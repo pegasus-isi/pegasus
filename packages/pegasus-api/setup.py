@@ -1,5 +1,12 @@
+"""_summary_.
+
+_extended_summary_
+
+:return: _description_
+:rtype: _type_
+"""
+
 import os
-import subprocess
 
 from setuptools import setup
 
@@ -9,20 +16,6 @@ home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 install_requires = [
     "pegasus-wms.common",
 ]
-
-
-#
-# Utility function to read the pegasus Version.in file
-#
-def read_version():
-    return (
-        subprocess.Popen(
-            "%s/release-tools/getversion" % home_dir, stdout=subprocess.PIPE, shell=True
-        )
-        .communicate()[0]
-        .decode()
-        .strip()
-    )
 
 
 #
@@ -48,7 +41,7 @@ def find_namespace_packages(where):
 
 setup(
     name="pegasus-wms.api",
-    version=read_version(),
+    version="5.1.2-dev.0",
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Python API",
@@ -59,8 +52,8 @@ setup(
     project_urls={
         "Documentation": "https://pegasus.isi.edu/documentation/",
         "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
-        "Source Code": "https://github.com/pegasus-isi/pegasus",
-        "Issue Tracker": "https://github.com/pegasus-isi/pegasus/issues",
+        "Repository": "https://github.com/pegasus-isi/pegasus",
+        "Issue": "https://github.com/pegasus-isi/pegasus/issues",
     },
     python_requires=">=3.6",
     keywords=["scientific workflows"],

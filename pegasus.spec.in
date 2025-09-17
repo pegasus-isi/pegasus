@@ -29,7 +29,7 @@ BuildRequires:  ant-apache-regexp, java-21-openjdk-devel
 Requires:       java-21-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
 %endif
 
-%define sourcedir %{name}-%{version}
+%define sourcedir %{name}-%{_version}
 
 # Disables the automatic dependency generator, which will include
 # Python deps on packages we include inside our package
@@ -57,9 +57,9 @@ execute the steps in appropriate order.
 ant dist-release
 
 # strip executables
-strip dist/pegasus-%{version}/bin/pegasus-cluster
-strip dist/pegasus-%{version}/bin/pegasus-kickstart
-strip dist/pegasus-%{version}/bin/pegasus-keg
+strip dist/pegasus-%{_version}/bin/pegasus-cluster
+strip dist/pegasus-%{_version}/bin/pegasus-kickstart
+strip dist/pegasus-%{_version}/bin/pegasus-keg
 
 %install
 
@@ -68,12 +68,12 @@ mkdir -p %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_datadir}
 mkdir -p %{buildroot}/%{_unitdir}
 
-cp -aR dist/pegasus-%{version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
-cp -aR dist/pegasus-%{version}/bin/* %{buildroot}/%{_bindir}/
-cp -aR dist/pegasus-%{version}/lib* %{buildroot}/usr/
-cp -aR dist/pegasus-%{version}/share/* %{buildroot}/%{_datadir}/
+cp -aR dist/pegasus-%{_version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
+cp -aR dist/pegasus-%{_version}/bin/* %{buildroot}/%{_bindir}/
+cp -aR dist/pegasus-%{_version}/lib* %{buildroot}/usr/
+cp -aR dist/pegasus-%{_version}/share/* %{buildroot}/%{_datadir}/
 
-install -m 0644 dist/%{name}-%{version}/share/pegasus/systemd-unit/pegasus-service.service %{buildroot}/%{_unitdir}/
+install -m 0644 dist/%{name}-%{_version}/share/pegasus/systemd-unit/pegasus-service.service %{buildroot}/%{_unitdir}/
 
 # rm unwanted files
 rm -f  %{buildroot}/%{_bindir}/keg.condor

@@ -99,9 +99,7 @@ public class DeployWorkerPackage extends Engine {
      * <p>pegasus-worker-4.6.0dev-x86_64_macos_10.tar.gz
      */
     private static final String mRegexExpression =
-            //
-            // "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
-            "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z0-9]*)-(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
+            "(pegasus-)(binary|worker)-([0-9]+\\.[0-9]+\\.[0-9]+(-(dev|alpha|beta|rc)\\.[0-9]+)?)-(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
@@ -656,9 +654,9 @@ public class DeployWorkerPackage extends Engine {
 
         String version = null;
         if (matcher.matches()) {
-            result.setArchitecture(SysInfo.Architecture.valueOf(matcher.group(4)));
-            result.setOSRelease(matcher.group(5));
-            result.setOSVersion(matcher.group(6));
+            result.setArchitecture(SysInfo.Architecture.valueOf(matcher.group(6)));
+            result.setOSRelease(matcher.group(7));
+            result.setOSVersion(matcher.group(8));
         } else {
             throw new RuntimeException(
                     "Unable to determine system information of package from name  " + name);

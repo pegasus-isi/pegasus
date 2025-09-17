@@ -83,6 +83,9 @@ def console_select_site(wf_dir):
     pegasus_home = ""
     login_host = ""
     transfer_endpoint = ""
+    shared_scratch = ""
+    storage_dir = ""
+    remote_shared_scratch = ""
     share_filesystem_with_submit_node = False
 
     # default base directories for scratch and storage space
@@ -155,23 +158,10 @@ def console_select_site(wf_dir):
             kwargs["default"] = default_shared_scratch
             kwargs["show_default"] = True
 
-        shared_scratch = click.prompt(**kwargs)
-    else:
-        shared_scratch = default_shared_scratch
+        remote_shared_scratch = click.prompt(**kwargs)
 
-    if site in Sites.SitesRequireStorage:
-        kwargs = dict(
-            text="What's the storage space on the cluster that you want to use",
-            type=click.Path(),
-        )
-
-        if share_filesystem_with_submit_node:
-            kwargs["default"] = default_shared_storage
-            kwargs["show_default"] = True
-
-        storage_dir = click.prompt(**kwargs)
-    else:
-        storage_dir = default_shared_storage
+    shared_scratch = default_shared_scratch
+    storage_dir = default_shared_storage
 
     return (
         site,
@@ -182,6 +172,7 @@ def console_select_site(wf_dir):
         storage_dir,
         login_host,
         transfer_endpoint,
+        remote_shared_scratch,
     )
 
 
@@ -329,6 +320,7 @@ def create_workflow(
     storage_dir,
     login_host,
     transfer_endpoint,
+    remote_shared_scratch,
 ):
     commands = []
     pegasushub_config = read_pegasushub_config(wf_dir, workflow)
@@ -369,6 +361,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
         pegasus_home=pegasus_home,
         login_host=login_host,
         transfer_endpoint=transfer_endpoint,
+        remote_shared_scratch_parent_dir=remote_shared_scratch,
     )
 
     pre_scripts = [x for x in pegasushub_config["scripts"] if x.startswith("pre-")]
@@ -434,7 +427,8 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     --login-host \"{}\" \\
     --transfer-endpoint \"{}\" \\
     --scratch-parent-dir {} \\
-    --storage-parent-dir {}""".format(
+    --storage-parent-dir {} \\
+    --remote-scratch-parent-dir {}""".format(
         wf_sites,
         site.name,
         str(project_name),
@@ -444,6 +438,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
         transfer_endpoint,
         shared_scratch,
         storage_dir,
+        remote_shared_scratch,
     )
     commands.append(generate_sites_cmd)
 
@@ -518,6 +513,7 @@ def main(directory, workflow_gallery):
         storage_dir,
         login_host,
         transfer_endpoint,
+        remote_shared_scratch,
     ) = console_select_site(directory)
     workflows_available = read_workflows(workflow_gallery, site)
 
@@ -541,6 +537,7 @@ def main(directory, workflow_gallery):
         storage_dir,
         login_host,
         transfer_endpoint,
+        remote_shared_scratch,
     )
 
     return

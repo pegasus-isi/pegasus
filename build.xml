@@ -290,7 +290,6 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
 
   <target name="compile-python" depends="compile-pegasus-common,compile-pegasus-api,compile-pegasus-worker,compile-pegasus-python">
     <!-- Update pegasus-config -->
-    <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@PEGASUS_VERSION@" value="${pegasus.version}" />
     <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@LIBDIR@" value="${dist.lib.subdir}" />
     <replace file="${dist.dir}/${dist.python-lib.subdir}/Pegasus/cli/pegasus-config.py" token="@PYTHON_LIBDIR@" value="${dist.lib.subdir}/pegasus/python" />
     <!-- replace sometimes changes permissions - make sure pegasus-config.py permissions are correct -->
@@ -632,29 +631,27 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
   </target>
 
   <target name="dist-python-source" description="Build source tarball for Pegasus Python Modules">
-    <replace file="packages/pegasus-common/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;" />
-    <exec executable="${dist.python}" dir="packages/pegasus-common" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    <!-- Determine uv -->
+    <exec executable="which" outputproperty="dist.uv" failonerror="true">
+      <arg line="uv" />
     </exec>
-    <replace file="packages/pegasus-common/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+    <echo>Python: ${dist.uv}</echo>
 
-    <replace file="packages/pegasus-api/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-api" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    <exec executable="${dist.uv}" dir="packages/pegasus-common" failonerror="true">
+      <arg line="build --out-dir ../../dist"/>
     </exec>
-    <replace file="packages/pegasus-api/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
 
-    <replace file="packages/pegasus-python/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-python" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    <exec executable="${dist.uv}" dir="packages/pegasus-api" failonerror="true">
+      <arg line="build --out-dir ../../dist"/>
     </exec>
-    <replace file="packages/pegasus-python/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
 
-    <replace file="packages/pegasus-worker/setup.py" token="version=read_version()" value="version=&quot;${pegasus.version}&quot;"/>
-    <exec executable="${dist.python}" dir="packages/pegasus-worker" failonerror="true">
-      <arg line="setup.py sdist --dist-dir ../../dist"/>
+    <exec executable="${dist.uv}" dir="packages/pegasus-python" failonerror="true">
+      <arg line="build --out-dir ../../dist"/>
     </exec>
-    <replace file="packages/pegasus-worker/setup.py" value="version=read_version()" token="version=&quot;${pegasus.version}&quot;"/>
+
+    <exec executable="${dist.uv}" dir="packages/pegasus-worker" failonerror="true">
+      <arg line="build --out-dir ../../dist"/>
+    </exec>
 
     <!-- Rename files to be PEP-625 compliant -->
     <move todir="dist">

@@ -75,7 +75,7 @@ public class Version {
     }
 
     private String[] splitVersion() {
-        return getVersion().split("[.]");
+        return getVersion().split("[.]", 3);
     }
 
     /** @return Major version number */

@@ -22,7 +22,7 @@ public class VersionTest {
     public void testVersion() {
         String version = ver.getVersion();
         assertTrue(version != null);
-        assertTrue(version.matches("\\d+[.]\\d+[.]\\d+([a-zA-Z0-9]+)?"));
+        assertTrue(version.matches("\\d+[.]\\d+[.]\\d+(-(dev|alpha|beta|rc).\\d+)?"));
     }
 
     @Test
@@ -37,7 +37,7 @@ public class VersionTest {
 
         String patch = ver.getPatch();
         assertTrue(patch != null);
-        assertTrue(patch.matches("\\d+([a-zA-Z0-9]+)?"));
+        assertTrue(patch.matches("\\d+(-(dev|alpha|beta|rc).\\d+)?"));
 
         String version = ver.getVersion();
         assertEquals(version, major + "." + minor + "." + patch);

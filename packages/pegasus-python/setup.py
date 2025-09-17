@@ -1,3 +1,11 @@
+"""_summary_.
+
+_extended_summary_
+
+:return: _description_
+:rtype: _type_
+"""
+
 import os
 import subprocess
 
@@ -34,20 +42,6 @@ def setup_installer_dependencies():
 
     if subprocess.call(["which", "mysql_config"]) == 0:
         install_requires.append("pymysql<=0.10.1")
-
-
-#
-# Utility function to read the pegasus Version.in file
-#
-def read_version():
-    return (
-        subprocess.Popen(
-            "%s/release-tools/getversion" % home_dir, stdout=subprocess.PIPE, shell=True
-        )
-        .communicate()[0]
-        .decode()
-        .strip()
-    )
 
 
 #
@@ -90,7 +84,7 @@ setup_installer_dependencies()
 
 setup(
     name="pegasus-wms",
-    version=read_version(),
+    version="5.1.2-dev.0",
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Python Codebase",
@@ -101,8 +95,8 @@ setup(
     project_urls={
         "Documentation": "https://pegasus.isi.edu/documentation/",
         "Changes": "https://pegasus.isi.edu/blog/?category_name=Release",
-        "Source Code": "https://github.com/pegasus-isi/pegasus",
-        "Issue Tracker": "https://github.com/pegasus-isi/pegasus/issues",
+        "Repository": "https://github.com/pegasus-isi/pegasus",
+        "Issue": "https://github.com/pegasus-isi/pegasus/issues",
     },
     python_requires=">=3.6",
     keywords=["scientific workflows"],
