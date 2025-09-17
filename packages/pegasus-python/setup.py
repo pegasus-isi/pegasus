@@ -84,7 +84,7 @@ setup_installer_dependencies()
 
 setup(
     name="pegasus-wms",
-    version="5.1.2-dev.0",
+    version="5.2.0-dev.0",
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Python Codebase",

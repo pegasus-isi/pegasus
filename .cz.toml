@@ -2,7 +2,7 @@
 name = "cz_conventional_commits"
 tag_format = "$version"
 version_scheme = "semver2"
-version = "5.1.2-dev.0"
+version = "5.2.0-dev.0"
 version_files = [
     "build.properties",
     "packages/pegasus-common/pyproject.toml:version",
