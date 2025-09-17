@@ -29,12 +29,14 @@ mv pegasus-doc-*.tar.gz $DOWNLOADS/
 mv *.deb $DOWNLOADS/
 mv *.rpm $DOWNLOADS/
 mv pegasus_wms*.tar.gz $DOWNLOADS/
+mv pegasus_wms*.whl $DOWNLOADS/
 
 # debian / ubuntu
 for TARGET in \
     "deb10::buster" \
     "deb11::bullseye" \
     "deb12::bookworm" \
+    "deb13::trixie" \
     "ubuntu18::bionic" \
     "ubuntu20::focal" \
     "ubuntu22::jammy" \
