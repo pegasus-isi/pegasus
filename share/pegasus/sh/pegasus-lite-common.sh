@@ -752,7 +752,7 @@ pegasus_lite_get_system()
 
     if [ "$osname" = "Linux" ]; then
 
-        # /etc/issue and /etc/os-release works most of the time, but there are exceptions
+        # all systemd based distros should have a /etc/os-release
         if [ -e /etc/os-release ]; then
             osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
             osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
@@ -774,43 +774,10 @@ pegasus_lite_get_system()
                     "trixie")    osversion="13" ;;
                 esac
             fi
-        elif [ -e /etc/issue ]; then
-            osname=`cat /etc/issue | head -n1 | awk '{print $1;}' | tr '[:upper:]' '[:lower:]'`
 
-            if [ "X$osname" = "Xubuntu" ]; then
-                osversion=`cat /etc/issue | head -n1 | awk '{print $2;}'` 
-                # 18 LTS
-                if (grep -i "bionic" /etc/issue) >/dev/null 2>&1; then
-                    osversion="18"
-                fi
-                # 20 LTS
-                if (grep -i "focal" /etc/issue) >/dev/null 2>&1; then
-                    osversion="20"
-                fi
-            elif [ -e /etc/debian_version ]; then
-                osname="deb"
-                osversion=`cat /etc/debian_version | cut -d/ -f1`
-                case $oscodename in
-                    "buster")    osversion="10" ;;
-                    "bullseye")  osversion="11" ;;
-                    "bookworm")  osversion="12" ;;
-                    "trixie")    osversion="13" ;;
-                esac
-            elif [ -e /etc/fedora-release ]; then
-                osname="fc"
-                osversion=`cat /etc/fedora-release | grep -o -E '[0-9]+'`
-            elif [ -e /etc/redhat-release ]; then
-                osname="rhel"
-                osversion=`cat /etc/redhat-release | grep -o -E ' [0-9]+.[0-9]+'`
-            elif [ -e /etc/rocks-release ]; then
-                osname="rhel"
-                osversion=`cat /etc/rocks-release | grep -o -E ' [0-9]+.[0-9]+'`
-            elif [ -e /etc/rocky-release ]; then
-                osname="rhel"
-                osversion=`cat /etc/rocky-release | grep -o -E ' [0-9]+.[0-9]+'`
-            elif [ -e /etc/SuSE-release ]; then
-                osname="suse"
-                osversion=`cat /etc/SuSE-release | grep VERSION | grep -o -E ' [0-9]+'`
+            # ArchLinux is unversioned
+            if [ "X$osname" = "Xarch" ]; then
+                osversion=0
             fi
         fi
 
