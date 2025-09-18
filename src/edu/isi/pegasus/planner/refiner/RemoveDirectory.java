@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.gridstart.Kickstart;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
@@ -485,17 +486,10 @@ public class RemoveDirectory extends Engine {
             mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException(error.toString());
         }
-        if (mTransferFromSubmitHost) {
-            /*
-            newJob.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
 
-            StringBuffer sb = new StringBuffer();
-            sb.append(mProps.getBinDir())
-                    .append(File.separator)
-                    .append(RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME);
-            execPath = sb.toString();
-            newJob.condorVariables.construct("transfer_executable", "true");
-            */
+        // gh-2124 same as mTransferFromSubmitHost value , but better name
+        boolean runViaPegasusLite = false;
+        if (mTransferFromSubmitHost) {
             // PM-1552 after 5.0 worker package organization, we cannot just
             // transfer pegasus-transfer using transfer_executable. Instead we
             // have to set it up using PegasusLite and also ensure only pegasus-kickstart
@@ -506,6 +500,8 @@ public class RemoveDirectory extends Engine {
                     Pegasus.DATA_CONFIGURATION_KEY,
                     PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
             newJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
+            runViaPegasusLite = true;
+
         } else {
             execPath = entry.getPhysicalTransformation();
         }
@@ -589,6 +585,15 @@ public class RemoveDirectory extends Engine {
         // is assimilated overidding the one from transformation
         // catalog.
         newJob.updateProfiles(mProps);
+
+        if (runViaPegasusLite) {
+            // GH-2124 make sure PEGASUS_HOME is unset when we are
+            // running this job remotely, as it is in the sharedfs mode
+            // and we want to make sure PegasusLite does not set it's internal
+            // path to the worker package that was placed earlier in the workflow
+            // in the scratch directory, as that is what we want to delete!
+            newJob.envVariables.removeKey(ENV.PEGASUS_HOME_ENV_KEY);
+        }
 
         return newJob;
     }
