@@ -256,8 +256,6 @@ def db_verify(db, check=False, pegasus_version=None, force=False, print_version=
                 given_version=pegasus_version,
             )
 
-    print_db_version(print_version, db_version, db, parse=True)
-
 
 def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
     """
