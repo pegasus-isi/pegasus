@@ -252,7 +252,7 @@ class TestPegasusTransferInvocation:
                     "src_urls": [
                         {
                             "site_label": "web",
-                            "url": "http://BADURL0983012830181028310831adna02a0o.net",
+                            "url": "http://BADURL0983012830181028310831adna02a0o.scitech.group",
                         }
                     ],
                     "dest_urls": [
