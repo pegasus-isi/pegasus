@@ -88,7 +88,7 @@ sites:
   arch: "x86_64"
   os.type: "linux"
   os.release: "rhel"
-  os.version: "7"
+  os.version: "8"
   profiles:
     condor:
       universe: "vanilla"
@@ -99,7 +99,7 @@ sites:
   arch: "x86_64"
   os.type: "linux"
   os.release: "rhel"
-  os.version: "7"
+  os.version: "8"
   directories:
    -
     type: "sharedStorage"
@@ -124,7 +124,7 @@ $sc_snippet
   arch: "x86_64"
   os.type: "linux"
   os.release: "rhel"
-  os.version: "7"
+  os.version: "8"
   directories:
    -
     type: "sharedStorage"
