@@ -38,7 +38,7 @@ Lint:
     - LANGUAGE:
       - python
       - java
-  image: python:3.6
+  image: python:3.10
   before_script:
   - env
   - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
