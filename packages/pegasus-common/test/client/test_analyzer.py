@@ -47,7 +47,7 @@ class TestBaseAnalyze:
         assert BaseAnalyzer is not None
 
     def test_check_wf_start(self, mocker, capsys, BaseAnalyzer):
-        mocker.patch("Pegasus.analyzer.BaseAnalyze.backticks")
+        mocker.patch("Pegasus.client.analyzer.BaseAnalyze.backticks")
         BaseAnalyzer.check_for_wf_start(
             Options(input_dir="temp"), Counts(0, 0, 0, 0, 0, 0, [], [])
         )
@@ -433,7 +433,7 @@ class TestAnalyzeDB:
 
     def test_analyze_db_for_wf_workflow_error(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch(
-            "Pegasus.analyzer.AnalyzeDB.get_workflow_status",
+            "Pegasus.client.analyzer.AnalyzeDB.get_workflow_status",
             return_value=WORKFLOW_STATUS.FAILURE,
         )
         mock_wf = mocker.MagicMock()
@@ -451,7 +451,7 @@ class TestAnalyzeDB:
     def DISABLED_test_analyze_db_for_wf_failing_jobs(
         self, mocker, capsys, AnalyzerDatabase
     ):
-        mocker.patch("Pegasus.analyzer.AnalyzeDB.get_job_details")
+        mocker.patch("Pegasus.client.analyzer.AnalyzeDB.get_job_details")
         mock_wf = mocker.MagicMock()
 
         class count:
@@ -718,9 +718,9 @@ class TestAnalyzeFiles:
         self, mocker, capsys, AnalyzerFiles, out_dir, expected_output
     ):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        mocker.patch("Pegasus.analyzer.AnalyzeFiles.invoke_monitord")
+        mocker.patch("Pegasus.client.analyzer.AnalyzeFiles.invoke_monitord")
         mocker.patch(
-            "Pegasus.analyzer.AnalyzeFiles.get_jsdl_filename",
+            "Pegasus.client.analyzer.AnalyzeFiles.get_jsdl_filename",
             return_value="jobstate.log",
         )
         mocker.patch("os.access", return_value=False)
@@ -749,7 +749,7 @@ class TestAnalyzeFiles:
         assert output_state == expected_state
 
     def DISABLED_test_invoke_monitord(self, mocker, AnalyzerFiles):
-        mocker.patch("Pegasus.analyzer.BaseAnalyze.backticks")
+        mocker.patch("Pegasus.client.analyzer.BaseAnalyze.backticks")
         temp_dir = tempfile.mkdtemp("sample_temp_dir")
         dagman_out_file = os.path.join(
             directory,
@@ -766,7 +766,7 @@ class TestAnalyzeFiles:
     def DISABLED_test_invoke_monitord_error(self, mocker, AnalyzerFiles):
         analyze = AnalyzerFiles(Options(run_monitord=True))
         mocker.patch(
-            "Pegasus.analyzer.BaseAnalyze.backticks", side_effect=AnalyzerError
+            "Pegasus.client.analyzer.BaseAnalyze.backticks", side_effect=AnalyzerError
         )
         with pytest.raises(Exception) as err:
             analyze.invoke_monitord("", None)
