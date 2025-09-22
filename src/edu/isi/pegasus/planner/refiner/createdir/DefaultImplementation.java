@@ -287,7 +287,7 @@ public class DefaultImplementation implements Implementation {
             // in the scratch directory, as that is what we want to delete!
             newJob.envVariables.removeKey(ENV.PEGASUS_HOME_ENV_KEY);
         }
-        
+
         return newJob;
     }
 
