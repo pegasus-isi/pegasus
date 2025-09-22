@@ -28,8 +28,7 @@ from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.workflow import stampede_statistics
 from Pegasus.tools import kickstart_parser, utils
 
-logger = logging.getLogger("pegasus-newanalyzer")
-
+logger = logging.getLogger("pegasus-analyzer")
 utils.configureLogging(level=logging.WARNING)
 
 if sys.version_info > (3, 6):
