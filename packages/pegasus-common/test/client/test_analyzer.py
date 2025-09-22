@@ -448,7 +448,9 @@ class TestAnalyzeDB:
             assert "Workflow failed" in str(err)
             assert "uuid-0" in str(err) and "submit_dir-0" in str(err)
 
-    def DISABLED_test_analyze_db_for_wf_failing_jobs(self, mocker, capsys, AnalyzerDatabase):
+    def DISABLED_test_analyze_db_for_wf_failing_jobs(
+        self, mocker, capsys, AnalyzerDatabase
+    ):
         mocker.patch("Pegasus.analyzer.AnalyzeDB.get_job_details")
         mock_wf = mocker.MagicMock()
 
