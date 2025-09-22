@@ -25,6 +25,9 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
 
     # first look in the PATH
     I=0
+    eval PEXE_LIST$I="$(which pegasus-python 2>/dev/null)"
+    I=$((I+1))
+    # first look in the PATH
     eval PEXE_LIST$I="$(which python3 2>/dev/null)"
     I=$((I+1))
     # has to be last to find user defined environments

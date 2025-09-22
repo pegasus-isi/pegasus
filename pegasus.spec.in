@@ -9,24 +9,27 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant, python3-devel, python3-pip, python3-setuptools
-Requires:       which, python3, condor >= 10.0, graphviz, %{?systemd_requires}
+BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant
+Requires:       which, graphviz, alternatives, %{?systemd_requires}
 
 %global debug_package %{nil}
 
 %if 0%{?rhel} == 8
-BuildRequires:  java-17-openjdk-devel, python3-setuptools_scm
-Requires:       java-17-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython, python3-dataclasses
+BuildRequires:  java-17-openjdk-devel, python3.12-devel, python3.12-pip, python3.12-setuptools
+Requires:       java-17-openjdk-headless, python3.12, python3.12-cryptography, python3.12-PyYAML
+%define pegasus_python 3.12
 %endif
 
 %if 0%{?rhel} == 9
-BuildRequires:  ant-apache-regexp, java-21-openjdk-devel
-Requires:       java-21-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
+BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3.12-devel, python3.12-pip, python3.12-setuptools
+Requires:       java-21-openjdk-headless, python3.12, python3.12-cryptography, python3.12-PyYAML
+%define pegasus_python 3.12
 %endif
 
 %if 0%{?rhel} == 10
-BuildRequires:  ant-apache-regexp, java-21-openjdk-devel
-Requires:       java-21-openjdk-headless, python3-cryptography, python3-PyYAML, python3-GitPython
+BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3.13-devel, python3.13-pip, python3.13-setuptools
+Requires:       java-21-openjdk-headless, python3.13, python3.13-cryptography, python3.13-PyYAML
+%define pegasus_python 3.13
 %endif
 
 %define sourcedir %{name}-%{_version}
@@ -54,6 +57,7 @@ execute the steps in appropriate order.
 %setup -q -n %{sourcedir}
 
 %build
+export PEGASUS_PYTHON=/usr/bin/python%{pegasus_python}
 ant dist-release
 
 # strip executables
@@ -83,13 +87,6 @@ rm -f  %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
 rm -f  %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
 
-%pre
-# Handle previous install where /usr/lib64/pegasus/python was a directory
-if [ -d /usr/lib64/pegasus/python ] && [ ! -L /usr/lib64/pegasus/python ]; then
-    echo "Removing old /usr/lib64/pegasus/python directory to allow symlink install"
-    rm -rf /usr/lib64/pegasus/python
-fi
-
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/
@@ -98,6 +95,15 @@ fi
 %{_libdir}/python*
 %{_datadir}/%{name}
 %{_unitdir}/pegasus-service.service
+
+%pre
+# Handle previous install where /usr/lib64/pegasus/python was a directory
+if [ -d /usr/lib64/pegasus/python ] && [ ! -L /usr/lib64/pegasus/python ]; then
+    echo "Removing old /usr/lib64/pegasus/python directory to allow symlink install"
+    rm -rf /usr/lib64/pegasus/python
+fi
+
+/usr/sbin/update-alternatives --install /usr/bin/pegasus-python pegasus-python /usr/bin/python%{pegasus_python} 0
 
 %post
 # Enable the systemd user service
@@ -108,6 +114,8 @@ systemctl daemon-reload
 systemctl stop pegasus-service.service
 systemctl disable pegasus-service.service
 systemctl daemon-reload
+
+/usr/sbin/update-alternatives --remove-all pegasus-python
 
 %changelog
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@
