@@ -33,8 +33,8 @@ fi
 MAJOR=`$PEXE -V 2>&1 | sed -e 's/^.* \([0-9]*\)\.[0-9].*$/\1/'`
 MINOR=`$PEXE -V 2>&1 | sed -e 's/^.* [0-9]*\.\([0-9]*\).*$/\1/'`
 
-if [ $MAJOR = 3 -a $MINOR -lt 5 ]; then
-    echo "ERROR: Pegasus requires at least Python 3.5" >&2
+if [ $MAJOR = 3 -a $MINOR -lt 6 ]; then
+    echo "ERROR: Pegasus requires at least Python 3.6" >&2
     exit 1
 fi
 
