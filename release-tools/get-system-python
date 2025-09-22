@@ -8,6 +8,7 @@ set -e
 # Look for a python in a pre-determined order, prefer Python3
 for CANDIDATE in $PEGASUS_PYTHON \
             /usr/bin/python3 \
+            /usr/bin/python3.13 \
             /usr/bin/python3.12 \
             /usr/bin/python3.11 \
             /usr/bin/python3.10 \
