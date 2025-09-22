@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.code.gridstart.Kickstart;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -185,8 +186,10 @@ public class DefaultImplementation implements Implementation {
 
         SiteCatalogEntry ePool = mSiteStore.lookup(eSite);
 
-        StringBuffer argString = new StringBuffer();
+        StringBuilder argString = new StringBuilder();
         String targetURL = "";
+        // gh-2124 same as mTransferFromSubmitHost value , but better name
+        boolean runViaPegasusLite = false;
         if (mLaunchViaPegasusLite) {
 
             // PM-1552 after 5.0 worker package organization, we cannot just
@@ -200,6 +203,7 @@ public class DefaultImplementation implements Implementation {
                     PegasusConfiguration.CONDOR_CONFIGURATION_VALUE);
             newJob.vdsNS.construct(Pegasus.GRIDSTART_PATH_KEY, Kickstart.EXECUTABLE_BASENAME);
             targetURL = mSiteStore.getExternalWorkDirectoryURL(site, FileServer.OPERATION.put);
+            runViaPegasusLite = true;
 
         } else {
             execPath = entry.getPhysicalTransformation();
@@ -274,6 +278,15 @@ public class DefaultImplementation implements Implementation {
         // is assimilated overidding the one from transformation
         // catalog.
         newJob.updateProfiles(mProps);
+
+        if (runViaPegasusLite) {
+            // GH-2124 make sure PEGASUS_HOME is unset when we are
+            // running this job remotely, as it is in the sharedfs mode
+            // and we want to make sure PegasusLite does not set it's internal
+            // path to the worker package that was placed earlier in the workflow
+            // in the scratch directory, as that is what we want to delete!
+            newJob.envVariables.removeKey(ENV.PEGASUS_HOME_ENV_KEY);
+        }
 
         return newJob;
     }
