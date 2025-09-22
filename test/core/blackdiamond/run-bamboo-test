@@ -52,6 +52,17 @@ else
 fi
 ./blackdiamond.py "${PEGASUS_HOME}" ${CONFIG} > ${DAX}
 
+# figure out if we are going to use a remote PEGASUS_HOME
+# for sharedfs or not
+properties use_remote_pegasus_home use_remote_pegasus_home true
+sc_snippet=""
+if [ "$use_remote_pegasus_home" == true ]; then
+    sc_snippet="    env:
+      PEGASUS_HOME: $REMOTE_PEGASUS_HOME"
+fi
+echo "SNIPPET IS $sc_snippet"
+
+
 # create the site catalog
 cat > sites.yml << EOF
 pegasus: "5.0"
@@ -105,12 +116,7 @@ sites:
       operation: "all"
       url: "file:///scitech/shared/scratch-90-days/$USER/scratch/$RUN_ID"
   profiles:
-    env:
-      PEGASUS_HOME: "$REMOTE_PEGASUS_HOME"
-    condor:
-      should_transfer_files: "Yes"
-      universe: "vanilla"
-      when_to_transfer_output: "ON_EXIT"
+$sc_snippet
     pegasus:
       style: "condor"
  -
@@ -145,6 +151,7 @@ properties staging_site staging_site
 properties output_site output_site
 properties planner_args planner_args
 properties clean_up clean_up 'leaf'
+
 
 if [ -e ${TOPDIR}/pegasusrc ]; then
     cat ${TOPDIR}/pegasusrc >> ${CONFIG}/pegasusrc
