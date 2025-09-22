@@ -117,10 +117,6 @@ sites:
       url: "file:///scitech/shared/scratch-90-days/$USER/scratch/$RUN_ID"
   profiles:
 $sc_snippet
-    condor:
-      should_transfer_files: "Yes"
-      universe: "vanilla"
-      when_to_transfer_output: "ON_EXIT"
     pegasus:
       style: "condor"
  -
