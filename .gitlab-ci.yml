@@ -61,6 +61,45 @@ Python:
       - x86_64
       - arm64
       PYTHON_VERSION:
+      - '3.10'
+      - '3.11'
+      - '3.12'
+      - '3.13'
+      PACKAGE:
+      - common
+      - api
+      - python
+  image: python:${PYTHON_VERSION}
+  before_script:
+  - env
+  - export USER=nobody
+  - pip3 install --upgrade pip setuptools
+  - pip3 install tox
+  script:
+  - cd packages/pegasus-${PACKAGE}; tox -e py$(echo ${PYTHON_VERSION} | sed -E 's/([0-9]*).([0-9]*).*$/\1\2/g')
+  coverage: '/Total coverage: \d+\.\d+%/'
+  artifacts:
+    when: always
+    reports:
+      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
+    paths:
+    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  tags:
+  - ${ARCH}
+  - docker
+
+Python Worker:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      PYTHON_VERSION:
       - '3.6'
       - '3.7'
       - '3.8'
@@ -70,9 +109,6 @@ Python:
       - '3.12'
       - '3.13'
       PACKAGE:
-      - common
-      - api
-      - python
       - worker
   image: python:${PYTHON_VERSION}
   before_script:
