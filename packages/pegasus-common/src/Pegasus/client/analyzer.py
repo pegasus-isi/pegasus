@@ -749,7 +749,7 @@ class AnalyzeDB(BaseAnalyze):
         )
         if wf_detail.parent_wf_id:
             wf.parent_wf_uuid = wf_details[wf_detail.parent_wf_id].wf_uuid
-            if "dax_label" in wf_details[wf_detail.parent_wf_id]:
+            if hasattr(wf_details[wf_detail.parent_wf_id], "dax_label"):
                 wf.parent_wf_name = wf_details[wf_detail.parent_wf_id].dax_label
             else:
                 wf.parent_wf_name = "-"
