@@ -322,7 +322,9 @@ def pegasus_analyzer(
         print()
         agent_output = None
         try:
-            agent_output = agent.AgentClient().analyze(output.root_wf_uuid, console_output)
+            agent_output = agent.AgentClient().analyze(
+                output.root_wf_uuid, console_output
+            )
         except Exception as e:
             analyzer.logger.error(
                 f"Error occurred while calling Pegasus Agent for AI analysis: {e}"
