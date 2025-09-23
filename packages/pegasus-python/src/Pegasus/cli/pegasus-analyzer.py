@@ -185,6 +185,14 @@ class HelpCmd(click.Command):
     required=False,
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
+@click.option(
+    "--ai",
+    "ai",
+    type=bool,
+    default=True,
+    show_default=True,
+    help="Pegasus AI-based analysis of the workflow",
+)
 def pegasus_analyzer(
     ctx,
     vb,
@@ -208,6 +216,7 @@ def pegasus_analyzer(
     workflow_type,
     submit_dir,
     json_mode,
+    ai,
 ):
 
     if vb == 0:
@@ -307,19 +316,19 @@ def pegasus_analyzer(
     print(console_output)
     print()
 
-    # call out to the Pegasus Agent for AI analysis if needed
-    print(indent_console(" Pegasus AI Analysis ".center(80, "=")))
-    agent_output = None
-    try:
-        agent_output = agent.AgentClient().analyze(output.root_wf_uuid, console_output)
-    except Exception as e:
-        analyzer.logger.error(
-            f"Error occurred while calling Pegasus Agent for AI analysis: {e}"
-        )
-
-    if agent_output is not None:
+    if ai:
+        # call out to the Pegasus Agent for AI analysis if needed
+        print(indent_console(" Pegasus AI Analysis ".center(80, "=")))
         print()
-        print(agent_output)
+        agent_output = None
+        try:
+            agent_output = agent.AgentClient().analyze(output.root_wf_uuid, console_output)
+        except Exception as e:
+            analyzer.logger.error(
+                f"Error occurred while calling Pegasus Agent for AI analysis: {e}"
+            )
+        if agent_output is not None:
+            print(agent_output)
         print()
 
     sys.exit(0)
