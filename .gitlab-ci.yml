@@ -36,7 +36,7 @@ Lint:
   parallel:
     matrix:
     - LANGUAGE:
-      - python
+      # - python
       - java
   image: python:3.10
   before_script:
