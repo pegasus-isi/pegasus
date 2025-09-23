@@ -27,9 +27,9 @@ Requires:       java-21-openjdk-headless, python3.12, python3.12-cryptography, p
 %endif
 
 %if 0%{?rhel} == 10
-BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3.13-devel, python3.13-pip, python3.13-setuptools
-Requires:       java-21-openjdk-headless, python3.13, python3.13-cryptography, python3.13-PyYAML
-%define pegasus_python 3.13
+BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3-devel, python3-pip, python3-setuptools
+Requires:       java-21-openjdk-headless, python3, python3-cryptography, python3-PyYAML
+%define pegasus_python 3.12
 %endif
 
 %define sourcedir %{name}-%{_version}
