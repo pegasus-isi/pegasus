@@ -515,6 +515,8 @@ class YAMLParser(Parser):
             elif line[0] in [" ", "-", "l", "\n"]:
                 # for #2096 not clear if we need to check the first char of the line.
                 # l is for location multipart record
+                # We should check for the first char; else this parsing will break
+                # where the hpc scheduler may add their own epilogue at the end of the job.out
                 buffer.append(line)
 
         record = "".join(buffer)
@@ -704,6 +706,14 @@ class YAMLParser(Parser):
                 "KICKSTART-PARSE-ERROR --> yaml error in multipart record %s : %s"
                 % (self._kickstart_output_file, str(e))
             )
+
+        # For GH-2031 in case location record is malformed i.e includes html etc
+        # our parser does not return the content so will be a None record returned
+        if entries is None:
+            logger.error(
+                "A multipart record in %s is malformed." % self._kickstart_output_file
+            )
+            return {}
 
         # for integrity multipart a list of dict is returned as entries
         # However, for location record (which is just one) a dict is returned

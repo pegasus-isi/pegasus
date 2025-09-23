@@ -15,6 +15,16 @@ location:
     subdomain: ads.isi.edu
 """
 
+LOCATION_SERVICE_DOWN_MULTIPART_RECORD = """---------------pegasus-multipart
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+"""
+
 INTEGRITY_MULTIPART_RECORD = """---------------pegasus-multipart
 - integrity_verification_attempts:
   - lfn: "f.a"
@@ -251,21 +261,25 @@ class TestYAMLKickstartParser:
             f.close()
 
     @pytest.mark.parametrize(
-        "content",
+        "content,expected",
         [
-            LOCATION_MULTIPART_RECORD,
-            SINGLE_KICKSTART_RECORD,
-            INTEGRITY_MULTIPART_RECORD,
+            (LOCATION_MULTIPART_RECORD, LOCATION_MULTIPART_RECORD),
+            (SINGLE_KICKSTART_RECORD, SINGLE_KICKSTART_RECORD),
+            (INTEGRITY_MULTIPART_RECORD, INTEGRITY_MULTIPART_RECORD),
+            (
+                LOCATION_SERVICE_DOWN_MULTIPART_RECORD,
+                "---------------pegasus-multipart\n",
+            ),
         ],
     )
-    def test_read_record(self, content):
+    def test_read_record(self, content, expected):
         f = self.create_test_file(content)
         parser = kickstart_parser.YAMLParser(filename=f.name)
 
         # Try to open the file
         assert parser.open()
         record = parser.read_record()
-        assert record == content
+        assert record == expected
         parser.close()
 
     def test_parse_location_multipart_record(self):
