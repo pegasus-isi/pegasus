@@ -77,8 +77,8 @@ pegasus_lite_location()
     # try ipv4 first - it provides more accurate results in the geoip lookup
 
     if (curl --version) >/dev/null 2>&1; then
-        location=$(curl -s -S --insecure --max-time 60 --retry 0 --ipv4 https://location.scitech.group/v1/ 2>/dev/null || \
-                   curl -s -S --insecure --max-time 60 --retry 0 https://location.scitech.group/v1/ 2>/dev/null)
+        location=$(curl -s -S --fail --insecure --max-time 60 --retry 0 --ipv4 https://location.scitech.group/v1/ 2>/dev/null || \
+                   curl -s -S --fail --insecure --max-time 60 --retry 0 https://location.scitech.group/v1/ 2>/dev/null)
     fi
 
     if [ "x$location" = "x" ]; then
@@ -88,8 +88,12 @@ pegasus_lite_location()
         fi
     fi
 
+
     if [ "x$location" != "x" ]; then
-        echo "$location" >$PEGASUS_MULTIPART_DIR/location.yaml || true
+        # simple validation on the location data
+        if (echo "$location" | grep geohash) 2>/dev/null; then
+            echo "$location" >$PEGASUS_MULTIPART_DIR/location.yaml || true
+        fi
     fi
     return 0
 }
