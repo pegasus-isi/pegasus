@@ -2625,7 +2625,7 @@ class GSHandler(TransferHandlerBase):
         except Exception:
             raise RuntimeError("Unable to create tmp file for gs boto file")
         try:
-            conf = configparser.SafeConfigParser()
+            conf = configparser.ConfigParser()
             conf.read(env["BOTO_CONFIG"])
             conf.set("Credentials", "gs_service_key_file", env["GOOGLE_PKCS12"])
             conf.write(tmp_file)
