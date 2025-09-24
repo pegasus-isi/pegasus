@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 import traceback
@@ -793,3 +794,34 @@ def write_csv(f, fields, headers=None, dialect=csv.excel, encoding=None):
         writer.writeheader = writeheader
 
         yield writer
+
+
+def pegasus_version():
+    """
+    Returns the Pegasus version string.
+    """
+
+    # is calling out to pegasus-version really the best way to do this?
+    pegasus_version = None
+    if "PEGASUS_HOME" in os.environ:
+        f = os.path.join(os.environ.get("PEGASUS_HOME"), "bin/pegasus-version")
+        if os.path.isfile(f):
+            pegasus_version = f
+
+    if not pegasus_version:
+        f = os.path.join(os.path.dirname(sys.argv[0]), "pegasus-version")
+        if os.path.isfile(f):
+            pegasus_version = f
+
+    if pegasus_version:
+        child = subprocess.Popen(
+            pegasus_version,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            cwd=os.getcwd(),
+        )
+        out, err = child.communicate()
+        if child.returncode != 0:
+            raise Exception(err.decode("utf8").strip())
+        return out.decode("utf8").strip()

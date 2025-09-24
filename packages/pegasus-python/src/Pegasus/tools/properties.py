@@ -262,7 +262,7 @@ class Properties:
                     % (rundir_propfile)
                 )
 
-        # Last chance, look for $(HOME)/.pegasusrc
+        # look for $(HOME)/.pegasusrc
         if not my_already_loaded:
             if "user.home" in system:
                 my_user_propfile = os.path.join(system["user.home"], ".pegasusrc")
@@ -278,8 +278,26 @@ class Properties:
                     # No need to complain about this
                     pass
 
+        # Last chance, look for $(HOME)/.pegasus/pegasus.conf
         if not my_already_loaded:
-            logger.warning("no properties file parsed whatsoever!")
+            if "user.home" in system:
+                my_user_propfile = os.path.join(
+                    system["user.home"], ".pegasus", "pegasus.conf"
+                )
+                if os.path.isfile(my_user_propfile) and os.access(
+                    my_user_propfile, os.R_OK
+                ):
+                    logger.debug(
+                        "processing properties file %s... " % (my_user_propfile)
+                    )
+                    my_config.update(parse_properties(my_user_propfile))
+                    my_already_loaded = True
+                else:
+                    # No need to complain about this
+                    pass
+
+        if not my_already_loaded:
+            logger.debug("no properties file parsed whatsoever!")
 
         # Keep ordering of config before initial so that the -D CLI
         # properties can override any other properties

@@ -8,10 +8,9 @@ import logging
 
 import requests
 
-from Pegasus.tools import utils
+from Pegasus.tools import properties, utils
 
 logger = logging.getLogger("pegasus-agent")
-utils.configureLogging(level=logging.WARNING)
 
 
 class AgentClient:
@@ -19,10 +18,23 @@ class AgentClient:
     Client for the Pegasus Agent service.
     """
 
-    def __init__(self, url=None):
-        if url is None:
-            url = "https://agent.k.scitech.group"
-        self.url = url
+    def __init__(self):
+        self.props = properties.Properties()
+        self.props.new()  # load the default properties
+
+        # endpoint
+        if self.props.property("pegasus.agent.url"):
+            self.url = self.props.property("pegasus.agent.url")
+        else:
+            self.url = "https://agent.k.scitech.group"
+
+        # token
+        if self.props.property("pegasus.agent.token"):
+            self.token = self.props.property("pegasus.agent.token")
+        else:
+            self.token = "default"
+
+        self.client_version = utils.pegasus_version()
 
     def analyze(self, workflow_id, analyze_stdout):
         """
@@ -30,8 +42,15 @@ class AgentClient:
         """
 
         full_url = f"{self.url}/wf/analyze/ai/{workflow_id}"
-        headers = {"X-API-Key": "mysecretapikey", "Content-Type": "application/json"}
-        data = {"client_version": "5.2.0dev", "analyze_stdout": analyze_stdout[:4999]}
+        headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
+        data = {
+            "client_version": self.client_version,
+            "analyze_stdout": analyze_stdout[:4999],
+        }
+
+        logger.debug(
+            f"Posting to {full_url} with token '{self.token}' and data: {data}"
+        )
 
         cout = ""
         try:

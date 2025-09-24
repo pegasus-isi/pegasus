@@ -318,8 +318,7 @@ def pegasus_analyzer(
 
     if ai:
         # call out to the Pegasus Agent for AI analysis if needed
-        print(indent_console(" Pegasus AI Analysis ".center(80, "=")))
-        print()
+        print(indent_console(" Pegasus AI Analysis ".center(80, "*")))
         agent_output = None
         try:
             agent_output = agent.AgentClient().analyze(
