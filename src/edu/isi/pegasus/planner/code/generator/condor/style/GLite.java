@@ -217,6 +217,10 @@ public class GLite extends Abstract {
                                 + site.getSiteHandle(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
+                // GH-2132 do not set the condor quoting for the job to be false
+                // arguments always have to be condor quoted else condor_submit
+                // fails
+                /*
                 key = Pegasus.CONDOR_QUOTE_ARGUMENTS_KEY;
                 this.setProfileIfNotPresent(pegasusProfiles, key, "false");
                 mLogger.log(
@@ -227,6 +231,7 @@ public class GLite extends Abstract {
                                 + " for site "
                                 + site.getSiteHandle(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
+                */
             }
         }
     }
