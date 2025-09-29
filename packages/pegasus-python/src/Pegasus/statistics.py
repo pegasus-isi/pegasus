@@ -13,13 +13,13 @@ from pathlib import Path
 import click
 
 from Pegasus import braindump
+from Pegasus.client import agent
 from Pegasus.db import connection
 from Pegasus.db.connection import ConnectionError
 from Pegasus.db.workflow.stampede_statistics import StampedeStatistics
 from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.tools import utils
-from Pegasus.client import agent
 
 if sys.version_info > (3, 6):
     setattr(t, "_ClassVar", t.ClassVar)
@@ -1854,8 +1854,12 @@ class PegasusStatistics:
 
         # use the summary and transformation stats for AI
         extn = self.file_extn
-        summary_file = Path(self.output_dir) / f"{self.workflow_summary_file_name}.{extn}"
-        tf_file = Path(self.output_dir) / f"{self.transformation_stats_file_name}.{extn}"
+        summary_file = (
+            Path(self.output_dir) / f"{self.workflow_summary_file_name}.{extn}"
+        )
+        tf_file = (
+            Path(self.output_dir) / f"{self.transformation_stats_file_name}.{extn}"
+        )
 
         stats_data = ""
         if summary_file.exists():
