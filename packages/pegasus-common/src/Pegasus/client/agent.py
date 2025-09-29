@@ -61,3 +61,29 @@ class AgentClient:
             raise RuntimeError(f"{e}")
 
         return cout
+
+    def statistics(self, workflow_id, stats_stdout):
+        """
+        Summarize the stats using the Pegasus Agent service.
+        """
+
+        full_url = f"{self.url}/wf/statistics/ai/{workflow_id}"
+        headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
+        data = {
+            "client_version": self.client_version,
+            "statistics_stdout": stats_stdout[:9999],
+        }
+
+        logger.debug(
+            f"Posting to {full_url} with token '{self.token}' and data: {data}"
+        )
+
+        cout = ""
+        try:
+            response = requests.post(full_url, json=data, headers=headers, timeout=300)
+            response.raise_for_status()
+            cout += response.json()["message"]
+        except requests.RequestException as e:
+            raise RuntimeError(f"{e}")
+
+        return cout

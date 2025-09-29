@@ -68,7 +68,7 @@ def _arg_split(ctx, param, value):
 @click.option(
     "-s",
     "--statistics-level",
-    default="summary",
+    default="all",
     callback=_arg_split,
     help="Comma separated list. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats,int_stats; Default is '%default'.",
 )
@@ -124,6 +124,14 @@ def _arg_split(ctx, param, value):
     help="Set if the positional arguments are wf uuids",
 )
 @click.argument("submit-dirs", required=False, nargs=-1)
+@click.option(
+    "--ai",
+    "ai",
+    type=bool,
+    default=True,
+    show_default=True,
+    help="Pegasus AI-based analysis of the workflow",
+)
 @click.pass_context
 def pegasus_statistics(
     ctx,
@@ -139,6 +147,7 @@ def pegasus_statistics(
     is_pmc: bool = False,
     is_uuid: bool = False,
     submit_dirs: t.Sequence[str] = [],
+    ai: bool = True,
 ):
     """A tool to generate statistics about the workflow run."""
     s = PegasusStatistics(
@@ -152,6 +161,7 @@ def pegasus_statistics(
         is_pmc,
         is_uuid,
         submit_dirs,
+        ai,
     )
     try:
         s(ctx, verbose, quiet)
