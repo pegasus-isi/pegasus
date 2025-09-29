@@ -91,7 +91,7 @@ pegasus_lite_location()
 
     if [ "x$location" != "x" ]; then
         # simple validation on the location data
-        if (echo "$location" | grep geohash) 2>/dev/null; then
+        if (echo "$location" | grep geohash) >/dev/null 2>&1; then
             echo "$location" >$PEGASUS_MULTIPART_DIR/location.yaml || true
         fi
     fi
