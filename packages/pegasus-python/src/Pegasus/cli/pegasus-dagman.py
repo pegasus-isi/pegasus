@@ -231,6 +231,7 @@ if __name__ == "__main__":
                         monitord_current_restarts = 0
                     # backoff with upper limit
                     backoff = min(math.exp(monitord_current_restarts + 3), 3600)
+                    logger.info("monitord last exited with status %s", monitord.returncode)
                     logger.info(
                         "next monitord launch scheduled in about %d seconds" % (backoff)
                     )
