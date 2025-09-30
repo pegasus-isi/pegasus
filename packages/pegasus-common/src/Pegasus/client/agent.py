@@ -12,6 +12,7 @@ from Pegasus.tools import properties, utils
 
 logger = logging.getLogger("pegasus-agent")
 
+API_MAX_LENGTH=30000
 
 class AgentClient:
     """
@@ -45,7 +46,7 @@ class AgentClient:
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {
             "client_version": self.client_version,
-            "analyze_stdout": analyze_stdout[:4999],
+            "analyze_stdout": analyze_stdout[:API_MAX_LENGTH],
         }
 
         logger.debug(
@@ -71,7 +72,7 @@ class AgentClient:
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {
             "client_version": self.client_version,
-            "statistics_stdout": stats_stdout[:9999],
+            "statistics_stdout": stats_stdout[:API_MAX_LENGTH],
         }
 
         logger.debug(

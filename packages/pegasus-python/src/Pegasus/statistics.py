@@ -1250,45 +1250,45 @@ class PegasusStatistics:
                 )
             )
 
-            # Integrity summary
-            if not int_metrics_summary:
-                return
+            ## Integrity summary
+            #if not int_metrics_summary:
+            #    return
 
-            writer.write(
-                """
+            #writer.write(
+            #    """
 # Integrity Metrics
 # Number of files for which checksums were compared/computed along with total time spent doing it.\n"""
-            )
-            for result in int_metrics_summary:
-                type = result.type
-                if result.type == "check":
-                    type = "compared"
-                if result.type == "compute":
-                    type = "generated"
-                writer.write(
-                    f"{result.count} files checksums {type} with total duration of {format_seconds(result.duration)}\n"
-                )
+            #)
+            #for result in int_metrics_summary:
+            #    type = result.type
+            #    if result.type == "check":
+            #        type = "compared"
+            #    if result.type == "compute":
+            #        type = "generated"
+            #    writer.write(
+            #        f"{result.count} files checksums {type} with total duration of {format_seconds(result.duration)}\n"
+            #    )
 
-            writer.write(
-                """
+            #writer.write(
+            #    """
 # Integrity Errors
 # Total:
 #       Total number of integrity errors encountered across all job executions (including retries) of a workflow.
 # Failures:
 #       Number of failed jobs where the last job instance had integrity errors.
-"""
-            )
-            for result in int_error_summary:
-                type = "integrity" if result.name == "int.error" else result.name
-                writer.write(
-                    f"Total:    A total of {result.count} {type} errors encountered in the workflow\n"
-                )
+#"""
+            #)
+            #for result in int_error_summary:
+            #    type = "integrity" if result.name == "int.error" else result.name
+            #    writer.write(
+            #        f"Total:    A total of {result.count} {type} errors encountered in the workflow\n"
+            #    )
 
-            # PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
-            writer.write(
-                "Failures: %s job failures had integrity errors\n"
-                % (total_failed_jobs_integrity.failed or 0)
-            )
+            ## PM-1295 jobs where last_job_instance failed and there were integrity errors in those last job instances
+            #writer.write(
+            #    "Failures: %s job failures had integrity errors\n"
+            #    % (total_failed_jobs_integrity.failed or 0)
+            #)
 
     def _write_summary_statistics_csv(self):
         """Write summary statistics data to a csv file."""
@@ -1888,6 +1888,7 @@ class PegasusStatistics:
                 )
             if agent_output is not None:
                 click.echo(agent_output)
+            click.echo()
 
     def console_output(self, ctx):
         """Print Pegasus statistics output to the console."""
