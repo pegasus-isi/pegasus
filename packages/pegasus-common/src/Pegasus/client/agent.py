@@ -12,7 +12,8 @@ from Pegasus.tools import properties, utils
 
 logger = logging.getLogger("pegasus-agent")
 
-API_MAX_LENGTH=30000
+API_MAX_LENGTH = 30000
+
 
 class AgentClient:
     """
