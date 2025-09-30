@@ -68,6 +68,9 @@ utils.configureLogging()
 SLEEP_TIME = 15
 DIED_TOO_QUICKLY_TIME = 300
 MONITORD_KILL_TIME = 200  # the number of seconds after pegasus-remove is called, that monitord is sent the kill signal
+MAX_MONITORD_LAUNCH_ATTEMPTS = (
+    3  # GH-2134 maximum number of times monitord should be launched
+)
 
 dagman = None
 
@@ -77,6 +80,7 @@ monitord_next_start = 0
 monitord_current_restarts = 0
 monitord_shutdown_mode = False
 monitord_shutdown_time = 0
+monitord_launch_attempts = 0  # gh-2134 tracks the number of time monitord is launched
 
 
 def dagman_launch(dagman_bin, arguments=[]):
@@ -206,32 +210,51 @@ if __name__ == "__main__":
 
     # Launch Monitord
     monitord = monitord_launch(monitord_bin)
+    monitord_return_code = None
+    monitord_launch_attempts += 1
 
     dagman.poll()
     monitord.poll()
 
-    while monitord.returncode is None or dagman.returncode is None:
-        if dagman.returncode is None and monitord.returncode is not None:
+    while (monitord and monitord.returncode is None) or dagman.returncode is None:
+        if dagman.returncode is None and (monitord and monitord.returncode is not None):
+            monitord_return_code = monitord.returncode
             # monitord is not running
             t = time.time()
-            if monitord_next_start == 0:
-                logger.error("monitord is not running")
-                # did the process die too quickly?
-                if t - monitord_last_start < DIED_TOO_QUICKLY_TIME:
-                    monitord_current_restarts += 1
-                else:
-                    monitord_current_restarts = 0
-                # backoff with upper limit
-                backoff = min(math.exp(monitord_current_restarts + 3), 3600)
+
+            # GH-2134 check if it should be launched
+            if monitord_launch_attempts < MAX_MONITORD_LAUNCH_ATTEMPTS:
+                if monitord_next_start == 0:
+                    logger.error("monitord is not running")
+                    # did the process die too quickly?
+                    if t - monitord_last_start < DIED_TOO_QUICKLY_TIME:
+                        monitord_current_restarts += 1
+                    else:
+                        monitord_current_restarts = 0
+                    # backoff with upper limit
+                    backoff = min(math.exp(monitord_current_restarts + 3), 3600)
+                    logger.info(
+                        "monitord last exited with status %s", monitord.returncode
+                    )
+                    logger.info(
+                        "next monitord launch scheduled in about %d seconds" % (backoff)
+                    )
+                    monitord_next_start = t + backoff - 1
+                # time to restart yet?
+                if monitord_next_start <= t:
+                    monitord_next_start = 0
+                    monitord_last_start = t
+                    monitord = monitord_launch(monitord_bin)
+                    monitord_launch_attempts += 1
+                    monitord_return_code = None
+            elif monitord_next_start == 0:
+                # GH-2134 max attempts have been reached, and
+                # we are not launching monitord again
                 logger.info(
-                    "next monitord launch scheduled in about %d seconds" % (backoff)
+                    "monitord was not relaunched as max attempts of %d reached"
+                    % monitord_launch_attempts
                 )
-                monitord_next_start = t + backoff - 1
-            # time to restart yet?
-            if monitord_next_start <= t:
-                monitord_next_start = 0
-                monitord_last_start = t
-                monitord = monitord_launch(monitord_bin)
+                monitord = None
 
         # PM-767 if in shutdown mode, check to see if we need to kill monitord
         if monitord_shutdown_mode:
@@ -245,14 +268,17 @@ if __name__ == "__main__":
 
         # sleep in between polls
         time.sleep(SLEEP_TIME)
-
-        monitord.poll()
+        if monitord:
+            monitord.poll()
         dagman.poll()
 
     # Dagman and Monitord have exited. Lets exit pegasus-dagman with
     # a merged returncode
     logger.info("Dagman exited with code %d" % dagman.returncode)
-    logger.info("Monitord exited with code %d" % monitord.returncode)
+    logger.info(
+        "Monitord exited with code %d with a total of %d launch attempts on the workflow"
+        % (monitord_return_code or monitord.returncode, monitord_launch_attempts)
+    )
     if copy_to_spool:
         logger.info(
             "Removing copied condor_dagman from submit directory %s" % dagman_bin
