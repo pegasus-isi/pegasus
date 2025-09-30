@@ -678,13 +678,15 @@ def loading_completed(run_dir):
 
 def rotate_log_file(source_file):
     """
-    This function rotates the specified logfile.
+    This function rotates the specified logfile, and returns the
+    name of the rotated file
     """
 
+    dest_file = None
     # First we check if we have the log file
     if not os.access(source_file, os.F_OK):
         # File doesn't exist, we don't have to rotate
-        return
+        return dest_file
 
     # Now we need to find the latest log file
 
@@ -712,7 +714,72 @@ def rotate_log_file(source_file):
         sys.exit(1)
 
     # Done!
-    return
+    return dest_file
+
+
+def get_backedup_file(file, number):
+    """
+    Returns the backed up file corresponding to a backup number of the file
+    :param prefix:
+    :param number:
+    :return:
+    """
+    if number < 0:
+        return None
+
+    return file + ".%03d" % (number)
+
+
+def get_backup_number(file, prefix):
+    """
+    Returns the backup number encoded in the suffix of a file .
+    For example test.db.001 will return 1 with file passed as
+    test.db.001 and prefix test.db
+
+    :param file:
+    :param prefix:
+    :return:
+    """
+    num = -1
+    if file is None:
+        return num
+
+    prefix = prefix + "."
+    print(file.find(prefix))
+    if file.find(prefix) != 0:
+        logger.error(f"File {file} does not start with prefix {prefix}")
+        return -1
+
+    suffix = file[len(prefix) :]
+
+    try:
+        num = int(suffix)
+    except ValueError:
+        logger.error(f"suffix for file {file} is not integer {suffix}")
+        return -1
+
+    return num
+
+
+def truncate_file(source_file):
+    """
+    Truncates a file
+    :param file:
+    :return: False if unable to truncate
+    """
+
+    # First we check if we have the log file
+    if not os.access(source_file, os.F_OK):
+        return False
+
+    try:
+        with open(source_file, "w") as fp:
+            fp.truncate(0)
+    except:
+        logger.error(f"Unable to truncate file %s")
+        return False
+
+    return True
 
 
 def make_boolean(value):
