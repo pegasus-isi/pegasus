@@ -730,9 +730,36 @@ def _backup_db(dburi):
         if os.path.isfile(db_path):
             log.info("Rotating sqlite db file %s" % db_path)
             mask = os.stat(db_path)[ST_MODE]
-            utils.rotate_log_file(db_path)
+            rotated_backup_file = utils.rotate_log_file(db_path)
+            log.info("Rotated sqlite db file to %s" % rotated_backup_file)
+
+            if rotated_backup_file:
+                # GH-2134 truncate one previous backup if it exists
+                _truncate_previous_backup_file(rotated_backup_file, db_path)
 
     return mask
+
+
+def _truncate_previous_backup_file(backup_file, prefix):
+    """
+    Truncates the previous backed up file to zero bytes to ensure
+    filesytem does not get clogged up on multiple restarts.
+
+    :param backup_file:
+    :param prefix:
+    :return:
+    """
+    backup_number = utils.get_backup_number(backup_file, prefix)
+    if backup_number > 1:
+        # we want to keep only one backup
+        file_to_truncate = utils.get_backedup_file(prefix, backup_number - 1)
+        if file_to_truncate:
+            utils.truncate_file(file_to_truncate)
+            log.info("Truncated db file  %s to 0 bytes" % file_to_truncate)
+        else:
+            log.error(
+                f"Unable to determine backup file to truncate for prefix {prefix} with suffix {backup_number - 1}"
+            )
 
 
 def _db_is_file(dburi):
