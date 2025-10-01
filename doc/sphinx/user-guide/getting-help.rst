@@ -11,5 +11,6 @@ multiple support options available such
 * Mailing Lists
 * Weekly Online Pegasus Office Hours
 
-Please visit  `Pegasus Getting Help Page<https://pegasus.isi.edu/contact/>`__ for
+Please visit
+`Getting Help Page <https://pegasus.isi.edu/contact/>`_ for
 more details on how to get support.
