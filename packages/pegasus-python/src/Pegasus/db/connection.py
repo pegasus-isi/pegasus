@@ -737,7 +737,7 @@ def _backup_db(dburi):
                 # GH-2134 truncate one previous backup if it exists
                 _truncate_previous_backup_file(rotated_backup_file, db_path)
             else:
-                log.error("Database was not rotated %s" %db_path)
+                log.error("Database was not rotated %s" % db_path)
 
     return mask
 
@@ -752,9 +752,7 @@ def _truncate_previous_backup_file(backup_file, prefix):
     :return:
     """
     backup_number = utils.get_backup_number(backup_file, prefix)
-    log.debug(
-        "backup number determined is %s backup file %s" % (backup_number, backup_file)
-    )
+    log.debug(f"backup number determined is {backup_number} backup file {backup_file}")
     if backup_number > 0:
         # we want to keep only one backup if current backup is
         # stampede*.db.001 then we zero out the one previous stampede*db.000
