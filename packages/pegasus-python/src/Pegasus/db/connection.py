@@ -735,10 +735,9 @@ def _backup_db(dburi):
 
             if rotated_backup_file:
                 # GH-2134 truncate one previous backup if it exists
-                log.info("Will truncate previous backup file %s" % rotated_backup_file)
                 _truncate_previous_backup_file(rotated_backup_file, db_path)
             else:
-                log.error("truncation not attempted on file %s" % rotated_backup_file)
+                log.error("Database was not rotated %s" %db_path)
 
     return mask
 
