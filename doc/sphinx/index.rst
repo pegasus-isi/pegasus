@@ -25,6 +25,7 @@ Welcome to Pegasus WMS's documentation!
     user-guide/optimization.rst
     user-guide/migration.rst
     user-guide/glossary.rst
+    user-guide/getting-help.rst
 
 .. toctree::
     :caption: Reference Guide
