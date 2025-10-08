@@ -9,8 +9,8 @@ set -e
 DIR=$(dirname $(dirname $0))
 
 rm -f $DIR/src/requirements.txt
-for i in {6..13}; do
-    echo "# ------- Python 3.$i ------- " | tee -a src/requirements.txt
+for i in {6..14}; do
+    echo "# ------- Python 3.$i -------" | tee -a src/requirements.txt
 
     for j in $(echo common api python worker); do
         pip3.$i download -d p3${i} packages/pegasus-${j}
