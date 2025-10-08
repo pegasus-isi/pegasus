@@ -197,6 +197,10 @@ class _QueryEvaluator(ast.NodeVisitor):
         self._log.info("NameConstant <%s>", n.value)
         return n.value
 
+    def visit_Constant(self, n):
+        """Since version 3.8: Methods visit_Num(), visit_Str(), visit_Bytes(), visit_NameConstant() and visit_Ellipsis()"""
+        return n.value
+
     def visit_List(self, n):
         return [self.visit(n) for n in n.elts]
 
