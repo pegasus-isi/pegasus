@@ -1,11 +1,11 @@
-FROM rockylinux:8
+FROM rockylinux:9
 
 RUN groupadd --gid 808 scitech-group
 RUN useradd --gid 808 --uid 550 --create-home --password '$6$ouJkMasm5X8E4Aye$QTFH2cHk4b8/TmzAcCxbTz7Y84xyNFs.gqm/HWEykdngmOgELums1qOi3e6r8Z.j7GEA9bObS/2pTN1WArGNf0' scitech
 
 RUN dnf -y update && \
     dnf -y install 'dnf-command(config-manager)' && \
-    dnf -y config-manager --set-enabled powertools && \
+    dnf -y config-manager --set-enabled devel && \
     dnf -y config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo && \
     dnf -y install epel-release
 
@@ -48,8 +48,8 @@ ENV LANG=en_US.UTF-8
 RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 # HTCondor
-RUN dnf -y install https://htcss-downloads.chtc.wisc.edu/repo/24.x/htcondor-release-current.el8.noarch.rpm && \
-    dnf -y install condor minicondor && \
+RUN dnf -y install https://htcss-downloads.chtc.wisc.edu/repo/25.x/htcondor-release-current.el9.noarch.rpm && \
+    dnf -y install --enablerepo crb condor minicondor && \
     sed -i 's/condor@/scitech@/g' /etc/condor/config.d/00-minicondor
 
 RUN usermod -a -G condor scitech

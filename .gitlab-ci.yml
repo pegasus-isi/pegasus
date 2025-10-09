@@ -366,10 +366,10 @@ Tutorial Container:
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   dependencies:
   - pre-job
-  - "RHEL: [x86_64, rhel_8]"
+  - "RHEL: [x86_64, rhel_9]"
   needs:
   - pre-job
-  - "RHEL: [x86_64, rhel_8]"
+  - "RHEL: [x86_64, rhel_9]"
   tags:
   - x86_64
   - docker-cli
