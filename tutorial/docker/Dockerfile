@@ -88,7 +88,7 @@ RUN echo -e "export PATH=/home/scitech/.pyenv/bin:\$PATH:/usr/lib64/mpich/bin" >
 
 # Set notebook password to 'scitech'. This pw will be used instead of token authentication
 RUN mkdir /home/scitech/.jupyter \
-    && echo "{ \"NotebookApp\": { \"password\": \"sha1:30a323540baa:6eec8eaf3b4e0f44f2f2aa7b504f80d5bf0ad745\" } }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
+    && echo "{ \"IdentityProvider\": { \"hashed_password\": "argon2:$argon2id$v=19$m=10240,t=10,p=8$+6LBnaKYYO1511o+AlNsMA$xNCDkjVWAdUJJz5UUi13ZjAyJT/gbPWz7DdON0IqVew" }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
 
 USER root
 CMD ["/start.sh"]
