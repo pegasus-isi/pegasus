@@ -44,11 +44,11 @@ RUN python3 -m pip install 'setuptools_scm>=6'
 RUN python3 -m pip install jupyter
 
 # Locale and timezone
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 RUN cp /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 # HTCondor
-RUN dnf -y install https://research.cs.wisc.edu/htcondor/repo/24.x/htcondor-release-current.el8.noarch.rpm && \
+RUN dnf -y install https://htcss-downloads.chtc.wisc.edu/repo/24.x/htcondor-release-current.el8.noarch.rpm && \
     dnf -y install condor minicondor && \
     sed -i 's/condor@/scitech@/g' /etc/condor/config.d/00-minicondor
 
