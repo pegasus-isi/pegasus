@@ -86,10 +86,6 @@ RUN pegasus-db-admin create
 ADD ./config/kernel.json /usr/local/share/jupyter/kernels/python3/kernel.json
 RUN echo -e "export PATH=/home/scitech/.pyenv/bin:\$PATH:/usr/lib64/mpich/bin" >> /home/scitech/.bashrc
 
-# Set notebook password to 'scitech'. This pw will be used instead of token authentication
-RUN mkdir /home/scitech/.jupyter \
-    && echo "{ \"IdentityProvider\": { \"hashed_password\": "argon2:$argon2id$v=19$m=10240,t=10,p=8$+6LBnaKYYO1511o+AlNsMA$xNCDkjVWAdUJJz5UUi13ZjAyJT/gbPWz7DdON0IqVew" }" >> /home/scitech/.jupyter/jupyter_notebook_config.json
-
 USER root
 CMD ["/start.sh"]
 
