@@ -100,14 +100,14 @@ fi
 %{_unitdir}/pegasus-service.service
 
 %post
-# Enable the systemd user service
-systemctl daemon-reload
+# Enable the systemd user service (doesn't work in containers)
+systemctl daemon-reload >/dev/null 2>&1 || true
 
 %preun
-# Disable the service before uninstalling
-systemctl stop pegasus-service.service
-systemctl disable pegasus-service.service
-systemctl daemon-reload
+# Disable the service before uninstalling (doesn't work in containers)
+systemctl stop pegasus-service.service >/dev/null 2>&1 || true
+systemctl disable pegasus-service.service >/dev/null 2>&1 || true
+systemctl daemon-reload >/dev/null 2>&1 || true
 
 %changelog
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@
