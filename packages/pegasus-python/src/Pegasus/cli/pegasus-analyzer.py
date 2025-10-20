@@ -24,7 +24,6 @@ import click
 
 from Pegasus.client import agent, analyzer
 
-
 root_logger = logging.getLogger()
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
 indent = ""  # the corresponding indent string
