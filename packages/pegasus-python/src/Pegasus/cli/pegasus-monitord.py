@@ -37,6 +37,13 @@ import sys
 import time
 import traceback
 
+# PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
+peg_path = os.environ.get("PEGASUS_PYTHONPATH")
+if peg_path:
+    for p in reversed(peg_path.split(":")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+
 from Pegasus.db import connection
 from Pegasus.monitoring import event_output as eo
 from Pegasus.monitoring import notifications

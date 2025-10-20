@@ -13,6 +13,13 @@ import time
 from pathlib import Path
 from typing import Iterable, List, Set
 
+# PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
+peg_path = os.environ.get("PEGASUS_PYTHONPATH")
+if peg_path:
+    for p in reversed(peg_path.split(":")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+
 ptransfer_module = importlib.import_module("Pegasus.cli.pegasus-transfer")
 pegasus_transfer = ptransfer_module.pegasus_transfer
 
