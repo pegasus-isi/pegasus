@@ -13,9 +13,17 @@ import subprocess
 import sys
 import traceback
 
+# PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
+peg_path = os.environ.get("PEGASUS_PYTHONPATH")
+if peg_path:
+    for p in reversed(peg_path.split(":")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+
 import click
 
 from Pegasus.client import agent, analyzer
+
 
 root_logger = logging.getLogger()
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program

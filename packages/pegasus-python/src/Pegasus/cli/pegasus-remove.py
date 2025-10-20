@@ -4,7 +4,15 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+# PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
+peg_path = os.environ.get("PEGASUS_PYTHONPATH")
+if peg_path:
+    for p in reversed(peg_path.split(":")):
+        if p not in sys.path:
+            sys.path.insert(0, p)
 
 import click
 
