@@ -16,8 +16,8 @@ stages:
 - build
 - deploy
 - release
-- performance-tests
 - e2e-tests
+- performance-tests
 
 
 pre-job:
