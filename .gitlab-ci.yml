@@ -475,7 +475,6 @@ Workflow Tests:
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
-      #- 005-galactic-plane
       - 007-black-diamond-pegasuslite-local
       - 007-black-diamond-pegasuslite-local-bypass
       - 008-black-diamond-pegasuslite-condorio
@@ -580,8 +579,6 @@ Workflow Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
-  - export CLASSPATH=".:`pegasus-config --classpath`"
-  - export PYTHONPATH="`pegasus-config --python`"
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
@@ -616,8 +613,6 @@ Performance Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
-  - export CLASSPATH=".:`pegasus-config --classpath`"
-  - export PYTHONPATH="`pegasus-config --python`"
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
