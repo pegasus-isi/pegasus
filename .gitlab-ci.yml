@@ -365,6 +365,8 @@ Tutorial Container:
   - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
   - docker push pegasus/tutorial:${PEGASUS_VERSION}
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
+  rules:
+  - if: $CI_PIPELINE_NAME != 'workflow'
   dependencies:
   - pre-job
   - "RHEL: [x86_64, rhel_9]"
