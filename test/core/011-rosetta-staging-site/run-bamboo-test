@@ -42,10 +42,10 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
 fi
 
 # build the dax generator
-javac RosettaDAX.java
+CLASSPATH=.:$(pegasus-config --classpath) javac RosettaDAX.java
 
 # generate the dax
-java RosettaDAX dax.yml
+CLASSPATH=.:$(pegasus-config --classpath) java RosettaDAX dax.yml
 
 # site catalog
 cat > sites.yml <<EOF

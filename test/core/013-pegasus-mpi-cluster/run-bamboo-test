@@ -14,7 +14,7 @@ fi
 # Extract the ctools archive
 
 # Generate dax
-python3 daxgen.py dax.yml
+PYTHONPATH=$(pegasus-config --python) python3 daxgen.py dax.yml
 
 export PATH=/usr/lib64/mpich/bin:$PATH
 MPIEXEC=`which mpiexec`

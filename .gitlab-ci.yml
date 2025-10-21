@@ -561,7 +561,6 @@ Workflow Tests:
       - 047-cwl-docker-black-diamond
       - 048-black-deep-condorio
       - 048-black-deep-condorio-local
-      - 048-ligo-getenv
       - 049-pycbc-search
       - 050-singularity-container-universe nonsharedfs
       - 050-singularity-container-universe nonsharedfs-shared
