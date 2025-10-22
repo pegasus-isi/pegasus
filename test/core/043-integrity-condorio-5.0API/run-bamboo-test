@@ -3,4 +3,4 @@
 set -e
 
 echo "Running blackdiamond.py"
-python3 blackdiamond.py
+PYTHONPATH=$(pegasus-config --python) python3 blackdiamond.py

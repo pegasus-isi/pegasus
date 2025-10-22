@@ -14,7 +14,7 @@ fi
 export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
 
 # build the dax generator
-./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
 
 # we need a f.a file to start
 echo "Hello world!" >f.a

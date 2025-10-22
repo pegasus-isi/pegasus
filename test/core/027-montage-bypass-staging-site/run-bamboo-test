@@ -10,6 +10,8 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/work/$RUN_ID
 
+export PYTHONPATH=$(pegasus-config --python)
+
 rm -rf montage-workflow-v3
 git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 

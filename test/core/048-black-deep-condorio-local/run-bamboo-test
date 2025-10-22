@@ -3,4 +3,4 @@
 set -e
 
 echo "Running black-diamond-setup.py"
-python3 black-diamond-setup.py
+PYTHONPATH=$(pegasus-config --python) python3 black-diamond-setup.py

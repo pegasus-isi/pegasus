@@ -5,7 +5,7 @@ set -e
 export TOPDIR=`pwd`
 
 # generate the dax
-./workflow-generator.py
+PYTHONPATH=$(pegasus-config --python) ./workflow-generator.py
 
 # plan and submit the  workflow
 pegasus-plan \

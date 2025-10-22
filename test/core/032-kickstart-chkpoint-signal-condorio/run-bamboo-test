@@ -5,4 +5,4 @@ set -v
 
 
 # generate the workflow and submit all in one go
-./workflow.py
+PYTHONPATH=$(pegasus-config --python) ./workflow.py

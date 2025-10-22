@@ -21,7 +21,7 @@ CLASSPATH=.:$(pegasus-config --classpath) javac BlackDiamondDAX.java
 
 # generate the dax
 PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
-CLASSPATH=.:$(pegasus-config --classpath)java BlackDiamondDAX "${PEGASUS_HOME}" blackdiamond.dax
+CLASSPATH=.:$(pegasus-config --classpath) java BlackDiamondDAX "${PEGASUS_HOME}" blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF

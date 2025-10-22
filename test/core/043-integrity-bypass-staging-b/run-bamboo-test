@@ -31,7 +31,7 @@ export PEGASUS_SHARED_BIN_DIR
 echo "bin dir from untarred worker package dir  ${PEGASUS_SHARED_BIN_DIR}"
 
 echo "Running blackdiamond.py"
-python3 blackdiamond.py 2>&1 | tee $TOP_DIR/plan.out
+PYTHONPATH=$(pegasus-config --python) python3 blackdiamond.py 2>&1 | tee $TOP_DIR/plan.out
 
 
 WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+(.*)[ ]*/\1/'`

@@ -3,4 +3,4 @@
 set -e
 set -v
 
-./workflow.py
+PYTHONPATH=$(pegasus-config --python) ./workflow.py

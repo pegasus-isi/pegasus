@@ -33,10 +33,10 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-javac HierarchicalDiamonds.java
+CLASSPATH=.:$(pegasus-config --classpath) javac HierarchicalDiamonds.java
 
 # generate the dax
-java HierarchicalDiamonds /usr
+CLASSPATH=.:$(pegasus-config --classpath) java HierarchicalDiamonds /usr
 
 # create the site catalog
 cat > sites.yml <<EOF

@@ -31,7 +31,7 @@ EOF
 
 
 # generate the dax
-./blackdiamond.py $BIN_DIR > blackdiamond.dax
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $BIN_DIR > blackdiamond.dax
 
 # plan and submit the  workflow
 pegasus-plan \
