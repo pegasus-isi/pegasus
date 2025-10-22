@@ -12,10 +12,10 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-javac BlackDiamondDAX.java
+CLASSPATH=.:$(pegasus-config --classpath) javac BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+CLASSPATH=.:$(pegasus-config --classpath) java BlackDiamondDAX /usr blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF

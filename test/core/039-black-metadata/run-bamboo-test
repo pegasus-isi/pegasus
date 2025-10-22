@@ -3,4 +3,4 @@
 set -e
 
 # generate the dax
-./blackdiamond.py
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py

@@ -23,4 +23,4 @@ if [ ! -e pdbs ]; then
 fi
 
 echo "Running Rosetta.py"
-python3 Rosetta.py
+PYTHONPATH=$(pegasus-config --python) python3 Rosetta.py

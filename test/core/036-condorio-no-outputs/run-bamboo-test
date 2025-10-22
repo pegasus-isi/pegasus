@@ -16,7 +16,7 @@ mkdir -p outputs
 mkdir -p work
 
 # build the dax generator
-$testdir/dax-generator.py
+PYTHONPATH=$(pegasus-config --python) $testdir/dax-generator.py
 
 # create the site catalog
 cat > sites.xml <<EOF

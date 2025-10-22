@@ -11,4 +11,4 @@ else
 fi
 
 echo "Running cluster.py"
-python3 cluster.py "${PEGASUS_KEG}" $CONFIG
+PYTHONPATH=$(pegasus-config --python) python3 cluster.py "${PEGASUS_KEG}" $CONFIG

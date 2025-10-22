@@ -24,7 +24,8 @@ git clone https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
-./montage-workflow.py --center "275.196290 -16.171530" \
+PYTHONPATH=$(pegasus-config --python) \
+    ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.1 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \

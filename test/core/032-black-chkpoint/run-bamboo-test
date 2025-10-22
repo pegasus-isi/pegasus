@@ -20,7 +20,7 @@ mkdir -p outputs
 
 
 # build the workflow generator
-export CLASSPATH=$testdir:${CLASSPATH}
+export CLASSPATH=$testdir:$(pegasus-config --classpath)
 javac $testdir/BlackDiamondWorkflow.java
 
 # generate the workflow

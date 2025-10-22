@@ -50,7 +50,7 @@ if [[ "${CONFIG}" == *"sharedfs"*  ]]; then
 else
     PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
 fi
-./blackdiamond.py "${PEGASUS_HOME}" ${CONFIG} > ${DAX}
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py "${PEGASUS_HOME}" ${CONFIG} > ${DAX}
 
 # figure out if we are going to use a remote PEGASUS_HOME
 # for sharedfs or not

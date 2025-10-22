@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -e
-
-#$PEGASUS_HOME/libexec/notification/email -t rynge@isi.edu
-
-

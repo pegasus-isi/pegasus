@@ -33,10 +33,10 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-javac HierarchicalDiamonds.java
+CLASSPATH=.:$(pegasus-config --classpath) javac HierarchicalDiamonds.java
 
 # generate the dax
-java HierarchicalDiamonds /usr
+CLASSPATH=.:$(pegasus-config --classpath) java HierarchicalDiamonds /usr
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -105,6 +105,7 @@ echo `date`": subworkflow has started, sending halt command..."
 pegasus-halt $RUN_DIR
 
 # wait for all jobs to go away before restarting
+sleep 3m
 
 if [ ! -e braindump.yml ]; then
     echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2

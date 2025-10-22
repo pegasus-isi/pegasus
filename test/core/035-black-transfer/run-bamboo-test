@@ -22,7 +22,7 @@ mkdir -p outputs
 mkdir -p work
 
 # build the dax generator
-$testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
+PYTHONPATH=$(pegasus-config --python) $testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
 
 # create the site catalog
 cat > sites.xml <<EOF

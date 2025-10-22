@@ -22,7 +22,8 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:${CLASSPATH}
+export CLASSPATH=$testdir:$(pegasus-config --classpath)
+
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
