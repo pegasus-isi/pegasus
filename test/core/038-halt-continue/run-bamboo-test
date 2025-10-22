@@ -105,6 +105,7 @@ echo `date`": subworkflow has started, sending halt command..."
 pegasus-halt $RUN_DIR
 
 # wait for all jobs to go away before restarting
+sleep 3m
 
 if [ ! -e braindump.yml ]; then
     echo "braindump.yml was not found in this directory. Planner probably failed!" 1>&2
