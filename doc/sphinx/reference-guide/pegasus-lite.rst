@@ -124,7 +124,13 @@ to specify to do things such as module load to load appropriate libraries
 required by their jobs; when they run on nodes on a cluster.
 
 In order to specify this setup script, you can specify it in the Site Catalog
-either as a
+in the following ways. Priority order listed below is highest to lowest.
+
+#. Pegasus profile named **pegasus_lite_env_source** associated with site
+   where the job runs, that indicates a path to a setup script residing on the
+   submit host that needs to be sourced in PegasusLite when running the job.
+   This file is then transferred using Condor file transfer from the submit
+   host to the compute node where the job executes.
 
 #. Pegasus profile named **pegasus_lite_env_source** associated with site
    *local* that indicates a path to a setup script residing on the
