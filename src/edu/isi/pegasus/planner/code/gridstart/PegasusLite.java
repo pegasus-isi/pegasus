@@ -1251,24 +1251,40 @@ public class PegasusLite implements GridStart {
     /**
      * Associates a setup script with the job so that it can be invoked from within PegasusLite.
      *
+     * <p>The following preference order is followed
+     *
+     * <pre>
+     *   1. highest priority is pegasus profile associated with the job
+     *      can come from the site where the job runs or the TC
+     *   2. second priority is the value of pegasus profile
+     *      on the submit host.
+     *   3. if above two are not set, then env profile on the compute site .
+     * </pre>
+     *
      * @param job the job
      * @return boolean indicating whether a setup script was associated with the job or not.
      */
     public boolean associateSetupScriptWithJob(Job job) {
         String key = ENV.PEGASUS_LITE_ENV_SOURCE_KEY;
         boolean result = false;
-        // we prefer env profile over pegasus profile
-        String setupFile = (String) job.envVariables.get(key);
-        if (setupFile == null) {
-            // check if the key is specified as a pegasus profile
-            setupFile = mSetupScriptOnTheSubmitHost;
-            if (setupFile != null) {
-                // in case a pegasus profile is specified, then it means
-                // the script needs to be transferred using Condor File IO
-                job.condorVariables.addIPFileForTransfer(setupFile);
-                setupFile = "." + File.separator + new File(setupFile).getName();
-            }
+
+        // 1. highest priority is pegasus profile associated with the job
+        //    can come from the site where the job runs or the TC
+        // 2. second priority is the value of pegasus profile
+        //    on the submit host.
+        String setupFile = job.vdsNS.getStringValue(key);
+        setupFile = (setupFile == null) ? mSetupScriptOnTheSubmitHost : setupFile;
+
+        if (setupFile != null) {
+            // in case a pegasus profile is specified, then it means
+            // the script needs to be transferred using Condor File IO
+            job.condorVariables.addIPFileForTransfer(setupFile);
+            setupFile = "." + File.separator + new File(setupFile).getName();
         }
+
+        // 3. the env profile on the compute site has lowest priority
+        setupFile = (setupFile == null) ? (String) job.envVariables.get(key) : setupFile;
+
         if (setupFile != null) {
             // set the environment variable in the job env.
             // value can be absolute(if picked from env profile)
