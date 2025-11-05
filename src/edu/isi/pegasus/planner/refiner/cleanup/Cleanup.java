@@ -154,16 +154,18 @@ public class Cleanup implements CleanupImplementation {
         // as the compute job. We cannot clone as then the
         // the cleanup jobs for clustered jobs appears as
         // a clustered job. PM-368
-        Job cJob = new Job(job);
+        //        Job cJob = new Job(job);
+        Job cJob = new Job();
+        cJob.setStagingSiteHandle(stagingSiteHandle);
 
         // we dont want credentials to be inherited
-        cJob.resetCredentialTypes();
+        //      cJob.resetCredentialTypes();
 
         // String stagingSiteHandle = job.getStagingSiteHandle();
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         boolean stagingSiteVisibleToLocalSite = stagingSite.isVisibleToLocalSite();
 
-        boolean runsInContainerUniverse = job.runsInContainerUniverse();
+        boolean computeJobRunsInContainerUniverse = job.runsInContainerUniverse();
 
         // by default execution site for a cleanup job is local unless
         // overridden because of File URL's in list of files to be cleaned
@@ -188,7 +190,7 @@ public class Cleanup implements CleanupImplementation {
             // iterate first to check where the cleanup job should run
             for (Iterator it = files.iterator(); it.hasNext(); ) {
                 PegasusFile file = (PegasusFile) it.next();
-                if (runsInContainerUniverse && file.isContainerFile()) {
+                if (computeJobRunsInContainerUniverse && file.isContainerFile()) {
                     // PM-1950 short circuit for container for a job running
                     // in container universe, as we know it is being staged
                     // from the submit dir on local site
@@ -233,7 +235,7 @@ public class Cleanup implements CleanupImplementation {
                 PegasusFile file = (PegasusFile) it.next();
                 String fileSite =
                         stagingSiteHandle; // tracks where the file resides that we have to cleanup
-                if (runsInContainerUniverse && file.isContainerFile()) {
+                if (computeJobRunsInContainerUniverse && file.isContainerFile()) {
                     // PM-1950 short circuit for container for a job running
                     // in container universe, as we know it is being staged
                     // from the submit dir on local site, and not the staging
@@ -308,7 +310,7 @@ public class Cleanup implements CleanupImplementation {
         cJob.setSiteHandle(eSite);
 
         // we dont want notifications to be inherited
-        cJob.resetNotifications();
+        //        cJob.resetNotifications();
 
         // also make sure that user executables staged is set to false
         cJob.setExecutableStagingForJob(false);
@@ -321,8 +323,8 @@ public class Cleanup implements CleanupImplementation {
         // bug fix for JIRA PM-311
         // we dont want cleanup job to inherit any stdout or stderr
         // specified in the DAX for compute job
-        cJob.setStdOut("");
-        cJob.setStdErr("");
+        //        cJob.setStdOut("");
+        //        cJob.setStdErr("");
 
         // inconsistency between job name and logical name for now
         cJob.setTransformation(
@@ -346,19 +348,12 @@ public class Cleanup implements CleanupImplementation {
         TransformationCatalogEntry entry = this.getTCEntry(eSite);
         cJob.setRemoteExecutable(entry.getPhysicalTransformation());
 
-        // we want to run the job on fork jobmanager
-        // SiteInfo stagingSite = mSiteHandle.getTXPoolEntry( cJob.getSiteHandle() );
-        // JobManager jobmanager = stagingSite.selectJobManager( Engine.TRANSFER_UNIVERSE, true );
-        // cJob.globusScheduler = (jobmanager == null) ?
-        //                        null :
-        //                       jobmanager.getInfo(JobManager.URL);
-
         // set the stdin file for the job
         cJob.setStdIn(stdIn);
 
         // the cleanup job is a clone of compute
         // need to reset the profiles first
-        cJob.resetProfiles();
+        //        cJob.resetProfiles();
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
@@ -384,9 +379,6 @@ public class Cleanup implements CleanupImplementation {
             cJob.dagmanVariables.construct(Dagman.CATEGORY_KEY, DEFAULT_CLEANUP_CATEGORY_KEY);
         }
 
-        // a remote hack that only works for condor pools
-        // cJob.globusRSL.construct( "condorsubmit",
-        //                                 "(priority " + DEFAULT_PRIORITY_KEY + ")");
         return cJob;
     }
 
