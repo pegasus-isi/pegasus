@@ -1265,14 +1265,16 @@ public class PegasusLite implements GridStart {
      * @return boolean indicating whether a setup script was associated with the job or not.
      */
     public boolean associateSetupScriptWithJob(Job job) {
-        String key = ENV.PEGASUS_LITE_ENV_SOURCE_KEY;
+        String envKey = ENV.PEGASUS_LITE_ENV_SOURCE_KEY;
+        String pegasusKey = Pegasus.PEGASUS_LITE_ENV_SOURCE_KEY;
+
         boolean result = false;
 
         // 1. highest priority is pegasus profile associated with the job
         //    can come from the site where the job runs or the TC
         // 2. second priority is the value of pegasus profile
         //    on the submit host.
-        String setupFile = job.vdsNS.getStringValue(key);
+        String setupFile = job.vdsNS.getStringValue(pegasusKey);
         setupFile = (setupFile == null) ? mSetupScriptOnTheSubmitHost : setupFile;
 
         if (setupFile != null) {
@@ -1283,13 +1285,13 @@ public class PegasusLite implements GridStart {
         }
 
         // 3. the env profile on the compute site has lowest priority
-        setupFile = (setupFile == null) ? (String) job.envVariables.get(key) : setupFile;
+        setupFile = (setupFile == null) ? (String) job.envVariables.get(envKey) : setupFile;
 
         if (setupFile != null) {
             // set the environment variable in the job env.
             // value can be absolute(if picked from env profile)
             // or just the basename (if picked from pegasus profile)
-            job.envVariables.construct(key, setupFile);
+            job.envVariables.construct(envKey, setupFile);
             result = true;
         }
         return result;
