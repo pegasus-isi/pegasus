@@ -150,18 +150,9 @@ public class Cleanup implements CleanupImplementation {
      */
     public Job createCleanupJob(String id, List files, Job job, String stagingSiteHandle) {
 
-        // we want to run the clnjob in the same directory
-        // as the compute job. We cannot clone as then the
-        // the cleanup jobs for clustered jobs appears as
-        // a clustered job. PM-368
-        //        Job cJob = new Job(job);
         Job cJob = new Job();
         cJob.setStagingSiteHandle(stagingSiteHandle);
 
-        // we dont want credentials to be inherited
-        //      cJob.resetCredentialTypes();
-
-        // String stagingSiteHandle = job.getStagingSiteHandle();
         SiteCatalogEntry stagingSite = mSiteStore.lookup(stagingSiteHandle);
         boolean stagingSiteVisibleToLocalSite = stagingSite.isVisibleToLocalSite();
 
@@ -309,22 +300,12 @@ public class Cleanup implements CleanupImplementation {
 
         cJob.setSiteHandle(eSite);
 
-        // we dont want notifications to be inherited
-        //        cJob.resetNotifications();
-
-        // also make sure that user executables staged is set to false
         cJob.setExecutableStagingForJob(false);
 
         cJob.setJobType(Job.CLEANUP_JOB);
         cJob.setName(id);
         // empty arguments, as this job is a clone
         cJob.setArguments("");
-
-        // bug fix for JIRA PM-311
-        // we dont want cleanup job to inherit any stdout or stderr
-        // specified in the DAX for compute job
-        //        cJob.setStdOut("");
-        //        cJob.setStdErr("");
 
         // inconsistency between job name and logical name for now
         cJob.setTransformation(
@@ -350,10 +331,6 @@ public class Cleanup implements CleanupImplementation {
 
         // set the stdin file for the job
         cJob.setStdIn(stdIn);
-
-        // the cleanup job is a clone of compute
-        // need to reset the profiles first
-        //        cJob.resetProfiles();
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
