@@ -939,7 +939,9 @@ public class PegasusLite implements GridStart {
                 }
                 // end of PM-1608 not sure why this is not handled in wrapper
             }
-            if (this.mDoIntegrityChecking) {
+            if (this.mDoIntegrityChecking && job.getJobType() != Job.CLEANUP_JOB) {
+                // GH-2137 make sure that the cleanup job that is removing a container
+                // does not have to do integrity checking on that container file.
                 Collection<PegasusFile> containerFilesToCheck = new LinkedList();
                 for (PegasusFile file : job.getInputFiles()) {
                     if (file.isContainerFile()) {
