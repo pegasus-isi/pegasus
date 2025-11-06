@@ -7,7 +7,7 @@ PEGASUS_CONFIG="`dirname "$0"`/pegasus-config"
 eval `"$PEGASUS_CONFIG" --sh-dump`
 . "$PEGASUS_SHARE_DIR/sh/java.sh"
 
-function usage()
+usage()
 {
     echo "Usage: pegasus-halt [rundir]" 1>&2
     exit 1
@@ -17,7 +17,7 @@ function usage()
 RUN_DIR=$1
 
 # special case, no run dir given, but current dir is a run dir
-if [ "x$RUN_DIR" = "x" -a -e braindump.yml ]; then
+if [ "x$RUN_DIR" = "x" ] && [ -e braindump.yml ]; then
     RUN_DIR=`pwd`
 fi
 
@@ -43,4 +43,3 @@ done
 echo "Workflow has been given the halt signal, and will gracefully exit once"
 echo "all current jobs have finished. The workflow can be restarted from"
 echo "where it was left off with the pegasus-run command."
-
