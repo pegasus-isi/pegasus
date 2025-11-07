@@ -55,6 +55,9 @@ public class PegasusURL {
     /** Docker hub protocol scheme */
     public static String DOCKER_PROTOCOL_SCHEME = "docker";
 
+    /** OSDF protocol scheme */
+    public static String OSDF_PROTOCOL_SCHEME = "osdf";
+
     /**
      * Stores the regular expressions necessary to parse a PegasusURL into 3 components protocol,
      * host and path

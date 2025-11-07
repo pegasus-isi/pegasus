@@ -298,6 +298,10 @@ public class Transfer implements SLS {
             return null;
         }
 
+        // GH-2105 PM-1875 we escape variable if job run in container AND
+        // data tx is inside the container
+        boolean escapeEnvVariable = (job.getContainer() != null && !this.mTransfersOnHostOS);
+
         boolean symlinkingEnabledForJob = Transfer.this.symlinkingEnabled(job, this.mUseSymLinks);
         Set files = job.getInputFiles();
 
@@ -469,7 +473,20 @@ public class Transfer implements SLS {
             }
 
             // add all the sources
+            boolean usesOSDF = false;
             for (ReplicaCatalogEntry source : sources) {
+                // at this point we know all the sources whether the file
+                // is being retrieved directly or from the staging site.
+                String sourceURL = source.getPFN();
+                if (sourceURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+                    usesOSDF = true;
+                    // GH-2141 add the url as a job input file via condor file io
+                    // that will get the file to the condor scratch dir
+                    job.condorVariables.addIPFileForTransfer(sourceURL);
+                    // now update the source url to reflect pegasus_lite_start_dir
+                    source.setPFN(urlFromPegasusLiteStartDir(lfn, escapeEnvVariable));
+                }
+
                 ft.addSource(source);
             }
 
@@ -479,6 +496,10 @@ public class Transfer implements SLS {
                     (symlink)
                             ? PegasusURL.SYMLINK_URL_SCHEME
                             : PegasusURL.FILE_URL_SCHEME; // default is file URL
+
+            if (usesOSDF) {
+                destURLScheme = PegasusURL.MOVETO_PROTOCOL_SCHEME;
+            }
 
             // PM-1375 check the dial to see if we need to check checksum for this
             // or not, and turn off if nosymlink
@@ -1029,5 +1050,31 @@ public class Transfer implements SLS {
         }
         sb.append(" ").append(message);
         return sb.toString();
+    }
+
+    /**
+     * Constructs a URL for a file from directory where condor starts the job that is captured in
+     * bash variable pegasus_lite_start_dir.
+     *
+     * @param lfn
+     * @param escapeEnvVariable
+     * @return file url to that location
+     */
+    private String urlFromPegasusLiteStartDir(String lfn, boolean escapeEnvVariable) {
+        StringBuilder replacedURL = new StringBuilder();
+        replacedURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            // PM-1875 when a job is run through a container, then data stage-in
+            // happens inside the container. so we need to ensure
+            // the variable does not expanded on the host OS where pegasuslite
+            // script runs
+            replacedURL.append("\\");
+        }
+        replacedURL
+                .append("$pegasus_lite_start_dir")
+                .append(File.separator)
+                .append(new File(lfn).getName());
+
+        return replacedURL.toString();
     }
 }
