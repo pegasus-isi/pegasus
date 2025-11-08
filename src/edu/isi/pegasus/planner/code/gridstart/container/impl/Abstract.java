@@ -103,6 +103,9 @@ public abstract class Abstract implements ContainerShellWrapper {
     /** A boolean tracking whether transfers should be on the HOST OS or not */
     protected boolean mTransfersOnHostOS;
 
+    /** integrity handler for containers * */
+    protected Integrity mContainerIntegrityHandler;
+
     /**
      * Appends a fragment to the pegasus lite script that logs a message to stderr
      *
@@ -157,6 +160,8 @@ public abstract class Abstract implements ContainerShellWrapper {
         mIntegrityHandler.initialize(bag, dag);
         mPegasusMode = mProps.getPegasusMode();
         mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
+
+        mContainerIntegrityHandler = new Integrity();
     }
 
     /**
@@ -303,17 +308,57 @@ public abstract class Abstract implements ContainerShellWrapper {
             // PM-779 split the checkpoint files from the input files
             // as we want to stage them separately
             Collection<FileTransfer> inputFiles = new LinkedList();
-            Collection<FileTransfer> containerFile = new LinkedList();
+            Collection<FileTransfer> containerFiles = new LinkedList();
             Collection<FileTransfer> chkpointFiles = new LinkedList();
             for (FileTransfer ft : files) {
                 if (ft.isCheckpointFile()) {
                     chkpointFiles.add(ft);
                 } else if (ft.isContainerFile()) {
-                    containerFile.add(ft);
+                    containerFiles.add(ft);
                 } else {
                     inputFiles.add(ft);
                 }
             }
+
+            // GH-2141 moved code from PegasusLite.java
+            // stage the container first
+            if (!containerFiles.isEmpty()) {
+                appendStderrFragment(sb, "", "Staging in container");
+                sb.append("# stage in container file ").append('\n');
+                sb.append(sls.invocationString(job, null));
+                sb.append(" 1>&2").append(" << 'EOF'").append('\n');
+                sb.append(convertToTransferInputFormat(containerFiles, PegasusFile.LINKAGE.input));
+                sb.append("EOF").append('\n');
+                sb.append('\n');
+            }
+            if (this.mDoIntegrityChecking && job.getJobType() != Job.CLEANUP_JOB) {
+                // GH-2137 make sure that the cleanup job that is removing a container
+                // does not have to do integrity checking on that container file.
+                Collection<PegasusFile> containerFilesToCheck = new LinkedList();
+                for (PegasusFile file : job.getInputFiles()) {
+                    if (file.isContainerFile()) {
+                        containerFilesToCheck.add(file);
+                    }
+                }
+                if (!containerFilesToCheck.isEmpty()) {
+                    // PM-1620 enable integrity checking on containers
+                    appendStderrFragment(
+                            sb, "", "Checking file integrity for transferred container files");
+                    sb.append("# do file integrity checks").append('\n');
+                    StringBuilder invocation = new StringBuilder();
+                    String filesToVerify =
+                            mContainerIntegrityHandler.addIntegrityCheckInvocation(
+                                    invocation, containerFilesToCheck);
+                    sb.append(invocation);
+                    if (filesToVerify.length() > 0) {
+                        sb.append(" 1>&2").append(" << 'eof'").append('\n');
+                        sb.append(filesToVerify);
+                        sb.append('\n');
+                        sb.append("eof").append('\n');
+                    }
+                }
+            }
+            // GH-2141 end of code moved from PegasusLite.java
 
             // stage the input files first
             if (!inputFiles.isEmpty()) {

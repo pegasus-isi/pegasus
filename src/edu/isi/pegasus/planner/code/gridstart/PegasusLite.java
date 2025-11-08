@@ -65,7 +65,6 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -244,7 +243,7 @@ public class PegasusLite implements GridStart {
     protected boolean mDoIntegrityChecking;
 
     /** integrity handler for containers * */
-    protected Integrity mContainerIntegrityHandler;
+    //   protected Integrity mContainerIntegrityHandler;
 
     /** path to a setup script on the submit host that needs to be sourced in PegasusLite. */
     protected String mSetupScriptOnTheSubmitHost;
@@ -318,7 +317,7 @@ public class PegasusLite implements GridStart {
         mContainerWrapperFactory.initialize(bag, dag);
 
         mDoIntegrityChecking = mProps.doIntegrityChecking();
-        mContainerIntegrityHandler = new Integrity();
+        //        mContainerIntegrityHandler = new Integrity();
 
         Namespace localSitePegasusProfiles =
                 mSiteStore.lookup("local").getProfiles().get(Profiles.NAMESPACES.pegasus);
@@ -904,72 +903,42 @@ public class PegasusLite implements GridStart {
                 sb.append('\n');
             }
 
-            if (isCompute
-                    && // PM-971 for non compute jobs we don't do any sls transfers
-                    sls.needsSLSInputTransfers(job)) {
-                // generate the sls file with the mappings in the submit exectionSiteDirectory
-                Collection<FileTransfer> files =
-                        sls.determineSLSInputTransfers(
-                                job,
-                                sls.getSLSInputLFN(job),
-                                stagingSiteServerForRetrieval,
-                                stagingSiteDirectory,
-                                workerNodeDir);
-
-                // PM-779 split the checkpoint files and container from the input files
-                // as we want to stage them separately
-                Collection<FileTransfer> containerFiles = new LinkedList();
-                for (FileTransfer ft : files) {
-                    if (ft.isContainerFile()) {
-                        containerFiles.add(ft);
-                    }
-                }
-
-                // stage the container first
-                if (!containerFiles.isEmpty()) {
-                    appendStderrFragment(sb, "Staging in container");
-                    sb.append("# stage in container file ").append('\n');
-                    sb.append(sls.invocationString(job, null));
-                    sb.append(" 1>&2").append(" << 'EOF'").append('\n');
-                    sb.append(
-                            convertToTransferInputFormat(
-                                    containerFiles, PegasusFile.LINKAGE.input));
-                    sb.append("EOF").append('\n');
-                    sb.append('\n');
-                }
-                // end of PM-1608 not sure why this is not handled in wrapper
-            }
-            if (this.mDoIntegrityChecking && job.getJobType() != Job.CLEANUP_JOB) {
-                // GH-2137 make sure that the cleanup job that is removing a container
-                // does not have to do integrity checking on that container file.
-                Collection<PegasusFile> containerFilesToCheck = new LinkedList();
-                for (PegasusFile file : job.getInputFiles()) {
-                    if (file.isContainerFile()) {
-                        containerFilesToCheck.add(file);
-                    }
-                }
-                if (!containerFilesToCheck.isEmpty()) {
-                    // PM-1620 enable integrity checking on containers
-                    appendStderrFragment(
-                            sb, "Checking file integrity for transferred container files");
-                    sb.append("# do file integrity checks").append('\n');
-                    StringBuilder invocation = new StringBuilder();
-                    String filesToVerify =
-                            mContainerIntegrityHandler.addIntegrityCheckInvocation(
-                                    invocation, containerFilesToCheck);
-                    sb.append(invocation);
-                    if (filesToVerify.length() > 0) {
-                        sb.append(" 1>&2").append(" << 'eof'").append('\n');
-                        sb.append(filesToVerify);
-                        sb.append('\n');
-                        sb.append("eof").append('\n');
-                    }
-                }
-            }
-
+            /**
+             * if (isCompute && // PM-971 for non compute jobs we don't do any sls transfers
+             * sls.needsSLSInputTransfers(job)) { // generate the sls file with the mappings in the
+             * submit exectionSiteDirectory Collection<FileTransfer> files =
+             * sls.determineSLSInputTransfers( job, sls.getSLSInputLFN(job),
+             * stagingSiteServerForRetrieval, stagingSiteDirectory, workerNodeDir);
+             *
+             * <p>// PM-779 split the checkpoint files and container from the input files // as we
+             * want to stage them separately Collection<FileTransfer> containerFiles = new
+             * LinkedList(); for (FileTransfer ft : files) { if (ft.isContainerFile()) {
+             * containerFiles.add(ft); } }
+             *
+             * <p>// stage the container first if (!containerFiles.isEmpty()) {
+             * appendStderrFragment(sb, "Staging in container"); sb.append("# stage in container
+             * file ").append('\n'); sb.append(sls.invocationString(job, null)); sb.append("
+             * 1>&2").append(" << 'EOF'").append('\n'); sb.append( convertToTransferInputFormat(
+             * containerFiles, PegasusFile.LINKAGE.input)); sb.append("EOF").append('\n');
+             * sb.append('\n'); } // end of PM-1608 not sure why this is not handled in wrapper } if
+             * (this.mDoIntegrityChecking && job.getJobType() != Job.CLEANUP_JOB) { // GH-2137 make
+             * sure that the cleanup job that is removing a container // does not have to do
+             * integrity checking on that container file. Collection<PegasusFile>
+             * containerFilesToCheck = new LinkedList(); for (PegasusFile file :
+             * job.getInputFiles()) { if (file.isContainerFile()) { containerFilesToCheck.add(file);
+             * } } if (!containerFilesToCheck.isEmpty()) { // PM-1620 enable integrity checking on
+             * containers appendStderrFragment( sb, "Checking file integrity for transferred
+             * container files"); sb.append("# do file integrity checks").append('\n');
+             * StringBuilder invocation = new StringBuilder(); String filesToVerify =
+             * mContainerIntegrityHandler.addIntegrityCheckInvocation( invocation,
+             * containerFilesToCheck); sb.append(invocation); if (filesToVerify.length() > 0) {
+             * sb.append(" 1>&2").append(" << 'eof'").append('\n'); sb.append(filesToVerify);
+             * sb.append('\n'); sb.append("eof").append('\n'); } } }
+             *
+             * <p>writer.print(sb.toString()); writer.flush();
+             */
             writer.print(sb.toString());
             writer.flush();
-
             sb = new StringBuffer();
 
             // enable the job via kickstart
