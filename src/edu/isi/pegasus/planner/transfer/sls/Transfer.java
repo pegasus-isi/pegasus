@@ -503,7 +503,9 @@ public class Transfer implements SLS {
                         // that will get the file to the condor scratch dir
                         job.condorVariables.addIPFileForTransfer(sourceURL);
                         // now update the source url to reflect pegasus_lite_start_dir
-                        source.setPFN(urlFromPegasusLiteStartDir(lfn, escapeEnvVariable));
+                        source.setPFN(
+                                urlFromPegasusLiteStartDir(
+                                        PegasusURL.FILE_URL_SCHEME, lfn, escapeEnvVariable));
                     }
                 }
 
@@ -553,6 +555,7 @@ public class Transfer implements SLS {
      * @return a Collection of FileTransfer objects listing the transfers that need to be done.
      * @see #needsSLSOutputTransfers( Job)
      */
+    @Override
     public Collection<FileTransfer> determineSLSOutputTransfers(
             Job job,
             String fileName,
@@ -567,6 +570,10 @@ public class Transfer implements SLS {
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;
         }
+
+        // GH-2105 PM-1875 we escape variable if job run in container AND
+        // data tx is inside the container
+        boolean escapeEnvVariable = (job.getContainer() != null && !this.mTransfersOnHostOS);
 
         //      To handle for null conditions?
         //        File sls = null;
@@ -636,11 +643,17 @@ public class Transfer implements SLS {
                 // GH-2141 for osdf urls we do output remap and not
                 // push it via pegasus-transfer to the staging site
                 job.condorVariables.addOPFileForTransferRemap(lfn, stagingSiteURL);
+                // however we still need to move the file back to $pegasus_lite_start_dir for
+                // condor to pick up and push it to OSDF
+                ft.addDestination(
+                        job.getSiteHandle(),
+                        urlFromPegasusLiteStartDir(
+                                PegasusURL.MOVETO_PROTOCOL_SCHEME, lfn, escapeEnvVariable));
+
             } else {
                 ft.addDestination(stagingSite, url.toString());
-
-                result.add(ft);
             }
+            result.add(ft);
         }
 
         return result;
@@ -1083,13 +1096,15 @@ public class Transfer implements SLS {
      * Constructs a URL for a file from directory where condor starts the job that is captured in
      * bash variable pegasus_lite_start_dir.
      *
+     * @param urlScheme url scheme to use for creating the new URL
      * @param lfn
      * @param escapeEnvVariable
      * @return file url to that location
      */
-    private String urlFromPegasusLiteStartDir(String lfn, boolean escapeEnvVariable) {
+    private String urlFromPegasusLiteStartDir(
+            String urlScheme, String lfn, boolean escapeEnvVariable) {
         StringBuilder replacedURL = new StringBuilder();
-        replacedURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        replacedURL.append(urlScheme).append("//");
         if (escapeEnvVariable) {
             // PM-1875 when a job is run through a container, then data stage-in
             // happens inside the container. so we need to ensure
