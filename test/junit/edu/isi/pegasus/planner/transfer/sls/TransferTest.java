@@ -239,7 +239,12 @@ public abstract class TransferTest {
 
         Collection<FileTransfer> result =
                 t.determineSLSInputTransfers(
-                        job, inputFile.getLFN(), stagingSiteServer, stagingSiteDirectory, "$PWD");
+                        job,
+                        inputFile.getLFN(),
+                        stagingSiteServer,
+                        stagingSiteDirectory,
+                        "$PWD",
+                        false);
         // System.err.println(result);
         assertNotNull(result);
         assertEquals(1, result.size());

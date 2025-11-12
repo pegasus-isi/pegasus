@@ -264,7 +264,7 @@ public class CondorTest {
 
         Collection<FileTransfer> result =
                 cTX.determineSLSInputTransfers(
-                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD");
+                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD", false);
 
         if (expected.getDestURL() == null && result.isEmpty()) {
             // indicates we peek into transfer_input_files
@@ -306,7 +306,7 @@ public class CondorTest {
 
         Collection<FileTransfer> result =
                 cTX.determineSLSInputTransfers(
-                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD");
+                        job, null, stagingSiteServer, stagingSiteDirectory, "$PWD", false);
 
         /**
          * fixme: not doing it for the mix case?? if (expected.getDestURL() == null &&
