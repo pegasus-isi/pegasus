@@ -487,18 +487,24 @@ public class Transfer implements SLS {
             }
 
             // add all the sources
-            boolean usesOSDF = false;
+            boolean rewriteOSDFURL = false;
             for (ReplicaCatalogEntry source : sources) {
                 // at this point we know all the sources whether the file
                 // is being retrieved directly or from the staging site.
                 String sourceURL = source.getPFN();
                 if (sourceURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
-                    usesOSDF = true;
-                    // GH-2141 add the url as a job input file via condor file io
-                    // that will get the file to the condor scratch dir
-                    job.condorVariables.addIPFileForTransfer(sourceURL);
-                    // now update the source url to reflect pegasus_lite_start_dir
-                    source.setPFN(urlFromPegasusLiteStartDir(lfn, escapeEnvVariable));
+                    rewriteOSDFURL =
+                            (isContainerLFN && onlyContainer)
+                                    // GH-2141 rewrite containerLFN only when onlyContainer is true,
+                                    // as else container file can appear twice in transfer_ip_files
+                                    || !isContainerLFN;
+                    if (rewriteOSDFURL) {
+                        // GH-2141 add the url as a job input file via condor file io
+                        // that will get the file to the condor scratch dir
+                        job.condorVariables.addIPFileForTransfer(sourceURL);
+                        // now update the source url to reflect pegasus_lite_start_dir
+                        source.setPFN(urlFromPegasusLiteStartDir(lfn, escapeEnvVariable));
+                    }
                 }
 
                 ft.addSource(source);
@@ -511,7 +517,7 @@ public class Transfer implements SLS {
                             ? PegasusURL.SYMLINK_URL_SCHEME
                             : PegasusURL.FILE_URL_SCHEME; // default is file URL
 
-            if (usesOSDF) {
+            if (rewriteOSDFURL) {
                 destURLScheme = PegasusURL.MOVETO_PROTOCOL_SCHEME;
             }
 
