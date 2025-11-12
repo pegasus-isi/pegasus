@@ -343,6 +343,7 @@ public class Transfer implements SLS {
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+            boolean isContainerLFN = containerLFN != null && lfn.equals(containerLFN);
 
             // GH-2141 determine based on onlyContainer flag if we
             // have to consider normal input files or not.
@@ -357,7 +358,7 @@ public class Transfer implements SLS {
                 continue;
             }
 
-            if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
+            if (jobRunsInContainerUniverse && isContainerLFN) {
                 // PM-1950 we dont add to transfer_input_files
                 // it will be picked from container_image. but make sure no
                 // transfer is triggered in PegasusLite script
@@ -466,7 +467,7 @@ public class Transfer implements SLS {
                     symlink =
                             symlinkingEnabled(
                                     c, pf, sources, job.getID(), jobRunsInContainerUniverse);
-                    if (symlink && !lfn.equals(containerLFN) && this.mTransfersOnHostOS) {
+                    if (symlink && !isContainerLFN && this.mTransfersOnHostOS) {
                         // we don't want pegasus-transfer to fail in PegasusLite
                         // on the missing source path that is only visible in the container
                         // GH-2104 we only set it to false if transfers are happening on the HOST OS
@@ -477,7 +478,7 @@ public class Transfer implements SLS {
                     // PM-1893 when job is launched inside a container, we
                     // want to make sure the file URL's are mounted correctly
                     // for files other than the container image itself
-                    if (!pf.getLFN().equals(containerLFN)) {
+                    if (!isContainerLFN) {
                         for (ReplicaCatalogEntry source : sources) {
                             updateSourceFileURLForContainerizedJob(c, pf, source, job.getID());
                         }
