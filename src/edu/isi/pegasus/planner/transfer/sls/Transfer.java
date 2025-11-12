@@ -231,6 +231,7 @@ public class Transfer implements SLS {
      * @param job the job being detected.
      * @return true
      */
+    @Override
     public boolean needsSLSInputTransfers(Job job) {
         return true;
     }
@@ -242,6 +243,7 @@ public class Transfer implements SLS {
      * @param job the job being detected.
      * @return true
      */
+    @Override
     public boolean needsSLSOutputTransfers(Job job) {
         Set files = job.getOutputFiles();
         return !(files == null || files.isEmpty());
@@ -280,15 +282,19 @@ public class Transfer implements SLS {
      *     files i.e the get operation
      * @param stagingSiteDirectory directory on the head node of the staging site.
      * @param workerNodeDirectory worker node directory
+     * @param onlyContainer boolean indicating if sls inputs should be generated only for container
+     *     files associated with the job.
      * @return a Collection of FileTransfer objects listing the transfers that need to be done.
      * @see #needsSLSInputTransfers( Job)
      */
+    @Override
     public Collection<FileTransfer> determineSLSInputTransfers(
             Job job,
             String fileName,
             FileServer stagingSiteServer,
             String stagingSiteDirectory,
-            String workerNodeDirectory) {
+            String workerNodeDirectory,
+            boolean onlyContainer) {
 
         // sanity check
         if (!needsSLSInputTransfers(job)) {
@@ -297,6 +303,10 @@ public class Transfer implements SLS {
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;
         }
+
+        // GH-2105 PM-1875 we escape variable if job run in container AND
+        // data tx is inside the container
+        boolean escapeEnvVariable = (job.getContainer() != null && !this.mTransfersOnHostOS);
 
         boolean symlinkingEnabledForJob = Transfer.this.symlinkingEnabled(job, this.mUseSymLinks);
         Set files = job.getInputFiles();
@@ -333,6 +343,14 @@ public class Transfer implements SLS {
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+            boolean isContainerLFN = containerLFN != null && lfn.equals(containerLFN);
+
+            // GH-2141 determine based on onlyContainer flag if we
+            // have to consider normal input files or not.
+            if (onlyContainer && !pf.isContainerFile()) {
+                // all inputs other than the container file should be skipped
+                continue;
+            }
 
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
@@ -340,7 +358,7 @@ public class Transfer implements SLS {
                 continue;
             }
 
-            if (jobRunsInContainerUniverse && lfn.equals(containerLFN)) {
+            if (jobRunsInContainerUniverse && isContainerLFN) {
                 // PM-1950 we dont add to transfer_input_files
                 // it will be picked from container_image. but make sure no
                 // transfer is triggered in PegasusLite script
@@ -449,7 +467,7 @@ public class Transfer implements SLS {
                     symlink =
                             symlinkingEnabled(
                                     c, pf, sources, job.getID(), jobRunsInContainerUniverse);
-                    if (symlink && !lfn.equals(containerLFN) && this.mTransfersOnHostOS) {
+                    if (symlink && !isContainerLFN && this.mTransfersOnHostOS) {
                         // we don't want pegasus-transfer to fail in PegasusLite
                         // on the missing source path that is only visible in the container
                         // GH-2104 we only set it to false if transfers are happening on the HOST OS
@@ -460,7 +478,7 @@ public class Transfer implements SLS {
                     // PM-1893 when job is launched inside a container, we
                     // want to make sure the file URL's are mounted correctly
                     // for files other than the container image itself
-                    if (!pf.getLFN().equals(containerLFN)) {
+                    if (!isContainerLFN) {
                         for (ReplicaCatalogEntry source : sources) {
                             updateSourceFileURLForContainerizedJob(c, pf, source, job.getID());
                         }
@@ -469,7 +487,26 @@ public class Transfer implements SLS {
             }
 
             // add all the sources
+            boolean rewriteOSDFURL = false;
             for (ReplicaCatalogEntry source : sources) {
+                // at this point we know all the sources whether the file
+                // is being retrieved directly or from the staging site.
+                String sourceURL = source.getPFN();
+                if (sourceURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+                    rewriteOSDFURL =
+                            (isContainerLFN && onlyContainer)
+                                    // GH-2141 rewrite containerLFN only when onlyContainer is true,
+                                    // as else container file can appear twice in transfer_ip_files
+                                    || !isContainerLFN;
+                    if (rewriteOSDFURL) {
+                        // GH-2141 add the url as a job input file via condor file io
+                        // that will get the file to the condor scratch dir
+                        job.condorVariables.addIPFileForTransfer(sourceURL);
+                        // now update the source url to reflect pegasus_lite_start_dir
+                        source.setPFN(urlFromPegasusLiteStartDir(lfn, escapeEnvVariable));
+                    }
+                }
+
                 ft.addSource(source);
             }
 
@@ -479,6 +516,10 @@ public class Transfer implements SLS {
                     (symlink)
                             ? PegasusURL.SYMLINK_URL_SCHEME
                             : PegasusURL.FILE_URL_SCHEME; // default is file URL
+
+            if (rewriteOSDFURL) {
+                destURLScheme = PegasusURL.MOVETO_PROTOCOL_SCHEME;
+            }
 
             // PM-1375 check the dial to see if we need to check checksum for this
             // or not, and turn off if nosymlink
@@ -590,10 +631,16 @@ public class Transfer implements SLS {
             url.append(File.separator)
                     .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
             url.append(File.separator).append(lfn);
+            String stagingSiteURL = url.toString();
+            if (stagingSiteURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+                // GH-2141 for osdf urls we do output remap and not
+                // push it via pegasus-transfer to the staging site
+                job.condorVariables.addOPFileForTransferRemap(lfn, stagingSiteURL);
+            } else {
+                ft.addDestination(stagingSite, url.toString());
 
-            ft.addDestination(stagingSite, url.toString());
-
-            result.add(ft);
+                result.add(ft);
+            }
         }
 
         return result;
@@ -824,6 +871,7 @@ public class Transfer implements SLS {
      *
      * @return a short textual description
      */
+    @Override
     public String getDescription() {
         return "SLS backend using pegasus-transfer to worker node";
     }
@@ -1029,5 +1077,31 @@ public class Transfer implements SLS {
         }
         sb.append(" ").append(message);
         return sb.toString();
+    }
+
+    /**
+     * Constructs a URL for a file from directory where condor starts the job that is captured in
+     * bash variable pegasus_lite_start_dir.
+     *
+     * @param lfn
+     * @param escapeEnvVariable
+     * @return file url to that location
+     */
+    private String urlFromPegasusLiteStartDir(String lfn, boolean escapeEnvVariable) {
+        StringBuilder replacedURL = new StringBuilder();
+        replacedURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            // PM-1875 when a job is run through a container, then data stage-in
+            // happens inside the container. so we need to ensure
+            // the variable does not expanded on the host OS where pegasuslite
+            // script runs
+            replacedURL.append("\\");
+        }
+        replacedURL
+                .append("$pegasus_lite_start_dir")
+                .append(File.separator)
+                .append(new File(lfn).getName());
+
+        return replacedURL.toString();
     }
 }

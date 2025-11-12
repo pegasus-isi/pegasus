@@ -190,15 +190,19 @@ public class Condor implements SLS {
      *     files i.e the get operation
      * @param stagingSiteDirectory directory on the head node of the compute site.
      * @param workerNodeDirectory worker node directory
+     * @param onlyContainer boolean indicating if sls inputs should be generated only for container
+     *     files associated with the job.
      * @return a Collection of FileTransfer objects listing the transfers that need to be done.
      * @see #needsSLSInputTransfers( Job)
      */
+    @Override
     public Collection<FileTransfer> determineSLSInputTransfers(
             Job job,
             String fileName,
             FileServer stagingSiteServer,
             String stagingSiteDirectory,
-            String workerNodeDirectory) {
+            String workerNodeDirectory,
+            boolean onlyContainer) {
 
         Set files = job.getInputFiles();
         Collection<FileTransfer> result = new LinkedList();
@@ -207,7 +211,7 @@ public class Condor implements SLS {
 
         Container c = job.getContainer();
 
-        // GH-2105 PM-1875 we escape varialbe if job run in container AND
+        // GH-2105 PM-1875 we escape variable if job run in container AND
         // data tx is inside the container
         boolean escapeEnvVariable = (job.getContainer() != null && !this.mTransfersOnHostOS);
 
@@ -219,6 +223,13 @@ public class Condor implements SLS {
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+
+            // GH-2141 determine based on onlyContainer flag if we
+            // have to consider normal input files or not.
+            if (onlyContainer && !pf.isContainerFile()) {
+                // all inputs other than the container file should be skipped
+                continue;
+            }
 
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
@@ -274,7 +285,8 @@ public class Condor implements SLS {
                             fileName,
                             stagingSiteServer,
                             stagingSiteDirectory,
-                            workerNodeDirectory);
+                            workerNodeDirectory,
+                            onlyContainer);
             for (FileTransfer ft : bypassFileTXs) {
                 mLogger.log(
                         "File will be bypassed using pegasus-transfer " + ft,
