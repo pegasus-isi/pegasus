@@ -298,7 +298,8 @@ public abstract class Abstract implements ContainerShellWrapper {
                             sls.getSLSInputLFN(job),
                             stagingSiteServerForRetrieval,
                             stagingSiteDirectory,
-                            workerNodeDir);
+                            workerNodeDir,
+                            false);
 
             // PM-779 split the checkpoint files from the input files
             // as we want to stage them separately

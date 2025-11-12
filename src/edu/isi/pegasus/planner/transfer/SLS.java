@@ -104,6 +104,8 @@ public interface SLS {
      *     files i.e the get operation
      * @param stagingSiteDirectory the directory on the head node of the staging site.
      * @param workerNodeDirectory the worker node directory
+     * @param onlyContainer boolean indicating if sls inputs should be generated only for container
+     *     files associated with the job.
      * @return a Collection of FileTransfer objects listing the transfers that need to be done.
      * @see #needsSLSInputTransfers( Job)
      */
@@ -112,7 +114,8 @@ public interface SLS {
             String fileName,
             FileServer stagingSiteServer,
             String stagingSiteDirectory,
-            String workerNodeDirectory);
+            String workerNodeDirectory,
+            boolean onlyContainer);
 
     /**
      * Generates a second level staging file of the input files to the worker node directory. It

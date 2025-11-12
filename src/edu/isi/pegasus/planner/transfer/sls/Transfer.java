@@ -231,6 +231,7 @@ public class Transfer implements SLS {
      * @param job the job being detected.
      * @return true
      */
+    @Override
     public boolean needsSLSInputTransfers(Job job) {
         return true;
     }
@@ -242,6 +243,7 @@ public class Transfer implements SLS {
      * @param job the job being detected.
      * @return true
      */
+    @Override
     public boolean needsSLSOutputTransfers(Job job) {
         Set files = job.getOutputFiles();
         return !(files == null || files.isEmpty());
@@ -280,15 +282,19 @@ public class Transfer implements SLS {
      *     files i.e the get operation
      * @param stagingSiteDirectory directory on the head node of the staging site.
      * @param workerNodeDirectory worker node directory
+     * @param onlyContainer boolean indicating if sls inputs should be generated only for container
+     *     files associated with the job.
      * @return a Collection of FileTransfer objects listing the transfers that need to be done.
      * @see #needsSLSInputTransfers( Job)
      */
+    @Override
     public Collection<FileTransfer> determineSLSInputTransfers(
             Job job,
             String fileName,
             FileServer stagingSiteServer,
             String stagingSiteDirectory,
-            String workerNodeDirectory) {
+            String workerNodeDirectory,
+            boolean onlyContainer) {
 
         // sanity check
         if (!needsSLSInputTransfers(job)) {
@@ -337,6 +343,13 @@ public class Transfer implements SLS {
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
+
+            // GH-2141 determine based on onlyContainer flag if we
+            // have to consider normal input files or not.
+            if (onlyContainer && !pf.isContainerFile()) {
+                // all inputs other than the container file should be skipped
+                continue;
+            }
 
             if (lfn.equals(ENV.X509_USER_PROXY_KEY)) {
                 // ignore the proxy file for time being
@@ -845,6 +858,7 @@ public class Transfer implements SLS {
      *
      * @return a short textual description
      */
+    @Override
     public String getDescription() {
         return "SLS backend using pegasus-transfer to worker node";
     }

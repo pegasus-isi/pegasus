@@ -914,7 +914,8 @@ public class PegasusLite implements GridStart {
                                 sls.getSLSInputLFN(job),
                                 stagingSiteServerForRetrieval,
                                 stagingSiteDirectory,
-                                workerNodeDir);
+                                workerNodeDir,
+                                true);
 
                 // PM-779 split the checkpoint files and container from the input files
                 // as we want to stage them separately
