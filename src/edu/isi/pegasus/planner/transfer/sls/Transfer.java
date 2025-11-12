@@ -631,10 +631,16 @@ public class Transfer implements SLS {
             url.append(File.separator)
                     .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
             url.append(File.separator).append(lfn);
+            String stagingSiteURL = url.toString();
+            if (stagingSiteURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+                // GH-2141 for osdf urls we do output remap and not
+                // push it via pegasus-transfer to the staging site
+                job.condorVariables.addOPFileForTransferRemap(lfn, stagingSiteURL);
+            } else {
+                ft.addDestination(stagingSite, url.toString());
 
-            ft.addDestination(stagingSite, url.toString());
-
-            result.add(ft);
+                result.add(ft);
+            }
         }
 
         return result;
