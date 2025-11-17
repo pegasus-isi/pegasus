@@ -34,6 +34,7 @@ pegasus_lite_default_system="x86_64_rhel_8"
 
 # remember where we started from
 pegasus_lite_start_dir=`pwd`
+export pegasus_lite_start_dir
 
 pegasus_lite_setup_log()
 {
