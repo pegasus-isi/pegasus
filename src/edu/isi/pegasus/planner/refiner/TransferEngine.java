@@ -46,10 +46,12 @@ import edu.isi.pegasus.planner.transfer.generator.StageOut;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -372,11 +374,10 @@ public class TransferEngine extends Engine {
      */
     private void processParents(Job job, Collection<GraphNode> parents) {
 
-        Set nodeIpFiles = job.getInputFiles();
         Vector vRCSearchFiles = new Vector(); // vector of PegasusFile
 
         // getAll the output Files of the parents
-        Set<PegasusFile> parentsOutFiles = getOutputFiles(parents);
+        Map<String, PegasusFile> parentsOutFiles = getOutputFiles(parents);
 
         // interpool transfer of the nodes parents
         // output files
@@ -395,9 +396,16 @@ public class TransferEngine extends Engine {
         // check if node ip files are in the parents out files
         // if files are not, then these are to be got
         // from the RC based on the transiency characteristic
-        for (Iterator it = nodeIpFiles.iterator(); it.hasNext(); ) {
-            PegasusFile pf = (PegasusFile) it.next();
-            if (!parentsOutFiles.contains(pf)) {
+        for (PegasusFile pf : job.getInputFiles()) {
+            String lfn = pf.getLFN();
+            if (parentsOutFiles.containsKey(lfn)) {
+                PegasusFile parentPF = parentsOutFiles.get(lfn);
+                // GH-2141 if parent output file (intermediate file) has cleanup disabled,
+                // make sure that gets disabled for this job's input
+                if (!parentPF.canBeCleanedup()) {
+                    pf.setForCleanup(false);
+                }
+            } else {
                 // PM-976 all input files that are not generated
                 // by parent jobs should be looked up in the replica catalog
                 // we don't consider the value of the transfer flag
@@ -688,15 +696,17 @@ public class TransferEngine extends Engine {
      * It gets the output files for all the nodes which are specified in the nodes passed.
      *
      * @param nodes List<GraphNode> containing the jobs
-     * @return Set of PegasusFile objects
+     * @return HashMap<String,PegasusFile> of PegasusFile objects indexed by LFN
      */
-    private Set<PegasusFile> getOutputFiles(Collection<GraphNode> nodes) {
+    private Map<String, PegasusFile> getOutputFiles(Collection<GraphNode> nodes) {
 
-        Set<PegasusFile> files = new HashSet();
+        Map<String, PegasusFile> files = new HashMap();
 
         for (GraphNode n : nodes) {
             Job job = (Job) n.getContent();
-            files.addAll(job.getOutputFiles());
+            for (PegasusFile pf : job.getOutputFiles()) {
+                files.put(pf.getLFN(), pf);
+            }
         }
 
         return files;
