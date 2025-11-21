@@ -281,11 +281,23 @@ public class StageOut extends Abstract {
                     REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.get, job);
         }
 
+        // GH-2141 if the destination URL is an OSDF URL
+        // explicilty turn cleanup off
+        boolean doCleanup = true;
+        if (stagingSiteURLPrefix.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+            doCleanup = false;
+            mLogger.log(
+                    "Cleanup for outputs for job "
+                            + job.getID()
+                            + " is disabled as source staging site url is an osdf url.",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
         // check if there is a remote initialdir set
         String path = job.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY);
 
-        for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
-            PegasusFile pf = (PegasusFile) it.next();
+        for (PegasusFile pf : job.getOutputFiles()) {
+            pf.setForCleanup(doCleanup);
             if (destSiteHandle == null) {
                 // PM-1608 construct file transfers to parent workflow scratch
                 // directories

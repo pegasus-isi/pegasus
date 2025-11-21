@@ -109,6 +109,7 @@ public class StageIn extends Abstract {
      * @param bag bag of initialization objects
      * @param refiner
      */
+    @Override
     public void initalize(ADag dag, PegasusBag bag, Refiner refiner) {
         super.initalize(dag, bag, refiner);
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
@@ -674,6 +675,18 @@ public class StageIn extends Abstract {
             // PM-1386 explicitly now set per file level the bypass flag
             // whether a file is set for bypass staging or not
             pf.setForBypassStaging(bypassFirstLevelStagingPossible);
+
+            // GH-2141 if the destination URL is an OSDF URL
+            // explicilty turn cleanup off
+            if (preferredDestPutURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
+                mLogger.log(
+                        "For job "
+                                + job.getID()
+                                + " turned off cleanup for input file staged to OSDF - "
+                                + pf.getLFN(),
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+                pf.setForCleanup(false);
+            }
 
             if (!bypassFirstLevelStagingPossible) {
                 // no bypass of input file staging. we need to add
