@@ -30,7 +30,6 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
@@ -125,8 +124,6 @@ public class Transfer implements SLS {
      */
     protected boolean mTransfersOnHostOS;
 
-    private PlannerOptions mPOptions;
-
     /** The default constructor. */
     public Transfer() {}
 
@@ -135,9 +132,10 @@ public class Transfer implements SLS {
      *
      * @param bag the bag of objects. Contains access to catalogs etc.
      */
+    @Override
     public void initialize(PegasusBag bag) {
         mProps = bag.getPegasusProperties();
-        mPOptions = bag.getPlannerOptions();
+        bag.getPlannerOptions();
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mTCHandle = bag.getHandleToTransformationCatalog();
