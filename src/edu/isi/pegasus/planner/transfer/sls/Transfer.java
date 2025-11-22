@@ -501,9 +501,20 @@ public class Transfer implements SLS {
                         // that will get the file to the condor scratch dir
                         job.condorVariables.addIPFileForTransfer(sourceURL);
                         // now update the source url to reflect pegasus_lite_start_dir
+                        // however the lfn is the basename of the source url. not
+                        // the actual lfn for the file. this is to account for
+                        // mistmatch in the URL basename in replica catalog and the
+                        // lfn for the file in the job.
+                        // For lfn association with the job can f.a . the url
+                        // can be osdf:///pelicanplatform/test/hello-world.txt
+                        // so condor will transfer file to hello-world.txt in pegasus_lite_start_dir
+                        String path = new PegasusURL(sourceURL).getPath();
+
                         source.setPFN(
                                 urlFromPegasusLiteStartDir(
-                                        PegasusURL.FILE_URL_SCHEME, lfn, escapeEnvVariable));
+                                        PegasusURL.FILE_URL_SCHEME,
+                                        new File(path).getName(),
+                                        escapeEnvVariable));
                     }
                 }
 
