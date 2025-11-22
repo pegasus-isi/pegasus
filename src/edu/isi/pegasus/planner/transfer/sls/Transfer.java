@@ -505,7 +505,7 @@ public class Transfer implements SLS {
                         // the actual lfn for the file. this is to account for
                         // mistmatch in the URL basename in replica catalog and the
                         // lfn for the file in the job.
-                        // For lfn association with the job can f.a . the url
+                        // For example lfn association with the job can f.a . the url
                         // can be osdf:///pelicanplatform/test/hello-world.txt
                         // so condor will transfer file to hello-world.txt in pegasus_lite_start_dir
                         String path = new PegasusURL(sourceURL).getPath();
