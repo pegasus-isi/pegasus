@@ -261,10 +261,18 @@ public class Condor extends Abstract {
                     && (condorOutputTransfers == null || condorOutputTransfers.isEmpty())) {
                 // add +TransferOutput instead of transfer_output_files
                 job.condorVariables.removeOutputFilesForTransfer();
-                job.condorVariables.construct(EMPTY_TRANSFER_OUTPUT_KEY, "\"\"");
-                mLogger.log(
-                        "Added empty " + EMPTY_TRANSFER_OUTPUT_KEY + " key for job " + job.getID(),
-                        LogManager.DEBUG_MESSAGE_LEVEL);
+                // GH-2141 only add the empty transfer output key
+                // only if no output remaps are specified
+                if (!job.condorVariables.containsKey(
+                        edu.isi.pegasus.planner.namespace.Condor.TRANSFER_OP_REMAPS_KEY)) {
+                    job.condorVariables.construct(EMPTY_TRANSFER_OUTPUT_KEY, "\"\"");
+                    mLogger.log(
+                            "Added empty "
+                                    + EMPTY_TRANSFER_OUTPUT_KEY
+                                    + " key for job "
+                                    + job.getID(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                }
             }
 
         } else if (universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)
