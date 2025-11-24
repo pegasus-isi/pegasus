@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
  */
 public class TransferTestOSDF extends TransferTest {
 
-    private String OSDF_ENDPOINT_URL = "osdf:///ospool/ospool-ap2140/pegasuswfs";
+    private final String OSDF_ENDPOINT_URL = "osdf:///ospool/ospool-ap2140/pegasuswfs";
 
     public TransferTestOSDF() {}
 
@@ -100,6 +100,15 @@ public class TransferTestOSDF extends TransferTest {
         mLogger.logEventCompletion();
     }
 
+    @Test
+    public void testOSDFStageOutToStagingSite() {
+        this.testOSDFStageOut(
+                "f.out",
+                OSDF_ENDPOINT_URL + "/./" + "f.out",
+                "file://$PWD/f.out",
+                "moveto://$pegasus_lite_start_dir/f.out");
+    }
+
     public void testOSDFStagein(
             String lfn, String sourceOSDFURL, String expectedSource, String expectedDestination) {
         FileTransfer expectedOutput = new FileTransfer();
@@ -115,7 +124,26 @@ public class TransferTestOSDF extends TransferTest {
                 sourceOSDFURL,
                 job.condorVariables.getIPFilesForTransfer(),
                 "job transfer_input_files");
-        System.err.println(job.condorVariables.getIPFilesForTransfer());
+    }
+
+    public void testOSDFStageOut(
+            String lfn, String sourceOSDFURL, String expectedSource, String expectedDestination) {
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN(lfn);
+        expectedOutput.addSource("compute", expectedSource);
+        expectedOutput.addDestination("compute", expectedDestination);
+        this.testStageOut("osdf", expectedOutput);
+
+        // also check for transfer_output_remaps
+        // remap maps the file back to OSDF
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+
+        // f.out=osdf:///ospool/ospool-ap2140/pegasuswfs/./f.out
+        String expectedREMap = lfn + "=" + sourceOSDFURL;
+        assertEquals(
+                expectedREMap,
+                job.condorVariables.getOutputRemapsForTransfer(),
+                "job output remaps");
     }
 
     @Override
