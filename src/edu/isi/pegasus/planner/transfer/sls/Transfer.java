@@ -515,6 +515,7 @@ public class Transfer implements SLS {
                                         PegasusURL.FILE_URL_SCHEME,
                                         new File(path).getName(),
                                         escapeEnvVariable));
+                        source.setResourceHandle(computeSite);
                     }
                 }
 
