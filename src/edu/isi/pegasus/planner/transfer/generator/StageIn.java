@@ -746,7 +746,9 @@ public class StageIn extends Abstract {
         // and we are in pegasus lite mode
         if ((this.mBypassStagingForInputs || file.doBypassStaging())
                 && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job)) {
-            boolean isFileURL = entry.getPFN().startsWith(PegasusURL.FILE_URL_SCHEME);
+            String pfn = entry.getPFN();
+            boolean isFileURL =
+                    pfn.startsWith(PegasusURL.FILE_URL_SCHEME) || pfn.startsWith(File.separator);
             String fileSite = entry.getResourceHandle();
 
             // PM-1885 no special handling for CondorIO, as now CondorIO mode
