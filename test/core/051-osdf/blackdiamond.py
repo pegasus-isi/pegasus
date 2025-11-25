@@ -44,7 +44,7 @@ config = json.load(open(f"{TEST_NAME}/test.config"))
 # --- Sites --------------------------------------------------------------------
 LOCAL = "local"
 COMPUTE = "condorpool"
-STAGING = config["STAGING"] if "STAGING" in config 
+STAGING = config["STAGING"] if "STAGING" in config else None
 SHARED = config["SHARED"] if "SHARED" in config else False
 SYMLINK = config["SYMLINK"] if "SYMLINK" in config else False
 
@@ -129,9 +129,8 @@ if SYMLINK:
 base_container = Container(
     "centos-osgvo-el7",
     Container.SINGULARITY,
-    image_site="condorpool" if CONTAINER_ON_CVMFS else "local",
-    image="file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9"  if CONTAINER_ON_CVMFS else
-          "scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    image_site="condorpool",
+    image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
     bypass_staging=False,
     **container_mounts
 )
