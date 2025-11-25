@@ -167,6 +167,19 @@ public class StageInTest {
     }
 
     /**
+     * Test to ensure there is bypass in condor io mode , if the replica catalog location is a url
+     * starting / on the local site. After PM-1885 this should be false, as in CondorIO mode we let
+     * pegasus-transfer handle bypass files in the PegasusLite script
+     */
+    @Test
+    public void testBypassForCondorIOWithDirectoryPathOnLocalSite() {
+        testBypass(
+                new ReplicaCatalogEntry("/shared/input/f.in", "local"),
+                PegasusConfiguration.CONDOR_CONFIGURATION_VALUE,
+                false);
+    }
+
+    /**
      * PM-1875, PM-1885 Test to ensure there is bypass in condor io mode , if the replica catalog
      * location is a file URL on the local site, but the PFN does not end in the basename of the LFN
      * After PM-1885 this should be false, as in CondorIO mode we let pegasus-transfer handle bypass
