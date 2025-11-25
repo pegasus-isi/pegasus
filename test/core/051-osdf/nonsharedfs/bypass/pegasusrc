@@ -1,0 +1,8 @@
+pegasus.catalog.site.file=./sites.yml
+pegasus.catalog.site YAML
+pegasus.data.configuration = nonsharedfs
+
+pegasus.catalog.transformation.file ./transformations.yml
+pegasus.catalog.transformation YAML
+
+pegasus.transfer.bypass.input.staging=true
