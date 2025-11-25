@@ -585,15 +585,23 @@ information on how to set up an irodsEnv file to be used by Pegasus.
 
 .. _transfer-stashcp:
 
-OSG Stash / stashcp (osdf:// stash://)
---------------------------------------
+Open Science Data Federation (OSDF) / stashcp (osdf:// stash://)
+----------------------------------------------------------------
 
-Open Science Grid provides a data service called Stash, and the command
-line tool *stashcp* for interacting with the Stash data. An example on
+Open Science Grid provides a data service called OSDF, and the command
+line tool *pelican* for interacting with the OSDF endpoints. An example on
 how to set up the site catalog and URLs can be found in the `OSG User
 Support Pegasus
 tutorial <https://portal.osg-htc.org/documentation/htc_workloads/automated_workflows/tutorial-pegasus/>`__
 
+Starting 5.1.2 release, OSDF transfers are now always delagated to
+HTCondor to manage using HTCondor file IO, especially when turning on
+:ref:`bypass-input-staging`. This applicable both for `condorio` and
+`nonsharedfs` data configurations.
+
+Additionally, when using OSDF as a staging site in the `nonsharedfs` mode,
+PegasusLite jobs are setup to rely on HTCondor file transfers to stage-in
+and stage-out the data to OSDF endpoints from the job execution directory.
 
 .. _transfer-scp:
 
