@@ -78,6 +78,7 @@ public class GridGateway extends AbstractSiteData {
         condor,
         sge,
         slurm,
+        flux,
         unknown
     };
 
