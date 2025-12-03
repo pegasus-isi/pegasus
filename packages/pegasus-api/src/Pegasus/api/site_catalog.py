@@ -99,6 +99,7 @@ class Scheduler(Enum):
     CONDOR = "condor"
     SGE = "sge"
     SLURM = "slurm"
+    FLUX = "flux"
     UNKNOWN = "unknown"
 
 

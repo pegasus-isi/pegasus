@@ -104,6 +104,7 @@ $defs:
           - condor
           - sge
           - slurm
+          - flux
           - unknown
       jobtype:
         type: string
