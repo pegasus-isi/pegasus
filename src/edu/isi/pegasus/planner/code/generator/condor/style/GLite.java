@@ -271,7 +271,7 @@ public class GLite extends Abstract {
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
             mLogger.log(
-                    "Glite mode supports only pbs, sge, slurm, moab or cobalt submission. Will use PBS style attributes for job "
+                    "Glite mode supports only pbs, sge, slurm, flux, moab or cobalt submission. Will use PBS style attributes for job "
                             + job.getID()
                             + " with grid resource "
                             + gridResource,
@@ -464,16 +464,26 @@ public class GLite extends Abstract {
         /* the globus key maxwalltime is WALLTIME */
         if (job.globusRSL.containsKey("maxwalltime")) {
             value.append(" && ");
-            if (batchSystem.equals("lsf")) {
-                addSubExpression(
-                        value,
-                        "WALLTIME",
-                        lsfFormattedTimestamp((String) job.globusRSL.get("maxwalltime")));
-            } else {
-                addSubExpression(
-                        value,
-                        "WALLTIME",
-                        pbsFormattedTimestamp((String) job.globusRSL.get("maxwalltime")));
+            switch (batchSystem) {
+                case "flux":
+                    // GH-2143 globus maxwalltime is in minutes. flux expects in minutes
+                    // no formatting required.
+                    addSubExpression(value, "WALLTIME", (String) job.globusRSL.get("maxwalltime"));
+                    break;
+
+                case "lsf":
+                    addSubExpression(
+                            value,
+                            "WALLTIME",
+                            lsfFormattedTimestamp((String) job.globusRSL.get("maxwalltime")));
+                    break;
+
+                default:
+                    addSubExpression(
+                            value,
+                            "WALLTIME",
+                            pbsFormattedTimestamp((String) job.globusRSL.get("maxwalltime")));
+                    break;
             }
         }
 
@@ -810,7 +820,7 @@ public class GLite extends Abstract {
                 // default case nothing specified
             }
 
-        } else if (batchSystem.equals("slurm")) {
+        } else if (batchSystem.equals("slurm") || batchSystem.equals("flux")) {
             // for SLURM case
             boolean coresSet = job.globusRSL.containsKey(Globus.COUNT_KEY);
             boolean nodesSet = job.globusRSL.containsKey(Globus.HOST_COUNT_KEY);
@@ -877,6 +887,7 @@ public class GLite extends Abstract {
                 : batchSystem.equals("pbs")
                         || batchSystem.equals("sge")
                         || batchSystem.equals("slurm")
+                        || batchSystem.equals("flux")
                         || batchSystem.equals("moab")
                         || batchSystem.equals("lsf")
                         || batchSystem.equals("cobalt");
