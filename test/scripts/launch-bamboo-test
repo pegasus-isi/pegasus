@@ -82,6 +82,8 @@ fi
 
 
 # always pegasus-analyzer to detect other problems
+echo
+echo
 pegasus-analyzer $RUN_DIR
 STATUS=$(($STATUS + $?))
 
@@ -89,18 +91,24 @@ STATUS=$(($STATUS + $?))
 # PM-1390 -not -name ignores any hidden pegasus multipart dirs that
 # may have been created . for e.g. .pegasus.mulitpart.d
 for subdir in `find $RUN_DIR -type d -name "*.*" -not -name '.*'`; do
+    echo
+    echo
     pegasus-analyzer --top-dir $RUN_DIR $subdir
     STATUS=$(($STATUS + $?))
 done
 
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
+   echo
+   echo
    pegasus-statistics -s all -f text $RUN_DIR
    pegasus-statistics -s all -f csv  $RUN_DIR
    STATUS=$(($STATUS + $?))
 fi
 
 cd $RUN_DIR
+echo
+echo
 
 # monitord checks
 if [ ! -e monitord.done ]; then
