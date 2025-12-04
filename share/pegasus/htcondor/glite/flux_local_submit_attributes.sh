@@ -43,10 +43,10 @@ fi
 #   * PROCS -> bls_opt_smpgranularity
 #   * CORES -> bls_opt_mpinodes
 #   * GPUS -> bls_opt_gpunumber
-local __flux_nnodes=
-local __flux_nslots=
-local __flux_ncores_per_slot=
-local __flux_ngpus_per_slot=
+__flux_nnodes=
+__flux_nslots=
+__flux_ncores_per_slot=
+__flux_ngpus_per_slot=
 
 if [ -n "${NODES}" ] || ([ -n "${PROCS}" ] && [ -n "${CORES}" ]); then
     if [ -n "${NODES}" ]; then
@@ -54,7 +54,7 @@ if [ -n "${NODES}" ] || ([ -n "${PROCS}" ] && [ -n "${CORES}" ]); then
     else
         __flux_nnodes=$(( (CORES + PROCS - 1) / PROCS ))
     fi
-    local __cores_per_slot_from_CORES=
+    __cores_per_slot_from_CORES=
     if [ -n "${CORES}" ]; then
         __cores_per_slot_from_CORES=$(( (CORES + __flux_nnodes - 1) / __flux_nnodes ))
     fi
