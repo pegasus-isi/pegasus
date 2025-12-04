@@ -485,9 +485,9 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
 
 .. tabs::
 
-   .. tab:: SLURM
+    .. tab:: SLURM
 
-       .. table:: Mapping to SLURM directives
+        .. table:: Mapping to SLURM directives
 
             +-------------------------+------------------------+-----------------------+
             | Profile Key             | Key in                 | SLURM Parameter       |
@@ -512,9 +512,9 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#SBATCH” |
             +-------------------------+------------------------+-----------------------+
 
-   .. tab:: PBS
+    .. tab:: PBS
 
-       .. table:: Mapping to PBS directives
+        .. table:: Mapping to PBS directives
 
             +-------------------------+------------------------+--------------------+
             | Profile Key             | Key in                 | PBS Parameter      |
@@ -538,6 +538,87 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+--------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#PBS” |
             +-------------------------+------------------------+--------------------+
+
+    .. tab:: SGE
+
+        .. table:: Mapping to SGE directives
+
+            +-------------------------+------------------------+------------------+
+            | Profile Key             | Key in                 | SGE Parameter    |
+            |                         | +remote_cerequirements |                  |
+            +-------------------------+------------------------+------------------+
+            | pegasus.cores           | CORES                  | -pe ompi         |
+            +-------------------------+------------------------+------------------+
+            | pegasus.nodes           | NODES                  | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.ppn             | PROCS                  | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.runtime         | WALLTIME               | -l h_rt          |
+            +-------------------------+------------------------+------------------+
+            | pegasus.memory          | PER_PROCESS_MEMORY     | -l h_vmem        |
+            +-------------------------+------------------------+------------------+
+            | pegasus.project         | PROJECT                | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.queue           | QUEUE                  | -q               |
+            +-------------------------+------------------------+------------------+
+            | globus.totalmemory      | TOTAL_MEMORY           | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#?” |
+            +-------------------------+------------------------+------------------+
+
+    .. tab:: Moab
+
+        .. table:: Mapping to MOAB directives
+
+            +-------------------------+------------------------+---------------------+
+            | Profile Key             | Key in                 | Moab Parameter      |
+            |                         | +remote_cerequirements |                     |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.cores           | CORES                  | n/a                 |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.nodes           | NODES                  | -l nodes            |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.ppn             | PROCS                  | -l ppn              |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.runtime         | WALLTIME               | -l walltime         |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.memory          | PER_PROCESS_MEMORY     | –mem-per-cpu pmem   |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.project         | PROJECT                | -A project_name     |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.queue           | QUEUE                  | -q                  |
+            +-------------------------+------------------------+---------------------+
+            | globus.totalmemory      | TOTAL_MEMORY           | -l mem              |
+            +-------------------------+------------------------+---------------------+
+            | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#MSUB” |
+            +-------------------------+------------------------+---------------------+
+
+    .. tab:: Cobalt
+
+        .. table:: Mapping to Cobalt Directives
+
+            +-------------------------+------------------------+------------------+
+            | Profile Key             | Key in                 | Cobalt Parameter |
+            |                         | +remote_cerequirements |                  |
+            +-------------------------+------------------------+------------------+
+            | pegasus.cores           | CORES                  | –proccount cores |
+            +-------------------------+------------------------+------------------+
+            | pegasus.nodes           | NODES                  | -n nodes         |
+            +-------------------------+------------------------+------------------+
+            | pegasus.ppn             | PROCS                  | –mode c[ppn]     |
+            +-------------------------+------------------------+------------------+
+            | pegasus.runtime         | WALLTIME               | -t walltime      |
+            +-------------------------+------------------------+------------------+
+            | pegasus.memory          | PER_PROCESS_MEMORY     | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.project         | PROJECT                | -A project_name  |
+            +-------------------------+------------------------+------------------+
+            | pegasus.queue           | QUEUE                  |                  |
+            +-------------------------+------------------------+------------------+
+            | globus.totalmemory      | TOTAL_MEMORY           | n/a              |
+            +-------------------------+------------------------+------------------+
+            | pegasus.glite.arguments | EXTRA_ARGUMENTS        | n/a              |
+            +-------------------------+------------------------+------------------+
 
 Specifying a remote directory for the job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
