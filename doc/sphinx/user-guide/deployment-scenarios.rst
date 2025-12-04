@@ -608,36 +608,36 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
 
         .. table:: Mapping to Flux Directives
 
-            +-------------------------+------------------------+------------------+
-            | Profile Key             | Key in                 | Flux Parameter   |
-            |                         | +remote_cerequirements |                  |
-            +-------------------------+------------------------+------------------+
-            | pegasus.cores           | CORES                  | --nslots,        |
-            |                         |                        | --nodes,         |
-            |                         |                        | and/or           |
-            |                         |                        | --cores-per-slot |
-            +-------------------------+------------------------+------------------+
-            | pegasus.gpus            | GPUS                   | --gpus-per-slot  |
-            +-------------------------+------------------------+------------------+
-            | pegasus.nodes           | NODES                  | --nodes          |
-            +-------------------------+------------------------+------------------+
-            | pegasus.ppn             | PROCS                  | --nslots,        |
-            |                         |                        | --nodes,         |
-            |                         |                        | and/or           |
-            |                         |                        | --cores-per-slot |
-            +-------------------------+------------------------+------------------+
-            | pegasus.runtime         | WALLTIME               | --time-limit     |
-            +-------------------------+------------------------+------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | Not supported    |
-            +-------------------------+------------------------+------------------+
-            | pegasus.project         | PROJECT                | --bank           |
-            +-------------------------+------------------------+------------------+
-            | pegasus.queue           | QUEUE                  | --queue          |
-            +-------------------------+------------------------+------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | Not supported    |
-            +-------------------------+------------------------+------------------+
-            | pegasus.glite.arguments | EXTRA_ARGUMENTS        | Not supported    |
-            +-------------------------+------------------------+------------------+
+            +-------------------------+------------------------+----------------------+
+            | Profile Key             | Key in                 | Flux Parameter       |
+            |                         | +remote_cerequirements |                      |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.cores           | CORES                  | --nslots,            |
+            |                         |                        | --nodes,             |
+            |                         |                        | and/or               |
+            |                         |                        | --cores-per-slot     |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.gpus            | GPUS                   | --gpus-per-slot      |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.nodes           | NODES                  | --nodes              |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.ppn             | PROCS                  | --nslots,            |
+            |                         |                        | --nodes,             |
+            |                         |                        | and/or               |
+            |                         |                        | --cores-per-slot     |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.runtime         | WALLTIME               | --time-limit         |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.memory          | PER_PROCESS_MEMORY     | Not supported        |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.project         | PROJECT                | --bank               |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.queue           | QUEUE                  | --queue              |
+            +-------------------------+------------------------+----------------------+
+            | globus.totalmemory      | TOTAL_MEMORY           | Not supported        |
+            +-------------------------+------------------------+----------------------+
+            | pegasus.glite.arguments | EXTRA_ARGUMENTS        | Prefixed by "#FLUX:" |
+            +-------------------------+------------------------+----------------------+
 
 Specifying a remote directory for the job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
