@@ -40,7 +40,7 @@ ifeq (Linux,$(OS))
   ifneq ($(LIBNUMA),)
     ifneq ($(NUMAIF),)
       CXXFLAGS += -DHAS_LIBNUMA
-      LDFLAGS += -lnuma
+      LDLIBS += -lnuma
     endif
   endif
 endif
@@ -95,7 +95,7 @@ install: $(PROGRAMS)
 endif
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
-	$(LD) $(LDFLAGS) $^ -o $@
+	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 	$(SIGN)
 test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)
