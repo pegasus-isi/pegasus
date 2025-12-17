@@ -64,7 +64,14 @@ public class PegasusSubmitDAG {
     };
 
     public static final String[] ENV_VARIABLES_PICKED_FROM_USER_ENV = {
-        "USER", "HOME", "LANG", "LC_ALL", "TZ", PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE
+        "USER",
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "TZ",
+        "JAVA_HEAPMAX",
+        "JAVA_HEAPMIN",
+        PEGASUS_UPDATE_PYTHONPATH_ENV_VARIABLE
     };
 
     /** Default number of max postscripts run by dagman at a time. */
