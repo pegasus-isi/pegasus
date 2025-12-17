@@ -252,26 +252,8 @@ public class DAXParserFactory {
         if (FileDetector.isTypeXML(dax)) {
             return DAXParserFactory.getXMLDAXMetadata(bag, dax);
         }
-        Callback cb = DAXParserFactory.loadDAXParserCallback(bag, dax, "DAX2Metadata");
 
-        LogManager logger = bag.getLogger();
-        if (logger != null) {
-            logger.log(
-                    "Retrieving Metadata from the DAX file " + dax, LogManager.DEBUG_MESSAGE_LEVEL);
-        }
-        try {
-            DAXParser p = DAXParserFactory.loadDAXParser(bag, cb, dax);
-            p.parse(dax);
-        } catch (RuntimeException e) {
-            // check explicity for file not found exception
-            if (e.getCause() != null && e.getCause() instanceof java.io.IOException) {
-                // rethrow
-                throw e;
-            }
-        }
-
-        Map result = (Map) cb.getConstructedObject();
-        return (result == null) ? new HashMap() : result;
+        return YAMLDAX2Metadata.getMetadata(bag, dax);
     }
 
     /**
