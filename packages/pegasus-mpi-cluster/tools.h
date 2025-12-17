@@ -11,9 +11,9 @@
 #define HOST_NAME_MAX 255
 #endif
 
-typedef unsigned char cpu_t;
-#define SCNcpu_t "hhu"
-#define PRIcpu_t "hhu"
+typedef unsigned int cpu_t;
+#define SCNcpu_t "u"
+#define PRIcpu_t "u"
 
 struct cpuinfo {
     cpu_t threads;
