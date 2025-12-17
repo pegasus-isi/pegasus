@@ -77,7 +77,6 @@ public class YAMLDAX2Metadata {
                 }
                 // Process data based on the token type (e.g., FIELD_NAME, VALUE_STRING)
                 String fieldName = parser.getCurrentName();
-                System.out.println("Found token " + fieldName);
 
                 WorkflowKeywords reservedKey = WorkflowKeywords.getReservedKey(fieldName);
                 if (reservedKey == null) {
