@@ -1215,6 +1215,95 @@ of the Abstract Workflow file can be catalogued either in the
       be specified as Abstract Workflow File locations.
 
 
+Generating Abstract Workflow as a Compute Job
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible, to have the abstract workflow that a *pegasusWorkflow* job
+requires, to be a parent compute job in the hierarchical workflow.
+This is useful, when the generation of the abstract workflow
+the *pegasusWorkflow*
+
+* takes a lot of resources (time/memory) to generate.
+* the abstract workflows cannot be pre-generated when defining the
+  hierarchical workflow.
+
+In these scenarios, you can have a compute job generate the abstract
+workflow for the sub-workflows. The code snippets highlight it below
+
+.. tabs::
+
+        .. code-tab:: python generate_wf.py
+
+            #!/usr/bin/env python3
+            from Pegasus.api import *
+
+
+            wf = Workflow("hierarchical-workflow")
+
+            # job to generate the diamond workflow
+            diamond_wf_file = File("inner_diamond_workflow.yml")
+            generate_diamond_wf_job = Job(
+                generate_diamond_wf, _id="diamond_workflow_gen"
+            ).add_outputs(diamond_wf_file)
+
+            # job to plan and run the diamond workflow
+            # the file diamond_wf_file is set to be create by the
+            # generate_diamond_wf_job
+            diamond_wf_job = (
+                SubWorkflow(file=diamond_wf_file, is_planned=False, _id="diamond_subworkflow")
+                .add_args(
+                    "--conf",
+                    "inner_diamond_workflow.pegasus.properties",
+                    "--output-sites",
+                    "local",
+                    "-vvv",
+                    "--basename",
+                    "inner",
+                )
+                .add_inputs(
+                    File("inner_diamond_workflow.pegasus.properties", for_planning=True),
+                    File("inner_diamond_workflow_rc.yml", for_planning=True),
+                    File("inner_diamond_workflow_tc.yml", for_planning=True),
+                    File("sites.yml", for_planning=True),
+                )
+            )
+
+            wf.add_jobs(blackdiamond_wf)
+            # writes out to workflow.yml
+            wf.write()
+
+        .. code-tab:: yaml Abstract Workflow
+
+            x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '03-07-23T14:24:45Z'}
+            pegasus: 5.0.4
+            name: hierarchical-workflow
+            jobs:
+            - type: job
+              name: generate_inner_diamond_workflow.py
+              id: diamond_workflow_gen
+              arguments: []
+              uses:
+              - {lfn: inner_diamond_workflow.yml, type: output, stageOut: true, registerReplica: true}
+            - type: pegasusWorkflow
+              file: inner_diamond_workflow.yml
+              id: diamond_subworkflow
+              arguments: [--conf, inner_diamond_workflow.pegasus.properties, --output-sites, local,
+                -vvv, --basename, inner]
+              uses:
+              - {lfn: inner_diamond_workflow_rc.yml, forPlanning: true, type: input}
+              - {lfn: inner_diamond_workflow.yml, forPlanning: true, type: input}
+              - {lfn: inner_diamond_workflow.pegasus.properties, forPlanning: true, type: input}
+              - {lfn: inner_diamond_workflow_tc.yml, forPlanning: true, type: input}
+              - {lfn: sites.yml, forPlanning: true, type: input}
+            jobDependencies:
+            - id: diamond_workflow_gen
+              children: [diamond_subworkflow]
+
+
+
+
+
+
 Arguments for a pegasusWorkflow Job
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
