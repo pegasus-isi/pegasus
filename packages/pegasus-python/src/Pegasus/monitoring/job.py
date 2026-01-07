@@ -652,8 +652,7 @@ class Job:
                         )
 
             # PM-1398 pass cpu info
-            if "cpu" in my_record:
-                self._cpu_attribs = my_record["cpu"]
+            self._add_cpu_attributes(my_record)
 
             # GH-2149 we want to send invocation records as part of composite events
             if "invocation" in my_record:
@@ -1031,3 +1030,24 @@ class Job:
             kwargs["invocations"].append(invocation)
 
         return kwargs
+
+    def _add_cpu_attributes(self, invocation_record):
+
+        # PM-1398 pass cpu info
+        if "cpu" in invocation_record:
+            # this is how it appears in the old xml formatted kickstart records
+            self._cpu_attribs = invocation_record["cpu"]
+            return
+
+        # for GH-2150 handle for 5.0 yaml formatted records
+        """
+        cpu_count: 24
+        cpu_speed: 3300
+        cpu_vendor: GenuineIntel
+        cpu_name: Intel(R) Xeon(R) W-3235 CPU @ 3.30GHz
+        """
+        if self._cpu_attribs is None:
+            self._cpu_attribs = {}
+            for key in ["cpu_count", "cpu_speed", "cpu_vendor", "cpu_model"]:
+                if key in invocation_record:
+                    self._cpu_attribs[key] = invocation_record[key]
