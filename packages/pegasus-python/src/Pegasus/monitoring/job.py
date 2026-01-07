@@ -182,6 +182,7 @@ class Job:
         self._stderr_text = None
         self._additional_monitoring_events = []
         self._multipart_events = []
+        self._invocation_events = []
         self._cpu_attribs = None
         self._job_dagman_out = None  # _CONDOR_DAGMAN_LOG from environment
         # line for pegasus-plan and subdax_ jobs
@@ -654,6 +655,10 @@ class Job:
             if "cpu" in my_record:
                 self._cpu_attribs = my_record["cpu"]
 
+            # GH-2149 we want to send invocation records as part of composite events
+            if "invocation" in my_record:
+                self._add_invocation_event(my_record)
+
         if len(stdout_text_list) > 0:
             self._stdout_text = "".join(stdout_text_list)
 
@@ -897,6 +902,28 @@ class Job:
 
         return TaskOutput(task_data.getvalue(), events)
 
+    def _add_invocation_event(self, invocation_record):
+        # explicitly null out events that are not required to reduce confusion
+        my_record = {}
+
+        for key in [
+            "transformation",
+            "exitcode",
+            "duration",
+            "user",
+            "hostname",
+            "hostaddr",
+            "maxrss",
+            "ram",
+            "system",
+            "release",
+            "machine",
+        ]:
+            if key in invocation_record:
+                my_record[key] = invocation_record[key]
+
+        self._invocation_events.append(my_record)
+
     def create_composite_job_event(self, job_inst_kwargs):
         """
         this creates a composite job event that also includes all information included in a job_inst.end event
@@ -998,5 +1025,9 @@ class Job:
                         existing.append(subevent)
                 else:
                     kwargs[key] = event[key]
+
+        kwargs["invocations"] = []
+        for invocation in self._invocation_events:
+            kwargs["invocations"].append(invocation)
 
         return kwargs
