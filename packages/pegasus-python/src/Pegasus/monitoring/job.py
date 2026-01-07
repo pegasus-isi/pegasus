@@ -913,10 +913,6 @@ class Job:
             "hostname",
             "hostaddr",
             "maxrss",
-            "ram",
-            "system",
-            "release",
-            "machine",
         ]:
             if key in invocation_record:
                 my_record[key] = invocation_record[key]
@@ -1061,5 +1057,18 @@ class Job:
         if self._cpu_attribs is None:
             self._cpu_attribs = {}
             for key in ["cpu_count", "cpu_speed", "cpu_vendor", "cpu_model"]:
+                if key in invocation_record:
+                    self._cpu_attribs[key] = invocation_record[key]
+
+            # GH-2150 GH-2149 also add other machine attributes that we need.
+            # they are populated once only for clustered job
+            """
+            map from kickstart parser
+            [["machine", "ram_total"], ["ram"]],
+            ["machine", "uname_system"], ["system"]],
+            [["machine", "uname_release"], ["release"]],
+            [["machine", "uname_machine"], ["machine"]],
+            """
+            for key in ["ram", "system", "release", "machine"]:
                 if key in invocation_record:
                     self._cpu_attribs[key] = invocation_record[key]
