@@ -208,6 +208,30 @@ public class Condor extends Namespace {
     public static final String WF_SUBMIT_DIR_KEY = "wf_submit_dir";
 
     /**
+     * Expand back the workflow submit dir from the path.
+     *
+     * @param path
+     * @param classAdKey
+     * @param value the value to substitute
+     * @return
+     */
+    public static String expandFilePath(String path, String classAdKey, String value) {
+        StringBuilder result = new StringBuilder();
+        String key = "$(" + classAdKey + ")";
+        int index = path.indexOf(key);
+        if (index < 0) {
+            return path;
+        }
+        // should be empty string only
+        // for e.g. $(wf_submit_dir)/pegasus-worker-5.1.2-dev.0-x86_64_rhel_8.tar.gz
+        result.append(path.substring(0, index));
+        result.append(value);
+        result.append(path.substring(index + key.length()));
+
+        return result.toString();
+    }
+
+    /**
      * The name of the implementing namespace. It should be one of the valid namespaces always.
      *
      * @see Namespace#isNamespaceValid(String)

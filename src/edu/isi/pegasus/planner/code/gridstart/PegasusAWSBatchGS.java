@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
 import java.util.Arrays;
@@ -259,6 +260,7 @@ public class PegasusAWSBatchGS implements GridStart {
                     continue;
                 }
                 // add file
+                file = Condor.expandFilePath(file, Condor.WF_SUBMIT_DIR_KEY, this.mSubmitDir);
                 sb.append(file).append(",");
             }
             // remove trailing slash
