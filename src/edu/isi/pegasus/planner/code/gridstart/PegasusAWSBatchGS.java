@@ -254,13 +254,14 @@ public class PegasusAWSBatchGS implements GridStart {
             StringBuilder sb = new StringBuilder();
             boolean match = true;
             for (String file : files) {
+                // GH-2151 expand $(wf_submit_dir) before putting it in the env
+                file = Condor.expandFilePath(file, Condor.WF_SUBMIT_DIR_KEY, this.mSubmitDir);
                 if (match && file.equals(mPegasusLite.mLocalPathToPegasusLiteCommon)) {
                     // no need to match further
                     match = false;
                     continue;
                 }
                 // add file
-                file = Condor.expandFilePath(file, Condor.WF_SUBMIT_DIR_KEY, this.mSubmitDir);
                 sb.append(file).append(",");
             }
             // remove trailing slash
