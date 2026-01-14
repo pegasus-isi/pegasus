@@ -1015,6 +1015,18 @@ class Job:
                         % (key, self._exec_job_id)
                     )
                     existing = kwargs[key]
+
+                    if isinstance(existing, dict):
+                        if key != "location":
+                            # in case of aws batch for clustered jobs there are multiple location records
+                            # generated. We only pick the first one. For other records if there is a dict
+                            # and we detect multiple of them for the job, we should log an error
+                            logger.error(
+                                "key %s exists as a dict and not a list. Ignoring for job %s"
+                                % (key, self._exec_job_id)
+                            )
+                        continue
+
                     for subevent in event[key]:
                         # print(subevent) only print for debugging. too verbose for debug too
                         existing.append(subevent)
