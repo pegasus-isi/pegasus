@@ -111,6 +111,13 @@ Ubuntu
 
 .. tabs::
 
+   .. code-tab:: bash 26.04 LTS (Resolute Raccoon)
+
+      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
+      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu resolute main' >/etc/apt/sources.list.d/pegasus.list
+      apt-get update
+      apt-get install pegasus
+
    .. code-tab:: bash 24.04 LTS (Noble Numbat)
 
       curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
