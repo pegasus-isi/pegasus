@@ -278,6 +278,7 @@ Ubuntu:
       OS:
       - ubuntu_22
       - ubuntu_24
+      - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
   - ant dist-worker dist-release dist-deb
