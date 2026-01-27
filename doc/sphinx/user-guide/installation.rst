@@ -125,13 +125,6 @@ Ubuntu
       apt-get update
       apt-get install pegasus
 
-   .. code-tab:: bash 22.04 LTS (Jammy Jellyfish)
-
-      curl https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/ubuntu jammy main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
-
 
 Debian
 ======
@@ -151,14 +144,6 @@ Debian
       echo 'deb https://download.pegasus.isi.edu/pegasus/debian bookworm main' >/etc/apt/sources.list.d/pegasus.list
       apt-get update
       apt-get install pegasus
-
-   .. code-tab:: bash Debian 11 (Bullseye)
-
-      wget -O - https://download.pegasus.isi.edu/pegasus/gpg.txt | apt-key add -
-      echo 'deb https://download.pegasus.isi.edu/pegasus/debian bullseye main' >/etc/apt/sources.list.d/pegasus.list
-      apt-get update
-      apt-get install pegasus
-
 
 
 .. _macosx:
