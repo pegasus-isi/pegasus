@@ -42,6 +42,7 @@ for TARGET in \
     "ubuntu20::focal" \
     "ubuntu22::jammy" \
     "ubuntu24::noble" \
+    "ubuntu26::resolute" \
 ; do
     PLATFORM=$(echo $TARGET | sed 's/::.*//')
     CODENAME=$(echo $TARGET | sed 's/.*:://')
