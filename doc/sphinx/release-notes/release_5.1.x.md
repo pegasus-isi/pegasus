@@ -14,11 +14,22 @@ The release can be downloaded from:
 
 #### Highlights of the Release
 
+1) Move to Condor File IO for OSDF transfers. 
+
+   OSDF transfers are now always delagated to HTCondor to manage using HTCondor file IO, 
+   especially when turning on Bypass Input File Staging. This applicable both for **condorio** and 
+   **nonsharedfs data** configurations.
+
+   More details can be found in the 
+   [documentation](https://pegasus.isi.edu/docs/5.1.2/reference-guide/data-management.html#open-science-data-federation-osdf-stashcp-osdf-stash).
+
+2) Support for Python 3.14
+   
+
 #### New Features and Improvements
 
 - avoid parsing sub workflows into memory when parsing the top level workflow that includes them [\#2148](https://github.com/pegasus-isi/pegasus/issues/2148)
 - Move OSDF transfers to be via condor file transfers in Pegasus Lite instead of relying on pegasus-transfer [\#2141](https://github.com/pegasus-isi/pegasus/issues/2141)
-- bestway [\#2138](https://github.com/pegasus-isi/pegasus/issues/2138)
 - pick user provided env script for PegasusLite from the site where the job runs [\#2136](https://github.com/pegasus-isi/pegasus/issues/2136)
 - limit the number of pegasus-monitord launches in pegasus-dagman [\#2134](https://github.com/pegasus-isi/pegasus/issues/2134)
 - Add support for Python 3.14 [\#2128](https://github.com/pegasus-isi/pegasus/issues/2128)
