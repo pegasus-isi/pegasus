@@ -189,6 +189,9 @@ public class PegasusProperties implements Cloneable {
     /** the default value in MB for the size of documents that can be parsed * */
     private static final String DEFAULT_DOCUMENT_PARSER_SIZE = "500";
 
+    /** the maximum permissible value in MB for the size of documents that can be parsed * */
+    private static final int MAX_YAML_DOCUMENT_PARSER_SIZE = Integer.MAX_VALUE / 1024 / 1024;
+
     /**
      * the maximum number of jobs in the executable wf on which the condor dag checker is invoked *
      */
@@ -2069,6 +2072,17 @@ public class PegasusProperties implements Cloneable {
         int val;
         try {
             val = Integer.parseInt(prop);
+
+            // -ve value is also default
+            if (val < 0) {
+                val = Integer.parseInt(DEFAULT_DOCUMENT_PARSER_SIZE);
+            }
+
+            // GH-2152 default to 2GB as that is all is supported
+            val =
+                    val > PegasusProperties.MAX_YAML_DOCUMENT_PARSER_SIZE
+                            ? PegasusProperties.MAX_YAML_DOCUMENT_PARSER_SIZE
+                            : val;
         } catch (Exception e) {
             return Integer.parseInt(DEFAULT_DOCUMENT_PARSER_SIZE);
         }

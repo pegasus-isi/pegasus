@@ -3467,6 +3467,7 @@ Miscellaneous Properties
     | | Since : 5.1.1                                   | |                                                           |
     | | Type : Integer in MB                            | |                                                           |
     | | Default : 500                                   | |                                                           |
+    | | Maximum : 2047                                  | |                                                           |
     +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key: pegasus.credential.encrypt        | | If this property is set to true, then the planner         |
     | |                                                 | | will turn ON the encryption of credential when            |
