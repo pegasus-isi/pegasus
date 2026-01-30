@@ -1,5 +1,60 @@
 ## Pegasus 5.1.x Series
 
+### Pegasus 5.1.2
+
+**Release Date:**  Feb 2nd, 2026
+
+
+We are happy to announce the release of Pegasus 5.1.2. It is a minor release in the 5.1 branch.  We invite our users to give it a
+try. 
+
+The release can be downloaded from:
+<https://pegasus.isi.edu/downloads>
+
+
+#### Highlights of the Release
+
+#### New Features and Improvements
+
+- avoid parsing sub workflows into memory when parsing the top level workflow that includes them [\#2148](https://github.com/pegasus-isi/pegasus/issues/2148)
+- Move OSDF transfers to be via condor file transfers in Pegasus Lite instead of relying on pegasus-transfer [\#2141](https://github.com/pegasus-isi/pegasus/issues/2141)
+- bestway [\#2138](https://github.com/pegasus-isi/pegasus/issues/2138)
+- pick user provided env script for PegasusLite from the site where the job runs [\#2136](https://github.com/pegasus-isi/pegasus/issues/2136)
+- limit the number of pegasus-monitord launches in pegasus-dagman [\#2134](https://github.com/pegasus-isi/pegasus/issues/2134)
+- Add support for Python 3.14 [\#2128](https://github.com/pegasus-isi/pegasus/issues/2128)
+- Modify Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)
+- enable condorio support for bosco/ssh style job submissions for remote HPC clusters [\#2121](https://github.com/pegasus-isi/pegasus/issues/2121)
+- use job classad variables to shorten paths in transfer\_input\_files key in the job submit directories [\#2120](https://github.com/pegasus-isi/pegasus/issues/2120)
+- Explore condor\_dag\_checker - something we want to use as part of planning? [\#2116](https://github.com/pegasus-isi/pegasus/issues/2116)
+- update sqlite jar to latest stable 3.49.1.0 or higher [\#2109](https://github.com/pegasus-isi/pegasus/issues/2109)
+- \[PM-1833\] pmc cpuinfo invalid detection [\#1946](https://github.com/pegasus-isi/pegasus/issues/1946)
+- \[PM-1098\] encrypt the credentials when transferred with jobs [\#1212](https://github.com/pegasus-isi/pegasus/issues/1212)
+- \[PM-1092\] Ask Condor team to propagate glite errors in gridmanager [\#1206](https://github.com/pegasus-isi/pegasus/issues/1206)
+
+#### Bugs Fixed
+
+- cpu atttributes are not included in the job composite event [\#2150](https://github.com/pegasus-isi/pegasus/issues/2150)
+- ensure user JAVA\_HEAPMAX and JAVA\_HEAPMIN values are propagated to the planner invocations for sub workflows [\#2147](https://github.com/pegasus-isi/pegasus/issues/2147)
+- bypass in condorio mode gets incorrectly triggered if a directory path specified for a local file [\#2142](https://github.com/pegasus-isi/pegasus/issues/2142)
+- cleanup jobs running remotely in nonsharedfs get associated with a container [\#2137](https://github.com/pegasus-isi/pegasus/issues/2137)
+- CLI tools pollute PYTHONPATH [\#2135](https://github.com/pegasus-isi/pegasus/issues/2135)
+- condor quoting is not triggered for arguments for glite and ssh style jobs [\#2132](https://github.com/pegasus-isi/pegasus/issues/2132)
+- monitord fails to parse job.out file if location record is malformed [\#2131](https://github.com/pegasus-isi/pegasus/issues/2131)
+- pegasus-init remote cluster option creates incorrect paths for local site [\#2125](https://github.com/pegasus-isi/pegasus/issues/2125)
+- worker package staging broken in sharedfs for create dir job \(if set to run remotely\) [\#2124](https://github.com/pegasus-isi/pegasus/issues/2124)
+- monitord overwrites transfer\_attempts records found in the job.out file [\#2123](https://github.com/pegasus-isi/pegasus/issues/2123)
+- pegasus-analyzer --debug-job option broken [\#2122](https://github.com/pegasus-isi/pegasus/issues/2122)
+- pegasus-mpi-cluster: cpuinfo validation fails on hybrid CPU architectures [\#2119](https://github.com/pegasus-isi/pegasus/issues/2119)
+
+
+#### Merged Pull Requests
+
+- Bugfix: removes incorrect use of the 'local' keyword in flux\_local\_submit\_attributes.sh [\#2145](https://github.com/pegasus-isi/pegasus/pull/2145) ([ilumsden](https://github.com/ilumsden))
+- Adds a "local\_submit\_attributes.sh" script for the Flux RJMS [\#2144](https://github.com/pegasus-isi/pegasus/pull/2144) ([ilumsden](https://github.com/ilumsden))
+- Update pegasus-halt to fix POSIX compliance issue, bug on OSs where SH-\> dash [\#2139](https://github.com/pegasus-isi/pegasus/pull/2139) ([ahnitz](https://github.com/ahnitz))
+
+
+
 ### Pegasus 5.1.1 and 5.1.0
 
 **Release Date:**  May 29, 2025
