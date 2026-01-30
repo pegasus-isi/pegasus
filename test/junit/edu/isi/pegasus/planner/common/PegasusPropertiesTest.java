@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Test class to test the Pegasus Properties class
@@ -84,6 +86,32 @@ public class PegasusPropertiesTest {
                 assertTrue(n.isEmpty(), "Namepsace " + n.namespaceName() + " should be empty");
             }
         }
+        mLogger.logEventCompletion();
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "-50, 500", // default value
+                "10, 10",
+                "null, 500", // default value
+                "3000, 2047"
+            },
+            nullValues = {"null"})
+    public void testMaxSupportedYAMLDocSize(String input, String expected) {
+        mLogger.logEventStart(
+                "test.planner.common.PegasusProperties", "set", Integer.toString(mTestNumber++));
+
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        if (input != null) {
+            properties.setProperty("pegasus.parser.document.size", input);
+        }
+
+        String value = Integer.toString(properties.getMaxSupportedYAMLDocSize());
+
+        assertNotNull(value);
+        assertEquals(expected, value);
+
         mLogger.logEventCompletion();
     }
 }
