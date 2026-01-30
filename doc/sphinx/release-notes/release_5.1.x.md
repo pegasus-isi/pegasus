@@ -44,6 +44,7 @@ The release can be downloaded from:
 
 #### Bugs Fixed
 
+- enforce maximum document parsing size for yaml docs to 2047 MB [\#2152](https://github.com/pegasus-isi/pegasus/issues/2152)
 - cpu atttributes are not included in the job composite event [\#2150](https://github.com/pegasus-isi/pegasus/issues/2150)
 - ensure user JAVA\_HEAPMAX and JAVA\_HEAPMIN values are propagated to the planner invocations for sub workflows [\#2147](https://github.com/pegasus-isi/pegasus/issues/2147)
 - bypass in condorio mode gets incorrectly triggered if a directory path specified for a local file [\#2142](https://github.com/pegasus-isi/pegasus/issues/2142)
