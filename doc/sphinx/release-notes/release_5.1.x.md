@@ -24,7 +24,8 @@ The release can be downloaded from:
    [documentation](https://pegasus.isi.edu/docs/5.1.2/reference-guide/data-management.html#open-science-data-federation-osdf-stashcp-osdf-stash).
 
 2) Support for Python 3.14
-   
+
+3) Modified Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)   
 
 #### New Features and Improvements
 
