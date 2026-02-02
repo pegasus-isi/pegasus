@@ -25,8 +25,8 @@ fi
 
 # PM-1897 BLAHP configuration naming/layout changed - the rest of this
 # script has a "new" and "old" way of handling the config
-BLAHPD_LOCATION=$(condor_config_val BLAHPD_LOCATION || true)
-GLITE_LOCATION=$(condor_config_val GLITE_LOCATION || true)
+BLAHPD_LOCATION=$(condor_config_val BLAHPD_LOCATION 2>/dev/null || true)
+GLITE_LOCATION=$(condor_config_val GLITE_LOCATION 2>/dev/null || true)
 
 # user provided override
 if [ $# -eq 1 ]; then
