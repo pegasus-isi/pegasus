@@ -26,7 +26,8 @@ The release can be downloaded from:
 2) Support for Flux
    This release of Pegasus has support for running workflows on HPC resources managed by
    [Flux](https://flux-framework.org) resource manager. This support relies on changes to
-   HTCondor which will be made available in an upcoming release. 
+   HTCondor which will be made available in an upcoming 25.7.0 release scheduled for 
+   March 2026. 
    
    Details of mapping Pegasus resource profiles to flux parameters can be found 
    [here](https://pegasus.isi.edu/docs/5.1.2/user-guide/deployment-scenarios.html#setting-job-requirements)
