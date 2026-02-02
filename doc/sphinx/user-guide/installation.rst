@@ -182,7 +182,6 @@ service. The easiest way to do that is to use the Homebrew services tap:
 
 ::
 
-   $ brew tap homebrew/services
    $ brew services list
    $ brew services start htcondor
 
