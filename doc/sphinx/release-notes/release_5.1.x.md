@@ -2,7 +2,7 @@
 
 ### Pegasus 5.1.2
 
-**Release Date:**  Feb 2nd, 2026
+**Release Date:**  Feb 3rd, 2026
 
 
 We are happy to announce the release of Pegasus 5.1.2. It is a minor release in the 5.1 branch.  We invite our users to give it a
@@ -23,13 +23,26 @@ The release can be downloaded from:
    More details can be found in the 
    [documentation](https://pegasus.isi.edu/docs/5.1.2/reference-guide/data-management.html#open-science-data-federation-osdf-stashcp-osdf-stash).
 
-2) Support for Python 3.14
+2) Support for Flux
+   This release of Pegasus has support for running workflows on HPC resources managed by
+   [Flux](https://flux-framework.org) resource manager. This support relies on changes to
+   HTCondor which will be made available in an upcoming release. 
+   
+   Details of mapping Pegasus resource profiles to flux parameters can be found 
+   [here](https://pegasus.isi.edu/docs/5.1.2/user-guide/deployment-scenarios.html#setting-job-requirements)
+
+   This [repository](https://github.com/TauferLab/pegasus_flux_user_deploy) has useful scripts that a user can use to deploy pegasus in user mode 
+   on Flux Systems.
+
 
 3) Modified Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)   
+
+4) Support for Python 3.14
 
 #### New Features and Improvements
 
 - avoid parsing sub workflows into memory when parsing the top level workflow that includes them [\#2148](https://github.com/pegasus-isi/pegasus/issues/2148)
+- flux support [\#2143](https://github.com/pegasus-isi/pegasus/issues/2143)
 - Move OSDF transfers to be via condor file transfers in Pegasus Lite instead of relying on pegasus-transfer [\#2141](https://github.com/pegasus-isi/pegasus/issues/2141)
 - pick user provided env script for PegasusLite from the site where the job runs [\#2136](https://github.com/pegasus-isi/pegasus/issues/2136)
 - limit the number of pegasus-monitord launches in pegasus-dagman [\#2134](https://github.com/pegasus-isi/pegasus/issues/2134)
