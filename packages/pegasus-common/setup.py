@@ -42,7 +42,7 @@ def find_namespace_packages(where):
 
 setup(
     name="pegasus-wms.common",
-    version="5.1.2-dev.0",
+    version="5.1.2",
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Python Commons",
