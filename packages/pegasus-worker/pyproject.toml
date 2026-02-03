@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 # [project]
 
 # name = "pegasus-wms.worker"
-# version = "5.1.2"
+# version = "5.1.3-dev.0"
 # authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 # maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 # description = "Pegasus Workflow Management System Python API"
