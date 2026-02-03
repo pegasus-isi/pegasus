@@ -63,16 +63,18 @@ The release can be downloaded from:
 2) expand wf_submit_dir when generating AWS Batch job descriptions #2151 [\#2151](https://github.com/pegasus-isi/pegasus/issues/2151)
 3) cpu atttributes are not included in the job composite event [\#2150](https://github.com/pegasus-isi/pegasus/issues/2150)
 4) ensure user JAVA\_HEAPMAX and JAVA\_HEAPMIN values are propagated to the planner invocations for sub workflows [\#2147](https://github.com/pegasus-isi/pegasus/issues/2147)
-5) bypass in condorio mode gets incorrectly triggered if a directory path specified for a local file [\#2142](https://github.com/pegasus-isi/pegasus/issues/2142)
-6) cleanup jobs running remotely in nonsharedfs get associated with a container [\#2137](https://github.com/pegasus-isi/pegasus/issues/2137)
-7) CLI tools pollute PYTHONPATH [\#2135](https://github.com/pegasus-isi/pegasus/issues/2135)
-8) condor quoting is not triggered for arguments for glite and ssh style jobs [\#2132](https://github.com/pegasus-isi/pegasus/issues/2132)
-9) monitord fails to parse job.out file if location record is malformed [\#2131](https://github.com/pegasus-isi/pegasus/issues/2131)
-10) pegasus-init remote cluster option creates incorrect paths for local site [\#2125](https://github.com/pegasus-isi/pegasus/issues/2125)
-11) worker package staging broken in sharedfs for create dir job \(if set to run remotely\) [\#2124](https://github.com/pegasus-isi/pegasus/issues/2124)
-12) monitord overwrites transfer\_attempts records found in the job.out file [\#2123](https://github.com/pegasus-isi/pegasus/issues/2123)
-13) pegasus-analyzer --debug-job option broken [\#2122](https://github.com/pegasus-isi/pegasus/issues/2122)
-14) pegasus-mpi-cluster: cpuinfo validation fails on hybrid CPU architectures [\#2119](https://github.com/pegasus-isi/pegasus/issues/2119)
+5) pegasus-wms.worker incompatible with globus-sdk 4 [\#2146](https://github.com/pegasus-isi/pegasus/issues/2146)
+6) bypass in condorio mode gets incorrectly triggered if a directory path specified for a local file [\#2142](https://github.com/pegasus-isi/pegasus/issues/2142)
+7) cleanup jobs running remotely in nonsharedfs get associated with a container [\#2137](https://github.com/pegasus-isi/pegasus/issues/2137)
+8) CLI tools pollute PYTHONPATH [\#2135](https://github.com/pegasus-isi/pegasus/issues/2135)
+9) condor quoting is not triggered for arguments for glite and ssh style jobs [\#2132](https://github.com/pegasus-isi/pegasus/issues/2132)
+10) monitord fails to parse job.out file if location record is malformed [\#2131](https://github.com/pegasus-isi/pegasus/issues/2131)
+11) pegasus-init remote cluster option creates incorrect paths for local site [\#2125](https://github.com/pegasus-isi/pegasus/issues/2125)
+12) worker package staging broken in sharedfs for create dir job \(if set to run remotely\) [\#2124](https://github.com/pegasus-isi/pegasus/issues/2124)
+13) monitord overwrites transfer\_attempts records found in the job.out file [\#2123](https://github.com/pegasus-isi/pegasus/issues/2123)
+14) pegasus-analyzer --debug-job option broken [\#2122](https://github.com/pegasus-isi/pegasus/issues/2122)
+15) pegasus-mpi-cluster: cpuinfo validation fails on hybrid CPU architectures [\#2119](https://github.com/pegasus-isi/pegasus/issues/2119)
+
 
 
 #### Merged Pull Requests
