@@ -11,7 +11,7 @@ NOTE: Do not copy and paste the commands below without double checking.
        cd pegasus
        git checkout N.M
 
-2.  Set the version number in build.properties and commit:
+2.  Set the version number:
 
        # Install cz: https://commitizen-tools.github.io/commitizen/#installation
        cz bump --yes --files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --files-only 5.1.2-dev.0
