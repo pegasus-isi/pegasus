@@ -30,10 +30,10 @@ The release can be downloaded from:
    March 2026. 
    
    Details of mapping Pegasus resource profiles to flux parameters can be found 
-   [here](https://pegasus.isi.edu/docs/5.1.2/user-guide/deployment-scenarios.html#setting-job-requirements)
+   [here](https://pegasus.isi.edu/docs/5.1.2/user-guide/deployment-scenarios.html#setting-job-requirements).
 
    This [repository](https://github.com/TauferLab/pegasus_flux_user_deploy) has useful scripts that a user can use to deploy pegasus in user mode 
-   on Flux Systems.
+   on Flux Systems. [\#2143](https://github.com/pegasus-isi/pegasus/issues/2143)
 
 
 3) Modified Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)   
