@@ -196,7 +196,7 @@ public class SiteFactory {
         if (logger == null) {
             throw new SiteFactoryException("Invalid Logger passed");
         }
-        Properties connect = properties.matchingSubset(SiteCatalog.c_prefix + ".remote", false);
+        Properties connect = properties.matchingSubset(PegasusProperties.PEGASUS_SITE_CATALOG_BASE_REPO_URL_PROPERTY, false);
         /* get the implementor from properties */
         String catalogImplementor = properties.getSiteCatalogImplementor();
         String remoteFileBasename = (String) connect.get("file");

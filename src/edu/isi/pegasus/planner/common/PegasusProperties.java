@@ -91,7 +91,7 @@ public class PegasusProperties implements Cloneable {
             "pegasus.catalog.site.repo";
 
     public static final String PEGASUS_REMOTE_SITE_CATALOG_FILE_PROPERTY =
-            "pegasus.catalog.site.remote.file";
+            "pegasus.catalog.site.repo.file";
 
     public static final String PEGASUS_LOG_METRICS_PROPERTY = "pegasus.log.metrics";
 
