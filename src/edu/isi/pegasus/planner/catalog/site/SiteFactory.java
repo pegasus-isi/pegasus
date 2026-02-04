@@ -65,55 +65,7 @@ public class SiteFactory {
     /** The default basename of the site catalog file. */
     public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
-    /**
-     * @param sites list of sites
-     * @param bag the bag of pegasus objects
-     * @return SiteStore object containing the information about the sites.
-     */
-    public static SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
-        LogManager logger = bag.getLogger();
-        SiteStore result = new SiteStore();
-        if (sites.isEmpty()) {
-            logger.log(
-                    "No sites given by user. Will use sites from the site catalog",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            sites.add("*");
-        }
-        SiteCatalog catalog = null;
-
-        /* load the catalog using the factory */
-        catalog = SiteFactory.loadInstance(bag);
-
-        /* always load local site */
-        List<String> toLoad = new ArrayList<String>(sites);
-        toLoad.add("local");
-
-        /* load the sites in site catalog */
-        try {
-            catalog.load(toLoad);
-
-            /* query for the sites, and print them out */
-            logger.log("Sites loaded are " + catalog.list(), LogManager.DEBUG_MESSAGE_LEVEL);
-
-            // load into SiteStore from the catalog.
-            for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
-                SiteCatalogEntry s = catalog.lookup(it.next());
-                if (s != null) {
-                    result.addEntry(s);
-                }
-            }
-        } catch (SiteCatalogException e) {
-            throw new RuntimeException("Unable to load from site catalog ", e);
-        } finally {
-            /* close the connection */
-            try {
-                catalog.close();
-            } catch (Exception e) {
-            }
-        }
-
-        return result;
-    }
+    
 
     /**
      * Loads Site Catalog from a remote endpoint specified in the propoerties. If endpoint is not
