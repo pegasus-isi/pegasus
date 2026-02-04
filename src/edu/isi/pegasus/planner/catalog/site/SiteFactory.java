@@ -30,11 +30,12 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A factory class to load the appropriate implementation of Site Catalog as specified by
@@ -65,7 +66,111 @@ public class SiteFactory {
     /** The default basename of the site catalog file. */
     public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
-    
+    /**
+     * @param sites list of sites
+     * @param bag the bag of pegasus objects
+     * @return SiteStore object containing the information about the sites.
+     */
+    public static SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
+        LogManager logger = bag.getLogger();
+        SiteStore result = new SiteStore();
+
+        // GH-2154 we first try to load the remote site catalog
+        SiteCatalog catalog = null;
+        try {
+            catalog = SiteFactory.loadRemoteInstance(bag);
+            if (catalog != null) {
+                result = SiteFactory.loadSiteStoreFromCatalog(catalog, sites, logger);
+            }
+        } catch (SiteFactoryException e) {
+            logger.log(
+                    "Unable to download site catalog from remote endpoint",
+                    e,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        } finally {
+            /* close the connection */
+            try {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        // now we load the site catalog on user machine
+        SiteStore localSiteStore = new SiteStore();
+        try {
+            catalog = SiteFactory.loadInstance(bag);
+            // PM-1047 we want to save the catalogs all around.
+            result.setFileSource(catalog.getFileSource());
+
+            localSiteStore = SiteFactory.loadSiteStoreFromCatalog(catalog, sites, logger);
+
+        } catch (SiteFactoryException e) {
+            // PM-1515 site catalog exceptions to be ignored, as
+            // we can have entries in the DAX and also the planner
+            // generates default entries
+            logger.log(
+                    "Ignoring exception encountered while loading site catalog "
+                            + e.convertException(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        } finally {
+            /* close the connection */
+            try {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        for (Iterator<SiteCatalogEntry> it = localSiteStore.entryIterator(); it.hasNext(); ) {
+            // GH-2154 local machine site entries override what we downloaded
+            // it should be a merge actually
+            result.addEntry(it.next());
+        }
+
+        return result;
+    }
+
+    /**
+     * @param catalog
+     * @param sites list of sites
+     * @param logger
+     * @return SiteStore object containing the information about the sites.
+     */
+    public static SiteStore loadSiteStoreFromCatalog(
+            SiteCatalog catalog, Collection<String> sites, LogManager logger) {
+        SiteStore result = new SiteStore();
+        /* always load local site */
+        Set<String> toLoad = new HashSet<String>(sites);
+
+        /* load the sites in site catalog */
+        try {
+            catalog.load(new LinkedList(sites));
+
+            // load into SiteStore from the catalog.
+            if (toLoad.contains("*")) {
+                // if there * then we need to do a catalog listing after
+                // loading to ensure toLoad has all sites mentioned
+                toLoad.addAll(catalog.list());
+            }
+            /* query for the sites, and print them out */
+            logger.log("Sites to load are " + toLoad, LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // load into SiteStore from the catalog.
+            for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
+                SiteCatalogEntry s = catalog.lookup(it.next());
+                if (s != null) {
+                    result.addEntry(s);
+                }
+            }
+        } catch (SiteCatalogException e) {
+            throw new RuntimeException("Unable to load from site catalog ", e);
+        }
+
+        return result;
+    }
 
     /**
      * Loads Site Catalog from a remote endpoint specified in the propoerties. If endpoint is not
@@ -96,7 +201,7 @@ public class SiteFactory {
         String catalogImplementor = properties.getSiteCatalogImplementor();
         String remoteFileBasename = (String) connect.get("file");
 
-        if (remoteFileBasename != null) {
+        if (remoteFileBasename == null) {
             return null;
         }
 
