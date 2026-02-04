@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Date;
 
 /**
  * A FileUtility class to use for functions not supported by native JAVA File class.
@@ -55,7 +56,34 @@ public class FileUtils {
     }
 
     /**
-     * Copies a file to the specified directory.
+     * Downloads a file to the specified directory. If a file already exists, then only downloads if
+     * time equivalent to updateInterval has passed since download
+     *
+     * @param source the source url from where to download
+     * @param dest the destination to download to.
+     * @param updateInterval time in seconds to have elapsed, if a file is already been downloaded
+     *     previously
+     * @return file object to the copied file.
+     * @throws IOException in case of errors
+     */
+    public static File download(String source, String dest, long updateInterval)
+            throws IOException {
+        File result = new File(dest);
+        if (result.exists() && result.canRead()) {
+            // file exists and check for the modified time in milliseconds
+            long lastModifiedTime = result.lastModified();
+            long currentTime = new Date().getTime();
+            if (currentTime - lastModifiedTime <= updateInterval * 1000) {
+                // no need to redownload
+                return result;
+            }
+        }
+
+        return FileUtils.download(new URL(source), new File(dest));
+    }
+
+    /**
+     * Downloads a file to the specified directory.
      *
      * @param source the source url from where to download
      * @param dest the destination to download to.
@@ -65,8 +93,9 @@ public class FileUtils {
     public static File download(String source, String dest) throws IOException {
         return FileUtils.download(new URL(source), new File(dest));
     }
+
     /**
-     * Copies a file to the specified directory.
+     * Downloads a file to the specified directory.
      *
      * @param source the source url from where to download
      * @param dest the destination to download to.

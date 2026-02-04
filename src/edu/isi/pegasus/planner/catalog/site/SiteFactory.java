@@ -53,6 +53,9 @@ public class SiteFactory {
     public static final String DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM =
             "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs";
 
+    // value in seconds
+    public static final long DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO = 24 * 60 * 60;
+
     /** For 4.2, the orginal XML3 class was renamed XML and it supports different schemas. */
     private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
 
@@ -196,7 +199,9 @@ public class SiteFactory {
         if (logger == null) {
             throw new SiteFactoryException("Invalid Logger passed");
         }
-        Properties connect = properties.matchingSubset(PegasusProperties.PEGASUS_SITE_CATALOG_BASE_REPO_URL_PROPERTY, false);
+        Properties connect =
+                properties.matchingSubset(
+                        PegasusProperties.PEGASUS_SITE_CATALOG_BASE_REPO_URL_PROPERTY, false);
         /* get the implementor from properties */
         String catalogImplementor = properties.getSiteCatalogImplementor();
         String remoteFileBasename = (String) connect.get("file");
@@ -211,7 +216,11 @@ public class SiteFactory {
 
         File downloaded = null;
         try {
-            downloaded = FileUtils.download(endpoint, remoteFileBasename);
+            downloaded =
+                    FileUtils.download(
+                            endpoint,
+                            remoteFileBasename,
+                            DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO);
         } catch (IOException ex) {
             throw new SiteFactoryException("Unable to download file from endpoint " + endpoint, ex);
         }
