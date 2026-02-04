@@ -449,9 +449,16 @@ public class Profiles {
                     String val = (String) toAdd.get(key);
                     if (existing.containsKey(key)) {
                         if (overwrite) {
+                            if (val.isEmpty()) {
+                                // GH-2154 the value to be added is empty then
+                                // we delete existing profile
+                                existing.removeKey(key);
+                                continue;
+                            }
                             existing.construct((String) key, val);
                         }
                     } else {
+                        // key does not already exist
                         existing.construct((String) key, val);
                     }
                 }
