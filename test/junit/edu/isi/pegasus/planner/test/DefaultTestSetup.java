@@ -187,13 +187,13 @@ public class DefaultTestSetup implements TestSetup {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
         return this.loadSiteStore(sites, bag);
     }
-    
+
     /**
      * @param sites list of sites
      * @param bag the bag of pegasus objects
      * @return SiteStore object containing the information about the sites.
      */
-    private  SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
+    private SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
         LogManager logger = bag.getLogger();
         SiteStore result = new SiteStore();
         if (sites.isEmpty()) {
