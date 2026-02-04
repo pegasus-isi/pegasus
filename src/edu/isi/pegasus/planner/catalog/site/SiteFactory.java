@@ -128,9 +128,20 @@ public class SiteFactory {
         }
 
         for (Iterator<SiteCatalogEntry> it = localSiteStore.entryIterator(); it.hasNext(); ) {
-            // GH-2154 local machine site entries override what we downloaded
-            // it should be a merge actually
-            result.addEntry(it.next());
+            // GH-2154 local machine site entries ovewrite what we downloaded
+            // merge the local site store entry in.
+            SiteCatalogEntry localSiteStoreEntry = it.next();
+            String handle = localSiteStoreEntry.getSiteHandle();
+            if (result.contains(handle)) {
+                SiteCatalogEntry existing = result.lookup(handle);
+                existing.merge(localSiteStoreEntry, true);
+                logger.log(
+                        "Merged site catalog entry from remote github repo and local site catalog \n"
+                                + existing,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            } else {
+                result.addEntry(localSiteStoreEntry);
+            }
         }
 
         return result;
