@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -427,6 +428,35 @@ public class Profiles {
             obj.mProfileMap.put(n, nm);
         }
         return obj;
+    }
+
+    /**
+     * Merges the profiles in a controlled fashion.
+     *
+     * @param profiles
+     * @param overwrite
+     */
+    public void merge(Profiles profiles, boolean overwrite) {
+        // traverse through all the enum keys
+        for (NAMESPACES n : NAMESPACES.values()) {
+            Namespace existing = this.get(n);
+            Namespace toAdd = profiles.get(n);
+            Set toAddKeySet = toAdd.keySet();
+
+            if (toAddKeySet != null) {
+                // need to merge the profiles into the namespace
+                for (Object key : toAddKeySet) {
+                    String val = (String) toAdd.get(key);
+                    if (existing.containsKey(key)) {
+                        if (overwrite) {
+                            existing.construct((String) key, val);
+                        }
+                    } else {
+                        existing.construct((String) key, val);
+                    }
+                }
+            }
+        }
     }
 
     /**
