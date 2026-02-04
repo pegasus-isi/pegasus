@@ -21,12 +21,15 @@ package edu.isi.pegasus.planner.catalog.site;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
+import edu.isi.pegasus.common.util.FileUtils;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -44,6 +47,10 @@ public class SiteFactory {
 
     /** The default package where all the implementations reside. */
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.catalog.site.impl";
+
+    /** The default package where all the implementations reside. */
+    public static final String DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM =
+            "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs";
 
     /** For 4.2, the orginal XML3 class was renamed XML and it supports different schemas. */
     private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
@@ -106,6 +113,74 @@ public class SiteFactory {
         }
 
         return result;
+    }
+
+    /**
+     * Loads Site Catalog from a remote endpoint specified in the propoerties. If endpoint is not
+     * specified, then downloads from a conf directory in the default GitHub repository.
+     *
+     * @param bag bag of Pegasus initialization objects
+     * @return handle to the Site Catalog.
+     * @throws SiteFactoryException that nests any error that might occur during the instantiation
+     * @see #DEFAULT_PACKAGE_NAME
+     * @see #DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM
+     */
+    public static SiteCatalog loadRemoteInstance(PegasusBag bag) throws SiteFactoryException {
+
+        PegasusProperties properties = bag.getPegasusProperties();
+        if (properties == null) {
+            throw new SiteFactoryException("Invalid NULL properties passed");
+        }
+        File dir = bag.getPlannerDirectory();
+        if (dir == null) {
+            throw new SiteFactoryException("Invalid Directory passed");
+        }
+        LogManager logger = bag.getLogger();
+        if (logger == null) {
+            throw new SiteFactoryException("Invalid Logger passed");
+        }
+        Properties connect = properties.matchingSubset(SiteCatalog.c_prefix + ".remote", false);
+        /* get the implementor from properties */
+        String catalogImplementor = properties.getSiteCatalogImplementor();
+        String remoteFileBasename = (String) connect.get("file");
+
+        if (remoteFileBasename != null) {
+            return null;
+        }
+
+        String endpoint =
+                getRemoteEndpoint(
+                        properties.getBaseURLForSiteCatalogRepository(), remoteFileBasename);
+
+        File downloaded = null;
+        try {
+            downloaded = FileUtils.download(endpoint, remoteFileBasename);
+        } catch (IOException ex) {
+            throw new SiteFactoryException("Unable to download file from endpoint " + endpoint, ex);
+        }
+        logger.log(
+                "Download base site catalog file from "
+                        + endpoint
+                        + " to "
+                        + downloaded.getAbsolutePath(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        if (catalogImplementor == null) {
+            catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
+        }
+
+        /* prepend the package name if required */
+        catalogImplementor =
+                (catalogImplementor.indexOf('.') == -1)
+                        ?
+                        // pick up from the default package
+                        DEFAULT_PACKAGE_NAME + "." + catalogImplementor
+                        :
+                        // load directly
+                        catalogImplementor;
+
+        // determine the class that implements the site catalog
+        return loadInstance(catalogImplementor, bag, connect);
     }
 
     /**
@@ -251,5 +326,31 @@ public class SiteFactory {
      */
     private static boolean exists(File file) {
         return file == null ? false : file.exists() && file.canRead();
+    }
+
+    /**
+     * Returns the remote endpoint from where to download the file from.
+     *
+     * @param baseURL
+     * @param filename
+     * @return
+     */
+    public static String getRemoteEndpoint(String baseURL, String filename) {
+        StringBuilder endpoint = new StringBuilder();
+        baseURL = baseURL == null ? SiteFactory.DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM : baseURL;
+        Version v = new Version();
+
+        // "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/%s/conf/%s"
+        endpoint.append(baseURL)
+                .append("/")
+                .append(v.getMajor())
+                .append(".")
+                .append(v.getMinor())
+                .append("/")
+                .append("conf")
+                .append("/")
+                .append(filename);
+
+        return endpoint.toString();
     }
 }

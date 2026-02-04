@@ -87,6 +87,12 @@ public class PegasusProperties implements Cloneable {
 
     public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
 
+    public static final String PEGASUS_SITE_CATALOG_BASE_URL_PROPERTY =
+            "pegasus.catalog.site.baseurl";
+
+    public static final String PEGASUS_REMOTE_SITE_CATALOG_FILE_PROPERTY =
+            "pegasus.catalog.site.remote.file";
+
     public static final String PEGASUS_LOG_METRICS_PROPERTY = "pegasus.log.metrics";
 
     public static final String PEGASUS_LOG_METRICS_PROPERTY_FILE = "pegasus.log.metrics.file";
@@ -1003,6 +1009,17 @@ public class PegasusProperties implements Cloneable {
         return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY);
     }
 
+    /**
+     * Returns the Github repository from where to download the site catalogs from.
+     *
+     * <p>Referred to by the "pegasus.catalog.site.baseurl" property.
+     *
+     * @return the download url from where to download the file, else NULL
+     * @see #PEGASUS_SITE_CATALOG_BASE_URL_PROPERTY
+     */
+    public String getBaseURLForSiteCatalogRepository() {
+        return mProps.getProperty(PegasusProperties.PEGASUS_SITE_CATALOG_BASE_URL_PROPERTY);
+    }
     /**
      * Returns the location of the schema for the DAX.
      *
