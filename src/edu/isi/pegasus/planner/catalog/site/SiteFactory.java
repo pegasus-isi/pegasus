@@ -53,6 +53,12 @@ public class SiteFactory {
     public static final String DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM =
             "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs";
 
+    // in the user properties file the users specify with the prefix
+    // pegasus.catalog.site.repo. to change the value of these keys
+    public static final String FILE_PROPERTY_KEY = "file";
+
+    public static final String UPDATE_INTERVAL_PROPERTY_KEY = "interval";
+
     // value in seconds
     public static final long DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO = 24 * 60 * 60;
 
@@ -215,7 +221,7 @@ public class SiteFactory {
                         PegasusProperties.PEGASUS_SITE_CATALOG_BASE_REPO_URL_PROPERTY, false);
         /* get the implementor from properties */
         String catalogImplementor = properties.getSiteCatalogImplementor();
-        String remoteFileBasename = (String) connect.get("file");
+        String remoteFileBasename = (String) connect.get(SiteFactory.FILE_PROPERTY_KEY);
 
         if (remoteFileBasename == null) {
             return null;
@@ -231,7 +237,9 @@ public class SiteFactory {
                     FileUtils.download(
                             endpoint,
                             remoteFileBasename,
-                            DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO);
+                            getUpdateInterval(
+                                    (String)
+                                            connect.get(SiteFactory.UPDATE_INTERVAL_PROPERTY_KEY)));
         } catch (IOException ex) {
             throw new SiteFactoryException("Unable to download file from endpoint " + endpoint, ex);
         }
@@ -429,5 +437,26 @@ public class SiteFactory {
                 .append(filename);
 
         return endpoint.toString();
+    }
+
+    /**
+     * Returns the update interval value in seconds. If value passed is null or not a long then
+     * default interval value is returned
+     *
+     * @param value the value from properties
+     * @return interval value in seconds
+     * @see #DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO
+     */
+    private static long getUpdateInterval(String value) {
+        long interval = SiteFactory.DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO;
+        if (value == null) {
+            return interval;
+        }
+        try {
+            interval = Long.parseLong(value);
+        } catch (NumberFormatException e) {
+
+        }
+        return interval;
     }
 }
