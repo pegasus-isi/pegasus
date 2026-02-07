@@ -176,7 +176,14 @@ public class SiteFactory {
                 toLoad.addAll(catalog.list());
             }
             /* query for the sites, and print them out */
-            logger.log("Sites to load are " + toLoad, LogManager.DEBUG_MESSAGE_LEVEL);
+            logger.log(
+                    "Sites that will be loaded from "
+                            + catalog.getFileSource()
+                            + " "
+                            + "are"
+                            + " "
+                            + toLoad,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
 
             // load into SiteStore from the catalog.
             for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
