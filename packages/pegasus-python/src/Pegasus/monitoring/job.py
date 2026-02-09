@@ -913,6 +913,8 @@ class Job:
             "hostname",
             "hostaddr",
             "maxrss",
+            "total_input_size",
+            "total_output_size",
         ]:
             if key in invocation_record:
                 my_record[key] = invocation_record[key]

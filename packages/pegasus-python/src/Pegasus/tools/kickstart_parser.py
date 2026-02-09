@@ -11,6 +11,7 @@ import sys
 import traceback
 from enum import Enum
 from pprint import pprint
+from typing import Dict
 from xml.parsers import expat
 
 import yaml
@@ -615,6 +616,13 @@ class YAMLParser(Parser):
 
         # some mappings are based on lfns
         if "files" in data:
+            # GH-2155 compute the total sizes for input and output files
+            (total_input_size, total_output_size) = self.compute_total_input_output(
+                **data["files"]
+            )
+            new_data["total_input_size"] = total_input_size
+            new_data["total_output_size"] = total_output_size
+
             for lfn in data["files"]:
                 file_data = data["files"][lfn]
                 output = file_data["output"] if "output" in file_data.keys() else False
@@ -656,6 +664,34 @@ class YAMLParser(Parser):
                 new_data["outputs"][lfn] = meta
 
         return new_data
+
+    def compute_total_input_output(self, **kwargs: Dict[str, Dict[str, str]]):
+        """
+        Takes in a dictionary indexed by LFN names, where each value is statinfo for the file.
+
+        :param kwargs: lfn -> statinfo(dict)
+        :return: total size of input files statted and the total size of output files statted.
+        """
+
+        total_input_size = 0
+        total_output_size = 0
+
+        for lfn, statinfo in kwargs.items():
+            # ignore stdin, stdout, stderr and metadata infos
+            if lfn in ["stdin", "stdout", "stderr", "metadata"]:
+                continue
+
+            if not "size" in statinfo:
+                # should not happen. a statinfo record without a size
+                continue
+
+            if "output" in statinfo:
+                if statinfo["output"]:
+                    total_output_size += int(statinfo["size"])
+            else:
+                total_input_size += int(statinfo["size"])
+
+        return total_input_size, total_output_size
 
     def parse_invocation_record(self, buffer=""):
         """
