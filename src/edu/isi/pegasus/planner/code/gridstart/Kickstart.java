@@ -187,6 +187,9 @@ public class Kickstart implements GridStart {
 
     private Integrity mIntegrityHandler;
 
+    /** The default value of whether to enable stating of files or not */
+    private boolean DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES = false;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -234,10 +237,10 @@ public class Kickstart implements GridStart {
         mDisableKickstartStatCompletely = false;
         if (value == null) {
             // stat is disabled unless there is registration job
-            mDoStat = false;
+            mDoStat = DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES;
         } else {
             // user specified a stat value .
-            mDoStat = Boolean.parse(value, false);
+            mDoStat = Boolean.parse(value, DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES);
             mDisableKickstartStatCompletely = !mDoStat;
         }
         mLogger.log(
