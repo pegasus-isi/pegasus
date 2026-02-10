@@ -620,8 +620,8 @@ class YAMLParser(Parser):
             (total_ip_size_mb, total_op_size_mb) = self.compute_total_input_output(
                 **data["files"]
             )
-            new_data["total_ip_size_mb"] = total_ip_size_mb
-            new_data["total_op_size_mb"] = total_op_size_mb
+            new_data["tot_ip_size_mb"] = total_ip_size_mb
+            new_data["tot_op_size_mb"] = total_op_size_mb
 
             for lfn in data["files"]:
                 file_data = data["files"][lfn]
