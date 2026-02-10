@@ -11,6 +11,7 @@ import sys
 import traceback
 from enum import Enum
 from pprint import pprint
+from typing import Dict
 from xml.parsers import expat
 
 import yaml
@@ -615,6 +616,13 @@ class YAMLParser(Parser):
 
         # some mappings are based on lfns
         if "files" in data:
+            # GH-2155 compute the total sizes for input and output files
+            (total_ip_size_mb, total_op_size_mb) = self.compute_total_input_output(
+                **data["files"]
+            )
+            new_data["tot_ip_size_mb"] = total_ip_size_mb
+            new_data["tot_op_size_mb"] = total_op_size_mb
+
             for lfn in data["files"]:
                 file_data = data["files"][lfn]
                 output = file_data["output"] if "output" in file_data.keys() else False
@@ -656,6 +664,40 @@ class YAMLParser(Parser):
                 new_data["outputs"][lfn] = meta
 
         return new_data
+
+    def compute_total_input_output(self, **kwargs: Dict[str, Dict[str, str]]):
+        """
+        Takes in a dictionary indexed by LFN names, where each value is statinfo for the file.
+
+        :param kwargs: lfn -> statinfo(dict)
+        :return: total size of input files and output files in MB as determined from
+                 the stat records captured in the kickstart record.
+        """
+
+        # kickstart returns values as stat reports in bytes
+        total_input_size = 0
+        total_output_size = 0
+
+        for lfn, statinfo in kwargs.items():
+            # ignore stdin, stdout, stderr and metadata infos
+            if lfn in ["stdin", "stdout", "stderr", "metadata"]:
+                continue
+
+            if not "size" in statinfo:
+                # should not happen. a statinfo record without a size
+                continue
+
+            if "output" in statinfo:
+                if statinfo["output"]:
+                    total_output_size += int(statinfo["size"])
+            else:
+                total_input_size += int(statinfo["size"])
+
+        # convert to MB before returning and round to 6 digits
+        # to account for small files that are in bytes
+        total_ip_size_mb = round(total_input_size / (1024 * 1024), 6)
+        total_op_size_mb = round(total_output_size / (1024 * 1024), 6)
+        return total_ip_size_mb, total_op_size_mb
 
     def parse_invocation_record(self, buffer=""):
         """
