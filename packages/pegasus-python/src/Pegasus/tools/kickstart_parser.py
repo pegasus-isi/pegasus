@@ -617,11 +617,11 @@ class YAMLParser(Parser):
         # some mappings are based on lfns
         if "files" in data:
             # GH-2155 compute the total sizes for input and output files
-            (total_input_size, total_output_size) = self.compute_total_input_output(
+            (total_ip_size_mb, total_op_size_mb) = self.compute_total_input_output(
                 **data["files"]
             )
-            new_data["total_input_size"] = total_input_size
-            new_data["total_output_size"] = total_output_size
+            new_data["total_ip_size_mb"] = total_ip_size_mb
+            new_data["total_op_size_mb"] = total_op_size_mb
 
             for lfn in data["files"]:
                 file_data = data["files"][lfn]
@@ -670,9 +670,11 @@ class YAMLParser(Parser):
         Takes in a dictionary indexed by LFN names, where each value is statinfo for the file.
 
         :param kwargs: lfn -> statinfo(dict)
-        :return: total size of input files statted and the total size of output files statted.
+        :return: total size of input files and output files in MB as determined from
+                 the stat records captured in the kickstart record.
         """
 
+        # kickstart returns values as stat reports in bytes
         total_input_size = 0
         total_output_size = 0
 
@@ -691,7 +693,11 @@ class YAMLParser(Parser):
             else:
                 total_input_size += int(statinfo["size"])
 
-        return total_input_size, total_output_size
+        # convert to MB before returning and round to 6 digits
+        # to account for small files that are in bytes
+        total_ip_size_mb = round(total_input_size / (1024 * 1024), 6)
+        total_op_size_mb = round(total_output_size / (1024 * 1024), 6)
+        return total_ip_size_mb, total_op_size_mb
 
     def parse_invocation_record(self, buffer=""):
         """
