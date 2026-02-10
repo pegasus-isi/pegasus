@@ -188,7 +188,8 @@ public class Kickstart implements GridStart {
     private Integrity mIntegrityHandler;
 
     /** The default value of whether to enable stating of files or not */
-    private boolean DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES = false;
+    // GH-2155 set to true as we want to report file sizes in composite events
+    private boolean DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES = true;
 
     /**
      * Initializes the GridStart implementation.
