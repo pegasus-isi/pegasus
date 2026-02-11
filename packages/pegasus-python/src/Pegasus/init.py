@@ -440,7 +440,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
         storage_dir,
     )
     if remote_shared_scratch:
-        generate_sites_cmd += "--remote-scratch-parent-dir {} ".format(remote_shared_scratch)
+        generate_sites_cmd += f"--remote-scratch-parent-dir {remote_shared_scratch} "
     commands.append(generate_sites_cmd)
 
     create_plan_script(exec_site.exec_site_name, "workflow.yml")
