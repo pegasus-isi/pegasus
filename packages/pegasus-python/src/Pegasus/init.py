@@ -428,7 +428,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     --transfer-endpoint \"{}\" \\
     --scratch-parent-dir {} \\
     --storage-parent-dir {} \\
-    --remote-scratch-parent-dir {}""".format(
+    """.format(
         wf_sites,
         site.name,
         str(project_name),
@@ -438,8 +438,9 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
         transfer_endpoint,
         shared_scratch,
         storage_dir,
-        remote_shared_scratch,
     )
+    if remote_shared_scratch:
+        generate_sites_cmd += f"--remote-scratch-parent-dir {remote_shared_scratch} "
     commands.append(generate_sites_cmd)
 
     create_plan_script(exec_site.exec_site_name, "workflow.yml")
