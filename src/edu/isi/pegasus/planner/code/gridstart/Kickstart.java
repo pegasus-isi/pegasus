@@ -1234,6 +1234,8 @@ public class Kickstart implements GridStart {
             return "";
         }
 
+        boolean useCondorScratchDir = true;
+
         StringBuilder args = new StringBuilder();
         // PM-992 we stat outputs either if stat property is set
         // or registration is enabled. inputs are only stated if
@@ -1260,7 +1262,12 @@ public class Kickstart implements GridStart {
                         File file = new File(lof);
                         job.condorVariables.addIPFileForTransferFromWFSubmitDir(lof);
                         // arguments just need basename . no path component
-                        args.append(" -S @").append(file.getName()).append(" ");
+                        args.append(" -S @");
+                        if (useCondorScratchDir) {
+                            // GH-2156 pick lof file from the condor scratch dir
+                            args.append("$").append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE);
+                        }
+                        args.append(file.getName()).append(" ");
                         files.add(file.getName());
                     }
                 }
@@ -1273,7 +1280,12 @@ public class Kickstart implements GridStart {
                             File file = new File(lof);
                             job.condorVariables.addIPFileForTransferFromWFSubmitDir(lof);
                             // arguments just need basename . no path component
-                            args.append(" -s @").append(file.getName()).append(" ");
+                            args.append(" -s @");
+                            if (useCondorScratchDir) {
+                                // GH-2156 pick lof file from the condor scratch dir
+                                args.append("$").append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE);
+                            }
+                            args.append(file.getName()).append(" ");
                             files.add(file.getName());
                         }
                     }
