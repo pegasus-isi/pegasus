@@ -22,6 +22,8 @@
 #include <unistd.h>
 
 #include "mylist.h"
+#include "parse.h"
+#include "error.h"
 
 #ifndef ITEM_MAGIC
 #define ITEM_MAGIC 0xcd82bd08
@@ -161,6 +163,16 @@ int mylist_fill(mylist_p list, const char* fn) {
         return EINVAL;
     }
 
+    /* GH-2156 expand fn to account for enviornment variables */
+    Node *expanded_fn = parseCommandLine(fn);
+    if (expanded_fn == NULL){
+      printerr("ERROR: Unable to expand the filename %s\n", fn);
+      // To Do: figure out return value if required as
+      //        the parseCommandLine function errors out if unable to expand
+    }
+    //printerr("DEBUG: Expanded the filename %s to %s\n", fn, expanded_fn->data);
+    fn = (expanded_fn == NULL) ? fn : expanded_fn->data;
+ 
     /* try to open file */
     if ((file=fopen(fn, "r")) == NULL) {
         return errno;

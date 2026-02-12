@@ -208,6 +208,12 @@ public class Condor extends Namespace {
     public static final String WF_SUBMIT_DIR_KEY = "wf_submit_dir";
 
     /**
+     * the env variable that Condor sets in the job environment to indicate what directory the job
+     * executable is launched in at runtime
+     */
+    public static final String CONDOR_SCRATCH_DIR_ENV_VARIABLE = "_CONDOR_SCRATCH_DIR";
+
+    /**
      * Expand back the workflow submit dir from the path.
      *
      * @param path
