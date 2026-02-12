@@ -1265,7 +1265,9 @@ public class Kickstart implements GridStart {
                         args.append(" -S @");
                         if (useCondorScratchDir) {
                             // GH-2156 pick lof file from the condor scratch dir
-                            args.append("$").append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE).append("/");
+                            args.append("$")
+                                    .append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE)
+                                    .append("/");
                         }
                         args.append(file.getName()).append(" ");
                         files.add(file.getName());
@@ -1283,7 +1285,9 @@ public class Kickstart implements GridStart {
                             args.append(" -s @");
                             if (useCondorScratchDir) {
                                 // GH-2156 pick lof file from the condor scratch dir
-                                args.append("$").append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE).append("/");
+                                args.append("$")
+                                        .append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE)
+                                        .append("/");
                             }
                             args.append(file.getName()).append(" ");
                             files.add(file.getName());
