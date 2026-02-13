@@ -148,45 +148,6 @@ public class CondorSingularity extends AbstractContainer {
     @Override
     public StringBuilder containerRun(Job job) {
         StringBuilder sb = new StringBuilder();
-        /*
-        Container c = job.getContainer();
-        // PM-1888 the pegasus-lite-common.sh determines what
-        // is the singularity executable to use. We prefer apptainer if
-        // it exists
-        sb.append(this.wrapContainerInvocationWithLauncher(job, "$singularity_exec"));
-        sb.append(" ").append("exec").append(" ");
-
-        // do not mount home - this might not exists when running under for example the nobody user
-        sb.append("--no-home").append(" ");
-
-        // PM-1621 add --nv option if user has gpus requested with the job
-        if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)
-                || job.condorVariables.containsKey(Condor.REQUEST_GPUS_KEY)) {
-            sb.append("--nv").append(" ");
-        }
-
-        // exec --bind $PWD:/srv
-        sb.append("--bind $PWD:").append(CONTAINER_WORKING_DIRECTORY).append(" ");
-
-        // PM-1298 mount any host directories if specified
-        for (Container.MountPoint mp : c.getMountPoints()) {
-            sb.append("--bind ").append(mp).append(" ");
-        }
-
-        // PM-1626 incorporate any user specified extra arguments
-        String extraArgs = job.vdsNS.getStringValue(Pegasus.CONTAINER_ARGUMENTS_KEY);
-        if (extraArgs != null) {
-            sb.append(extraArgs);
-            sb.append(" ");
-        }
-
-        // we are running directly against image file. no loading
-        sb.append(c.getLFN()).append(" ");
-        */
-
-        // the script that sets up pegasus worker package and execute
-        // user application
-        // sb.append("/srv/").append(this.getJobLaunchScriptName(job));
 
         if (job instanceof AggregatedJob) {
             try {
