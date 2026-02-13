@@ -123,7 +123,7 @@ public class SingularityTest {
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         String expected =
-                "$singularity_exec exec --no-home --bind $PWD:/srv python3-minimal.sif /srv/preprocess_ID1-cont.sh";
+                "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh";
         assertEquals(
                 expected,
                 singularityInstance(j).containerRun(j).toString(),
@@ -142,7 +142,7 @@ public class SingularityTest {
         c.addMountPoint("/shared/scratch:/scratch");
         // get the part of singularity run with the options
         assertEquals(
-                "$singularity_exec exec --no-home --bind $PWD:/srv --bind /shared/scratch:/scratch python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+                "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR --bind /shared/scratch:/scratch python3-minimal.sif /srv/preprocess_ID1-cont.sh",
                 singularityInstance(j).containerRun(j).toString(),
                 "--bind option should be in singularity exec invocation");
         mLogger.logEventCompletion();
@@ -175,7 +175,7 @@ public class SingularityTest {
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         j.vdsNS.construct(Pegasus.GPUS_KEY, "5");
         assertEquals(
-                "$singularity_exec exec --no-home --nv --bind $PWD:/srv python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+                "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh",
                 singularityInstance(j).containerRun(j).toString(),
                 "singularity exec should have -nv option");
         mLogger.logEventCompletion();
@@ -190,7 +190,7 @@ public class SingularityTest {
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         j.condorVariables.construct(Condor.REQUEST_GPUS_KEY, "5");
         assertEquals(
-                "$singularity_exec exec --no-home --nv --bind $PWD:/srv python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+                "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh",
                 singularityInstance(j).containerRun(j).toString(),
                 "singluarity exec");
         mLogger.logEventCompletion();
