@@ -267,6 +267,11 @@ public class GLite extends Abstract {
             throw new CondorStyleException(missingKeyError(job, Condor.GRID_RESOURCE_KEY));
         }
 
+        // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
+        // variable for grid universe jobs, we explicity set the variable .
+        // in order for kickstart to read in the lof files correctly
+        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
+
         String batchSystem = GLite.getBatchSystem(job, gridResource);
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
