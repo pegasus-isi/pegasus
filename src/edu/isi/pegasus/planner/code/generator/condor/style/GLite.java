@@ -967,8 +967,9 @@ public class GLite extends Abstract {
                 if (args.contains(toReplace)) {
                     String newArgs = args.replaceAll("\\" + toReplace, value);
                     mLogger.log(
-                            "For job %s replaced arguments from '%s' to \n'%s'"
-                                    .formatted(job.getID(), args, newArgs),
+                            String.format(
+                                    "For job %s replaced arguments from '%s' to \n'%s'",
+                                    job.getID(), args, newArgs),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     job.setArguments(newArgs);
                 }
