@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -268,9 +269,9 @@ public class GLite extends Abstract {
         }
 
         // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
-        // variable for grid universe jobs, we explicity set the variable .
+        // variable for grid universe jobs, we explicity set the variable to .
         // in order for kickstart to read in the lof files correctly
-        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
+        updateJobToSetCondorScratchDir(job, ".");
 
         String batchSystem = GLite.getBatchSystem(job, gridResource);
         if (!supportedBatchSystem(batchSystem)) {
@@ -937,6 +938,43 @@ public class GLite extends Abstract {
             }
         }
         return;
+    }
+
+    /**
+     * Update a job environment with _CONDOR_SCRATCH_DIR and update arguments to replace
+     * _CONDOR_SCRATCH_DIR with it's value if required.
+     *
+     * @param job the job
+     * @param value the value to which _CONDOR_SCRATCH_DIR needs to be set to.
+     * @see Condor#CONDOR_SCRATCH_DIR_ENV_VARIABLE
+     */
+    protected void updateJobToSetCondorScratchDir(Job job, String value) {
+        // GH-2156 in grid universe jobs condor does not set $_CONDOR_SCRATCH_DIR
+        // set that to the value pass for Pegasus Lite jobs running via Glite
+        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, value);
+
+        // for shared fs jobs the kickstart arguments are specified directly
+        // to via arguments key in the condor submit file, and in that case
+        // we can't pass $_CONDOR_SCRATCH_DIR as that is evaluated on the submit
+        // host!
+        String dataConf = job.getDataConfiguration();
+        if (dataConf != null
+                && dataConf.equals(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)) {
+            // inspect the arguments string for $_CONDOR_SCRATCH_DIR and replace with value
+            String args = job.getArguments();
+            if (args != null) {
+                String toReplace = "$" + Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE;
+                if (args.contains(toReplace)) {
+                    String newArgs = args.replaceAll("\\" + toReplace, value);
+                    mLogger.log(
+                            String.format(
+                                    "For job %s replaced arguments from '%s' to \n'%s'",
+                                    job.getID(), args, newArgs),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    job.setArguments(newArgs);
+                }
+            }
+        }
     }
 
     public static void main(String[] args) {

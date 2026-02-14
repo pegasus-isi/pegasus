@@ -87,6 +87,16 @@ public class Singularity extends AbstractContainer {
         // exec --bind $PWD:/srv
         sb.append("--bind $PWD:").append(CONTAINER_WORKING_DIRECTORY).append(" ");
 
+        // GH-2156 we need to mount $_CONDOR_SCRATCH_DIR at the same location
+        // into the container. Else kickstart expansion of $_CONDOR_SCRATCH_DIR/job.in.lof
+        // for stating of the files does not work when kickstart is invoked
+        // inside the container
+        sb.append("--bind $")
+                .append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE)
+                .append(":$")
+                .append(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE)
+                .append(" ");
+
         // PM-1298 mount any host directories if specified
         for (Container.MountPoint mp : c.getMountPoints()) {
             sb.append("--bind ").append(mp).append(" ");

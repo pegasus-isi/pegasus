@@ -395,11 +395,16 @@ pegasus_lite_setup_work_dir()
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
             rm -f $d/.dirtest.$$ >/dev/null 2>&1
             d=`mktemp -d $d/pegasus.XXXXXXXXX`
-            pegasus_lite_work_dir=$d
+	    
+            # GH-2156 we always want a full path . no relative paths
+            # for pegasus_lite_work_dir . We get relative path when
+            # Pegasus sets _CONDOR_SCRATCH_DIR=. in submit files
+            pegasus_lite_work_dir=$(cd $d && pwd)
             export pegasus_lite_work_dir
+
             pegasus_lite_work_dir_created=1
             export pegasus_lite_work_dir_created
-            pegasus_lite_log "  Workdir is $d - $free_human available"
+            pegasus_lite_log "  Workdir is $pegasus_lite_work_dir - $free_human available"
 
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
