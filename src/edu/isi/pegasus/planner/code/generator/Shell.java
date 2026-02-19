@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -350,13 +351,11 @@ public class Shell extends Abstract {
             Job job, String scratchDirectory, String submitDirectory) {
         StringBuilder sb = new StringBuilder();
 
-        // gridstart modules right now store the executable
-        // and arguments as condor profiles. Should be fixed.
-        // This setting should happen only in Condor Generator
-        /*
-               String executable = (String) job.condorVariables.get( "executable" );
-               String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
-        */
+        // GH-2156 $_CONDOR_SCRATCH_DIR is not set in shell code generator
+        // we update the arguments string for the job and replace
+        // $_CONDOR_SCRATCH_DIR with .
+        CodeGenerator.updateJobToSetCondorScratchDir(job, mLogger, ".");
+
         String executable = job.getRemoteExecutable();
         String arguments =
                 job.getJobType() == Job.DAX_JOB
