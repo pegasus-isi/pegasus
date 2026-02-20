@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
@@ -189,7 +190,7 @@ public class Kickstart implements GridStart {
 
     /** The default value of whether to enable stating of files or not */
     // GH-2155 set to true as we want to report file sizes in composite events
-    private boolean DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES = true;
+    private final boolean DEFAULT_ENABLE_KICKSTART_STAT_OF_FILES = true;
 
     /**
      * Initializes the GridStart implementation.
@@ -585,6 +586,10 @@ public class Kickstart implements GridStart {
             // add the -X flag to denote turning on
             gridStartArgs.append(" -X ");
         }
+
+        // GH-2156 for pegasusWorkflows we disable stat completely always
+        // 045-hierarchy-sharedfs-c test cases example
+        stat = (job instanceof DAXJob) ? false : stat;
 
         String statArgs =
                 generateStatArgumentOptions(

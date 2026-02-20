@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -353,6 +354,11 @@ public class Shell extends Abstract {
             Job job, String scratchDirectory, String submitDirectory)
             throws CodeGeneratorException {
         StringBuilder sb = new StringBuilder();
+
+        // GH-2156 $_CONDOR_SCRATCH_DIR is not set in shell code generator
+        // we update the arguments string for the job and replace
+        // $_CONDOR_SCRATCH_DIR with .
+        CodeGenerator.updateJobToSetCondorScratchDir(job, mLogger, ".");
 
         String executable = job.getRemoteExecutable();
         String arguments =

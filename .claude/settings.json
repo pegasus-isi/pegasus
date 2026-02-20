@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "scitech": {
+      "source": {
+        "source": "github",
+        "repo": "pegasus-isi/claude-plugin-marketplace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "pegasus-dev@scitech": true
+  }
+}

@@ -1,6 +1,5 @@
-
-# Created by https://www.toptal.com/developers/gitignore/api/r,c,svn,cvs,vim,git,c++,venv,node,perl,java,maven,perl6,macos,emacs,linux,python,packer,dotenv,direnv,windows,eclipse,vagrant,terraform,virtualenv,intellij+all,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=r,c,svn,cvs,vim,git,c++,venv,node,perl,java,maven,perl6,macos,emacs,linux,python,packer,dotenv,direnv,windows,eclipse,vagrant,terraform,virtualenv,intellij+all,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
 
 ### C ###
 # Prerequisites
@@ -74,12 +73,6 @@ dkms.conf
 *.lai
 
 # Executables
-
-### CVS ###
-/CVS/*
-**/CVS/*
-.cvsignore
-*/.cvsignore
 
 ### direnv ###
 .direnv
@@ -284,6 +277,9 @@ atlassian-ide-plugin.xml
 # Cursive Clojure plugin
 .idea/replstate.xml
 
+# SonarLint plugin
+.idea/sonarlint/
+
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
 crashlytics.properties
@@ -297,20 +293,10 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 ### Intellij+all Patch ###
-# Ignores the whole .idea folder and all .iml files
-# See https://github.com/joeblau/gitignore.io/issues/186 and https://github.com/joeblau/gitignore.io/issues/360
+# Ignore everything but code style settings and run configurations
+# that are supposed to be shared within teams.
 
 .idea/
-
-# Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-249601023
-
-*.iml
-modules.xml
-.idea/misc.xml
-*.ipr
-
-# Sonarlint plugin
-.idea/sonarlint
 
 ### Java ###
 # Compiled class file
@@ -336,6 +322,7 @@ modules.xml
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+replay_pid*
 
 ### Linux ###
 
@@ -380,6 +367,10 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+### macOS Patch ###
+# iCloud generated files
+*.icloud
+
 ### Maven ###
 target/
 pom.xml.tag
@@ -393,7 +384,6 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
-### Maven Patch ###
 # Eclipse m2e generated files
 # Eclipse Core
 .project
@@ -456,6 +446,9 @@ web_modules/
 # Optional eslint cache
 .eslintcache
 
+# Optional stylelint cache
+.stylelintcache
+
 # Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
@@ -471,9 +464,11 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env.test
-.env.production
+# dotenv environment variable files
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -495,6 +490,12 @@ dist
 
 # vuepress build output
 .vuepress/dist
+
+# vuepress v2.x temp and cache directory
+.temp
+
+# Docusaurus cache and generated files
+.docusaurus
 
 # Serverless directories
 .serverless/
@@ -522,64 +523,10 @@ dist
 # Serverless Webpack directories
 .webpack/
 
-### Packer ###
-# Cache objects
-packer_cache/
+# Optional stylelint cache
 
-# Crash log
-crash.log
-
-# For built boxes
-*.box
-
-### Packer Patch ###
-# ignore temporary output files
-output-*/
-
-### Perl ###
-!Build/
-.last_cover_stats
-/META.yml
-/META.json
-/MYMETA.*
-*.pm.tdy
-*.bs
-
-# Devel::Cover
-cover_db/
-
-# Devel::NYTProf
-nytprof.out
-
-# Dizt::Zilla
-/.build/
-
-# Module::Build
-_build/
-Build
-Build.bat
-
-# Module::Install
-inc/
-
-# ExtUtils::MakeMaker
-/blib/
-/_eumm/
-/*.gz
-/Makefile
-/Makefile.old
-/MANIFEST.bak
-/pm_to_blib
-/*.zip
-
-### Perl6 ###
-# Gitignore for Perl 6 (http://www.perl6.org)
-# As part of https://github.com/github/gitignore
-
-# precompiled files
-.precomp
-lib/.precomp
-
+# SvelteKit build / generate output
+.svelte-kit
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -673,7 +620,22 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
 # Celery stuff
@@ -715,102 +677,22 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-### R ###
-# History files
-.Rhistory
-.Rapp.history
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
 
-# Session Data files
-.RData
+### Python Patch ###
+# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
+poetry.toml
 
-# User-specific files
-.Ruserdata
+# ruff
+.ruff_cache/
 
-# Example code in package build process
-*-Ex.R
-
-# Output files from R CMD build
-## /*.tar.gz
-
-# Output files from R CMD check
-/*.Rcheck/
-
-# RStudio files
-.Rproj.user/
-
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
-
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
-
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron
-
-# pkgdown site
-docs/
-
-# translation temp files
-po/*~
-
-### R.Bookdown Stack ###
-# R package: bookdown caching files
-/*_files/
-
-### SVN ###
-.svn/
-
-### Terraform ###
-# Local .terraform directories
-**/.terraform/*
-
-# .tfstate files
-*.tfstate
-*.tfstate.*
-
-# Crash log files
-
-# Exclude all .tfvars files, which are likely to contain sentitive data, such as
-# password, private keys, and other secrets. These should not be part of version
-# control as they are data points which are potentially sensitive and subject
-# to change depending on the environment.
-#
-*.tfvars
-
-# Ignore override files as they are usually used to override resources locally and so
-# are not checked in
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# Include override files you do wish to add to version control using negated pattern
-# !example_override.tf
-
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
-
-# Ignore CLI configuration files
-.terraformrc
-terraform.rc
-
-### Vagrant ###
-# General
-.vagrant/
-
-# Log files (if you are creating logs in debug mode, uncomment this)
-# *.log
-
-### Vagrant Patch ###
+# LSP config files
+pyrightconfig.json
 
 ### venv ###
 # Virtualenv
@@ -849,15 +731,18 @@ tags
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 
 ### VisualStudioCode ###
-.vscode/
+.vscode/*
 ## !.vscode/settings.json
 ## !.vscode/tasks.json
 ## !.vscode/launch.json
 ## !.vscode/extensions.json
-*.code-workspace
+## !.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/
+
+# Built Visual Studio Code Extensions
+*.vsix
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
@@ -890,4 +775,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/r,c,svn,cvs,vim,git,c++,venv,node,perl,java,maven,perl6,macos,emacs,linux,python,packer,dotenv,direnv,windows,eclipse,vagrant,terraform,virtualenv,intellij+all,visualstudiocode
+# End of https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode

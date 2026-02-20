@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
@@ -268,9 +269,9 @@ public class GLite extends Abstract {
         }
 
         // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
-        // variable for grid universe jobs, we explicity set the variable .
+        // variable for grid universe jobs, we explicity set the variable to .
         // in order for kickstart to read in the lof files correctly
-        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
+        CodeGenerator.updateJobToSetCondorScratchDir(job, mLogger, ".");
 
         String batchSystem = GLite.getBatchSystem(job, gridResource);
         if (!supportedBatchSystem(batchSystem)) {

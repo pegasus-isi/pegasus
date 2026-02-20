@@ -119,7 +119,7 @@ public class DockerTest {
                 "test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         String expected =
-                "docker run --user root -v $PWD:/scratch -w=/scratch --entrypoint /bin/sh --name $cont_name  $cont_image -c \"set -e ;export root_path=\\$PATH ;if ! grep -q -E  \"^$cont_group:\" /etc/group ; then groupadd -f --gid $c"
+                "docker run --user root -v $PWD:/scratch -v $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR -w=/scratch --entrypoint /bin/sh --name $cont_name  $cont_image -c \"set -e ;export root_path=\\$PATH ;if ! grep -q -E  \"^$cont_group:\" /etc/group ; then groupadd -f --gid $c"
                         + "ont_groupid $cont_group ;fi; if ! id $cont_user 2>/dev/null >/dev/null; then    if id $cont_userid 2>/dev/null >/dev/null; then        useradd -o --uid $cont_userid --gid $cont_groupid $cont_user;    else        "
                         + "useradd --uid $cont_userid --gid $cont_groupid $cont_user;    fi; fi; su $cont_user -c \\\"./preprocess_ID1-cont.sh \\\"\"";
         assertEquals(expected, dockerInstance(j).containerRun(j).toString(), "docker run command");
