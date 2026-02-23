@@ -359,7 +359,6 @@ public class Shell extends Abstract {
         // we update the arguments string for the job and replace
         // $_CONDOR_SCRATCH_DIR with .
         CodeGenerator.updateJobToSetCondorScratchDir(job, mLogger, ".");
-
         String executable = job.getRemoteExecutable();
         String arguments =
                 job.getJobType() == Job.DAX_JOB
@@ -404,7 +403,14 @@ public class Shell extends Abstract {
         sb.append(" ");
 
         // GH-2161 update to handle transfer input files
-        updateJobForCondorFileTX(job);
+        // only if the job is not running in the submit dir
+        // the auxillary jobs pegasus creates are set to run in submit dir
+        if (job.runInWorkDirectory()) {
+            updateJobForCondorFileTX(job);
+        }
+
+        // explicitly remove GRIDSTART_CLEANUP
+        job.envVariables.removeKey("GRIDSTART_CLEANUP");
 
         // add the environment variables
         for (Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ) {
