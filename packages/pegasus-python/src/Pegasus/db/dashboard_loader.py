@@ -3,7 +3,7 @@ __author__ = "Karan Vahi"
 
 import time
 
-from sqlalchemy import exc
+from sqlalchemy import exc, orm, select
 
 from Pegasus.db.base_loader import BaseLoader
 from Pegasus.db.schema import *
@@ -317,11 +317,15 @@ class DashboardLoader(BaseLoader):
         Cuts down on DB queries during insert processing.
         """
         if wf_uuid not in self.wf_id_cache:
-            query = self.session.query(MasterWorkflow).filter(
-                MasterWorkflow.wf_uuid == wf_uuid
-            )
             try:
-                self.wf_id_cache[wf_uuid] = query.one().wf_id
+                self.wf_id_cache[wf_uuid] = (
+                    self.session.execute(
+                        select(MasterWorkflow).where(MasterWorkflow.wf_uuid == wf_uuid)
+                    )
+                    .scalars()
+                    .one()
+                    .wf_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error("Multiple wf_id results for wf_uuid %s : %s", wf_uuid, e)
                 return None
@@ -341,11 +345,15 @@ class DashboardLoader(BaseLoader):
         Cuts down on DB queries during insert processing.
         """
         if wf_uuid not in self.root_wf_id_cache:
-            query = self.session.query(Workflow).filter(
-                MasterWorkflow.wf_uuid == wf_uuid
-            )
             try:
-                self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
+                self.root_wf_id_cache[wf_uuid] = (
+                    self.session.execute(
+                        select(Workflow).where(MasterWorkflow.wf_uuid == wf_uuid)
+                    )
+                    .scalars()
+                    .one()
+                    .root_wf_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error("Multiple wf_id results for wf_uuid %s : %s", wf_uuid, e)
                 return None

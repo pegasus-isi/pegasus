@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 
 from flask import url_for
-from sqlalchemy import sql
+from sqlalchemy import delete, func, select, sql, update
 from sqlalchemy.orm.exc import NoResultFound
 
 # TODO: circular import here...
@@ -247,10 +247,10 @@ class Ensembles:
         self.session = session
 
     def list_ensembles(self, username):
-        q = self.session.query(Ensemble)
-        q = q.filter(Ensemble.username == username)
+        q = select(Ensemble)
+        q = q.where(Ensemble.username == username)
         q = q.order_by(Ensemble.created)
-        return q.all()
+        return self.session.execute(q).scalars().all()
 
     def list_actionable_ensembles(self):
         states = (
@@ -264,13 +264,17 @@ class Ensembles:
             .where(Ensemble.id == EnsembleWorkflow.ensemble_id)
             .where(EnsembleWorkflow.state.in_(states))
         )
-        return self.session.query(Ensemble).filter(stmt).all()
+        return self.session.execute(select(Ensemble).where(stmt)).scalars().all()
 
     def get_ensemble(self, username, name):
         try:
             return (
-                self.session.query(Ensemble)
-                .filter(Ensemble.username == username, Ensemble.name == name)
+                self.session.execute(
+                    select(Ensemble).where(
+                        Ensemble.username == username, Ensemble.name == name
+                    )
+                )
+                .scalars()
                 .one()
             )
         except NoResultFound:
@@ -284,13 +288,20 @@ class Ensembles:
         :return: name of target ensemble
         :rtype: str
         """
-        return self.session.query(Ensemble).filter_by(id=ensemble_id).first().name
+        return (
+            self.session.execute(select(Ensemble).where(Ensemble.id == ensemble_id))
+            .scalars()
+            .first()
+            .name
+        )
 
     def create_ensemble(self, username, name, max_running, max_planning):
         if (
-            self.session.query(Ensemble)
-            .filter(Ensemble.username == username, Ensemble.name == name)
-            .count()
+            self.session.execute(
+                select(func.count(Ensemble.id)).where(
+                    Ensemble.username == username, Ensemble.name == name
+                )
+            ).scalar()
             > 0
         ):
             raise EMError("Ensemble %s already exists" % name, 400)
@@ -303,19 +314,23 @@ class Ensembles:
         return ensemble
 
     def list_ensemble_workflows(self, ensemble_id):
-        q = self.session.query(EnsembleWorkflow)
-        q = q.filter(EnsembleWorkflow.ensemble_id == ensemble_id)
+        q = select(EnsembleWorkflow)
+        q = q.where(EnsembleWorkflow.ensemble_id == ensemble_id)
         q = q.order_by(EnsembleWorkflow.created)
-        return q.all()
+        return self.session.execute(q).scalars().all()
 
     def get_ensemble_workflow(self, ensemble_id, name):
         try:
-            q = self.session.query(EnsembleWorkflow)
-            q = q.filter(
-                EnsembleWorkflow.ensemble_id == ensemble_id,
-                EnsembleWorkflow.name == name,
+            return (
+                self.session.execute(
+                    select(EnsembleWorkflow).where(
+                        EnsembleWorkflow.ensemble_id == ensemble_id,
+                        EnsembleWorkflow.name == name,
+                    )
+                )
+                .scalars()
+                .one()
             )
-            return q.one()
         except NoResultFound:
             raise EMError("No such ensemble workflow: %s" % name, 404)
 
@@ -324,11 +339,15 @@ class Ensembles:
     ):
 
         # Verify that the workflow doesn't already exist
-        q = self.session.query(EnsembleWorkflow)
-        q = q.filter(
-            EnsembleWorkflow.ensemble_id == ensemble_id, EnsembleWorkflow.name == name
-        )
-        if q.count() > 0:
+        if (
+            self.session.execute(
+                select(func.count(EnsembleWorkflow.id)).where(
+                    EnsembleWorkflow.ensemble_id == ensemble_id,
+                    EnsembleWorkflow.name == name,
+                )
+            ).scalar()
+            > 0
+        ):
             raise EMError("Ensemble workflow %s already exists" % name, 400)
 
         # Create database record
@@ -411,8 +430,13 @@ class Triggers:
         """
         try:
             return (
-                self.session.query(db.schema.Trigger)
-                .filter_by(ensemble_id=ensemble_id, name=trigger_name)
+                self.session.execute(
+                    select(db.schema.Trigger).where(
+                        db.schema.Trigger.ensemble_id == ensemble_id,
+                        db.schema.Trigger.name == trigger_name,
+                    )
+                )
+                .scalars()
                 .one()
             )
         except NoResultFound:
@@ -425,7 +449,7 @@ class Triggers:
 
     def list_triggers(self):
         """List all triggers"""
-        return self.session.query(db.schema.Trigger).all()
+        return self.session.execute(select(db.schema.Trigger)).scalars().all()
 
     def list_triggers_by_ensemble(self, username: str, ensemble: str):
         """List all triggers belonging to a specific ensemble
@@ -437,13 +461,13 @@ class Triggers:
         :return: list of Triggers
         :rtype: List[Trigger]
         """
-        q = self.session.query(db.schema.Trigger).filter(
+        q = select(db.schema.Trigger).where(
             Ensemble.username == username,
             Ensemble.name == ensemble,
             Ensemble.id == db.schema.Trigger.ensemble_id,
         )
 
-        return q.all()
+        return self.session.execute(q).scalars().all()
 
     def insert_trigger(
         self,
@@ -493,9 +517,14 @@ class Triggers:
         :type new_state: str
         """
 
-        self.session.query(db.schema.Trigger).filter_by(
-            ensemble_id=ensemble_id, _id=trigger_id
-        ).update({"state": new_state})
+        self.session.execute(
+            update(db.schema.Trigger)
+            .where(
+                db.schema.Trigger.ensemble_id == ensemble_id,
+                db.schema.Trigger._id == trigger_id,
+            )
+            .values(state=new_state)
+        )
 
         self.session.commit()
 
@@ -508,9 +537,12 @@ class Triggers:
         :type trigger: str
         """
 
-        self.session.query(db.schema.Trigger).filter_by(
-            ensemble_id=ensemble_id, name=trigger
-        ).delete()
+        self.session.execute(
+            delete(db.schema.Trigger).where(
+                db.schema.Trigger.ensemble_id == ensemble_id,
+                db.schema.Trigger.name == trigger,
+            )
+        )
 
         self.session.commit()
 

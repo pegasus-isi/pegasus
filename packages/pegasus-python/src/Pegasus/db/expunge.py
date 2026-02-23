@@ -3,7 +3,7 @@ __author__ = "Monte Goode"
 import logging
 import time
 
-from sqlalchemy import orm
+from sqlalchemy import orm, select
 
 from Pegasus.db import connection
 from Pegasus.db.schema import *
@@ -41,17 +41,23 @@ def delete_workflow(dburi, wf_uuid):
 
     session = connection.connect(dburi, create=True)
     try:
-        query = session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
         try:
-            wf = query.one()
+            wf = (
+                session.execute(select(Workflow).where(Workflow.wf_uuid == wf_uuid))
+                .scalars()
+                .one()
+            )
         except orm.exc.NoResultFound as e:
             log.warning("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
             return
 
         # PM-1218 gather list of descendant workflows with wf_uuid
-        query = session.query(Workflow).filter(Workflow.root_wf_id == wf.wf_id)
         try:
-            desc_wfs = query.all()
+            desc_wfs = (
+                session.execute(select(Workflow).where(Workflow.root_wf_id == wf.wf_id))
+                .scalars()
+                .all()
+            )
             for desc_wf in desc_wfs:
                 # delete the files from the rc_lfn explicitly as they are
                 # not associated with workflow table
@@ -80,12 +86,23 @@ def __delete_workflow_files__(session, wf_uuid, wf_id):
         % (wf_uuid, wf_id)
     )
 
-    query = session.query(RCLFN).filter(
-        RCLFN.lfn_id.in_(
-            session.query(WorkflowFiles.lfn_id).filter(WorkflowFiles.wf_id == wf_id)
+    sq = select(WorkflowFiles.lfn_id).where(WorkflowFiles.wf_id == wf_id).subquery()
+    lfn_ids_to_delete = [
+        row.lfn_id
+        for row in session.execute(
+            select(RCLFN.lfn_id).where(RCLFN.lfn_id.in_(sq))
+        ).all()
+    ]
+    count = 0
+    for lfn_id in lfn_ids_to_delete:
+        obj = (
+            session.execute(select(RCLFN).where(RCLFN.lfn_id == lfn_id))
+            .scalars()
+            .first()
         )
-    )
-    count = query.delete(synchronize_session=False)
+        if obj:
+            session.delete(obj)
+            count += 1
     log.info("Flushing deletes of rc_lfn from workflow: %s", wf_uuid)
     i = time.time()
     session.flush()
@@ -101,9 +118,14 @@ def delete_dashboard_workflow(dburi, wf_uuid):
 
     session = connection.connect(dburi, create=True)
     try:
-        query = session.query(MasterWorkflow).filter(MasterWorkflow.wf_uuid == wf_uuid)
         try:
-            wf = query.one()
+            wf = (
+                session.execute(
+                    select(MasterWorkflow).where(MasterWorkflow.wf_uuid == wf_uuid)
+                )
+                .scalars()
+                .one()
+            )
         except orm.exc.NoResultFound as e:
             log.warning("No workflow found with wf_uuid %s - aborting expunge", wf_uuid)
             return

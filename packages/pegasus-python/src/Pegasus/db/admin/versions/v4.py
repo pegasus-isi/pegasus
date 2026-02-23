@@ -17,6 +17,7 @@
 import logging
 
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.versions.base_version import BaseVersion
 
@@ -35,7 +36,9 @@ class Version(BaseVersion):
         # TODO We might need to check to see if the field already exists first
         try:
             self.db.execute(
-                "ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default 0"
+                text(
+                    "ALTER TABLE master_workflow ADD archived BOOLEAN NOT NULL default 0"
+                )
             )
         except (OperationalError, ProgrammingError):
             pass

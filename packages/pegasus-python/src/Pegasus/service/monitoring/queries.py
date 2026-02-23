@@ -17,8 +17,10 @@ __author__ = "Rajiv Mayani"
 import hashlib
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.orm import aliased, defer
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import LABEL_STYLE_TABLENAME_PLUS_COL
 from sqlalchemy.sql.expression import and_, desc, distinct, func
 
 from Pegasus.db import connection
@@ -82,54 +84,55 @@ class WorkflowQueries:
         else:
             raise TypeError("Expecting boolean, found %s" % type(use_cache))
 
-    def _cache_key_from_query(self, q):
-        statement = q.with_labels().statement
-        compiled = statement.compile()
+    def _cache_key_from_query(self, stmt):
+        compiled = stmt.set_label_style(LABEL_STYLE_TABLENAME_PLUS_COL).compile()
         params = compiled.params
-
         cache_key = " ".join(
             [self._conn_string_csum, str(compiled)]
             + [str(params[k]) for k in sorted(params)]
         )
         return hashlib.md5(cache_key.encode("utf-8")).hexdigest()
 
-    def _get_count(self, q, use_cache=True, timeout=60):
-        cache_key = "%s.count" % self._cache_key_from_query(q)
+    def _get_count(self, stmt, use_cache=True, timeout=60):
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        cache_key = "%s.count" % self._cache_key_from_query(count_stmt)
         if use_cache and cache.get(cache_key):
             log.debug("Cache Hit: %s" % cache_key)
             count = cache.get(cache_key)
 
         else:
             log.debug("Cache Miss: %s" % cache_key)
-            count = q.count()
+            count = self.session.execute(count_stmt).scalar()
             t = timeout(count) if callable(timeout) else timeout
             cache.set(cache_key, count, t)
 
         return count
 
-    def _get_all(self, q, use_cache=True, timeout=60):
-        cache_key = "%s.all" % self._cache_key_from_query(q)
+    def _get_all(self, stmt, use_cache=True, timeout=60, scalars=True):
+        cache_key = "%s.all" % self._cache_key_from_query(stmt)
         if use_cache and cache.get(cache_key):
             log.debug("Cache Hit: %s" % cache_key)
             record = cache.get(cache_key)
 
         else:
             log.debug("Cache Miss: %s" % cache_key)
-            record = q.all()
+            result = self.session.execute(stmt)
+            record = result.scalars().all() if scalars else result.all()
             t = timeout(record) if callable(timeout) else timeout
             cache.set(cache_key, record, t)
 
         return record
 
-    def _get_one(self, q, use_cache=True, timeout=60):
-        cache_key = "%s.one" % self._cache_key_from_query(q)
+    def _get_one(self, stmt, use_cache=True, timeout=60, scalars=True):
+        cache_key = "%s.one" % self._cache_key_from_query(stmt)
         if use_cache and cache.get(cache_key):
             log.debug("Cache Hit: %s" % cache_key)
             record = cache.get(cache_key)
 
         else:
             log.debug("Cache Miss: %s" % cache_key)
-            record = q.one()
+            result = self.session.execute(stmt)
+            record = result.scalars().one() if scalars else result.one()
             t = timeout(record) if callable(timeout) else timeout
             cache.set(cache_key, record, t)
 
@@ -142,7 +145,7 @@ class WorkflowQueries:
 
         try:
             x = query_parse(query, **resource)
-            q = q.filter(x[0])
+            q = q.where(x[0])
         except (KeyError, AttributeError):
             log.exception("Invalid query %s" % query)
             raise InvalidQueryError("Invalid query %s" % query)
@@ -157,7 +160,7 @@ class WorkflowQueries:
 
     @staticmethod
     def _add_ordering(q, order, **resource):
-        if not q or not order or not resource:
+        if q is None or not order or not resource:
             return q
 
         sort_order = sort_parse(order)
@@ -229,7 +232,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(MasterWorkflow)
+        q = select(MasterWorkflow)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -245,8 +248,9 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         alias = aliased(MasterWorkflowstate, qws)
 
-        q = q.outerjoin(qws, MasterWorkflow.wf_id == qws.c.wf_id)
-        q = q.add_entity(alias)
+        q = select(MasterWorkflow, alias).outerjoin(
+            qws, MasterWorkflow.wf_id == qws.c.wf_id
+        )
 
         #
         # Construct SQLAlchemy Query `q` to filter.
@@ -270,7 +274,7 @@ class MasterWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, scalars=False)
 
         for i in range(len(records)):
             new_record = records[i][0]
@@ -289,16 +293,10 @@ class MasterWorkflowQueries(WorkflowQueries):
 
         :return: Root Workflow object
         """
-        q = self.session.query(MasterWorkflow)
-
         if m_wf_id is None:
             raise ValueError("m_wf_id cannot be None")
 
         m_wf_id = str(m_wf_id)
-        if m_wf_id.isdigit():
-            q = q.filter(MasterWorkflow.wf_id == m_wf_id)
-        else:
-            q = q.filter(MasterWorkflow.wf_uuid == m_wf_id)
 
         #
         # Finish Construction of Base SQLAlchemy Query `q`
@@ -306,11 +304,19 @@ class MasterWorkflowQueries(WorkflowQueries):
         qws = self._get_max_master_workflow_state(m_wf_id=m_wf_id)
         qws = qws.subquery("master_workflowstate")
 
-        q = q.outerjoin(qws, MasterWorkflow.wf_id == qws.c.wf_id)
-        q = q.add_entity(aliased(MasterWorkflowstate, qws))
+        alias = aliased(MasterWorkflowstate, qws)
+
+        q = select(MasterWorkflow, alias).outerjoin(
+            qws, MasterWorkflow.wf_id == qws.c.wf_id
+        )
+
+        if m_wf_id.isdigit():
+            q = q.where(MasterWorkflow.wf_id == m_wf_id)
+        else:
+            q = q.where(MasterWorkflow.wf_uuid == m_wf_id)
 
         try:
-            record_tuple = self._get_one(q, use_cache)
+            record_tuple = self._get_one(q, use_cache, scalars=False)
             record = record_tuple[0]
             record.workflow_state = record_tuple[1]
             return record
@@ -323,20 +329,18 @@ class MasterWorkflowQueries(WorkflowQueries):
         qmax = self._get_recent_master_workflow_state(m_wf_id, mws)
         qmax = qmax.subquery("max_timestamp")
 
-        q = self.session.query(mws)
-        q = q.join(
+        q = select(mws).join(
             qmax, and_(mws.wf_id == qmax.c.wf_id, mws.timestamp == qmax.c.max_time)
         )
 
         return q
 
     def _get_recent_master_workflow_state(self, m_wf_id=None, mws=MasterWorkflowstate):
-        q = self.session.query(mws.wf_id)
-        q = q.add_columns(func.max(mws.timestamp).label("max_time"))
+        q = select(mws.wf_id, func.max(mws.timestamp).label("max_time"))
 
         if m_wf_id:
             log.debug("filter on m_wf_id")
-            q = q.filter(mws.wf_id == m_wf_id)
+            q = q.where(mws.wf_id == m_wf_id)
 
         q = q.group_by(mws.wf_id)
 
@@ -350,11 +354,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         wf_id = str(wf_id)
         if not wf_id.isdigit():
-            q = self.session.query(Workflow.wf_id)
-            q = q.filter(Workflow.wf_uuid == wf_id)
+            q = select(Workflow.wf_id).where(Workflow.wf_uuid == wf_id)
 
             try:
-                q = self._get_one(q, True, timeout=600)
+                q = self._get_one(q, True, timeout=600, scalars=False)
                 wf_id = q.wf_id
 
             except NoResultFound as e:
@@ -390,8 +393,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.root_wf_id == m_wf_id)
+        q = select(Workflow).where(Workflow.root_wf_id == m_wf_id)
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
@@ -433,8 +435,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         """
         wf_id = self.wf_uuid_to_wf_id(wf_id)
 
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.wf_id == wf_id)
+        q = select(Workflow).where(Workflow.wf_id == wf_id)
 
         try:
             return self._get_one(q, use_cache)
@@ -470,8 +471,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(WorkflowMeta)
-        q = q.filter(WorkflowMeta.wf_id == wf_id)
+        q = select(WorkflowMeta).where(WorkflowMeta.wf_id == wf_id)
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
@@ -531,26 +531,24 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(WorkflowFiles)
-        q = q.filter(WorkflowFiles.wf_id == wf_id)
+        q = select(WorkflowFiles).where(WorkflowFiles.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        q = (
-            self.session.query(WorkflowFiles)
-            .outerjoin(RCLFN)
-            .outerjoin(RCLFN.pfns)
-            .outerjoin(RCLFN.meta)
-            .filter(WorkflowFiles.wf_id == wf_id)
-        )
+        q = select(WorkflowFiles).where(WorkflowFiles.wf_id == wf_id)
 
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
+            q = (
+                q.outerjoin(RCLFN, WorkflowFiles.lfn_id == RCLFN.lfn_id)
+                .outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+                .outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+            )
             q = self._evaluate_query(q, query, l=RCLFN, p=RCPFN, rm=RCMeta)
             total_filtered = self._get_count(q, use_cache)
 
@@ -613,8 +611,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Workflowstate)
-        q = q.filter(Workflowstate.wf_id == wf_id)
+        q = select(Workflowstate).where(Workflowstate.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache, timeout=timeout)
 
@@ -651,20 +648,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qmax = self._get_recent_workflow_state(wf_id, ws)
         qmax = qmax.subquery("max_timestamp")
 
-        q = self.session.query(ws)
-        q = q.join(
+        q = select(ws).join(
             qmax, and_(ws.wf_id == qmax.c.wf_id, ws.timestamp == qmax.c.max_time)
         )
 
         return q
 
     def _get_recent_workflow_state(self, wf_id=None, ws=Workflowstate):
-        q = self.session.query(ws.wf_id)
-        q = q.add_columns(func.max(ws.timestamp).label("max_time"))
+        q = select(ws.wf_id, func.max(ws.timestamp).label("max_time"))
 
         if wf_id:
             log.debug("filter on wf_id")
-            q = q.filter(ws.wf_id == wf_id)
+            q = q.where(ws.wf_id == wf_id)
 
         q = q.group_by(ws.wf_id)
 
@@ -699,8 +694,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job)
-        q = q.filter(Job.wf_id == wf_id)
+        q = select(Job).where(Job.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -745,8 +739,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if job_id is None:
             raise ValueError("job_id cannot be None")
 
-        q = self.session.query(Job)
-        q = q.filter(Job.job_id == job_id)
+        q = select(Job).where(Job.job_id == job_id)
 
         try:
             return self._get_one(q, use_cache, timeout=600)
@@ -782,8 +775,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Host)
-        q = q.filter(Host.wf_id == wf_id)
+        q = select(Host).where(Host.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -828,8 +820,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if host_id is None or not str(host_id).isdigit():
             raise ValueError("host_id cannot be None")
 
-        q = self.session.query(Host)
-        q = q.filter(Host.host_id == host_id)
+        q = select(Host).where(Host.host_id == host_id)
 
         try:
             return self._get_one(q, use_cache)
@@ -867,14 +858,16 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Jobstate)
-        q = q.join(JobInstance, JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.join(Job, Job.job_id == JobInstance.job_id)
+        q = (
+            select(Jobstate)
+            .join(JobInstance, JobInstance.job_instance_id == Jobstate.job_instance_id)
+            .join(Job, Job.job_id == JobInstance.job_id)
+        )
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Jobstate.job_instance_id == job_instance_id)
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(Job.job_id == job_id)
+        q = q.where(JobInstance.job_instance_id == job_instance_id)
+        q = q.where(Jobstate.job_instance_id == job_instance_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -908,12 +901,13 @@ class StampedeWorkflowQueries(WorkflowQueries):
         return PagedResponse(records, total_records, total_filtered)
 
     def _get_recent_job_state(self, job_instance_id=None, js=Jobstate):
-        q = self.session.query(js.job_instance_id)
-        q = q.add_columns(func.max(js.jobstate_submit_seq).label("max_jsss"))
+        q = select(
+            js.job_instance_id, func.max(js.jobstate_submit_seq).label("max_jsss")
+        )
 
         if job_instance_id:
             log.debug("filter on job_instance_id")
-            q = q.filter(js.job_instance_id == job_instance_id)
+            q = q.where(js.job_instance_id == job_instance_id)
 
         q = q.group_by(js.job_instance_id)
 
@@ -948,8 +942,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Task)
-        q = q.filter(Task.wf_id == wf_id)
+        q = select(Task).where(Task.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -1008,9 +1001,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Task)
-        q = q.filter(Task.wf_id == wf_id)
-        q = q.filter(Task.job_id == job_id)
+        q = select(Task).where(Task.wf_id == wf_id).where(Task.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -1052,12 +1043,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
 
         :return: task record
         """
-        q = self.session.query(Task)
-
         if task_id is None:
             raise ValueError("task_id cannot be None")
 
-        q = q.filter(Task.task_id == task_id)
+        q = select(Task).where(Task.task_id == task_id)
 
         try:
             return self._get_one(q, use_cache)
@@ -1091,8 +1080,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(TaskMeta)
-        q = q.filter(TaskMeta.task_id == task_id)
+        q = select(TaskMeta).where(TaskMeta.task_id == task_id)
         total_records = total_filtered = self._get_count(q, use_cache)
 
         if total_records == 0:
@@ -1155,11 +1143,10 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(JobInstance)
-        q = q.join(Job, Job.job_id == JobInstance.job_id)
+        q = select(JobInstance).join(Job, Job.job_id == JobInstance.job_id)
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(Job.job_id == job_id)
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(Job.job_id == job_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -1220,8 +1207,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if job_instance_id is None:
             raise ValueError("job_instance_id cannot be None")
 
-        q = self.session.query(JobInstance)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
+        q = select(JobInstance).where(JobInstance.job_instance_id == job_instance_id)
 
         try:
             return self._get_one(q, use_cache, timeout=timeout_duration)
@@ -1229,12 +1215,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
             raise e
 
     def _get_recent_job_instance(self, job_id=None, ji=JobInstance):
-        q = self.session.query(ji.job_id)
-        q = q.add_columns(func.max(ji.job_submit_seq).label("max_jss"))
+        q = select(ji.job_id, func.max(ji.job_submit_seq).label("max_jss"))
 
         if job_id:
             log.debug("filter on job_id")
-            q = q.filter(ji.job_id == job_id)
+            q = q.where(ji.job_id == job_id)
 
         q = q.group_by(ji.job_id)
 
@@ -1269,8 +1254,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Invocation)
-        q = q.filter(Invocation.wf_id == wf_id)
+        q = select(Invocation).where(Invocation.wf_id == wf_id)
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -1334,9 +1318,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Invocation)
-        q = q.filter(Invocation.wf_id == wf_id)
-        q = q.filter(Invocation.job_instance_id == job_instance_id)
+        q = (
+            select(Invocation)
+            .where(Invocation.wf_id == wf_id)
+            .where(Invocation.job_instance_id == job_instance_id)
+        )
 
         total_records = total_filtered = self._get_count(q, use_cache)
 
@@ -1381,8 +1367,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if invocation_id is None or not str(invocation_id).isdigit():
             raise ValueError("invocation_id cannot be None")
 
-        q = self.session.query(Invocation)
-        q = q.filter(Invocation.invocation_id == invocation_id)
+        q = select(Invocation).where(Invocation.invocation_id == invocation_id)
 
         try:
             return self._get_one(q, use_cache)
@@ -1418,17 +1403,17 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance).options(
+        q = select(Job, JobInstance).options(
             defer(JobInstance.stdout_text), defer(JobInstance.stderr_text)
         )
-        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.where(Job.job_id == JobInstance.job_id)
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode == None)  # noqa: E711
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(JobInstance.exitcode == None)  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.filter(JobInstance.exitcode != None)  # noqa: E711
+        qjss = qjss.where(JobInstance.exitcode != None)  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1466,7 +1451,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, scalars=False)
         records = self._merge_job_instance(records)
 
         return PagedResponse(records, total_records, total_filtered)
@@ -1498,19 +1483,19 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance).options(
+        q = select(Job, JobInstance).options(
             defer(JobInstance.stdout_text), defer(JobInstance.stderr_text)
         )
-        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.where(Job.job_id == JobInstance.job_id)
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode == 0
         )  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.filter(JobInstance.exitcode != None).filter(
+        qjss = qjss.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode == 0
         )  # noqa: E711
         qjss = qjss.subquery("max_jss")
@@ -1550,7 +1535,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, scalars=False)
         records = self._merge_job_instance(records)
 
         return PagedResponse(records, total_records, total_filtered)
@@ -1582,19 +1567,19 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance).options(
+        q = select(Job, JobInstance).options(
             defer(JobInstance.stdout_text), defer(JobInstance.stderr_text)
         )
-        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.where(Job.job_id == JobInstance.job_id)
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode != 0
         )  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.filter(JobInstance.exitcode != None).filter(
+        qjss = qjss.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode != 0
         )  # noqa: E711
         qjss = qjss.subquery("max_jss")
@@ -1634,7 +1619,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, scalars=False)
         records = self._merge_job_instance(records)
 
         return PagedResponse(records, total_records, total_filtered)
@@ -1666,42 +1651,42 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         # Construct SQLAlchemy Query `q` to count.
         #
-        q = self.session.query(Job, JobInstance).options(
+        q = select(Job, JobInstance).options(
             defer(JobInstance.stdout_text), defer(JobInstance.stderr_text)
         )
 
-        q = q.filter(Job.wf_id == wf_id)
-        q = q.filter(JobInstance.exitcode != None).filter(
+        q = q.where(Job.wf_id == wf_id)
+        q = q.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode != 0
         )  # noqa: E711
 
-        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.where(Job.job_id == JobInstance.job_id)
 
         # Running
         j = aliased(Job, name="j")
         ji = aliased(JobInstance, name="ji")
 
-        qr = self.session.query(distinct(j.job_id))
+        qr = select(distinct(j.job_id))
 
-        qr = qr.filter(j.wf_id == wf_id)
-        qr = qr.filter(ji.exitcode == None)  # noqa: E711
+        qr = qr.where(j.wf_id == wf_id)
+        qr = qr.where(ji.exitcode == None)  # noqa: E711
 
-        qr = qr.filter(j.job_id == ji.job_id)
+        qr = qr.where(j.job_id == ji.job_id)
         qr = qr.subquery()
 
-        q = q.filter(Job.job_id.in_(qr))
+        q = q.where(Job.job_id.in_(qr))
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.filter(Job.wf_id == wf_id)
-        qjss = qjss.filter(JobInstance.exitcode != None).filter(
+        qjss = qjss.where(Job.wf_id == wf_id)
+        qjss = qjss.where(JobInstance.exitcode != None).where(
             JobInstance.exitcode != 0
         )  # noqa: E711
 
-        qjss = qjss.filter(Job.job_id == JobInstance.job_id)
+        qjss = qjss.where(Job.job_id == JobInstance.job_id)
         qjss = qjss.subquery("allmaxjss")
 
-        q = q.filter(
+        q = q.where(
             and_(
                 JobInstance.job_id == qjss.c.job_id,
                 JobInstance.job_submit_seq == qjss.c.max_jss,
@@ -1735,7 +1720,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         #
         q = WorkflowQueries._add_pagination(q, start_index, max_results, total_filtered)
 
-        records = self._get_all(q, use_cache)
+        records = self._get_all(q, use_cache, scalars=False)
         records = self._merge_job_instance(records)
 
         return PagedResponse(records, total_records, total_filtered)

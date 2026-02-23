@@ -154,6 +154,7 @@ exclude = [
 
 pythonpath = ["src"]
 testpaths = ["test"]
+filterwarnings = ["ignore:.*Decimal.*natively:sqlalchemy.exc.SAWarning"]
 
 "resource-path.directory-name-tests" = "test"
 "resource-path.directory-name-test-resources" = "resources"

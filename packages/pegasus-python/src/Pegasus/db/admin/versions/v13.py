@@ -16,6 +16,8 @@
 #
 import logging
 
+from sqlalchemy.sql import text
+
 from Pegasus.db.admin.admin_loader import DBAdminError
 from Pegasus.db.admin.versions.base_version import BaseVersion
 
@@ -32,8 +34,10 @@ class Version(BaseVersion):
         """."""
         log.debug("Updating to version %s" % DB_VERSION)
         try:
-            self.db.execute("ALTER TABLE invocation ADD COLUMN maxrss INTEGER")
-            self.db.execute("ALTER TABLE invocation ADD COLUMN avg_cpu NUMERIC(16, 6)")
+            self.db.execute(text("ALTER TABLE invocation ADD COLUMN maxrss INTEGER"))
+            self.db.execute(
+                text("ALTER TABLE invocation ADD COLUMN avg_cpu NUMERIC(16, 6)")
+            )
         except Exception as e:
             if "uplicate column name" not in str(
                 e

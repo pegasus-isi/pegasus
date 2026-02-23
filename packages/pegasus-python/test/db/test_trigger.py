@@ -1,8 +1,8 @@
 import datetime
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session
 
 import Pegasus.db.schema as schema
 from Pegasus.db.ensembles import EMError, Triggers, TriggerType
@@ -19,7 +19,7 @@ def session():
     # create all tables in the schema
     schema.Base.metadata.create_all(engine)
 
-    session = sessionmaker(bind=engine)()
+    session = Session(engine)
 
     # create an ensemble entry
     session.add(
@@ -159,7 +159,7 @@ class TestTriggers:
         assert len(result) == 0
 
     def test_insert_trigger(self, session):
-        print(session.query(schema.Ensemble).all())
+        print(session.execute(select(schema.Ensemble)).scalars().all())
         triggers = Triggers(session)
         triggers.insert_trigger(
             ensemble_id=1,
@@ -182,8 +182,13 @@ class TestTriggers:
         }
 
         result = Triggers.get_object(
-            session.query(schema.Trigger)
-            .filter_by(ensemble_id=1, name="test-trigger")
+            session.execute(
+                select(schema.Trigger).where(
+                    schema.Trigger.ensemble_id == 1,
+                    schema.Trigger.name == "test-trigger",
+                )
+            )
+            .scalars()
             .one()
         )
 
@@ -206,7 +211,12 @@ class TestTriggers:
         triggers.update_state(ensemble_id=1, trigger_id=1, new_state="RUNNING")
 
         expected_state = "RUNNING"
-        result = session.query(schema.Trigger).filter_by(_id=1).one().state
+        result = (
+            session.execute(select(schema.Trigger).where(schema.Trigger._id == 1))
+            .scalars()
+            .one()
+            .state
+        )
 
         assert expected_state == result
 
@@ -222,14 +232,14 @@ class TestTriggers:
             _type=TriggerType.CRON.value,
         )
         session.add(t)
-        assert len(session.query(schema.Trigger).all()) == 1
+        assert len(session.execute(select(schema.Trigger)).scalars().all()) == 1
 
         triggers = Triggers(session)
 
         # delete trigger
         triggers.delete_trigger(ensemble_id=1, trigger="test-trigger")
 
-        assert len(session.query(schema.Trigger).all()) == 0
+        assert len(session.execute(select(schema.Trigger)).scalars().all()) == 0
 
     def test_get_object(self, session):
         t = schema.Trigger(

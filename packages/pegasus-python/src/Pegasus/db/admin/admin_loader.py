@@ -24,7 +24,7 @@ import sys
 import time
 import warnings
 
-from sqlalchemy import func
+from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -196,18 +196,20 @@ def db_create(
     :param verbose: whether messages should be printed in the prompt
     :param print_version: whether to print the database version
     """
-    table_names = engine.table_names()
+    table_names = inspect(engine).get_table_names()
     db_version = DBVersion.__table__
     db_version.create(engine, checkfirst=True)
 
     v = 0
     if len(table_names) == 0:
-        engine.execute(
-            db_version.insert(),
-            version=CURRENT_DB_VERSION,
-            version_number=int(CURRENT_DB_VERSION),
-            version_timestamp=datetime.datetime.now().strftime("%s"),
-        )
+        with engine.begin() as conn:
+            conn.execute(
+                db_version.insert().values(
+                    version=CURRENT_DB_VERSION,
+                    version_number=int(CURRENT_DB_VERSION),
+                    version_timestamp=datetime.datetime.now().strftime("%s"),
+                )
+            )
         if verbose:
             print("Pegasus database was successfully created.")
     else:
@@ -363,16 +365,15 @@ def all_workflows_db(
     f_out = open("%s.out" % file_prefix, "w")
     f_err = open("%s.err" % file_prefix, "w")
 
-    data = (
-        db.query(
+    data = db.execute(
+        select(
             MasterWorkflow.db_url,
             MasterWorkflowstate.state,
             func.max(MasterWorkflowstate.timestamp),
         )
         .join(MasterWorkflowstate)
         .group_by(MasterWorkflow.wf_id)
-        .all()
-    )
+    ).all()
 
     db_urls = []
     for d in data:
@@ -478,9 +479,9 @@ def get_version(db, sanity_check=True):
     :return: the DB current version (integer) or -1 if not found
     """
     try:
-        current_version = (
-            db.query(DBVersion.version).order_by(DBVersion.id.desc()).first()
-        )
+        current_version = db.execute(
+            select(DBVersion.version).order_by(DBVersion.id.desc())
+        ).first()
         if not current_version:
             log.debug("No version record found on dbversion table.")
             return -1

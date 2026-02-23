@@ -22,6 +22,7 @@ DB_VERSION = 3
 import logging
 
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
@@ -38,7 +39,9 @@ class Version(BaseVersion):
         log.info("Updating to version %s" % DB_VERSION)
         try:
             self.db.execute(
-                "ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'"
+                text(
+                    "ALTER TABLE ensemble_workflow ADD plan_command VARCHAR(1024) NOT NULL default './plan.sh'"
+                )
             )
         except (OperationalError, ProgrammingError):
             pass

@@ -5,6 +5,7 @@ import subprocess
 import threading
 import time
 
+from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import text
 
@@ -274,8 +275,10 @@ class WorkflowProcessor:
 
         try:
             w = (
-                self.dao.session.query(MasterWorkflow)
-                .filter_by(wf_uuid=str(wf_uuid))
+                self.dao.session.execute(
+                    select(MasterWorkflow).where(MasterWorkflow.wf_uuid == str(wf_uuid))
+                )
+                .scalars()
                 .one()
             )
             return w
@@ -306,10 +309,13 @@ class WorkflowProcessor:
         # Get the last event for the workflow where the event timestamp is
         # greater than the last updated ts for the ensemble workflow
         ws = (
-            self.dao.session.query(MasterWorkflowstate)
-            .filter_by(wf_id=w.wf_id)
-            .filter(MasterWorkflowstate.timestamp >= updated)
-            .order_by(text("timestamp desc"))
+            self.dao.session.execute(
+                select(MasterWorkflowstate)
+                .where(MasterWorkflowstate.wf_id == w.wf_id)
+                .where(MasterWorkflowstate.timestamp >= updated)
+                .order_by(text("timestamp desc"))
+            )
+            .scalars()
             .first()
         )
 

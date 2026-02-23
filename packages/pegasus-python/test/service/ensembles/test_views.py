@@ -5,8 +5,8 @@ import pwd
 
 import pytest
 from flask import g
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import Session
 
 import Pegasus.db.schema as schema
 from Pegasus.db.ensembles import Triggers, TriggerType
@@ -27,7 +27,7 @@ class NoAuthFlaskTestCase:
         # create all tables in schema
         schema.Base.metadata.create_all(engine)
 
-        g.session = sessionmaker(bind=engine)()
+        g.session = Session(engine)
 
         # create an ensemble entry
         g.session.add(
@@ -118,7 +118,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         assert rv.json == {"message": "created"}
         assert rv.location == "/ensembles/test-ensemble/triggers/test-trigger2"
 
-        db_entry = g.session.query(schema.Trigger).filter_by(_id=2).one()
+        db_entry = (
+            g.session.execute(select(schema.Trigger).where(schema.Trigger._id == 2))
+            .scalars()
+            .one()
+        )
         assert Triggers.get_object(db_entry) == {
             "id": 2,
             "ensemble_id": 1,
@@ -279,7 +283,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         assert rv.json == {"message": "created"}
         assert rv.location == "/ensembles/test-ensemble/triggers/test-trigger2"
 
-        db_entry = g.session.query(schema.Trigger).filter_by(_id=2).one()
+        db_entry = (
+            g.session.execute(select(schema.Trigger).where(schema.Trigger._id == 2))
+            .scalars()
+            .one()
+        )
         assert Triggers.get_object(db_entry) == {
             "id": 2,
             "ensemble_id": 1,
@@ -487,7 +495,11 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         )
 
         # check trigger state
-        trigger_to_delete = g.session.query(schema.Trigger).filter_by(_id=1).one()
+        trigger_to_delete = (
+            g.session.execute(select(schema.Trigger).where(schema.Trigger._id == 1))
+            .scalars()
+            .one()
+        )
         assert trigger_to_delete.state == "STOPPED"
 
     @pytest.mark.parametrize(

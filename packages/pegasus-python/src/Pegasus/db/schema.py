@@ -25,9 +25,11 @@ import time
 import warnings
 
 from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.exc import OperationalError, ProgrammingError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import foreign, mapper, relation
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import OperationalError, ProgrammingError, SAWarning
+from sqlalchemy.orm import backref, declarative_base, foreign
+from sqlalchemy.orm import registry as sa_registry
+from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, UniqueConstraint
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import (
@@ -76,7 +78,7 @@ __all__ = (
 log = logging.getLogger(__name__)
 
 # for SQLite
-warnings.filterwarnings("ignore", r".*does \*not\* support Decimal*.")
+warnings.filterwarnings("ignore", message=r".*Decimal.*natively", category=SAWarning)
 
 # These are keywords that all tables should have
 table_keywords = {"mysql_charset": "utf8mb4", "mysql_engine": "InnoDB"}
@@ -141,6 +143,7 @@ class SABase:
 
 metadata = MetaData()
 Base = declarative_base(cls=SABase, metadata=metadata)
+_mapper_registry = sa_registry()
 
 
 # ----------------------------------------------------------------
@@ -187,7 +190,12 @@ def get_missing_tables(db):
 
 def check_table_exists(engine, table):
     try:
-        engine.execute(table.__table__.select().limit(1))
+        if isinstance(engine, Engine):
+            with engine.connect() as conn:
+                conn.execute(table.__table__.select().limit(1))
+        else:
+            # engine is a Session or scoped_session
+            engine.execute(table.__table__.select().limit(1))
         return True
 
     except OperationalError as e:
@@ -259,86 +267,90 @@ class Workflow(Base):
     root_wf_id = Column("root_wf_id", KeyInteger)
 
     # Relationships
-    root_wf = relation(
+    root_wf = relationship(
         lambda: Workflow,
         cascade="all, delete-orphan",
         single_parent=True,
         remote_side=(wf_id,),
+        overlaps="parent_wf",
     )
-    parent_wf = relation(
+    parent_wf = relationship(
         lambda: Workflow,
         cascade="all, delete-orphan",
         single_parent=True,
         remote_side=(wf_id,),
+        overlaps="root_wf",
     )
-    states = relation(
+    states = relationship(
         lambda: Workflowstate,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by=lambda: Workflowstate.timestamp,
     )
-    jobs = relation(
+    jobs = relationship(
         lambda: Job,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    job_edges = relation(
+    job_edges = relationship(
         lambda: JobEdge,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    tasks = relation(
+    tasks = relationship(
         lambda: Task,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    task_edges = relation(
+    task_edges = relationship(
         lambda: TaskEdge,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    invocations = relation(
+    invocations = relationship(
         lambda: Invocation,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    hosts = relation(
+    hosts = relationship(
         lambda: Host,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    workflow_files = relation(
+    workflow_files = relationship(
         lambda: WorkflowFiles,
-        backref="workflow",
+        backref=backref("workflow", overlaps="files,workflow_files"),
         cascade="all, delete-orphan",
         passive_deletes=True,
+        overlaps="files",
     )
-    files = relation(
+    files = relationship(
         lambda: RCLFN,
         secondary=lambda: WorkflowFiles.__table__,
         primaryjoin=lambda: Workflow.wf_id == WorkflowFiles.wf_id,
         secondaryjoin=lambda: WorkflowFiles.lfn_id == RCLFN.lfn_id,
+        overlaps="workflow,workflow_files",
     )
-    integrity_metrics = relation(
+    integrity_metrics = relationship(
         lambda: IntegrityMetrics,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    tags = relation(
+    tags = relationship(
         lambda: Tag,
         backref="workflow",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    meta = relation(
+    meta = relationship(
         lambda: WorkflowMeta,
         backref="workflow",
         cascade="all, delete-orphan",
@@ -474,7 +486,7 @@ class Job(Base):
     task_count = Column("task_count", Integer, nullable=False)
 
     # Relationships
-    parents = relation(
+    parents = relationship(
         lambda: Job,
         backref="children",
         cascade="all",
@@ -488,10 +500,10 @@ class Job(Base):
             Job.exec_job_id == foreign(JobEdge.parent_exec_job_id),
         ),
     )
-    tasks = relation(
+    tasks = relationship(
         lambda: Task, backref="job", cascade="all, delete-orphan", passive_deletes=True,
     )
-    job_instances = relation(
+    job_instances = relationship(
         lambda: JobInstance,
         backref="job",
         cascade="all, delete-orphan",
@@ -562,37 +574,37 @@ class JobInstance(Base):
     # PM-712 don't want merges to happen to invocation table .
     # setting lazy = false leads to a big join query when a job_instance is updated
     # with the postscript status.
-    invocations = relation(
+    invocations = relationship(
         lambda: Invocation,
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    states = relation(
+    states = relationship(
         lambda: Jobstate,
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    sub_workflow = relation(
+    sub_workflow = relationship(
         lambda: Workflow,
         backref="job_instance",
         cascade="all, delete-orphan",
         single_parent=True,
     )
-    host = relation(
+    host = relationship(
         lambda: Host,
         backref="job_instance",
         cascade="all, delete-orphan",
         single_parent=True,
     )
-    integrity_metrics = relation(
+    integrity_metrics = relationship(
         lambda: IntegrityMetrics,
         backref="job_instance",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    tag = relation(
+    tag = relationship(
         lambda: Tag,
         backref="job_instance",
         cascade="all, delete-orphan",
@@ -691,7 +703,7 @@ class Task(Base):
     type_desc = Column("type_desc", String(255), nullable=False)
 
     # Relationships
-    parents = relation(
+    parents = relationship(
         lambda: Task,
         backref="children",
         cascade="all",
@@ -705,19 +717,21 @@ class Task(Base):
             Task.abs_task_id == foreign(TaskEdge.parent_abs_task_id),
         ),
     )
-    task_files = relation(
+    task_files = relationship(
         lambda: WorkflowFiles,
-        backref="task",
+        backref=backref("task", overlaps="files,task_files"),
         cascade="all, delete-orphan",
         passive_deletes=True,
+        overlaps="files",
     )
-    files = relation(
+    files = relationship(
         lambda: RCLFN,
         secondary=lambda: WorkflowFiles.__table__,
         primaryjoin=lambda: Task.task_id == WorkflowFiles.task_id,
         secondaryjoin=lambda: WorkflowFiles.lfn_id == RCLFN.lfn_id,
+        overlaps="task,task_files,files",
     )
-    meta = relation(
+    meta = relationship(
         lambda: TaskMeta,
         backref="task",
         cascade="all, delete-orphan",
@@ -861,13 +875,13 @@ class RCLFN(Base):
     lfn = Column("lfn", String(245), nullable=False)
 
     # Relationships
-    pfns = relation(
+    pfns = relationship(
         lambda: RCPFN,
         backref="lfn",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    meta = relation(
+    meta = relationship(
         lambda: RCMeta,
         backref="lfn",
         cascade="all, delete-orphan",
@@ -949,7 +963,12 @@ class WorkflowFiles(Base):
     file_type = Column("file_type", String(255))
 
     # Relationships
-    lfn = relation(lambda: RCLFN, cascade="all, delete-orphan", single_parent=True)
+    lfn = relationship(
+        lambda: RCLFN,
+        cascade="all, delete-orphan",
+        single_parent=True,
+        overlaps="files",
+    )
 
 
 # ---------------------------------------------
@@ -980,7 +999,7 @@ class MasterWorkflow(Base):
     archived = Column("archived", Boolean, nullable=False, default=0)
 
     # Relationships
-    states = relation(
+    states = relationship(
         lambda: MasterWorkflowstate,
         backref="workflow",
         cascade="all, delete-orphan",
@@ -1047,12 +1066,19 @@ Ensemble.__table_args__ = (
     table_keywords,
 )
 
-# User mapper(..,...) to extend ensembles.Ensemble to the schema.Ensemble table
-mapper(
-    _Ensemble,
-    Ensemble.__table__,
-    properties={"workflows": relation(lambda: _EnsembleWorkflow)},
-)
+# Use map_imperatively() to extend ensembles.Ensemble to the schema.Ensemble table
+from sqlalchemy.exc import InvalidRequestError as _InvalidRequestError
+
+try:
+    _mapper_registry.map_imperatively(
+        _Ensemble,
+        Ensemble.__table__,
+        properties={
+            "workflows": relationship(lambda: _EnsembleWorkflow, overlaps="ensemble")
+        },
+    )
+except _InvalidRequestError:
+    pass
 
 
 class EnsembleWorkflow(Base):
@@ -1090,11 +1116,14 @@ EnsembleWorkflow.__table_args__ = (
     table_keywords,
 )
 
-mapper(
-    _EnsembleWorkflow,
-    EnsembleWorkflow.__table__,
-    properties={"ensemble": relation(_Ensemble)},
-)
+try:
+    _mapper_registry.map_imperatively(
+        _EnsembleWorkflow,
+        EnsembleWorkflow.__table__,
+        properties={"ensemble": relationship(_Ensemble, overlaps="workflows")},
+    )
+except _InvalidRequestError:
+    pass
 
 
 class Trigger(Base):

@@ -18,6 +18,7 @@ import logging
 
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.schema import Column, ForeignKey, Index, Table
+from sqlalchemy.sql import text
 from sqlalchemy.types import Integer, String
 
 from Pegasus.db.admin.admin_loader import *
@@ -47,7 +48,7 @@ class Version(BaseVersion):
         # check if the migration was interrupted
         interrupted = False
         try:
-            self.db.execute("SELECT site FROM rc_lfn_v4 LIMIT 0,1")
+            self.db.execute(text("SELECT site FROM rc_lfn_v4 LIMIT 0,1"))
             interrupted = True
         except (OperationalError, ProgrammingError):
             pass
@@ -64,7 +65,7 @@ class Version(BaseVersion):
         # check if previous table exists. If not, the migration should not continue (for new dbs)
         try:
             if not interrupted:
-                self.db.execute("SELECT site FROM rc_lfn LIMIT 0,1")
+                self.db.execute(text("SELECT site FROM rc_lfn LIMIT 0,1"))
         except (OperationalError, ProgrammingError):
             return
         except Exception as e:
@@ -79,9 +80,9 @@ class Version(BaseVersion):
         else:
             log.info("Renaming 'rc_lfn' table...")
             if self.db.get_bind().driver == "mysqldb":
-                self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_v4")
+                self.db.execute(text("RENAME TABLE rc_lfn TO rc_lfn_v4"))
             else:
-                self.db.execute("ALTER TABLE rc_lfn RENAME TO rc_lfn_v4")
+                self.db.execute(text("ALTER TABLE rc_lfn RENAME TO rc_lfn_v4"))
 
         # Create new rc_lfn table and populate it
         log.info("Updating tables...")
@@ -94,17 +95,21 @@ class Version(BaseVersion):
         try:
             log.info("Updating rc_lfn...")
             self.db.execute(
-                "INSERT INTO rc_lfn(lfn) SELECT DISTINCT lfn FROM rc_lfn_v4"
+                text("INSERT INTO rc_lfn(lfn) SELECT DISTINCT lfn FROM rc_lfn_v4")
             )
             self.db.commit()
             log.info("Updating rc_pfn...")
             self.db.execute(
-                "INSERT INTO rc_pfn(lfn_id, pfn, site) SELECT l.lfn_id, a.pfn, a.site FROM rc_lfn l LEFT JOIN rc_lfn_v4 a ON (l.lfn=a.lfn)"
+                text(
+                    "INSERT INTO rc_pfn(lfn_id, pfn, site) SELECT l.lfn_id, a.pfn, a.site FROM rc_lfn l LEFT JOIN rc_lfn_v4 a ON (l.lfn=a.lfn)"
+                )
             )
             self.db.commit()
             log.info("Updating rc_meta...")
             self.db.execute(
-                "INSERT INTO rc_meta(lfn_id, key, value) SELECT l.lfn_id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v4 b ON (l.lfn=b.lfn) INNER JOIN rc_attr a ON (a.id=b.id)"
+                text(
+                    "INSERT INTO rc_meta(lfn_id, key, value) SELECT l.lfn_id, a.name, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v4 b ON (l.lfn=b.lfn) INNER JOIN rc_attr a ON (a.id=b.id)"
+                )
             )
             self.db.commit()
 
@@ -128,9 +133,9 @@ class Version(BaseVersion):
 
         log.info("Renaming 'rc_lfn' table...")
         if self.db.get_bind().driver == "mysqldb":
-            self.db.execute("RENAME TABLE rc_lfn TO rc_lfn_v5")
+            self.db.execute(text("RENAME TABLE rc_lfn TO rc_lfn_v5"))
         else:
-            self.db.execute("ALTER TABLE rc_lfn RENAME TO rc_lfn_v5")
+            self.db.execute(text("ALTER TABLE rc_lfn RENAME TO rc_lfn_v5"))
         self.db.commit()
 
         # Create tables
@@ -198,12 +203,16 @@ class Version(BaseVersion):
         try:
             log.info("Updating rc_lfn...")
             self.db.execute(
-                "INSERT INTO rc_lfn(lfn, pfn, site) SELECT l.lfn, a.pfn, a.site FROM (rc_lfn_v5 l INNER JOIN rc_pfn a ON (l.lfn_id=a.lfn_id))"
+                text(
+                    "INSERT INTO rc_lfn(lfn, pfn, site) SELECT l.lfn, a.pfn, a.site FROM (rc_lfn_v5 l INNER JOIN rc_pfn a ON (l.lfn_id=a.lfn_id))"
+                )
             )
             self.db.commit()
             log.info("Updating rc_attr...")
             self.db.execute(
-                "INSERT INTO rc_attr(id, name, value) SELECT l.id, a.key, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v5 b ON (l.lfn=b.lfn) INNER JOIN rc_meta a ON (a.lfn_id=b.lfn_id)"
+                text(
+                    "INSERT INTO rc_attr(id, name, value) SELECT l.id, a.key, a.value FROM rc_lfn l LEFT JOIN rc_lfn_v5 b ON (l.lfn=b.lfn) INNER JOIN rc_meta a ON (a.lfn_id=b.lfn_id)"
+                )
             )
             self.db.commit()
 
@@ -240,7 +249,7 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute("DROP TABLE %s" % table_name)
+            self.db.execute(text("DROP TABLE %s" % table_name))
         except Exception:
             pass
 
@@ -251,6 +260,6 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute("DROP INDEX %s" % index_name)
+            self.db.execute(text("DROP INDEX %s" % index_name))
         except Exception:
             pass
