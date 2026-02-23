@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -175,6 +176,12 @@ public class PMC extends Abstract {
                 args.append(kickstartPreArgs).append(job.getArguments());
                 job.setArguments(args.toString());
             }
+
+            // GH-2156 PMC itself does not set $_CONDOR_SCRATCH_DIR
+            // set that to the full path for the relative submit dir for the
+            // job
+            File dir = new File(mSubmitFileDir, job.getRelativeSubmitDirectory());
+            CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, dir.getAbsolutePath());
 
             prevJob = job;
         }
