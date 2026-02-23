@@ -40,19 +40,15 @@ public interface CodeGenerator {
     public static final String VERSION = "1.5";
 
     /**
-     * Update a job environment with _CONDOR_SCRATCH_DIR and update arguments to replace
-     * _CONDOR_SCRATCH_DIR with it's value if required.
+     * Update a job's arguments to replace _CONDOR_SCRATCH_DIR with it's value if required.
      *
      * @param job the job
      * @param logger the logging object
      * @param value the value to which _CONDOR_SCRATCH_DIR needs to be set to.
      * @see Condor#CONDOR_SCRATCH_DIR_ENV_VARIABLE
      */
-    public static void updateJobToSetCondorScratchDir(Job job, LogManager logger, String value) {
-        // GH-2156 in grid universe jobs condor does not set $_CONDOR_SCRATCH_DIR
-        // set that to the value pass for Pegasus Lite jobs running via Glite
-        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, value);
-
+    public static void replaceCondorScratchDirInArguments(
+            Job job, LogManager logger, String value) {
         // for shared fs jobs the kickstart arguments are specified directly
         // to via arguments key in the condor submit file, and in that case
         // we can't pass $_CONDOR_SCRATCH_DIR as that is evaluated on the submit
