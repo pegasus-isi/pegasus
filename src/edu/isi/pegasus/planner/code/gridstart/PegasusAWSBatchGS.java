@@ -237,6 +237,11 @@ public class PegasusAWSBatchGS implements GridStart {
         job.condorVariables.addIPFileForTransfer(executable);
         job.setArguments(new File(executable).getName());
 
+        // GH-2156 when running via AWS Batch $_CONDOR_SCRATCH_DIR env variable
+        // is not set. Set that to . so that the kickstart arguments for lof
+        // file invocations get resolved.
+        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
+
         // since in this we are running each task making up the clustered job via
         // pegasus lite, the credentials have to be handled per task, not at the
         // clustered job level in the code generator
