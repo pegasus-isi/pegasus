@@ -4,7 +4,9 @@
       "Bash(ls:*)",
       "Bash(wc:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(tox:*)",
+      "Bash(ant:*)"
     ]
   },
   "extraKnownMarketplaces": {
