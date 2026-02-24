@@ -420,8 +420,8 @@ public class Kickstart implements GridStart {
      * constituentJob description, and also constructs all the valid option to be passed to
      * kickstart for launching the executable.
      *
-     * @param constituentJob the <code>Job</code> object containing the constituentJob description
-     *     of the constituentJob that has to be enabled on the grid.
+     * @param job the <code>Job</code> object containing the constituentJob description of the
+     *     constituentJob that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the constituentJob generated a line <code>
      *     universe = globus</code>, and thus runs remotely. Set to <code>false</code>, if the
      *     constituentJob runs on the submit host in any way.
