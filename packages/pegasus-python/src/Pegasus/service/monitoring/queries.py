@@ -117,7 +117,9 @@ class WorkflowQueries:
         else:
             log.debug("Cache Miss: %s" % cache_key)
             result = self.session.execute(stmt)
-            record = result.scalars().all() if scalars else result.all()
+            record = (
+                result.scalars().unique().all() if scalars else result.unique().all()
+            )
             t = timeout(record) if callable(timeout) else timeout
             cache.set(cache_key, record, t)
 
@@ -538,17 +540,18 @@ class StampedeWorkflowQueries(WorkflowQueries):
         if total_records == 0:
             return PagedResponse([], 0, 0)
 
-        q = select(WorkflowFiles).where(WorkflowFiles.wf_id == wf_id)
+        q = (
+            select(WorkflowFiles)
+            .where(WorkflowFiles.wf_id == wf_id)
+            .outerjoin(RCLFN, WorkflowFiles.lfn_id == RCLFN.lfn_id)
+            .outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
+            .outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
+        )
 
         #
         # Construct SQLAlchemy Query `q` to filter.
         #
         if query:
-            q = (
-                q.outerjoin(RCLFN, WorkflowFiles.lfn_id == RCLFN.lfn_id)
-                .outerjoin(RCPFN, RCLFN.lfn_id == RCPFN.lfn_id)
-                .outerjoin(RCMeta, RCLFN.lfn_id == RCMeta.lfn_id)
-            )
             q = self._evaluate_query(q, query, l=RCLFN, p=RCPFN, rm=RCMeta)
             total_filtered = self._get_count(q, use_cache)
 
