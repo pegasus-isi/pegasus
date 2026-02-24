@@ -21,11 +21,8 @@ import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -1677,60 +1674,24 @@ public class CPlanner extends Executable {
             result.addEntry(it.next());
         }
 
-        SiteCatalog catalog = null;
+        // PM-1515 make sure catalog was instantiated
+        Set<String> toLoad = new HashSet<String>();
+        mLogger.log(
+                "All sites will be loaded from the site catalog", LogManager.DEBUG_MESSAGE_LEVEL);
+        toLoad.add("*");
+        /* always load local site */
+        toLoad.add("local");
 
-        /* load the catalog using the factory */
-        try {
-            catalog = SiteFactory.loadInstance(mBag);
+        /* load the sites from remote repository and on user machine */
+        SiteStore store = SiteFactory.loadSiteStore(toLoad, mBag);
 
-            // PM-1047 we want to save the catalogs all around.
-            result.setFileSource(catalog.getFileSource());
-        } catch (SiteFactoryException e) {
-            // PM-1515 site catalog exceptions to be ignored, as
-            // we can have entries in the DAX and also the planner
-            // generates default entries
-            mLogger.log(
-                    "Ignoring exception encountered while loading site catalog "
-                            + e.convertException(),
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-        }
-
-        if (catalog != null) {
-            // PM-1515 make sure catalog was instantiated
-            Set<String> toLoad = new HashSet<String>();
-            mLogger.log(
-                    "All sites will be loaded from the site catalog",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            toLoad.add("*");
-
-            /* always load local site */
-            toLoad.add("local");
-
-            /* load the sites in site catalog */
-            try {
-                catalog.load(new LinkedList(toLoad));
-
-                // load into SiteStore from the catalog.
-                if (toLoad.contains("*")) {
-                    // we need to load all sites into the site store
-                    toLoad.addAll(catalog.list());
-                }
-                for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
-                    SiteCatalogEntry s = catalog.lookup(it.next());
-                    if (s != null && result.lookup(s.getSiteHandle()) == null) {
-                        // PM-1515 prefer entries from DAX SiteStore.
-                        // Only load from catalog if not in DAX SiteStore
-                        result.addEntry(s);
-                    }
-                }
-            } catch (SiteCatalogException e) {
-                throw new RuntimeException("Unable to load from site catalog ", e);
-            } finally {
-                /* close the connection */
-                try {
-                    catalog.close();
-                } catch (Exception e) {
-                }
+        // since we are loading * . shortcut to load all entries
+        for (Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext(); ) {
+            SiteCatalogEntry s = it.next();
+            if (s != null && result.lookup(s.getSiteHandle()) == null) {
+                // PM-1515 prefer entries from DAX SiteStore.
+                // Only load from catalog if not in DAX SiteStore
+                result.addEntry(s);
             }
         }
 

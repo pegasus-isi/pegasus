@@ -21,17 +21,21 @@ package edu.isi.pegasus.planner.catalog.site;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
+import edu.isi.pegasus.common.util.FileUtils;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A factory class to load the appropriate implementation of Site Catalog as specified by
@@ -44,6 +48,19 @@ public class SiteFactory {
 
     /** The default package where all the implementations reside. */
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.catalog.site.impl";
+
+    /** The default package where all the implementations reside. */
+    public static final String DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM =
+            "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs";
+
+    // in the user properties file the users specify with the prefix
+    // pegasus.catalog.site.repo. to change the value of these keys
+    public static final String FILE_PROPERTY_KEY = "file";
+
+    public static final String UPDATE_INTERVAL_PROPERTY_KEY = "interval";
+
+    // value in seconds
+    public static final long DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO = 24 * 60 * 60;
 
     /** For 4.2, the orginal XML3 class was renamed XML and it supports different schemas. */
     private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
@@ -66,27 +83,107 @@ public class SiteFactory {
     public static SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
         LogManager logger = bag.getLogger();
         SiteStore result = new SiteStore();
-        if (sites.isEmpty()) {
-            logger.log(
-                    "No sites given by user. Will use sites from the site catalog",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-            sites.add("*");
-        }
+
+        // GH-2154 we first try to load the remote site catalog
         SiteCatalog catalog = null;
+        try {
+            catalog = SiteFactory.loadRemoteInstance(bag);
+            if (catalog != null) {
+                result = SiteFactory.loadSiteStoreFromCatalog(catalog, sites, logger);
+            }
+        } catch (SiteFactoryException e) {
+            logger.log(
+                    "Unable to download site catalog from remote endpoint",
+                    e,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        } finally {
+            /* close the connection */
+            try {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            } catch (Exception e) {
+            }
+        }
 
-        /* load the catalog using the factory */
-        catalog = SiteFactory.loadInstance(bag);
+        // now we load the site catalog on user machine
+        SiteStore localSiteStore = new SiteStore();
+        try {
+            catalog = SiteFactory.loadInstance(bag);
+            // PM-1047 we want to save the catalogs all around.
+            result.setFileSource(catalog.getFileSource());
 
+            localSiteStore = SiteFactory.loadSiteStoreFromCatalog(catalog, sites, logger);
+
+        } catch (SiteFactoryException e) {
+            // PM-1515 site catalog exceptions to be ignored, as
+            // we can have entries in the DAX and also the planner
+            // generates default entries
+            logger.log(
+                    "Ignoring exception encountered while loading site catalog "
+                            + e.convertException(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        } finally {
+            /* close the connection */
+            try {
+                if (catalog != null) {
+                    catalog.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        for (Iterator<SiteCatalogEntry> it = localSiteStore.entryIterator(); it.hasNext(); ) {
+            // GH-2154 local machine site entries ovewrite what we downloaded
+            // merge the local site store entry in.
+            SiteCatalogEntry localSiteStoreEntry = it.next();
+            String handle = localSiteStoreEntry.getSiteHandle();
+            if (result.contains(handle)) {
+                SiteCatalogEntry existing = result.lookup(handle);
+                existing.merge(localSiteStoreEntry, true);
+                logger.log(
+                        "Merged site catalog entry from remote github repo and local site catalog \n"
+                                + existing,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            } else {
+                result.addEntry(localSiteStoreEntry);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @param catalog
+     * @param sites list of sites
+     * @param logger
+     * @return SiteStore object containing the information about the sites.
+     */
+    public static SiteStore loadSiteStoreFromCatalog(
+            SiteCatalog catalog, Collection<String> sites, LogManager logger) {
+        SiteStore result = new SiteStore();
         /* always load local site */
-        List<String> toLoad = new ArrayList<String>(sites);
-        toLoad.add("local");
+        Set<String> toLoad = new HashSet<String>(sites);
 
         /* load the sites in site catalog */
         try {
-            catalog.load(toLoad);
+            catalog.load(new LinkedList(sites));
 
+            // load into SiteStore from the catalog.
+            if (toLoad.contains("*")) {
+                // if there * then we need to do a catalog listing after
+                // loading to ensure toLoad has all sites mentioned
+                toLoad.addAll(catalog.list());
+            }
             /* query for the sites, and print them out */
-            logger.log("Sites loaded are " + catalog.list(), LogManager.DEBUG_MESSAGE_LEVEL);
+            logger.log(
+                    "Sites that will be loaded from "
+                            + catalog.getFileSource()
+                            + " "
+                            + "are"
+                            + " "
+                            + toLoad,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
 
             // load into SiteStore from the catalog.
             for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
@@ -97,15 +194,85 @@ public class SiteFactory {
             }
         } catch (SiteCatalogException e) {
             throw new RuntimeException("Unable to load from site catalog ", e);
-        } finally {
-            /* close the connection */
-            try {
-                catalog.close();
-            } catch (Exception e) {
-            }
         }
 
         return result;
+    }
+
+    /**
+     * Loads Site Catalog from a remote endpoint specified in the propoerties. If endpoint is not
+     * specified, then downloads from a conf directory in the default GitHub repository.
+     *
+     * @param bag bag of Pegasus initialization objects
+     * @return handle to the Site Catalog.
+     * @throws SiteFactoryException that nests any error that might occur during the instantiation
+     * @see #DEFAULT_PACKAGE_NAME
+     * @see #DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM
+     */
+    public static SiteCatalog loadRemoteInstance(PegasusBag bag) throws SiteFactoryException {
+
+        PegasusProperties properties = bag.getPegasusProperties();
+        if (properties == null) {
+            throw new SiteFactoryException("Invalid NULL properties passed");
+        }
+        File dir = bag.getPlannerDirectory();
+        if (dir == null) {
+            throw new SiteFactoryException("Invalid Directory passed");
+        }
+        LogManager logger = bag.getLogger();
+        if (logger == null) {
+            throw new SiteFactoryException("Invalid Logger passed");
+        }
+        Properties connect =
+                properties.matchingSubset(
+                        PegasusProperties.PEGASUS_SITE_CATALOG_BASE_REPO_URL_PROPERTY, false);
+        /* get the implementor from properties */
+        String catalogImplementor = properties.getSiteCatalogImplementor();
+        String remoteFileBasename = (String) connect.get(SiteFactory.FILE_PROPERTY_KEY);
+
+        if (remoteFileBasename == null) {
+            return null;
+        }
+
+        String endpoint =
+                getRemoteEndpoint(
+                        properties.getBaseURLForSiteCatalogRepository(), remoteFileBasename);
+
+        File downloaded = null;
+        try {
+            downloaded =
+                    FileUtils.download(
+                            endpoint,
+                            remoteFileBasename,
+                            getUpdateInterval(
+                                    (String)
+                                            connect.get(SiteFactory.UPDATE_INTERVAL_PROPERTY_KEY)));
+        } catch (IOException ex) {
+            throw new SiteFactoryException("Unable to download file from endpoint " + endpoint, ex);
+        }
+        logger.log(
+                "Download base site catalog file from "
+                        + endpoint
+                        + " to "
+                        + downloaded.getAbsolutePath(),
+                LogManager.DEBUG_MESSAGE_LEVEL);
+
+        if (catalogImplementor == null) {
+            catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
+        }
+
+        /* prepend the package name if required */
+        catalogImplementor =
+                (catalogImplementor.indexOf('.') == -1)
+                        ?
+                        // pick up from the default package
+                        DEFAULT_PACKAGE_NAME + "." + catalogImplementor
+                        :
+                        // load directly
+                        catalogImplementor;
+
+        // determine the class that implements the site catalog
+        return loadInstance(catalogImplementor, bag, connect);
     }
 
     /**
@@ -251,5 +418,52 @@ public class SiteFactory {
      */
     private static boolean exists(File file) {
         return file == null ? false : file.exists() && file.canRead();
+    }
+
+    /**
+     * Returns the remote endpoint from where to download the file from.
+     *
+     * @param baseURL
+     * @param filename
+     * @return
+     */
+    public static String getRemoteEndpoint(String baseURL, String filename) {
+        StringBuilder endpoint = new StringBuilder();
+        baseURL = baseURL == null ? SiteFactory.DEFAULT_GITHUB_REPO_TO_DOWNLOAD_FROM : baseURL;
+        Version v = new Version();
+
+        // "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/%s/conf/%s"
+        endpoint.append(baseURL)
+                .append("/")
+                .append(v.getMajor())
+                .append(".")
+                .append(v.getMinor())
+                .append("/")
+                .append("conf")
+                .append("/")
+                .append(filename);
+
+        return endpoint.toString();
+    }
+
+    /**
+     * Returns the update interval value in seconds. If value passed is null or not a long then
+     * default interval value is returned
+     *
+     * @param value the value from properties
+     * @return interval value in seconds
+     * @see #DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO
+     */
+    private static long getUpdateInterval(String value) {
+        long interval = SiteFactory.DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO;
+        if (value == null) {
+            return interval;
+        }
+        try {
+            interval = Long.parseLong(value);
+        } catch (NumberFormatException e) {
+
+        }
+        return interval;
     }
 }

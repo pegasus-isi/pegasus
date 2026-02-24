@@ -781,6 +781,55 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
+     * Merges the SiteCatalog Entry in a controlled fashion
+     *
+     * @param entry the site catalog entry to be merged in
+     * @param overwrite resolves intersections. If true, uses entry's attribute to remain, if false,
+     *     the original attribute remains.
+     * @return true if a merge was attempted, false if the PFNs did not match.
+     */
+    public boolean merge(SiteCatalogEntry entry, boolean overwrite) {
+        String existingSiteHandle = this.getSiteHandle();
+        String siteHandle = entry.getSiteHandle();
+        boolean result =
+                (existingSiteHandle == null && siteHandle == null
+                        || existingSiteHandle != null
+                                && siteHandle != null
+                                && existingSiteHandle.equals(siteHandle));
+
+        // only merge if site handles match
+        if (result) {
+            if (this.getSysInfo() == null || overwrite) {
+                this.setSysInfo(entry.getSysInfo());
+            }
+
+            for (GridGateway.JOB_TYPE type : GridGateway.JOB_TYPE.values()) {
+                GridGateway toAdd = entry.getGridGateway(type);
+                if (toAdd != null) {
+                    if (this.getGridGateway(type) == null || overwrite) {
+                        this.addGridGateway(toAdd);
+                    }
+                }
+            }
+
+            for (Directory.TYPE type : Directory.TYPE.values()) {
+                Directory toAdd = entry.getDirectory(type);
+                if (toAdd != null) {
+                    if (this.getDirectory(type) == null || overwrite) {
+                        this.addDirectory(toAdd);
+                    }
+                }
+            }
+
+            if (this.mProfiles != null) {
+                this.mProfiles.merge(entry.getProfiles(), overwrite);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Accept method for the visitor interface
      *
      * @param visitor the visitor

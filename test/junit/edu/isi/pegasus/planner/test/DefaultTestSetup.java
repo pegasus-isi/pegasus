@@ -15,12 +15,18 @@ package edu.isi.pegasus.planner.test;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -179,6 +185,56 @@ public class DefaultTestSetup implements TestSetup {
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
-        return SiteFactory.loadSiteStore(sites, bag);
+        return this.loadSiteStore(sites, bag);
+    }
+
+    /**
+     * @param sites list of sites
+     * @param bag the bag of pegasus objects
+     * @return SiteStore object containing the information about the sites.
+     */
+    private SiteStore loadSiteStore(Collection<String> sites, PegasusBag bag) {
+        LogManager logger = bag.getLogger();
+        SiteStore result = new SiteStore();
+        if (sites.isEmpty()) {
+            logger.log(
+                    "No sites given by user. Will use sites from the site catalog",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+            sites.add("*");
+        }
+        SiteCatalog catalog = null;
+
+        /* load the catalog using the factory */
+        catalog = SiteFactory.loadInstance(bag);
+
+        /* always load local site */
+        List<String> toLoad = new ArrayList<String>(sites);
+        toLoad.add("local");
+
+        /* load the sites in site catalog */
+        try {
+            catalog.load(toLoad);
+
+            /* query for the sites, and print them out */
+            logger.log("Sites loaded are " + catalog.list(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // load into SiteStore from the catalog.
+            for (Iterator<String> it = toLoad.iterator(); it.hasNext(); ) {
+                SiteCatalogEntry s = catalog.lookup(it.next());
+                if (s != null) {
+                    result.addEntry(s);
+                }
+            }
+        } catch (SiteCatalogException e) {
+            throw new RuntimeException("Unable to load from site catalog ", e);
+        } finally {
+            /* close the connection */
+            try {
+                catalog.close();
+            } catch (Exception e) {
+            }
+        }
+
+        return result;
     }
 }

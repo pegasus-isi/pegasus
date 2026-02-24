@@ -1970,23 +1970,45 @@ Catalog Related Properties
 
 .. table:: Site Catalog Properties
 
-    +---------------------------------------------+------------------------------------------------------------------+
-    | Key Attributes                              | Description                                                      |
-    +=============================================+==================================================================+
-    | | Property Key: pegasus.catalog.site        | | Pegasus supports two different types of site catalogs in       |
-    | | Profile Key: N/A                          | | :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML4>` formats          |
-    | | Scope : Properties                        |                                                                  |
-    | | Type : Enumeration                        |                                                                  |
-    | | Values : YAML|XML                         | | Pegasus is able to auto-detect what schema a user site         |
-    | | Since : 2.0                               | | catalog refers to. Hence, this property may no longer be set.  |
-    | | Default : YAML                            |                                                                  |
-    +---------------------------------------------+------------------------------------------------------------------+
-    | | Property Key: pegasus.catalog.site.file   | | The path to the site catalog file, that describes the various  |
-    | | Profile Key : N/A                         | | sites and their layouts to Pegasus.                            |
-    | | Scope : Properties                        |                                                                  |
-    | | Since : 2.0                               |                                                                  |
-    | | Default : $PWD/sites.yml | $PWD/sites.xml |                                                                  |
-    +---------------------------------------------+------------------------------------------------------------------+
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+    | Key Attributes                                      | Description                                                          |
+    +=====================================================+======================================================================+
+    | | Property Key: pegasus.catalog.site                | | Pegasus supports two different types of site catalogs in           |
+    | | Profile Key: N/A                                  | | :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML4>` formats              |
+    | | Scope : Properties                                |                                                                      |
+    | | Type : Enumeration                                |                                                                      |
+    | | Values : YAML|XML                                 | | Pegasus is able to auto-detect what schema a user site             |
+    | | Since : 2.0                                       | | catalog refers to. Hence, this property may no longer be set.      |
+    | | Default : YAML                                    |                                                                      |
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.site.file           | | The path to the site catalog file, that describes the various      |
+    | | Profile Key : N/A                                 | | sites and their layouts to Pegasus.                                |
+    | | Scope : Properties                                |                                                                      |
+    | | Since : 2.0                                       |                                                                      |
+    | | Default : $PWD/sites.yml | $PWD/sites.xml         |                                                                      |
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.site.repo           | | Override the default GitHub repo from where to download the site   |
+    | | Profile Key : N/A                                 | | catalog from . Defaults to                                         |
+    | | Scope : Properties                                | | https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs |
+    | | Since : 5.1.3                                     |                                                                      |
+    | | Type : URL                                        |                                                                      |
+    | | Default : (no default)                            |                                                                      |
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.site.repo.file      | | The file to download from the conf directory in the GitHub repo.   |
+    | | Profile Key : N/A                                 | | The file is downloaded from the branch corresponding to the        |
+    | | Scope : Properties                                | | Pegasus version (MAJOR.MINOR).                                     |
+    | | Type : String                                     |                                                                      |
+    | | Since : 5.1.3                                     |                                                                      |
+    | | Default : (no default)                            |                                                                      |
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+    | | Property Key: pegasus.catalog.site.repo.interval  | | The update interval at which to download a previously              |
+    | | Profile Key : N/A                                 | | downloaded file again. Value specified in seconds                  |
+    | | Scope : Properties                                | | Pegasus version.                                                   |
+    | | Type : long                                       |                                                                      |
+    | | Since : 5.1.3                                     |                                                                      |
+    | | Default : 86400                                   |                                                                      |
+    +-----------------------------------------------------+----------------------------------------------------------------------+
+
 
 .. table:: Transformation Catalog Properties
 
