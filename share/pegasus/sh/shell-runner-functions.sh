@@ -92,6 +92,30 @@ execute_job() {
 	    shift
 	done;
 
+	# GH-2161 transfer any input files if required
+	if [ "X${_PEGASUS_TRANSFER_INPUT_FILES}" != "X" ]; then
+	    #split files on ,
+	    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_INPUT_FILES" 
+
+	    for file in "${FILES[@]}";do
+		#echo "FILES NEED TO BE TRANSFERRED $file"
+		if [[ $file == /* ]] ; then
+		    #file starts with /
+		    cp $file $dir
+		else
+		    #file is relative grab from initialdir
+		    #check for initialdir
+		    if [ "X${_PEGASUS_INITIAL_DIR}" = "X" ]; then
+			echo "ERROR: _PEGASUS_INITIAL_DIR not populated" 1>&2
+			exit 1;
+		    fi
+		    file=$_PEGASUS_INITIAL_DIR/$file
+		    cp $file $dir
+		fi
+	    done
+    
+	fi
+	
 	echo "Executing JOB $exec $args" 
 	jobout="${submit_dir}/${jobname}.out"
 	joberr="${submit_dir}/${jobname}.err"

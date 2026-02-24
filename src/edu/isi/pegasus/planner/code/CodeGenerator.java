@@ -13,9 +13,12 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.namespace.Condor;
 import java.io.File;
 import java.util.Collection;
 
@@ -35,6 +38,40 @@ public interface CodeGenerator {
 
     /** The version number associated with this API of Code Generator. */
     public static final String VERSION = "1.5";
+
+    /**
+     * Update a job's arguments to replace _CONDOR_SCRATCH_DIR with it's value if required.
+     *
+     * @param job the job
+     * @param logger the logging object
+     * @param value the value to which _CONDOR_SCRATCH_DIR needs to be set to.
+     * @see Condor#CONDOR_SCRATCH_DIR_ENV_VARIABLE
+     */
+    public static void replaceCondorScratchDirInArguments(
+            Job job, LogManager logger, String value) {
+        // for shared fs jobs the kickstart arguments are specified directly
+        // to via arguments key in the condor submit file, and in that case
+        // we can't pass $_CONDOR_SCRATCH_DIR as that is evaluated on the submit
+        // host!
+        String dataConf = job.getDataConfiguration();
+        if (dataConf != null
+                && dataConf.equals(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)) {
+            // inspect the arguments string for $_CONDOR_SCRATCH_DIR and replace with value
+            String args = job.getArguments();
+            if (args != null) {
+                String toReplace = "$" + Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE;
+                if (args.contains(toReplace)) {
+                    String newArgs = args.replaceAll("\\" + toReplace, value);
+                    logger.log(
+                            String.format(
+                                    "For job %s replaced arguments from '%s' to \n'%s'",
+                                    job.getID(), args, newArgs),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                    job.setArguments(newArgs);
+                }
+            }
+        }
+    }
 
     /**
      * Initializes the Code Generator implementation.

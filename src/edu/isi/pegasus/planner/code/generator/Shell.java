@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
@@ -55,6 +56,9 @@ public class Shell extends Abstract {
 
     public static final String PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME =
             "shell-runner-functions.sh ";
+
+    /** The name of the environment variable for transferring input files */
+    public static final String PEGASUS_TRANSFER_INPUT_FILES_KEY = "_PEGASUS_TRANSFER_INPUT_FILES";
 
     /** The prefix for events associated with job in jobstate.log file */
     public static final String JOBSTATE_JOB_PREFIX = "JOB";
@@ -347,23 +351,20 @@ public class Shell extends Abstract {
      * @return the call to execute job function.
      */
     protected String generateCallToExecuteJob(
-            Job job, String scratchDirectory, String submitDirectory) {
+            Job job, String scratchDirectory, String submitDirectory)
+            throws CodeGeneratorException {
         StringBuilder sb = new StringBuilder();
 
-        // gridstart modules right now store the executable
-        // and arguments as condor profiles. Should be fixed.
-        // This setting should happen only in Condor Generator
-        /*
-               String executable = (String) job.condorVariables.get( "executable" );
-               String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
-        */
+        // GH-2156 $_CONDOR_SCRATCH_DIR is not set in shell code generator
+        // we update the arguments string for the job and replace
+        // $_CONDOR_SCRATCH_DIR with .
+        CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, ".");
         String executable = job.getRemoteExecutable();
         String arguments =
                 job.getJobType() == Job.DAX_JOB
                         ? job.getPreScriptPath() + job.getPreScriptArguments() + " --submit"
                         : job.getArguments();
         arguments = (arguments == null) ? "" : arguments;
-        // arguments = job.getJobType() == Job.DAX_JOB ? arguments + " --submit" : arguments;
 
         String directory = job.runInWorkDirectory() ? scratchDirectory : submitDirectory;
 
@@ -400,6 +401,16 @@ public class Shell extends Abstract {
             }
         }
         sb.append(" ");
+
+        // GH-2161 update to handle transfer input files
+        // only if the job is not running in the submit dir
+        // the auxillary jobs pegasus creates are set to run in submit dir
+        if (job.runInWorkDirectory()) {
+            updateJobForCondorFileTX(job);
+        }
+
+        // explicitly remove GRIDSTART_CLEANUP
+        job.envVariables.removeKey("GRIDSTART_CLEANUP");
 
         // add the environment variables
         for (Iterator it = job.envVariables.getProfileKeyIterator(); it.hasNext(); ) {
@@ -623,5 +634,37 @@ public class Shell extends Abstract {
             // ignore
         }
         return result;
+    }
+
+    /**
+     * Translate jobs transfer_input_files to be done via a shell command
+     *
+     * @param job
+     * @throws CodeGeneratorException
+     * @see #PEGASUS_TRANSFER_INPUT_FILES_KEY
+     */
+    private void updateJobForCondorFileTX(Job job) throws CodeGeneratorException {
+        String ipFiles = job.condorVariables.getIPFilesForTransfer();
+        // check if any transfer_input_files is transferred
+        if (ipFiles != null) {
+            String[] files = ipFiles.split(",");
+            StringBuilder value = new StringBuilder();
+            for (String f : files) {
+                if (f.startsWith(File.separator) || f.startsWith("$(")) {
+                    // absolute path to file specified OR
+                    // GH-2120 starts with a classad variable
+                    value.append(f);
+                } else {
+                    throw new CodeGeneratorException(
+                            "File path "
+                                    + f
+                                    + " needs to be absolute for Shell code generator to resolve for job "
+                                    + job.getID());
+                }
+                value.append(",");
+            }
+            job.envVariables.construct(Shell.PEGASUS_TRANSFER_INPUT_FILES_KEY, value.toString());
+            job.condorVariables.removeIPFilesForTransfer();
+        }
     }
 }
