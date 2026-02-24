@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.File;
@@ -97,6 +98,7 @@ public class PegasusAWSBatchGS implements GridStart {
     private String mClusteredJobS3Bucket;
 
     private SiteStore mSiteStore;
+    private PegasusProperties mProps;
 
     public PegasusAWSBatchGS() {
         mPegasusLite = new PegasusLite();
@@ -112,6 +114,16 @@ public class PegasusAWSBatchGS implements GridStart {
         mLogger = bag.getLogger();
         mSiteStore = bag.getHandleToSiteStore();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory();
+
+        // GH-2156 we need to make stat of files is disabled completely
+        // if running on AWS batch. We don't support it right now.
+        mProps = bag.getPegasusProperties();
+        mProps.setProperty(PegasusProperties.PEGASUS_KICKSTART_STAT_PROPERTY, "false");
+        mLogger.log(
+                "Kickstart stating turned off by AWSBatch Wrapper - "
+                        + mProps.doStatWithKickstart(),
+                LogManager.CONFIG_MESSAGE_LEVEL);
+
         mPegasusLite.initialize(bag, dag);
         mStyleFactory = new CondorStyleFactory();
         mStyleFactory.initialize(bag);
@@ -236,11 +248,6 @@ public class PegasusAWSBatchGS implements GridStart {
         job.setRemoteExecutable(AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME);
         job.condorVariables.addIPFileForTransfer(executable);
         job.setArguments(new File(executable).getName());
-
-        // GH-2156 when running via AWS Batch $_CONDOR_SCRATCH_DIR env variable
-        // is not set. Set that to . so that the kickstart arguments for lof
-        // file invocations get resolved.
-        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
 
         // since in this we are running each task making up the clustered job via
         // pegasus lite, the credentials have to be handled per task, not at the
