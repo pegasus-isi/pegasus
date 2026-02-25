@@ -251,6 +251,9 @@ public class AggregatedJob extends Job implements Graph {
         for (Iterator it = this.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             Job constituentJob = (Job) node.getContent();
+            // GH-2163 the constitutent jobs should have it set
+            // so that lof files get placed correctly
+            constituentJob.setRelativeSubmitDirectory(dir);
             if (constituentJob instanceof AggregatedJob) {
                 // PM-833 we need to make sure clustered job part of larger
                 // cluster also has it set
