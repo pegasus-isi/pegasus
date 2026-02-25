@@ -358,8 +358,7 @@ public class Shell extends Abstract {
         // GH-2156 $_CONDOR_SCRATCH_DIR is not set in shell code generator
         // we update the arguments string for the job and replace
         // $_CONDOR_SCRATCH_DIR with the absolute path
-        File dir = new File(submitDirectory, job.getRelativeSubmitDirectory());
-        CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, dir.getAbsolutePath());
+        CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, submitDirectory);
         String executable = job.getRemoteExecutable();
         String arguments =
                 job.getJobType() == Job.DAX_JOB
