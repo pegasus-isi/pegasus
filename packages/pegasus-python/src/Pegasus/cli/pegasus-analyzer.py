@@ -37,11 +37,7 @@ class HelpCmd(click.Command):
 @click.command(cls=HelpCmd, options_metavar="<options>")
 @click.pass_context
 @click.option(
-    "--verbose",
-    "-v",
-    "vb",
-    count=True,
-    help="Increase verbosity, repeatable",
+    "--verbose", "-v", "vb", count=True, help="Increase verbosity, repeatable",
 )
 @click.option(
     "-i",
@@ -443,8 +439,7 @@ def generate_output(ctx, options, wf):
     if counts.failed > 0:
         cout += indent_console(
             "Workflow failed : wf_uuid: {} submit dir: {}\n".format(
-                wf.wf_uuid,
-                wf.submit_dir,
+                wf.wf_uuid, wf.submit_dir,
             )
         )
 
@@ -575,9 +570,7 @@ def generate_job_instance(options, job_instance_info):
             # get any options that need to be invoked for the sub workflow
 
             sub_wf_cmd = "{} {} -d {}".format(
-                user_cmd,
-                extraOptions,
-                os.path.split(job_instance_info.subwf_dir)[0],
+                user_cmd, extraOptions, os.path.split(job_instance_info.subwf_dir)[0],
             )
 
         else:
