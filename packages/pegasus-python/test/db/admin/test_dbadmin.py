@@ -3,6 +3,7 @@ import shutil
 import uuid
 
 import pytest
+from sqlalchemy import text
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
@@ -16,7 +17,7 @@ def test_create_database():
     db = connection.connect(dburi, create=True, verbose=False)
     assert get_version(db) == CURRENT_DB_VERSION
 
-    db.execute("DROP TABLE dbversion")
+    db.execute(text("DROP TABLE dbversion"))
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
     db.close()
@@ -24,13 +25,13 @@ def test_create_database():
     db = connection.connect(dburi, create=True, verbose=False)
     assert get_version(db) == CURRENT_DB_VERSION
 
-    db.execute("DELETE FROM dbversion")
+    db.execute(text("DELETE FROM dbversion"))
     db.close()
 
     db = connection.connect(dburi, create=True, verbose=False)
     assert get_version(db) == CURRENT_DB_VERSION
 
-    db.execute("DROP TABLE rc_pfn")
+    db.execute(text("DROP TABLE rc_pfn"))
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
     db.close()
@@ -38,8 +39,8 @@ def test_create_database():
     db = connection.connect(dburi, create=True, verbose=False)
     assert get_version(db) == CURRENT_DB_VERSION
 
-    db.execute("DROP TABLE rc_pfn")
-    db.execute("DROP TABLE master_workflow")
+    db.execute(text("DROP TABLE rc_pfn"))
+    db.execute(text("DROP TABLE master_workflow"))
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
     with pytest.raises(DBAdminError):
@@ -138,7 +139,7 @@ def test_malformed_db():
     dburi = "sqlite://"
     db = connection.connect(dburi, create=True, verbose=False)
     assert get_version(db) == CURRENT_DB_VERSION
-    db.execute("DROP TABLE rc_pfn")
+    db.execute(text("DROP TABLE rc_pfn"))
     with pytest.raises(DBAdminError):
         db_verify(db, check=True)
     db.close()

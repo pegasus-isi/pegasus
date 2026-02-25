@@ -21,6 +21,7 @@ DB_VERSION = 0
 import logging
 
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
@@ -53,23 +54,34 @@ class Version(BaseVersion):
         ]
 
         try:
-            q = self.db.query(JobInstance.job_instance_id).order_by(
-                JobInstance.job_instance_id
-            )
-            for r in q.all():
-                qq = self.db.query(Jobstate.state)
-                qq = qq.filter(Jobstate.job_instance_id == r.job_instance_id)
-                qq = qq.order_by(Jobstate.jobstate_submit_seq.desc()).limit(1)
-                for rr in qq.all():
+            from sqlalchemy import select
+
+            q = self.db.execute(
+                select(JobInstance.job_instance_id).order_by(
+                    JobInstance.job_instance_id
+                )
+            ).fetchall()
+            for r in q:
+                qq = (
+                    select(Jobstate.state)
+                    .where(Jobstate.job_instance_id == r.job_instance_id)
+                    .order_by(Jobstate.jobstate_submit_seq.desc())
+                    .limit(1)
+                )
+                for rr in self.db.execute(qq).fetchall():
                     if rr.state in success:
                         self.db.execute(
-                            "UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = %s"
-                            % r.job_instance_id
+                            text(
+                                "UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = %s"
+                                % r.job_instance_id
+                            )
                         )
                     elif rr.state in failure:
                         self.db.execute(
-                            "UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = %s"
-                            % r.job_instance_id
+                            text(
+                                "UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = %s"
+                                % r.job_instance_id
+                            )
                         )
                     else:
                         pass
@@ -83,6 +95,10 @@ class Version(BaseVersion):
 
     def execute(self, query):
         try:
+            if isinstance(query, str):
+                from sqlalchemy.sql import text
+
+                query = text(query)
             self.db.execute(query)
         except (OperationalError, ProgrammingError):
             pass

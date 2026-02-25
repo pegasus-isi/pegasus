@@ -17,6 +17,7 @@
 import logging
 
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
@@ -41,9 +42,11 @@ class Version(BaseVersion):
         try:
             log.debug("Renaming integrity_metrics table...")
             if self.db.get_bind().driver == "mysqldb":
-                self.db.execute("RENAME TABLE integrity_metrics TO integrity")
+                self.db.execute(text("RENAME TABLE integrity_metrics TO integrity"))
             else:
-                self.db.execute("ALTER TABLE integrity_metrics RENAME TO integrity")
+                self.db.execute(
+                    text("ALTER TABLE integrity_metrics RENAME TO integrity")
+                )
 
         except (OperationalError, ProgrammingError):
             pass
@@ -60,9 +63,11 @@ class Version(BaseVersion):
         try:
             log.debug("Renaming integrity table...")
             if self.db.get_bind().driver == "mysqldb":
-                self.db.execute("RENAME TABLE integrity TO integrity_metrics")
+                self.db.execute(text("RENAME TABLE integrity TO integrity_metrics"))
             else:
-                self.db.execute("ALTER TABLE integrity RENAME TO integrity_metrics")
+                self.db.execute(
+                    text("ALTER TABLE integrity RENAME TO integrity_metrics")
+                )
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:

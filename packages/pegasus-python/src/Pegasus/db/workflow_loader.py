@@ -3,7 +3,7 @@ __author__ = "Karan Vahi"
 
 import time
 
-from sqlalchemy import exc, orm
+from sqlalchemy import exc, orm, select
 
 from Pegasus.db.base_loader import BaseLoader
 from Pegasus.db.schema import *
@@ -687,9 +687,12 @@ class WorkflowLoader(BaseLoader):
 
         try:
             task = (
-                self.session.query(Task)
-                .filter(Task.wf_id == wf_id)
-                .filter(Task.abs_task_id == linedata["task.id"])
+                self.session.execute(
+                    select(Task)
+                    .where(Task.wf_id == wf_id)
+                    .where(Task.abs_task_id == linedata["task.id"])
+                )
+                .scalars()
                 .one()
             )
             task.job_id = job_id
@@ -858,9 +861,12 @@ class WorkflowLoader(BaseLoader):
 
         try:
             job_inst = (
-                self.session.query(JobInstance)
-                .filter(JobInstance.job_id == job_id)
-                .filter(JobInstance.job_submit_seq == linedata["job_inst.id"])
+                self.session.execute(
+                    select(JobInstance)
+                    .where(JobInstance.job_id == job_id)
+                    .where(JobInstance.job_submit_seq == linedata["job_inst.id"])
+                )
+                .scalars()
                 .one()
             )
             job_inst.subwf_id = subwf_id
@@ -892,8 +898,7 @@ class WorkflowLoader(BaseLoader):
 
         if self.hosts_written_cache is None:
             self.hosts_written_cache = {}
-            query = self.session.query(Host)
-            for row in query.all():
+            for row in self.session.execute(select(Host)).scalars().all():
                 self.hosts_written_cache[
                     (row.wf_id, row.site, row.hostname, row.ip)
                 ] = True
@@ -968,9 +973,15 @@ class WorkflowLoader(BaseLoader):
         Cuts down on DB queries during insert processing.
         """
         if wf_uuid not in self.wf_id_cache:
-            query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
-                self.wf_id_cache[wf_uuid] = query.one().wf_id
+                self.wf_id_cache[wf_uuid] = (
+                    self.session.execute(
+                        select(Workflow).where(Workflow.wf_uuid == wf_uuid)
+                    )
+                    .scalars()
+                    .one()
+                    .wf_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error("Multiple wf_id results for wf_uuid %s : %s", wf_uuid, e)
                 return None
@@ -990,9 +1001,15 @@ class WorkflowLoader(BaseLoader):
         Cuts down on DB queries during insert processing.
         """
         if wf_uuid not in self.root_wf_id_cache:
-            query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
             try:
-                self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
+                self.root_wf_id_cache[wf_uuid] = (
+                    self.session.execute(
+                        select(Workflow).where(Workflow.wf_uuid == wf_uuid)
+                    )
+                    .scalars()
+                    .one()
+                    .root_wf_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error("Multiple wf_id results for wf_uuid %s : %s", wf_uuid, e)
                 return None
@@ -1012,13 +1029,16 @@ class WorkflowLoader(BaseLoader):
         Gets and caches task_id for task_meta inserts
         """
         if (wf_id, task_dax_id) not in self.task_id_cache:
-            query = (
-                self.session.query(Task.task_id)
-                .filter(Task.wf_id == wf_id)
-                .filter(Task.abs_task_id == task_dax_id)
-            )
             try:
-                self.task_id_cache[((wf_id, task_dax_id))] = query.one().task_id
+                self.task_id_cache[((wf_id, task_dax_id))] = (
+                    self.session.execute(
+                        select(Task.task_id)
+                        .where(Task.wf_id == wf_id)
+                        .where(Task.abs_task_id == task_dax_id)
+                    )
+                    .one()
+                    .task_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error(
                     "Multiple results found for wf_uuid/task_dax_id: %s/%s",
@@ -1078,10 +1098,13 @@ class WorkflowLoader(BaseLoader):
         Retrieves the LFN explicitly by querying the database.
         """
 
-        query = self.session.query(RCLFN.lfn_id).filter(RCLFN.lfn == lfn)
         lfn_id = None
         try:
-            lfn_id = query.one().lfn_id
+            lfn_id = (
+                self.session.execute(select(RCLFN.lfn_id).where(RCLFN.lfn == lfn))
+                .one()
+                .lfn_id
+            )
         except orm.exc.MultipleResultsFound as e:
             self.log.error("Multiple results found for wf_uuid/lfn: %s/%s", wf_id, lfn)
             return None
@@ -1101,13 +1124,16 @@ class WorkflowLoader(BaseLoader):
         table updating.
         """
         if (wf_id, exec_id) not in self.job_id_cache:
-            query = (
-                self.session.query(Job.job_id)
-                .filter(Job.wf_id == wf_id)
-                .filter(Job.exec_job_id == exec_id)
-            )
             try:
-                self.job_id_cache[((wf_id, exec_id))] = query.one().job_id
+                self.job_id_cache[((wf_id, exec_id))] = (
+                    self.session.execute(
+                        select(Job.job_id)
+                        .where(Job.wf_id == wf_id)
+                        .where(Job.exec_job_id == exec_id)
+                    )
+                    .one()
+                    .job_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 self.log.error(
                     "Multiple results found for wf_uuid/exec_job_id: %s/%s",
@@ -1119,7 +1145,6 @@ class WorkflowLoader(BaseLoader):
                 self.log.error(
                     "No results found for wf_uuid/exec_job_id: %s/%s", wf_id, exec_id
                 )
-                self.log.error(query)
                 return None
 
         return self.job_id_cache[((wf_id, exec_id))]
@@ -1136,13 +1161,17 @@ class WorkflowLoader(BaseLoader):
         cached_job_id = self.get_job_id(wf_id, o.exec_job_id)
         uniqueIdIdx = (cached_job_id, o.job_submit_seq)
         if uniqueIdIdx not in self.job_instance_id_cache:
-            query = (
-                self.session.query(JobInstance)
-                .filter(JobInstance.job_id == cached_job_id)
-                .filter(JobInstance.job_submit_seq == o.job_submit_seq)
-            )
             try:
-                self.job_instance_id_cache[uniqueIdIdx] = query.one().job_instance_id
+                self.job_instance_id_cache[uniqueIdIdx] = (
+                    self.session.execute(
+                        select(JobInstance)
+                        .where(JobInstance.job_id == cached_job_id)
+                        .where(JobInstance.job_submit_seq == o.job_submit_seq)
+                    )
+                    .scalars()
+                    .one()
+                    .job_instance_id
+                )
             except orm.exc.MultipleResultsFound as e:
                 if not quiet:
                     self.log.error(
@@ -1178,20 +1207,25 @@ class WorkflowLoader(BaseLoader):
             if not host.host_id:
                 try:
                     host.host_id = (
-                        self.session.query(Host.host_id)
-                        .filter(Host.wf_id == host.wf_id)
-                        .filter(Host.site == host.site)
-                        .filter(Host.hostname == host.hostname)
-                        .filter(Host.ip == host.ip)
+                        self.session.execute(
+                            select(Host.host_id)
+                            .where(Host.wf_id == host.wf_id)
+                            .where(Host.site == host.site)
+                            .where(Host.hostname == host.hostname)
+                            .where(Host.ip == host.ip)
+                        )
                         .one()
                         .host_id
                     )
                 except orm.exc.MultipleResultsFound as e:
                     self.log.error("Multiple host_id results for host: %s", host)
             job_instance = (
-                self.session.query(JobInstance)
-                .filter(JobInstance.job_id == cached_job_id)
-                .filter(JobInstance.job_submit_seq == host.job_submit_seq)
+                self.session.execute(
+                    select(JobInstance)
+                    .where(JobInstance.job_id == cached_job_id)
+                    .where(JobInstance.job_submit_seq == host.job_submit_seq)
+                )
+                .scalars()
                 .one()
             )
             job_instance.host_id = host.host_id

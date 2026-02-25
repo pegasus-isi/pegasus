@@ -20,7 +20,9 @@ DB_VERSION = 2
 
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
@@ -36,18 +38,20 @@ class Version(BaseVersion):
     def update(self, force=False):
         log.info("Updating to version %s" % DB_VERSION)
         try:
-            res = self.db.query(EnsembleWorkflow.id).limit(1).first()
+            res = (
+                self.db.execute(select(EnsembleWorkflow.id).limit(1)).scalars().first()
+            )
             if not res:
-                self.db.execute("DROP TABLE ensemble_workflow")
+                self.db.execute(text("DROP TABLE ensemble_workflow"))
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
             self.db.rollback()
             raise DBAdminError(e)
         try:
-            res = self.db.query(Ensemble.id).limit(1).first()
+            res = self.db.execute(select(Ensemble.id).limit(1)).scalars().first()
             if not res:
-                self.db.execute("DROP TABLE ensemble")
+                self.db.execute(text("DROP TABLE ensemble"))
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
@@ -70,9 +74,9 @@ class Version(BaseVersion):
         #             raise DBAdminError(e)
 
         try:
-            self.db.execute("SELECT parent_wf_id FROM workflow")
+            self.db.execute(text("SELECT parent_wf_id FROM workflow"))
             try:
-                self.db.execute("ALTER TABLE workflow ADD COLUMN db_url TEXT")
+                self.db.execute(text("ALTER TABLE workflow ADD COLUMN db_url TEXT"))
             except (OperationalError, ProgrammingError):
                 pass
             except Exception as e:
@@ -81,14 +85,16 @@ class Version(BaseVersion):
             return
         except Exception:
             try:
-                self.db.execute("SELECT db_url FROM workflow")
+                self.db.execute(text("SELECT db_url FROM workflow"))
             except (OperationalError, ProgrammingError):
                 return
 
         data = None
         data2 = None
         try:
-            data = self.db.execute("SELECT COUNT(wf_id) FROM master_workflow").first()
+            data = self.db.execute(
+                text("SELECT COUNT(wf_id) FROM master_workflow")
+            ).first()
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
@@ -97,7 +103,7 @@ class Version(BaseVersion):
 
         try:
             data2 = self.db.execute(
-                "SELECT COUNT(wf_id) FROM master_workflowstate"
+                text("SELECT COUNT(wf_id) FROM master_workflowstate")
             ).first()
         except (OperationalError, ProgrammingError):
             pass
@@ -137,6 +143,10 @@ class Version(BaseVersion):
 
     def _execute(self, sql):
         try:
+            if isinstance(sql, str):
+                from sqlalchemy.sql import text
+
+                sql = text(sql)
             self.db.execute(sql)
         except (OperationalError, ProgrammingError):
             pass

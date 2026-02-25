@@ -19,6 +19,7 @@ import warnings
 
 from sqlalchemy import *
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
@@ -38,7 +39,9 @@ class Version(BaseVersion):
 
         # check and fix foreign key for master_workflowstate table
         with warnings.catch_warnings():
-            table_names = self.db.get_bind().table_names()
+            from sqlalchemy import inspect as sa_inspect
+
+            table_names = sa_inspect(self.db.get_bind()).get_table_names()
             tables_to_inquiry = ["master_workflowstate", "master_workflow", "workflow"]
             if set(tables_to_inquiry).issubset(table_names):
                 meta = MetaData()
@@ -52,20 +55,26 @@ class Version(BaseVersion):
                 ) and mw_id.references(meta.tables["workflow"].c.wf_id):
                     log.info("Updating foreign key constraint.")
                     try:
-                        self.db.execute("DROP INDEX UNIQUE_MASTER_WORKFLOWSTATE")
+                        self.db.execute(text("DROP INDEX UNIQUE_MASTER_WORKFLOWSTATE"))
                     except Exception:
                         pass
                     if self.db.get_bind().driver == "mysqldb":
                         self.db.execute(
-                            "RENAME TABLE master_workflowstate TO master_workflowstate_v4"
+                            text(
+                                "RENAME TABLE master_workflowstate TO master_workflowstate_v4"
+                            )
                         )
                     else:
                         self.db.execute(
-                            "ALTER TABLE master_workflowstate RENAME TO master_workflowstate_v4"
+                            text(
+                                "ALTER TABLE master_workflowstate RENAME TO master_workflowstate_v4"
+                            )
                         )
                     Workflowstate.__table__.create(self.db.get_bind(), checkfirst=True)
                     self.db.execute(
-                        "INSERT INTO master_workflowstate(wf_id, state, timestamp, restart_count, status) SELECT m4.wf_id, m4.state, m4.timestamp, m4.restart_count, m4.status FROM master_workflowstate_v4 m4 LEFT JOIN master_workflow mw WHERE m4.wf_id=mw.wf_id"
+                        text(
+                            "INSERT INTO master_workflowstate(wf_id, state, timestamp, restart_count, status) SELECT m4.wf_id, m4.state, m4.timestamp, m4.restart_count, m4.status FROM master_workflowstate_v4 m4 LEFT JOIN master_workflow mw WHERE m4.wf_id=mw.wf_id"
+                        )
                     )
                     self.db.commit()
                     self._drop_table("master_workflowstate_v4")
@@ -84,6 +93,6 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute("DROP TABLE %s" % table_name)
+            self.db.execute(text("DROP TABLE %s" % table_name))
         except Exception:
             pass

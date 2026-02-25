@@ -18,6 +18,8 @@ import logging
 import os
 import subprocess
 
+from sqlalchemy.sql import text
+
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
 from Pegasus.db.schema import *
@@ -39,7 +41,7 @@ class Version(BaseVersion):
         """
         log.debug(f"Updating to version {DB_VERSION}")
         try:
-            self.db.execute("DROP TABLE sequences")
+            self.db.execute(text("DROP TABLE sequences"))
         except Exception:
             pass
 
@@ -102,7 +104,7 @@ class Version(BaseVersion):
         # update charset
         if self.db.get_bind().driver == "mysqldb":
             log.debug("Updating table charsets")
-            self.db.execute("SET FOREIGN_KEY_CHECKS=0")
+            self.db.execute(text("SET FOREIGN_KEY_CHECKS=0"))
             tables = (
                 DBVersion,
                 # WORKFLOW
@@ -133,10 +135,12 @@ class Version(BaseVersion):
             )
             for table in tables:
                 self.db.execute(
-                    "ALTER TABLE %s CONVERT TO CHARACTER SET utf8mb4"
-                    % table.__tablename__
+                    text(
+                        "ALTER TABLE %s CONVERT TO CHARACTER SET utf8mb4"
+                        % table.__tablename__
+                    )
                 )
-            self.db.execute("SET FOREIGN_KEY_CHECKS=1")
+            self.db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
             self.db.commit()
 
         elif self.db.get_bind().driver == "psycopg2":
@@ -174,10 +178,10 @@ class Version(BaseVersion):
             try:
                 if self.db.get_bind().driver == "mysqldb":
                     self.db.execute(
-                        f"DROP INDEX {index[0]} ON {index[1].__tablename__}"
+                        text(f"DROP INDEX {index[0]} ON {index[1].__tablename__}")
                     )
                 else:
-                    self.db.execute("DROP INDEX %s" % index[0])
+                    self.db.execute(text("DROP INDEX %s" % index[0]))
             except (OperationalError, ProgrammingError):
                 pass
             except Exception as e:
@@ -190,11 +194,13 @@ class Version(BaseVersion):
         for index in index_list:
             try:
                 self.db.execute(
-                    "CREATE INDEX {}_{}_COL ON {}({})".format(
-                        index[0].__tablename__,
-                        index[1].name,
-                        index[0].__tablename__,
-                        index[1].name,
+                    text(
+                        "CREATE INDEX {}_{}_COL ON {}({})".format(
+                            index[0].__tablename__,
+                            index[1].name,
+                            index[0].__tablename__,
+                            index[1].name,
+                        )
                     )
                 )
             except (OperationalError, ProgrammingError):
@@ -507,8 +513,10 @@ class Version(BaseVersion):
             else:
                 try:
                     self.db.execute(
-                        "ALTER TABLE {} ADD CONSTRAINT {} UNIQUE ({})".format(
-                            uc[0].__tablename__, uc[1], ",".join(uc[2])
+                        text(
+                            "ALTER TABLE {} ADD CONSTRAINT {} UNIQUE ({})".format(
+                                uc[0].__tablename__, uc[1], ",".join(uc[2])
+                            )
                         )
                     )
                 except (OperationalError, ProgrammingError):
@@ -521,32 +529,43 @@ class Version(BaseVersion):
     def _update_sqlite_table(self, tbl, create_stmt):
         """"."""
         try:
-            if {tbl.__tablename__}.issubset(self.db.get_bind().table_names()):
+            from sqlalchemy import inspect as sa_inspect
+
+            if {tbl.__tablename__}.issubset(
+                sa_inspect(self.db.get_bind()).get_table_names()
+            ):
                 log.debug(f"Updating table: {tbl.__tablename__}")
                 for stmt in create_stmt:
-                    self.db.execute(stmt)
+                    self.db.execute(text(stmt))
 
                 resultproxy = self.db.execute(
-                    f"PRAGMA table_info('{tbl.__tablename__}')"
+                    text(f"PRAGMA table_info('{tbl.__tablename__}')")
                 )
                 cols = []
                 for rowproxy in resultproxy:
-                    for column, value in rowproxy.items():
+                    for column, value in rowproxy._mapping.items():
                         if column == "name":
                             cols.append(value)
 
                 if len(cols) > 0:
                     cols = ", ".join(cols)
                     self.db.execute(
-                        "INSERT INTO {} ({}) SELECT {} FROM {}".format(
-                            tbl.__tablename__ + "_new", cols, cols, tbl.__tablename__
+                        text(
+                            "INSERT INTO {} ({}) SELECT {} FROM {}".format(
+                                tbl.__tablename__ + "_new",
+                                cols,
+                                cols,
+                                tbl.__tablename__,
+                            )
                         )
                     )
 
-                self.db.execute(f"DROP TABLE {tbl.__tablename__}")
+                self.db.execute(text(f"DROP TABLE {tbl.__tablename__}"))
                 self.db.execute(
-                    "ALTER TABLE {} RENAME TO {}".format(
-                        tbl.__tablename__ + "_new", tbl.__tablename__
+                    text(
+                        "ALTER TABLE {} RENAME TO {}".format(
+                            tbl.__tablename__ + "_new", tbl.__tablename__
+                        )
                     )
                 )
                 self.db.commit()

@@ -131,7 +131,8 @@ def connect(
         engine = create_engine(
             dburi, echo=echo, pool_recycle=True, connect_args=connect_args
         )
-        engine.connect()
+        with engine.connect():
+            pass
         if backup or not init:
             _check_db_permissions(dburi, db_type, mask)
 

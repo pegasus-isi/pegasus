@@ -16,8 +16,9 @@ __author__ = "Rajiv Mayani"
 
 import logging
 import time
+from collections import namedtuple
 
-from sqlalchemy import orm
+from sqlalchemy import orm, select
 from sqlalchemy.orm.exc import *
 from sqlalchemy.sql.expression import (
     and_,
@@ -29,7 +30,6 @@ from sqlalchemy.sql.expression import (
     func,
     or_,
 )
-from sqlalchemy.util._collections import KeyedTuple
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -37,6 +37,22 @@ from Pegasus.db.errors import StampedeDBNotFoundError
 from Pegasus.db.schema import *
 
 log = logging.getLogger(__name__)
+
+_JobCounts = namedtuple(
+    "_JobCounts",
+    [
+        "total",
+        "total_workflow",
+        "others",
+        "others_workflow",
+        "success",
+        "success_workflow",
+        "fail",
+        "fail_workflow",
+        "running",
+        "running_workflow",
+    ],
+)
 
 
 class MasterDBNotFoundError(Exception):
@@ -75,27 +91,24 @@ class MasterDatabase:
 
         w = orm.aliased(MasterWorkflow, name="w")
 
-        q = self.session.query(w.db_url)
-        q = q.filter(w.wf_id == wf_id)
+        stmt = select(w.db_url).where(w.wf_id == wf_id)
 
-        return q.one().db_url
+        return self.session.execute(stmt).one().db_url
 
     def get_wf_id_url(self, root_wf_id):
         """
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database.
         """
-        q = self.session.query(MasterWorkflow)
-
         if root_wf_id is None:
             raise ValueError("root_wf_id cannot be None")
 
         m_wf_id = str(root_wf_id)
         if m_wf_id.isdigit():
-            q = q.filter(MasterWorkflow.wf_id == root_wf_id)
+            stmt = select(MasterWorkflow).where(MasterWorkflow.wf_id == root_wf_id)
         else:
-            q = q.filter(MasterWorkflow.wf_uuid == root_wf_id)
+            stmt = select(MasterWorkflow).where(MasterWorkflow.wf_uuid == root_wf_id)
 
-        q = q.one()
+        q = self.session.execute(stmt).scalars().one()
 
         return q.wf_id, q.wf_uuid, q.db_url
 
@@ -117,13 +130,14 @@ class MasterDatabase:
         ws = orm.aliased(MasterWorkflowstate, name="ws")
 
         # Get last state change for each work-flow.
-        qmax = self.session.query(
-            MasterWorkflowstate.wf_id,
-            func.max(MasterWorkflowstate.timestamp).label("max_time"),
+        qmax = (
+            select(
+                MasterWorkflowstate.wf_id,
+                func.max(MasterWorkflowstate.timestamp).label("max_time"),
+            )
+            .group_by(MasterWorkflowstate.wf_id)
+            .subquery("max_timestamp")
         )
-        qmax = qmax.group_by(MasterWorkflowstate.wf_id)
-
-        qmax = qmax.subquery("max_timestamp")
 
         state = case(
             [
@@ -134,38 +148,41 @@ class MasterDatabase:
             else_="Undefined",
         ).label("state")
 
-        q = self.session.query(
-            w.wf_id,
-            w.wf_uuid,
-            w.timestamp,
-            w.dag_file_name,
-            w.submit_hostname,
-            w.submit_dir,
-            w.planner_arguments,
-            w.user,
-            w.grid_dn,
-            w.planner_version,
-            w.dax_label,
-            w.dax_version,
-            w.db_url,
-            w.archived,
-            ws.reason,
-            ws.status,
-            state,
+        stmt = (
+            select(
+                w.wf_id,
+                w.wf_uuid,
+                w.timestamp,
+                w.dag_file_name,
+                w.submit_hostname,
+                w.submit_dir,
+                w.planner_arguments,
+                w.user,
+                w.grid_dn,
+                w.planner_version,
+                w.dax_label,
+                w.dax_version,
+                w.db_url,
+                w.archived,
+                ws.reason,
+                ws.status,
+                state,
+            )
+            .where(w.wf_id == ws.wf_id)
+            .where(ws.wf_id == qmax.c.wf_id)
+            .where(ws.timestamp == qmax.c.max_time)
         )
 
-        q = q.filter(w.wf_id == ws.wf_id)
-        q = q.filter(ws.wf_id == qmax.c.wf_id)
-        q = q.filter(ws.timestamp == qmax.c.max_time)
-
         # Get Total Count. Need this to pass to jQuery Datatable.
-        count = q.count()
+        count = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
         if count == 0:
             return 0, 0, []
 
         if "filter" in table_args:
             filter_text = "%" + table_args["filter"] + "%"
-            q = q.filter(
+            stmt = stmt.where(
                 or_(
                     w.dax_label.like(filter_text),
                     w.submit_hostname.like(filter_text),
@@ -179,18 +196,26 @@ class MasterDatabase:
             current_time = int(time.time())
 
             if time_filter == "day":
-                q = q.filter(between(w.timestamp, current_time - 86400, current_time))
+                stmt = stmt.where(
+                    between(w.timestamp, current_time - 86400, current_time)
+                )
             elif time_filter == "week":
-                q = q.filter(between(w.timestamp, current_time - 604800, current_time))
+                stmt = stmt.where(
+                    between(w.timestamp, current_time - 604800, current_time)
+                )
             elif time_filter == "month":
-                q = q.filter(between(w.timestamp, current_time - 2620800, current_time))
+                stmt = stmt.where(
+                    between(w.timestamp, current_time - 2620800, current_time)
+                )
             elif time_filter == "year":
-                q = q.filter(
+                stmt = stmt.where(
                     between(w.timestamp, current_time - 31449600, current_time)
                 )
 
         # Get Total Count. Need this to pass to jQuery Datatable.
-        filtered = q.count()
+        filtered = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
 
         if filtered == 0:
             return count, 0, []
@@ -205,7 +230,6 @@ class MasterDatabase:
 
         if "sort-col-count" in table_args:
             for i in range(table_args["sort-col-count"]):
-
                 if "iSortCol_" + str(i) in table_args:
                     if (
                         "sSortDir_" + str(i) in table_args
@@ -214,7 +238,7 @@ class MasterDatabase:
                         i = table_args["iSortCol_" + str(i)]
 
                         if 0 <= i < len(display_columns):
-                            q = q.order_by(display_columns[i])
+                            stmt = stmt.order_by(display_columns[i])
                         else:
                             raise ValueError(
                                 "Invalid column (%s) in work-flow listing " % i
@@ -223,7 +247,7 @@ class MasterDatabase:
                         i = table_args["iSortCol_" + str(i)]
 
                         if 0 <= i < len(display_columns):
-                            q = q.order_by(desc(display_columns[i]))
+                            stmt = stmt.order_by(desc(display_columns[i]))
                         else:
                             raise ValueError(
                                 "Invalid column (%s) in work-flow listing " % i
@@ -231,13 +255,13 @@ class MasterDatabase:
 
         else:
             # Default sorting order
-            q = q.order_by(desc(w.timestamp))
+            stmt = stmt.order_by(desc(w.timestamp))
 
         if "limit" in table_args and "offset" in table_args:
-            q = q.limit(table_args["limit"])
-            q = q.offset(table_args["offset"])
+            stmt = stmt.limit(table_args["limit"])
+            stmt = stmt.offset(table_args["offset"])
 
-        return count, filtered, q.all()
+        return count, filtered, self.session.execute(stmt).all()
 
     def get_workflow_counts(self):
 
@@ -245,28 +269,30 @@ class MasterDatabase:
         ws = orm.aliased(MasterWorkflowstate, name="ws")
 
         # Get last state change for each work-flow.
-        qmax = self.session.query(
-            MasterWorkflowstate.wf_id,
-            func.max(MasterWorkflowstate.timestamp).label("max_time"),
-        )
-        qmax = qmax.group_by(MasterWorkflowstate.wf_id)
-
-        qmax = qmax.subquery("max_timestamp")
-
-        q = self.session.query(
-            func.count(w.wf_id).label("total"),
-            func.sum(case([(ws.status == 0, 1)], else_=0)).label("success"),
-            func.sum(case([(ws.status != 0, 1)], else_=0)).label("fail"),
-            func.sum(case([(ws.status == None, 1)], else_=0)).label(
-                "others"
-            ),  # noqa: E711
+        qmax = (
+            select(
+                MasterWorkflowstate.wf_id,
+                func.max(MasterWorkflowstate.timestamp).label("max_time"),
+            )
+            .group_by(MasterWorkflowstate.wf_id)
+            .subquery("max_timestamp")
         )
 
-        q = q.filter(w.wf_id == ws.wf_id)
-        q = q.filter(ws.wf_id == qmax.c.wf_id)
-        q = q.filter(ws.timestamp == qmax.c.max_time)
+        stmt = (
+            select(
+                func.count(w.wf_id).label("total"),
+                func.sum(case((ws.status == 0, 1), else_=0)).label("success"),
+                func.sum(case((ws.status != 0, 1), else_=0)).label("fail"),
+                func.sum(case((ws.status == None, 1), else_=0)).label(
+                    "others"
+                ),  # noqa: E711
+            )
+            .where(w.wf_id == ws.wf_id)
+            .where(ws.wf_id == qmax.c.wf_id)
+            .where(ws.timestamp == qmax.c.max_time)
+        )
 
-        return q.one()
+        return self.session.execute(stmt).one()
 
 
 class WorkflowInfo:
@@ -302,77 +328,76 @@ class WorkflowInfo:
             return
 
         if wf_uuid:
-            q = self.session.query(Workflow.wf_id)
-            q = q.filter(Workflow.wf_uuid == wf_uuid)
-
-            self._wf_id = q.one().wf_id
+            stmt = select(Workflow.wf_id).where(Workflow.wf_uuid == wf_uuid)
+            self._wf_id = self.session.execute(stmt).one().wf_id
 
     def get_workflow_information(self):
 
-        qmax = self.session.query(func.max(Workflowstate.timestamp).label("max_time"))
-        qmax = qmax.filter(Workflowstate.wf_id == self._wf_id)
-
-        qmax = qmax.subquery("max_timestamp")
+        qmax = (
+            select(func.max(Workflowstate.timestamp).label("max_time"))
+            .where(Workflowstate.wf_id == self._wf_id)
+            .subquery("max_timestamp")
+        )
 
         ws = orm.aliased(Workflowstate, name="ws")
         w = orm.aliased(Workflow, name="w")
 
-        q = self.session.query(
-            w.wf_id,
-            w.wf_uuid,
-            w.parent_wf_id,
-            w.root_wf_id,
-            w.dag_file_name,
-            w.submit_hostname,
-            w.submit_dir,
-            w.planner_arguments,
-            w.user,
-            w.grid_dn,
-            w.planner_version,
-            w.dax_label,
-            w.dax_version,
-            case(
-                [
-                    (ws.status == None, "Running"),  # noqa: E711
-                    (ws.status == 0, "Successful"),
-                    (ws.status != 0, "Failed"),
-                ],
-                else_="Undefined",
-            ).label("state"),
-            ws.reason,
-            ws.timestamp,
+        stmt = (
+            select(
+                w.wf_id,
+                w.wf_uuid,
+                w.parent_wf_id,
+                w.root_wf_id,
+                w.dag_file_name,
+                w.submit_hostname,
+                w.submit_dir,
+                w.planner_arguments,
+                w.user,
+                w.grid_dn,
+                w.planner_version,
+                w.dax_label,
+                w.dax_version,
+                case(
+                    [
+                        (ws.status == None, "Running"),  # noqa: E711
+                        (ws.status == 0, "Successful"),
+                        (ws.status != 0, "Failed"),
+                    ],
+                    else_="Undefined",
+                ).label("state"),
+                ws.reason,
+                ws.timestamp,
+            )
+            .where(w.wf_id == self._wf_id)
+            .where(w.wf_id == ws.wf_id)
+            .where(ws.timestamp == qmax.c.max_time)
         )
 
-        q = q.filter(w.wf_id == self._wf_id)
-        q = q.filter(w.wf_id == ws.wf_id)
-        q = q.filter(ws.timestamp == qmax.c.max_time)
-
-        return q.one()
+        return self.session.execute(stmt).one()
 
     def get_workflow_job_counts(self):
 
         qmax = self.__get_maxjss_subquery()
 
-        q = self.session.query(func.count(Job.wf_id).label("total"))
-        q = q.add_column(
+        stmt_totals = select(
+            func.count(Job.wf_id).label("total"),
             func.sum(
                 case(
                     [(Job.type_desc == "dag", 1), (Job.type_desc == "dax", 1)], else_=0
                 )
-            ).label("total_workflow")
-        )
-        q = q.filter(Job.wf_id == self._wf_id)
+            ).label("total_workflow"),
+        ).where(Job.wf_id == self._wf_id)
 
-        totals = q.one()
+        totals = self.session.execute(stmt_totals).one()
 
-        q = self.session.query(func.count(Job.wf_id).label("total"))
-        q = q.add_column(
-            func.sum(case([(JobInstance.exitcode == 0, 1)], else_=0)).label("success")
-        )
-        q = q.add_column(
-            func.sum(
-                case(
-                    [
+        stmt_counts = (
+            select(
+                func.count(Job.wf_id).label("total"),
+                func.sum(case((JobInstance.exitcode == 0, 1), else_=0)).label(
+                    "success"
+                ),
+                func.sum(
+                    case(
                         (
                             JobInstance.exitcode == 0,
                             case(
@@ -382,20 +407,13 @@ class WorkflowInfo:
                                 ],
                                 else_=0,
                             ),
-                        )
-                    ],
-                    else_=0,
-                )
-            ).label("success_workflow")
-        )
-
-        q = q.add_column(
-            func.sum(case([(JobInstance.exitcode != 0, 1)], else_=0)).label("fail")
-        )
-        q = q.add_column(
-            func.sum(
-                case(
-                    [
+                        ),
+                        else_=0,
+                    )
+                ).label("success_workflow"),
+                func.sum(case((JobInstance.exitcode != 0, 1), else_=0)).label("fail"),
+                func.sum(
+                    case(
                         (
                             JobInstance.exitcode != 0,
                             case(
@@ -405,24 +423,17 @@ class WorkflowInfo:
                                 ],
                                 else_=0,
                             ),
-                        )
-                    ],
-                    else_=0,
-                )
-            ).label("fail_workflow")
-        )
-
-        q = q.add_column(
-            func.sum(
-                case([(JobInstance.exitcode == None, 1)], else_=0)
-            ).label(  # noqa: E711
-                "running"
-            )
-        )
-        q = q.add_column(
-            func.sum(
-                case(
-                    [
+                        ),
+                        else_=0,
+                    )
+                ).label("fail_workflow"),
+                func.sum(
+                    case((JobInstance.exitcode == None, 1), else_=0)
+                ).label(  # noqa: E711
+                    "running"
+                ),
+                func.sum(
+                    case(
                         (
                             JobInstance.exitcode == None,  # noqa: E711
                             case(
@@ -432,142 +443,130 @@ class WorkflowInfo:
                                 ],
                                 else_=0,
                             ),
-                        )
-                    ],
-                    else_=0,
-                )
-            ).label("running_workflow")
+                        ),
+                        else_=0,
+                    )
+                ).label("running_workflow"),
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(Job.job_id == qmax.c.job_id)
+            .where(JobInstance.job_submit_seq == qmax.c.max_jss)
         )
 
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(Job.job_id == qmax.c.job_id)
-        q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
+        counts = self.session.execute(stmt_counts).one()
 
-        counts = q.one()
-
-        out = KeyedTuple(
-            [
-                totals.total,
-                totals.total_workflow,
-                totals.total - (counts.success + counts.fail + counts.running),
-                totals.total_workflow
-                - (
-                    counts.success_workflow
-                    + counts.fail_workflow
-                    + counts.running_workflow
-                ),
-                counts.success,
-                counts.success_workflow,
-                counts.fail,
-                counts.fail_workflow,
-                counts.running,
-                counts.running_workflow,
-            ],
-            labels=[
-                "total",
-                "total_workflow",
-                "others",
-                "others_workflow",
-                "success",
-                "success_workflow",
-                "fail",
-                "fail_workflow",
-                "running",
-                "running_workflow",
-            ],
+        out = _JobCounts(
+            total=totals.total,
+            total_workflow=totals.total_workflow,
+            others=totals.total - (counts.success + counts.fail + counts.running),
+            others_workflow=totals.total_workflow
+            - (
+                counts.success_workflow + counts.fail_workflow + counts.running_workflow
+            ),
+            success=counts.success,
+            success_workflow=counts.success_workflow,
+            fail=counts.fail,
+            fail_workflow=counts.fail_workflow,
+            running=counts.running,
+            running_workflow=counts.running_workflow,
         )
 
         return out
 
     def get_job_information(self, job_id, job_instance_id):
 
-        q = self.session.query(
-            Job.exec_job_id,
-            Job.clustered,
-            JobInstance.job_instance_id,
-            JobInstance.work_dir,
-            JobInstance.exitcode,
-            JobInstance.stdout_file,
-            JobInstance.stderr_file,
-            Host.site,
-            Host.hostname,
-            Host.ip,
+        stmt = (
+            select(
+                Job.exec_job_id,
+                Job.clustered,
+                JobInstance.job_instance_id,
+                JobInstance.work_dir,
+                JobInstance.exitcode,
+                JobInstance.stdout_file,
+                JobInstance.stderr_file,
+                Host.site,
+                Host.hostname,
+                Host.ip,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(JobInstance.job_instance_id == job_instance_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .outerjoin(Host, JobInstance.host_id == Host.host_id)
         )
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.outerjoin(Host, JobInstance.host_id == Host.host_id)
 
-        return q.one()
+        return self.session.execute(stmt).one()
 
     def get_job_instances(self, job_id):
 
-        q = self.session.query(
-            Job.exec_job_id,
-            JobInstance.job_instance_id,
-            JobInstance.exitcode,
-            JobInstance.job_submit_seq,
+        stmt = (
+            select(
+                Job.exec_job_id,
+                JobInstance.job_instance_id,
+                JobInstance.exitcode,
+                JobInstance.job_submit_seq,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .order_by(desc(JobInstance.job_submit_seq))
         )
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
 
-        q = q.order_by(desc(JobInstance.job_submit_seq))
-
-        return q.all()
+        return self.session.execute(stmt).all()
 
     def get_job_states(self, job_id, job_instance_id):
 
-        q = self.session.query(Jobstate.state, Jobstate.reason, Jobstate.timestamp)
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
+        stmt = (
+            select(Jobstate.state, Jobstate.reason, Jobstate.timestamp)
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(JobInstance.job_instance_id == job_instance_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(JobInstance.job_instance_id == Jobstate.job_instance_id)
+            .order_by(asc(Jobstate.jobstate_submit_seq))
+        )
 
-        q = q.order_by(asc(Jobstate.jobstate_submit_seq))
-
-        return q.all()
+        return self.session.execute(stmt).all()
 
     def _jobs_by_type(self):
         qmax = self.__get_jobs_maxjss_sq()
 
-        q = self.session.query(
-            Job.job_id,
-            JobInstance.job_instance_id,
-            Job.exec_job_id,
-            JobInstance.exitcode,
+        stmt = (
+            select(
+                Job.job_id,
+                JobInstance.job_instance_id,
+                Job.exec_job_id,
+                JobInstance.exitcode,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(Job.job_id == qmax.c.job_id)
+            .where(JobInstance.job_submit_seq == qmax.c.max_jss)
+            .group_by(JobInstance.job_id)
         )
 
-        q = q.filter(Job.wf_id == self._wf_id)
-
-        q = q.filter(Job.job_id == JobInstance.job_id)
-
-        q = q.filter(Job.job_id == qmax.c.job_id)
-        q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
-
-        q = q.group_by(JobInstance.job_id)
-
-        return q
+        return stmt
 
     def get_failed_jobs(self, **table_args):
 
-        q = self._jobs_by_type()
-        q = q.filter(JobInstance.exitcode != 0).filter(
-            JobInstance.exitcode != None
-        )  # noqa: E711
+        stmt = (
+            self._jobs_by_type()
+            .where(JobInstance.exitcode != 0)
+            .where(JobInstance.exitcode != None)  # noqa: E711
+        )
 
         # Get Total Count. Need this to pass to jQuery Datatable.
-        count = q.count()
+        count = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
         if count == 0:
             return (0, 0, [])
 
         filtered = count
         if "filter" in table_args:
             filter_text = "%" + table_args["filter"] + "%"
-            q = q.filter(
+            stmt = stmt.where(
                 or_(
                     Job.exec_job_id.like(filter_text),
                     JobInstance.exitcode.like(filter_text),
@@ -575,7 +574,9 @@ class WorkflowInfo:
             )
 
             # Get Total Count. Need this to pass to jQuery Datatable.
-            filtered = q.count()
+            filtered = self.session.execute(
+                select(func.count()).select_from(stmt.subquery())
+            ).scalar()
 
             if filtered == 0:
                 return (count, 0, [])
@@ -584,7 +585,6 @@ class WorkflowInfo:
 
         if "sort-col-count" in table_args:
             for i in range(table_args["sort-col-count"]):
-
                 if "iSortCol_" + str(i) in table_args:
                     sort_order = desc
 
@@ -597,7 +597,7 @@ class WorkflowInfo:
                     i = table_args["iSortCol_" + str(i)]
 
                     if i >= 0 and i < len(display_columns):
-                        q = q.order_by(sort_order(display_columns[i]))
+                        stmt = stmt.order_by(sort_order(display_columns[i]))
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
@@ -607,42 +607,46 @@ class WorkflowInfo:
 
         else:
             # Default sorting order
-            q = q.order_by(desc(Job.exec_job_id))
+            stmt = stmt.order_by(desc(Job.exec_job_id))
 
         if "limit" in table_args and "offset" in table_args:
-            q = q.limit(table_args["limit"])
-            q = q.offset(table_args["offset"])
+            stmt = stmt.limit(table_args["limit"])
+            stmt = stmt.offset(table_args["offset"])
 
-        return count, filtered, q.all()
+        return count, filtered, self.session.execute(stmt).all()
 
     def get_successful_jobs(self, **table_args):
 
-        q = self._jobs_by_type()
-
-        q = q.add_column(JobInstance.local_duration)
-        q = q.add_column(JobInstance.cluster_duration)
         duration = case(
             [(Job.clustered == 1, JobInstance.cluster_duration)],
             else_=JobInstance.local_duration,
         ).label("duration")
-        q = q.add_column(duration)
 
-        q = q.filter(JobInstance.exitcode == 0).filter(
-            JobInstance.exitcode != None
-        )  # noqa: E711
+        stmt = (
+            self._jobs_by_type()
+            .add_columns(
+                JobInstance.local_duration, JobInstance.cluster_duration, duration,
+            )
+            .where(JobInstance.exitcode == 0)
+            .where(JobInstance.exitcode != None)  # noqa: E711
+        )
 
         # Get Total Count. Need this to pass to jQuery Datatable.
-        count = q.count()
+        count = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
         if count == 0:
             return (0, 0, [])
 
         filtered = count
         if "filter" in table_args:
             filter_text = "%" + table_args["filter"] + "%"
-            q = q.filter(or_(Job.exec_job_id.like(filter_text)))
+            stmt = stmt.where(or_(Job.exec_job_id.like(filter_text)))
 
             # Get Total Count. Need this to pass to jQuery Datatable.
-            filtered = q.count()
+            filtered = self.session.execute(
+                select(func.count()).select_from(stmt.subquery())
+            ).scalar()
 
             if filtered == 0:
                 return count, 0, []
@@ -651,7 +655,6 @@ class WorkflowInfo:
 
         if "sort-col-count" in table_args:
             for i in range(table_args["sort-col-count"]):
-
                 if "iSortCol_" + str(i) in table_args:
                     sort_order = desc
 
@@ -664,7 +667,7 @@ class WorkflowInfo:
                     i = table_args["iSortCol_" + str(i)]
 
                     if i >= 0 and i < len(display_columns):
-                        q = q.order_by(sort_order(display_columns[i]))
+                        stmt = stmt.order_by(sort_order(display_columns[i]))
                     else:
                         raise ValueError(
                             "Invalid column(%s) in successful jobs listing " % i
@@ -672,41 +675,45 @@ class WorkflowInfo:
 
         else:
             # Default sorting order
-            q = q.order_by(desc(Job.exec_job_id))
+            stmt = stmt.order_by(desc(Job.exec_job_id))
 
         if "limit" in table_args and "offset" in table_args:
-            q = q.limit(table_args["limit"])
-            q = q.offset(table_args["offset"])
+            stmt = stmt.limit(table_args["limit"])
+            stmt = stmt.offset(table_args["offset"])
 
-        return count, filtered, q.all()
+        return count, filtered, self.session.execute(stmt).all()
 
     def get_other_jobs(self, **table_args):
 
-        q = self._jobs_by_type()
-
-        q = q.add_column(JobInstance.local_duration)
-        q = q.add_column(JobInstance.cluster_duration)
-        q = q.add_column(
-            case(
-                [(Job.clustered == 1, JobInstance.cluster_duration)],
-                else_=JobInstance.local_duration,
-            ).label("duration")
-        )
-
-        q = q.filter(JobInstance.exitcode == None)  # noqa: E711
+        stmt = (
+            self._jobs_by_type()
+            .add_columns(
+                JobInstance.local_duration,
+                JobInstance.cluster_duration,
+                case(
+                    [(Job.clustered == 1, JobInstance.cluster_duration)],
+                    else_=JobInstance.local_duration,
+                ).label("duration"),
+            )
+            .where(JobInstance.exitcode == None)
+        )  # noqa: E711
 
         # Get Total Count. Need this to pass to jQuery Datatable.
-        count = q.count()
+        count = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
         if count == 0:
             return 0, 0, []
 
         filtered = count
         if "filter" in table_args:
             filter_text = "%" + table_args["filter"] + "%"
-            q = q.filter(or_(Job.exec_job_id.like(filter_text)))
+            stmt = stmt.where(or_(Job.exec_job_id.like(filter_text)))
 
             # Get Total Count. Need this to pass to jQuery Datatable.
-            filtered = q.count()
+            filtered = self.session.execute(
+                select(func.count()).select_from(stmt.subquery())
+            ).scalar()
 
             if filtered == 0:
                 return count, 0, []
@@ -715,7 +722,6 @@ class WorkflowInfo:
 
         if "sort-col-count" in table_args:
             for i in range(table_args["sort-col-count"]):
-
                 if "iSortCol_" + str(i) in table_args:
                     sort_order = desc
 
@@ -728,7 +734,7 @@ class WorkflowInfo:
                     i = table_args["iSortCol_" + str(i)]
 
                     if i >= 0 and i < len(display_columns):
-                        q = q.order_by(sort_order(display_columns[i]))
+                        stmt = stmt.order_by(sort_order(display_columns[i]))
                     else:
                         raise ValueError(
                             "Invalid column(%s) in other jobs listing " % i
@@ -736,13 +742,13 @@ class WorkflowInfo:
 
         else:
             # Default sorting order
-            q = q.order_by(desc(Job.exec_job_id))
+            stmt = stmt.order_by(desc(Job.exec_job_id))
 
         if "limit" in table_args and "offset" in table_args:
-            q = q.limit(table_args["limit"])
-            q = q.offset(table_args["offset"])
+            stmt = stmt.limit(table_args["limit"])
+            stmt = stmt.offset(table_args["offset"])
 
-        return count, filtered, q.all()
+        return count, filtered, self.session.execute(stmt).all()
 
     def get_failing_jobs(self, **table_args):
         """
@@ -778,61 +784,57 @@ class WorkflowInfo:
         j1 = orm.aliased(Job, name="j1")
         ji1 = orm.aliased(JobInstance, name="ji1")
 
-        q_sub = self.session.query(distinct(j1.job_id))
-
-        q_sub = q_sub.filter(j1.wf_id == self._wf_id)
-
-        q_sub = q_sub.filter(j1.job_id == ji1.job_id)
-
-        q_sub = q_sub.filter(ji1.exitcode == None)  # noqa: E711
-
-        q_sub = q_sub.subquery()
+        q_sub = (
+            select(distinct(j1.job_id))
+            .where(j1.wf_id == self._wf_id)
+            .where(j1.job_id == ji1.job_id)
+            .where(ji1.exitcode == None)  # noqa: E711
+        )
 
         #
         # Get max(job_submit_seq) of all the failed job instances, for each job.
         #
-        qmax = self.__get_jobs_maxjss_q()
-        qmax = qmax.filter(JobInstance.exitcode != None).filter(
-            JobInstance.exitcode != 0
-        )  # noqa: E711
-        qmax = qmax.subquery("allmaxjss")
+        qmax = (
+            self.__get_jobs_maxjss_q()
+            .where(JobInstance.exitcode != None)  # noqa: E711
+            .where(JobInstance.exitcode != 0)
+            .subquery("allmaxjss")
+        )
 
         #
         # Get the latest failed job instances
         # whose job_id matches the job_ids of the currently running jobs.
         #
 
-        q = self.session.query(
-            Job.job_id,
-            JobInstance.job_instance_id,
-            Job.exec_job_id,
-            JobInstance.exitcode,
+        stmt = (
+            select(
+                Job.job_id,
+                JobInstance.job_instance_id,
+                Job.exec_job_id,
+                JobInstance.exitcode,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(JobInstance.exitcode != 0)
+            .where(JobInstance.exitcode != None)  # noqa: E711
+            .where(Job.job_id == qmax.c.job_id)
+            .where(JobInstance.job_submit_seq == qmax.c.max_jss)
+            .where(Job.job_id.in_(q_sub))
         )
-
-        q = q.filter(Job.wf_id == self._wf_id)
-
-        q = q.filter(Job.job_id == JobInstance.job_id)
-
-        q = q.filter(JobInstance.exitcode != 0).filter(
-            JobInstance.exitcode != None
-        )  # noqa: E711
-
-        q = q.filter(Job.job_id == qmax.c.job_id)
-        q = q.filter(JobInstance.job_submit_seq == qmax.c.max_jss)
-
-        q = q.filter(Job.job_id.in_(q_sub))
 
         #
         # Get Total Count. Need this to pass to jQuery Datatable.
         #
-        count = q.count()
+        count = self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar()
         if count == 0:
             return 0, 0, []
 
         filtered = count
         if "filter" in table_args:
             filter_text = "%" + table_args["filter"] + "%"
-            q = q.filter(
+            stmt = stmt.where(
                 or_(
                     Job.exec_job_id.like(filter_text),
                     JobInstance.exitcode.like(filter_text),
@@ -840,7 +842,9 @@ class WorkflowInfo:
             )
 
             # Get Total Count. Need this to pass to jQuery Datatable.
-            filtered = q.count()
+            filtered = self.session.execute(
+                select(func.count()).select_from(stmt.subquery())
+            ).scalar()
 
             if filtered == 0:
                 return count, 0, []
@@ -849,7 +853,6 @@ class WorkflowInfo:
 
         if "sort-col-count" in table_args:
             for i in range(table_args["sort-col-count"]):
-
                 if "iSortCol_" + str(i) in table_args:
                     sort_order = desc
 
@@ -862,7 +865,7 @@ class WorkflowInfo:
                     i = table_args["iSortCol_" + str(i)]
 
                     if i >= 0 and i < len(display_columns):
-                        q = q.order_by(sort_order(display_columns[i]))
+                        stmt = stmt.order_by(sort_order(display_columns[i]))
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
@@ -872,197 +875,204 @@ class WorkflowInfo:
 
         else:
             # Default sorting order
-            q = q.order_by(desc(Job.exec_job_id))
+            stmt = stmt.order_by(desc(Job.exec_job_id))
 
         if "limit" in table_args and "offset" in table_args:
-            q = q.limit(table_args["limit"])
-            q = q.offset(table_args["offset"])
+            stmt = stmt.limit(table_args["limit"])
+            stmt = stmt.offset(table_args["offset"])
 
-        return count, filtered, q.all()
+        return count, filtered, self.session.execute(stmt).all()
 
     def __get_jobs_maxjss_q(self):
-        qmax = self.session.query(
-            Job.job_id, func.max(JobInstance.job_submit_seq).label("max_jss")
+        stmt = (
+            select(Job.job_id, func.max(JobInstance.job_submit_seq).label("max_jss"))
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .group_by(Job.job_id)
         )
-        qmax = qmax.filter(Job.wf_id == self._wf_id)
-        qmax = qmax.filter(Job.job_id == JobInstance.job_id)
-        qmax = qmax.group_by(Job.job_id)
 
-        return qmax
+        return stmt
 
     def __get_jobs_maxjss_sq(self):
-        qmax = self.__get_jobs_maxjss_q()
-        qmax = qmax.subquery("allmaxjss")
-        return qmax
+        return self.__get_jobs_maxjss_q().subquery("allmaxjss")
 
     def get_sub_workflows(self):
-        qmax = self.session.query(
-            Workflowstate.wf_id, func.max(Workflowstate.timestamp).label("max_time")
+        qmax = (
+            select(
+                Workflowstate.wf_id,
+                func.max(Workflowstate.timestamp).label("max_time"),
+            )
+            .group_by(Workflowstate.wf_id)
+            .subquery("max_timestamp")
         )
-        qmax = qmax.group_by(Workflowstate.wf_id)
-
-        qmax = qmax.subquery("max_timestamp")
 
         ws = orm.aliased(Workflowstate, name="ws")
         w = orm.aliased(Workflow, name="w")
 
-        q = self.session.query(
-            w.root_wf_id,
-            w.wf_id,
-            w.wf_uuid,
-            w.dax_label,
-            case(
-                [
-                    (ws.status == None, "Running"),  # noqa: E711
-                    (ws.status == 0, "Successful"),
-                    (ws.status != 0, "Failed"),
-                ],
-                else_="Undefined",
-            ).label("state"),
+        stmt = (
+            select(
+                w.root_wf_id,
+                w.wf_id,
+                w.wf_uuid,
+                w.dax_label,
+                case(
+                    [
+                        (ws.status == None, "Running"),  # noqa: E711
+                        (ws.status == 0, "Successful"),
+                        (ws.status != 0, "Failed"),
+                    ],
+                    else_="Undefined",
+                ).label("state"),
+            )
+            .where(w.parent_wf_id == self._wf_id)
+            .where(w.wf_id == ws.wf_id)
+            .where(ws.wf_id == qmax.c.wf_id)
+            .where(ws.timestamp == qmax.c.max_time)
         )
 
-        q = q.filter(w.parent_wf_id == self._wf_id)
-        q = q.filter(w.wf_id == ws.wf_id)
-        q = q.filter(ws.wf_id == qmax.c.wf_id)
-        q = q.filter(ws.timestamp == qmax.c.max_time)
-
-        return q.all()
+        return self.session.execute(stmt).all()
 
     def get_stdout(self, job_id, job_instance_id):
-        q = self.session.query(JobInstance.stdout_file, JobInstance.stdout_text)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
+        stmt = select(JobInstance.stdout_file, JobInstance.stdout_text).where(
+            JobInstance.job_instance_id == job_instance_id
+        )
 
-        return q.one()
+        return self.session.execute(stmt).one()
 
     def get_stderr(self, job_id, job_instance_id):
-        q = self.session.query(JobInstance.stderr_file, JobInstance.stderr_text)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
+        stmt = select(JobInstance.stderr_file, JobInstance.stderr_text).where(
+            JobInstance.job_instance_id == job_instance_id
+        )
 
-        return q.one()
+        return self.session.execute(stmt).one()
 
     def get_successful_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(
-            Job.exec_job_id,
-            Invocation.invocation_id,
-            Invocation.abs_task_id,
-            Invocation.exitcode,
-            Invocation.remote_duration,
+        stmt = (
+            select(
+                Job.exec_job_id,
+                Invocation.invocation_id,
+                Invocation.abs_task_id,
+                Invocation.exitcode,
+                Invocation.remote_duration,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(JobInstance.job_instance_id == job_instance_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(JobInstance.job_instance_id == Invocation.job_instance_id)
+            .where(Invocation.exitcode == 0)
+            .where(
+                or_(
+                    Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
+                )  # noqa: E711
+            )
         )
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
-        q = q.filter(Invocation.exitcode == 0)
 
-        q = q.filter(
-            or_(
-                Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
-            )  # noqa: E711
-        )
-
-        return q.all()
+        return self.session.execute(stmt).all()
 
     def get_failed_job_invocations(self, job_id, job_instance_id):
 
-        q = self.session.query(
-            Job.exec_job_id,
-            Invocation.invocation_id,
-            Invocation.abs_task_id,
-            Invocation.exitcode,
-            Invocation.remote_duration,
+        stmt = (
+            select(
+                Job.exec_job_id,
+                Invocation.invocation_id,
+                Invocation.abs_task_id,
+                Invocation.exitcode,
+                Invocation.remote_duration,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(JobInstance.job_instance_id == job_instance_id)
+            .where(Job.job_id == JobInstance.job_id)
+            .where(JobInstance.job_instance_id == Invocation.job_instance_id)
+            .where(Invocation.exitcode != 0)
+            .where(
+                or_(
+                    Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
+                )  # noqa: E711
+            )
         )
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
-        q = q.filter(Invocation.exitcode != 0)
 
-        q = q.filter(
-            or_(
-                Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
-            )  # noqa: E711
-        )
-
-        return q.all()
+        return self.session.execute(stmt).all()
 
     def __get_maxjss_subquery(self, job_id=None):
 
         jii = orm.aliased(JobInstance, name="jii")
 
         if job_id:
-
-            qmax = self.session.query(
-                JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq)
+            stmt = (
+                select(
+                    JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq)
+                )
+                .where(Job.wf_id == self._wf_id)
+                .where(Job.job_id == job_id)
+                .where(Job.type_desc != "dax", Job.type_desc != "dag")
+                .where(Job.job_id == JobInstance.job_id)
+                .correlate(jii)
             )
-            qmax = qmax.filter(Job.wf_id == self._wf_id)
-            qmax = qmax.filter(Job.job_id == job_id)
-            qmax = qmax.filter(Job.type_desc != "dax", Job.type_desc != "dag")
-            qmax = qmax.filter(Job.job_id == JobInstance.job_id).correlate(jii)
 
-            qmax = qmax.subquery("maxjss")
+            qmax = stmt.subquery("maxjss")
 
         else:
-
-            qmax = self.session.query(
-                Job.job_id, func.max(JobInstance.job_submit_seq).label("max_jss")
+            stmt = (
+                select(
+                    Job.job_id, func.max(JobInstance.job_submit_seq).label("max_jss")
+                )
+                .where(Job.wf_id == self._wf_id)
+                .where(Job.job_id == JobInstance.job_id)
+                .correlate(jii)
+                .group_by(Job.job_id)
             )
-            qmax = qmax.filter(Job.wf_id == self._wf_id)
-            qmax = qmax.filter(Job.job_id == JobInstance.job_id).correlate(jii)
 
-            qmax = qmax.group_by(Job.job_id)
-
-            qmax = qmax.subquery("maxjss")
+            qmax = stmt.subquery("maxjss")
 
         return qmax
 
     def get_invocation_information(self, job_id, job_instance_id, invocation_id):
 
-        q = self.session.query(JobInstance.work_dir)
-
-        q = q.join(Job, Job.job_id == JobInstance.job_id)
-        q = q.outerjoin(Task, Job.job_id == Task.job_id)
-        q = q.join(
-            Invocation,
-            and_(
-                JobInstance.job_instance_id == Invocation.job_instance_id,
+        stmt = (
+            select(
+                JobInstance.work_dir,
+                Task.task_id,
+                Invocation.invocation_id,
+                Invocation.abs_task_id,
+                Invocation.start_time,
+                Invocation.remote_duration,
+                Invocation.remote_cpu_time,
+                Invocation.exitcode,
+                Invocation.transformation,
+                Invocation.executable,
+                Invocation.argv,
+            )
+            .join(Job, Job.job_id == JobInstance.job_id)
+            .outerjoin(Task, Job.job_id == Task.job_id)
+            .join(
+                Invocation,
                 and_(
-                    or_(
-                        Task.abs_task_id == None,  # noqa: E711
-                        and_(
-                            Task.abs_task_id != None,  # noqa: E711
-                            Task.abs_task_id == Invocation.abs_task_id,
-                        ),
-                    )
+                    JobInstance.job_instance_id == Invocation.job_instance_id,
+                    and_(
+                        or_(
+                            Task.abs_task_id == None,  # noqa: E711
+                            and_(
+                                Task.abs_task_id != None,  # noqa: E711
+                                Task.abs_task_id == Invocation.abs_task_id,
+                            ),
+                        )
+                    ),
                 ),
-            ),
-        )
-
-        q = q.filter(Job.wf_id == self._wf_id)
-        q = q.filter(Job.job_id == job_id)
-        q = q.filter(JobInstance.job_instance_id == job_instance_id)
-
-        q = q.add_columns(
-            Task.task_id,
-            Invocation.invocation_id,
-            Invocation.abs_task_id,
-            Invocation.start_time,
-            Invocation.remote_duration,
-            Invocation.remote_cpu_time,
-            Invocation.exitcode,
-            Invocation.transformation,
-            Invocation.executable,
-            Invocation.argv,
+            )
+            .where(Job.wf_id == self._wf_id)
+            .where(Job.job_id == job_id)
+            .where(JobInstance.job_instance_id == job_instance_id)
         )
 
         if invocation_id is None:
-            q = q.filter(Invocation.task_submit_seq == 1)
+            stmt = stmt.where(Invocation.task_submit_seq == 1)
         else:
-            q = q.filter(Invocation.invocation_id == invocation_id)
+            stmt = stmt.where(Invocation.invocation_id == invocation_id)
 
-        return q.one()
+        return self.session.execute(stmt).one()
 
     def close(self):
         log.debug("close")

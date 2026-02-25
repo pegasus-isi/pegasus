@@ -21,7 +21,7 @@ OPERATORS = {
     ast.Add: operator.__add__,
     ast.Sub: operator.__sub__,
     ast.Mult: operator.__mul__,
-    ast.Div: operator.__div__,
+    ast.Div: operator.__truediv__,
 }
 
 BOOLEAN_OPERATORS = {ast.And: and_, ast.Or: or_}

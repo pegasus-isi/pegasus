@@ -7,6 +7,8 @@ import shutil
 import tarfile
 from os.path import expanduser
 
+from sqlalchemy import select
+
 from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
 from Pegasus.db.schema import (
@@ -30,24 +32,21 @@ class MasterDatabase:
         self.session = session
 
     def get_master_workflow(self, wf_uuid, submit_dir=None):
-        q = self.session.query(MasterWorkflow)
-        q = q.filter(MasterWorkflow.wf_uuid == wf_uuid)
+        q = select(MasterWorkflow).where(MasterWorkflow.wf_uuid == wf_uuid)
 
         if submit_dir:
-            q = q.filter(MasterWorkflow.submit_dir == submit_dir)
+            q = q.where(MasterWorkflow.submit_dir == submit_dir)
 
-        wf = q.first()
+        wf = self.session.execute(q).scalars().first()
         return wf
 
     def get_master_workflow_for_submitdir(self, submitdir):
-        q = self.session.query(MasterWorkflow)
-        q = q.filter(MasterWorkflow.submit_dir == submitdir)
-        return q.all()
+        q = select(MasterWorkflow).where(MasterWorkflow.submit_dir == submitdir)
+        return self.session.execute(q).scalars().all()
 
     def get_ensemble_workflow(self, wf_uuid):
-        q = self.session.query(EnsembleWorkflow)
-        q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
-        return q.first()
+        q = select(EnsembleWorkflow).where(EnsembleWorkflow.wf_uuid == wf_uuid)
+        return self.session.execute(q).scalars().first()
 
     def delete_master_workflow(self, wf_uuid, submit_dir=None):
         w = self.get_master_workflow(wf_uuid, submit_dir=submit_dir)
@@ -55,14 +54,17 @@ class MasterDatabase:
             return
 
         # Delete any ensemble workflows
-        q = self.session.query(EnsembleWorkflow)
-        q = q.filter(EnsembleWorkflow.wf_uuid == wf_uuid)
-        q.delete()
+        for ew in (
+            self.session.execute(
+                select(EnsembleWorkflow).where(EnsembleWorkflow.wf_uuid == wf_uuid)
+            )
+            .scalars()
+            .all()
+        ):
+            self.session.delete(ew)
 
         # Delete the workflow
-        q = self.session.query(MasterWorkflow)
-        q = q.filter(MasterWorkflow.wf_id == w.wf_id)
-        q.delete()
+        self.session.delete(w)
 
 
 class WorkflowDatabase:
@@ -70,9 +72,11 @@ class WorkflowDatabase:
         self.session = session
 
     def delete_workflow(self, wf_uuid):
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.wf_uuid == wf_uuid)
-        w = q.first()
+        w = (
+            self.session.execute(select(Workflow).where(Workflow.wf_uuid == wf_uuid))
+            .scalars()
+            .first()
+        )
 
         # If not found, do nothing
         if w is None:
@@ -83,19 +87,29 @@ class WorkflowDatabase:
         self.session.delete(w)
 
     def get_workflow(self, wf_uuid):
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.wf_uuid == wf_uuid)
-        return q.first()
+        return (
+            self.session.execute(select(Workflow).where(Workflow.wf_uuid == wf_uuid))
+            .scalars()
+            .first()
+        )
 
     def get_workflow_states(self, wf_id):
-        q = self.session.query(Workflowstate)
-        q = q.filter(Workflowstate.wf_id == wf_id)
-        return q.all()
+        return (
+            self.session.execute(
+                select(Workflowstate).where(Workflowstate.wf_id == wf_id)
+            )
+            .scalars()
+            .all()
+        )
 
     def update_submit_dirs(self, root_wf_id, src, dest):
-        q = self.session.query(Workflow)
-        q = q.filter(Workflow.root_wf_id == root_wf_id)
-        for wf in q.all():
+        for wf in (
+            self.session.execute(
+                select(Workflow).where(Workflow.root_wf_id == root_wf_id)
+            )
+            .scalars()
+            .all()
+        ):
             log.info("Old submit dir: %s" % wf.submit_dir)
             wf.submit_dir = wf.submit_dir.replace(src, dest)
             log.info("New submit dir: %s" % wf.submit_dir)

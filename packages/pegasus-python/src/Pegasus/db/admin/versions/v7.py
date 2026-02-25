@@ -17,6 +17,7 @@
 import logging
 
 from sqlalchemy.exc import *
+from sqlalchemy.sql import text
 
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import BaseVersion
@@ -40,7 +41,7 @@ class Version(BaseVersion):
         log.info("Updating to version %s" % DB_VERSION)
         try:
             log.info("Updating workflowstate...")
-            self.db.execute("ALTER TABLE workflowstate ADD reason TEXT NULL")
+            self.db.execute(text("ALTER TABLE workflowstate ADD reason TEXT NULL"))
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
@@ -50,7 +51,7 @@ class Version(BaseVersion):
 
         try:
             log.info("Updating jobstate...")
-            self.db.execute("ALTER TABLE jobstate ADD reason TEXT NULL")
+            self.db.execute(text("ALTER TABLE jobstate ADD reason TEXT NULL"))
         except (OperationalError, ProgrammingError):
             pass
         except Exception as e:
