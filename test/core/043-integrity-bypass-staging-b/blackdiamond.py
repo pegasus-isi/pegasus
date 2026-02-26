@@ -86,7 +86,7 @@ rc = ReplicaCatalog().add_replica(
 # --- Transformations ----------------------------------------------------------
 # compute the initial hash for the container
 with open(
-    "/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    "/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     "rb",
 ) as f:
     readable_hash = hashlib.sha256(f.read()).hexdigest()
@@ -95,9 +95,9 @@ print("Generating transformation catalog")
 tc = TransformationCatalog()
 # A container that will be used to execute the following transformations.
 tools_container = Container(
-    "osgvo-el7",
+    "ospool-rocky-9",
     Container.SINGULARITY,
-    image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     checksum={"sha256": readable_hash},
     mounts=["${PEGASUS_SHARED_BIN_DIR}:${PEGASUS_SHARED_BIN_DIR}"],
     bypass_staging=True,

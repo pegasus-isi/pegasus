@@ -1685,6 +1685,9 @@ public class CPlanner extends Executable {
         /* load the sites from remote repository and on user machine */
         SiteStore store = SiteFactory.loadSiteStore(toLoad, mBag);
 
+        // PM-1047, GH-2154 we want to save the catalogs all around.
+        result.setFileSource(store.getFileSource());
+
         // since we are loading * . shortcut to load all entries
         for (Iterator<SiteCatalogEntry> it = store.entryIterator(); it.hasNext(); ) {
             SiteCatalogEntry s = it.next();
