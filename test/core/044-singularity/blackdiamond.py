@@ -130,12 +130,12 @@ if SYMLINK:
     # mount the shared dir where the raw input is
     container_mounts["mounts"] = ["{}:/existing/data:ro".format(condorpool_shared_dir)]
 base_container = Container(
-    "centos-osgvo-el7",
+    "ospool-rocky-9",
     Container.SINGULARITY,
     image_site="condorpool" if CONTAINER_ON_CVMFS else "local",
     image="file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9"
     if CONTAINER_ON_CVMFS else
-    "scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    "scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
     **container_mounts
 )
