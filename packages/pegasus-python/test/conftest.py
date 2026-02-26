@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from flask import _request_ctx_stack
+from flask import has_request_context
 
 log = logging.getLogger(__name__)
 
@@ -91,14 +91,6 @@ class FlaskTestClient:
             uri, method=method, data=data, headers=_headers, **kwargs
         ):
             try:
-                if not self.app._got_first_request:
-                    with self.app._before_request_lock:
-                        if not self.app._got_first_request:
-                            for func in self.app.before_first_request_funcs:
-                                self.app.ensure_sync(func)()
-
-                            self.app._got_first_request = True
-
                 # Pre process Request
                 rv = self.app.preprocess_request()
 
@@ -148,12 +140,11 @@ def emapp_client(emapp):
 
 @pytest.fixture()
 def request_ctx(app):
-    if _request_ctx_stack.top is None:
-        with app.test_request_context("/"):
-            app.preprocess_request()
-            yield _request_ctx_stack.top
+    if has_request_context():
+        yield
     else:
-        return _request_ctx_stack.top
+        with app.test_request_context("/") as ctx:
+            yield ctx
 
 
 @pytest.fixture(scope="session")

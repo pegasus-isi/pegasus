@@ -52,16 +52,16 @@ build-backend = "setuptools.build_meta"
 # ]
 # dependencies = [ # Utils
 #   # DAX/Workflow
-#   "PyYAML>5.3",
+#   "PyYAML",
 #   # pegasus-init
-#   "GitPython>1.0",
-#   "pamela>=1.0,<1.1.0",
-#   "pika>=1.1.0",
+#   "GitPython",
+#   "pamela",
+#   "pika",
 #   "werkzeug<3.1.0",
 #   "Flask>1.1,<2.3",
-#   "Flask-Caching>1.8",
-#   "requests>2.23",
-#   "sqlalchemy>=1.4",
+#   "Flask-Caching",
+#   "requests",
+#   "sqlalchemy",
 #   "dataclasses;python_version=='3.6'",
 #   "pegasus-wms.api",
 #   "pegasus-wms.common",
@@ -72,7 +72,7 @@ build-backend = "setuptools.build_meta"
 # [project.optional-dependencies]
 
 # postgresql = ["psycopg2"]
-# mysql = ["pymysql<=0.10.1"]
+# mysql = ["pymysql"]
 # cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
 
 
