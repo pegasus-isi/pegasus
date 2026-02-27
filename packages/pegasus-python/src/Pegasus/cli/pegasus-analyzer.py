@@ -473,7 +473,8 @@ def generate_failing_jobs(options, failing_jobs):
     cout = ""
     cout += indent_console("failing jobs' details".center(80, "*"))
     for my_job in failing_jobs:
-        cout += generate_job_instance(options, failing_jobs[my_job])
+        _cout, _ = generate_job_instance(options, failing_jobs[my_job])
+        cout += _cout
     return cout
 
 
@@ -508,7 +509,8 @@ def generate_unknown_jobs(options, unknown_jobs):
     cout += indent_console("Unknown jobs' details".center(80, "*"))
 
     for my_job in unknown_jobs:
-        cout += generate_job_instance(options, unknown_jobs[my_job])
+        _cout, _ = generate_job_instance(options, unknown_jobs[my_job])
+        cout += _cout
 
     return cout
 
@@ -564,8 +566,8 @@ def generate_job_instance(options, job_instance_info):
         extraOptions = ""
 
         if options.use_files:
-            if self.options.output_dir is not None:
-                user_cmd = user_cmd + " --output-dir %s" % (self.options.output_dir)
+            if options.output_dir is not None:
+                user_cmd = user_cmd + " --output-dir %s" % (options.output_dir)
 
             # get any options that need to be invoked for the sub workflow
 
