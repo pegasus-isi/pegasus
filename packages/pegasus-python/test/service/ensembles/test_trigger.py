@@ -313,7 +313,7 @@ class TestTriggerThread:
             )
 
         def run(self):
-            while not self.stop_event.isSet():
+            while not self.stop_event.is_set():
                 time.sleep(1)
 
     def test_constructor(self):

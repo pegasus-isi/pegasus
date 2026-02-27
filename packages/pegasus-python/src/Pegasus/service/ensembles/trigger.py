@@ -214,7 +214,7 @@ class CronTrigger(TriggerThread):
         try:
             self.log.debug("starting")
 
-            while not self.stop_event.isSet():
+            while not self.stop_event.is_set():
                 cmd = [
                     "pegasus-em",
                     "submit",
@@ -294,8 +294,7 @@ class FilePatternTrigger(TriggerThread):
         try:
             self.log.debug("starting")
 
-            while not self.stop_event.isSet():
-
+            while not self.stop_event.is_set():
                 files = self.collect_and_move_files()
 
                 if len(files) > 0:

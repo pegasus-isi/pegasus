@@ -50,7 +50,7 @@ build-backend = "setuptools.build_meta"
 #   "Topic :: Scientific/Engineering",
 #   "Topic :: Utilities",
 # ]
-# dependencies = ["PyYAML>5.3", "dataclasses;python_version=='3.6'"]
+# dependencies = ["PyYAML", "dataclasses;python_version=='3.6'"]
 # keywords = ["scientific workflows"]
 
 # [dependency-groups]
