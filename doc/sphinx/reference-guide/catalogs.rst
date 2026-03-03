@@ -548,17 +548,15 @@ Described below are some of the entries in the site catalog.
 
 The rest of this section shows how to configure the site catalog.
 
-Pegasus supports the following implementations of the Site Catalog.
-
-1. **YAML** (Default) Corresponds to the schema described
-   :download:`here <../../schemas/5.0/sc-5.0.yml>`.
-
-The above two formats are functionally equivalent
-
 .. _sc-YAML:
 
 YAML
 ----
+
+Pegasus supports the following implementations of the Site Catalog.
+
+1. **YAML** (Default) Corresponds to the schema described
+   :download:`here <../../schemas/5.0/sc-5.0.yml>`.
 
 The YAML mode is the Default mode, and by default Pegasus picks up a
 file named **sites.yml** in the current working directory ( from
@@ -666,6 +664,119 @@ can be used to generate a new Site Catalog programmatically.
             fileServers:
             - {url: 'scp://obelix.isi.edu/data', operation: put}
             - {url: 'http://obelix.isi.edu/data', operation: get}
+
+
+.. _sc-GitHub:
+
+Centrally hosted Site Catalogs
+------------------------------
+
+Optionally, you also have an option to get the planner to download the
+site catalog from a `GitHUB repository <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`_
+that hosts catalog entries for the various compute infrastructures.
+
+Specifically, the planner will download from the branch of the repository
+corresponding to the major.minor version. For example, if you are running
+Pegasus version `5.1.3-dev.0`, the planner will download from the `5.1` branch
+of the repository.
+
+The suggested naming convention for the site names in the site catalogs in this
+repository are as follows
+
+1. **compute**
+
+   This is to designate the site entry indicating the *compute* site for that
+   infrastructure, where you would want the jobs defined in your workflow to
+   normally run, and set by passing the `--sites` option when planning the
+   workflow.
+
+2. **staging**
+
+   This is the designate the *data staging site* to use when your workflows
+   run in `nonsharedfs` or `condorio` mode.
+
+
+To specify the file to download from the github repository, you have to set
+the following properties
+
+*  **pegasus.catalog.site.repo.file=<basename of the file to download>**
+
+For example, setting it to  `usc-discovery.yml`  will download the file
+describing the USC discovery cluster.
+
+If a file with the same name already exists in the directory from
+where you are running the planner, then the file is re-downloaded only
+if it is more than a day old. To change this frequency you can
+set the property
+
+*  **pegasus.catalog.site.repo.interval=<time in seconds>**
+
+Overriding the downloaded Site Catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have a local site catalog file (sites.yml) either in the
+default location or specified by in your properties, then
+the entries in the local `sites.yml` will override the entries
+in the remote site catalog file. Specifically, it is a merge
+with overwrite preference to the local entries. This allows you
+to easily add profiles for a site.  For example, the
+ `usc-discovery.yml` has
+
+.. code-block:: yaml
+
+    x-pegasus:
+      apiLang: python
+      createdBy: vahi
+      createdOn: 02-07-26T00:00:00Z
+    pegasus: 5.0.4
+    sites:
+    - name: compute
+      directories:
+      - type: sharedScratch
+        path: ${HOME}/SLURM/work
+        sharedFileSystem: false
+        fileServers:
+        - url: file://${HOME}/SLURM/work
+          operation: all
+      - type: localStorage
+        path: ${HOME}/SLURM/storage
+        sharedFileSystem: false
+        fileServers:
+        - url: file://${HOME}/SLURM/storage
+          operation: all
+      profiles:
+        condor:
+          grid_resource: batch slurm
+        pegasus:
+          style: glite
+          queue: main
+          project: hpcsuppt_613
+          data.configuration: nonsharedfs
+          auxillary.local: 'true'
+          nodes: 1
+          ppn: 1
+          runtime: 1800
+          clusters.num: 2
+
+To override/change the queue from `main` to `test`, you can have
+a local sites.yml file with
+
+.. code-block:: yaml
+
+    x-pegasus:
+      apiLang: python
+      createdBy: vahi
+      createdOn: 02-07-26T00:00:00Z
+    pegasus: 5.0.4
+    sites:
+    - name: compute
+      profiles:
+        pegasus:
+          queue: test
+
+
+
+To remove a key you can specify an empty string to a profile value.
 
 Site Catalog Converter pegasus-sc-converter
 -------------------------------------------
