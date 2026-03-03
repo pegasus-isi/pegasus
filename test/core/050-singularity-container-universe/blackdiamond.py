@@ -126,10 +126,10 @@ cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_f
 logging.info("Generating replica catalog at: {}".format(transformation_catalog_file))
 
 base_container = Container(
-    "osgvo-el7",
+    "ospool-rocky-9",
     Container.SINGULARITY,
     image_site="local",
-    image="scp://bamboo@bamboo.isi.edu/ceph/kubernetes/pv/data/data-html/osg/images/opensciencegrid__osgvo-el7__latest.sif",
+    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
 )
 
