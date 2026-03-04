@@ -69,6 +69,8 @@ class Properties:
         "pegasus.catalog.replica.dax.asrc",
         "pegasus.catalog.site",
         "pegasus.catalog.site.file",
+        "pegasus.catalog.site.repo.file",
+        "pegasus.catalog.site.repo.interval"
         "pegasus.catalog.transformation",
         "pegasus.catalog.transformation.file",
         "pegasus.selector.replica",
