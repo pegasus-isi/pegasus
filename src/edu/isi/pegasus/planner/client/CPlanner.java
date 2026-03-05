@@ -413,7 +413,8 @@ public class CPlanner extends Executable {
         // check if sites set by user. If user has not specified any sites then
         // load all sites from site catalog.
         Collection<String> eSites = mPOptions.getExecutionSites();
-        if (eSites.isEmpty()) {
+        boolean noExecutionSitesPassedByUser = eSites.isEmpty();
+        if (noExecutionSitesPassedByUser) {
             mLogger.log(
                     "No sites given by user. Will use sites from the site catalog",
                     LogManager.DEBUG_MESSAGE_LEVEL);
@@ -427,7 +428,11 @@ public class CPlanner extends Executable {
         // update the local/output site entry if required
         configurator.updateSiteStoreAndOptions(s, mPOptions, mProps);
 
-        if (eSites.contains("*")) {
+        if (noExecutionSitesPassedByUser && s.contains("compute")) {
+            // GH-2164 special handling for a site named compute
+            eSites.remove("*");
+            eSites.add("compute");
+        } else if (eSites.contains("*")) {
             // set execution sites to all sites that are loaded into site store
             // only if a user passed * option on command line or did not specify
             eSites.remove("*");
