@@ -714,6 +714,10 @@ set the property
 Overriding the downloaded Site Catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+Local Site Catalog
+^^^^^^^^^^^^^^^^^^
+
 If you have a local site catalog file (sites.yml) either in the
 default location or specified by in your properties, then
 the entries in the local `sites.yml` will override the entries
@@ -774,9 +778,31 @@ a local sites.yml file with
         pegasus:
           queue: test
 
+.. note::
 
+    To remove a key you can specify an empty string to a profile value.
 
-To remove a key you can specify an empty string to a profile value.
+Site Profiles Overriding in Properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In your properties file, you can specify site specific profiles that override
+what is specified in the site catalog. To do that you specify
+a property of the form
+
+**pegasus.catalog.site.sites.[sitename].profiles.[namespace].key**
+
+For example, going back to previous usecase of changing the queue
+specfiied in the site catalog, you can specify the following
+in your properties
+
+::
+
+    pegasus.catalog.site.sites.compute.profiles.pegasus.queue test
+
+.. note::
+
+    The Python API provides a conveience function *add_site_profile*
+    in the Properties class that facilitates this.
 
 Site Catalog Converter pegasus-sc-converter
 -------------------------------------------
