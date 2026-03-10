@@ -217,11 +217,11 @@ public class ClassADSGenerator {
         String gpusValue = job.vdsNS.getStringValue(Pegasus.GPUS_KEY);
         int gpus = -1;
         try {
-            gpus = (gpusValue == null) ? 1 : Integer.parseInt(gpusValue);
+            gpus = (gpusValue == null) ? 0 : Integer.parseInt(gpusValue);
         } catch (Exception e) {
             // ignore
         }
-        if (gpus > 0) {
+        if (gpus >= 0) {
             writer.println(generateClassAdAttribute(ClassADSGenerator.GPUS_KEY, gpus));
         }
 
