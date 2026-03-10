@@ -66,6 +66,11 @@ public class InterPoolEngine extends Engine implements Refiner {
     /** The name of the refiner for purposes of error logging */
     public static final String REFINER_NAME = "InterPoolEngine";
 
+    // default resource profiles for jobs if not specified by the users
+    public static final String DEFAULT_CORES_FOR_JOB = "1";
+    public static final String DEFAULT_MEMORY_IN_MB_FOR_JOB = Integer.toString(2 * 1024);
+    public static final String DEFAULT_DISK_IN_MB_FOR_JOB = Integer.toString(5 * 1024);
+
     /** ADag object corresponding to the Dag whose jobs we want to schedule. */
     private ADag mDag;
 
@@ -244,6 +249,9 @@ public class InterPoolEngine extends Engine implements Refiner {
         mLogger.log(
                 "Job was mapped to " + job.jobName + " to site " + site,
                 LogManager.DEBUG_MESSAGE_LEVEL);
+
+        // GH-2167 associate default resource profiles for the job
+        incorporateDefaultResourceProfiles(job);
 
         // incorporate the profiles and
         // do transformation selection
@@ -858,5 +866,16 @@ public class InterPoolEngine extends Engine implements Refiner {
             // ignore
         }
         throw new RuntimeException(error.toString());
+    }
+
+    /**
+     * Associate default pegasus resource profile keys with the jobs, if not specified with the job.
+     *
+     * @param job the job
+     */
+    protected void incorporateDefaultResourceProfiles(Job job) {
+        job.vdsNS.checkKeyInNSIfNotSet(Pegasus.CORES_KEY, DEFAULT_CORES_FOR_JOB);
+        job.vdsNS.checkKeyInNSIfNotSet(Pegasus.MEMORY_KEY, DEFAULT_MEMORY_IN_MB_FOR_JOB);
+        job.vdsNS.checkKeyInNSIfNotSet(Pegasus.DISKSPACE_KEY, DEFAULT_DISK_IN_MB_FOR_JOB);
     }
 }
