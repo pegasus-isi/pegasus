@@ -1431,6 +1431,7 @@ public class CondorGenerator extends Abstract {
      * @param workflow the executable workflow
      * @return Map containing entries for dag and condor_log
      */
+    @Override
     public Map<String, String> getAdditionalBraindumpEntries(ADag workflow) {
         Map entries = new HashMap();
         entries.put(Braindump.GENERATOR_TYPE_KEY, "dag");
@@ -1438,6 +1439,12 @@ public class CondorGenerator extends Abstract {
         entries.put("condor_log", new File(this.getCondorLogInSubmitDirectory(workflow)).getName());
         entries.put(
                 "notify", this.getDAGFilename(workflow, MonitordNotify.NOTIFICATIONS_FILE_SUFFIX));
+
+        // GH-2166 encode app name if specified
+        if (this.mAppName != null) {
+            entries.put(Braindump.APP_KEY, this.mAppName);
+        }
+
         return entries;
     }
 

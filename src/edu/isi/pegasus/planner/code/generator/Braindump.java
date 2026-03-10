@@ -98,6 +98,9 @@ public class Braindump {
     /** The path to the pegasus properties file */
     public static final String PROPERTIES_KEY = "properties";
 
+    /** the key indicating application name */
+    public static final String APP_KEY = "app";
+
     /** The key for the submit hostname. */
     public static final String SUBMIT_HOSTNAME_KEY = "submit_hostname";
 
@@ -232,7 +235,9 @@ public class Braindump {
     /**
      * Returns default braindump entries.
      *
+     * @param workflow
      * @return default entries
+     * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
     public Map<String, String> defaultBrainDumpEntries(ADag workflow)
             throws CodeGeneratorException {
