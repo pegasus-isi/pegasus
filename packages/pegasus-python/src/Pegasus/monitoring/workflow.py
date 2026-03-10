@@ -947,6 +947,7 @@ class Workflow:
         self._wf_uuid = None
         self._dag_file_name = None
         self._static_bp_file = None
+        self._app = None
         self._dax_label = None
         self._dax_version = None
         self._dax_file = None
@@ -1036,6 +1037,9 @@ class Workflow:
             self._root_workflow_id = self._wf_uuid
 
         self._fixed_addon_attrs["root__xwf__id"] = self._root_workflow_id
+
+        if "app" in wfparams:
+            self._app = wfparams["app"]
 
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
@@ -1653,6 +1657,13 @@ class Workflow:
 
         # create a composite job event
         composite_kwargs = my_job.create_composite_job_event(kwargs)
+
+        # GH-2166 encode wf and app info into the composite event
+        if self._app:
+            kwargs["app"] = self._app
+        if self._dax_label:
+            kwargs["wf"] = self._dax_label
+
         self.output_to_db("job_inst.composite", composite_kwargs)
 
         # Clean up stdout and stderr, to avoid memory issues...
@@ -1668,6 +1679,7 @@ class Workflow:
     def load_stdout_err_in_job_instance(self, my_job, kwargs):
         """
         Loads the information from the job stdout and stderr into the job_instance event's kwargs
+
 
         :param my_job:
         :param kwargs:
