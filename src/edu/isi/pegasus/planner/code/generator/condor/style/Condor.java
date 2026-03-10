@@ -329,7 +329,9 @@ public class Condor extends Abstract {
 
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
                 String pegasusProfileValue = profiles.getStringValue(pegasusKey);
-                if (classAdKey.equals(edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)) {
+                if (classAdKey.equals(edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)
+                        || classAdKey.equals(
+                                edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY)) {
                     // PM-1912 the pegasus profile value is in MB while
                     // request_disk condor classad value is specified in KB
                     long disk = profiles.getLongValue(pegasusKey, -1);
