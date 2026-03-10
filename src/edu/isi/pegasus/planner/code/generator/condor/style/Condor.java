@@ -340,7 +340,8 @@ public class Condor extends Abstract {
                                         + " invalid value for request_disk "
                                         + pegasusProfileValue);
                     }
-                    pegasusProfileValue = Long.toString(disk * 1024);
+                    // add a suffix indicating MB to be specific
+                    pegasusProfileValue = disk + " " + "MB";
                 }
                 // one to one mapping
                 classAdKeys.construct(classAdKey, pegasusProfileValue);
