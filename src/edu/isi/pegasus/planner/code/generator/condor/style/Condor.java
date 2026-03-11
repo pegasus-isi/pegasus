@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the submit host is a part of.
@@ -326,14 +327,25 @@ public class Condor extends Abstract {
             String classAdKey = entry.getKey();
             String pegasusKey = entry.getValue();
 
-            // GH-2169 warn if classad key is already set, as everything should
-            // be using pegasus profiles
             if (classAdKeys.containsKey(classAdKey)) {
-                mLogger.log(
-                        String.format(
-                                "For job %s condor profile %s was set directly to %s. Only set/associate pegasus profile %s for the job.",
-                                job.getID(), classAdKey, classAdKeys.get(classAdKey), pegasusKey),
-                        LogManager.WARNING_MESSAGE_LEVEL);
+                // GH-2169 warn if classad key is already set, as everything should
+                // be using pegasus profiles
+
+                // resource classad directly set as a condor profile
+                // we warn only if the value is numeric, as if a user
+                // specifies a classad expression then we need to allow it.
+                // pegasus resource profiles are numeric only!
+                String condorProfileValue = (String) classAdKeys.get(classAdKey);
+
+                if (StringUtils.isNumeric(condorProfileValue)) {
+                    // stringutils is faster than using parseLong etc
+                    // https://www.baeldung.com/java-check-string-number
+                    mLogger.log(
+                            String.format(
+                                    "For job %s condor profile %s was set directly to %s . Using that for the job. For numeric values, only set/associate corresponding pegasus resource profile %s for the job.",
+                                    job.getID(), classAdKey, condorProfileValue, pegasusKey),
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                }
             }
 
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
@@ -343,8 +355,8 @@ public class Condor extends Abstract {
                                 edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY)) {
                     // PM-1912 the pegasus profile value is in MB while
                     // request_disk condor classad value is specified in KB
-                    long disk = profiles.getLongValue(pegasusKey, -1);
-                    if (disk == -1) {
+                    long value = profiles.getLongValue(pegasusKey, -1);
+                    if (value == -1) {
                         throw new RuntimeException(
                                 "For job "
                                         + job.getLogicalID()
@@ -353,7 +365,7 @@ public class Condor extends Abstract {
                                         + pegasusProfileValue);
                     }
                     // add a suffix indicating MB to be specific
-                    pegasusProfileValue = disk + " " + "MB";
+                    pegasusProfileValue = value + " " + "MB";
                 }
                 // one to one mapping
                 classAdKeys.construct(classAdKey, pegasusProfileValue);
