@@ -327,9 +327,21 @@ public class Condor extends Abstract {
             String classAdKey = entry.getKey();
             String pegasusKey = entry.getValue();
 
+            // GH-2169 warn if classad key is already set, as everything should
+            // be using pegasus profiles
+            if (classAdKeys.containsKey(classAdKey)) {
+                mLogger.log(
+                        String.format(
+                                "For job %s condor profile %s was set directly to %s. Only set/associate pegasus profile %s for the job.",
+                                job.getID(), classAdKey, classAdKeys.get(classAdKey), pegasusKey),
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            }
+
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
                 String pegasusProfileValue = profiles.getStringValue(pegasusKey);
-                if (classAdKey.equals(edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)) {
+                if (classAdKey.equals(edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)
+                        || classAdKey.equals(
+                                edu.isi.pegasus.planner.namespace.Condor.REQUEST_MEMORY_KEY)) {
                     // PM-1912 the pegasus profile value is in MB while
                     // request_disk condor classad value is specified in KB
                     long disk = profiles.getLongValue(pegasusKey, -1);
@@ -340,7 +352,8 @@ public class Condor extends Abstract {
                                         + " invalid value for request_disk "
                                         + pegasusProfileValue);
                     }
-                    pegasusProfileValue = Long.toString(disk * 1024);
+                    // add a suffix indicating MB to be specific
+                    pegasusProfileValue = disk + " " + "MB";
                 }
                 // one to one mapping
                 classAdKeys.construct(classAdKey, pegasusProfileValue);

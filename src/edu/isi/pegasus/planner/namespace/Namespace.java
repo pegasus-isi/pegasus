@@ -232,6 +232,18 @@ public abstract class Namespace /*extends Data*/ {
     public abstract void checkKeyInNS(PegasusProperties properties, String pool);
 
     /**
+     * Checks in a key in the profile namespace if it does not exist already
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public void checkKeyInNSIfNotSet(String key, String value) {
+        if (!this.containsKey(key)) {
+            this.checkKeyInNS(key, value);
+        }
+    }
+
+    /**
      * This checks the whether a key value pair specified is valid in the current namespace or not
      * by calling the checkKey function and then on the basis of the values returned puts them into
      * the associated map in the class.
