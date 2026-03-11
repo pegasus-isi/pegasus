@@ -53,7 +53,6 @@ re_parse_pegasus_classads = re.compile(r"^\s*\+(pegasus_\S+)\s*=\s*(\S+)")
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
-re_site_parse_euryale = re.compile(r"^\#!\s+site=(\S+)")
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
@@ -319,6 +318,9 @@ class Job:
         if "pegasus_job_class" in self._pegasus_classads:
             self._job_type = self._pegasus_classads["pegasus_job_class"]
 
+        if "pegasus_site" in self._pegasus_classads:
+            self._site_name = self._pegasus_classads["pegasus_site"].strip('"')
+
         return
 
     def add_integrity_metric(self, metric):
@@ -448,14 +450,6 @@ class Job:
                             my_result = int(my_v)
                         except ValueError:
                             my_result = None
-            elif re_site_parse_gvds.search(my_line):
-                # GVDS agreement
-                my_site = re_site_parse_gvds.search(my_line).group(4)
-                self._site_name = my_site
-            elif re_site_parse_euryale.search(my_line):
-                # Euryale specific comment
-                my_site = re_site_parse_euryale.search(my_line).group(1)
-                self._site_name = my_site
             elif re_parse_executable.search(my_line):
                 # Found line with executable
                 my_executable = re_parse_executable.search(my_line).group(1)
