@@ -95,6 +95,12 @@ public class ClassADSGenerator {
     /** The key for the number of gpus associated with the job */
     public static final String GPUS_KEY = "pegasus_gpus";
 
+    /** The key for memory request for the job in MB */
+    public static final String MEMORY_KEY = "pegasus_memory_mb";
+
+    /** The key for diskspace request for the job in MB */
+    public static final String DISKSPACE_KEY = "pegasus_diskspace_mb";
+
     /**
      * The class ad to store the execution pool at which the job is run. The globusscheduler
      * specified in the submit file refers to the jobmanager on this execution pool.
@@ -223,6 +229,29 @@ public class ClassADSGenerator {
         }
         if (gpus >= 0) {
             writer.println(generateClassAdAttribute(ClassADSGenerator.GPUS_KEY, gpus));
+        }
+
+        // GH-2170 generate diskspace and memory
+        String memoryValue = job.vdsNS.getStringValue(Pegasus.MEMORY_KEY);
+        int memory = -1;
+        try {
+            memory = (memoryValue == null) ? -1 : Integer.parseInt(memoryValue);
+        } catch (Exception e) {
+            // ignore
+        }
+        if (memory >= 0) {
+            writer.println(generateClassAdAttribute(ClassADSGenerator.MEMORY_KEY, memory));
+        }
+
+        String diskValue = job.vdsNS.getStringValue(Pegasus.DISKSPACE_KEY);
+        int disk = -1;
+        try {
+            disk = (diskValue == null) ? -1 : Integer.parseInt(diskValue);
+        } catch (Exception e) {
+            // ignore
+        }
+        if (disk >= 0) {
+            writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
         }
 
         // determine the cluster size
