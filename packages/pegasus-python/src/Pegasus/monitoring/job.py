@@ -50,11 +50,6 @@ re_site_parse_gvds = re.compile(
 
 re_parse_pegasus_classads = re.compile(r"^\s*\+(pegasus_\S+)\s*=\s*(\S+)")
 
-re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
-re_parse_derivation = re.compile(r"^\s*\+pegasus_wf_dax_job_id\s*=\s*(\S+)")
-re_parse_multiplier_factor = re.compile(r"^\s*\+pegasus_cores\s=\s(\S+)")
-re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
-
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
@@ -286,6 +281,46 @@ class Job:
             else:  # catch all
                 self._additional_monitoring_events.append(event)
 
+    def _extract_job_info_from_pegasus_classads(self, submit_file):
+        """
+        Internal function to populate job variables from the pegasus classds in the submit files
+        :param submit_file: the job submit file
+        :return:
+        """
+
+        if "pegasus_wf_xformation" in self._pegasus_classads:
+            my_transformation = self._pegasus_classads["pegasus_wf_xformation"]
+            # Remove quotes, if any
+            my_transformation = my_transformation.strip('"')
+            self._main_job_transformation = my_transformation
+
+        if "pegasus_wf_dax_job_id" in self._pegasus_classads:
+            my_derivation = self._pegasus_classads["pegasus_wf_dax_job_id"]
+            # Remove quotes, if any
+            my_derivation = my_derivation.strip('"')
+            if my_derivation == "null":
+                # If derivation is the "null" string, we don't want to take it
+                self._main_job_derivation = None
+            else:
+                self._main_job_derivation = my_derivation
+
+        if "pegasus_cores" in self._pegasus_classads:
+            # Found line with multiplier_factor
+            try:
+                my_multiplier_factor = self._pegasus_classads["pegasus_cores"]
+                self._main_job_multiplier_factor = int(my_multiplier_factor)
+            except ValueError:
+                logger.warning(
+                    "%s: cannot convert multiplier factor: %s"
+                    % (os.path.basename(submit_file), my_multiplier_factor)
+                )
+                self._main_job_multiplier_factor = None
+
+        if "pegasus_job_class" in self._pegasus_classads:
+            self._job_type = self._pegasus_classads["pegasus_job_class"]
+
+        return
+
     def add_integrity_metric(self, metric):
         """
         adds an integrity metric, if a metric with the same key already exists we retrive
@@ -399,6 +434,7 @@ class Job:
                 key = match.group(1)
                 value = match.group(2)
                 self._pegasus_classads[key] = value
+                continue
 
             if re_rsl_string.search(my_line):
                 # Found RSL string, do parse now
@@ -420,22 +456,6 @@ class Job:
                 # Euryale specific comment
                 my_site = re_site_parse_euryale.search(my_line).group(1)
                 self._site_name = my_site
-            elif re_parse_transformation.search(my_line):
-                # Found line with job transformation
-                my_transformation = re_parse_transformation.search(my_line).group(1)
-                # Remove quotes, if any
-                my_transformation = my_transformation.strip('"')
-                self._main_job_transformation = my_transformation
-            elif re_parse_derivation.search(my_line):
-                # Found line with job derivation
-                my_derivation = re_parse_derivation.search(my_line).group(1)
-                # Remove quotes, if any
-                my_derivation = my_derivation.strip('"')
-                if my_derivation == "null":
-                    # If derivation is the "null" string, we don't want to take it
-                    self._main_job_derivation = None
-                else:
-                    self._main_job_derivation = my_derivation
             elif re_parse_executable.search(my_line):
                 # Found line with executable
                 my_executable = re_parse_executable.search(my_line).group(1)
@@ -448,19 +468,6 @@ class Job:
                 # Remove quotes, if any
                 my_arguments = my_arguments.strip('"')
                 self._main_job_arguments = my_arguments
-            elif re_parse_multiplier_factor.search(my_line):
-                # Found line with multiplier_factor
-                my_multiplier_factor = re_parse_multiplier_factor.search(my_line).group(
-                    1
-                )
-                try:
-                    self._main_job_multiplier_factor = int(my_multiplier_factor)
-                except ValueError:
-                    logger.warning(
-                        "%s: cannot convert multiplier factor: %s"
-                        % (os.path.basename(submit_file), my_multiplier_factor)
-                    )
-                    self._main_job_multiplier_factor = None
             elif re_parse_input.search(my_line):
                 # Found line with input file
                 my_input = re_parse_input.search(my_line).group(1)
@@ -486,9 +493,11 @@ class Job:
                         "Unable to parse dagman out file from environment key %s in submit file for job %s"
                         % (my_line, self._exec_job_id)
                     )
-            elif re_parse_job_class.search(my_line):
-                self._job_type = re_parse_job_class.search(my_line).group(1)
+
         SUB.close()
+
+        # set values from pegasus classads that we need
+        self._extract_job_info_from_pegasus_classads(submit_file)
 
         # All done!
         return my_result, my_site
