@@ -127,7 +127,7 @@ public class CondorTest {
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
-        testForKey(j, REQUEST_MEMORY_KEY, "5");
+        testForKey(j, REQUEST_MEMORY_KEY, "5 MB");
     }
 
     @Test
@@ -135,6 +135,7 @@ public class CondorTest {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
         j.condorVariables.checkKeyInNS(REQUEST_MEMORY_KEY, "6");
+        // GH-2167 when condor key is preferred we dont end up padding MB suffix
         testForKey(j, REQUEST_MEMORY_KEY, "6");
     }
 
@@ -142,7 +143,7 @@ public class CondorTest {
     public void testPegasusProfileDiskspaceAndCondorKey() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.DISKSPACE_KEY, "5");
-        testForKey(j, REQUEST_DISK_KEY, Long.toString(5 * 1024));
+        testForKey(j, REQUEST_DISK_KEY, "5 MB");
     }
 
     @Test
@@ -367,6 +368,7 @@ public class CondorTest {
     }
 
     private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {
+        mCS.initialize(mBag, null);
         mCS.apply(j);
         assertTrue(j.condorVariables.containsKey(key));
         assertEquals(expectedValue, j.condorVariables.get(key));
