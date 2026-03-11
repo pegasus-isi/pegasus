@@ -47,9 +47,14 @@ re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(
     r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3"
 )
+
+re_parse_pegasus_classads = re.compile(r"^\s*\+(pegasus_\S+)\s*=\s*(\S+)")
+
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
 re_parse_derivation = re.compile(r"^\s*\+pegasus_wf_dax_job_id\s*=\s*(\S+)")
 re_parse_multiplier_factor = re.compile(r"^\s*\+pegasus_cores\s=\s(\S+)")
+re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
+
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
@@ -58,7 +63,6 @@ re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
 re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
-re_parse_job_class = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(
     r"^.*Executing on host\s*(\S+)(?:\s*IP=(\S+))*.*$", re.MULTILINE
 )
@@ -129,6 +133,13 @@ class Job:
         "11": "dag",
     }
 
+    PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS = {
+        "pegasus_cores": "req_cpus",
+        "pegasus_gpus": "req_gpus",
+        "pegasus_memory_mb": "req_memory_mb",
+        "pegasus_diskspace_mb": "req_diskspace_mb",
+    }
+
     # Variables that describe a job, as per the Stampede schema
     # Some will be initialized in the init method, others will
     # get their values from the kickstart output file when a job
@@ -194,6 +205,7 @@ class Job:
         # was rotated or not, as is the default case.
         self._deferred_job_end_kwargs = None
         self._integrity_metrics = set()
+        self._pegasus_classads = {}
 
     def _get_jobtype_desc(self):
         """
@@ -380,6 +392,14 @@ class Job:
 
         # Parse submit file
         for my_line in SUB:
+
+            # general look for pegasus classads first
+            match = re_parse_pegasus_classads.search(my_line)
+            if match:
+                key = match.group(1)
+                value = match.group(2)
+                self._pegasus_classads[key] = value
+
             if re_rsl_string.search(my_line):
                 # Found RSL string, do parse now
                 for my_match in re.findall(r"\(([^)]+)\)", my_line):
@@ -951,6 +971,15 @@ class Job:
         if self._cpu_attribs:
             for key in self._cpu_attribs:
                 kwargs[key] = self._cpu_attribs[key]
+
+        # GH-2171 encode pegasus resource classads as
+        # corresponding req_ keys
+        if self._pegasus_classads:
+            for key in self._pegasus_classads.keys():
+                if key in self.PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS:
+                    kwargs[
+                        self.PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS[key]
+                    ] = self._pegasus_classads[key]
 
         # PM-1398 for DIBBS we want task monitoring event that has metadata
         # to be included in the composite event also
