@@ -26,7 +26,6 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -360,6 +359,11 @@ public class Condor extends Abstract {
                 classAdKeys.construct(classAdKey, pegasusProfileValue);
             }
         }
+
+        // GH-2167 we we will let the resource limits percolate to compute jobs running in local and
+        // scheduler universe and do nothing special as in removal of request_cpus attributes
+        // as we did earlier
+        /*
         if (universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)
                 || universe.equalsIgnoreCase(Condor.LOCAL_UNIVERSE)) {
             // PM-1206, PM-1864 remove request_ keys as they are not handled in local universe
@@ -377,6 +381,7 @@ public class Condor extends Abstract {
                 }
             }
         }
+        */
     }
 
     /**
