@@ -349,7 +349,8 @@ public class Condor extends Abstract {
                         throw new RuntimeException(
                                 "For job "
                                         + job.getLogicalID()
-                                        + " invalid value for request_disk "
+                                        + " invalid value for "
+                                        + pegasusKey
                                         + pegasusProfileValue);
                     }
                     // add a suffix indicating MB to be specific
