@@ -138,6 +138,9 @@ class Braindump:
     #: Set in PMC mode.
     script: str = field(default=None)  # type: str
 
+    #: the application this workflow belongs to
+    #: The username of the user that ran pegasus-plan
+    app: str = field(default=None) # type: str
 
 def load(fp: TextIO, *args, **kwargs) -> Braindump:
     """
