@@ -1660,9 +1660,9 @@ class Workflow:
 
         # GH-2166 encode wf and app info into the composite event
         if self._app:
-            kwargs["app"] = self._app
+            composite_kwargs["app"] = self._app
         if self._dax_label:
-            kwargs["wf"] = self._dax_label
+            composite_kwargs["wf"] = self._dax_label
 
         self.output_to_db("job_inst.composite", composite_kwargs)
 
