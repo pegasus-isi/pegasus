@@ -504,9 +504,7 @@ def build_pegasus_wf(
 
         # add job args
         args = (
-            cwl_cmd_ln_tool.arguments
-            if cwl_cmd_ln_tool.arguments is not None
-            else []
+            cwl_cmd_ln_tool.arguments if cwl_cmd_ln_tool.arguments is not None else []
         )
 
         # args will be added in the order of their assigned inputBinding
