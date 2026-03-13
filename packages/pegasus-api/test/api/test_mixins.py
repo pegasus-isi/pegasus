@@ -20,7 +20,7 @@ def md_mixin_obj():
     def _metadata_mixin_obj():
         class MetadataMixinObj(MetadataMixin):
             def __init__(self):
-                self.metadata = dict()
+                self.metadata = {}
 
         return MetadataMixinObj()
 

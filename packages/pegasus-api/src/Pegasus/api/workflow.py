@@ -40,7 +40,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         """
         self._id = _id
         self.node_label = node_label
-        self.args = list()
+        self.args = []
         self.uses = set()
 
         self.stdout = None

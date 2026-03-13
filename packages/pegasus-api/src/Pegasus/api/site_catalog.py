@@ -207,7 +207,7 @@ class Directory:
 
         self.shared_file_system = shared_file_system
 
-        self.file_servers = list()
+        self.file_servers = []
 
     @_chained
     def add_file_servers(self, *file_servers: FileServer):
@@ -377,8 +377,8 @@ class Site(ProfileMixin):
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         """
         self.name = name
-        self.directories = list()
-        self.grids = list()
+        self.directories = []
+        self.grids = []
 
         if arch is not None:
             if not isinstance(arch, Arch):

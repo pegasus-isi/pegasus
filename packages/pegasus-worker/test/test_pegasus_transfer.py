@@ -25,7 +25,7 @@ class TestReadJSONFormat:
         ]
 
         data_str = json.dumps(data)
-        inputs_loaded = list()
+        inputs_loaded = []
         transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
         expected_transfer_obj = transfer.Transfer()
@@ -53,7 +53,7 @@ class TestReadJSONFormat:
         ]
 
         data_str = json.dumps(data)
-        inputs_loaded = list()
+        inputs_loaded = []
         with pytest.raises(RuntimeError) as e:
             transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
@@ -70,7 +70,7 @@ class TestReadJSONFormat:
         ]
 
         data_str = json.dumps(data)
-        inputs_loaded = list()
+        inputs_loaded = []
         with pytest.raises(RuntimeError) as e:
             transfer.read_json_format(input=data_str, inputs_l=inputs_loaded)
 
@@ -161,8 +161,8 @@ class TestPegasusTransferInvocation:
         with tempfile.TemporaryDirectory() as td:
             temp_dir = Path(td)
 
-            downloaded_files = list()
-            xfers = list()
+            downloaded_files = []
+            xfers = []
             NUM_XFERS = 5
             for i in range(NUM_XFERS):
                 xfers.append(
@@ -202,8 +202,8 @@ class TestPegasusTransferInvocation:
         with tempfile.TemporaryDirectory() as td:
             temp_dir = Path(td)
 
-            downloaded_files = list()
-            xfers = list()
+            downloaded_files = []
+            xfers = []
             NUM_XFERS = 8
             for i in range(NUM_XFERS):
                 xfers.append(

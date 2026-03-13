@@ -109,7 +109,7 @@ tc = TransformationCatalog().add_transformations(rosetta_exe)
 rc = ReplicaCatalog()
 
 # add all files in minirosetta_database
-inputs = list()
+inputs = []
 
 
 def get_files(d: Path) -> None:

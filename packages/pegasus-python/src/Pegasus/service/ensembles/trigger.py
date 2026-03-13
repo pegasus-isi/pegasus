@@ -34,7 +34,7 @@ class TriggerManager(threading.Thread):
 
         # references to currently running trigger threads
         # key: (<ensenble_id>, <trigger_name>), value: handle to trigger thread
-        self.running = dict()
+        self.running = {}
 
         self.trigger_dao = None
         self.ensemble_dao = None

@@ -633,7 +633,7 @@ def __get_datatables_args():
     Extract list of arguments passed in the request
     """
 
-    table_args = dict()
+    table_args = {}
 
     #
     # Common Arguments

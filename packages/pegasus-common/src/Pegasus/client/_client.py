@@ -541,7 +541,7 @@ class Client:
         for line in status_output.split("\n"):
             matched = pattern.match(line)
             if matched:
-                parsed_status_output = dict()
+                parsed_status_output = {}
 
                 values = matched.group(1).split()
                 # remove all "," from each value and convert to int

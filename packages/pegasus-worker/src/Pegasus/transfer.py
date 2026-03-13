@@ -2235,7 +2235,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             "transfer_at": cred_details["transfer_at"],
             "transfer_rt": cred_details["transfer_rt"],
             "transfer_at_exp": cred_details["transfer_at_exp"],
-            "files": list(),
+            "files": [],
         }
 
         for t in mkdir_l:
@@ -2295,7 +2295,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             "transfer_at": cred_details["transfer_at"],
             "transfer_rt": cred_details["transfer_rt"],
             "transfer_at_exp": cred_details["transfer_at_exp"],
-            "files": list(),
+            "files": [],
         }
 
         for t in transfers_l:
@@ -2352,7 +2352,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             "transfer_rt": cred_details["transfer_rt"],
             "transfer_at_exp": cred_details["transfer_at_exp"],
             "recursive": removes_l[0].get_recursive(),
-            "files": list(),
+            "files": [],
         }
 
         for t in removes_l:

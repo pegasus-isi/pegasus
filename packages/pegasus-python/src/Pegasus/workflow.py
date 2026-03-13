@@ -92,7 +92,7 @@ def _to_wf(d: dict) -> Workflow:
                 raise ValueError
 
             # add args
-            args = list()
+            args = []
             for a in j["arguments"]:
                 args.append(a)
 

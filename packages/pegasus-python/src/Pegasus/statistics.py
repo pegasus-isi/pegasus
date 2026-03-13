@@ -1003,7 +1003,7 @@ class PegasusStatistics:
 
         # Go through each job in the workflow
         job_stats_list = []
-        job_retry_count_dict = dict()
+        job_retry_count_dict = {}
         for job in wf_job_stats_list:
             job_stats = JobStatistics()
             job_stats.name = job.job_name

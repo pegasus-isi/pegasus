@@ -248,7 +248,7 @@ class Properties:
         :type prop: Optional[str]
         """
         if prop:
-            to_print = list()
+            to_print = []
             for p in Properties._props:
                 if prop in p:
                     to_print.append(p)
