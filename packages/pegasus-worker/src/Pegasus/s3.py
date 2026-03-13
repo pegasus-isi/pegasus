@@ -14,6 +14,14 @@
 #  limitations under the License.
 #
 
+"""S3 operations (ls, get, put, cp, mkdir, rm) for the Pegasus transfer system, using boto3.
+
+Credentials are read from :code:`~/.pegasus/credentials.conf` (or the path given by the
+``PEGASUS_CREDENTIALS`` / ``S3CFG`` environment variables). The config file must not be
+group- or world-readable. URIs use the :code:`s3://user@site/bucket/key` or
+:code:`s3s://...` (HTTPS) scheme.
+"""
+
 import logging as log
 import os
 import re
@@ -58,7 +66,13 @@ TB = 1024 * GB
 
 
 def configure_logging(verbose, debug):
+    """Configure the root logger level and format.
 
+    :param verbose: if True, set log level to INFO
+    :type verbose: bool
+    :param debug: if True, set log level to DEBUG (takes precedence over verbose)
+    :type debug: bool
+    """
     if verbose or debug:
         if verbose:
             level = log.INFO
@@ -73,6 +87,13 @@ def configure_logging(verbose, debug):
 
 
 def human_size(size):
+    """Format a byte count as a human-readable string (e.g. ``" 1.2GB"``).
+
+    :param size: number of bytes
+    :type size: int
+    :return: human-readable size string with unit suffix
+    :rtype: str
+    """
     if size >= TB:
         return f"{size / float(TB):6.1f}TB"
     elif size >= GB:
@@ -131,12 +152,26 @@ DEFAULT_CONFIG = {
 
 
 def fix_file(url):
+    """Strip the ``file:`` scheme prefix from a URL, leaving only the path.
+
+    :param url: a URL that may start with ``file://``
+    :type url: str
+    :return: the URL with the ``file:`` prefix removed
+    :rtype: str
+    """
     if url.startswith("file://"):
         url = url.replace("file:", "")
     return url
 
 
 def has_wildcards(string):
+    """Return True if the string contains any wildcard characters (``*``, ``?``, ``[``, ``]``).
+
+    :param string: the string to check, or None
+    :type string: str or None
+    :return: True if any wildcard character is present, False otherwise
+    :rtype: bool
+    """
     if string is None:
         return False
     wildcards = "*?[]"
@@ -147,6 +182,19 @@ def has_wildcards(string):
 
 
 def get_path_for_key(bucket, searchkey, key, output):
+    """Compute the local destination path for a downloaded S3 key.
+
+    :param bucket: S3 bucket name (used as a fallback basename when ``searchkey`` is empty)
+    :type bucket: str
+    :param searchkey: the key prefix that was searched for (may be None or empty)
+    :type searchkey: str or None
+    :param key: the actual S3 key being downloaded
+    :type key: str or None
+    :param output: the local output path (may be a directory ending with ``/``)
+    :type output: str
+    :return: the resolved local destination path for this key
+    :rtype: str
+    """
     # We have to strip any trailing / off the keys so that they can match
     # Also, if a key is None, then convert it to an empty string
     key = "" if key is None else key.rstrip("/")
@@ -171,6 +219,17 @@ OLD_DEFAULT_CREDENTIAL_PATH = "~/.pegasus/s3cfg"
 
 
 def get_config(options):
+    """Load and return the S3 credentials config file as a :class:`ConfigParser`.
+
+    Config file resolution order: ``--conf`` CLI flag → ``PEGASUS_CREDENTIALS`` env var →
+    ``S3CFG`` env var → ``~/.pegasus/credentials.conf`` → ``~/.pegasus/s3cfg``.
+
+    :param options: parsed argument namespace containing an optional ``config`` attribute
+    :raises Exception: if no config file is found
+    :raises Exception: if the config file has group- or world-readable permissions
+    :return: loaded configuration
+    :rtype: ConfigParser
+    """
     PEGASUS_CREDENTIALS = os.getenv("PEGASUS_CREDENTIALS", None)
     S3CFG = os.getenv("S3CFG", None)
     if options.config:
@@ -208,6 +267,13 @@ def get_config(options):
 
 
 def parse_endpoint(uri):
+    """Parse an S3 endpoint URI and return boto3 client kwargs and AWS region name.
+
+    :param uri: S3 endpoint URI (e.g. ``"https://s3.us-east-2.amazonaws.com"``)
+    :type uri: str
+    :return: tuple of ``(kwargs, location)`` where ``kwargs`` contains ``is_secure``, ``host``, ``port``, and ``path``, and ``location`` is the AWS region string (or ``""`` for the default region)
+    :rtype: tuple
+    """
     result = urlsplit(uri)
 
     kwargs = {
@@ -223,6 +289,16 @@ def parse_endpoint(uri):
 
 
 def get_s3_client(config, uri):
+    """Create and return a boto3 S3 client configured for the site and identity in ``uri``.
+
+    :param config: loaded credentials config (from :func:`get_config`)
+    :type config: ConfigParser
+    :param uri: parsed S3 URI containing site and identity information
+    :type uri: S3URI
+    :raises Exception: if the config has no section for the site or identity
+    :return: tuple of ``(s3_client, region_name)``
+    :rtype: tuple
+    """
     if not config.has_section(uri.site):
         raise Exception("Config file has no section for site '%s'" % uri.site)
 
@@ -261,6 +337,15 @@ def get_s3_client(config, uri):
 
 
 def get_create_bucket_configuration(region_name):
+    """Return the ``CreateBucketConfiguration`` kwargs dict for :func:`boto3.S3.Client.create_bucket`.
+
+    Returns an empty dict for ``us-east-1`` (which must not specify a ``LocationConstraint``).
+
+    :param region_name: AWS region name, or None
+    :type region_name: str or None
+    :return: kwargs to spread into ``create_bucket()``, possibly containing ``CreateBucketConfiguration``
+    :rtype: dict
+    """
     config = {}
     # don't set any create bucket configuration for us-east-1
     # https://github.com/aws/aws-sdk-js/issues/3647
@@ -270,6 +355,16 @@ def get_create_bucket_configuration(region_name):
 
 
 def is_bucket_available(s3_client, bucket):
+    """Return True if the bucket exists and is accessible, or does not yet exist (can be created).
+
+    Returns False only if a 403 Forbidden response is received (bucket owned by another account).
+
+    :param s3_client: boto3 S3 client
+    :param bucket: bucket name to check
+    :type bucket: str
+    :return: True if the bucket is available for use or creation, False if forbidden
+    :rtype: bool
+    """
     is_available = False
     try:
         s3_client.head_bucket(Bucket=bucket)
@@ -289,6 +384,13 @@ def is_bucket_available(s3_client, bucket):
 
 
 def read_command_file(path):
+    """Yield tokenized lines from a command file, skipping blank lines and ``#`` comments.
+
+    :param path: path to the command file
+    :type path: str
+    :return: generator of token lists, one per non-blank, non-comment line
+    :rtype: generator
+    """
     tokenizer = re.compile(r"\s+")
     f = open(path)
     try:
@@ -304,7 +406,21 @@ def read_command_file(path):
 
 
 class S3URI:
+    """Represents a parsed S3 URI of the form :code:`s3[s]://user@site[/bucket[/key]]`."""
+
     def __init__(self, user, site, bucket=None, key=None, secure=False):
+        """
+        :param user: the username portion of the identity (e.g. ``"myuser"``)
+        :type user: str
+        :param site: hostname (and optional port) of the S3 endpoint (e.g. ``"s3.amazonaws.com"``)
+        :type site: str
+        :param bucket: S3 bucket name, or None
+        :type bucket: str, optional
+        :param key: S3 key (object path), or None
+        :type key: str, optional
+        :param secure: if True the URI uses the ``s3s://`` (HTTPS) scheme, defaults to False
+        :type secure: bool, optional
+        """
         self.user = user
         self.site = site
         self.ident = f"{user}@{site}"
@@ -313,6 +429,7 @@ class S3URI:
         self.secure = secure
 
     def __repr__(self):
+        """Return the string representation of the URI (e.g. ``"s3://user@site/bucket/key"``)."""
         if self.secure:
             uri = "s3s://%s" % self.ident
         else:
@@ -385,6 +502,13 @@ def parse_uri(uri):
 
 
 def ls(args):
+    """List S3 buckets or keys.
+
+    If the URL specifies a bucket, lists all keys in that bucket (optionally with a key prefix).
+    If the URL specifies only the site/identity, lists all buckets for that identity.
+
+    :param args: parsed arguments from the ``ls`` subcommand
+    """
     config = get_config(args)
     uri = parse_uri(args.url)
 
@@ -437,6 +561,11 @@ def ls(args):
 
 
 def cp(args):
+    """Copy one or more S3 keys to a destination bucket (server-side copy within the same account).
+
+    :param args: parsed arguments from the ``cp`` subcommand
+    :raises Exception: if sources and destination have different identities, or if destination key already exists and ``--force`` is not set
+    """
     config = get_config(args)
 
     srcs = [parse_uri(uri) for uri in args.srcs]
@@ -544,6 +673,11 @@ def cp(args):
 
 
 def mkdir(args):
+    """Create an S3 bucket. Issues a warning (not an error) if the bucket already exists and is owned by the caller.
+
+    :param args: parsed arguments from the ``mkdir`` subcommand
+    :raises Exception: if the URL does not contain a bucket, contains a key, or the bucket is owned by another account
+    """
     uri = parse_uri(args.url)
 
     if uri.bucket is None:
@@ -587,6 +721,11 @@ def mkdir(args):
 
 
 def rm(args):
+    """Delete one or more S3 keys. Supports batch deletion and reading URLs from a file.
+
+    :param args: parsed arguments from the ``rm`` subcommand
+    :raises Exception: if a key does not exist and ``--force`` is not set
+    """
     if args.url is None and args.file is None:
         print("Specify URL")
         sys.exit(1)
@@ -697,6 +836,18 @@ def rm(args):
 
 
 def get_key_for_path(path, infile, outkey):
+    """Compute the destination S3 key for a local file being uploaded.
+
+    :param path: the root upload path (must be absolute and a prefix of ``infile``)
+    :type path: str
+    :param infile: absolute path to the file being uploaded
+    :type infile: str
+    :param outkey: S3 key prefix for the upload destination
+    :type outkey: str
+    :raises Exception: if ``outkey`` is empty, ``path`` is not absolute, or ``infile`` is not under ``path``
+    :return: the computed S3 key
+    :rtype: str
+    """
     if outkey is None or outkey == "":
         raise Exception("invalid key: '%s'" % outkey)
 
@@ -721,6 +872,11 @@ def get_key_for_path(path, infile, outkey):
 
 
 def put(args):
+    """Upload a local file to S3.
+
+    :param args: parsed arguments from the ``put`` subcommand
+    :raises Exception: if the file does not exist, is a directory, the key already exists and ``--force`` is not set, or the upload fails
+    """
     path = fix_file(args.file)
     url = args.url
 
@@ -799,6 +955,11 @@ def put(args):
 
 
 def get(args):
+    """Download an S3 key to a local file.
+
+    :param args: parsed arguments from the ``get`` subcommand; ``args.file`` is optional — if omitted, the key's basename is used as the output filename
+    :raises Exception: if the URL does not contain a bucket or key
+    """
     uri = parse_uri(args.url)
 
     if uri.bucket is None:
@@ -830,6 +991,13 @@ def get(args):
 
 # --- Handle Command Line Arguments --------------------------------------------
 def parse_args(args):
+    """Build the argument parser and parse the given command-line arguments.
+
+    :param args: command-line arguments (e.g. ``sys.argv[1:]``)
+    :type args: list
+    :return: tuple of ``(parser, parsed_args)``
+    :rtype: tuple
+    """
     parser = ArgumentParser(prog="pegasus-s3")
 
     # add top level arguments
@@ -974,6 +1142,7 @@ def parse_args(args):
 
 # --- Entrypoint ---------------------------------------------------------------
 def main():
+    """Entry point for the ``pegasus-s3`` CLI tool."""
     parser, args = parse_args(sys.argv[1:])
 
     configure_logging(args.verbose, args.debug)

@@ -24,7 +24,7 @@ class MetadataMixin:
             job.add_metadata({"key1": "value1"})
 
             # Example 2
-            job.add_metadata(key1="value1, key2="value2")
+            job.add_metadata(key1="value1", key2="value2")
 
         :param args: dictionary of key value pair to add as metadata
         :type args: Dict[str, Union[str, int, float, bool]]
@@ -193,7 +193,7 @@ def _profiles(ns, **map_p):
 def to_mb(value: str) -> int:
     """Convert the given value to MB
 
-    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
+    :param value: str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
     :type value: str
     :raises ValueError: invalid format
     :return: value in MB
@@ -235,7 +235,7 @@ def to_mb(value: str) -> int:
 def to_kb(value: str) -> int:
     """Convert the given value to KB
 
-    :param value: str formatted as str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
+    :param value: str formatted as :code:`'<int> [MB | GB | TB | PB | EB | ZB | YB]'`
     :type value: str
     :raises ValueError: invalid format
     :return: value in KB
@@ -245,6 +245,10 @@ def to_kb(value: str) -> int:
 
 
 class ProfileMixin:
+    """Derived class can have Pegasus profiles assigned to it across multiple namespaces
+    (PEGASUS, CONDOR, DAGMAN, ENV, GLOBUS, SELECTOR, STAT).
+    """
+
     @_chained
     def add_profiles(
         self,
@@ -668,7 +672,7 @@ class ProfileMixin:
         pfn: Union[str, Path] = None,
         grid_job_type: str = None,
     ):
-        """Add Selector(s).
+        """Add Selector profile(s).
 
         The Selector namespace allows users to override the beahvior of the Workflow
         Mapper during site selection. This gives you finer grained control over

@@ -194,7 +194,11 @@ class EventSink:
 
 class DBEventSink(EventSink):
     """
-    Write wflow event logs to database via loader
+    Write workflow event logs to a database via the appropriate loader.
+
+    Uses :class:`~Pegasus.db.workflow_loader.WorkflowLoader` for the stampede
+    namespace and :class:`~Pegasus.db.dashboard_loader.DashboardLoader` for the
+    dashboard namespace.
     """
 
     def __init__(

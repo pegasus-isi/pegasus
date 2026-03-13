@@ -38,7 +38,7 @@ def remove_file(path: t.Union[str, os.PathLike]):
     Remove the file identified by the `path` from the file system.
 
     :param path: The path of the file to be removed.
-    :type path: t.Optional[str, os.PathLike]
+    :type path: t.Union[str, os.PathLike]
     """
     try:
         Path(path).unlink()
@@ -75,7 +75,7 @@ def pstr(value: t.Any, to: int = 2) -> str:
 
 @dataclass
 class JobStatistics:
-    """A data class to hols Job statistics data."""
+    """A data class to hold Job statistics data."""
 
     #: The name of the job.
     name: str = None
@@ -131,7 +131,7 @@ class JobStatistics:
 
 @dataclass
 class TransformationStatistics:
-    """A data class to hols Transformation statistics data."""
+    """A data class to hold Transformation statistics data."""
 
     #: The transformation name.
     transformation: str = None

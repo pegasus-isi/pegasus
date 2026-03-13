@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Pegasus utility functions for pasing a kickstart output file and return wanted information
+Pegasus utility functions for parsing a kickstart output file and returning wanted information.
 
+Supports both YAML-format (Pegasus 5+) and XML-format (legacy) kickstart records.
 """
 
 import logging
@@ -299,7 +300,7 @@ class _YAMLParserToken(Enum):
 
 class YAMLParser(Parser):
     """
-    Represents the parser that parses the kickstart xml records
+    Represents the parser that parses kickstart YAML records.
     """
 
     def __init__(self, filename):

@@ -110,9 +110,9 @@ class FileServer(ProfileMixin):
         """
         :param url: url including protocol such as :code:`scp://obelix.isi.edu/data`
         :type url: str
-        :param operation_type: operation type defined in :py:class:`~Pegasus.api.site_catalog.OperationType` (e.g. :code:`Operation.ALL`)
-        :type operation_type: OperationType
-        :raises ValueError: operation_type must be one defined in :py:class:`~Pegasus.api.site_catalog.OperationType`
+        :param operation_type: operation type defined in :py:class:`~Pegasus.api.site_catalog.Operation` (e.g. :code:`Operation.ALL`)
+        :type operation_type: Operation
+        :raises TypeError: operation_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Operation`
         """
         self.url = url
 
@@ -179,7 +179,7 @@ class Directory:
         :type path: Union[str, Path]
         :param shared_file_system: indicate whether the shared scratch space is accessible to the worker nodes via a shared filesystem, defaults to False
         :type shared_file_system: bool
-        :raises ValueError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.DirectoryType`
+        :raises TypeError: directory_type must be one of :py:class:`~Pegasus.api.site_catalog.Directory` (e.g. :code:`Directory.SHARED_SCRATCH`)
         :raises ValueError: path must be given as an absolute path
         """
         if not isinstance(directory_type, _DirectoryType):
@@ -215,8 +215,9 @@ class Directory:
         add_file_servers(self, *file_servers: FileServer)
         Add one or more access methods to this directory
 
-        :param file_server: a :py:class:`~Pegasus.api.site_catalog.FileServer`
-        :raises ValueError: file_server must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
+        :param file_servers: one or more :py:class:`~Pegasus.api.site_catalog.FileServer` objects
+        :type file_servers: FileServer
+        :raises TypeError: each argument must be of type :py:class:`~Pegasus.api.site_catalog.FileServer`
         :return: self
         """
         for fs in file_servers:
@@ -275,7 +276,7 @@ class Grid:
     ):
         """
 
-        :param grid_type: a grid type defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.SLURM`)
+        :param grid_type: a grid type defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.CONDOR`)
         :type grid_type: _GridType
         :param contact: endpoint such as :code:`"workflow.isi.edu"`
         :type contact: str
@@ -283,9 +284,9 @@ class Grid:
         :type scheduler_type: Scheduler
         :param job_type: a job type defined in :py:class:`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`), defaults to None
         :type job_type: Optional[SupportedJobs], optional
-        :raises ValueError: grid_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.PBS`)
-        :raises ValueError: scheduler_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Scheduler` (e.g. :code:`Scheduler.PBS`)
-        :raises ValueError: job_type must be one defined in :py:class`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`)
+        :raises TypeError: grid_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Grid` (e.g. :code:`Grid.CONDOR`)
+        :raises TypeError: scheduler_type must be one defined in :py:class:`~Pegasus.api.site_catalog.Scheduler` (e.g. :code:`Scheduler.PBS`)
+        :raises TypeError: job_type must be one defined in :py:class:`~Pegasus.api.site_catalog.SupportedJobs` (e.g. :code:`SupportedJobs.COMPUTE`)
         """
         if not isinstance(grid_type, _GridType):
             raise TypeError(
@@ -372,8 +373,8 @@ class Site(ProfileMixin):
         :type os_release: Optional[str]
         :param os_version: the version of the site's operating system, defaults to None
         :type os_version: Optional[str]
-        :raises ValueError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
-        :raises ValueError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
+        :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
+        :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         """
         self.name = name
         self.directories = list()
@@ -414,8 +415,9 @@ class Site(ProfileMixin):
         add_directories(self, *directories: Directory)
         Add one or more :py:class:`~Pegasus.api.site_catalog.Directory` to this :py:class:`~Pegasus.api.site_catalog.Site`
 
-        :param directory: the :py:class:`~Pegasus.api.site_catalog.Directory` to be added
-        :raises TypeError: directory must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
+        :param directories: one or more :py:class:`~Pegasus.api.site_catalog.Directory` objects to add
+        :type directories: Directory
+        :raises TypeError: each argument must be of type :py:class:`~Pegasus.api.site_catalog.Directory`
         :return: self
         """
         for d in directories:
@@ -434,8 +436,9 @@ class Site(ProfileMixin):
         add_grids(self, *grids: Grid)
         Add one or more :py:class:`~Pegasus.api.site_catalog.Grid` to this :py:class:`~Pegasus.api.site_catalog.Site`
 
-        :param grid: the :py:class:`~Pegasus.api.site_catalog.Grid` to be added
-        :raises TypeError: grid must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
+        :param grids: one or more :py:class:`~Pegasus.api.site_catalog.Grid` objects to add
+        :type grids: Grid
+        :raises TypeError: each argument must be of type :py:class:`~Pegasus.api.site_catalog.Grid`
         :return: self
         """
         for g in grids:

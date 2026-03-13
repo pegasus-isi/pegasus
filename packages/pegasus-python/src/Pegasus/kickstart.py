@@ -28,11 +28,9 @@ def load(fp: TextIO, *args, **kwargs) -> Dict:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Kickstart document) to a Python object.
 
-    [extended_summary]
-
-    :param fp: [description]
+    :param fp: File-like object to read from.
     :type fp: TextIO
-    :return: [description]
+    :return: Deserialized kickstart data.
     :rtype: Dict
     """
 
@@ -41,11 +39,9 @@ def loads(s: str, *args, **kwargs) -> Dict:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Kickstart document) to a Python object.
 
-    [extended_summary]
-
-    :param s: [description]
+    :param s: String containing a Kickstart document.
     :type s: str
-    :return: [description]
+    :return: Deserialized kickstart data.
     :rtype: Dict
     """
 
@@ -54,14 +50,11 @@ def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
     """
     Serialize ``obj`` as a Kickstart formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
-    [extended_summary]
-
-    :param obj: [description]
+    :param obj: Kickstart data to serialize.
     :type obj: Dict
-    :param fp: [description]
+    :param fp: File-like object to write to.
     :type fp: TextIO
-    :return: [description]
-    :rtype: NoReturn
+    :rtype: None
     """
 
 
@@ -69,10 +62,8 @@ def dumps(obj: Dict, *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a Kickstart formatted ``str``.
 
-    [extended_summary]
-
-    :param obj: [description]
+    :param obj: Kickstart data to serialize.
     :type obj: Dict
-    :return: [description]
+    :return: Kickstart document as a string.
     :rtype: str
     """

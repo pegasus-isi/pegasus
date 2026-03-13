@@ -16,7 +16,6 @@
 
 """Provides common functions used by all workflow programs."""
 
-
 import logging
 import os
 import re
@@ -33,16 +32,23 @@ logger = logging.getLogger("Pegasus")
 
 
 def force_str(s):
-    """
-    force s to be str - should work both in py2 and py3
+    """Decode a bytes object to a str.
+
+    :param s: the bytes object to decode
+    :type s: bytes
+    :return: decoded string
+    :rtype: str
     """
     return s.decode()
-    return s
 
 
 def backticks(cmd_line):
-    """
-    what would a python program be without some perl love?
+    """Execute a shell command and return its stdout as a string.
+
+    :param cmd_line: the shell command to execute
+    :type cmd_line: str
+    :return: stdout of the command
+    :rtype: str
     """
     return force_str(
         subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
@@ -50,7 +56,7 @@ def backticks(cmd_line):
 
 
 class TimedCommand:
-    """ Provides a shell callout with a timeout """
+    """Provides a shell callout with a configurable timeout (default 6 hours)."""
 
     def __init__(
         self,
@@ -62,6 +68,22 @@ class TimedCommand:
         log_outerr=True,
         cwd=None,
     ):
+        """
+        :param cmd: the shell command to execute
+        :type cmd: str
+        :param cmd_display: an alternate command string used for logging (e.g. to hide credentials); if None, ``cmd`` is used
+        :type cmd_display: str, optional
+        :param env_overrides: environment variable overrides to apply in the subprocess environment
+        :type env_overrides: dict, optional
+        :param timeout_secs: maximum number of seconds to wait before killing the process; defaults to 6 hours
+        :type timeout_secs: int, optional
+        :param log_cmd: whether to log the command before executing it, defaults to True
+        :type log_cmd: bool, optional
+        :param log_outerr: whether to log the combined stdout/stderr after the command completes, defaults to True
+        :type log_outerr: bool, optional
+        :param cwd: working directory for the subprocess; if None, the current working directory is used
+        :type cwd: str, optional
+        """
         self._cmd = cmd
         if cmd_display is None:
             self._cmd_display = cmd
@@ -78,6 +100,12 @@ class TimedCommand:
         self._cwd = cwd
 
     def run(self):
+        """Execute the command, blocking until it completes or the timeout expires.
+
+        :raises RuntimeError: if the command times out
+        :raises RuntimeError: if the command exits with a non-zero exit code
+        """
+
         def target():
 
             # custom environment for the subshell
@@ -151,20 +179,26 @@ class TimedCommand:
             )
 
     def get_outerr(self):
-        """
-        returns the combined stdout and stderr from the command
+        """Return the combined stdout and stderr captured from the command.
+
+        :return: combined stdout and stderr output
+        :rtype: str
         """
         return self._outerr
 
     def get_exit_code(self):
-        """
-        returns the exit code from the process
+        """Return the exit code of the process.
+
+        :return: process exit code
+        :rtype: int
         """
         return self._process.returncode
 
     def get_duration(self):
-        """
-        returns the timing of the command (seconds)
+        """Return the wall-clock duration of the command execution in seconds.
+
+        :return: execution time in seconds
+        :rtype: float
         """
         return self._duration
 
@@ -185,7 +219,6 @@ class Tools:
         return getattr(self.instance, name)
 
     class __Tools:
-
         _info = {}
 
         def __init__(self):
@@ -194,7 +227,23 @@ class Tools:
         def find(
             self, executable, version_arg=None, version_regex=None, path_prepend=None
         ):
+            """Detect and cache the full path and version of an executable.
 
+            Searches ``PATH`` (and optionally prepended directories) for the
+            given executable, optionally running it with ``version_arg`` and
+            extracting the version string via ``version_regex``.
+
+            :param executable: name of the executable to find (e.g. ``"gsiftp"``)
+            :type executable: str
+            :param version_arg: argument to pass to the executable to obtain its version (e.g. ``"--version"``)
+            :type version_arg: str, optional
+            :param version_regex: regex with one capture group to extract the version number from the version output
+            :type version_regex: str, optional
+            :param path_prepend: list of additional directories to search before ``PATH``
+            :type path_prepend: list, optional
+            :return: full path to the executable, or None if not found
+            :rtype: str or None
+            """
             self.lock.acquire()
             try:
                 if executable in self._info:
@@ -280,7 +329,13 @@ class Tools:
                 self.lock.release()
 
         def full_path(self, executable):
-            """ Returns the full path to a given executable """
+            """Return the cached full path to the given executable.
+
+            :param executable: name of the executable
+            :type executable: str
+            :return: full path, or None if not found or not yet detected
+            :rtype: str or None
+            """
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
@@ -290,7 +345,13 @@ class Tools:
                 self.lock.release()
 
         def major_version(self, executable):
-            """ Returns the detected major version given executable """
+            """Return the cached major version number of the given executable.
+
+            :param executable: name of the executable
+            :type executable: str
+            :return: major version number, or None if unknown
+            :rtype: int or None
+            """
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
@@ -300,7 +361,13 @@ class Tools:
                 self.lock.release()
 
         def minor_version(self, executable):
-            """ Returns the detected minor version given executable """
+            """Return the cached minor version number of the given executable.
+
+            :param executable: name of the executable
+            :type executable: str
+            :return: minor version number, or None if unknown
+            :rtype: int or None
+            """
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:
@@ -310,7 +377,13 @@ class Tools:
                 self.lock.release()
 
         def version_comparable(self, executable):
-            """ Returns the detected comparable version given executable """
+            """Return a zero-padded version string suitable for lexicographic comparison (e.g. ``"001002003"`` for v1.2.3).
+
+            :param executable: name of the executable
+            :type executable: str
+            :return: comparable version string, or None if version is unknown
+            :rtype: str or None
+            """
             self.lock.acquire()
             try:
                 if executable in self._info and self._info[executable] is not None:

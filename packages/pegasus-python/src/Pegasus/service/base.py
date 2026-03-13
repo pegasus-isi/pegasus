@@ -177,7 +177,7 @@ class OrderedSet(set):
         self.__data.clear()
 
     def values(self):
-        "od.items() -> list of (key, value) pairs in od"
+        """Return a list of elements in insertion order."""
         return [key for key in self.__data]
 
     def remove(self, element):

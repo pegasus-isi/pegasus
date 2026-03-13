@@ -79,7 +79,7 @@ def dump(obj: Properties, fp: TextIO, *args, **kwargs) -> None:
     :type obj: Properties
     :param fp: file like object to serialize to
     :type fp: TextIO
-    :rtype: NoReturn
+    :rtype: None
     """
     obj.write(fp)
 

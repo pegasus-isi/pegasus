@@ -61,12 +61,12 @@ _Loader.add_constructor(
 # Dumper extras
 def _represent_path(self, data: Path):
     """
-    Serialize a `Path` object to a string.
+    Serialize a :class:`pathlib.Path` object to a YAML string scalar.
 
     .. warning::
-        Path("./aaa") serializes to "aaa"
+        ``Path("./aaa")`` serializes to ``"aaa"`` because ``str(Path("./aaa")) == "aaa"``.
 
-    :param data: [description]
+    :param data: path object to serialize
     :type data: pathlib.Path
     """
     return self.represent_scalar("tag:yaml.org,2002:str", str(data))
@@ -74,9 +74,9 @@ def _represent_path(self, data: Path):
 
 def _represent_ordered_dict(self, data):
     """
-    Serialize OrderedDict to a yaml map
+    Serialize an :class:`collections.OrderedDict` to a YAML map, preserving insertion order.
 
-    :param data: [description]
+    :param data: ordered dictionary to serialize
     :type data: collections.OrderedDict
     """
     return self.represent_mapping("tag:yaml.org,2002:map", data.items())
@@ -93,13 +93,14 @@ load = partial(_yaml.load, Loader=_Loader)
 
 def loads(s: str, *args, **kwargs) -> Dict:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a YAML document) to a Python dictionary.
+    Deserialize ``s`` (a ``str``, ``bytes``, or ``bytearray`` containing a YAML document) to a Python dictionary.
 
-    [extended_summary]
+    Uses Pegasus-specific loader defaults: ``yes/no/on/off`` are kept as strings
+    and date/datetime strings are not converted to Python objects.
 
-    :param s: [description]
+    :param s: YAML-formatted string to deserialize
     :type s: str
-    :return: [description]
+    :return: deserialized Python dictionary
     :rtype: Dict
     """
     return load(io.StringIO(s), *args, **kwargs)
@@ -115,11 +116,12 @@ def dumps(obj: Dict, Dumper=_Dumper, *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a YAML formatted ``str``.
 
-    [extended_summary]
+    :class:`pathlib.Path` objects are serialized as strings and
+    :class:`collections.OrderedDict` instances preserve their key order.
 
-    :param obj: [description]
+    :param obj: object to serialize
     :type obj: Dict
-    :return: [description]
+    :return: YAML-formatted string
     :rtype: str
     """
     return dump(obj, *args, **kwargs)

@@ -54,8 +54,8 @@ class File(MetadataMixin):
         :type lfn: str
         :param size: size in bytes, defaults to None
         :type size: int
-        :param for_planning: indicate that a file is to be used for planning purposes
-        :type for_planning: bool
+        :param for_planning: indicate that a file is to be used for planning purposes, defaults to False
+        :type for_planning: bool, optional
         """
         if not isinstance(lfn, str):
             raise TypeError(f"invalid lfn: {lfn}; lfn must be of type str")
@@ -98,6 +98,8 @@ class File(MetadataMixin):
 
 
 class _ReplicaCatalogEntry:
+    """Internal representation of a single entry in the replica catalog, mapping an LFN (or regex pattern) to one or more physical file names."""
+
     def __init__(
         self,
         lfn: str,

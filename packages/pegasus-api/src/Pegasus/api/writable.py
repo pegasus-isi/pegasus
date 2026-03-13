@@ -13,15 +13,9 @@ __all__ = ["Writable"]
 
 
 class _CustomEncoder(json.JSONEncoder):
-    def default(self, obj):
-        # TODO: handle instance of Date and Path
-        """
-        if isinstance(obj, Date):
-                        return "whatever spec we come up with for Date such as ISO8601"
-        elif isinstance(obj, Path):
-            return obj.resolve
-        """
+    """JSON encoder that delegates to an object's ``__json__()`` method when present."""
 
+    def default(self, obj):
         if hasattr(obj, "__json__"):
             if callable(obj.__json__):
                 return obj.__json__()
@@ -77,8 +71,8 @@ class Writable:
 
         :param file: file object to write to
         :type file: file
-        :param _format: file format that can be "yml", "yaml", or "json
-        :type _ext: str
+        :param _format: file format; must be one of ``"yml"``, ``"yaml"``, or ``"json"``
+        :type _format: str
         :raises ValueError: _format must be one of "yml", "yaml" or "json"
         """
         if _format.lower() not in Writable._FORMATS:

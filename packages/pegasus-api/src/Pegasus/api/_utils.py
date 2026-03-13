@@ -61,7 +61,7 @@ def _get_enum_str(enum_cls):
     :type enum_cls: type
     :return: a str formatted as enum_cls.__name__ + ".<member 1 | member 2 | .. | member n>"
     :rtype: str
-    :raises TypeError:
+    :raises TypeError: if ``enum_cls`` is not a subclass of :class:`enum.Enum`
     """
 
     if not issubclass(enum_cls, Enum):
@@ -77,8 +77,12 @@ def _get_enum_str(enum_cls):
 
 
 def _chained(f):
-    """Method decorator to allow chaining. Methods decorated by this should
-    not return anything. If they do an exception will be thrown."""
+    """Method decorator to allow method chaining.
+
+    The wrapped method must not return a value (i.e. must implicitly return
+    ``None``); this is enforced with an assertion. The decorator then returns
+    ``self`` so that calls can be chained.
+    """
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):

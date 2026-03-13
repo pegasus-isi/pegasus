@@ -423,14 +423,18 @@ def _slurp_braindb(run, brain_alternate=None):
 
 def slurp_braindb(run_dir, brain_alternate=None):
     """
-    Consume braindump file and return it's content as a `dict`.
+    Load the braindump file from *run_dir* and return its contents as a ``dict``.
 
-    :param run_dir: [description]
-    :type run_dir: [type]
-    :param brain_alternate: [description], defaults to None
-    :type brain_alternate: [type], optional
-    :return: [description]
-    :rtype: [type]
+    Prefers ``braindump.yml`` (YAML). Falls back to the legacy ``braindump.txt``
+    format for pre-5.0 workflows.
+
+    :param run_dir: Path to the workflow submit directory.
+    :type run_dir: str
+    :param brain_alternate: Override filename within *run_dir*. Defaults to None.
+    :type brain_alternate: str or None
+    :return: Dictionary of braindump key/value pairs.
+    :rtype: dict
+    :raises ValueError: If *run_dir* is empty or None.
     """
     if not run_dir:
         raise ValueError("run_dir is required")

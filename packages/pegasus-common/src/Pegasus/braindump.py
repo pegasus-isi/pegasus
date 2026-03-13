@@ -45,6 +45,7 @@ class Braindump:
     """
 
     def __post_init__(self):
+        """Convert string path fields to :class:`pathlib.Path` and coerce ``uses_pmc`` to bool."""
         self.dax = Path(self.dax) if self.dax else self.dax
         self.basedir = Path(self.basedir) if self.basedir else self.basedir
         self.submit_dir = Path(self.submit_dir) if self.submit_dir else self.submit_dir
@@ -144,28 +145,25 @@ class Braindump:
 
 def load(fp: TextIO, *args, **kwargs) -> Braindump:
     """
-    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Braindump document) to a Python object.
+    Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Braindump document) to a :class:`Braindump` object.
 
-    [extended_summary]
-
-    :param fp: [description]
+    :param fp: readable file-like object containing a YAML-formatted braindump document
     :type fp: TextIO
-    :return: [description]
-    :rtype: Dict
+    :return: populated Braindump dataclass instance
+    :rtype: Braindump
     """
     return loads(fp.read())
 
 
 def loads(s: str, *args, **kwargs) -> Braindump:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Braindump document) to a Python object.
+    Deserialize ``s`` (a ``str``, ``bytes``, or ``bytearray`` containing a Braindump document) to a :class:`Braindump` object.
 
-    [extended_summary]
-
-    :param s: [description]
+    :param s: YAML-formatted braindump string
     :type s: str
-    :return: [description]
-    :rtype: Dict
+    :return: populated Braindump dataclass instance
+    :rtype: Braindump
+    :raises ValueError: if ``s`` does not parse to a YAML mapping
     """
     _dict = yaml.load(s, *args, **kwargs)
 
@@ -177,29 +175,23 @@ def loads(s: str, *args, **kwargs) -> Braindump:
 
 def dump(obj: Braindump, fp: TextIO, *args, **kwargs) -> None:
     """
-    Serialize ``obj`` as a Braindump formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
+    Serialize ``obj`` as a YAML-formatted braindump stream to ``fp`` (a ``.write()``-supporting file-like object).
 
-    [extended_summary]
-
-    :param obj: [description]
-    :type obj: Dict
-    :param fp: [description]
+    :param obj: Braindump instance to serialize
+    :type obj: Braindump
+    :param fp: writable file-like object to write the YAML output to
     :type fp: TextIO
-    :return: [description]
-    :rtype: NoReturn
     """
     yaml.dump(asdict(obj), fp, *args, **kwargs)
 
 
 def dumps(obj: Braindump, *args, **kwargs) -> str:
     """
-    Serialize ``obj`` to a Braindump formatted ``str``.
+    Serialize ``obj`` to a YAML-formatted braindump ``str``.
 
-    [extended_summary]
-
-    :param obj: [description]
-    :type obj: Dict
-    :return: [description]
+    :param obj: Braindump instance to serialize
+    :type obj: Braindump
+    :return: YAML-formatted braindump string
     :rtype: str
     """
     return yaml.dumps(asdict(obj), *args, **kwargs)

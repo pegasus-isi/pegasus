@@ -1,4 +1,10 @@
-"""."""
+"""
+Utilities for managing Pegasus workflow submit directories.
+
+Provides :class:`SubmitDir` with operations to archive, extract, move, delete,
+attach, and detach submit directories from the Pegasus master database. These
+operations are exposed via the ``pegasus-submitdir`` CLI tool.
+"""
 
 import glob
 import logging

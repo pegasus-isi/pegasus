@@ -1,8 +1,21 @@
+"""
+Parser for Pegasus cluster/seqexec summary records.
+
+Cluster records take the form::
+
+    [cluster-summary stat=ok, succeeded=5, failed=0, tasks=5, ...]
+
+:class:`RecordParser` tokenizes and parses such records into dictionaries.
+"""
+
+
 class RecordParseException(Exception):
-    pass
+    """Raised when a cluster record string cannot be parsed."""
 
 
 class Token:
+    """Token type constants used by :class:`RecordParser`."""
+
     START = "["
     END = "]"
     VALUE = "<value>"
@@ -11,6 +24,16 @@ class Token:
 
 
 class RecordParser:
+    """Recursive-descent parser for Pegasus cluster/seqexec records.
+
+    Parses bracket-delimited key=value records of the form::
+
+        [cluster-summary stat=ok, succeeded=5, failed=0, tasks=5, ...]
+
+    :param string: The raw record string to parse.
+    :type string: str
+    """
+
     def __init__(self, string):
         self.string = string
         self.index = 0

@@ -107,6 +107,11 @@ total_timing = 0.0
 
 
 def setup_logger(debug_flag):
+    """Configure the logger for pegasus-integrity.
+
+    :param debug_flag: if True, sets the log level to DEBUG; otherwise INFO
+    :type debug_flag: bool
+    """
     # log to the console
     console = logging.StreamHandler()
 
@@ -127,8 +132,12 @@ def setup_logger(debug_flag):
 
 
 def backticks(cmd_line):
-    """
-    what would a python program be without some perl love?
+    """Execute a shell command and return its stdout as a UTF-8 string.
+
+    :param cmd_line: the shell command to execute
+    :type cmd_line: str
+    :return: stdout of the command decoded as UTF-8
+    :rtype: str
     """
     return (
         subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE)
@@ -138,8 +147,12 @@ def backticks(cmd_line):
 
 
 def json_object_decoder(obj):
-    """
-    utility function used by json.load() to parse some known objects into equivalent Python objects
+    """Object hook for :func:`json.load` that converts known dict shapes into
+    :class:`Transfer`, :class:`Mkdir`, or :class:`Remove` objects.
+
+    :param obj: a decoded JSON object
+    :type obj: dict
+    :return: a :class:`Transfer`, :class:`Mkdir`, :class:`Remove`, or the original dict if unrecognized
     """
     if "type" in obj and obj["type"] == "transfer":
         t = Transfer()
@@ -169,8 +182,12 @@ def json_object_decoder(obj):
 
 
 def read_meta_data(f):
-    """
-    Reads transfers from the new JSON based input format
+    """Read file transfer metadata from a JSON file.
+
+    :param f: path to the JSON metadata file
+    :type f: str
+    :return: list of metadata entries, or an empty list if the file is empty or unreadable
+    :rtype: list
     """
     data = []
 
@@ -193,8 +210,10 @@ def read_meta_data(f):
 
 
 def myexit(rc):
-    """
-    system exit without a stack trace
+    """Exit the process with the given return code, suppressing any stack trace.
+
+    :param rc: exit code to pass to :func:`sys.exit`
+    :type rc: int
     """
     try:
         sys.exit(rc)
@@ -203,8 +222,12 @@ def myexit(rc):
 
 
 def generate_sha256(fname):
-    """
-    Generates a sha256 hash for the given file
+    """Generate a SHA-256 checksum for the given file using ``openssl`` or ``sha256sum``.
+
+    :param fname: path to the file to checksum
+    :type fname: str
+    :return: 64-character hex digest, or None if the tool is unavailable or the file does not exist
+    :rtype: str or None
     """
     # quote the filename to handle space character in LFNs. Possible edge case is if the LFN has a ~user
     # then shlex.quote will quote it as '~user' which is not what we want
@@ -252,16 +275,26 @@ def generate_sha256(fname):
 
 
 def iso8601(ts):
-    """
-    Formats a UNIX timestamp in ISO 8601 format
+    """Format a UNIX timestamp as an ISO 8601 UTC datetime string.
+
+    :param ts: UNIX timestamp
+    :type ts: float
+    :return: ISO 8601 formatted string (e.g. ``"2024-01-15T12:34:56"``)
+    :rtype: str
     """
     dt = datetime.utcfromtimestamp(ts)
     return dt.isoformat()
 
 
 def generate_yaml(lfn, pfn):
-    """
-    Generates kickstart yaml for the given file
+    """Generate a kickstart YAML snippet containing only the SHA-256 checksum and checksum timing for the given file.
+
+    :param lfn: logical file name (unused in output, reserved for future use)
+    :type lfn: str
+    :param pfn: physical file path to checksum
+    :type pfn: str
+    :return: YAML string with ``sha256`` and ``checksum_timing`` fields, or None if the checksum could not be generated
+    :rtype: str or None
     """
 
     ts_start = time.time()
@@ -276,8 +309,14 @@ def generate_yaml(lfn, pfn):
 
 
 def generate_fullstat_yaml(lfn, pfn):
-    """
-    Generates kickstart yaml for the given file
+    """Generate a kickstart YAML snippet with full ``stat`` metadata (mode, size, timestamps, owner, group) and SHA-256 checksum for the given file.
+
+    :param lfn: logical file name used as the YAML map key
+    :type lfn: str
+    :param pfn: physical file path to stat and checksum
+    :type pfn: str
+    :return: YAML string with full file statistics, or None if the checksum could not be generated
+    :rtype: str or None
     """
 
     ts_start = time.time()
@@ -341,8 +380,20 @@ def generate_fullstat_yaml(lfn, pfn):
 
 
 def check_integrity(fname, lfn, meta_data, print_timings):
-    """
-    Checks the integrity of a file given a set of metadata
+    """Verify the SHA-256 checksum of a file against its expected value in the metadata.
+
+    Updates the module-level ``count_succeeded``, ``count_failed``, and ``total_timing`` counters.
+
+    :param fname: physical file path to verify
+    :type fname: str
+    :param lfn: logical file name used to look up the expected checksum in ``meta_data``
+    :type lfn: str
+    :param meta_data: list of metadata dicts, each containing an ``_id`` and ``_attributes`` with ``checksum.value``
+    :type meta_data: list
+    :param print_timings: if True, write per-file checksum stats to the multipart monitoring directory
+    :type print_timings: bool
+    :return: True if the checksum matches, False otherwise
+    :rtype: bool
     """
 
     global count_succeeded
@@ -393,8 +444,12 @@ def check_integrity(fname, lfn, meta_data, print_timings):
 
 
 def multipart_out(s):
-    """
-    returns a multipart fh if required
+    """Write a string to the multipart monitoring directory file, if ``PEGASUS_MULTIPART_DIR`` is set.
+
+    Does nothing when the environment variable is not set.
+
+    :param s: the string to write
+    :type s: str
     """
     global multipart_fh
 
@@ -423,8 +478,18 @@ def multipart_out(s):
 
 
 def check_info_yaml(lfn, pfn, sha256, expected_sha256, success):
-    """
-    prints stats for monitord
+    """Write per-file integrity check stats in YAML format to the pegasus-monitord multipart directory.
+
+    :param lfn: logical file name
+    :type lfn: str
+    :param pfn: physical file path
+    :type pfn: str
+    :param sha256: computed SHA-256 checksum
+    :type sha256: str
+    :param expected_sha256: expected SHA-256 checksum from metadata
+    :type expected_sha256: str
+    :param success: whether the computed checksum matched the expected one
+    :type success: bool
     """
     multipart_out(
         ('  - lfn: "%s"\n    pfn: "%s"\n    sha256: %s\n    success: %s\n')
@@ -435,9 +500,7 @@ def check_info_yaml(lfn, pfn, sha256, expected_sha256, success):
 
 
 def dump_summary_yaml():
-    """
-    outputs a timing block for Pegasus monitoring
-    """
+    """Write an integrity-summary YAML block (succeeded count, failed count, total duration) to the pegasus-monitord multipart directory."""
     multipart_out(
         (
             "- integrity_summary:\n"

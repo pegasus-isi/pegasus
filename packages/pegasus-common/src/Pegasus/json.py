@@ -24,6 +24,13 @@ __all__ = (
 
 
 class _CustomJSONEncoder(_json.JSONEncoder):
+    """JSON encoder extended with Pegasus-specific type handling.
+
+    Supports serialization of :class:`uuid.UUID`, :class:`enum.Enum`,
+    :class:`pathlib.Path`, SQLAlchemy model instances, and objects that
+    implement ``__html__()``, ``__json__()``, or ``__table__`` (SQLAlchemy).
+    """
+
     def default(self, o):
         if isinstance(o, uuid.UUID):
             return str(o)
@@ -55,14 +62,15 @@ loads = _json.loads
 
 def load_all(s, *args, **kwargs) -> Iterator:
     """
-    Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a JSON document) to a Python dictionary.
+    Deserialize newline-delimited JSON (NDJSON) from ``s`` to an iterator of Python objects.
 
-    [extended_summary]
+    Each non-empty line of ``s`` is parsed as a separate JSON document.
 
-    :param obj: [description]
-    :type obj: Dict
-    :return: [description]
+    :param s: NDJSON string or open text file object to deserialize
+    :type s: str or file-like
+    :return: iterator of deserialized Python objects, one per JSON line
     :rtype: Iterator
+    :raises TypeError: if ``s`` is neither a string nor a file-like object
     """
     if isinstance(s, str):
         fp = io.StringIO(s)
@@ -83,14 +91,19 @@ dumps = partial(_json.dumps, cls=_CustomJSONEncoder)
 
 def dump_all(objs: List, fp=None, *args, **kwargs) -> Optional[str]:
     """
-    Serialize ``obj`` to a JSON formatted ``str``.
+    Serialize a list of objects to newline-delimited JSON (NDJSON).
 
-    [extended_summary]
+    Each object is serialized as a compact JSON line (no pretty-printing).
+    If ``fp`` is ``None``, the NDJSON string is returned; otherwise the
+    output is written to ``fp`` and ``None`` is returned.
 
-    :param objs: [description]
+    :param objs: list of objects to serialize
     :type objs: List
-    :return: [description]
-    :rtype: str
+    :param fp: open writable file object, or ``None`` to return a string, defaults to None
+    :type fp: file-like, optional
+    :return: NDJSON string if ``fp`` is None, otherwise None
+    :rtype: Optional[str]
+    :raises TypeError: if ``fp`` is not None and does not have a ``write`` method
     """
     if fp is None:
         fp = io.StringIO()

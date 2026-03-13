@@ -482,8 +482,8 @@ class TransferHandlerBase:
     protocol map (for example ["http->file"]) and implement the following
     methods:
       do_mkdirs()
-      do_transfer()
-      do_removes)_
+      do_transfers()
+      do_removes()
     """
 
     _name = "BaseHandler"

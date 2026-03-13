@@ -1,3 +1,10 @@
+"""
+Base command classes for Pegasus CLI tools.
+
+Provides :class:`Command`, :class:`LoggingCommand`, and :class:`CompoundCommand`
+as the foundation for all ``pegasus-*`` command-line tools.
+"""
+
 import logging
 import sys
 from optparse import OptionParser
@@ -8,6 +15,12 @@ log = logging.getLogger(__name__)
 
 
 class Command:
+    """Base class for all Pegasus CLI commands.
+
+    Subclasses set :attr:`description`, :attr:`usage`, and :attr:`epilog` class
+    attributes, then override :meth:`run` with their logic.
+    """
+
     description = None
     epilog = None
     usage = "Usage: %prog [options] [args]"
@@ -29,6 +42,12 @@ class Command:
 
 
 class LoggingCommand(Command):
+    """A :class:`Command` subclass that configures logging verbosity via ``-v/--verbose``.
+
+    Handles unhandled exceptions by printing them to stderr and exiting with code 1.
+    Pass ``-v`` once for INFO logging, twice for DEBUG.
+    """
+
     def __init__(self):
         Command.__init__(self)
         self.parser.add_option(
@@ -66,7 +85,13 @@ class LoggingCommand(Command):
 
 
 class CompoundCommand(Command):
-    "A Command with multiple sub-commands"
+    """A :class:`Command` with multiple named sub-commands.
+
+    Subclasses declare a :attr:`commands` list of ``(name, CommandClass)`` pairs
+    and an optional :attr:`aliases` dict mapping alias strings to canonical names.
+    The first non-option argument on the command line selects the sub-command to run.
+    """
+
     usage = "%prog COMMAND [options] [args]"
     commands = []
     aliases = {}

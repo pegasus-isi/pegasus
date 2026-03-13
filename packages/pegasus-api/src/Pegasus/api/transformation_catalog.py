@@ -185,18 +185,18 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :param pfn: physical file name, an absolute path given as a str or Path
         :type pfn: Union[str, Path]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
-        :type type: bool, optional
+        :type is_stageable: bool, optional
         :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=True`), defaults to False
         :type bypass_staging: bool, optional
         :param arch: architecture that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch`), defaults to None
         :type arch: Optional[Arch], optional
         :param os_type: name of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.OS`), defaults to None
         :type os_type: Optional[OS], optional
-        :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :param os_release: release of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None
         :type os_release: Optional[str], optional
-        :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None, defaults to None
+        :param os_version: version of os that this :py:class:`~Pegasus.api.transformation_catalog.Transformation` was compiled for, defaults to None
         :type os_version: Optional[str], optional
-        :param container: specify the name of the container or Container object to use, optional
+        :param container: specify the name of the container or Container object to use, defaults to None
         :type container: Optional[Union[Container, str]], optional
         :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
@@ -375,7 +375,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :param pfn: the physical filename of this transformation (e.g. :code:`"/usr/bin/tar"`), defaults to None
         :type pfn: Optional[Union[str, Path]]
         :param is_stageable: whether or not this transformation is stageable or installed, defaults to False
-        :type type: bool, optional
+        :type is_stageable: bool, optional
         :param bypass_staging: whether or not to bypass the stage in job of this executable (Note that this only works for transformations where :code:`is_stageable=True`), defaults to False
         :type bypass_staging: bool, optional
         :param arch: architecture that this transformation was compiled for (defined in :py:class:`~Pegasus.api.site_catalog.Arch` , e.g :code:`Arch.X86_64`), defaults to None
@@ -449,6 +449,11 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         self.checksum = checksum
 
     def _get_key(self):
+        """Return the unique string key identifying this transformation as ``namespace::name::version``.
+
+        :return: key in the form ``namespace::name::version``
+        :rtype: str
+        """
         return f"{self.namespace}::{self.name}::{self.version}"
 
     @_chained
@@ -603,7 +608,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
 class TransformationCatalog(Writable):
     """Maintains a list a :py:class:`~Pegasus.api.transformation_catalog.Transformation` s and
-    :py:class:~`Pegasus.api.transformation_catalog.Container` s
+    :py:class:`~Pegasus.api.transformation_catalog.Container` s
 
     .. code-block:: python
 

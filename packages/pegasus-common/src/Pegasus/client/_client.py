@@ -31,6 +31,16 @@ class PegasusClientError(Exception):
 
 
 def from_env(pegasus_home: str = None):
+    """Create a :class:`Client` by locating ``pegasus-version`` on PATH.
+
+    :param pegasus_home: explicit Pegasus installation directory; if omitted,
+        the parent of the directory containing ``pegasus-version`` is used
+    :type pegasus_home: str, optional
+    :return: configured Pegasus client
+    :rtype: Client
+    :raises ValueError: if ``pegasus_home`` is not given and ``pegasus-version``
+        cannot be found on PATH
+    """
     if not pegasus_home:
         pegasus_version_path = shutil.which("pegasus-version")
 
@@ -70,7 +80,41 @@ def get_planner_args(
     java_options: Optional[List[str]] = None,
     **properties: Dict[str, str],
 ):
-    """."""
+    """Build the argument list for ``pegasus-plan`` from keyword parameters.
+
+    Each positional/keyword argument maps to the corresponding ``pegasus-plan``
+    command-line flag.  Extra ``**properties`` key-value pairs are passed as
+    ``-Dkey=value`` Java system properties.
+
+    :param basename: workflow basename (``--basename``)
+    :param job_prefix: prefix for generated job names (``--job-prefix``)
+    :param conf: path to properties file (``--conf``)
+    :param cluster: clustering techniques to apply (``--cluster``)
+    :param sites: execution sites (``--sites``)
+    :param output_sites: sites where output files should be transferred (``--output-sites``)
+    :param staging_sites: mapping of execution site to staging site (``--staging-site``)
+    :param cache: replica catalog cache files (``--cache``)
+    :param input_dirs: directories to search for input files (``--input-dir``)
+    :param output_dir: directory for output files (``--output-dir``)
+    :param transformations_dir: directory containing transformation executables (``--transformations-dir``)
+    :param dir: base directory for the submit directory hierarchy (``--dir``)
+    :param relative_dir: path relative to ``dir`` for the submit directory (``--relative-dir``)
+    :param relative_submit_dir: path relative to ``dir`` for the submit directory, overrides ``relative_dir`` (``--relative-submit-dir``)
+    :param random_dir: if True adds ``--randomdir``; if a string/Path adds ``--randomdir=<value>``
+    :param inherited_rc_files: replica catalogs to inherit (``--inherited-rc-files``)
+    :param cleanup: cleanup strategy (``--cleanup``)
+    :param reuse: submit directories to reuse (``--reuse``)
+    :param verbose: verbosity level; each increment adds a ``-v`` flag
+    :param quiet: quietness level; each increment adds a ``-q`` flag
+    :param force: if True, adds ``--force``
+    :param force_replan: if True, adds ``--force-replan``
+    :param forward: options to forward to the job manager (``--forward``)
+    :param submit: if True, adds ``--submit`` to start the workflow immediately
+    :param java_options: JVM options passed as ``-X<opt>`` flags
+    :param properties: additional ``-Dkey=value`` Pegasus/Java properties
+    :return: list of command-line arguments suitable for passing to ``pegasus-plan``
+    :rtype: list
+    """
     cmd = []
 
     for k, v in properties.items():
@@ -212,12 +256,19 @@ def get_planner_args(
 
 class Client:
     """
-    Pegasus client.
-
     Pegasus workflow management client.
+
+    Wraps the Pegasus CLI tools (``pegasus-plan``, ``pegasus-run``,
+    ``pegasus-status``, etc.) with threaded streaming I/O so that tool
+    output can be logged in real time while also being captured for
+    programmatic use.
     """
 
     def __init__(self, pegasus_home: str):
+        """
+        :param pegasus_home: root directory of the Pegasus installation
+        :type pegasus_home: str
+        """
         self._log = logging.getLogger("pegasus.client")
         self._log.addHandler(console_handler)
         self._log.propagate = False
@@ -265,6 +316,20 @@ class Client:
         java_options: List[str] = None,
         **kwargs,
     ):
+        """Invoke ``pegasus-plan`` to generate an executable workflow.
+
+        Arguments mirror :func:`get_planner_args`.  See that function for
+        parameter descriptions.  Extra ``**kwargs`` are forwarded as
+        ``-Dkey=value`` Pegasus properties.
+
+        :param abstract_workflow: path to the abstract workflow YAML file;
+            if omitted, ``pegasus-plan`` defaults to ``workflow.yml`` in the
+            current directory
+        :type abstract_workflow: str, optional
+        :return: :class:`Workflow` instance pointing at the generated submit directory
+        :rtype: Workflow
+        :raises PegasusClientError: if ``pegasus-plan`` exits with a non-zero status
+        """
         cmd = [self._plan]
         cmd.extend(
             get_planner_args(
@@ -335,6 +400,18 @@ class Client:
         return workflow
 
     def run(self, submit_dir: str, verbose: int = 0, grid: bool = False):
+        """Submit a planned workflow by invoking ``pegasus-run``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param verbose: verbosity level; each increment adds a ``-v`` flag, defaults to 0
+        :type verbose: int, optional
+        :param grid: if True, passes ``--grid`` to enable grid execution, defaults to False
+        :type grid: bool, optional
+        :return: parsed JSON output from ``pegasus-run``
+        :rtype: dict
+        :raises PegasusClientError: if ``pegasus-run`` exits with a non-zero status
+        """
         cmd = [self._run]
 
         if verbose:
@@ -366,6 +443,16 @@ class Client:
         return rv.json
 
     def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
+        """Print the current workflow status by invoking ``pegasus-status``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param long: if True, passes ``--long`` for detailed output, defaults to False
+        :type long: bool, optional
+        :param verbose: verbosity level; each increment adds a ``-v`` flag, defaults to 0
+        :type verbose: int, optional
+        :raises PegasusClientError: if ``pegasus-status`` exits with a non-zero status
+        """
         cmd = [self._status]
 
         if long:
@@ -384,8 +471,14 @@ class Client:
         status_output: str, root_wf_name: str
     ) -> Union[dict, None]:
         """
-        Internal method for parsing pegasus-status output. Returns None if pegasus-status
-        if pegasus-status output is not recognized
+        Internal method for parsing ``pegasus-status`` output.
+
+        :param status_output: text output from ``pegasus-status -l``
+        :type status_output: str
+        :param root_wf_name: basename of the root DAG (used to match the status line)
+        :type root_wf_name: str
+        :return: parsed status dict, or None if the output format is not recognized
+        :rtype: dict or None
         """
         # TODO: account for hierarchical workflows
         # match output from pegasus-status -l
@@ -506,18 +599,31 @@ class Client:
         return parsed_status_output
 
     def get_status(self, root_wf_name: str, submit_dir: str) -> Union[dict, None]:
-        """Returns a dict containing pegasus-status output"""
-        """cmd = [self._status, "--long", submit_dir]
-        result = self._exec(cmd, stream_stdout=False, stream_stderr=False)
+        """Return a dict containing the current workflow status.
 
-        return Client._parse_status_output(
-            status_output=result.stdout, root_wf_name=root_wf_name
-        )"""
-
+        :param root_wf_name: basename of the root DAG
+        :type root_wf_name: str
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :return: status dictionary or None if status cannot be determined
+        :rtype: dict or None
+        """
         return self._retrieve_status.fetch_status(submit_dir, json=True)
 
     def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
-        """Prints progress bar and blocks until workflow completes or fails"""
+        """Block until the workflow completes or fails, printing a live progress bar.
+
+        Polls :meth:`get_status` every ``delay`` seconds and renders a colored
+        ASCII progress bar.  Can be interrupted with Ctrl-C without affecting
+        the running workflow.
+
+        :param root_wf_name: basename of the root DAG
+        :type root_wf_name: str
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param delay: polling interval in seconds, defaults to 5
+        :type delay: int, optional
+        """
 
         # color strings for terminal output
         blue = lambda s: "\x1b[1;34m" + s + "\x1b[0m"
@@ -597,6 +703,14 @@ class Client:
             )
 
     def remove(self, submit_dir: str, verbose: int = 0):
+        """Remove a running or held workflow by invoking ``pegasus-remove``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param verbose: verbosity level; each increment adds a ``-v`` flag, defaults to 0
+        :type verbose: int, optional
+        :raises PegasusClientError: if ``pegasus-remove`` exits with a non-zero status
+        """
         cmd = [self._remove]
 
         if verbose:
@@ -614,6 +728,18 @@ class Client:
         json_mode: bool = False,
         traverse_all: bool = False,
     ):
+        """Analyze a workflow by invoking ``pegasus-analyzer``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param verbose: verbosity level; each increment adds a ``-v`` flag, defaults to 0
+        :type verbose: int, optional
+        :param json_mode: if True, passes ``--json`` for machine-readable output, defaults to False
+        :type json_mode: bool, optional
+        :param traverse_all: if True, passes ``-T`` to traverse all sub-workflows, defaults to False
+        :type traverse_all: bool, optional
+        :raises PegasusClientError: if ``pegasus-analyzer`` exits with a non-zero status
+        """
         cmd = [self._analyzer]
         if verbose:
             cmd.append("-" + "v" * verbose)
@@ -628,6 +754,14 @@ class Client:
         self._exec(cmd)
 
     def statistics(self, submit_dir: str, verbose: int = 0):
+        """Print workflow statistics by invoking ``pegasus-statistics``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param verbose: verbosity level; each increment adds a ``-v`` flag, defaults to 0
+        :type verbose: int, optional
+        :raises PegasusClientError: if ``pegasus-statistics`` exits with a non-zero status
+        """
         cmd = [self._statistics]
 
         if verbose:
@@ -652,7 +786,26 @@ class Client:
         width: int = None,
         height: int = None,
     ):
+        """Generate a GraphViz dot representation of a workflow by invoking ``pegasus-graphviz``.
 
+        :param workflow_file: path to the workflow YAML file
+        :type workflow_file: str
+        :param include_files: if True, passes ``--files`` to include data nodes, defaults to True
+        :type include_files: bool, optional
+        :param no_simplify: if False, passes ``--nosimplify`` to disable edge simplification, defaults to True
+        :type no_simplify: bool, optional
+        :param label: node label attribute (``--label``), defaults to ``"label"``
+        :type label: str, optional
+        :param output: output file path (``--output``), defaults to None (stdout)
+        :type output: str, optional
+        :param remove: transformation names to exclude from the graph (``--remove``), defaults to None
+        :type remove: List[str], optional
+        :param width: output graph width in inches (``--width``), defaults to None
+        :type width: int, optional
+        :param height: output graph height in inches (``--height``), defaults to None
+        :type height: int, optional
+        :raises PegasusClientError: if ``pegasus-graphviz`` exits with a non-zero status
+        """
         cmd = [self._graph]
 
         cmd.append(workflow_file)
@@ -738,6 +891,19 @@ class Client:
                 break
 
     def _exec(self, cmd, stream_stdout=True, stream_stderr=False):
+        """Execute a command with threaded stdout/stderr stream handlers.
+
+        :param cmd: command and arguments to execute
+        :type cmd: list
+        :param stream_stdout: if True, log stdout at INFO level, defaults to True
+        :type stream_stdout: bool, optional
+        :param stream_stderr: if True, log stderr at ERROR level, defaults to False
+        :type stream_stderr: bool, optional
+        :return: execution result containing exit code and captured output
+        :rtype: Result
+        :raises ValueError: if ``cmd`` is empty
+        :raises PegasusClientError: if the command exits with a non-zero status
+        """
         if not cmd:
             raise ValueError("cmd is required")
 
@@ -789,11 +955,25 @@ class Client:
 
 
 class WorkflowInstanceError(Exception):
-    pass
+    """Raised when a :class:`Workflow` instance cannot be initialised (e.g. missing braindump file)."""
 
 
 class Workflow:
+    """Represents a planned or running Pegasus workflow rooted at a submit directory.
+
+    Binds convenience methods (``run``, ``status``, ``remove``, ``analyze``,
+    ``statistics``) to the submit directory so callers do not need to pass it
+    explicitly on each call.
+    """
+
     def __init__(self, submit_dir: str, client: Client = None):
+        """
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :param client: Pegasus client to use; if None, :func:`from_env` is called, defaults to None
+        :type client: Client, optional
+        :raises WorkflowInstanceError: if the braindump file cannot be loaded from ``submit_dir``
+        """
         self._log = logging.getLogger("pegasus.client.workflow")
         self._log.addHandler(console_handler)
         self._log.propagate = False
@@ -827,6 +1007,14 @@ class Workflow:
 
     @staticmethod
     def _get_braindump(submit_dir: str):
+        """Load and return the braindump from ``submit_dir/braindump.yml``.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :return: parsed braindump dataclass
+        :rtype: Braindump
+        :raises WorkflowInstanceError: if the braindump file is not found
+        """
         try:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 bd = braindump.load(f)
@@ -840,6 +1028,16 @@ class Result:
     """An object to store outcome from the execution of a script."""
 
     def __init__(self, cmd, exit_code, stdout_bytes, stderr_bytes):
+        """
+        :param cmd: the command that was executed
+        :type cmd: list
+        :param exit_code: exit code returned by the process
+        :type exit_code: int
+        :param stdout_bytes: raw bytes captured from stdout
+        :type stdout_bytes: bytes
+        :param stderr_bytes: raw bytes captured from stderr
+        :type stderr_bytes: bytes
+        """
         self.cmd = cmd
         self.exit_code = exit_code
         self._stdout_bytes = stdout_bytes
@@ -848,9 +1046,13 @@ class Result:
         self._yaml = None
 
     def raise_exit_code(self):
+        """Raise :exc:`ValueError` if the exit code is non-zero.
+
+        :raises ValueError: if ``exit_code != 0``
+        """
         if self.exit_code == 0:
             return
-        raise ValueError("Commad failed", self)
+        raise ValueError("Command failed", self)
 
     @property
     def output(self):
@@ -903,7 +1105,7 @@ class Result:
 
     @property
     def yaml_all(self):
-        """Return standard out as YAML."""
+        """Return standard out as an iterator over all YAML documents in the stream."""
         if self._stdout_bytes:
             if not self._yaml:
                 self._yaml = yaml.load_all(self.output)

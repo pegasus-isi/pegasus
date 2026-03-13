@@ -49,7 +49,7 @@ class Notifications:
         notifications_timeout=0,
     ):
         """
-        This function initialized the Notifications class.
+        Initialize the Notifications class.
         """
         self._active_notifications = []
         self._pending_notifications = []
@@ -130,7 +130,7 @@ class Notifications:
 
     def service_notifications(self):
         """
-        This function services notifications. It chekcs the notifications
+        This function services notifications. It checks the notifications
         in the active list to see if they have finished. If so, it copies
         the stdout/stderr from these notifications to the
         monitord-notifications.log file. For notifications in the

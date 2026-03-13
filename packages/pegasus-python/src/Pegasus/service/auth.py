@@ -1,3 +1,10 @@
+"""
+Authentication backends for the Pegasus service.
+
+:class:`NoAuthentication` is used in single-user deployments; :class:`PAMAuthentication`
+delegates to the system PAM stack for multi-user or remote deployments.
+"""
+
 import logging
 import os
 
@@ -10,6 +17,8 @@ log = logging.getLogger(__name__)
 
 
 class BaseAuthentication:
+    """Abstract base class for Pegasus service authentication backends."""
+
     def __init__(self, username, password):
         self.username = username
         self.password = password
@@ -22,6 +31,8 @@ class BaseAuthentication:
 
 
 class NoAuthentication(BaseAuthentication):
+    """Authentication backend that always succeeds, used for single-user service deployments."""
+
     def __init__(self, *args):
         # For no auth. username and password is not required
         pass
@@ -39,6 +50,8 @@ class NoAuthentication(BaseAuthentication):
 
 
 class PAMAuthentication(BaseAuthentication):
+    """Authentication backend that validates credentials via the system PAM stack."""
+
     def authenticate(self):
         try:
             if not self.username:

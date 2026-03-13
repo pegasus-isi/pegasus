@@ -1,3 +1,10 @@
+"""
+Workflow status monitoring via HTCondor queue and DAGMan log parsing.
+
+Provides :class:`Status`, which queries ``condor_q`` for live job state and
+parses ``*.dag.dagman.out`` files for per-DAG progress counters.
+"""
+
 import logging
 import os
 import re
@@ -15,23 +22,33 @@ console_handler.setFormatter(logging.Formatter("%(message)s"))
 
 
 class Status:
+    """Retrieves and displays the status of one or more Pegasus workflows.
+
+    Combines live HTCondor queue data (via ``condor_q``) with DAGMan progress
+    counters parsed from ``*.dag.dagman.out`` log files.  Results can be
+    printed to the terminal or returned as a structured dictionary.
+    """
+
     def __init__(self):
+        """Initialize status keys, job-state constants, and the empty status output structure.
+
+        The ``status_output`` dictionary uses the following keys:
+
+        * ``unready``: jobs blocked by unsatisfied dependencies
+        * ``ready``: jobs ready for submission
+        * ``pre``: PRE-scripts currently running
+        * ``queued``: jobs submitted to HTCondor
+        * ``post``: POST-scripts currently running
+        * ``succeeded``: jobs that completed successfully
+        * ``failed``: jobs that completed with failure
+        * ``percent_done``: percentage of jobs that have succeeded
+        * ``state``: overall workflow state (``Running``, ``Success``, or ``Failure``)
+        * ``dagname``: name of the DAG file
+        """
         self.log = logging.getLogger(__name__)
         self.log.addHandler(console_handler)
         self.log.propagate = False
 
-        """Keys are defined as follows
-            * `unready`: Jobs blocked by dependencies
-            * `ready`: Jobs ready for submission
-            * `pre`: PRE-Scripts running
-            * `queued`: Submitted jobs
-            * `post`: POST-Scripts running
-            * `succeeded`: Job completed with success
-            * `failed`: Jobs completed with failure
-            * `percent_done`: Success percentage
-            * `state`: Workflow state
-            * `dagname`: Name of workflow
-        """
         self.K_UNREADY = "unready"
         self.K_READY = "ready"
         self.K_PRE = "pre"
@@ -134,10 +151,27 @@ class Status:
         noqueue: bool = False,
         debug: bool = False,
     ) -> Union[Dict, None]:
-        """
-        Shows the workflow status or returns a Dict containing status output
-        :return: current status information
-        :rtype: Union[dict, None]
+        """Fetch and optionally display workflow status.
+
+        When ``json=True``, returns a structured dictionary instead of printing.
+
+        :param submit_dir: path to the workflow submit directory; if omitted,
+            all Pegasus jobs visible in ``condor_q`` are shown, defaults to None
+        :type submit_dir: str, optional
+        :param json: if True, return status as a dict instead of printing, defaults to False
+        :type json: bool, optional
+        :param long: if True, show extended columns (site, DAG name), defaults to False
+        :type long: bool, optional
+        :param dirs: if True, include relative sub-workflow directory paths in DAG names, defaults to False
+        :type dirs: bool, optional
+        :param legend: if True, print a column legend above the status table, defaults to False
+        :type legend: bool, optional
+        :param noqueue: if True, skip the ``condor_q`` query, defaults to False
+        :type noqueue: bool, optional
+        :param debug: if True, print the ``condor_q`` command used, defaults to False
+        :type debug: bool, optional
+        :return: status dictionary when ``json=True``, otherwise None
+        :rtype: Union[Dict, None]
         """
         if submit_dir:
             self.submit_dir_entered = True
@@ -172,6 +206,14 @@ class Status:
         return None
 
     def get_braindump(self, submit_dir: str):
+        """Load the braindump file from ``submit_dir`` and populate workflow identity fields.
+
+        :param submit_dir: path to the workflow submit directory
+        :type submit_dir: str
+        :return: parsed braindump dataclass
+        :rtype: Braindump
+        :raises FileNotFoundError: if ``braindump.yml`` is not found or cannot be parsed
+        """
         try:
             with (Path(submit_dir) / "braindump.yml").open("r") as f:
                 bd = braindump.load(f)
@@ -184,6 +226,7 @@ class Status:
         return bd
 
     def show_debug_info(self):
+        """Print the ``condor_q`` command that was used to query the HTCondor queue."""
         print("condor_q command used to retrieve jobs in Condor Q :")
         print("{} {}".format(shutil.which("condor_q"), " ".join(self.q_cmd[1:])))
 
@@ -197,6 +240,15 @@ class Status:
         return condor._q(self.q_cmd)
 
     def get_condor_q_dict(self, condor_jobs: list):
+        """Process the raw ``condor_q`` job list and store it under ``status_output['condor_jobs']``.
+
+        Jobs are grouped by workflow UUID. Each entry includes a subset of
+        attributes defined by :attr:`job_attr_set` plus a resolved
+        ``JobStatusName`` string.
+
+        :param condor_jobs: list of job attribute dicts returned by ``condor_q -json``
+        :type condor_jobs: list
+        """
         d = defaultdict(list)
         for job in condor_jobs:
             status_name = self.job_status_codes[job["JobStatus"]]
@@ -431,6 +483,19 @@ class Status:
         return self.status_output
 
     def parse_dagman_file(self, dagman_file, dag_name, dag_dict):
+        """Parse a ``*.dag.dagman.out`` file and update ``status_output['dags'][dag_dict]``.
+
+        Reads DAG status, node counts, and per-state job counts from the
+        DAGMan log file.  Also detects workflow exit status lines to set the
+        final ``state`` (``Running``, ``Success``, or ``Failure``).
+
+        :param dagman_file: absolute path to the ``*.dag.dagman.out`` file
+        :type dagman_file: str
+        :param dag_name: display name for this DAG (e.g. ``workflow.dag``)
+        :type dag_name: str
+        :param dag_dict: key under ``status_output['dags']`` to update (``"root"`` or sub-DAG name)
+        :type dag_dict: str
+        """
         # parsing the dagman.out file
         with open(dagman_file) as f:
             for line in f:
@@ -662,6 +727,15 @@ class Status:
         print(summary_line[:-1].rstrip(" ") + ")")
 
     def get_dag_tree_structure(self, dagman_list, submit_dir):
+        """Build a nested hierarchical structure from a list of dagman log file paths.
+
+        :param dagman_list: list of absolute paths to ``*.dag.dagman.out`` files
+        :type dagman_list: list
+        :param submit_dir: root submit directory path (used to compute relative paths)
+        :type submit_dir: str
+        :return: list of ``(dag_path, display_name)`` tuples in tree order (excluding root)
+        :rtype: list
+        """
         root_dir_name = submit_dir.rstrip("/").split("/")[-1]
         dags = [each_path[each_path.find(root_dir_name) :] for each_path in dagman_list]
         root_dag_name = self.status_output["dags"]["root"]["dagname"]
@@ -699,6 +773,17 @@ class Status:
         return list(self.print_tree(default_to_regular(new_path_dict)))
 
     def print_tree(self, paths: dict, prefix: str = ""):
+        """Recursively yield ``(dag_path, display_name)`` tuples for a nested DAG tree.
+
+        Uses Unicode box-drawing characters to visualize the hierarchy.
+
+        :param paths: nested dict mapping DAG path strings to child dicts
+        :type paths: dict
+        :param prefix: indentation prefix accumulated during recursion, defaults to ``""``
+        :type prefix: str, optional
+        :return: generator of ``(dag_path, display_name)`` tuples
+        :rtype: Generator
+        """
         space = "  "
         bar = "\u2502 "
         t = "\u251c\u2500"

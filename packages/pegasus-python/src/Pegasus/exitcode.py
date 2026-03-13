@@ -1,3 +1,12 @@
+"""
+Implementation of ``pegasus-exitcode``: post-job processing that inspects
+kickstart output files to determine job success or failure.
+
+Rotates ``.out``/``.err`` files, checks cluster-summary and invocation records,
+scans for user-supplied success/failure messages, and optionally generates a
+``.meta`` file with output-file checksums.
+"""
+
 import atexit
 import datetime
 import json
@@ -23,7 +32,7 @@ tmp_log_files = []
 
 
 class JobFailed(Exception):
-    pass
+    """Raised when a job is determined to have failed during exitcode processing."""
 
 
 def rotate_file(outfile, errfile):
@@ -69,6 +78,15 @@ def rotate_file(outfile, errfile):
 
 
 def readfile(filename):
+    """Read and return the full contents of *filename*.
+
+    Returns an empty string if *filename* is ``None`` or the file does not exist.
+
+    :param filename: Path to the file to read, or ``None``.
+    :type filename: str or None
+    :return: File contents, or ``""`` if unavailable.
+    :rtype: str
+    """
     # If the file does not exits, return empty string
     if filename is None or not os.path.isfile(filename):
         return ""
@@ -138,6 +156,16 @@ def check_cluster_summary(record):
 
 
 def check_kickstart_records(txt):
+    """Scan *txt* for kickstart invocation records and verify all tasks exited cleanly.
+
+    Checks for integrity errors first, then iterates YAML ``raw:`` fields and XML
+    ``<status raw="..."/>`` elements. Raises :class:`JobFailed` if any task
+    exited non-zero or if no invocation records are found.
+
+    :param txt: Raw content of the kickstart ``.out`` file.
+    :type txt: str
+    :raises JobFailed: If any task failed or no invocation records are present.
+    """
     # Check the exitcodes of all kickstart records
     regex = re.compile(r'raw="(-?[0-9]+)"')
     succeeded = 0
@@ -184,6 +212,17 @@ def check_kickstart_records(txt):
 
 
 def unquote_message(message):
+    """Decode a Pegasus-quoted message string.
+
+    ``+`` is decoded as a space; ``\\+`` as a literal ``+``; other backslash
+    sequences are passed through unchanged.
+
+    :param message: The encoded message string.
+    :type message: str
+    :return: The decoded message string.
+    :rtype: str
+    """
+
     def genchars():
         yield from message
 
@@ -210,6 +249,13 @@ def unquote_message(message):
 
 
 def unquote_messages(messages):
+    """Decode a list of Pegasus-quoted message strings using :func:`unquote_message`.
+
+    :param messages: List of encoded message strings.
+    :type messages: list[str]
+    :return: List of decoded message strings.
+    :rtype: list[str]
+    """
     return [unquote_message(m) for m in messages]
 
 
@@ -229,7 +275,7 @@ def has_any_failure_messages(stdio, messages):
 
 
 def has_all_success_messages(stdio, messages):
-    """Return true if any of the messages don't appear in the files"""
+    """Return True if all *messages* appear somewhere in *stdio*, or if *messages* is empty."""
     if len(messages) == 0:
         return True
 
@@ -284,6 +330,35 @@ def exitcode(
     wf_metadata_log=None,
     generate_meta=True,
 ):
+    """Evaluate the success or failure of a job by inspecting its output file.
+
+    Performs the following checks in order:
+
+    1. Rotates ``.out``/``.err`` to ``.out.NNN``/``.err.NNN`` (unless *rename* is False).
+    2. Checks the DAGMan-reported exit status (*dagman_job_status*).
+    3. Checks that stdout is non-empty (when *check_invocations* is True).
+    4. Scans for user-supplied *failure_messages* and *success_messages*.
+    5. Validates cluster-summary records or individual kickstart invocation records.
+    6. Optionally generates a ``.meta`` file and/or appends to *wf_metadata_log*.
+
+    :param outfile: Path to the ``.out`` file (must end in ``.out``).
+    :type outfile: str
+    :param check_invocations: Whether to require kickstart invocation records.
+    :type check_invocations: bool
+    :param dagman_job_status: Exit code reported by DAGMan, or ``None``.
+    :type dagman_job_status: int or None
+    :param rename: Whether to rotate the output file. Defaults to ``True``.
+    :type rename: bool
+    :param failure_messages: Strings whose presence in stdout/stderr marks failure.
+    :type failure_messages: list[str]
+    :param success_messages: Strings that must all appear in stdout/stderr.
+    :type success_messages: list[str]
+    :param wf_metadata_log: Path to append workflow-level file metadata records.
+    :type wf_metadata_log: str or None
+    :param generate_meta: Whether to write a ``.meta`` checksums file.
+    :type generate_meta: bool
+    :raises JobFailed: If the job is determined to have failed.
+    """
     if not os.path.isfile(outfile):
         raise JobFailed("%s does not exist" % outfile)
 
@@ -352,6 +427,16 @@ def exitcode(
 
 
 def parse_metadata_from_kickstart(outfile):
+    """Parse output file metadata from kickstart invocation records.
+
+    Reads kickstart records from *outfile* and extracts :class:`~Pegasus.monitoring.metadata.FileMetadata`
+    objects for each output file referenced in invocation records.
+
+    :param outfile: Path to the (possibly rotated) kickstart ``.out`` file.
+    :type outfile: str
+    :return: List of file metadata objects for output files.
+    :rtype: list
+    """
     # First assume we will find rotated file
     parser = kickstart_parser.Parser(outfile)
     kickstart_output = parser.parse_stampede()
@@ -525,6 +610,10 @@ def main(args):
 
 @atexit.register
 def remove_temporary_files():
+    """Remove temporary stdout/stderr log files created during this process run.
+
+    Registered via :func:`atexit.register`; called automatically on interpreter exit.
+    """
     # cleaning temporary files
     for tmp_file in tmp_log_files:
         os.remove(tmp_file.name)

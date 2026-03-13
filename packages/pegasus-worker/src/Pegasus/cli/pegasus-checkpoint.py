@@ -36,6 +36,13 @@ PEGASUS_CHECKPOINT_PID_FILE = "pegasus_checkpoint.pid"
 
 
 def parse_args(args: List[str] = sys.argv[1:]) -> argparse.Namespace:
+    """Parse command-line arguments for pegasus-checkpoint.
+
+    :param args: command-line argument list; defaults to ``sys.argv[1:]``
+    :type args: List[str]
+    :return: parsed arguments namespace
+    :rtype: argparse.Namespace
+    """
     parser = argparse.ArgumentParser(
         description="Periodically transfer checkpoints back to staging site."
     )
@@ -195,7 +202,6 @@ class CheckpointWorker(threading.Thread):
         Wait for notification to start working. Once notified, create the
         checkpoint archive file and transfer back to staging site with either
         pegasus-transfer or condor_chirp.
-        self.log.debug("{} started".format(self.name))
         """
         while True:
             # wait till we are notified

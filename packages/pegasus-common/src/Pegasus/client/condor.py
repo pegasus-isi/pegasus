@@ -1,3 +1,9 @@
+"""
+Condor queue utilities used by the Pegasus client status layer.
+
+Provides helpers for executing ``condor_q`` commands and streaming their output.
+"""
+
 import logging
 import subprocess
 import threading
@@ -62,6 +68,17 @@ def _handle_stream(
 
 
 def _exec(cmd, stream_stdout=True, stream_stderr=False):
+    """Execute a command and capture its output via threaded stream handlers.
+
+    :param cmd: command and arguments to execute
+    :type cmd: list
+    :param stream_stdout: if True, log stdout at INFO level, defaults to True
+    :type stream_stdout: bool, optional
+    :param stream_stderr: if True, log stderr at ERROR level, defaults to False
+    :type stream_stderr: bool, optional
+    :return: execution result containing exit code and captured output
+    :rtype: cli.Result
+    """
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stream_handlers = []
     # out is not synchronized, don't access until after stdout_handler completes
@@ -96,8 +113,14 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
 
 
 def _q(cmd):
-    """Returns the output of condor_q cmd in JSON format"""
+    """Execute a ``condor_q`` command and return its JSON output.
 
+    :param cmd: condor_q command and arguments (must include ``-json`` flag)
+    :type cmd: list
+    :return: parsed JSON output from condor_q, or None if no jobs were found
+    :rtype: list or None
+    :raises ValueError: if cmd is empty
+    """
     if not cmd:
         raise ValueError("cmd is required")
     rv = _exec(cmd=cmd)
