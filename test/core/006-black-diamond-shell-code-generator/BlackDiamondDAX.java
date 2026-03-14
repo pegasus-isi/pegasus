@@ -1,25 +1,23 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 import edu.isi.pegasus.planner.dax.*;
 
 public class BlackDiamondDAX {
 
     /**
      * Create an example DIAMOND DAX
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -30,16 +28,14 @@ public class BlackDiamondDAX {
 
         try {
             Diamond(args[0]).writeToFile(args[1]);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private static ADAG Diamond(String pegasus_location) throws Exception {
 
-        java.io.File cwdFile = new java.io.File (".");
+        java.io.File cwdFile = new java.io.File(".");
         String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("blackdiamond");
@@ -60,16 +56,25 @@ public class BlackDiamondDAX {
         fd.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("rhel").setOSVersion("7");
+        preprocess
+                .setArchitecture(Executable.ARCH.X86_64)
+                .setOS(Executable.OS.LINUX)
+                .setOSRelease("rhel")
+                .setOSVersion("7");
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX).setOSRelease("rhel").setOSVersion("7");
+        findrange
+                .setArchitecture(Executable.ARCH.X86_64)
+                .setOS(Executable.OS.LINUX)
+                .setOSRelease("rhel")
+                .setOSVersion("7");
         findrange.setInstalled(true);
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
-        Executable analyze = new Executable("pegasus", "analyze", "4.0").setOSRelease("rhel").setOSVersion("7");
+        Executable analyze =
+                new Executable("pegasus", "analyze", "4.0").setOSRelease("rhel").setOSVersion("7");
         analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");

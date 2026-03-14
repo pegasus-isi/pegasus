@@ -1,25 +1,23 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 import edu.isi.pegasus.planner.dax.*;
 
 public class HierarchicalDiamonds {
 
     /**
      * Create an example DIAMOND DAX
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -31,17 +29,15 @@ public class HierarchicalDiamonds {
         try {
             TopDiamond(args[0]).writeToFile("top.dax");
             SubDiamond(args[0]).writeToFile("sub.dax");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private static ADAG TopDiamond(String pegasus_location) throws Exception {
 
-        java.io.File cwdFile = new java.io.File (".");
-        String cwd = cwdFile.getCanonicalPath(); 
+        java.io.File cwdFile = new java.io.File(".");
+        String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("topdiamond");
 
@@ -112,11 +108,11 @@ public class HierarchicalDiamonds {
         dax.addDependency("j3", "j4");
         return dax;
     }
-    
+
     private static ADAG SubDiamond(String pegasus_location) throws Exception {
 
-        java.io.File cwdFile = new java.io.File (".");
-        String cwd = cwdFile.getCanonicalPath(); 
+        java.io.File cwdFile = new java.io.File(".");
+        String cwd = cwdFile.getCanonicalPath();
 
         ADAG dax = new ADAG("subdiamond");
 

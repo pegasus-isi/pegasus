@@ -1,57 +1,51 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2008 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
+import edu.isi.pegasus.planner.dax.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.isi.pegasus.planner.dax.*;
-
 public class RosettaDAX {
 
-    public void constructDAX(String daxfile){
+    public void constructDAX(String daxfile) {
 
-        try{
-            java.io.File cwdFile = new java.io.File (".");
-            String cwd = cwdFile.getCanonicalPath(); 
+        try {
+            java.io.File cwdFile = new java.io.File(".");
+            String cwd = cwdFile.getCanonicalPath();
 
-            // construct a dax object 
+            // construct a dax object
             ADAG dax = new ADAG("rosetta");
 
             // executables and transformations
-            // including this in the dax is a new feature in 
+            // including this in the dax is a new feature in
             // 3.0. Earlier you had a standalone transformation catalog
             Executable exe = new Executable("rosetta.exe");
-            
-            // the executable is not installed on the remote sites, so 
+
+            // the executable is not installed on the remote sites, so
             // pick it up from the local file system
             exe.setInstalled(false);
             exe.addPhysicalFile("file://" + cwd + "/rosetta.exe", "local");
-            
+
             // cluster the jobs together to lessen the grid overhead
             exe.addProfile("pegasus", "clusters.size", "3");
-            
+
             // the dag needs to know about the executable to handle
-            // transferrring 
+            // transferrring
             dax.addExecutable(exe);
 
             // all jobs depend on the flatfile databases
             List<File> inputs = new ArrayList<File>();
-            recursiveAddToFileCollection(inputs,
-                                         "minirosetta_database",
-                                         "Rosetta Database");
+            recursiveAddToFileCollection(inputs, "minirosetta_database", "Rosetta Database");
             dax.addFiles(inputs); // for replica catalog
 
             // and some top level files
@@ -66,7 +60,7 @@ public class RosettaDAX {
 
             java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
-            //for (int i = 0; i < pdbs.length; i++) {
+            // for (int i = 0; i < pdbs.length; i++) {
             for (int i = 0; i < 2; i++) {
                 java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
@@ -75,7 +69,7 @@ public class RosettaDAX {
                 }
             }
 
-            //write DAX to file
+            // write DAX to file
             dax.writeToFile(daxfile);
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,13 +79,13 @@ public class RosettaDAX {
     /*
      * This adds all the files in a directory to a set which can be used for job
      * data dependencies
-     */ 
+     */
     private void recursiveAddToFileCollection(List<File> list, String dir, String desc) {
         try {
             java.io.File d = new java.io.File(dir);
             String items[] = d.list();
             for (int i = 0; i < items.length; i++) {
-                if (items[i].substring(0,1).equals(".")) {
+                if (items[i].substring(0, 1).equals(".")) {
                     continue;
                 }
                 java.io.File f = new java.io.File(dir + "/" + items[i]);
@@ -100,15 +94,13 @@ public class RosettaDAX {
                     File input = new File(dir + "/" + items[i], File.LINK.INPUT);
                     input.addPhysicalFile("file://" + f.getAbsolutePath(), "local");
                     list.add(input);
-                }
-                else {
+                } else {
                     recursiveAddToFileCollection(list, f.getPath(), desc);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private Job createJobFromPDB(ADAG dax, java.io.File pdb, List<File> inputs) {
@@ -120,7 +112,7 @@ public class RosettaDAX {
             id = id.replaceAll(".pdb", "");
 
             job = new Job(id, "rosetta.exe");
-            
+
             // general rosetta inputs (database, design, ...)
             job.uses(inputs, File.LINK.INPUT);
 
@@ -129,7 +121,7 @@ public class RosettaDAX {
             pdbFile.addPhysicalFile("file://" + pdb.getAbsolutePath(), "local");
             job.uses(pdbFile, File.LINK.INPUT); // the job uses the file
             dax.addFile(pdbFile); // the dax needs to know about it to handle transfers
-            
+
             // outputs
             File outFile = new File(pdb.getName() + ".score.sc");
             job.uses(outFile, File.LINK.OUTPUT); // the job uses the file
@@ -153,7 +145,6 @@ public class RosettaDAX {
         return job;
     }
 
-
     /**
      * Usage : RosettaDAX daxfile
      *
@@ -168,6 +159,4 @@ public class RosettaDAX {
             System.out.println("Usage: RosettaDAX <outputdaxfile>");
         }
     }
-
 }
-
