@@ -50,7 +50,7 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DeleteLogStreamRespo
  * @author Karan Vahi
  */
 public class CloudWatchLog {
-    
+
     public static final String TASK_STDERR_SEPARATOR="########################[AWS BATCH] TASK STDERR ########################";
 
     private Logger mLogger;
@@ -60,7 +60,7 @@ public class CloudWatchLog {
     private CloudWatchLogsClient mCWL;
 
     private String mLogGroup;
-    
+
     private final boolean mDeleteLogstreamAfterRetrieval;
 
     /**
@@ -90,7 +90,7 @@ public class CloudWatchLog {
      * Retrieves a cloud watch log for an AWS Job
      *
      * @param j AWSJob
-     * 
+     *
      * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
     public Tuple<File,File> retrieve( AWSJob j ){
@@ -101,7 +101,7 @@ public class CloudWatchLog {
      *
      * @param awsJobID the AWS job ID for the job
      * @param summary  the task summary record
-     * 
+     *
      * @return a Tuple containing the stdout and stderr files to which it is retrieved
      */
     public Tuple<File,File> retrieve(String awsJobID, String summary ) {
@@ -136,7 +136,7 @@ public class CloudWatchLog {
         GetLogEventsRequest gle = GetLogEventsRequest.builder().
                 logGroupName(logGroup).
                 logStreamName(streamName).
-                startFromHead​(true).
+                startFromHead(true).
                 build();
         boolean done = false;
         String previousToken = null;
@@ -155,7 +155,7 @@ public class CloudWatchLog {
             stderrPW   = new PrintWriter(new BufferedWriter(new FileWriter(stderrFile)));
             PrintWriter pw = stdoutPW;
             mLogger.debug("Will write out stdout log to " + stdoutFile.getAbsolutePath());
-            
+
             while (!done) {
                 GetLogEventsResponse response = mCWL.getLogEvents(gle);
                 for (OutputLogEvent event : response.events()) {
@@ -164,13 +164,13 @@ public class CloudWatchLog {
                     if( notSwitched && message.startsWith( CloudWatchLog.TASK_STDERR_SEPARATOR) ){
                         // print summary to stdout and switch print writer to stderr
                         pw.println( summary );
-                        notSwitched = false; 
+                        notSwitched = false;
                         pw = stderrPW;
                     }
                     else{
                         pw.println(event.message());
                     }
-                    
+
                 }
                 String nextToken = response.nextForwardToken();
 
@@ -181,7 +181,7 @@ public class CloudWatchLog {
                     gle = GetLogEventsRequest.builder().
                             logGroupName(logGroup).
                             logStreamName(streamName).
-                            startFromHead​(true).
+                            startFromHead(true).
                             nextToken(nextToken).
                             build();
                 }
@@ -198,21 +198,21 @@ public class CloudWatchLog {
                 stderrPW.close();
             }
         }
-        
+
         if( mDeleteLogstreamAfterRetrieval ){
             this.delete(logGroup, streamName);
         }
-        
+
         return result;
     }
-    
+
     /**
      * Deletes a log stream from CloudWatch
-     * 
+     *
      * @param logGroup    the log group
      * @param streamName  the stream name
-     * 
-     * @return boolean 
+     *
+     * @return boolean
      */
     public boolean delete( String logGroup, String streamName){
         DeleteLogStreamRequest request = DeleteLogStreamRequest.builder().
