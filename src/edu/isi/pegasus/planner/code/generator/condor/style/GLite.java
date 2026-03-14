@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -270,11 +271,17 @@ public class GLite extends Abstract {
 
         // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
         // variable for grid universe jobs, we explicity set the variable to .
-        // in order for kickstart to read in the lof files correctly
-        job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
-        // GH-2156 in grid universe jobs condor does not set $_CONDOR_SCRATCH_DIR
-        // set that to the value pass for Pegasus Lite jobs running via Glite
-        CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, ".");
+        // in order for kickstart to read in the lof files correctly.
+        // GH-2173 BUT, we only do set $_CONDOR_SCRATCH_DIR for the sharedfs
+        // case where PegasusLite is not used to launch the jobs
+        String dataConf = job.getDataConfiguration();
+        if (dataConf != null
+                && dataConf.equals(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE)) {
+            job.envVariables.construct(Condor.CONDOR_SCRATCH_DIR_ENV_VARIABLE, ".");
+            // GH-2156, GH-2173 in grid universe jobs condor does not set $_CONDOR_SCRATCH_DIR
+            // set that to the value pass for Pegasus Lite jobs running via Glite
+            CodeGenerator.replaceCondorScratchDirInArguments(job, mLogger, ".");
+        }
 
         String batchSystem = GLite.getBatchSystem(job, gridResource);
         if (!supportedBatchSystem(batchSystem)) {
