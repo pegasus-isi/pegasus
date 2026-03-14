@@ -36,6 +36,14 @@ pegasus_lite_default_system="x86_64_rhel_8"
 pegasus_lite_start_dir=`pwd`
 export pegasus_lite_start_dir
 
+# GH-2173 in grid universe cases _CONDOR_SCRATCH_DIR is not
+# set by BLAHP. Lets set it up ourselves to the directory
+# where we started from
+if [ "x$_CONDOR_SCRATCH_DIR" = "x" ]; then
+    _CONDOR_SCRATCH_DIR=$pegasus_lite_start_dir
+    export _CONDOR_SCRATCH_DIR
+fi
+
 pegasus_lite_setup_log()
 {
     # PM-1132 set up the log explicitly to a file     
