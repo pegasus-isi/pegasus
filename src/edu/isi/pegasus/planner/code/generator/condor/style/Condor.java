@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
@@ -368,7 +369,19 @@ public class Condor extends Abstract {
                     pegasusProfileValue = value + " " + "MB";
                 }
                 // one to one mapping
-                classAdKeys.construct(classAdKey, pegasusProfileValue);
+                // classAdKeys.construct(classAdKey, pegasusProfileValue);
+                // GH-2174 instead of putting in an actual value, refer to
+                // the corresponding pegasus classad key to the Pegasus Profile
+                // as a variable
+                String pegasusClassADKey =
+                        ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                                pegasusKey);
+                if (pegasusKey.equals(Pegasus.MEMORY_KEY)
+                        || pegasusKey.equals(Pegasus.DISKSPACE_KEY)) {
+                    // specify the unit in MB
+                    pegasusClassADKey += " MB";
+                }
+                classAdKeys.construct(classAdKey, pegasusClassADKey);
             }
         }
 

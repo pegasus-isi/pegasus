@@ -18,6 +18,8 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A helper class, that generates Pegasus specific classads for the jobs.
@@ -85,6 +87,72 @@ public class ClassADSGenerator {
      * @see edu.isi.pegasus.planner.classes.Job#jobID
      */
     public static final String DAG_JOB_ID_KEY = "pegasus_wf_dag_job_id";
+
+    private static HashMap<String, String> mPegasusClassAdsToPegasusProfiles;
+
+    /**
+     * Maps ClassAD keys to corresponding Pegasus Profile Keys
+     *
+     * @return
+     */
+    public static Map<String, String> pegasusClassAdKeysToPegasusProfiles() {
+        if (mPegasusClassAdsToPegasusProfiles == null) {
+            mPegasusClassAdsToPegasusProfiles = new HashMap();
+            mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.MEMORY_KEY, Pegasus.MEMORY_KEY);
+            mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.CORES_KEY, Pegasus.CORES_KEY);
+            mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.MEMORY_KEY, Pegasus.GPUS_KEY);
+            mPegasusClassAdsToPegasusProfiles.put(
+                    ClassADSGenerator.DISKSPACE_KEY, Pegasus.DISKSPACE_KEY);
+            mPegasusClassAdsToPegasusProfiles.put(
+                    ClassADSGenerator.JOB_RUNTIME_AD_KEY, Pegasus.RUNTIME_KEY);
+        }
+        return mPegasusClassAdsToPegasusProfiles;
+    }
+
+    private static HashMap<String, String> mPegasusProfilesToPegasusClassAdKeys;
+
+    /**
+     * Maps ClassAD keys to corresponding Pegasus Profile Keys
+     *
+     * @return
+     */
+    public static Map<String, String> pegasusProfilesToPegasusClassAdKeys() {
+        if (mPegasusProfilesToPegasusClassAdKeys == null) {
+            mPegasusProfilesToPegasusClassAdKeys = new HashMap();
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.MEMORY_KEY, ClassADSGenerator.MEMORY_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.CORES_KEY, ClassADSGenerator.CORES_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.GPUS_KEY, ClassADSGenerator.MEMORY_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.DISKSPACE_KEY, ClassADSGenerator.DISKSPACE_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.RUNTIME_KEY, ClassADSGenerator.JOB_RUNTIME_AD_KEY);
+        }
+        return mPegasusProfilesToPegasusClassAdKeys;
+    }
+
+    /**
+     * Maps a Pegasus resource profile key to a corressponding Pegasus Classad variable
+     *
+     * @param profileKey
+     * @return
+     */
+    public static final String mapPegasusResourceProfileToPegasusClassAdVariable(
+            String profileKey) {
+        StringBuffer variable = new StringBuffer();
+        String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
+        if (varKey != null) {
+            // $(my.pegasus_memory_mb)
+            variable.append("$my.(").append(varKey).append(")");
+        } else {
+            throw new RuntimeException(
+                    "Unable to map pegasus profile key to pegasus classad - " + profileKey);
+        }
+
+        return variable.toString();
+    }
 
     /** The class ad for the expected job value */
     public static final String JOB_RUNTIME_AD_KEY = "pegasus_job_runtime";
