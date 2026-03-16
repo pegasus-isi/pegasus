@@ -17,7 +17,7 @@ infrastructure. They provide an abstract yet uniform interface to
 specify configuration options for various layers from planner/mapper
 behavior to remote environment settings. At various stages during the
 mapping process, profiles may be added associated with the job. The
-system supports five diffferent namespaces, with each namespace refers
+system supports five different namespaces, with each namespace refers
 to a different aspect of a job's runtime settings. A profile's
 representation in the executable workflow (e.g. the Condor submit files)
 depends on its namespace. Pegasus supports the following Namespaces for

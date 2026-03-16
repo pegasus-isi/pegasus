@@ -24,7 +24,7 @@ most common execution environments Pegasus supports.
   set up. The example workflows might not work in your
   environment without modifications. Site and transformation catalogs
   may contain site and user specifics such as paths to scratch directories
-  and installed software, and minor modificiations might be
+  and installed software, and minor modifications might be
   required to get the workflows to plan and run.
 
 .. _pegasushub:
@@ -96,7 +96,7 @@ stored in a single file ``binaries.txt``.
 Diamond Workflow
 ----------------
 
-The diamond workflow (``https://github.com/pegasus-isi/diamond-workflow``) has 4 nodes, layed out in
+The diamond workflow (``https://github.com/pegasus-isi/diamond-workflow``) has 4 nodes, laid out in
 a diamond shape, with files being passed between them (f.*): First node represents a computation to
 preprocess an input ``f.a`` and produce two output files ``f.b*``. Each of the output file is then analyzed
 by a ``findrange`` job, which produces one output ``f.c*``. The outputs are then processed by a single node
@@ -115,7 +115,7 @@ Pegasus Init
 
 Pegasus Init (``pegasus-init``) is designed to be an interactive cli tool that generates example
 workflows, ready to be executed on common execution environments. The
-example workflows provided are a subset of the workflows availabe at
+example workflows provided are a subset of the workflows available at
 PegasusHub (``https://pegasushub.github.io``).
 
 
@@ -179,7 +179,7 @@ such as your project allocation, the scheduler's queue etc.
 Pegasus Init Execution Environments
 ===================================
 
-The execution environemnts supported by ``pegasus-init`` are updated dynamically
+The execution environments supported by ``pegasus-init`` are updated dynamically
 and their source code can be found at the GitHub repository
 ``https://github.com/pegasushub/pegasus-site-catalogs``. The python script
 ``Sites.py`` is used by ``pegasus-init`` to generate the appropriate site

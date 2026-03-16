@@ -5,7 +5,7 @@
 Pegasus Workflow Management System
 ----------------------------------
 <p align="left">
-    <img src="https://img.shields.io/github/license/pegasus-isi/pegasus?color=blue&label=Licence"/>
+    <img src="https://img.shields.io/github/license/pegasus-isi/pegasus?color=blue&label=License"/>
     <img src="https://img.shields.io/github/v/tag/pegasus-isi/pegasus?label=Latest"/>
     <img src="https://img.shields.io/pypi/dm/pegasus-wms?color=green&label=PyPI%20Downloads"/>
     <img src="https://img.shields.io/github/contributors-anon/pegasus-isi/pegasus?color=green&label=Contributors"/>
@@ -32,7 +32,7 @@ workflows on complex, distributed infrastructures.
 Pegasus has a number of features that contribute to its usability and
 effectiveness:
 
-* Portability / Reuse – User created workflows can easily be run in different
+* Portability / Reuse – User-created workflows can easily be run in different
 environments without alteration. Pegasus currently runs workflows on top of
 Condor pools, Grid infrastructures such as Open Science Grid and XSEDE,
 Amazon EC2, Google Cloud, and HPC clusters. The same workflow can run on a
@@ -49,9 +49,9 @@ Kickstart wrapper that captures runtime provenance of the job and helps in
 debugging. Provenance data is collected in a database, and the data can be
 queried with tools such as pegasus-statistics, pegasus-plots, or directly
 using SQL.
-* Data Management – Pegasus handles replica selection, data transfers and
+* Data Management – Pegasus handles replica selection, data transfers, and
 output registration in data catalogs. These tasks are added to a workflow as
-auxilliary jobs by the Pegasus planner.
+auxiliary jobs by the Pegasus planner.
 * Reliability – Jobs and data transfers are automatically retried in case of
 failures. Debugging tools such as pegasus-analyzer help the user to debug the
 workflow in case of non-recoverable failures.
@@ -83,15 +83,15 @@ Consult [Chapter 2 of the Pegasus User Guide](https://pegasus.isi.edu/documentat
 for more information about installing Pegasus from binary packages.
 
 Release notes are also incorporated in the user guide and can be accessed from
-the Table of Contents below the Reference Guide. The sources for it can
-be found in `./doc/sphinx/release-notes` directory.
+the Table of Contents below the Reference Guide. The source files are located
+in the `./doc/sphinx/release-notes` directory.
 
 There is documentation on the Pegasus website for the Python, Java and R
 [Abstract Workflow Generator APIs](https://pegasus.isi.edu/documentation/reference-guide/api-reference.html).
-We strongly recommend using the Python API which is feature complete, and also
-allows you to invoke all the pegasus command line tools.
+We strongly recommend using the Python API, which is feature complete, and also
+allows you to invoke all the pegasus command-line tools.
 
-You can use *pegasus-init* command line tool to run several examples
+You can use the *pegasus-init* command-line tool to run several examples
 on your local machine. Consult [Chapter 4 of the Pegasus
 User Guide](https://pegasus.isi.edu/documentation/user-guide/example-workflows.html)
 for more information.
@@ -100,21 +100,20 @@ There are also examples of how to [Configure Pegasus for Different Execution
 Environments](https://pegasus.isi.edu/documentation/user-guide/execution-environments.html)
 in the Pegasus User Guide.
 
-If you need help using Pegasus, please contact us. See the [contact page]
-(http://pegasus.isi.edu/contact) on the Pegasus website for more information.
+If you need help using Pegasus, please contact us. See the [contact page](https://pegasus.isi.edu/contact) on the Pegasus website for more information.
 
 
 Building from Source
 --------------------
 
-Pegasus can be compiled on any recent Linux or Mac OS X system.
+Pegasus can be compiled on any recent Linux or macOS system.
 
 ### Source Dependencies
 
 In order to build Pegasus from source, make sure you have the following installed:
 
 * Git
-* Java 8 or higher
+* Java 17 or higher
 * Python 3.6 or higher
 * Ant
 * gcc
