@@ -242,7 +242,7 @@ If you need to mix a Pegasus install with other environments, such as using
 the Pegasus command line tools from a system install, but use the Python
 install and libraries from Conda, you can tell Pegasus to leave the
 environment alone. Note that by doing this, you will need to supply the
-requirements in your own environment. Set the environemnt variable:
+requirements in your own environment. Set the environment variable:
 
    ::
 

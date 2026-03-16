@@ -38,7 +38,7 @@ facilitate the proper execution of the workflow. These tasks include:
    and whether multiple compute tasks can share stage-in jobs.
 
 -  the original compute task is concretized into a compute job in the DAG.
-   Compute jobs are a concatination of the job's **name** and **id**
+   Compute jobs are a concatenation of the job's **name** and **id**
    attribute from the input Abstract Workflow file.
 
 -  the stage-out of data products to one or more output sites. Data

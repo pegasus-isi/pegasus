@@ -55,7 +55,7 @@ do and what to work upon.
    *executable* section above. During planning, the logical name is
    translated into the physical executable location on the chosen target
    site. By declaring jobs abstractly, physical layout consideration of
-   the target sites do not matter. The job's *id* uniquley identifies
+   the target sites do not matter. The job's *id* uniquely identifies
    the job within this workflow.
 
    The arguments declare what command-line arguments to pass to the job.
@@ -136,7 +136,7 @@ Metadata associated with the whole workflow.
      creator: vahi
 
 The workflow level metadata maybe used to control the Pegasus Mapper
-behaviour at planning time or maybe propogated to external services
+behaviour at planning time or maybe propagated to external services
 while querying for job characteristics.
 
 Workflow-level Notifications
@@ -194,7 +194,7 @@ may have 0 or more *metadata* associated with it.
 
 Each entry in the *replicas* section can provide 0 or more *pfn* locations,
 taking precedence over the replica catalog. Multiple locations constitute
-replicas of the same file, and are assumed to be usable interchangably.
+replicas of the same file, and are assumed to be usable interchangeably.
 The *pfn* attribute is mandatory, and typically would use a file schema URL.
 The *site* attribute is optional, and defaults to value *local* if missing.
 A *pfns* entri may have *profile* children-elements, which refer to attributes
@@ -359,7 +359,7 @@ defined in the *AbstractJobType* declaration in the schema definition:
    data files.
 
 -  0 or more *hooks* array to solicit
-   `notifications <#notifications>`__ whence a job reaches a certain
+   `notifications <#notifications>`__ when a job reaches a certain
    state in its life-cycle.
 
 .. _api-job-nodes:
@@ -448,7 +448,7 @@ The *uses* element enumerates all the files that the task consumes or
 produces. While it is not necessary nor required to have all files
 appear on the command-line, it is imperative that you declare even
 hidden files that your task requires in this section, so that the proper
-ancilliary staging- and clean-up tasks can be generated during planning.
+ancillary staging- and clean-up tasks can be generated during planning.
 
 The *hooks* array may be specified multiple times, as needed. The currently
 supported *shell* hooks have a mandatory _on attribute with the
@@ -710,7 +710,7 @@ terms of the local machine. Please note that
    remote site, the has to be some way for the file to be staged from
    the local site to the remote site. While Pegasus will augment the
    workflow with such ancillary jobs, the site catalog as well as local
-   and remote site have to be set up properlyl. For a locally run
+   and remote site have to be set up properly. For a locally run
    workflow you don't need to do anything.
 
 -  The **jobs** array define the workflow's logical constituents, the

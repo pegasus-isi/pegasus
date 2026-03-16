@@ -25,7 +25,7 @@ configured using the properties described below.
    PRIVATE_KEY                None              SSL key file used to encrypt connections. If no certificate, key files are provided the service will generate and use self-signed certificates.
    AUTHENTICATION             PAMAuthentication By default the service uses PAM authentication i.e. When prompted for a username and password users can use the credentials that they use to login to the machine. Users can specify NoAuthentication to disable username/password prompt.
    ADMIN_USERS                None              ADMIN_USERS can be used to specify which users have the ability to access other users workflow info. If ADMIN_USERS is None, False, or '' then users can only access their own workflow information. If ADMIN_USERS is '*' then all users are admin users and can access everyones workflow information. If ADMIN_USERS = {'u1', .., 'un'} OR ['u1', .., 'un'] then only users u1, .., un can access other users workflow information.
-   PROCESS_SWITCHING          True              File created by running Pegasus workflows have permissions as per user configuration. So one user migt not be able to view workflow information of other users. Setting PROCESS_SWITCHING to True makes the service change the process UID to the UID of the user whose information is being requested. pegasus-service must be started as root for PROCESS_SWITCHING to work. PROCESS_SWITCHING can be set to False.
+   PROCESS_SWITCHING          True              File created by running Pegasus workflows have permissions as per user configuration. So one user might not be able to view workflow information of other users. Setting PROCESS_SWITCHING to True makes the service change the process UID to the UID of the user whose information is being requested. pegasus-service must be started as root for PROCESS_SWITCHING to work. PROCESS_SWITCHING can be set to False.
    MAX_PROCESSES              None              If specified, starts the server in multi process mode. Should be used when process switching is enabled.
    PEGASUS_SERVICE_URL_PREFIX None              Adds a prefix to the default base URL ie `/<PEGASUS_SERVICE_URL_PREFIX>/`.
    USERNAME                   ''                The username which pegasus-em client uses to connect to the pegasus-em server.
@@ -46,7 +46,7 @@ follows
    $ pegasus-service
 
 By default, the server will start on
-`https://localhost:5000 <http://localhost:5000>`__. You can set the host
+`https://localhost:5000 <https://localhost:5000>`__. You can set the host
 and port in the configuration file OR pass it as a command line switch
 to pegasus-service as follows.
 

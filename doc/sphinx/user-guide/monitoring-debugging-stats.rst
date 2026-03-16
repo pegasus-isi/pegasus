@@ -6,7 +6,7 @@ Monitoring, Debugging and Statistics
 
 Pegasus comes bundled with useful tools that help users debug workflows
 and generate useful statistics and plots about their workflow runs. Most
-of the tools query a runtime workflow database ( usually a sqllite in
+of the tools query a runtime workflow database ( usually a SQLite in
 the workflow submit directory ) populated at runtime by
 pegasus-monitord. With the exception of pegasus-monitord (see below),
 all tools take in the submit directory as an argument. Users can invoke
