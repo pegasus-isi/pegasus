@@ -34,7 +34,7 @@ required many different people. New users are encouraged to explore the
 Pegasus for their own workflows in which users create and run a sample project
 to demonstrate Pegasus capabilities.
 
-Pegasus has a number of features that contribute to its useability and
+Pegasus has a number of features that contribute to its usability and
 effectiveness.
 
 -  **Portability / Reuse**
@@ -297,7 +297,7 @@ as a workflow. The following snippet illustrates this:
 
    # --- Specify Executables ------------------------------------------------------
    preprocess = Transformation(
-      name="preproces.py",
+      name="preprocess.py",
       site="local",
       pfn=Path(".").resolve() / "bin/preprocess.py",
       is_stageable=True,
