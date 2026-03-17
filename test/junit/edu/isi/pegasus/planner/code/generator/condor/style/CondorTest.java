@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -127,7 +128,7 @@ public class CondorTest {
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
-        testForKey(j, REQUEST_MEMORY_KEY, "5 MB");
+        testForKey(j, REQUEST_MEMORY_KEY, "5");
     }
 
     @Test
@@ -135,7 +136,6 @@ public class CondorTest {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
         j.condorVariables.checkKeyInNS(REQUEST_MEMORY_KEY, "6");
-        // GH-2167 when condor key is preferred we dont end up padding MB suffix
         testForKey(j, REQUEST_MEMORY_KEY, "6");
     }
 
@@ -143,7 +143,7 @@ public class CondorTest {
     public void testPegasusProfileDiskspaceAndCondorKey() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.DISKSPACE_KEY, "5");
-        testForKey(j, REQUEST_DISK_KEY, "5 MB");
+        testForKey(j, REQUEST_DISK_KEY, "5");
     }
 
     @Test
@@ -367,11 +367,28 @@ public class CondorTest {
                 "testForS3CredentialForLocalExecWithEntryNotInCredFile");
     }
 
-    private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {
+    private void testForKey(Job j, String condorProfileKey, String expectedValue)
+            throws CondorStyleException {
         mCS.initialize(mBag, null);
         mCS.apply(j);
-        assertTrue(j.condorVariables.containsKey(key));
-        assertEquals(expectedValue, j.condorVariables.get(key));
+
+        // GH-2174 we need to check with the corresponding classad key
+        String pegasusProfileKey =
+                edu.isi.pegasus.planner.namespace.Condor.classAdKeysToPegasusProfiles()
+                        .get(condorProfileKey);
+        String classAdKey =
+                ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(pegasusProfileKey);
+
+        assertTrue(
+                j.condorVariables.containsKey(condorProfileKey),
+                "Classad profile key not present " + condorProfileKey);
+        assertTrue(
+                j.vdsNS.containsKey(pegasusProfileKey),
+                "Pegasus profile key not present " + pegasusProfileKey);
+        assertEquals(
+                expectedValue,
+                j.vdsNS.get(pegasusProfileKey),
+                "Pegasus profile value for key " + pegasusProfileKey + " does not match ");
     }
 
     private void testForCredentialForRemoteExec(
