@@ -60,10 +60,10 @@ public class StageIn extends Abstract {
     /** The property prefix for retrieving SRM properties. */
     public static final String SRM_PROPERTIES_PREFIX = "pegasus.transfer.srm";
 
-    /** The suffix to retrive the service url for SRM server. */
+    /** The suffix to retrieve the service url for SRM server. */
     public static final String SRM_SERVICE_URL_PROPERTIES_SUFFIX = "service.url";
 
-    /** The suffix to retrive the mount point for SRM server. */
+    /** The suffix to retrieve the mount point for SRM server. */
     public static final String SRM_MOUNT_POINT_PROPERTIES_SUFFIX = "mountpoint";
 
     /** The handle to the replica selector that is to used to select the various replicas. */

@@ -58,7 +58,7 @@ public class JobStateEntry implements Workflow, Cloneable {
         return result;
     }
 
-    /** Default contructor. */
+    /** Default constructor. */
     public JobStateEntry() {
         // empty
     }

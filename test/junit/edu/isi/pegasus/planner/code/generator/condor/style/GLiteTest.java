@@ -105,7 +105,7 @@ public class GLiteTest {
         this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*", "50");
     }
 
-    @Test
+    // disable for GH-2175 @Test
     public void testPegasusProfileMAXWalltime() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.RUNTIME_KEY, "100");

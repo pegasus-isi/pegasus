@@ -105,7 +105,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
      * Note that a {@link Derivation} may remain anonymous. The namespace will be the default
      * namespace, or taken from the {@link Definitions}. The version remains unset.
      *
-     * @param name is the name to be used for the defintion.
+     * @param name is the name to be used for the definition.
      */
     public Definition(String name) {
         this.m_namespace = null;
@@ -118,7 +118,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
      * Note that a {@link Derivation} may remain anonymous. The version remains unset.
      *
      * @param namespace is the namespace the name resides in.
-     * @param name is the name to be used for the defintion.
+     * @param name is the name to be used for the definition.
      */
     public Definition(String namespace, String name) {
         this.m_name = name;
@@ -131,7 +131,7 @@ public abstract class Definition extends VDL implements Comparable, Serializable
      * Note that a {@link Derivation} may remain anonymous.
      *
      * @param namespace is the namespace the name resides in.
-     * @param name is the name to be used for the defintion.
+     * @param name is the name to be used for the definition.
      * @param version is the version of this definition.
      */
     public Definition(String namespace, String name, String version) {

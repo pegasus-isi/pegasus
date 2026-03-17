@@ -59,7 +59,7 @@ public class WorkFactory {
      *     the database driver API.
      * @exception InstantiationException if the schema class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the schema class it not publicly
+     * @exception IllegalAccessException if the constructor for the schema class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.
@@ -106,7 +106,7 @@ public class WorkFactory {
      *     the database driver API.
      * @exception InstantiationException if the schema class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the schema class it not publicly
+     * @exception IllegalAccessException if the constructor for the schema class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the schema throws an exception
      *     while being dynamically loaded.

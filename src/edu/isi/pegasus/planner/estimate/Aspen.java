@@ -89,7 +89,7 @@ public class Aspen implements Estimator {
             modelEnvVariable = System.getenv(ASPEN_MODELS_PATH_ENV_VARIABLE);
         }
         if (modelEnvVariable == null) {
-            // complain for hte models directory
+            // complain for the models directory
             throw new RuntimeException(
                     "Models directory not set. Please set the property "
                             + ASPEN_MODELS_PROPERTY_KEY

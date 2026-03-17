@@ -32,7 +32,7 @@ public class FactoryException
     public static final String DEFAULT_NAME = "Object";
 
     /**
-     * The name of the class that was trying to be instantiated when this error occured, or some
+     * The name of the class that was trying to be instantiated when this error occurred, or some
      * other signifier like module name.
      */
     protected String mClassname;
@@ -151,7 +151,7 @@ public class FactoryException
     }
 
     /**
-     * Returns the name of the class that was trying to be loaded when this error occured, or some
+     * Returns the name of the class that was trying to be loaded when this error occurred, or some
      * other signifier like a module name.
      *
      * @return the name of the class.

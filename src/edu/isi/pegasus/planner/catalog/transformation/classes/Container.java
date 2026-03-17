@@ -259,7 +259,7 @@ public class Container implements Cloneable {
     }
 
     /**
-     * Return image defintion URL
+     * Return image definition URL
      *
      * @return
      */

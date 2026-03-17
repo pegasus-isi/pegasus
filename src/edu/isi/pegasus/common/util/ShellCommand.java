@@ -19,7 +19,7 @@ import java.io.IOException;
 import org.apache.logging.log4j.Level;
 
 /**
- * A utility class that has convenience methods to execute a command and retrive the stdout and
+ * A utility class that has convenience methods to execute a command and retrieve the stdout and
  * stderr
  *
  * @author Karan Vahi

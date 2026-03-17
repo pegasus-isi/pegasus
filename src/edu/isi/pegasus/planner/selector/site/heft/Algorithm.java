@@ -637,7 +637,7 @@ public class Algorithm {
      *     can be used.
      * @return if the pool is found to which the job can be mapped, a string of the form <code>
      *     executionpool:jobmanager</code> where the jobmanager can be null. If the pool is not
-     *     found, then set poolhandle to NONE. null - if some error occured .
+     *     found, then set poolhandle to NONE. null - if some error occurred.
      */
     public String mapJob2ExecPool(Job job, List pools) {
         return "";

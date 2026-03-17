@@ -553,7 +553,7 @@ public class Horizontal
      * Perform best fit bin packing.
      *
      * @param jobs List of jobs sorted in decreasing order of the job runtime.
-     * @param maxBins The fixed-number of bins taht should be created
+     * @param maxBins The fixed-number of bins that should be created
      * @return List of List of Jobs where each List <Job> is the set of jobs which should be
      *     clustered together so as to run in under maxTime.
      */

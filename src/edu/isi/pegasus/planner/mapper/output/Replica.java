@@ -206,7 +206,7 @@ public class Replica implements OutputMapper {
         if (url == null && this.mThrowExceptionInCaseOfReplicaNotFound) {
             throw new MapperException(
                     this.getErrorMessagePrefix()
-                            + "Unable to retrive location from Mapper Replica Backend for lfn "
+                            + "Unable to retrieve location from Mapper Replica Backend for lfn "
                             + lfn
                             + " for site "
                             + site
@@ -246,7 +246,7 @@ public class Replica implements OutputMapper {
         if (result.isEmpty() && this.mThrowExceptionInCaseOfReplicaNotFound) {
             throw new MapperException(
                     this.getErrorMessagePrefix()
-                            + "Unable to retrive location from Mapper Replica Backend for lfn "
+                            + "Unable to retrieve location from Mapper Replica Backend for lfn "
                             + lfn
                             + " for site "
                             + site

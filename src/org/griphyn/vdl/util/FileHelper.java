@@ -29,7 +29,7 @@ import java.util.*;
  *
  * <p>In write mode, the cursor file gets locked until the writer is being closed again. Thus,
  * parallel access by other writers or readers are prohibited. The cursor is advanced at stream
- * close. The database stream points to the next file beyong the cursor. If no cursor file existed,
+ * close. The database stream points to the next file beyond the cursor. If no cursor file existed,
  * it will point to suffix ".0".
  *
  * <p>All access to the files must go through the respective open and close methods provided by this
@@ -91,7 +91,7 @@ public abstract class FileHelper {
      * for the cursor file.
      *
      * @param number is the new cursor position.
-     * @return true, if the file was updated all right, false, if an error occured during update.
+     * @return true, if the file was updated all right, false, if an error occurred during update.
      */
     protected boolean writeCount(int number) {
         boolean result = false;

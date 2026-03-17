@@ -118,6 +118,9 @@ public class GLite extends Abstract {
     /** the panda grid resource */
     public static String BATCH_GRID_RESOURCE_PREFIX = "batch";
 
+    /** A boolean to track whether to encode all resource profiles into remote_ce_requirements */
+    protected boolean mEncodeAllResourceProfilesIntoCEReqs;
+
     /**
      * The internal mapping of globus keys to BLAHP directives.
      *
@@ -192,6 +195,7 @@ public class GLite extends Abstract {
         super();
         mEnvEscape = new CondorEnvironmentEscape();
         mCondorG = new CondorG();
+        mEncodeAllResourceProfilesIntoCEReqs = false;
     }
 
     /**
@@ -328,11 +332,6 @@ public class GLite extends Abstract {
         job.condorVariables.construct(
                 "+remote_cerequirements", getCERequirementsForJob(job, batchSystem));
         generateBLAHPDirectives(job, batchSystem);
-
-        /* retrieve some keys from globus rsl and convert to gLite format */
-        if (job.globusRSL.containsKey("queue")) {
-            job.condorVariables.construct("batch_queue", (String) job.globusRSL.get("queue"));
-        }
 
         // PM-1116 set the task requirements as environment variables
         Globus rsl = job.globusRSL;
@@ -478,7 +477,7 @@ public class GLite extends Abstract {
         }
 
         /* the globus key maxwalltime is WALLTIME */
-        if (job.globusRSL.containsKey("maxwalltime")) {
+        if (mEncodeAllResourceProfilesIntoCEReqs && job.globusRSL.containsKey("maxwalltime")) {
             value.append(" && ");
             switch (batchSystem) {
                 case "flux":
@@ -516,7 +515,7 @@ public class GLite extends Abstract {
         }
 
         /* the globus key project is PROJECT */
-        if (job.globusRSL.containsKey(Globus.PROJECT_KEY)) {
+        if (mEncodeAllResourceProfilesIntoCEReqs && job.globusRSL.containsKey(Globus.PROJECT_KEY)) {
             value.append(" && ");
             addSubExpression(value, "PROJECT", (String) job.globusRSL.get(Globus.PROJECT_KEY));
         }
@@ -718,9 +717,10 @@ public class GLite extends Abstract {
      */
     protected void handleResourceRequirements(Job job, String batchSystem)
             throws CondorStyleException {
+
         // PM-962 we update the globus RSL keys on basis
         // of Pegasus profile keys before doing any translation
-
+        // we then only deal with globus keys at this point!
         mCondorG.handleResourceRequirements(job);
 
         if (batchSystem.equals("pbs")
@@ -926,13 +926,30 @@ public class GLite extends Abstract {
      */
     private void generateBLAHPDirectives(Job job, String batchSystem) {
         // sanity check
+
+        if (!batchSystem.equals("cobalt")) {
+            // GH-2175 we only tackle project , runtime and queue for time being
+            // for all batch schedulers like pbs/sge/lsf/slurm
+
+            /* retrieve some keys from globus rsl and convert to condor keys */
+            if (job.globusRSL.containsKey("queue")) {
+                job.condorVariables.construct("batch_queue", (String) job.globusRSL.get("queue"));
+            }
+            if (job.globusRSL.containsKey(Globus.PROJECT_KEY)) {
+                job.condorVariables.construct(
+                        "batch_project", (String) job.globusRSL.get(Globus.PROJECT_KEY));
+            }
+            if (job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY)) {
+                // globus maxwalltime is in minutes; condor expects in seconds
+                long runtime =
+                        Long.parseLong((String) job.globusRSL.get(Globus.MAX_WALLTIME_KEY)) * 60;
+                job.condorVariables.construct("batch_runtime", Long.toString(runtime));
+            }
+            return;
+        }
         /*generate blahp directives only for cobalt
          * till we verify it works for blahp backends in condor
          */
-        if (!batchSystem.equals("cobalt")) {
-            return;
-        }
-
         for (int i = 0; i < GLite.GLOBUS_BLAHP_DIRECTIVES_MAPPING.length; i++) {
             String globusKey = GLOBUS_BLAHP_DIRECTIVES_MAPPING[i][0];
             String blahpDirective = GLOBUS_BLAHP_DIRECTIVES_MAPPING[i][1];

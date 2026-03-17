@@ -475,7 +475,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the dax version
      *
-     * @return teh dax version.
+     * @return the dax version.
      */
     public String getDAXVersion() {
         return this.mDAGInfo.getDAXVersion();

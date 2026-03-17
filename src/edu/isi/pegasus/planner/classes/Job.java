@@ -770,7 +770,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Looks at a URL to determine whether a credential should be associated with a job or not.
      *
-     * @param site the site from whcih data is being pulled/pushed to
+     * @param site the site from which data is being pulled/pushed to
      * @param url the url for which a credential needs to be added
      */
     public void addCredentialType(String site, String url) {
@@ -975,7 +975,7 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
-     * Sets the site handle of the site, where teh job is to be executed
+     * Sets the site handle of the site, where the job is to be executed
      *
      * @param site the site handle.
      */

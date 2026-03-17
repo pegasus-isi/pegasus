@@ -433,7 +433,7 @@ public class NonJavaCallout extends AbstractPerJob {
      * @param pools is a list of site candidates. The items of the list are <code>String</code>
      *     objects.
      * @return the temporary input file was successfully prepared. A value of <code>null</code>
-     *     implies that an error occured while writing the file.
+     *     implies that an error occurred while writing the file.
      * @see #getTempFilename()
      */
     private File prepareInputFile(Job job, List pools) {
