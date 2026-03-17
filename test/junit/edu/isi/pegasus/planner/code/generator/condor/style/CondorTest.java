@@ -140,6 +140,15 @@ public class CondorTest {
     }
 
     @Test
+    public void testCondorRequestMemoryExpressionKey() throws CondorStyleException {
+        Job j = new Job();
+        String expr = "ifthenelse(isundefined(DAGNodeRetry) || DAGNodeRetry == 0, 1024, 4096)";
+        j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
+        j.condorVariables.checkKeyInNS(REQUEST_MEMORY_KEY, expr);
+        testForKey(j, REQUEST_MEMORY_KEY, expr);
+    }
+
+    @Test
     public void testPegasusProfileDiskspaceAndCondorKey() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.DISKSPACE_KEY, "5");
