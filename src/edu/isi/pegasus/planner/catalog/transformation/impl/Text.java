@@ -904,7 +904,7 @@ public class Text extends Abstract implements TransformationCatalog {
     }
 
     /**
-     * Computes the maximum column lenght for pretty printing.
+     * Computes the maximum column length for pretty printing.
      *
      * @param s String[]
      * @param count int[]

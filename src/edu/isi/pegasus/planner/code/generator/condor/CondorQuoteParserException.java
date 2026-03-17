@@ -30,7 +30,7 @@ public class CondorQuoteParserException extends Exception {
      * The overloaded constructor
      *
      * @param msg the message to be thrown in exception
-     * @param position the position at which error occured
+     * @param position the position at which error occurred
      */
     public CondorQuoteParserException(String msg, int position) {
         super(msg);
@@ -41,7 +41,7 @@ public class CondorQuoteParserException extends Exception {
      * The overloaded constructor
      *
      * @param msg the message to be thrown in exception.
-     * @param position the position at which error occured.
+     * @param position the position at which error occurred.
      * @param cause the cause of the error.
      */
     public CondorQuoteParserException(String msg, int position, Throwable cause) {

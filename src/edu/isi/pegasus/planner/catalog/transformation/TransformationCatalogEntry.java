@@ -477,7 +477,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Set the logical transformation by providing the mNamespace, mName and mVersion as seperate
+     * Set the logical transformation by providing the mNamespace, mName and mVersion as separate
      * strings.
      *
      * @param namespace

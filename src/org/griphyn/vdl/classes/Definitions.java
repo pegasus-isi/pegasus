@@ -521,7 +521,7 @@ public class Definitions extends VDL implements Serializable {
      * object.The previous component at that position is discarded. The index must be a value
      * greater than or equal to 0 and less than the current size of the vector.
      *
-     * @param index is the postion at which to replace a {@link Definition}.
+     * @param index is the position at which to replace a {@link Definition}.
      * @param d is either a {@link Transformation} or {@link Derivation} to use for replacement.
      * @return Definition
      * @throws IndexOutOfBoundsException if the index was invalid.

@@ -55,7 +55,7 @@ public abstract class XMLParser extends DefaultHandler {
         return name;
     }
 
-    /** Locator object to determine on which line in the xml has the error occured. */
+    /** Locator object to determine on which line in the xml has the error occurred. */
     protected Locator mLocator;
 
     /**

@@ -56,7 +56,7 @@ public class Workflow {
     public static int nworkflows;
 
     public static long millisecsToRefreshStatus = 30000; // 30 secs between auto-refresh of status
-    public static long timeOfLastRefresh = 0; // really want this publically read-only
+    public static long timeOfLastRefresh = 0; // really want this publicly read-only
 
     //    private static String voGroup;
 

@@ -809,7 +809,7 @@ public class Synch {
     }
 
     public synchronized void signalToExitAfterJobsComplete() {
-        mLogger.info("****Recieved signal to exit after completion of jobs****");
+        mLogger.info("****Received signal to exit after completion of jobs****");
         mDoneWithJobSubmits = true;
     }
 

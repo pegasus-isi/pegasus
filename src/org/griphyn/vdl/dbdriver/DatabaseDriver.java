@@ -71,7 +71,7 @@ public abstract class DatabaseDriver {
      *     the database driver API.
      * @exception InstantiationException if the driver class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the driver class it not publicly
+     * @exception IllegalAccessException if the constructor for the driver class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
@@ -134,7 +134,7 @@ public abstract class DatabaseDriver {
      *     the database driver API.
      * @exception InstantiationException if the driver class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the driver class it not publicly
+     * @exception IllegalAccessException if the constructor for the driver class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
@@ -184,7 +184,7 @@ public abstract class DatabaseDriver {
      */
     protected boolean connect(String driver, String url, Properties info, Set tables)
             throws SQLException, ClassNotFoundException {
-        // load specificed driver class into memory
+        // load specified driver class into memory
         Class.forName(driver);
 
         Logging.instance().log("xaction", 1, "START connect to dbase");

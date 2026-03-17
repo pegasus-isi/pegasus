@@ -617,7 +617,7 @@ public class TransferEngine extends Engine {
                                 "Unable to determine the scratch dir for site "
                                         + pJob.getStagingSiteHandle());
                     }
-                    // retrive all the file servers matching the get operations
+                    // retrieve all the file servers matching the get operations
                     for (FileServer.OPERATION op : FileServer.OPERATION.operationsForGET()) {
                         for (Iterator it1 = parentScratchDir.getFileServersIterator(op);
                                 it1.hasNext(); ) {

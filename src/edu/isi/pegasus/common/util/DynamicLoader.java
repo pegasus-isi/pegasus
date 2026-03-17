@@ -86,7 +86,7 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a contructor.You must have set the class name before
+     * Dynamically instantiates a class from a constructor.You must have set the class name before
      * invoking this method. Please note that any exceptions thrown by the constructor will be
      * wrapped into a <code>InvocationTargetException</code>.
      *
@@ -99,7 +99,7 @@ public class DynamicLoader {
      *     the database driver API.
      * @exception InstantiationException if the driver class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the driver class it not publicly
+     * @exception IllegalAccessException if the constructor for the driver class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
@@ -117,7 +117,7 @@ public class DynamicLoader {
     }
 
     /**
-     * Dynamically instantiates a class from a contructor.You must have set the class name before
+     * Dynamically instantiates a class from a constructor.You must have set the class name before
      * invoking this method. Please note that any exceptions thrown by the constructor will be
      * wrapped into a <code>InvocationTargetException</code>.
      *
@@ -138,7 +138,7 @@ public class DynamicLoader {
      *     number of types, ie the vector have mismatching sizes.
      * @exception InstantiationException if the driver class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the driver class it not publicly
+     * @exception IllegalAccessException if the constructor for the driver class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.
@@ -171,7 +171,7 @@ public class DynamicLoader {
      *     the database driver API.
      * @exception InstantiationException if the driver class is an abstract class instead of a
      *     concrete implementation.
-     * @exception IllegalAccessException if the constructor for the driver class it not publicly
+     * @exception IllegalAccessException if the constructor for the driver class is not publicly
      *     accessible to this package.
      * @exception InvocationTargetException if the constructor of the driver throws an exception
      *     while being dynamically loaded.

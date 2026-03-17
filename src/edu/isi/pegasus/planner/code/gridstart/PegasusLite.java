@@ -303,7 +303,7 @@ public class PegasusLite implements GridStart {
         mEnablingPartOfAggregatedJob = false;
         mDefaultGridStartImplementation = new Kickstart();
         mDefaultGridStartImplementation.initialize(bag, dag);
-        // for pegasus lite we dont want ot use the full path, unless
+        // for pegasus lite we dont want to use the full path, unless
         // a user has specifically catalogued in the transformation catalog
         mDefaultGridStartImplementation.useFullPathToGridStarts(false);
 
@@ -1407,7 +1407,7 @@ public class PegasusLite implements GridStart {
         if (propValue != null && propValue.equals("PegasusLite.None")) {
             gs = new NoGridStart();
             gs.initialize(mBag, mDAG);
-            // for pegasus lite we dont want ot use the full path, unless
+            // for pegasus lite we dont want to use the full path, unless
             // a user has specifically catalogued in the transformation catalog
             gs.useFullPathToGridStarts(false);
         }

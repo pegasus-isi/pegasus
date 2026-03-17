@@ -392,7 +392,7 @@ public class Filename extends Leaf implements Cloneable {
      *
      * @param link is the new linkage type to use. Please note that it must match the range of legal
      *     values.
-     * @throws IllegalArgumentException if the range is beyong legal values.
+     * @throws IllegalArgumentException if the range is beyond legal values.
      * @see #getLink()
      */
     public void setLink(int link) throws IllegalArgumentException {

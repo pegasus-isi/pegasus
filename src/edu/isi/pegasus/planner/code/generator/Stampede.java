@@ -97,7 +97,7 @@ public class Stampede implements CodeGenerator {
     /** The attribute key for job id */
     public static final String JOB_ID_KEY = "job.id";
 
-    /** Teh attribute key for the submit file */
+    /** The attribute key for the submit file */
     public static final String JOB_SUBMIT_FILE_KEY = "submit_file";
 
     /** The attribute key for whether a job is clustered or not */

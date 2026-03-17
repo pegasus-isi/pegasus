@@ -147,7 +147,7 @@ public class ReduceEdges {
                         // child.getID() );
 
                         ancestor.removeChild(child);
-                        // remove from the child hte parent
+                        // remove from the child the parent
                         child.removeParent(ancestor);
                     }
                 }
@@ -226,7 +226,7 @@ public class ReduceEdges {
                     // deletedAncestors.add( parent );
 
                     parent.removeChild(to);
-                    // remove from the child hte parent
+                    // remove from the child the parent
                     to.removeParent(parent);
                 }
             } else {

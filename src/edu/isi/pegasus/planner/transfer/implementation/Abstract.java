@@ -235,7 +235,7 @@ public abstract class Abstract implements Implementation {
                             this.createSetXBitJob(execFile, xBitJobName); // create a chmod job
 
             if (xBitJob == null) {
-                // error occured while creating the job
+                // error occurred while creating the job
                 throw new RuntimeException(
                         "Unable to create setXBitJob "
                                 + "corresponding to  compute job "
@@ -309,7 +309,7 @@ public abstract class Abstract implements Implementation {
                             this.createSetXBitJob(execFile, xBitJobName); // create a chmod job
 
             if (xBitJob == null) {
-                // error occured while creating the job
+                // error occurred while creating the job
                 throw new RuntimeException(
                         "Unable to create setXBitJob "
                                 + "corresponding to  compute job "
@@ -453,7 +453,7 @@ public abstract class Abstract implements Implementation {
                                 computeJob.getSiteHandle()); // create a chmod job
 
         if (xBitJob == null) {
-            // error occured while creating the job
+            // error occurred while creating the job
             throw new RuntimeException(
                     "Unable to create setXBitJob "
                             + "corresponding to  compute job "
