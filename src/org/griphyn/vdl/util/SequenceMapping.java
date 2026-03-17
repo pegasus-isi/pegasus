@@ -59,8 +59,8 @@ public class SequenceMapping {
     }
 
     /**
-     * C'tor: Instances from this constructor will generate ${prefix}xxxxx. Please note that multiple
-     * instances of this class with the same prefix will produce the same sequences!
+     * C'tor: Instances from this constructor will generate ${prefix}xxxxx. Please note that
+     * multiple instances of this class with the same prefix will produce the same sequences!
      *
      * @param prefix is a prefix to the generated sequence.
      */

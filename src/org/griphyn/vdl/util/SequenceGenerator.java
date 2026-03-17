@@ -40,8 +40,8 @@ public class SequenceGenerator {
     }
 
     /**
-     * C'tor: Instances from this constructor will generate ${prefix}xxxxx. Please note that multiple
-     * instances of this class with the same prefix will produce the same sequences!
+     * C'tor: Instances from this constructor will generate ${prefix}xxxxx. Please note that
+     * multiple instances of this class with the same prefix will produce the same sequences!
      *
      * @param digits are the number of digits to use. This value must be at least one.
      * @exception IllegalArgumentException if the number of digits is negative
