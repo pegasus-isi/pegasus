@@ -958,9 +958,14 @@ public class GLite extends Abstract {
             }
             if (job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY)) {
                 // globus maxwalltime is in minutes; condor expects in seconds
-                long runtime =
-                        Long.parseLong((String) job.globusRSL.get(Globus.MAX_WALLTIME_KEY)) * 60;
-                job.condorVariables.construct("batch_runtime", Long.toString(runtime));
+                // long runtime =
+                //        Long.parseLong((String) job.globusRSL.get(Globus.MAX_WALLTIME_KEY)) * 60;
+
+                // GH-2176 just refer to corresponding pegasus classad key
+                job.condorVariables.construct(
+                        "batch_runtime",
+                        ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                                Pegasus.RUNTIME_KEY));
             }
             return;
         }
