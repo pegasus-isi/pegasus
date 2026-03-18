@@ -147,6 +147,7 @@ public class Condor extends Abstract {
      * @param job the job on which the style needs to be applied.
      * @throws CondorStyleException in case of any error occuring code generation.
      */
+    @Override
     public void apply(Job job) throws CondorStyleException {
 
         String workdir = job.getDirectory();
@@ -328,6 +329,12 @@ public class Condor extends Abstract {
             String classAdKey = entry.getKey();
             String pegasusKey = entry.getValue();
 
+            // GH-2174 instead of putting in an actual value, refer to
+            // the corresponding pegasus classad key to the Pegasus Profile
+            // as a variable
+            String pegasusClassADKey =
+                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(pegasusKey);
+
             if (classAdKeys.containsKey(classAdKey)) {
                 // GH-2169 warn if classad key is already set, as everything should
                 // be using pegasus profiles
@@ -346,7 +353,24 @@ public class Condor extends Abstract {
                                     "For job %s condor profile %s was set directly to %s . Using that for the job. For numeric values, only set/associate corresponding pegasus resource profile %s for the job.",
                                     job.getID(), classAdKey, condorProfileValue, pegasusKey),
                             LogManager.WARNING_MESSAGE_LEVEL);
+
+                    if (classAdKey.equals(
+                            edu.isi.pegasus.planner.namespace.Condor.REQUEST_DISK_KEY)) {
+                        // PM-1912 the pegasus profile value is in MB while
+                        // request_disk condor classad value is specified in KB
+                        long value = Long.parseLong(condorProfileValue);
+                        condorProfileValue = Long.toString(value / 1024);
+                        // specify the unit in MB
+                        pegasusClassADKey += " MB";
+                    }
                 }
+                // GH-2174 if a user did specify a condor classad resource key such
+                //  as request_cpus etc;
+                //     set the condor request_* to the corresponding +pegasus_* variable
+                //     update the pegasus key to the condor value,
+                profiles.construct(pegasusKey, condorProfileValue);
+                // the condor value is now just a referece to the +pegasus key
+                classAdKeys.construct(classAdKey, pegasusClassADKey);
             }
 
             if (!classAdKeys.containsKey(classAdKey) && profiles.containsKey(pegasusKey)) {
@@ -365,22 +389,16 @@ public class Condor extends Abstract {
                                         + pegasusKey
                                         + pegasusProfileValue);
                     }
-                    // add a suffix indicating MB to be specific
-                    pegasusProfileValue = value + " " + "MB";
                 }
-                // one to one mapping
-                // classAdKeys.construct(classAdKey, pegasusProfileValue);
                 // GH-2174 instead of putting in an actual value, refer to
                 // the corresponding pegasus classad key to the Pegasus Profile
                 // as a variable
-                String pegasusClassADKey =
-                        ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
-                                pegasusKey);
                 if (pegasusKey.equals(Pegasus.MEMORY_KEY)
                         || pegasusKey.equals(Pegasus.DISKSPACE_KEY)) {
                     // specify the unit in MB
                     pegasusClassADKey += " MB";
                 }
+                // now set the condor request_* to the corresponding +pegasus_* variable
                 classAdKeys.construct(classAdKey, pegasusClassADKey);
             }
         }

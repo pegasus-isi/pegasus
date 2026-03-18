@@ -375,6 +375,8 @@ Tutorial Container:
   tags:
   - x86_64
   - docker-cli
+  timeout: 45 minutes
+
 
 # Release
 

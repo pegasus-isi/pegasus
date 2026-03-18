@@ -145,7 +145,7 @@ public class ClassADSGenerator {
         String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
         if (varKey != null) {
             // $(my.pegasus_memory_mb)
-            variable.append("$my.(").append(varKey).append(")");
+            variable.append("$(my.").append(varKey).append(")");
         } else {
             throw new RuntimeException(
                     "Unable to map pegasus profile key to pegasus classad - " + profileKey);
@@ -300,12 +300,15 @@ public class ClassADSGenerator {
         }
 
         // GH-2170 generate diskspace and memory
+
         String memoryValue = job.vdsNS.getStringValue(Pegasus.MEMORY_KEY);
         int memory = -1;
         try {
             memory = (memoryValue == null) ? -1 : Integer.parseInt(memoryValue);
         } catch (Exception e) {
-            // ignore
+            // GH-2174 they can also be expressions in case a user
+            // explicitly specified condor profile key request_memory
+            writer.println(generateClassAdAttribute(ClassADSGenerator.MEMORY_KEY, memoryValue));
         }
         if (memory >= 0) {
             writer.println(generateClassAdAttribute(ClassADSGenerator.MEMORY_KEY, memory));
@@ -316,9 +319,11 @@ public class ClassADSGenerator {
         try {
             disk = (diskValue == null) ? -1 : Integer.parseInt(diskValue);
         } catch (Exception e) {
-            // ignore
+            writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
         }
         if (disk >= 0) {
+            // GH-2174 they can also be expressions in case a user
+            // explicitly specified condor profile key request_disk
             writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
         }
 
