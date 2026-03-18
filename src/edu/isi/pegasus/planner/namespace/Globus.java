@@ -21,8 +21,10 @@ import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -40,6 +42,7 @@ public class Globus extends Namespace {
 
     private static Map<String, String> mRSLToPegasus;
     private static Map<String, String> mPegasusToRSL;
+    private static Set mRSLKeysSubstitutedWithPegasusClassAds;
 
     /**
      * Maps Globus RSL keys to corresponding Pegasus Profile Keys
@@ -98,6 +101,16 @@ public class Globus extends Namespace {
             mRSLToENV.put(Globus.PROJECT_KEY, "PEGASUS_PROJECT");
         }
         return mRSLToENV;
+    }
+
+    public static final Set<String> rslKeysSubstitutedWithPegasusClassAds() {
+        if (mRSLKeysSubstitutedWithPegasusClassAds == null) {
+            mRSLKeysSubstitutedWithPegasusClassAds = new HashSet();
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.COUNT_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_MEMORY_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_WALLTIME_KEY);
+        }
+        return mRSLKeysSubstitutedWithPegasusClassAds;
     }
 
     /** Key indicating the number of cores to be used */

@@ -345,12 +345,31 @@ public class GLite extends Abstract {
 
             if (rsl.containsKey(rslKey)) {
                 String value = (String) rsl.get(rslKey);
-                if (rslKey.equals(Globus.MAX_WALLTIME_KEY)) {
-                    // handle runtime key as a special case as, as a globus profile it is in minutes
-                    // and we want in seconds
-                    long runtime = Long.parseLong(value) * 60;
-                    value = Long.toString(runtime);
+
+                if (Globus.rslKeysSubstitutedWithPegasusClassAds().contains(rslKey)) {
+                    // GH-2176 convoluted 2-stage process for a subset of key
+                    // map rls -> pegasus profile -> pegasus classad key
+                    String pegasusProfileKey = Globus.rslToPegasusProfiles().get(rslKey);
+                    if (pegasusProfileKey == null) {
+                        throw new CondorStyleException(
+                                "For job: "
+                                        + job.getID()
+                                        + " unable to map rsl key "
+                                        + rslKey
+                                        + " to pegasus key");
+                    }
+                    value =
+                            ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                                    pegasusProfileKey);
                 }
+
+                //                if (rslKey.equals(Globus.MAX_WALLTIME_KEY)) {
+                //                    // handle runtime key as a special case as, as a globus
+                // profile it is in minutes
+                //                    // and we want in seconds
+                //                    long runtime = Long.parseLong(value) * 60;
+                //                    value = Long.toString(runtime);
+                //                }
 
                 job.envVariables.construct(envKey, value);
             }
