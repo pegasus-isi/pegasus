@@ -14,16 +14,20 @@
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorEnvironmentEscape;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
@@ -444,7 +448,7 @@ public class GLite extends Abstract {
 
         /* specifically pass the queue in the requirement since
         some versions dont handle +remote_queue correctly */
-        if (job.globusRSL.containsKey("queue")) {
+        if (mEncodeAllResourceProfilesIntoCEReqs && job.globusRSL.containsKey("queue")) {
             value.append(" && ");
             addSubExpression(value, "QUEUE", (String) job.globusRSL.get("queue"));
         }
@@ -459,15 +463,23 @@ public class GLite extends Abstract {
 
         /* the globus key count is CORES */
         if (job.globusRSL.containsKey("count")) {
+            String pegasusClassAdKey =
+                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                            Pegasus.CORES_KEY);
             value.append(" && ");
-            addSubExpression(value, "CORES", (String) job.globusRSL.get("count"));
+            // addSubExpression(value, "CORES", (String) job.globusRSL.get("count"));
+            addSubExpression(value, "CORES", pegasusClassAdKey);
         }
 
         /* PM-1625 pick the pegasus profile key gpus directly, as we don't have a RSL
         counterpart */
         if (job.vdsNS.containsKey(Pegasus.GPUS_KEY)) {
+            String pegasusClassAdKey =
+                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                            Pegasus.GPUS_KEY);
             value.append(" && ");
-            addSubExpression(value, "GPUS", (String) job.vdsNS.get(Pegasus.GPUS_KEY));
+            // addSubExpression(value, "GPUS", (String) job.vdsNS.get(Pegasus.GPUS_KEY));
+            addSubExpression(value, "GPUS", pegasusClassAdKey);
         }
 
         /* the globus key xcount is PROCS */
@@ -504,8 +516,13 @@ public class GLite extends Abstract {
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
         if (job.globusRSL.containsKey("maxmemory")) {
+            String pegasusClassAdKey =
+                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                            Pegasus.MEMORY_KEY);
             value.append(" && ");
-            addSubExpression(value, "PER_PROCESS_MEMORY", (String) job.globusRSL.get("maxmemory"));
+            addSubExpression(value, "PER_PROCESS_MEMORY", pegasusClassAdKey);
+            // addSubExpression(value, "PER_PROCESS_MEMORY", (String)
+            // job.globusRSL.get("maxmemory"));
         }
 
         /* the globus key totalmemory is TOTAL_MEMORY */
@@ -967,8 +984,15 @@ public class GLite extends Abstract {
         return;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CondorStyleException {
         GLite gl = new GLite();
+        PegasusBag bag = new PegasusBag();
+        LogManager logger = LogManagerFactory.loadSingletonInstance();
+        logger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        logger.logEventStart("glite-test", "key", "value");
+        gl.initialize(bag, null);
 
         System.out.println("0 mins is " + gl.pbsFormattedTimestamp("0"));
         System.out.println("11 mins is " + gl.pbsFormattedTimestamp("11"));
@@ -976,5 +1000,9 @@ public class GLite extends Abstract {
         System.out.println("69 mins is " + gl.pbsFormattedTimestamp("69"));
         System.out.println("169 mins is " + gl.pbsFormattedTimestamp("169"));
         System.out.println("1690 mins is " + gl.pbsFormattedTimestamp("1690"));
+
+        Job j = new Job();
+        String ce = gl.getCERequirementsForJob(j, GLite.PBS_GRID_RESOURCE);
+        System.err.println(ce);
     }
 }
