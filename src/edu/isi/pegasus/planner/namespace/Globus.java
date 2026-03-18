@@ -39,6 +39,7 @@ public class Globus extends Namespace {
     public static final String NAMESPACE_NAME = Profile.GLOBUS;
 
     private static Map<String, String> mRSLToPegasus;
+    private static Map<String, String> mPegasusToRSL;
 
     /**
      * Maps Globus RSL keys to corresponding Pegasus Profile Keys
@@ -57,6 +58,25 @@ public class Globus extends Namespace {
             mRSLToPegasus.put(Globus.PROJECT_KEY, Pegasus.PROJECT_KEY);
         }
         return mRSLToPegasus;
+    }
+
+    /**
+     * Maps Pegasus resource profile keys to corresponding globus RLS key
+     *
+     * @return
+     */
+    public static Map<String, String> pegasusProfilesToRSLKey() {
+        if (mPegasusToRSL == null) {
+            mPegasusToRSL = new HashMap();
+            mPegasusToRSL.put(Pegasus.MEMORY_KEY, Globus.MAX_MEMORY_KEY);
+            mPegasusToRSL.put(Pegasus.RUNTIME_KEY, Globus.MAX_WALLTIME_KEY);
+            mPegasusToRSL.put(Pegasus.CORES_KEY, Globus.COUNT_KEY);
+            mPegasusToRSL.put(Pegasus.NODES_KEY, Globus.HOST_COUNT_KEY);
+            mPegasusToRSL.put(Pegasus.PPN_KEY, Globus.XCOUNT_KEY);
+            mPegasusToRSL.put(Pegasus.QUEUE_KEY, Globus.QUEUE_KEY);
+            mPegasusToRSL.put(Pegasus.PROJECT_KEY, Globus.PROJECT_KEY);
+        }
+        return mPegasusToRSL;
     }
 
     private static Map<String, String> mRSLToENV;
