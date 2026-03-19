@@ -363,6 +363,10 @@ public class GLite extends Abstract {
                                     pegasusProfileKey);
                 }
 
+                // GH-2176 no special handling for runtime key
+                // Globus is not used job submission. Globus profile
+                // namespace is internal and with 5.1.3 we assume
+                // the value to be in seconds.
                 //                if (rslKey.equals(Globus.MAX_WALLTIME_KEY)) {
                 //                    // handle runtime key as a special case as, as a globus
                 // profile it is in minutes

@@ -122,7 +122,10 @@ public class Globus extends Namespace {
     /** Key indicating the number of hosts to be used */
     public static final String HOST_COUNT_KEY = "hostcount";
 
-    /** Key indicating max walltime for a job. */
+    /**
+     * Key indicating max walltime for a job in seconds. Units to seconds changed in 5.1.3 . Earlier
+     * it was assumed to be minutes
+     */
     public static final String MAX_WALLTIME_KEY = "maxwalltime";
 
     /** Key indicating the maximum memory used. */
