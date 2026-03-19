@@ -72,9 +72,9 @@ public class CondorGTest {
     @Test
     public void testPegasusProfileRuntime() throws CondorStyleException {
         Job j = new Job();
-        // runtime in seconds. walltime in minutes
+        // runtime in seconds. walltime in seconds now.
         j.vdsNS.checkKeyInNS(Pegasus.RUNTIME_KEY, "5");
-        testForKey(j, Globus.MAX_WALLTIME_KEY, "1");
+        testForKey(j, Globus.MAX_WALLTIME_KEY, "5");
     }
 
     @Test
