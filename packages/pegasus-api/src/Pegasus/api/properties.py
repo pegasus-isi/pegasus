@@ -2,6 +2,7 @@ import logging
 import re
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
+from pathlib import Path
 from typing import Optional, TextIO, Union
 
 __all__ = ["Properties"]
@@ -338,7 +339,7 @@ class Properties:
 
         self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 
-    def write(self, file: Optional[Union[str, TextIO]] = None):
+    def write(self, file: Optional[Union[str, Path, TextIO]] = None):
         """Write these properties to a file. If :code:`file` is not given, these
         properties are written to :code:`./pegasus.properties`
 
@@ -352,7 +353,7 @@ class Properties:
                 props.write(f)
 
         :param file: file path or file object where properties will be written to, defaults to None
-        :type file: Optional[Union[str, TextIO]]
+        :type file: Optional[Union[str, Path, TextIO]]
         :raises TypeError: file must be of type str or file like object
         """
         with StringIO() as sio:
@@ -365,7 +366,7 @@ class Properties:
         if file is None:
             file = "pegasus.properties"
 
-        if isinstance(file, str):
+        if isinstance(file, (str, Path)):
             with open(file, "w") as f:
                 f.write(props)
         elif hasattr(file, "read"):
