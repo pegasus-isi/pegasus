@@ -547,9 +547,9 @@ def mkdir(args):
     uri = parse_uri(args.url)
 
     if uri.bucket is None:
-        raise Exception("URL for mkdir must contain a bucket: %s" % arg)
+        raise Exception("URL for mkdir must contain a bucket: %s" % args.url)
     if uri.key is not None:
-        raise Exception("URL for mkdir cannot contain a key: %s" % arg)
+        raise Exception("URL for mkdir cannot contain a key: %s" % args.url)
 
     config = get_config(args)
     s3, region_name = get_s3_client(config, uri)
@@ -618,7 +618,6 @@ def rm(args):
     config = get_config(args)
 
     for bucket in buckets:
-
         # Connect to the bucket
         log.info("Deleting keys from bucket %s" % bucket)
         uri, keys = buckets[bucket]

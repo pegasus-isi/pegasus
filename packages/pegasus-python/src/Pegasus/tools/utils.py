@@ -16,7 +16,6 @@
 
 """Provides common functions used by all workflow programs."""
 
-
 import calendar
 import csv
 import datetime
@@ -776,7 +775,7 @@ def truncate_file(source_file):
         with open(source_file, "w") as fp:
             fp.truncate(0)
     except:
-        logger.error(f"Unable to truncate file %s")
+        logger.error("Unable to truncate file %s", source_file)
         return False
 
     return True
