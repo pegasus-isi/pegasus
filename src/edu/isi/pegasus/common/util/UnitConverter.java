@@ -52,7 +52,7 @@ public class UnitConverter {
      * in MB. If a value can't be converted then returns -1.
      *
      * <p>In the case a KB value is specified, then we return ceiling of the value passed divided by
-     * 1023 i.e Math.ceil(value/1024)
+     * 1024 i.e Math.ceil(value/1024)
      *
      * @param value value to be converted optionally with a suffix
      * @return
