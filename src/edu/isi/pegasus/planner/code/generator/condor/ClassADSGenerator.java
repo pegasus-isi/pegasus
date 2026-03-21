@@ -100,7 +100,7 @@ public class ClassADSGenerator {
             mPegasusClassAdsToPegasusProfiles = new HashMap();
             mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.MEMORY_KEY, Pegasus.MEMORY_KEY);
             mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.CORES_KEY, Pegasus.CORES_KEY);
-            mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.MEMORY_KEY, Pegasus.GPUS_KEY);
+            mPegasusClassAdsToPegasusProfiles.put(ClassADSGenerator.GPUS_KEY, Pegasus.GPUS_KEY);
             mPegasusClassAdsToPegasusProfiles.put(
                     ClassADSGenerator.DISKSPACE_KEY, Pegasus.DISKSPACE_KEY);
             mPegasusClassAdsToPegasusProfiles.put(
@@ -123,8 +123,7 @@ public class ClassADSGenerator {
                     Pegasus.MEMORY_KEY, ClassADSGenerator.MEMORY_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     Pegasus.CORES_KEY, ClassADSGenerator.CORES_KEY);
-            mPegasusProfilesToPegasusClassAdKeys.put(
-                    Pegasus.GPUS_KEY, ClassADSGenerator.MEMORY_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(Pegasus.GPUS_KEY, ClassADSGenerator.GPUS_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     Pegasus.DISKSPACE_KEY, ClassADSGenerator.DISKSPACE_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(

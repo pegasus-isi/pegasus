@@ -111,7 +111,9 @@ class Writable:
                 self_as_dict, file, cls=_CustomEncoder, indent=4, ensure_ascii=False
             )
 
-    def write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml"):
+    def write(
+        self, file: Optional[Union[str, Path, TextIO]] = None, _format: str = "yml"
+    ):
         """Serialize this class as either yaml or json and write to the given
         file. If file==None, this class will be written to a default file. The
         following classes have these defaults:
@@ -129,7 +131,7 @@ class Writable:
             =====================  ===================
 
         :param file: path or file object (opened in "w" mode) to write to, defaults to None
-        :type file: Optional[Union[str, TextIO]]
+        :type file: Optional[Union[str, Path, TextIO]]
         :param _format: can be either "yml", "yaml" or "json", defaults to "yml"
         :type _format: str, optional
         :raises ValueError: _format must be one of "yml", "yaml" or "json"
@@ -145,7 +147,7 @@ class Writable:
             file = self._DEFAULT_FILENAME
 
         # do the write
-        if isinstance(file, str):
+        if isinstance(file, (str, Path)):
             path = Path(file)
             ext = path.suffix[1:].lower()
 

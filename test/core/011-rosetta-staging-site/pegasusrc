@@ -5,3 +5,7 @@ pegasus.transfer.worker.package = true
 
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
+
+# always get the job environment in the
+# kickstart record
+pegasus.gridstart.arguments = -f 

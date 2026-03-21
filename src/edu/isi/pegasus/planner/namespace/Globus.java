@@ -21,8 +21,10 @@ import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -39,6 +41,8 @@ public class Globus extends Namespace {
     public static final String NAMESPACE_NAME = Profile.GLOBUS;
 
     private static Map<String, String> mRSLToPegasus;
+    private static Map<String, String> mPegasusToRSL;
+    private static Set mRSLKeysSubstitutedWithPegasusClassAds;
 
     /**
      * Maps Globus RSL keys to corresponding Pegasus Profile Keys
@@ -57,6 +61,25 @@ public class Globus extends Namespace {
             mRSLToPegasus.put(Globus.PROJECT_KEY, Pegasus.PROJECT_KEY);
         }
         return mRSLToPegasus;
+    }
+
+    /**
+     * Maps Pegasus resource profile keys to corresponding globus RLS key
+     *
+     * @return
+     */
+    public static Map<String, String> pegasusProfilesToRSLKey() {
+        if (mPegasusToRSL == null) {
+            mPegasusToRSL = new HashMap();
+            mPegasusToRSL.put(Pegasus.MEMORY_KEY, Globus.MAX_MEMORY_KEY);
+            mPegasusToRSL.put(Pegasus.RUNTIME_KEY, Globus.MAX_WALLTIME_KEY);
+            mPegasusToRSL.put(Pegasus.CORES_KEY, Globus.COUNT_KEY);
+            mPegasusToRSL.put(Pegasus.NODES_KEY, Globus.HOST_COUNT_KEY);
+            mPegasusToRSL.put(Pegasus.PPN_KEY, Globus.XCOUNT_KEY);
+            mPegasusToRSL.put(Pegasus.QUEUE_KEY, Globus.QUEUE_KEY);
+            mPegasusToRSL.put(Pegasus.PROJECT_KEY, Globus.PROJECT_KEY);
+        }
+        return mPegasusToRSL;
     }
 
     private static Map<String, String> mRSLToENV;
@@ -80,6 +103,16 @@ public class Globus extends Namespace {
         return mRSLToENV;
     }
 
+    public static final Set<String> rslKeysSubstitutedWithPegasusClassAds() {
+        if (mRSLKeysSubstitutedWithPegasusClassAds == null) {
+            mRSLKeysSubstitutedWithPegasusClassAds = new HashSet();
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.COUNT_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_MEMORY_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_WALLTIME_KEY);
+        }
+        return mRSLKeysSubstitutedWithPegasusClassAds;
+    }
+
     /** Key indicating the number of cores to be used */
     public static final String COUNT_KEY = "count";
 
@@ -89,7 +122,10 @@ public class Globus extends Namespace {
     /** Key indicating the number of hosts to be used */
     public static final String HOST_COUNT_KEY = "hostcount";
 
-    /** Key indicating max walltime for a job. */
+    /**
+     * Key indicating max walltime for a job in seconds. Units to seconds changed in 5.1.3 . Earlier
+     * it was assumed to be minutes
+     */
     public static final String MAX_WALLTIME_KEY = "maxwalltime";
 
     /** Key indicating the maximum memory used. */

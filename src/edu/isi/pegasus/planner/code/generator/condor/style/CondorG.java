@@ -139,15 +139,11 @@ public class CondorG extends Abstract {
             return;
         }
 
-        // handle runtime key as a special case
-        if (profiles.containsKey(Pegasus.RUNTIME_KEY)) {
-            long runtime = Long.parseLong(profiles.getStringValue(Pegasus.RUNTIME_KEY));
-            if (!rsl.containsKey(Globus.MAX_WALLTIME_KEY)) {
-                // take the ceiling value
-                long runtimeM = (long) Math.ceil(runtime / 60.0);
-                rsl.construct(Globus.MAX_WALLTIME_KEY, Long.toString(runtimeM));
-            }
-        }
+        // GH-2176 no special handling for runtime key
+        // Globus is not used job submission. Globus profile
+        // namespace is internal. so no unnecesary conversion
+        // from seconds to minutes and then seconds later
+        // in Glite.java for generating job runtimes etc.
 
         // we only take value of Pegasus profile if corresponding
         // globus profile is not set

@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
+import edu.isi.pegasus.common.util.UnitConverter;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -896,6 +897,18 @@ public class Condor extends Namespace {
                     key = REQUIREMENTS_KEY;
                     // construct the classad expression
                     value = FILE_SYSTEM_DOMAIN_KEY + " == " + "\"" + value + "\"";
+                } else if (key.equalsIgnoreCase(Condor.REQUEST_MEMORY_KEY)) {
+                    // GH-2178 convert to MB if possible taking into account the units passed
+                    long converted = UnitConverter.toMB(value);
+                    if (converted >= 0) {
+                        value = Long.toString(converted);
+                    }
+                } else if (key.equalsIgnoreCase(Condor.REQUEST_DISK_KEY)) {
+                    // GH-2178 convert to KB if possible taking into account the units passed
+                    long converted = UnitConverter.toKB(value);
+                    if (converted >= 0) {
+                        value = Long.toString(converted);
+                    }
                 }
                 construct(key, value);
                 break;

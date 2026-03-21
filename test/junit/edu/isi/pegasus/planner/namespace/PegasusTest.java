@@ -138,7 +138,11 @@ public class PegasusTest {
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
-        testKey(Pegasus.DISKSPACE_KEY, "dummy", Namespace.VALID_KEY);
+        testKey(Pegasus.DISKSPACE_KEY, "1024", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        this.testKeyWithIllegalArgument(Pegasus.DISKSPACE_KEY, "1G", "should have a numeric value");
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
@@ -206,7 +210,11 @@ public class PegasusTest {
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
-        testKey(Pegasus.MEMORY_KEY, "dummy", Namespace.VALID_KEY);
+        testKey(Pegasus.MEMORY_KEY, "1", Namespace.VALID_KEY);
+        mLogger.logEventCompletion();
+
+        mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
+        this.testKeyWithIllegalArgument(Pegasus.MEMORY_KEY, "1G", "should have a numeric value");
         mLogger.logEventCompletion();
 
         mLogger.logEventStart("test.namespace.Pegasus", "set", Integer.toString(mTestNum++));
@@ -374,5 +382,30 @@ public class PegasusTest {
         Pegasus p = new Pegasus();
         int result = p.checkKey(key, value);
         assertEquals(expected, result, key);
+    }
+
+    /**
+     * convenience method
+     *
+     * @param key
+     * @param expected
+     * @param actual
+     */
+    private void testKeyWithIllegalArgument(String key, String value, String expectedErrorMessage) {
+        System.out.println("Testing Key " + key);
+        Pegasus p = new Pegasus();
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> {
+                            p.checkKey(key, value);
+                        });
+        assertTrue(
+                exception.getMessage().contains(expectedErrorMessage),
+                "EXCEPTION MESSAGE "
+                        + exception.getMessage()
+                        + " DOES NOT CONTAIN "
+                        + expectedErrorMessage);
     }
 }

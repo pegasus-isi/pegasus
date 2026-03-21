@@ -6,6 +6,14 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(tox:*)",
+      "Bash(pytest:*)",
+      "Bash(autoflake:*)",
+      "Bash(pyupgrade:*)",
+      "Bash(isort:*)",
+      "Bash(black:*)",
+      "Bash(flake8:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
       "Bash(ant:*)"
     ]
   },

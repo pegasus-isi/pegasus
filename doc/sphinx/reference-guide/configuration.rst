@@ -427,15 +427,9 @@ RSL specification.
     | | Since : 2.0                      |                                                               |
     | | Type :Integer                    |                                                               |
     +------------------------------------+---------------------------------------------------------------+
-    | | Property Key: globus.maxtime     | | the maximum time or walltime in minutes for a single        |
-    | | Profile Key:maxtime              | | execution of a job.                                         |
-    | | Scope : TC, SC, DAX, Properties  |                                                               |
-    | | Since : 2.0                      |                                                               |
-    | | Type  : Integer                  |                                                               |
-    +------------------------------------+---------------------------------------------------------------+
-    | | Property Key: globus.maxwalltime | | the maximum walltime in minutes for a single execution      |
-    | | Profile Key: maxwalltime         | | of a job.                                                   |
-    | | Scope : TC, SC, DAX, Properties  |                                                               |
+    | | Property Key: globus.maxwalltime | | the maximum walltime in seconds for a single execution      |
+    | | Profile Key: maxwalltime         | | of a job. Units changed from minutes to seconds starting    |
+    | | Scope : TC, SC, DAX, Properties  | | 5.1.3/5.2.0 releases.                                       |
     | | Since : 2.0                      |                                                               |
     | | Type :Integer                    |                                                               |
     +------------------------------------+---------------------------------------------------------------+

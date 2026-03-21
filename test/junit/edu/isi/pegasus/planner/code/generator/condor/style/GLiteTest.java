@@ -21,8 +21,10 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.generator.condor.ClassADSGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,14 +97,20 @@ public class GLiteTest {
     public void testPegasusGPUS() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.GPUS_KEY, "5");
-        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*GPUS==\"([0-9]*)\".*", "5");
+
+        // this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*GPUS==\"([0-9]*)\".*", "5");
+        this.testWithPegasusClassADSVariables(
+                j, DEFAULT_GRID_RESOURCE, Pegasus.GPUS_KEY, "GPUS", "5");
     }
 
     @Test
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.MEMORY_KEY, "50");
-        this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*", "50");
+        // this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*",
+        // "50");
+        this.testWithPegasusClassADSVariables(
+                j, DEFAULT_GRID_RESOURCE, Pegasus.MEMORY_KEY, "PER_PROCESS_MEMORY", "50");
     }
 
     // disable for GH-2175 @Test
@@ -143,7 +151,10 @@ public class GLiteTest {
     public void testSGEPegasusProfileCores() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.CORES_KEY, "5");
-        this.testWithRegex(j, "sge", ".*CORES==\"([0-9]*)\".*", "5");
+
+        // this.testWithRegex(j, "sge", ".*CORES==\"([0-9]*)\".*", "5");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.SGE_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "5");
     }
 
     // test SGE complex combinations
@@ -170,7 +181,10 @@ public class GLiteTest {
         Job j = new Job();
         j.vdsNS.construct(Pegasus.PPN_KEY, "8");
         j.vdsNS.construct(Pegasus.NODES_KEY, "5");
-        this.testWithRegex(j, GLite.SGE_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+
+        // this.testWithRegex(j, GLite.SGE_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.SGE_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "40");
     }
 
     // test PBS complex combinations
@@ -202,7 +216,10 @@ public class GLiteTest {
         j.vdsNS.construct(Pegasus.NODES_KEY, "5");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
-        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+
+        // this.testWithRegex(j, , ".*CORES==\"([0-9]*)\".*", "40");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.PBS_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "40");
     }
 
     @Test
@@ -234,7 +251,10 @@ public class GLiteTest {
         j.vdsNS.construct(Pegasus.PPN_KEY, "8");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
-        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+
+        // this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.PBS_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "40");
     }
 
     @Test
@@ -261,9 +281,13 @@ public class GLiteTest {
         j.vdsNS.construct(Pegasus.CORES_KEY, "40");
         j.vdsNS.construct(Pegasus.NODES_KEY, "5");
         j.vdsNS.construct(Pegasus.PPN_KEY, "8");
+
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "5");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "8");
-        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+
+        // this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "40");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.PBS_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "40");
     }
 
     @Test
@@ -297,7 +321,55 @@ public class GLiteTest {
         j.vdsNS.construct(Pegasus.PPN_KEY, "1");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*NODES==\"([0-9]*)\".*", "1");
         this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*PROCS==\"([0-9]*)\".*", "1");
-        this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "1");
+
+        // this.testWithRegex(j, GLite.PBS_GRID_RESOURCE, ".*CORES==\"([0-9]*)\".*", "1");
+        this.testWithPegasusClassADSVariables(
+                j, GLite.PBS_GRID_RESOURCE, Pegasus.CORES_KEY, "CORES", "1");
+    }
+
+    private void testWithPegasusClassADSVariables(
+            Job j,
+            String gridResource,
+            String pegasusProfileKey,
+            String expectedCERequirementKey,
+            String expectedValue)
+            throws CondorStyleException {
+        String ce = gs.getCERequirementsForJob(j, gridResource);
+
+        String expectedGlobusKey = Globus.pegasusProfilesToRSLKey().get(pegasusProfileKey);
+        if (!pegasusProfileKey.equals(Pegasus.GPUS_KEY)) {
+            // we have no mapping for the GPU's key
+            assertNotNull(
+                    expectedGlobusKey,
+                    "Unable to map pegasus key to globus RSL - " + pegasusProfileKey);
+            assertTrue(
+                    j.globusRSL.containsKey(expectedGlobusKey),
+                    "Job does not contain globus rsl key - " + expectedGlobusKey);
+            assertEquals(expectedValue, j.globusRSL.get(expectedGlobusKey), "Expected value");
+        }
+
+        String expectedClassAdKey =
+                ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(pegasusProfileKey);
+        System.err.println(ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys());
+        assertNotNull(
+                expectedClassAdKey,
+                "Unable to map pegasus key " + pegasusProfileKey + " to classad key");
+
+        // CORES=="$(my.pegasus_cores)"
+        // .*CORES=="\$\(my\.(.*)\)".*
+        String regex = ".*" + expectedCERequirementKey + "==\"\\$\\(my\\.(.*)\\)\".*";
+
+        // System.err.println("***** DEBUG *****");
+        // System.err.println( regex );
+        // System.err.println( ce );
+
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(ce);
+        String value = null;
+        while (m.find()) {
+            value = m.group(1);
+        }
+        assertEquals(expectedClassAdKey, value);
     }
 
     private void testWithRegex(Job j, String gridResource, String regex, String expected)

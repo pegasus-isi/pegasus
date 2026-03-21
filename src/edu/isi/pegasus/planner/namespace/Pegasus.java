@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A Planner specific namespace. It defines profiles that are used to fine tune Pegasus behaviour on
@@ -577,9 +578,15 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'd':
-                if ((key.compareTo(DATA_CONFIGURATION_KEY) == 0)
-                        || (key.compareTo(DISKSPACE_KEY) == 0)) {
+                if ((key.compareTo(DATA_CONFIGURATION_KEY) == 0)) {
                     res = VALID_KEY;
+                } else if (key.compareTo(DISKSPACE_KEY) == 0) {
+                    // GH-2177 make sure value is numeric
+                    if (StringUtils.isNumeric(value)) {
+                        res = VALID_KEY;
+                    } else {
+                        complainForNonNumericValue(key, value);
+                    }
                 } else {
                     res = UNKNOWN_KEY;
                 }
@@ -640,8 +647,15 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'm':
-                if (key.compareTo(MAX_WALLTIME) == 0 || key.compareTo(MEMORY_KEY) == 0) {
+                if (key.compareTo(MAX_WALLTIME) == 0) {
                     res = VALID_KEY;
+                } else if (key.compareTo(MEMORY_KEY) == 0) {
+                    // GH-2177 make sure value is numeric
+                    if (StringUtils.isNumeric(value)) {
+                        res = VALID_KEY;
+                    } else {
+                        complainForNonNumericValue(key, value);
+                    }
                 } else {
                     res = UNKNOWN_KEY;
                 }
@@ -951,5 +965,20 @@ public class Pegasus extends Namespace {
      */
     public Object clone() {
         return (mProfileMap == null) ? new Pegasus() : new Pegasus(this.mProfileMap);
+    }
+
+    /**
+     * Complain for a non numeric value
+     *
+     * @param key
+     * @param value
+     */
+    public void complainForNonNumericValue(String key, String value) {
+        StringBuilder error = new StringBuilder();
+        error.append("Pegasus profile - ")
+                .append(key)
+                .append(" should have a numeric value. Value passed - ")
+                .append(value);
+        throw new IllegalArgumentException(error.toString());
     }
 }

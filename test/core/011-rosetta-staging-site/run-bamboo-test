@@ -70,7 +70,7 @@ sites:
       project: scavenge
       runtime: 1800
       glite.arguments: --cpus-per-task=1
-      memory: 2G
+      memory: 2048
       # Works around bug in the HTCondor GAHP, that does not
       # set the remote directory
       change.dir: 'true'
