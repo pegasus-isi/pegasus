@@ -1,4 +1,5 @@
 import io
+import typing
 from dataclasses import fields
 from typing import Dict
 
@@ -7,6 +8,14 @@ import pytest
 from Pegasus.braindump import Braindump, dump, dumps, load, loads
 
 cls_fields = {field.name: field for field in fields(Braindump)}
+
+
+def _isinstance_types(t):
+    """Return types suitable for isinstance() from a possibly-Optional annotation."""
+    origin = getattr(t, "__origin__", None)
+    if origin is typing.Union:
+        return tuple(a for a in t.__args__ if a is not type(None))
+    return (t,)
 
 
 @pytest.mark.parametrize(
@@ -26,8 +35,8 @@ def test_load(s, obj):
     assert isinstance(b, Braindump)
     for k, v in obj.items():
         assert k in cls_fields
-        assert isinstance(getattr(b, k), cls_fields[k].type)
-        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
 
 @pytest.mark.parametrize(
@@ -47,8 +56,8 @@ def test_loads(s, obj):
 
     for k, v in obj.items():
         assert k in cls_fields
-        assert isinstance(getattr(b, k), cls_fields[k].type)
-        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
 
 def test_loads_fail():
@@ -77,7 +86,7 @@ def test_dump(obj: Dict):
 
     for k in obj.keys():
         assert k in cls_fields
-        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
     dump(b, fp)
 
@@ -105,7 +114,7 @@ def test_dumps(obj: Dict):
 
     for k in obj:
         assert k in cls_fields
-        assert isinstance(getattr(b, k), cls_fields[k].type)
+        assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
     rv = dumps(b)
     for attr_name, attr_val in obj.items():
