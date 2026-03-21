@@ -27,7 +27,7 @@ public class UnitConverter {
 
     /** Store the regular expressions necessary to parse the memory values */
     private static final String mRegexExpression =
-            "^\\s*(\\d+([Ee][+-]?\\d+)?)\\s*([kKMmGgPpEeZzYy][Bb]?)?\\s*$";
+            "^\\s*(\\d+([Ee][+-]?\\d+)?)\\s*([kKMmGgTtPp][Bb]?)?\\s*$";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPattern = null;
@@ -83,20 +83,22 @@ public class UnitConverter {
         if (conversion == null) {
             // KB is a rare case and our base unit is MB
             if (unit.equals("kb")) {
-                // do a celining so that value is never 0
+                // do a ceiling so that value is never 0
                 result = (long) Math.ceil((double) amt / 1024);
             }
         } else {
             result = amt * conversion;
         }
-        System.out.println(
-                "Unit computed for " + value + " is " + unit + " and converted to MB is " + result);
+        // System.out.println(
+        //        "Unit computed for " + value + " is " + unit + " and converted to MB is " +
+        // result);
         return result;
     }
 
     /**
      * Converts the value passed into MB. If no unit is specified, the passed value is assumed to be
-     * in KB. If a value can't be converted then returns -1.
+     * in KB. A value of <= 1024 KB is always returned as 1024. If a value can't be converted then
+     * returns -1.
      *
      * @param value value to be converted optionally with a suffix
      * @return
@@ -105,13 +107,14 @@ public class UnitConverter {
         long val = UnitConverter.toMB(value);
 
         val = (val == -1) ? -1 : val * 1024;
-        System.out.println("Unit computed for " + value + " and converted to KB is " + val);
+        // System.out.println("Unit computed for " + value + " and converted to KB is " + val);
         return val;
     }
 
     public static void main(String[] args) {
         // UnitConverter uc = new UnitConverter();
 
+        UnitConverter.toMB("1 PB");
         UnitConverter.toMB("1 KB");
         UnitConverter.toMB("1 M");
         UnitConverter.toMB("1 MB");
