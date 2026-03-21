@@ -27,7 +27,7 @@ public class UnitConverter {
 
     /** Store the regular expressions necessary to parse the memory values */
     private static final String mRegexExpression =
-            "^\\s*(\\d+([Ee][+-]?\\d+)?)\\s*([MmGgPpEeZzYy][Bb]?)?\\s*$";
+            "^\\s*(\\d+([Ee][+-]?\\d+)?)\\s*([kKMmGgPpEeZzYy][Bb]?)?\\s*$";
 
     /** Stores compiled patterns at first use, quasi-Singleton. */
     private static Pattern mPattern = null;
@@ -50,6 +50,9 @@ public class UnitConverter {
     /**
      * Converts the value passed into MB. If no unit is specified, the passed value is assumed to be
      * in MB. If a value can't be converted then returns -1.
+     *
+     * <p>In the case a KB value is specified, then we return ceiling of the value passed divided by
+     * 1023 i.e Math.ceil(value/1024)
      *
      * @param value value to be converted optionally with a suffix
      * @return
@@ -75,11 +78,19 @@ public class UnitConverter {
             // add a b suffix
             unit += "b";
         }
-        result = amt * UnitConverter.mUnitsToMBMultiplier.get(unit);
 
-        // System.out.println(
-        //        "Unit computed for " + value + " is " + unit + " and converted to MB is " +
-        // result);
+        Long conversion = UnitConverter.mUnitsToMBMultiplier.get(unit);
+        if (conversion == null) {
+            // KB is a rare case and our base unit is MB
+            if (unit.equals("kb")) {
+                // do a celining so that value is never 0
+                result = (long) Math.ceil((double) amt / 1024);
+            }
+        } else {
+            result = amt * conversion;
+        }
+        System.out.println(
+                "Unit computed for " + value + " is " + unit + " and converted to MB is " + result);
         return result;
     }
 
@@ -94,18 +105,20 @@ public class UnitConverter {
         long val = UnitConverter.toMB(value);
 
         val = (val == -1) ? -1 : val * 1024;
-        // System.out.println(
-        //        "Unit computed for " + value +  " and converted to KB is " + val);
+        System.out.println("Unit computed for " + value + " and converted to KB is " + val);
         return val;
     }
 
     public static void main(String[] args) {
         // UnitConverter uc = new UnitConverter();
+
+        UnitConverter.toMB("1 KB");
         UnitConverter.toMB("1 M");
         UnitConverter.toMB("1 MB");
         UnitConverter.toMB("1");
         UnitConverter.toMB("1 G");
         UnitConverter.toMB("10 GB");
         UnitConverter.toKB("1 MB");
+        UnitConverter.toKB("1 KB");
     }
 }
