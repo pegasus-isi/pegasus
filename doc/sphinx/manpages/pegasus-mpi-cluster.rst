@@ -38,10 +38,10 @@ process is rank 0 in MPI parlance) and several worker processes. The
 master process manages the workflow and assigns workflow tasks to
 workers for execution. The workers execute the tasks and return the
 results to the master. Any output written to stdout or stderr by the
-tasks is captured (see `TASK STDIO <#TASK_STDIO>`__).
+tasks is captured (see :ref:`TASK STDIO <TASK_STDIO>`).
 
 **pegasus-mpi-cluster** applications are expressed as DAGs (Directed
-Acyclic Graphs) (see `DAG FILES <#DAG_FILES>`__). Each node in the graph
+Acyclic Graphs) (see :ref:`DAG FILES <DAG_FILES>`). Each node in the graph
 represents a task, and the edges represent dependencies between the
 tasks that constrain the order in which the tasks are executed. Each
 task is a program and a set of parameters that need to be run (i.e. a
@@ -51,14 +51,13 @@ files produced by one task are needed as inputs for another.
 
 If an error occurs while executing a DAG that causes the workflow to
 stop, it can be restarted using a rescue file, which records the
-progress of the workflow (see `RESCUE FILES <#RESCUE_FILES>`__). This
+progress of the workflow (see :ref:`RESCUE FILES <RESCUE_FILES>`). This
 enables **pegasus-mpi-cluster** to pick up running the workflow where it
 stopped.
 
 **pegasus-mpi-cluster** was designed to work either as a standalone tool
 or as a complement to the Pegasus Workflow Managment System (WMS). For
-more information about using PMC with Pegasus see the section on `PMC
-AND PEGASUS <#PMC_AND_PEGASUS>`__.
+more information about using PMC with Pegasus see the section on :ref:`PMC AND PEGASUS <PMC_AND_PEGASUS>`.
 
 **pegasus-mpi-cluster** allows applications expressed as a DAG to be
 executed in parallel on a large number of compute nodes. It is designed
@@ -78,25 +77,25 @@ Options
 **-v**; \ **--verbose**
    Increase logging verbosity. Adding multiple **-v** increases the
    level more. The default log level is *INFO*. (see
-   `LOGGING <#LOGGING>`__)
+   :ref:`LOGGING <LOGGING>`)
 
 **-q**; \ **--quiet**
    Decrease logging verbosity. Adding multiple **-q** decreases the
    level more. The default log level is *INFO*. (see
-   `LOGGING <#LOGGING>`__)
+   :ref:`LOGGING <LOGGING>`)
 
 **-s**; \ **--skip-rescue**
    Ignore the rescue file for *workflow.dag* if it exists. Note that
    **pegasus-mpi-cluster** will still create a new rescue file for the
    current run. The default behavior is to use the rescue file if one is
-   found. (see `RESCUE FILES <#RESCUE_FILES>`__)
+   found. (see :ref:`RESCUE FILES <RESCUE_FILES>`)
 
 **-o** *path*; \ **--stdout** *path*
-   Path to file for task stdout. (see `TASK STDIO <#TASK_STDIO>`__ and
+   Path to file for task stdout. (see :ref:`TASK STDIO <TASK_STDIO>` and
    **--per-task-stdio**)
 
 **-e** *path*; \ **--stderr** *path*
-   Path to file for task stderr. (see `TASK STDIO <#TASK_STDIO>`__ and
+   Path to file for task stderr. (see :ref:`TASK STDIO <TASK_STDIO>` and
    **--per-task-stdio**)
 
 **-m** *M*; \ **--max-failures** *M*
@@ -126,25 +125,23 @@ Options
    then the log will be used to recover the state of the workflow. The
    file is truncated after it is read and a new rescue log is created in
    its place. The default is to append *.rescue* to the DAG file name.
-   (see `RESCUE FILES <#RESCUE_FILES>`__)
+   (see :ref:`RESCUE FILES <RESCUE_FILES>`)
 
 **--host-script** *path*
    Path to a script or executable to launch on each unique host that
    **pegasus-mpi-cluster** is running on. This path can also be set
-   using the PMC_HOST_SCRIPT environment variable. (see `HOST
-   SCRIPTS <#HOST_SCRIPTS>`__)
+   using the PMC_HOST_SCRIPT environment variable. (see :ref:`HOST SCRIPTS <HOST_SCRIPTS>`)
 
 **--host-memory** *size*
    Amount of memory available on each host in MB. The default is to
    determine the amount of physical RAM automatically. This value can
    also be set using the PMC_HOST_MEMORY environment variable. (see
-   `RESOURCE-BASED SCHEDULING <#RESOURCE_SCHED>`__)
+   :ref:`RESOURCE-BASED SCHEDULING <RESOURCE_SCHED>`)
 
 **--host-cpus** *cpus*
    Number of CPUs available on each host. The default is to determine
    the number of CPU cores automatically. This value can also be set
-   using the PMC_HOST_CPUS environment variable. (see `RESOURCE-BASED
-   SCHEDULING <#RESOURCE_SCHED>`__)
+   using the PMC_HOST_CPUS environment variable. (see :ref:`RESOURCE-BASED SCHEDULING <RESOURCE_SCHED>`)
 
 **--strict-limits**
    This enables strict memory usage limits for tasks. When this option
@@ -193,7 +190,7 @@ Options
 
 **--no-sleep-on-recv**
    Do not use polling with sleep() to implement message receive. (see
-   `Known Issues: CPU Usage <#CPU_USAGE_ISSUE>`__)
+   :ref:`Known Issues: CPU Usage <CPU_USAGE_ISSUE>`)
 
 **--maxfds**
    Set the maximum number of file descriptors that can be left open by
@@ -267,16 +264,14 @@ available task options are:
    The amount of memory required by the task in MB. The default is 0,
    which means memory is not considered for this task. This option can
    be set for a job in the DAX by specifying the
-   pegasus::pmc_request_memory profile. (see `RESOURCE-BASED
-   SCHEDULING <#RESOURCE_SCHED>`__)
+   pegasus::pmc_request_memory profile. (see :ref:`RESOURCE-BASED SCHEDULING <RESOURCE_SCHED>`)
 
 **-c** *N*; \ **--request-cpus** *N*
    The number of CPUs required by the task. The default is 1, which
    implies that the number of slots on a host should be less than or
    equal to the number of physical CPUs in order for all the slots to be
    used. This option can be set for a job in the DAX by specifying the
-   pegasus::pmc_request_cpus profile. (see `RESOURCE-BASED
-   SCHEDULING <#RESOURCE_SCHED>`__)
+   pegasus::pmc_request_cpus profile. (see :ref:`RESOURCE-BASED SCHEDULING <RESOURCE_SCHED>`)
 
 **-t** *T*; \ **--tries** *T*
    The number of times to try to execute the task before failing
@@ -303,15 +298,14 @@ available task options are:
    profile (note that the value of pmc_arguments must contain the "-f"
    part of the argument, so a valid value would be: <profile
    namespace="pegasus" key="pmc_arguments">-f A=/tmp/a </profile>). (see
-   `I/O FORWARDING <#IO_FORWARDING>`__)
+   :ref:`I/O FORWARDING <IO_FORWARDING>`)
 
 **-F** *SRC=DEST*; \ **--file-forward** *SRC=DEST*
    Forward I/O to the file *DEST* from the file *SRC*. When the task
    finishes, the worker will read the data from *SRC* and send it to the
    master where it will be written to the file *DEST*. After *SRC* is
    read it is deleted. In order to specify this argument in a Pegasus
-   DAX you need to set the pegasus::pmc_arguments profile. (see `I/O
-   FORWARDING <#IO_FORWARDING>`__)
+   DAX you need to set the pegasus::pmc_arguments profile. (see :ref:`I/O FORWARDING <IO_FORWARDING>`)
 
 The format of an **EDGE** record is:
 
@@ -639,7 +633,7 @@ workflow will be aborted. By default, the host memory is determined
 automatically, however the user can specify **--host-memory** to "lie"
 to **pegasus-mpi-cluster**. The amount of memory required for each task
 is specified in the DAG using the **-m**/**--request-memory** argument
-(see `DAG Files <#DAG_FILES>`__).
+(see :ref:`DAG Files <DAG_FILES>`).
 
 
 
@@ -653,7 +647,7 @@ be aborted. By default, the number of CPUs on a host is determined
 automatically, but the user can specify **--host-cpus** to over- or
 under-subscribe the host. The number of CPUs required for each task is
 specified in the DAG using the **-c**/**--request-cpus** argument (see
-`DAG Files <#DAG_FILES>`__).
+:ref:`DAG Files <DAG_FILES>`).
 
 .. _IO_FORWARDING:
 

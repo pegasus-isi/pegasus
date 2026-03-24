@@ -49,8 +49,7 @@ instrumented to send metrics.
 
 All the metrics are sent in JSON format to a server at USC/ISI over
 HTTP. The data reported is as generic as possible and is listed in
-detail in the section titled `"Metrics
-Collected" <#usage_metrics_collected>`__.
+detail in the section titled :ref:`"Metrics Collected" <usage-metrics-collected>`.
 
 .. _usage-stats-configuration:
 

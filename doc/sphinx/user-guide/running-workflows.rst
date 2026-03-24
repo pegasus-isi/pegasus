@@ -118,8 +118,8 @@ a number of additional helper files.
 The various instructions that can be put into a DAG file are described
 in `Condor's DAGMAN
 documentation <https://htcondor.readthedocs.io/en/latest/users-manual/dagman-workflows.html>`__.
-The constituents of the submit directory are described in the \ `"Submit
-Directory Details" <#submit-directory>`__\ section
+The constituents of the submit directory are described in the
+:ref:`Submit Directory Details <submit-directory>` section
 
 .. _data-staging-configuration:
 
@@ -208,7 +208,7 @@ are defined below.
 You can specifiy the data configuration to use either in
 
 1. properties - Specify the global property
-   `pegasus.data.configuration <#data_conf_props>`__ .
+   :ref:`pegasus.data.configuration <data-conf-props>`.
 
 2. site catalog - Starting 4.5.0 release, you can specify pegasus
    profile key named data.configuration and associate that with your

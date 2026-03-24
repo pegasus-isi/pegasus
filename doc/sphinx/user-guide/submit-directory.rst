@@ -147,7 +147,7 @@ includes the following:
     and writes out the jobstate.log that is easier to parse. The
     jobstate.log captures the various states through which a job goes
     during the workflow. There are other monitoring related files that
-    are explained in the monitoring `chapter <#monitoring-files>`__.
+    are explained in the monitoring :ref:`chapter <monitoring-files>`.
 
 #. **braindump.yml**
 
@@ -652,7 +652,7 @@ Each entry in jobstate.log has the following:
    ========================================== ======================================================================================================
 
 There are other monitoring related files that are explained in the
-monitoring `chapter <#monitoring-files>`__.
+monitoring :ref:`chapter <monitoring-files>`.
 
 .. _submit-directory-delays:
 

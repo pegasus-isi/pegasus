@@ -275,7 +275,7 @@ transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need create a Pegasus credentials files. See 
-`the section on credential staging <#cred-staging>`__. This file is
+:ref:`the section on credential staging <cred-staging>`. This file is
 picked up automatically when your workflow contains s3 transfers.
 
 
@@ -293,7 +293,7 @@ transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need create a Pegasus credentials files. See
-`the section on credential staging <#cred-staging>`__. This file is
+:ref:`the section on credential staging <cred-staging>`. This file is
 picked up automatically when your workflow contains OSN transfers.
 Please add a section in it describing your endpoint. For example
 to use OSN deployment at XSEDE.
@@ -559,7 +559,7 @@ not exist in the archive. pegasus-transfer tries to make sure after the
 transfer that the destination file exists and is readable.
 
 HPSS requires a token to generated for retrieval. Information on how to
-specify the token location can be found `here <#hpss_cred>`__.
+specify the token location can be found :ref:`here <hpss-cred>`.
 
 .. _transfer-irods:
 
@@ -580,7 +580,7 @@ The path to the file is **relative** to the internal iRODS location. In
 the example above, the path used to refer to the file in iRODS is
 *path/to/file.txt* (no leading /).
 
-See `the section on credential staging <#cred_staging>`__ for
+See :ref:`the section on credential staging <cred-staging>` for
 information on how to set up an irodsEnv file to be used by Pegasus.
 
 .. _transfer-stashcp:
@@ -631,7 +631,7 @@ WebDAV (webdav://, webdavs://)
 ------------------------------
 
 Authenticated WebDAV transfers uses the
-`credential staging <#cred-staging>`__ file. Please add a section in
+:ref:`credential staging <cred-staging>` file. Please add a section in
 it describing your endpoint. For example:
 
 ..
@@ -647,9 +647,8 @@ Credentials Management
 ======================
 
 Pegasus tries to do data staging from localhost by default, but some
-data scenarios makes some `remote jobs do data
-staging <#local_vs_remote_transfers>`__. An example of such a case is
-when running in `nonsharedfs <#ref_data_staging_configuration>`__ mode.
+data scenarios makes some :ref:`remote jobs do data staging <local-vs-remote-transfers>`. An example of such a case is
+when running in :ref:`nonsharedfs <ref-data-staging-configuration>` mode.
 Depending on the transfer protocols used, the job may have to carry
 credentials to enable these data transfers. To specify where which
 credential to use and where Pegasus can find it, use environment
@@ -1045,8 +1044,8 @@ The following mappers are supported currently
    where you specify the locations for the input files. You cannot
    specify the locations for the output files to be used by the mapper
    in the Abstract Workflow. The format for the File based replica catalog is
-   described `here <#rc-FILE>`__, while for the Regex it is
-   `here <#rc-regex>`__.
+   described :ref:`here <rc-FILE>`, while for the Regex it is
+   :ref:`here <rc-regex>`.
 
 Effect of pegasus.dir.storage.deep
 ----------------------------------
@@ -1098,7 +1097,7 @@ strategy implemented
    nodes. The nodes remove files no longer required during execution.
    The added cleanup node guarantees limits on disk usage. File sizes
    are read from the **size** flag in the Abstract Workflow, or from a CSV file
-   (`pegasus.file.cleanup.constraint.csv <#cleanup_props>`__).
+   (:ref:`pegasus.file.cleanup.constraint.csv <cleanup-props>`).
 
 ..
 
@@ -1109,7 +1108,7 @@ strategy implemented
    when it is safe to remove a file.
 
 Behaviour of the cleanup strategies implemented in the Pegasus Mapper
-can be controlled by properties described `here <#cleanup_props>`__.
+can be controlled by properties described :ref:`here <cleanup-props>`.
 
 Data Cleanup in Hierarchical Workflows
 --------------------------------------
@@ -1430,7 +1429,7 @@ happen in case of non shared filesystem deployments
 Integrity Checking Statistics
 -----------------------------
 
-`pegasus-statistics <#cli-pegasus-statistics>`__ now includes a section
+:ref:`pegasus-statistics <cli-pegasus-statistics>` now includes a section
 containing integrity statistics:
 
 ::

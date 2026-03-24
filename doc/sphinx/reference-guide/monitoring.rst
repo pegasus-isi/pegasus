@@ -31,7 +31,7 @@ in real-time as it parses the workflow execution logs.
 ``pegasus-monitord`` is automatically invoked by ``pegasus-run``, and
 tracks workflows in real-time. By default, it produces the ``jobstate.log``
 file, and a SQLite database, which contains all the information listed
-in the `Stampede schema <#stampede_schema_overview>`__. When a workflow
+in the :ref:`Stampede schema <stampede-schema-overview>`. When a workflow
 fails, and is re-submitted with a rescue DAG, ``pegasus-monitord`` will
 automatically pick up from where it left previously and continue to
 write the ``jobstate.log`` file and populate the database.
@@ -159,7 +159,7 @@ directory:
 Multiple End points
 ~~~~~~~~~~~~~~~~~~~
 
-```pegasus-monitord`` can be used to publish `events <#stampede_wf_events>`__
+```pegasus-monitord`` can be used to publish :ref:`events <stampede-wf-events>`
 to different backends at the same time. The configuration of this is
 managed through properties matching
 ``pegasus.catalog.workflow.<variable-name>.url``.
@@ -579,83 +579,85 @@ Events
 The system generates following types of events, that are described
 below.
 
--  `stampede.wf.plan <#stampede_wf_plan_event>`__
+-  :ref:`stampede.wf.plan <stampede_wf_plan_event>`
 
--  `stampede.static.start <#stampede_static_start_event>`__
+-  :ref:`stampede.static.start <stampede_static_start_event>`
 
--  `stampede.static.end <#stampede_static_end_event>`__
+-  :ref:`stampede.static.end <stampede_static_end_event>`
 
--  `stampede.xwf.start <#stampede_xwf_start_event>`__
+-  :ref:`stampede.xwf.start <stampede_xwf_start_event>`
 
--  `stampede.xwf.end <#stampede_xwf_end_event>`__
+-  :ref:`stampede.xwf.end <stampede_xwf_end_event>`
 
--  `stampede.task.info <#stampede_task_info_event>`__
+-  :ref:`stampede.task.info <stampede_task_info_event>`
 
--  `stampede.task.edge <#stampede_task_edge_event>`__
+-  :ref:`stampede.task.edge <stampede_task_edge_event>`
 
--  `stampede.wf.map.task_job <#stampede_wf_map_task_job_event>`__
+-  :ref:`stampede.wf.map.task_job <stampede_wf_map_task_job_event>`
 
--  `stampede.xwf.map.subwf_job <#stampede_xwf_map_subwf_job_event>`__
+-  :ref:`stampede.xwf.map.subwf_job <stampede_xwf_map_subwf_job_event>`
 
--  `stampede.int.metric <#stampede_int_metric>`__
+-  :ref:`stampede.int.metric <stampede_int_metric>`
 
--  `stampede.job.info <#stampede_job_info_event>`__
+-  :ref:`stampede.job.info <stampede_job_info_event>`
 
--  `stampede.job.edge <#stampede_job_edge_event>`__
+-  :ref:`stampede.job.edge <stampede_job_edge_event>`
 
--  `stampede.job_inst.pre.start <#stampede_job_inst_pre_start_event>`__
+-  :ref:`stampede.job_inst.pre.start <stampede_job_inst_pre_start_event>`
 
--  `stampede.job_inst.pre.term <#stampede_job_inst_pre_term_event>`__
+-  :ref:`stampede.job_inst.pre.term <stampede_job_inst_pre_term_event>`
 
--  `stampede.job_inst.pre.end <#stampede_job_inst_pre_end_event>`__
+-  :ref:`stampede.job_inst.pre.end <stampede_job_inst_pre_end_event>`
 
--  `stampede.job_inst.submit.start <#stampede_job_inst_submit_start_event>`__
+-  :ref:`stampede.job_inst.submit.start <stampede_job_inst_submit_start_event>`
 
--  `stampede.job_inst.submit.end <#stampede_job_inst_submit_end_event>`__
+-  :ref:`stampede.job_inst.submit.end <stampede_job_inst_submit_end_event>`
 
--  `stampede.job_inst.held.start <#stampede_job_inst_held_start_event>`__
+-  :ref:`stampede.job_inst.held.start <stampede_job_inst_held_start_event>`
 
--  `stampede.job_inst.held.end <#stampede_job_inst_held_end_event>`__
+-  :ref:`stampede.job_inst.held.end <stampede_job_inst_held_end_event>`
 
--  `stampede.job_inst.main.start <#stampede_job_inst_main_start_event>`__
+-  :ref:`stampede.job_inst.main.start <stampede_job_inst_main_start_event>`
 
--  `stampede.job_inst.main.term <#stampede_job_inst_main_term_event>`__
+-  :ref:`stampede.job_inst.main.term <stampede_job_inst_main_term_event>`
 
--  `stampede.job_inst.main.end <#stampede_job_inst_main_end_event>`__
+-  :ref:`stampede.job_inst.main.end <stampede_job_inst_main_end_event>`
 
--  `stampede.job_inst.composite <#stampede_job_inst_composite_event>`__
+-  :ref:`stampede.job_inst.composite <stampede_job_inst_composite_event>`
 
--  `stampede.job_inst.post.start <#stampede_job_inst_post_start_event>`__
+-  :ref:`stampede.job_inst.post.start <stampede_job_inst_post_start_event>`
 
--  `stampede.job_inst.post.term <#stampede_job_inst_post_term_event>`__
+-  :ref:`stampede.job_inst.post.term <stampede_job_inst_post_term_event>`
 
--  `stampede.job_inst.post.end <#stampede_job_inst_post_end_event>`__
+-  :ref:`stampede.job_inst.post.end <stampede_job_inst_post_end_event>`
 
--  `stampede.job_inst.host.info <#stampede_job_inst_host_info_event>`__
+-  :ref:`stampede.job_inst.host.info <stampede_job_inst_host_info_event>`
 
--  `stampede.job_inst.image.info <#stampede_job_inst_image_info_event>`__
+-  :ref:`stampede.job_inst.image.info <stampede_job_inst_image_info_event>`
 
--  `stampede.job_inst.tag <#stampede_job_inst_tag_event>`__
+-  :ref:`stampede.job_inst.tag <stampede_job_inst_tag_event>`
 
--  `stampede.inv.start <#stampede_inv_start_event>`__
+-  :ref:`stampede.inv.start <stampede_inv_start_event>`
 
--  `stampede.inv.end <#stampede_inv_end_event>`__
+-  :ref:`stampede.inv.end <stampede_inv_end_event>`
 
--  `stampede.static.meta.start <#stampede_static_meta_start_event>`__
+-  :ref:`stampede.static.meta.start <stampede_static_meta_start_event>`
 
--  `stampede.static.meta.end <#stampede_static_meta_end_event>`__
+-  :ref:`stampede.static.meta.end <stampede_static_meta_end_event>`
 
--  `stampede.xwf.meta <#stampede_xwf_meta_event>`__
+-  :ref:`stampede.xwf.meta <stampede_xwf_meta_event>`
 
--  `stampede.task.meta <#stampede_task_meta_event>`__
+-  :ref:`stampede.task.meta <stampede_task_meta_event>`
 
--  `stampede.task.monitoring <#stampede_task_monitoring>`__
+-  :ref:`stampede.task.monitoring <stampede_task_monitoring>`
 
--  `stampede.rc.meta <#stampede_rc_meta_event>`__
+-  :ref:`stampede.rc.meta <stampede_rc_meta_event>`
 
--  `stampede.wf.map.file <#stampede_wf_map_file_event>`__
+-  :ref:`stampede.wf.map.file <stampede_wf_map_file_event>`
 
 The events are described in detail below
+
+.. _stampede_wf_plan_event:
 
 -  **stampede.wf.plan**
 
@@ -753,6 +755,8 @@ The events are described in detail below
                   }
       }  // container stampede.wf.plan
 
+.. _stampede_static_start_event:
+
 -  **stampede.static.start**
 
    ::
@@ -761,6 +765,8 @@ The events are described in detail below
            uses base-event;
       }
 
+.. _stampede_static_end_event:
+
 -  **stampede.static.end**
 
    ::
@@ -768,6 +774,8 @@ The events are described in detail below
       container stampede.static.end {
           uses base-event;
       }  //
+
+.. _stampede_xwf_start_event:
 
 -  **stampede.xwf.start**
 
@@ -783,6 +791,8 @@ The events are described in detail below
                       "Number of times workflow was restarted (due to failures)";
                   }
       }  // container stampede.xwf.start
+
+.. _stampede_xwf_end_event:
 
 -  **stampede.xwf.end**
 
@@ -805,6 +815,8 @@ The events are described in detail below
                       "Status of workflow. 0=success, -1=failure";
                   }
       }  // container stampede.xwf.end
+
+.. _stampede_task_info_event:
 
 -  **stampede.task.info**
 
@@ -849,6 +861,8 @@ The events are described in detail below
                   }
                 }  // container stampede.task.info
 
+.. _stampede_task_edge_event:
+
 -  **stampede.task.edge**
 
    ::
@@ -870,6 +884,8 @@ The events are described in detail below
                     description "Child task";
                   }
       }  // container stampede.task.edge
+
+.. _stampede_wf_map_task_job_event:
 
 -  **stampede.wf.map.task_job**
 
@@ -895,6 +911,8 @@ The events are described in detail below
                       "Identifier for corresponding job in the DAG";
                   }
       }  // container stampede.wf.map.task_job
+
+.. _stampede_xwf_map_subwf_job_event:
 
 -  **stampede.xwf.map.subwf_job**
 
@@ -927,6 +945,8 @@ The events are described in detail below
                       "Job instance identifier i.e the submit sequence generated by monitord";
                   }
       }  // container stampede.xwf.map.subwf_job
+
+.. _stampede_job_info_event:
 
 -  **stampede.job.info**
 
@@ -1001,6 +1021,8 @@ The events are described in detail below
                   }
       }  // container stampede.job.info
 
+.. _stampede_job_edge_event:
+
 -  **stampede.job.edge**
 
    ::
@@ -1024,6 +1046,8 @@ The events are described in detail below
                   }
       }  // container stampede.job.edge
 
+.. _stampede_job_inst_pre_start_event:
+
 -  **stampede.job_inst.pre.start**
 
    ::
@@ -1035,6 +1059,8 @@ The events are described in detail below
                   uses base-job-inst;
       }  // container stampede.job_inst.pre.start
 
+.. _stampede_job_inst_pre_term_event:
+
 -  **stampede.job_inst.pre.term**
 
    ::
@@ -1043,6 +1069,8 @@ The events are described in detail below
                   description
                     "Job prescript is terminated (success or failure not yet known)";
       }  // container stampede.job_inst.pre.term
+
+.. _stampede_job_inst_pre_end_event:
 
 -  **stampede.job_inst.pre.end**
 
@@ -1068,6 +1096,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.pre.end
 
+.. _stampede_job_inst_submit_start_event:
+
 -  **stampede.job_inst.submit.start**
 
    ::
@@ -1078,6 +1108,8 @@ The events are described in detail below
                       + "Scheduler job id is not yet known";
                   uses sched-job-inst;
       }  // container stampede.job_inst.submit.start
+
+.. _stampede_job_inst_submit_end_event:
 
 -  **stampede.job_inst.submit.end**
 
@@ -1096,6 +1128,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.submit.end
 
+.. _stampede_job_inst_held_start_event:
+
 -  **stampede.job_inst.held.start**
 
    ::
@@ -1105,6 +1139,8 @@ The events are described in detail below
                     "When Condor holds the jobs";
                   uses sched-job-inst;
       }  // container stampede.job_inst.held.start
+
+.. _stampede_job_inst_held_end_event:
 
 -  **stampede.job_inst.held.end**
 
@@ -1122,6 +1158,8 @@ The events are described in detail below
                       "Status of workflow. 0=success, -1=failure";
                   }
       }  // container stampede.job_inst.held.end
+
+.. _stampede_job_inst_main_start_event:
 
 -  **stampede.job_inst.main.start**
 
@@ -1153,6 +1191,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.main.start
 
+.. _stampede_job_inst_main_term_event:
+
 -  **stampede.job_inst.main.term**
 
    ::
@@ -1169,6 +1209,8 @@ The events are described in detail below
                       "Execution status. 0=means job terminated, -1=job was evicted, not terminated";
                   }
       }  // container stampede.job_inst.main.term
+
+.. _stampede_job_inst_main_end_event:
 
 -  **stampede.job_inst.main.end**
 
@@ -1276,6 +1318,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.main.end
 
+.. _stampede_job_inst_post_start_event:
+
 -  **stampede.job_inst.post.start**
 
    ::
@@ -1286,6 +1330,8 @@ The events are described in detail below
                   uses sched-job-inst;
       }  // container stampede.job_inst.post.start
 
+.. _stampede_job_inst_post_term_event:
+
 -  **stampede.job_inst.post.term**
 
    ::
@@ -1295,6 +1341,8 @@ The events are described in detail below
                     "Job postscript is terminated (success or failure not yet known)";
                   uses sched-job-inst;
       }  // container stampede.job_inst.post.term
+
+.. _stampede_job_inst_post_end_event:
 
 -  **stampede.job_inst.post.end**
 
@@ -1319,6 +1367,8 @@ The events are described in detail below
                       "the exitcode with which the postscript exited";
                   }
       }  // container stampede.job_inst.post.end
+
+.. _stampede_job_inst_host_info_event:
 
 -  **stampede.job_inst.host.info**
 
@@ -1360,6 +1410,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.host.info
 
+.. _stampede_job_inst_image_info_event:
+
 -  **stampede.job_inst.image.info**
 
    ::
@@ -1382,6 +1434,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.image.info
 
+.. _stampede_job_inst_tag_event:
+
 -  **stampede.job_inst.tag**
 
    ::
@@ -1403,6 +1457,8 @@ The events are described in detail below
                       "count of occurences of the events of type name for the job_instance";
                   }
       }  // container stampede.job_inst.tag
+
+.. _stampede_job_inst_composite_event:
 
 -  **stampede.job_inst.composite**
 
@@ -1529,6 +1585,8 @@ The events are described in detail below
                   }
       }  // container stampede.job_inst.composite
 
+.. _stampede_inv_start_event:
+
 -  **stampede.inv.start**
 
    ::
@@ -1560,6 +1618,8 @@ The events are described in detail below
                         + "Sequence number, with -1=prescript and -2=postscript";
                   }
       }  // container stampede.inv.start
+
+.. _stampede_inv_end_event:
 
 -  **stampede.inv.end**
 
@@ -1649,6 +1709,8 @@ The events are described in detail below
                   }
       }  // container stampede.inv.end
 
+.. _stampede_int_metric:
+
 -  **stampede.int.metric**
 
    ::
@@ -1697,6 +1759,8 @@ The events are described in detail below
                   }
       }  // container stampede.int.metric
 
+.. _stampede_static_meta_start_event:
+
 -  **stampede.static.meta.start**
 
    ::
@@ -1705,6 +1769,8 @@ The events are described in detail below
                   uses base-event;
       }  // container stampede.static.meta.start
 
+.. _stampede_static_meta_end_event:
+
 -  **stampede.static.meta.end**
 
    ::
@@ -1712,6 +1778,8 @@ The events are described in detail below
       container stampede.static.meta.end {
                   uses base-event;
       } // container stampede.static.meta.end
+
+.. _stampede_xwf_meta_event:
 
 -  **stampede.xwf.meta**
 
@@ -1722,6 +1790,8 @@ The events are described in detail below
                     "Metadata associated with a workflow";
                   uses base-metadata;
       }  // container stampede.xwf.meta
+
+.. _stampede_task_meta_event:
 
 -  **stampede.task.meta**
 
@@ -1738,6 +1808,8 @@ The events are described in detail below
                       "Identifier for related task in the DAX";
                   }
       }  // container stampede.task.meta
+
+.. _stampede_task_monitoring:
 
 -  **stampede.task.monitoring**
 
@@ -1775,6 +1847,8 @@ The events are described in detail below
                   }
       }  // container stampede.task.meta
 
+.. _stampede_rc_meta_event:
+
 -  **stampede.rc.meta**
 
    ::
@@ -1790,6 +1864,8 @@ The events are described in detail below
                       "Logical File Identifier for the file";
                   }
       }  // container stampede.rc.meta
+
+.. _stampede_wf_map_file_event:
 
 -  **stampede.wf.map.file**
 
@@ -1818,7 +1894,7 @@ The events are described in detail below
 Publishing to AMQP Message Servers
 ==================================
 
-The\ `workflow events <#stampede_wf_events>`__ generated by
+The\ :ref:`workflow events <stampede-wf-events>` generated by
 *pegasus-monitord*\ can also be used to publish to an AMQP message
 server such as RabbitMQ in addition to the stampede workflow database.
 

@@ -1789,12 +1789,11 @@ with an internal ratio of 5.
 Additionally, Pegasus makes use of DAGMan categories and associates the
 following default values with the transfer and cleanup jobs.
 
-See `Job Throttling <#job_throttling>`__ for details on how to set these
+See :ref:`Job Throttling <job-throttling>` for details on how to set these
 values.
 
 Information on how to control manully the maxinum number of stagein and
-stageout jobs can be found in the `Data Movement
-Nodes <#data_movement_nodes>`__ section.
+stageout jobs can be found in the :ref:`Data Movement Nodes <data-movement-nodes>` section.
 
 To control the number of threads pegasus-transfer can use in 
 standard transfer jobs and when invoked by PegasusLite,
@@ -1813,7 +1812,7 @@ submitted.
 workflow level to control it's behavior. These knobs control how it
 interacts with the local HTCondor Schedd to which it submits jobs that
 are ready to run in a particular DAG. These knobs are exposed
-as\ `DAGMan profiles <#dagman_profiles>`__ (maxidle, maxjobs, maxpre and
+as\ :ref:`DAGMan profiles <dagman-profiles>` (maxidle, maxjobs, maxpre and
 maxpost) that you can set in your properties files.
 
 Within a single workflow, you can also control the number of jobs
