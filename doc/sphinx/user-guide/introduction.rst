@@ -160,10 +160,11 @@ be used throughout this chapter.
 - **workflow**
    A workflow is the collected organization of jobs, files, and dependencies. 
 
+.. _diamond-example:
+
 .. figure:: ../images/examples-diamond-clear.png
-   :name: diamond-example
    :align: center
-   
+
    Figure 1: example workflow
 
 To represent the computations imagined by scientists, workflows use a formal 
@@ -210,8 +211,9 @@ structure. Simply speaking, an application is just a set of functions executed
 in sequence, one after another. Consider the following Python script as a toy 
 example of a monolithic application.
 
+.. _monolithic-script:
+
 .. code-block:: python
-   :name: monolithic-script 
 
    def preprocess(data):
       # process the data

@@ -320,7 +320,7 @@ Catalog Related Properties
     | Key Attributes                              | Description                                                      |
     +=============================================+==================================================================+
     | | Property Key: pegasus.catalog.site        | | Pegasus supports two different types of site catalogs in       |
-    | | Profile Key: N/A                          | | :ref:`YAML <sc-YAML>` or :ref:`XML <sc-XML4>` formats          |
+    | | Profile Key: N/A                          | | :ref:`YAML <sc-YAML>` or `XML <https://pegasus.isi.edu/docs/5.0.9/reference-guide/catalogs.html>`__ formats          |
     | | Scope : Properties                        |                                                                  |
     | | Type : Enumeration                        |                                                                  |
     | | Values : YAML|XML                         | | Pegasus is able to auto-detect what schema a user site         |
