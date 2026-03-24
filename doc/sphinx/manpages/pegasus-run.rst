@@ -45,7 +45,7 @@ directory needs to be specified.
    CLI properties take precedence over the file-based properties of the
    same key.
 
-   See the `PROPERTIES <#PROPERTIES>`__ section below.
+   See the :ref:`PROPERTIES <PROPERTIES>` section below.
 
 **-c** *propsfile*; \ **--conf** *propsfile*
    Provide a property file to override the default Pegasus properties

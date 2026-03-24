@@ -679,7 +679,7 @@ be ignored, and all other files will be traced.
 
 **KICKSTART_METADATA** Kickstart passes this environment variable to the
 job. The value of the variable is the path to the metadata file to which
-the job should write its metadata. See the `METADATA <#METADATA>`__
+the job should write its metadata. See the :ref:`METADATA <METADATA>`
 section for more information.
 
 

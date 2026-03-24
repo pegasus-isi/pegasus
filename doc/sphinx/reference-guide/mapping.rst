@@ -188,7 +188,7 @@ After site selection, the workflow is optionally handed for to the job
 clustering module, which clusters jobs that are scheduled to the same
 site. Clustering is usually done on short running jobs in order to
 reduce the remote execution overheads associated with a job. Clustering
-is described in detail in the `optimization <#job_clustering>`__
+is described in detail in the :ref:`optimization <job-clustering>`
 chapter.
 
 .. tip::
@@ -211,8 +211,7 @@ location from where to stage the data is selected using a **Replica
 Selector** . Replica Selection is described in detail in the
 :ref:`Replica Selection <replica-selection>` section of the
 :ref:`Data Management <data-management>` chapter. More details
-about staging site can be found in the `data staging
-configuration <#data-staging-configuration>`__ section.
+about staging site can be found in the :ref:`data staging configuration <data-staging-configuration>` section.
 
 The process of adding the data stage-in and data stage-out nodes is
 handled by Transfer Refiners. All data transfer jobs in Pegasus are
@@ -223,7 +222,7 @@ source and destination url and figures out automatically which
 underlying client to use. pegasus-transfer is distributed with the
 PEGASUS and can be found in the bin subdirectory . Pegasus Transfer
 Refiners are are described in the detail in the Transfers section of the
-`Data Management <#data_management>`__ chapter. The default transfer
+:ref:`Data Management <data-management>` chapter. The default transfer
 refiner that is used in Pegasus is the **BalancedCluster** Transfer
 Refiner, that clusters data stage-in nodes and data stage-out nodes per
 level of the workflow, on the basis of certain pegasus profile keys
@@ -279,7 +278,7 @@ stage-in jobs.
 The staging site for a job is the execution site if running in a
 sharedfs mode, else it is the one specified by **--staging-site** option
 to the planner. More details about staging site can be found in the
-`data staging configuration <#data_staging_configuration>`__ chapter.
+:ref:`data staging configuration <data-staging-configuration>` chapter.
 
 After addition of the create dir jobs, the workflow is optionally handed
 to the cleanup module. The cleanup module adds cleanup nodes to the

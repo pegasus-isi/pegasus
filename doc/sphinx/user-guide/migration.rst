@@ -969,8 +969,7 @@ succeeded/failed databases.
 Note that, if no URL is provided, the tool will create/use a SQLite
 database in the user's home directory: *${HOME}/.pegasus/workflow.db*.
 
-For complete description of pegasus-db-admin, see the `man
-page <#cli-pegasus-db-admin>`__.
+For complete description of pegasus-db-admin, see the :ref:`man page <cli-pegasus-db-admin>`.
 
 Migration from Pegasus 4.6 to 4.7
 ---------------------------------
@@ -1073,8 +1072,7 @@ WORKFLOW, or JDBCRC) should also be provided:
 Note that, if no URL is provided, the tool will create/use a SQLite
 database in the user's home directory: *${HOME}/.pegasus/workflow.db*.
 
-For complete description of pegasus-db-admin, see the `man
-page <#cli-pegasus-db-admin>`__.
+For complete description of pegasus-db-admin, see the :ref:`man page <cli-pegasus-db-admin>`.
 
 .. _migrating-from-3x:
 
@@ -1113,8 +1111,7 @@ For example, to find the PYTHONPATH for the DAX API, run:
 
    export PYTHONPATH=`pegasus-config --python`
 
-For complete description of pegasus-config, see the `man
-page <#cli-pegasus-config>`__.
+For complete description of pegasus-config, see the :ref:`man page <cli-pegasus-config>`.
 
 Stampede Schema Upgrade Tool
 ----------------------------
@@ -1251,7 +1248,7 @@ entry to determine the staging location for the condor io on the submit
 host.
 
 Users should read pegasus data staging configuration
-`chapter <#data_staging_configuration>`__ and also look in the examples
+:ref:`chapter <data-staging-configuration>` and also look in the examples
 directory ( share/pegasus/examples).
 
 .. _migrating-from-2x:
@@ -1361,7 +1358,7 @@ Properties and Profiles Simplification
 Starting with Pegasus 3.0 all profiles can be specified in the
 properties file. Profiles specified in the properties file have the
 lowest priority. Profiles are explained in the detail in
-the\ `configuration <#configuration>`__ chapter. As a result of this a
+the :ref:`configuration <reference-configuration>` chapter. As a result of this a
 lot of existing Pegasus Properties were replaced by profiles. The table
 below lists the properties removed and the new profile based names.
 

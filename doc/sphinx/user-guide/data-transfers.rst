@@ -521,7 +521,7 @@ pegasus-transfer job can spawn. Cleanup jobs are similarly constructed
 with an internal ratio of 5.
 
 Information on how to control the number of stagein and stageout jobs
-can be found in the `Data Movement Nodes <#data-movement-nodes>`__
+can be found in the :ref:`Data Movement Nodes <data-movement-nodes>`
 section.
 
 To control the number of threads pegasus-transfer can use in

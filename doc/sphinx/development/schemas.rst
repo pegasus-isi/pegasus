@@ -27,7 +27,7 @@ do and what to work upon.
 2. Workflow-level Notifications
 
    Very simple workflow-level notifications. These are defined in the
-   `Notification <#notifications>`__ section.
+   :ref:`Notification <hooks>` section.
 
 3. Catalogs
 
@@ -139,6 +139,7 @@ The workflow level metadata maybe used to control the Pegasus Mapper
 behaviour at planning time or maybe propagated to external services
 while querying for job characteristics.
 
+
 Workflow-level Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -155,7 +156,7 @@ Notifications that are generated when workflow level events happened.
 
 The above snippet will append the current time to a log file in the
 current directory. This is with regards to the pegasus-monitord instance
-acting on the `notification <#notifications>`__.
+acting on the :ref:`notification <hooks>`.
 
 The Catalogs Section
 ~~~~~~~~~~~~~~~~~~~~
@@ -273,7 +274,7 @@ external transformation catalog.
 Each *transformations* entry may also feature *hooks* entry. These
 enable notifications at the appropriate point when every job that uses
 this executable reaches the point of notification. Please refer to the
-`notification section <#notifications>`__ for details and caveats.
+:ref:`notification section <hooks>` for details and caveats.
 
 The last example above comes from the black diamond example workflow,
 and presents the kind and extend of attributes you are most likely to
@@ -359,7 +360,7 @@ defined in the *AbstractJobType* declaration in the schema definition:
    data files.
 
 -  0 or more *hooks* array to solicit
-   `notifications <#notifications>`__ when a job reaches a certain
+   :ref:`notifications <hooks>` when a job reaches a certain
    state in its life-cycle.
 
 .. _api-job-nodes:
@@ -513,7 +514,7 @@ included into the current workflow using the *dag* element.
 
 
 The *id* and *node-label* attributes were described
-`previously <#api-graph-nodes>`__. The *file* attribute refers to a file
+:ref:`previously <api-graph-nodes>`. The *file* attribute refers to a file
 from the File Catalog that provides the actual DAGMan DAG as data
 content. The *condorWorkflow* job features optional *profile* elements. These
 would most likely pertain to the ``dagman`` and ``env`` profile
@@ -544,8 +545,7 @@ the *dax* element.
       profiles:
         dagman: {MAXJOBS: '10'}
 
-In addition to the *id* and *node-label* attributes, See `Graph
-Nodes <#api-graph-nodes>`__. The *name* attribute refers to a file from
+In addition to the *id* and *node-label* attributes, See :ref:`Graph Nodes <api-graph-nodes>`. The *name* attribute refers to a file from
 the File Catalog that provides the to be planned DAX as external file
 data content. The *dax* element features optional *profile* elements.
 These would most likely pertain to the ``pegasus``, ``dagman`` and
@@ -698,7 +698,7 @@ the diamond workflow.
 
 
 The above workflow defines the black diamond from the abstract workflow
-section of the `Introduction <#about>`__ chapter. It will require
+section of the :ref:`Abstract Workflows <abstract-workflows>` chapter. It will require
 minimal configuration, because the catalog sections include all
 necessary declarations.
 

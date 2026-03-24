@@ -40,7 +40,7 @@ pointing it to. In a second section, it will show a summary of the state
 of all jobs in the workflow and all of its sub-workflows.
 
 The details of ``pegasus-status`` are described in its respective
-`manual page <#cli-pegasus-status>`__. There are many options to help
+:ref:`manual page <cli-pegasus-status>`. There are many options to help
 you gather the most out of this tool, including a watch-mode to
 repeatedly draw information, various modes to add more information, and
 legends if you are new to it, or need to present it.
@@ -241,7 +241,7 @@ Plotting and Statistics
 
 Pegasus plotting and statistics tools queries the Stampede database
 created by pegasus-monitord for generating the output.The stampede
-scheme can be found `here <#stampede_schema_overview>`__.
+scheme can be found :ref:`here <stampede-schema-overview>`.
 
 The statistics and plotting tools use the following terminology for
 defining tasks, jobs etc. Pegasus takes in a DAX which is composed of
@@ -936,6 +936,8 @@ workflow over time.
    :width: 100.0%
 
    Dashboard Plots - Workflow Gantt Chart
+
+.. _hooks:
 
 Hooks
 =====

@@ -1063,7 +1063,7 @@ schedule jobs to local compute nodes.
 
 Some infrastructures, such as `Open Science Grid <http://www.opensciencegrid.org/>`__
 , provide infrastructure level glidein
-solutions, such as GlideinWMS. Another solution is `BOSCO <#bosco>`__.
+solutions, such as GlideinWMS. Another solution is :ref:`BOSCO <bosco>`.
 For some more custom setups,
 `pyglidein <https://github.com/WIPACrepo/pyglidein>`__ from the
 `IceCube <http://icecube.wisc.edu/>`__ project provides a nice
@@ -1460,7 +1460,7 @@ resource announcements, or is part of a larger HTCondor pool that
 collects these announcements. HTCondor makes the remote resources
 available to the submit host's HTCondor installation.
 
-The `figure above <#concepts-fig-cloud-layout>`__ shows the way Pegasus
+The :ref:`figure above <concepts-fig-cloud-layout>` shows the way Pegasus
 WMS is deployed in cloud computing resources, ignoring how these
 resources were provisioned. The provisioning request shows multiple
 resources per provisioning request.

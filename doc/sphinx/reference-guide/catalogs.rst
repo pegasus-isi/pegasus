@@ -372,7 +372,7 @@ You can specify checksums for raw input files to your workflow in a Replica
 Catalog. Pegasus will check against these checksums to ensure data integrity.
 An example of this is shown below. More information in integrity checking
 can be found in the section of this guide on
-`Integrity Checking <#integrity-checking>`__.
+:ref:`Integrity Checking <integrity-checking>`.
 
 Below is an example of how checksums are specified in YAML and File based
 RC's. JDBC backend also supports specification of checksums. For that use

@@ -636,22 +636,19 @@ Query clauses are rudimentary and must follow some rules.
 -  <FIELDNAMES> which can be used in a query caluse depends on the
    resource being queries. Example: For endpoint
    /api/v1/user/user-a/root/1/**workflow**/1/**job**/2/**state** query
-   clause can only contain fields from the `Job
-   State <#resource-job-state>`__ resource.
+   clause can only contain fields from the :ref:`Job State <resource-job-state>` resource.
 
 -  Only exceptions for the previous rules are
 
-   Querying Root Workflow where fields from both `Root
-   Workflow <#resource-root-workflow>`__ and `Workflow
-   State <#resource-workflow-state>`__ can be included.
+   Querying Root Workflow where fields from both :ref:`Root Workflow <resource-root-workflow>` and :ref:`Workflow State <resource-workflow-state>` can be included.
 
    Querying the /api/v1/user/user-a/root/1/workflow/1/files where fields
    from RC LFN, RC PFN, an RC Metadata can be included.
 
    Views endpoint
    /api/v1/user/user-a/root/1/workflow/1/job/<[running|successful|failed|failing]>
-   where fields from `Job <#resource-job>`__ and
-   `JobInstance <#resource-job-instance>`__ resource can be included.
+   where fields from :ref:`Job <resource-job>` and
+   :ref:`JobInstance <resource-job-instance>` resource can be included.
 
 **Example**
 
@@ -705,8 +702,8 @@ Order clause can only contain fields which are part of the resource
 being returned. Fields must be prefixed by the Resource Query Prefix
 
 **Example:** Order clause for an endpoint returning a
-`Workflow <#resource-workflow>`__ resource can only contain fields that
-are part of the `Workflow <#resource-workflow>`__ resource.
+:ref:`Workflow <resource-workflow>` resource can only contain fields that
+are part of the :ref:`Workflow <resource-workflow>` resource.
 
 Syntax
 ~~~~~~
