@@ -970,8 +970,8 @@ on the *remote* system for the mapping of Pegasus profiles to local
 scheduler job requirements to work. In particular, you will need
 to install the ``slurm_local_submit_attributes.sh`` script
 (equivalent ones exist for PBS, SGE and LSF) in the correct place in the
-glite ``bin`` directory on the remote cluster, usually in the directory
-``~/bosco/glite/bin/`` . See :ref:`glite-mappings` for a full list
+glite ``blahp etc`` directory on the remote cluster, usually in the directory
+``~/bosco/glite/etc/blahp/`` . See :ref:`glite-mappings` for a full list
 of available attributes. An example of this file can be found in
 ``/usr/share/pegasus/htcondor/glite/slurm_local_submit_attributes.sh``
 
@@ -1374,7 +1374,7 @@ Let's tell BOSCO about our SDSC Comet account:
 BOSCO needs a little bit more information to be able to submit the
 glideins to Comet. Log in to your Comet account via ssh (important -
 this step has to take place on Comet) and create the
-*~/bosco/glite/bin/pbs_local_submit_attributes.sh* file with the
+*~/bosco/glite/etc/blahp/pbs_local_submit_attributes.sh* file with the
 following content. You can find your allocation by running
 *show_accounts* and looking at the project column.
 
@@ -1390,7 +1390,7 @@ Also chmod the file:
 
 ::
 
-   $ chmod 755 ~/bosco/glite/bin/pbs_local_submit_attributes.sh
+   $ chmod 755 ~/bosco/glite/etc/blahp/pbs_local_submit_attributes.sh
 
 
 Log out of Comet, and get back into the host and user BOSCO was
