@@ -1402,11 +1402,13 @@ Integrity checks in the workflows are implemented at 3 levels
    servers - This ensures that output data staged to the final location
    was not corrupted in transit.
 
-The `figure <#fig_pegasus_integrity_checking>`__ below illustrates the
+The :ref:`figure below <fig-pegasus-integrity-checking>` illustrates the
 points at which integrity checks are implemented. In our approach, the
 reference checksums for the input files for a job are sent to the remote
 node where a job executes using in-built HTCondor file transfer
 mechanism.
+
+.. _fig-pegasus-integrity-checking:
 
 .. figure:: ../images/pegasus-integrity-checking.png
    :alt: Pegasus Integrity Checking

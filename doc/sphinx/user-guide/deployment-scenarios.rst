@@ -1444,9 +1444,12 @@ workflow.
 Cloud (AWS, Google, JetStream, ...)
 ========================================
 
+.. _concepts-fig-cloud-layout:
+
 .. figure:: ../images/fg-pwms-prefio.3.png
-   :name: concepts-fig-cloud-layout
    :align: center
+
+   Pegasus deployment across multiple clouds.
 
 This figure shows a sample environment for executing Pegasus across
 multiple clouds. At this point, it is up to the user to provision the
