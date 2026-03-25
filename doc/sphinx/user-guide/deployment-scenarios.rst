@@ -972,8 +972,25 @@ to install the ``slurm_local_submit_attributes.sh`` script
 (equivalent ones exist for PBS, SGE and LSF) in the correct place in the
 glite ``blahp etc`` directory on the remote cluster, usually in the directory
 ``~/bosco/glite/etc/blahp/`` . See :ref:`glite-mappings` for a full list
-of available attributes. An example of this file can be found in
-``/usr/share/pegasus/htcondor/glite/slurm_local_submit_attributes.sh``
+of available attributes.
+
+An example of this file can be found in the `SHARE` directory of your local
+pegasus install. To figure out the share directory run the following
+command.
+
+::
+
+    $ pegasus-config --sh-dump | grep -v export | grep SHARE
+
+
+It will write out the value of the directory. For example
+
+::
+
+    PEGASUS_SHARE_DIR="/path/to/install/pegasus/default/share/pegasus"
+
+
+The file is found at ``$PEGASUS_SHARE_DIR\htcondor/glite/slurm_local_submit_attributes.sh``
 
 
 Long Term SSH Connnection against 2FA Clusters (optional)
