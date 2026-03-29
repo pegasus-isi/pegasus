@@ -13,6 +13,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Key;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -305,13 +307,15 @@ public class JobDefinition {
         if (node.has("environment")) {
             JsonNode envPairs = node.get("environment");
             if (envPairs.isArray()) {
+                Collection<KeyValuePair> envPairsCollection = new LinkedList();
                 for (JsonNode n : envPairs) {
-                    builder.environment(
+                    envPairsCollection.add(
                             KeyValuePair.builder()
                                     .name(n.get("name").asText())
                                     .value(n.get("value").asText())
                                     .build());
                 }
+                builder.environment(envPairsCollection);
             } else {
                 throw new RuntimeException("envPairs should be an array");
             }

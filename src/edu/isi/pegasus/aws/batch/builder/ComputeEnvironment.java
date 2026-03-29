@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -178,9 +179,11 @@ public class ComputeEnvironment {
         if (computeResource.has("subnets")) {
             JsonNode subnets = computeResource.get("subnets");
             if (subnets.isArray()) {
+                Collection<String> subnetsList = new LinkedList();
                 for (JsonNode id : subnets) {
-                    builder.subnets(id.asText());
+                    subnetsList.add(id.asText());
                 }
+                builder.subnets(subnetsList);
             } else {
                 throw new RuntimeException("subnets should be an array");
             }
