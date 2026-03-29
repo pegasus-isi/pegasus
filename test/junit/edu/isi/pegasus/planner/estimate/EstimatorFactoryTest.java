@@ -15,31 +15,77 @@ package edu.isi.pegasus.planner.estimate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the EstimatorFactory. */
 public class EstimatorFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.estimate",
+                EstimatorFactory.DEFAULT_PACKAGE_NAME,
+                "Default package name should match");
     }
-    */
+
+    @Test
+    public void testDefaultEstimatorClass() {
+        assertEquals(
+                "Default",
+                EstimatorFactory.DEFAULT_ESTIMATOR_CLASS,
+                "Default estimator class should be 'Default'");
+    }
+
+    @Test
+    public void testLoadDefaultEstimator() throws EstimatorFactoryException {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        Estimator estimator = EstimatorFactory.loadEstimator(null, bag);
+        assertNotNull(estimator, "Loaded estimator should not be null");
+        assertInstanceOf(Default.class, estimator, "Should load Default estimator by default");
+    }
+
+    @Test
+    public void testLoadEstimatorWithNullBagThrows() {
+        assertThrows(
+                EstimatorFactoryException.class,
+                () -> EstimatorFactory.loadEstimator(null, null),
+                "Loading with null bag should throw EstimatorFactoryException");
+    }
+
+    @Test
+    public void testLoadEstimatorWithNullPropertiesThrows() {
+        PegasusBag bag = new PegasusBag();
+        // bag without properties set
+        assertThrows(
+                EstimatorFactoryException.class,
+                () -> EstimatorFactory.loadEstimator(null, bag),
+                "Loading with null properties in bag should throw EstimatorFactoryException");
+    }
+
+    @Test
+    public void testLoadEstimatorWithCustomProperty() throws EstimatorFactoryException {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.estimator", "Default");
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        Estimator estimator = EstimatorFactory.loadEstimator(null, bag);
+        assertNotNull(estimator, "Should load estimator specified in properties");
+    }
+
+    @Test
+    public void testLoadInvalidEstimatorThrows() {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.estimator", "NonExistentEstimator");
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        assertThrows(
+                EstimatorFactoryException.class,
+                () -> EstimatorFactory.loadEstimator(null, bag),
+                "Loading non-existent estimator should throw");
+    }
 }

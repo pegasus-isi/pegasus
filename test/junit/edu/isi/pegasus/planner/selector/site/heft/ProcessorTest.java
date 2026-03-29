@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Processor class. */
 public class ProcessorTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,45 @@ public class ProcessorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInstantiation() {
+        Processor p = new Processor();
+        assertNotNull(p);
     }
-    */
+
+    @Test
+    public void testGetAvailableTimeInitiallyReturnsStart() {
+        Processor p = new Processor();
+        // When no job scheduled, endTime=0. If start > endTime, return start
+        assertEquals(5L, p.getAvailableTime(5L));
+    }
+
+    @Test
+    public void testGetAvailableTimeWhenEndTimeGreaterThanStart() {
+        Processor p = new Processor();
+        p.scheduleJob(0L, 100L);
+        // endTime=100, start=50: since 100 > 50, return endTime=100
+        assertEquals(100L, p.getAvailableTime(50L));
+    }
+
+    @Test
+    public void testGetAvailableTimeWhenStartGreaterThanEndTime() {
+        Processor p = new Processor();
+        p.scheduleJob(0L, 10L);
+        // endTime=10, start=50: since 10 <= 50, return start=50
+        assertEquals(50L, p.getAvailableTime(50L));
+    }
+
+    @Test
+    public void testScheduleJob() {
+        Processor p = new Processor();
+        p.scheduleJob(10L, 20L);
+        // After scheduling, end time is 20. start=0 < 20, so available time = 20
+        assertEquals(20L, p.getAvailableTime(0L));
+    }
+
+    @Test
+    public void testProcessorClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Processor.class.getModifiers()));
+    }
 }

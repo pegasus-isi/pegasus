@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ReplicaCatalog class in site classes. */
 public class ReplicaCatalogTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,42 @@ public class ReplicaCatalogTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testReplicaCatalogExtendsAbstractSiteData() {
+        assertTrue(AbstractSiteData.class.isAssignableFrom(ReplicaCatalog.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        ReplicaCatalog rc = new ReplicaCatalog();
+        assertNotNull(rc);
+    }
+
+    @Test
+    public void testConstructorWithUrlAndType() {
+        ReplicaCatalog rc = new ReplicaCatalog("http://example.com/rc", "File");
+        assertNotNull(rc);
+    }
+
+    @Test
+    public void testGetUrlReturnsSetValue() {
+        ReplicaCatalog rc = new ReplicaCatalog("http://example.com/rc", "File");
+        assertEquals("http://example.com/rc", rc.getURL());
+    }
+
+    @Test
+    public void testGetTypeReturnsSetValue() {
+        ReplicaCatalog rc = new ReplicaCatalog("http://example.com/rc", "File");
+        assertEquals("File", rc.getType());
+    }
+
+    @Test
+    public void testClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(ReplicaCatalog.class.getModifiers()));
+    }
+
+    @Test
+    public void testClassIsNotInterface() {
+        assertFalse(ReplicaCatalog.class.isInterface());
+    }
 }

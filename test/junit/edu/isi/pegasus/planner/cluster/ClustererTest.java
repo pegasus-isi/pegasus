@@ -15,31 +15,55 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the Clusterer interface: verifies constants and that known implementations conform to
+ * the interface.
+ */
 public class ClustererTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstantNotNull() {
+        assertNotNull(Clusterer.VERSION, "Clusterer.VERSION should not be null");
     }
-    */
+
+    @Test
+    public void testVersionConstantNotEmpty() {
+        assertFalse(Clusterer.VERSION.isEmpty(), "Clusterer.VERSION should not be empty");
+    }
+
+    @Test
+    public void testHorizontalImplementsClusterer() {
+        Horizontal h = new Horizontal();
+        assertInstanceOf(Clusterer.class, h, "Horizontal should implement Clusterer");
+    }
+
+    @Test
+    public void testVerticalImplementsClusterer() {
+        Vertical v = new Vertical();
+        assertInstanceOf(Clusterer.class, v, "Vertical should implement Clusterer");
+    }
+
+    @Test
+    public void testHorizontalCanBeInstantiated() {
+        assertDoesNotThrow(Horizontal::new, "Horizontal should be instantiatable");
+    }
+
+    @Test
+    public void testVerticalCanBeInstantiated() {
+        assertDoesNotThrow(Vertical::new, "Vertical should be instantiatable");
+    }
+
+    @Test
+    public void testHorizontalDescriptionNotNull() {
+        Horizontal h = new Horizontal();
+        assertNotNull(h.description(), "Horizontal description() should not return null");
+    }
+
+    @Test
+    public void testVerticalDescriptionNotNull() {
+        Vertical v = new Vertical();
+        assertNotNull(v.description(), "Vertical description() should not return null");
+    }
 }

@@ -15,31 +15,36 @@ package edu.isi.pegasus.planner.selector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteSelector interface constants. */
 public class SiteSelectorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertNotNull(SiteSelector.VERSION, "VERSION constant should not be null");
+        assertFalse(SiteSelector.VERSION.isEmpty(), "VERSION constant should not be empty");
     }
-    */
+
+    @Test
+    public void testVersionFormat() {
+        assertTrue(
+                SiteSelector.VERSION.matches("\\d+\\.\\d+"),
+                "VERSION should be in numeric dotted format like '2.0'");
+    }
+
+    @Test
+    public void testSiteNotFoundConstantNotNull() {
+        assertNotNull(SiteSelector.SITE_NOT_FOUND, "SITE_NOT_FOUND constant should not be null");
+    }
+
+    @Test
+    public void testSiteNotFoundValue() {
+        assertEquals("NONE", SiteSelector.SITE_NOT_FOUND, "SITE_NOT_FOUND should be 'NONE'");
+    }
+
+    @Test
+    public void testSiteNotFoundNotEmpty() {
+        assertFalse(SiteSelector.SITE_NOT_FOUND.isEmpty(), "SITE_NOT_FOUND should not be empty");
+    }
 }

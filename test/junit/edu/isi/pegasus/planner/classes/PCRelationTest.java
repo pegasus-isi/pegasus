@@ -13,14 +13,15 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class PCRelationTest {
@@ -36,10 +37,133 @@ public class PCRelationTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorInitializesEmptyStrings() {
+        PCRelation rel = new PCRelation();
+        assertThat(rel.getParent(), is(""));
+        assertThat(rel.getChild(), is(""));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorIsDeletedFalse() {
+        PCRelation rel = new PCRelation();
+        assertFalse(rel.isDeleted);
+    }
+
+    @Test
+    public void testTwoArgConstructorSetsParentAndChild() {
+        PCRelation rel = new PCRelation("parentJob", "childJob");
+        assertThat(rel.getParent(), is("parentJob"));
+        assertThat(rel.getChild(), is("childJob"));
+    }
+
+    @Test
+    public void testTwoArgConstructorIsDeletedDefaultsFalse() {
+        PCRelation rel = new PCRelation("p", "c");
+        assertFalse(rel.isDeleted);
+    }
+
+    @Test
+    public void testThreeArgConstructorSetsDeletedFlag() {
+        PCRelation rel = new PCRelation("parentJob", "childJob", true);
+        assertTrue(rel.isDeleted);
+    }
+
+    @Test
+    public void testSetAndGetAbstractParentID() {
+        PCRelation rel = new PCRelation("p", "c");
+        rel.setAbstractParentID("abstractP");
+        assertThat(rel.getAbstractParentID(), is("abstractP"));
+    }
+
+    @Test
+    public void testSetAndGetAbstractChildID() {
+        PCRelation rel = new PCRelation("p", "c");
+        rel.setAbstractChildID("abstractC");
+        assertThat(rel.getAbstractChildID(), is("abstractC"));
+    }
+
+    @Test
+    public void testDefaultConstructorAbstractIDsAreEmpty() {
+        PCRelation rel = new PCRelation();
+        assertThat(rel.getAbstractParentID(), is(""));
+        assertThat(rel.getAbstractChildID(), is(""));
+    }
+
+    @Test
+    public void testEqualsSameParentAndChild() {
+        PCRelation rel1 = new PCRelation("p", "c");
+        PCRelation rel2 = new PCRelation("p", "c");
+        assertEquals(rel1, rel2);
+    }
+
+    @Test
+    public void testEqualsDifferentParentNotEqual() {
+        PCRelation rel1 = new PCRelation("p1", "c");
+        PCRelation rel2 = new PCRelation("p2", "c");
+        assertNotEquals(rel1, rel2);
+    }
+
+    @Test
+    public void testEqualsDifferentChildNotEqual() {
+        PCRelation rel1 = new PCRelation("p", "c1");
+        PCRelation rel2 = new PCRelation("p", "c2");
+        assertNotEquals(rel1, rel2);
+    }
+
+    @Test
+    public void testEqualityIgnoresDeletedFlag() {
+        PCRelation rel1 = new PCRelation("p", "c", true);
+        PCRelation rel2 = new PCRelation("p", "c", false);
+        // equals is based on parent+child only
+        assertEquals(rel1, rel2);
+    }
+
+    @Test
+    public void testCloneProducesEqualObject() {
+        PCRelation original = new PCRelation("parentJob", "childJob", true);
+        original.setAbstractParentID("ap1");
+        original.setAbstractChildID("ac1");
+        PCRelation clone = (PCRelation) original.clone();
+        assertThat(clone.getParent(), is(original.getParent()));
+        assertThat(clone.getChild(), is(original.getChild()));
+        assertThat(clone.isDeleted, is(original.isDeleted));
+        assertThat(clone.getAbstractParentID(), is(original.getAbstractParentID()));
+        assertThat(clone.getAbstractChildID(), is(original.getAbstractChildID()));
+    }
+
+    @Test
+    public void testCloneIsIndependentObject() {
+        PCRelation original = new PCRelation("p", "c");
+        PCRelation clone = (PCRelation) original.clone();
+        assertNotSame(original, clone);
+    }
+
+    @Test
+    public void testToStringContainsParentAndChild() {
+        PCRelation rel = new PCRelation("parentJob", "childJob");
+        String str = rel.toString();
+        assertThat(str, containsString("parentJob"));
+        assertThat(str, containsString("childJob"));
+    }
+
+    @Test
+    public void testToStringContainsDeletedFlag() {
+        PCRelation rel = new PCRelation("p", "c", true);
+        assertThat(rel.toString(), containsString("true"));
+    }
+
+    @Test
+    public void testSetParentUpdatesParent() {
+        PCRelation rel = new PCRelation("old", "c");
+        rel.setParent("new");
+        assertThat(rel.getParent(), is("new"));
+    }
+
+    @Test
+    public void testSetChildUpdatesChild() {
+        PCRelation rel = new PCRelation("p", "old");
+        rel.setChild("new");
+        assertThat(rel.getChild(), is("new"));
+    }
 }

@@ -15,31 +15,53 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the Abstract site selector class. Uses concrete subclasses to exercise the abstract
+ * base.
+ */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testRandomImplementsAbstract() {
+        Random selector = new Random();
+        assertInstanceOf(Abstract.class, selector, "Random should extend Abstract");
     }
-    */
+
+    @Test
+    public void testRoundRobinImplementsAbstract() {
+        RoundRobin selector = new RoundRobin();
+        assertInstanceOf(Abstract.class, selector, "RoundRobin should extend Abstract");
+    }
+
+    @Test
+    public void testGroupImplementsAbstract() {
+        Group selector = new Group();
+        assertInstanceOf(Abstract.class, selector, "Group should extend Abstract");
+    }
+
+    @Test
+    public void testAbstractImplementsSiteSelector() {
+        Random selector = new Random();
+        assertInstanceOf(
+                SiteSelector.class, selector, "Concrete Abstract should implement SiteSelector");
+    }
+
+    @Test
+    public void testRandomCanBeInstantiated() {
+        assertDoesNotThrow(Random::new, "Random should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testRoundRobinCanBeInstantiated() {
+        assertDoesNotThrow(
+                RoundRobin::new, "RoundRobin should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testGroupCanBeInstantiated() {
+        assertDoesNotThrow(Group::new, "Group should be instantiatable with no-arg constructor");
+    }
 }

@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the PMC code generator class. */
 public class PMCTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,29 @@ public class PMCTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPMCExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(PMC.class));
     }
-    */
+
+    @Test
+    public void testPMCImplementsCodeGenerator() {
+        assertTrue(edu.isi.pegasus.planner.code.CodeGenerator.class.isAssignableFrom(PMC.class));
+    }
+
+    @Test
+    public void testPMCIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(PMC.class.getModifiers()));
+    }
+
+    @Test
+    public void testPMCInstantiation() {
+        PMC pmc = new PMC();
+        assertNotNull(pmc);
+    }
+
+    @Test
+    public void testPMCIsNotInterface() {
+        assertFalse(PMC.class.isInterface());
+    }
 }

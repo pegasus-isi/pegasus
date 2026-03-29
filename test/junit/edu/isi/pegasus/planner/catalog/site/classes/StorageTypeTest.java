@@ -19,11 +19,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for StorageType via HeadNodeScratch (concrete subclass).
+ *
+ * @author Rajiv Mayani
+ */
 public class StorageTypeTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +40,49 @@ public class StorageTypeTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorCreatesNonNullLocalDirectory() {
+        HeadNodeScratch scratch = new HeadNodeScratch();
+        assertNotNull(scratch.getLocalDirectory());
     }
-    */
+
+    @Test
+    public void testDefaultConstructorCreatesNonNullSharedDirectory() {
+        HeadNodeScratch scratch = new HeadNodeScratch();
+        assertNotNull(scratch.getSharedDirectory());
+    }
+
+    @Test
+    public void testSetAndGetLocalDirectory() {
+        HeadNodeScratch scratch = new HeadNodeScratch();
+        LocalDirectory local = new LocalDirectory();
+        scratch.setLocalDirectory(local);
+        assertSame(local, scratch.getLocalDirectory());
+    }
+
+    @Test
+    public void testSetAndGetSharedDirectory() {
+        HeadNodeScratch scratch = new HeadNodeScratch();
+        SharedDirectory shared = new SharedDirectory();
+        scratch.setSharedDirectory(shared);
+        assertSame(shared, scratch.getSharedDirectory());
+    }
+
+    @Test
+    public void testOverloadedConstructorSetsLocalAndShared() {
+        LocalDirectory local = new LocalDirectory();
+        SharedDirectory shared = new SharedDirectory();
+        HeadNodeScratch scratch = new HeadNodeScratch(local, shared);
+        assertSame(local, scratch.getLocalDirectory());
+        assertSame(shared, scratch.getSharedDirectory());
+    }
+
+    @Test
+    public void testCloneProducesDistinctDirectories() {
+        HeadNodeScratch scratch = new HeadNodeScratch();
+        HeadNodeScratch cloned = (HeadNodeScratch) scratch.clone();
+        assertNotSame(scratch, cloned);
+        assertNotSame(scratch.getLocalDirectory(), cloned.getLocalDirectory());
+        assertNotSame(scratch.getSharedDirectory(), cloned.getSharedDirectory());
+    }
 }

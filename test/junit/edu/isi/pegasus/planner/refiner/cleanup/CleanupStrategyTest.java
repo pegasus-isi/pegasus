@@ -15,31 +15,39 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for CleanupStrategy interface. */
 public class CleanupStrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(CleanupStrategy.class.isInterface());
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertEquals("1.1", CleanupStrategy.VERSION);
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws Exception {
+        assertNotNull(
+                CleanupStrategy.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        CleanupImplementation.class));
+    }
+
+    @Test
+    public void testHasAddCleanupJobsMethod() throws Exception {
+        assertNotNull(
+                CleanupStrategy.class.getMethod(
+                        "addCleanupJobs", edu.isi.pegasus.planner.partitioner.graph.Graph.class));
+    }
+
+    @Test
+    public void testInPlaceImplementsStrategy() {
+        assertTrue(CleanupStrategy.class.isAssignableFrom(InPlace.class));
+    }
 }

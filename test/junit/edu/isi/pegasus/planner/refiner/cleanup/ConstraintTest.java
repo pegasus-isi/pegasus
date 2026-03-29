@@ -15,31 +15,36 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Constraint cleanup strategy. */
 public class ConstraintTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractCleanupStrategy() {
+        assertTrue(AbstractCleanupStrategy.class.isAssignableFrom(Constraint.class));
     }
-    */
+
+    @Test
+    public void testImplementsCleanupStrategy() {
+        assertTrue(CleanupStrategy.class.isAssignableFrom(Constraint.class));
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Constraint.class.getModifiers()));
+    }
+
+    @Test
+    public void testHasAddCleanupJobsMethod() throws Exception {
+        assertNotNull(
+                Constraint.class.getMethod(
+                        "addCleanupJobs", edu.isi.pegasus.planner.partitioner.graph.Graph.class));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Constraint c = new Constraint();
+        assertNotNull(c);
+    }
 }

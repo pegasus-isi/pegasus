@@ -13,17 +13,44 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for AbstractSiteData via a minimal concrete subclass. */
 public class AbstractSiteDataTest {
+
+    /** Minimal concrete subclass for testing AbstractSiteData methods. */
+    private static class ConcreteData extends AbstractSiteData {
+        private final String mContent;
+
+        ConcreteData(String content) {
+            this.mContent = content;
+        }
+
+        @Override
+        public void toXML(Writer writer, String indent) throws IOException {
+            writer.write(indent);
+            writer.write("<data>");
+            writer.write(mContent);
+            writer.write("</data>");
+        }
+
+        @Override
+        public void accept(SiteDataVisitor visitor) throws IOException {
+            visitor.visit(this);
+        }
+    }
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +63,52 @@ public class AbstractSiteDataTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testToXMLStringNoIndent() throws IOException {
+        ConcreteData data = new ConcreteData("hello");
+        String xml = data.toXML();
+        assertThat(xml, containsString("<data>hello</data>"));
     }
-    */
+
+    @Test
+    public void testToStringDelegatesToToXML() {
+        ConcreteData data = new ConcreteData("world");
+        String str = data.toString();
+        assertThat(str, containsString("<data>world</data>"));
+    }
+
+    @Test
+    public void testWriteAttributeFormatsCorrectly() throws IOException {
+        ConcreteData data = new ConcreteData("");
+        StringWriter sw = new StringWriter();
+        data.writeAttribute(sw, "key", "value");
+        assertEquals(" key=\"value\"", sw.toString());
+    }
+
+    @Test
+    public void testWriteAttributeMultipleAttributes() throws IOException {
+        ConcreteData data = new ConcreteData("");
+        StringWriter sw = new StringWriter();
+        data.writeAttribute(sw, "name", "local");
+        data.writeAttribute(sw, "arch", "x86_64");
+        String result = sw.toString();
+        assertThat(result, containsString(" name=\"local\""));
+        assertThat(result, containsString(" arch=\"x86_64\""));
+    }
+
+    @Test
+    public void testCloneProducesDistinctInstance() throws CloneNotSupportedException {
+        ConcreteData data = new ConcreteData("clone-test");
+        ConcreteData cloned = (ConcreteData) data.clone();
+        assertNotNull(cloned);
+        assertNotSame(data, cloned);
+    }
+
+    @Test
+    public void testToXMLWithIndent() throws IOException {
+        ConcreteData data = new ConcreteData("indented");
+        StringWriter sw = new StringWriter();
+        data.toXML(sw, "  ");
+        assertThat(sw.toString(), startsWith("  <data>"));
+    }
 }

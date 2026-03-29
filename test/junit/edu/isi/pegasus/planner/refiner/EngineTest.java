@@ -15,31 +15,34 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Engine abstract class. */
 public class EngineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(Engine.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testRegistrationUniverseConstant() {
+        assertEquals("registration", Engine.REGISTRATION_UNIVERSE);
+    }
+
+    @Test
+    public void testTransferUniverseConstant() {
+        assertEquals("transfer", Engine.TRANSFER_UNIVERSE);
+    }
+
+    @Test
+    public void testInterPoolEngineExtendsEngine() {
+        assertTrue(Engine.class.isAssignableFrom(InterPoolEngine.class));
+    }
+
+    @Test
+    public void testTransferEngineExtendsEngine() {
+        assertTrue(Engine.class.isAssignableFrom(TransferEngine.class));
+    }
 }

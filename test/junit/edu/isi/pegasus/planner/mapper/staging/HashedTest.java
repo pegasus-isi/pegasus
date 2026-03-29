@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.mapper.staging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.mapper.StagingMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Hashed staging mapper class structure. */
 public class HashedTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,39 @@ public class HashedTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHashedImplementsStagingMapper() {
+        assertTrue(StagingMapper.class.isAssignableFrom(Hashed.class));
     }
-    */
+
+    @Test
+    public void testHashedExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Hashed.class));
+    }
+
+    @Test
+    public void testMultiplicatorPropertyKeyConstant() {
+        assertEquals("hashed.multiplier", Hashed.MULIPLICATOR_PROPERTY_KEY);
+    }
+
+    @Test
+    public void testDefaultMultiplicatorFactorConstant() {
+        assertEquals(5, Hashed.DEFAULT_MULTIPLICATOR_FACTOR);
+    }
+
+    @Test
+    public void testLevelsPropertyKeyConstant() {
+        assertEquals("hashed.levels", Hashed.LEVELS_PROPERTY_KEY);
+    }
+
+    @Test
+    public void testDefaultLevelsConstant() {
+        assertEquals(2, Hashed.DEFAULT_LEVELS);
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Hashed hashed = new Hashed();
+        assertNotNull(hashed);
+    }
 }

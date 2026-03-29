@@ -13,33 +13,75 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.format.NetloggerEvent;
+import edu.isi.pegasus.common.logging.format.SimpleEvent;
+import java.util.Collection;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for the Event interface via reflection. */
 public class EventTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- interface structure ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testEventIsInterface() {
+        assertTrue(Event.class.isInterface());
     }
-    */
+
+    @Test
+    public void testEventExtendsCloneable() {
+        assertThat(Event.class.getInterfaces(), hasItemInArray(Cloneable.class));
+    }
+
+    // --- method declarations (NoSuchMethodException = test failure if missing) ---
+
+    @Test
+    public void testNoArgMethods() throws NoSuchMethodException {
+        Event.class.getMethod("getEventName");
+        Event.class.getMethod("getStartEventMessage");
+        Event.class.getMethod("getEndEventMessage");
+        Event.class.getMethod("reset");
+        Event.class.getMethod("createLogMessage");
+        Event.class.getMethod("createLogMessageAndReset");
+    }
+
+    @Test
+    public void testProgramNameMethods() throws NoSuchMethodException {
+        Event.class.getMethod("setProgramName", String.class);
+        Event.class.getMethod("getProgramName", String.class);
+    }
+
+    @Test
+    public void testAddMethod() throws NoSuchMethodException {
+        Event.class.getMethod("add", String.class, String.class);
+    }
+
+    @Test
+    public void testSetEventMethods() throws NoSuchMethodException {
+        Event.class.getMethod("setEvent", String.class, String.class, String.class);
+        Event.class.getMethod("setEvent", String.class, Map.class);
+    }
+
+    @Test
+    public void testCreateEntityHierarchyMessageMethod() throws NoSuchMethodException {
+        Event.class.getMethod(
+                "createEntityHierarchyMessage",
+                String.class,
+                String.class,
+                String.class,
+                Collection.class);
+    }
+
+    // --- known implementors ---
+
+    @Test
+    public void testKnownImplementors() {
+        assertThat(NetloggerEvent.class, typeCompatibleWith(Event.class));
+        assertThat(SimpleEvent.class, typeCompatibleWith(Event.class));
+    }
 }

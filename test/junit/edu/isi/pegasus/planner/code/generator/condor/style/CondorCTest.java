@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorC style class. */
 public class CondorCTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,38 @@ public class CondorCTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCondorCExtendsCondor() {
+        assertTrue(Condor.class.isAssignableFrom(CondorC.class));
     }
-    */
+
+    @Test
+    public void testCondorCImplementsCondorStyle() {
+        assertTrue(CondorStyle.class.isAssignableFrom(CondorC.class));
+    }
+
+    @Test
+    public void testCondorCIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(CondorC.class.getModifiers()));
+    }
+
+    @Test
+    public void testCondorCIsNotInterface() {
+        assertFalse(CondorC.class.isInterface());
+    }
+
+    @Test
+    public void testRemoteUniverseKeyNotNull() {
+        assertNotNull(CondorC.REMOTE_UNIVERSE_KEY);
+    }
+
+    @Test
+    public void testShouldTransferFilesKeyNotNull() {
+        assertNotNull(CondorC.SHOULD_TRANSFER_FILES_KEY);
+    }
+
+    @Test
+    public void testWhenToTransferOutputKeyNotNull() {
+        assertNotNull(CondorC.WHEN_TO_TRANSFER_OUTPUT_KEY);
+    }
 }

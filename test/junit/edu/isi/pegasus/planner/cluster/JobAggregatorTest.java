@@ -15,31 +15,51 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
+import edu.isi.pegasus.planner.cluster.aggregator.SeqExec;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the JobAggregator interface. Exercises known constants and verifies that concrete
+ * implementations conform to the interface.
+ */
 public class JobAggregatorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstantNotNull() {
+        assertNotNull(JobAggregator.VERSION, "JobAggregator.VERSION should not be null");
     }
-    */
+
+    @Test
+    public void testVersionConstantNotEmpty() {
+        assertFalse(JobAggregator.VERSION.isEmpty(), "JobAggregator.VERSION should not be empty");
+    }
+
+    @Test
+    public void testSeqExecImplementsJobAggregator() {
+        SeqExec seqExec = new SeqExec();
+        assertInstanceOf(JobAggregator.class, seqExec, "SeqExec should implement JobAggregator");
+    }
+
+    @Test
+    public void testMPIExecImplementsJobAggregator() {
+        MPIExec mpiExec = new MPIExec();
+        assertInstanceOf(JobAggregator.class, mpiExec, "MPIExec should implement JobAggregator");
+    }
+
+    @Test
+    public void testSeqExecCanBeInstantiated() {
+        assertDoesNotThrow(SeqExec::new, "SeqExec should be instantiatable with no-arg ctor");
+    }
+
+    @Test
+    public void testMPIExecCanBeInstantiated() {
+        assertDoesNotThrow(MPIExec::new, "MPIExec should be instantiatable with no-arg ctor");
+    }
+
+    @Test
+    public void testSeqExecAndMPIExecAreDifferentClasses() {
+        assertNotEquals(
+                SeqExec.class, MPIExec.class, "SeqExec and MPIExec should be different classes");
+    }
 }

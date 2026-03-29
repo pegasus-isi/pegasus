@@ -13,14 +13,15 @@
  */
 package edu.isi.pegasus.planner.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TransferJobTest {
@@ -36,10 +37,71 @@ public class TransferJobTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorNonThirdPartySiteIsNull() {
+        TransferJob tj = new TransferJob();
+        assertNull(tj.getNonThirdPartySite());
     }
-    */
+
+    @Test
+    public void testSetAndGetNonThirdPartySite() {
+        TransferJob tj = new TransferJob();
+        tj.setNonThirdPartySite("isi");
+        assertThat(tj.getNonThirdPartySite(), is("isi"));
+    }
+
+    @Test
+    public void testSetNonThirdPartySiteOverwritesPreviousValue() {
+        TransferJob tj = new TransferJob();
+        tj.setNonThirdPartySite("siteA");
+        tj.setNonThirdPartySite("siteB");
+        assertThat(tj.getNonThirdPartySite(), is("siteB"));
+    }
+
+    @Test
+    public void testConstructorFromJobPreservesNonThirdPartySiteAsNull() {
+        Job baseJob = new Job();
+        TransferJob tj = new TransferJob(baseJob);
+        assertNull(tj.getNonThirdPartySite());
+    }
+
+    @Test
+    public void testClonePreservesNonThirdPartySite() {
+        TransferJob original = new TransferJob();
+        original.setNonThirdPartySite("condorPool");
+        TransferJob clone = (TransferJob) original.clone();
+        assertThat(clone.getNonThirdPartySite(), is("condorPool"));
+    }
+
+    @Test
+    public void testCloneIsIndependentObject() {
+        TransferJob original = new TransferJob();
+        original.setNonThirdPartySite("site1");
+        TransferJob clone = (TransferJob) original.clone();
+        assertNotSame(original, clone);
+    }
+
+    @Test
+    public void testCloneWithNullNonThirdPartySite() {
+        TransferJob original = new TransferJob();
+        TransferJob clone = (TransferJob) original.clone();
+        assertNull(clone.getNonThirdPartySite());
+    }
+
+    @Test
+    public void testToStringContainsNonThirdPartySite() {
+        TransferJob tj = new TransferJob();
+        tj.logicalName = "transfer-job";
+        tj.setNonThirdPartySite("targetSite");
+        String str = tj.toString();
+        assertThat(str, containsString("targetSite"));
+    }
+
+    @Test
+    public void testToStringContainsNonTPTLabel() {
+        TransferJob tj = new TransferJob();
+        tj.logicalName = "transfer-job";
+        tj.setNonThirdPartySite("mySite");
+        assertThat(tj.toString(), containsString("Non TPT Site"));
+    }
 }

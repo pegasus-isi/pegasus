@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link OutOfSpaceError}. */
 public class OutOfSpaceErrorTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,45 @@ public class OutOfSpaceErrorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAnError() {
+        OutOfSpaceError e = new OutOfSpaceError("no space left");
+        assertTrue(e instanceof Error);
     }
-    */
+
+    @Test
+    public void testMessageIsPreserved() {
+        String msg = "disk full on site cluster-A";
+        OutOfSpaceError e = new OutOfSpaceError(msg);
+        assertEquals(msg, e.getMessage());
+    }
+
+    @Test
+    public void testCanBeThrownAndCaught() {
+        assertThrows(
+                OutOfSpaceError.class,
+                () -> {
+                    throw new OutOfSpaceError("test throw");
+                });
+    }
+
+    @Test
+    public void testIsSubtypeOfError() {
+        OutOfSpaceError e = new OutOfSpaceError("test");
+        assertInstanceOf(Error.class, e);
+    }
+
+    @Test
+    public void testEmptyMessage() {
+        OutOfSpaceError e = new OutOfSpaceError("");
+        assertEquals("", e.getMessage());
+    }
+
+    @Test
+    public void testExtendsError() {
+        // OutOfSpaceError extends Error (not RuntimeException)
+        OutOfSpaceError e = new OutOfSpaceError("test");
+        assertTrue(e instanceof Error);
+        assertFalse(e.getClass().getSuperclass().equals(RuntimeException.class));
+    }
 }

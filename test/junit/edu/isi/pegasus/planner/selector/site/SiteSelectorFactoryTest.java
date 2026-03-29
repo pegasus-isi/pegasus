@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteSelectorFactory class. */
 public class SiteSelectorFactoryTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,34 @@ public class SiteSelectorFactoryTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.selector.site", SiteSelectorFactory.DEFAULT_PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testDefaultSiteSelector() {
+        assertEquals("Random", SiteSelectorFactory.DEFAULT_SITE_SELECTOR);
+    }
+
+    @Test
+    public void testDefaultPackageNameNotNull() {
+        assertNotNull(SiteSelectorFactory.DEFAULT_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testDefaultSiteSelectorNotNull() {
+        assertNotNull(SiteSelectorFactory.DEFAULT_SITE_SELECTOR);
+    }
+
+    @Test
+    public void testFactoryClassIsNotInterface() {
+        assertFalse(SiteSelectorFactory.class.isInterface());
+    }
+
+    @Test
+    public void testFactoryClassExists() {
+        assertNotNull(SiteSelectorFactory.class);
+    }
 }

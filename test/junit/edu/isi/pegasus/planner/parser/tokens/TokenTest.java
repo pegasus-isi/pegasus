@@ -19,11 +19,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the {@link Token} interface and its concrete implementations as Token instances. Token
+ * is an empty marker interface; tests verify all concrete types implement it.
+ */
 public class TokenTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +39,46 @@ public class TokenTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIdentifierIsToken() {
+        Token t = new Identifier("someId");
+        assertInstanceOf(Token.class, t);
     }
-    */
+
+    @Test
+    public void testQuotedStringIsToken() {
+        Token t = new QuotedString("quoted");
+        assertInstanceOf(Token.class, t);
+    }
+
+    @Test
+    public void testOpenBraceIsToken() {
+        Token t = new OpenBrace();
+        assertInstanceOf(Token.class, t);
+    }
+
+    @Test
+    public void testCloseBraceIsToken() {
+        Token t = new CloseBrace();
+        assertInstanceOf(Token.class, t);
+    }
+
+    @Test
+    public void testOpenParanthesisIsToken() {
+        Token t = new OpenParanthesis();
+        assertInstanceOf(Token.class, t);
+    }
+
+    @Test
+    public void testCloseParanthesisIsToken() {
+        Token t = new CloseParanthesis();
+        assertInstanceOf(Token.class, t);
+    }
+
+    @Test
+    public void testTransformationCatalogReservedWordIsToken() {
+        Token t = TransformationCatalogReservedWord.symbolTable().get("tr");
+        assertNotNull(t);
+        assertInstanceOf(Token.class, t);
+    }
 }

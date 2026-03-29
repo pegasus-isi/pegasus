@@ -15,31 +15,72 @@ package edu.isi.pegasus.planner.namespace.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the MIN aggregator. */
 public class MINTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private MIN mAggregator;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mAggregator = new MIN();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mAggregator = null;
     }
-    */
+
+    @Test
+    public void testMinReturnsSmallerNewValue() {
+        String result = mAggregator.compute("7", "3", "0");
+        assertEquals("3", result, "MIN should return the smaller of 7 and 3");
+    }
+
+    @Test
+    public void testMinReturnsSmallerOldValue() {
+        String result = mAggregator.compute("2", "10", "0");
+        assertEquals("2", result, "MIN should return old value when it is smaller");
+    }
+
+    @Test
+    public void testMinWithEqualValues() {
+        String result = mAggregator.compute("5", "5", "0");
+        assertEquals("5", result, "MIN should return the value when both are equal");
+    }
+
+    @Test
+    public void testMinWithNullOldValueUsesDefault() {
+        // null old value => parseInt returns default(0), newValue=5 => min(0,5)=0
+        String result = mAggregator.compute(null, "5", "0");
+        assertEquals(
+                "0", result, "MIN with null old value should pick default(0) over newValue(5)");
+    }
+
+    @Test
+    public void testMinWithNonNumericNewValueUsesDefault() {
+        // "xyz" is NaN => falls back to default(0), oldValue=10 => min(10,0)=0
+        String result = mAggregator.compute("10", "xyz", "0");
+        assertEquals("0", result, "MIN with non-numeric new value should use default(0)");
+    }
+
+    @Test
+    public void testMinWithNegativeNumbers() {
+        String result = mAggregator.compute("-2", "-5", "0");
+        assertEquals("-5", result, "MIN should return -5 as it is smaller than -2");
+    }
+
+    @Test
+    public void testMinImplementsAggregatorInterface() {
+        assertTrue(
+                mAggregator instanceof Aggregator, "MIN should implement the Aggregator interface");
+    }
+
+    @Test
+    public void testMinExtendsAbstract() {
+        assertTrue(mAggregator instanceof Abstract, "MIN should extend the Abstract class");
+    }
 }

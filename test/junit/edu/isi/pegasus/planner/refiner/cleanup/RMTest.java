@@ -15,31 +15,39 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for RM cleanup implementation. */
 public class RMTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsCleanupImplementation() {
+        assertTrue(CleanupImplementation.class.isAssignableFrom(RM.class));
     }
-    */
+
+    @Test
+    public void testDefaultRmLogicalName() {
+        assertEquals("rm", RM.DEFAULT_RM_LOGICAL_NAME);
+    }
+
+    @Test
+    public void testDefaultRmLocation() {
+        assertEquals("/bin/rm", RM.DEFAULT_RM_LOCATION);
+    }
+
+    @Test
+    public void testDefaultPriorityKey() {
+        assertEquals("1000", RM.DEFAULT_PRIORITY_KEY);
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        RM rm = new RM();
+        assertNotNull(rm);
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(RM.class.getModifiers()));
+    }
 }

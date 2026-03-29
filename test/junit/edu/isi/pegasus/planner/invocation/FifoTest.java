@@ -15,31 +15,60 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Fifo invocation class. */
 public class FifoTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsTemporary() {
+        assertTrue(Temporary.class.isAssignableFrom(Fifo.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorZeroCounts() {
+        Fifo f = new Fifo();
+        assertEquals(0, f.getCount());
+        // input/output sizes start at 0
+        assertEquals(0, f.getInputSize());
+        assertEquals(0, f.getOutputSize());
+    }
+
+    @Test
+    public void testConstructorWithFilenameAndDescriptor() {
+        Fifo f = new Fifo("/tmp/mypipe", 5);
+        assertEquals("/tmp/mypipe", f.getFilename());
+        assertEquals(5, f.getDescriptor());
+    }
+
+    @Test
+    public void testSetAndGetCount() {
+        Fifo f = new Fifo();
+        f.setCount(10);
+        assertEquals(10, f.getCount());
+    }
+
+    @Test
+    public void testSetAndGetInputSize() {
+        Fifo f = new Fifo();
+        f.setInputSize(1024L);
+        assertEquals(1024L, f.getInputSize());
+    }
+
+    @Test
+    public void testSetAndGetOutputSize() {
+        Fifo f = new Fifo();
+        f.setOutputSize(2048L);
+        assertEquals(2048L, f.getOutputSize());
+    }
+
+    @Test
+    public void testImplementsHasDescriptor() {
+        assertTrue(HasDescriptor.class.isAssignableFrom(Fifo.class));
+    }
+
+    @Test
+    public void testImplementsHasFilename() {
+        assertTrue(HasFilename.class.isAssignableFrom(Fifo.class));
+    }
 }

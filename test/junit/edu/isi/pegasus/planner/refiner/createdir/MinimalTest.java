@@ -15,31 +15,36 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Minimal createdir strategy. */
 public class MinimalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractStrategy() {
+        assertTrue(AbstractStrategy.class.isAssignableFrom(Minimal.class));
     }
-    */
+
+    @Test
+    public void testImplementsStrategy() {
+        assertTrue(Strategy.class.isAssignableFrom(Minimal.class));
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Minimal.class.getModifiers()));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Minimal m = new Minimal();
+        assertNotNull(m);
+    }
+
+    @Test
+    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
+        assertNotNull(
+                Minimal.class.getMethod(
+                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class));
+    }
 }

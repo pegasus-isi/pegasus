@@ -15,31 +15,60 @@ package edu.isi.pegasus.planner.ranking;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Rank class (tests initialization and basic properties). */
 public class RankTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructor() {
+        Rank rank = new Rank();
+        assertNotNull(rank, "Rank should be instantiatable with no-arg constructor");
     }
-    */
+
+    @Test
+    public void testRankCanBeInstantiatedWithDefaultConstructor() {
+        assertDoesNotThrow(Rank::new, "Rank should not throw during construction");
+    }
+
+    @Test
+    public void testRankIsCorrectType() {
+        Rank rank = new Rank();
+        assertInstanceOf(Rank.class, rank, "Object should be an instance of Rank");
+    }
+
+    @Test
+    public void testRankingClassConstructor() {
+        Ranking ranking = new Ranking("test.dax", 1000L);
+        assertNotNull(ranking, "Ranking should be constructable");
+        assertEquals("test.dax", ranking.getName());
+        assertEquals(1000L, ranking.getRuntime());
+    }
+
+    @Test
+    public void testRankingInitialRank() {
+        Ranking ranking = new Ranking("test.dax", 0L);
+        assertEquals(0L, ranking.getRank(), "Initial rank should be 0");
+    }
+
+    @Test
+    public void testRankingComparableImplementation() {
+        Ranking r1 = new Ranking("a.dax", 100L);
+        r1.setRank(10L);
+        Ranking r2 = new Ranking("b.dax", 200L);
+        r2.setRank(20L);
+
+        assertInstanceOf(Comparable.class, r1, "Ranking should implement Comparable");
+        assertTrue(r1.compareTo(r2) < 0, "r1 with lower rank should compare less than r2");
+        assertTrue(r2.compareTo(r1) > 0, "r2 with higher rank should compare greater than r1");
+    }
+
+    @Test
+    public void testRankingCompareToThrowsForWrongType() {
+        Ranking r = new Ranking("test.dax", 100L);
+        assertThrows(
+                ClassCastException.class,
+                () -> r.compareTo("not a ranking"),
+                "compareTo should throw ClassCastException for non-Ranking object");
+    }
 }

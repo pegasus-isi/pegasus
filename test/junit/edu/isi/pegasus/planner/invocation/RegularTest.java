@@ -15,31 +15,56 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Regular invocation class. */
 public class RegularTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFile() {
+        assertTrue(File.class.isAssignableFrom(Regular.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasFilename() {
+        assertTrue(HasFilename.class.isAssignableFrom(Regular.class));
+    }
+
+    @Test
+    public void testDefaultConstructorNullFilename() {
+        Regular r = new Regular();
+        assertNull(r.getFilename());
+    }
+
+    @Test
+    public void testConstructorWithFilename() {
+        Regular r = new Regular("/tmp/output.txt");
+        assertEquals("/tmp/output.txt", r.getFilename());
+    }
+
+    @Test
+    public void testSetAndGetFilename() {
+        Regular r = new Regular();
+        r.setFilename("/data/file.dat");
+        assertEquals("/data/file.dat", r.getFilename());
+    }
+
+    @Test
+    public void testToXMLContainsNameAttribute() throws Exception {
+        Regular r = new Regular("/tmp/myfile.txt");
+        StringWriter sw = new StringWriter();
+        r.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertTrue(xml.contains("name=\"/tmp/myfile.txt\""));
+        assertTrue(xml.contains("<file"));
+    }
+
+    @Test
+    public void testToXMLSelfClosingWhenNoContent() throws Exception {
+        Regular r = new Regular("/tmp/empty.txt");
+        StringWriter sw = new StringWriter();
+        r.toXML(sw, "", null);
+        assertTrue(sw.toString().contains("/>"));
+    }
 }

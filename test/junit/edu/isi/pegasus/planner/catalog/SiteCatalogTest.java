@@ -15,31 +15,66 @@ package edu.isi.pegasus.planner.catalog;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the SiteCatalog interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class SiteCatalogTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSiteCatalogIsInterface() {
+        assertTrue(SiteCatalog.class.isInterface(), "SiteCatalog should be an interface");
     }
-    */
+
+    @Test
+    public void testSiteCatalogExtendsCatalog() {
+        assertTrue(
+                Catalog.class.isAssignableFrom(SiteCatalog.class),
+                "SiteCatalog should extend Catalog");
+    }
+
+    @Test
+    public void testVersionConstant() {
+        assertNotNull(SiteCatalog.VERSION, "SiteCatalog VERSION should not be null");
+        assertFalse(SiteCatalog.VERSION.isEmpty(), "SiteCatalog VERSION should not be empty");
+    }
+
+    @Test
+    public void testPropertyPrefixConstant() {
+        assertEquals(
+                "pegasus.catalog.site",
+                SiteCatalog.c_prefix,
+                "SiteCatalog property prefix should be 'pegasus.catalog.site'");
+    }
+
+    @Test
+    public void testFileKeyConstant() {
+        assertEquals("file", SiteCatalog.FILE_KEY, "SiteCatalog FILE_KEY should be 'file'");
+    }
+
+    @Test
+    public void testHasLoadMethod() throws NoSuchMethodException {
+        Method load = SiteCatalog.class.getMethod("load", java.util.List.class);
+        assertNotNull(load, "SiteCatalog should have a load(List) method");
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws NoSuchMethodException {
+        Method init =
+                SiteCatalog.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class);
+        assertNotNull(init, "SiteCatalog should have an initialize(PegasusBag) method");
+    }
+
+    @Test
+    public void testVariableExpansionKeyConstant() {
+        assertEquals(
+                "expand",
+                SiteCatalog.VARIABLE_EXPANSION_KEY,
+                "SiteCatalog VARIABLE_EXPANSION_KEY should be 'expand'");
+    }
 }

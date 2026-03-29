@@ -13,17 +13,19 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link ScannerException}. */
 public class ScannerExceptionTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +38,47 @@ public class ScannerExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorWithLinenoAndMessage() {
+        ScannerException e = new ScannerException(42, "unexpected token");
+        assertEquals(42, e.getLineNumber());
+        assertThat(e.getMessage(), containsString("42"));
+        assertThat(e.getMessage(), containsString("unexpected token"));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessageOnly() {
+        ScannerException e = new ScannerException("parse error");
+        assertEquals(-1, e.getLineNumber());
+        assertEquals("parse error", e.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndException() {
+        Exception cause = new Exception("root cause");
+        ScannerException e = new ScannerException("wrapped error", cause);
+        assertEquals(-1, e.getLineNumber());
+        assertThat(e.getMessage(), containsString("wrapped error"));
+        assertSame(cause, e.getCause());
+    }
+
+    @Test
+    public void testConstructorWithLinenoAndException() {
+        Exception cause = new Exception("cause");
+        ScannerException e = new ScannerException(10, cause);
+        assertEquals(10, e.getLineNumber());
+        assertThat(e.getMessage(), containsString("10"));
+    }
+
+    @Test
+    public void testIsRuntimeException() {
+        ScannerException e = new ScannerException("test");
+        assertInstanceOf(RuntimeException.class, e);
+    }
+
+    @Test
+    public void testLineNumberNegativeOneWhenNoLine() {
+        ScannerException e = new ScannerException("no line info");
+        assertEquals(-1, e.getLineNumber());
+    }
 }

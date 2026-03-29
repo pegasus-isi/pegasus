@@ -13,17 +13,22 @@
  */
 package edu.isi.pegasus.planner.catalog.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.catalog.CatalogException;
+import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CatalogEntryJsonDeserializer abstract class. */
 public class CatalogEntryJsonDeserializerTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +41,66 @@ public class CatalogEntryJsonDeserializerTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassIsAbstract() {
+        assertTrue(
+                Modifier.isAbstract(CatalogEntryJsonDeserializer.class.getModifiers()),
+                "CatalogEntryJsonDeserializer should be abstract");
     }
-    */
+
+    @Test
+    public void testExtendsJsonDeserializer() {
+        assertTrue(
+                PegasusJsonDeserializer.class.isAssignableFrom(CatalogEntryJsonDeserializer.class),
+                "CatalogEntryJsonDeserializer should extend PegasusJsonDeserializer");
+    }
+
+    @Test
+    public void testGetExceptionReturnsCatalogException() {
+        // Create an anonymous subclass to test getException()
+        CatalogEntryJsonDeserializer<?> deserializer =
+                new CatalogEntryJsonDeserializer<Object>() {
+                    @Override
+                    public Object deserialize(
+                            com.fasterxml.jackson.core.JsonParser jp,
+                            com.fasterxml.jackson.databind.DeserializationContext dc)
+                            throws java.io.IOException {
+                        return null;
+                    }
+                };
+        RuntimeException ex = deserializer.getException("test error");
+        assertThat(ex, instanceOf(CatalogException.class));
+    }
+
+    @Test
+    public void testGetExceptionMessage() {
+        CatalogEntryJsonDeserializer<?> deserializer =
+                new CatalogEntryJsonDeserializer<Object>() {
+                    @Override
+                    public Object deserialize(
+                            com.fasterxml.jackson.core.JsonParser jp,
+                            com.fasterxml.jackson.databind.DeserializationContext dc)
+                            throws java.io.IOException {
+                        return null;
+                    }
+                };
+        String msg = "something went wrong";
+        RuntimeException ex = deserializer.getException(msg);
+        assertEquals(msg, ex.getMessage());
+    }
+
+    @Test
+    public void testGetExceptionNonNull() {
+        CatalogEntryJsonDeserializer<?> deserializer =
+                new CatalogEntryJsonDeserializer<Object>() {
+                    @Override
+                    public Object deserialize(
+                            com.fasterxml.jackson.core.JsonParser jp,
+                            com.fasterxml.jackson.databind.DeserializationContext dc)
+                            throws java.io.IOException {
+                        return null;
+                    }
+                };
+        assertNotNull(deserializer.getException("error"));
+    }
 }

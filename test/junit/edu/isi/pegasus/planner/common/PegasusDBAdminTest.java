@@ -15,31 +15,73 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for PegasusDBAdmin static constants and structural properties.
+ *
+ * @author Rajiv Mayani
+ */
 public class PegasusDBAdminTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMasterDatabasePropertyKey() {
+        assertEquals(
+                "pegasus.catalog.master.url",
+                PegasusDBAdmin.MASTER_DATABASE_PROPERTY_KEY,
+                "Master database property key should match");
     }
-    */
+
+    @Test
+    public void testMasterDatabaseDeprecatedPropertyKey() {
+        assertEquals(
+                "pegasus.dashboard.output",
+                PegasusDBAdmin.MASTER_DATABASE_DEPRECATED_PROPERTY_KEY,
+                "Deprecated master database property key should match");
+    }
+
+    @Test
+    public void testWorkflowDatabasePropertyKey() {
+        assertEquals(
+                "pegasus.catalog.workflow.url",
+                PegasusDBAdmin.WORKFLOW_DATABASE_PROPERTY_KEY,
+                "Workflow database property key should match");
+    }
+
+    @Test
+    public void testWorkflowDatabaseDeprecatedPropertyKey() {
+        assertEquals(
+                "pegasus.monitord.output",
+                PegasusDBAdmin.WORKFLOW_DATABASE_DEPRECATED_PROPERTY_KEY,
+                "Deprecated workflow database property key should match");
+    }
+
+    @Test
+    public void testMasterDatabaseKeyIsNotEmpty() {
+        assertFalse(
+                PegasusDBAdmin.MASTER_DATABASE_PROPERTY_KEY.isEmpty(),
+                "Master database property key should not be empty");
+    }
+
+    @Test
+    public void testWorkflowDatabaseKeyIsNotEmpty() {
+        assertFalse(
+                PegasusDBAdmin.WORKFLOW_DATABASE_PROPERTY_KEY.isEmpty(),
+                "Workflow database property key should not be empty");
+    }
+
+    @Test
+    public void testPropertyKeysAreDistinct() {
+        assertNotEquals(
+                PegasusDBAdmin.MASTER_DATABASE_PROPERTY_KEY,
+                PegasusDBAdmin.WORKFLOW_DATABASE_PROPERTY_KEY,
+                "Master and workflow property keys should be different");
+    }
+
+    @Test
+    public void testPegasusDBAdminIsConcreteClass() {
+        assertFalse(
+                java.lang.reflect.Modifier.isAbstract(PegasusDBAdmin.class.getModifiers()),
+                "PegasusDBAdmin should be a concrete (non-abstract) class");
+    }
 }

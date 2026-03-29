@@ -13,17 +13,30 @@
  */
 package edu.isi.pegasus.aws.batch.builder;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.aws.batch.classes.AWSJob;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** @author Rajiv Mayani */
 public class JobTest {
+
+    @TempDir File tempDir;
+
+    private Job job;
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -31,15 +44,109 @@ public class JobTest {
     public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        job = new Job();
+    }
 
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassLoads() {
+        assertNotNull(Job.class);
     }
-    */
+
+    @Test
+    public void testCreateJobParsesAllFields() throws IOException {
+        String json =
+                "{"
+                        + "\"SubmitJob\": [{"
+                        + "  \"jobName\": \"my-job\","
+                        + "  \"jobDefinition\": \"arn:aws:batch::111:job-definition/my-def\","
+                        + "  \"jobQueue\": \"arn:aws:batch::111:job-queue/my-queue\","
+                        + "  \"executable\": \"myjob.sh\","
+                        + "  \"arguments\": \"arg1 arg2\""
+                        + "}]}";
+        File f = writeToTempFile("job.json", json);
+        List<AWSJob> jobs = job.createJob(f);
+        assertThat(jobs, hasSize(1));
+        AWSJob j = jobs.get(0);
+        assertThat(j.getID(), is("my-job"));
+        assertThat(j.getJobDefinitionARN(), is("arn:aws:batch::111:job-definition/my-def"));
+        assertThat(j.getJobQueueARN(), is("arn:aws:batch::111:job-queue/my-queue"));
+        assertThat(j.getExecutable(), is("myjob.sh"));
+        assertThat(j.getArguments(), is("arg1 arg2"));
+    }
+
+    @Test
+    public void testCreateJobMultipleJobs() throws IOException {
+        String json =
+                "{"
+                        + "\"SubmitJob\": ["
+                        + "  {\"jobName\": \"job-1\", \"executable\": \"run1.sh\"},"
+                        + "  {\"jobName\": \"job-2\", \"executable\": \"run2.sh\"},"
+                        + "  {\"jobName\": \"job-3\", \"executable\": \"run3.sh\"}"
+                        + "]}";
+        File f = writeToTempFile("jobs-multi.json", json);
+        List<AWSJob> jobs = job.createJob(f);
+        assertThat(jobs, hasSize(3));
+        assertThat(jobs.get(0).getID(), is("job-1"));
+        assertThat(jobs.get(1).getID(), is("job-2"));
+        assertThat(jobs.get(2).getID(), is("job-3"));
+    }
+
+    @Test
+    public void testCreateJobParsesEnvironmentVariables() throws IOException {
+        String json =
+                "{"
+                        + "\"SubmitJob\": [{"
+                        + "  \"jobName\": \"my-job\","
+                        + "  \"environment\": ["
+                        + "    {\"name\": \"PEGASUS_HOME\", \"value\": \"/usr\"},"
+                        + "    {\"name\": \"JAVA_HOME\",    \"value\": \"/usr/lib/jvm/java\"}"
+                        + "  ]"
+                        + "}]}";
+        File f = writeToTempFile("job-env.json", json);
+        List<AWSJob> jobs = job.createJob(f);
+        AWSJob j = jobs.get(0);
+        assertThat(j.getEnvironmentVariable("PEGASUS_HOME"), is("/usr"));
+        assertThat(j.getEnvironmentVariable("JAVA_HOME"), is("/usr/lib/jvm/java"));
+    }
+
+    @Test
+    public void testCreateJobMissingExecutableAndArguments() throws IOException {
+        String json = "{\"SubmitJob\": [{\"jobName\": \"my-job\"}]}";
+        File f = writeToTempFile("job-noexec.json", json);
+        List<AWSJob> jobs = job.createJob(f);
+        AWSJob j = jobs.get(0);
+        assertNull(j.getExecutable());
+        assertNull(j.getArguments());
+    }
+
+    @Test
+    public void testCreateJobEmptyWhenNoKey() throws IOException {
+        String json = "{\"Other\": []}";
+        File f = writeToTempFile("job-nokey.json", json);
+        List<AWSJob> jobs = job.createJob(f);
+        assertThat(jobs, is(empty()));
+    }
+
+    @Test
+    public void testCreateJobThrowsForNonArray() throws IOException {
+        String json = "{\"SubmitJob\": {}}";
+        File f = writeToTempFile("job-nonarray.json", json);
+        assertThrows(RuntimeException.class, () -> job.createJob(f));
+    }
+
+    @Test
+    public void testCreateJobFileNotFound() {
+        File missing = new File(tempDir, "does-not-exist.json");
+        assertThrows(RuntimeException.class, () -> job.createJob(missing));
+    }
+
+    private File writeToTempFile(String filename, String content) throws IOException {
+        File f = new File(tempDir, filename);
+        Files.write(f.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        return f;
+    }
 }

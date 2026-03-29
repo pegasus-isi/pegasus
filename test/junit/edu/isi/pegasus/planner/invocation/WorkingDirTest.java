@@ -15,31 +15,65 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for WorkingDir invocation class. */
 public class WorkingDirTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(WorkingDir.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(WorkingDir.class));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        WorkingDir wd = new WorkingDir();
+        assertNull(wd.getValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        WorkingDir wd = new WorkingDir("/scratch/run1");
+        assertEquals("/scratch/run1", wd.getValue());
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new WorkingDir(null));
+    }
+
+    @Test
+    public void testSetAndGetValue() {
+        WorkingDir wd = new WorkingDir();
+        wd.setValue("/home/user/jobs");
+        assertEquals("/home/user/jobs", wd.getValue());
+    }
+
+    @Test
+    public void testAppendValue() {
+        WorkingDir wd = new WorkingDir("/home/");
+        wd.appendValue("user");
+        assertEquals("/home/user", wd.getValue());
+    }
+
+    @Test
+    public void testToXMLStringContainsCwd() {
+        WorkingDir wd = new WorkingDir("/scratch/workflow");
+        String xml = wd.toXML("");
+        assertTrue(xml.contains("<cwd>"));
+        assertTrue(xml.contains("/scratch/workflow"));
+        assertTrue(xml.contains("</cwd>"));
+    }
+
+    @Test
+    public void testToXMLStringEmptyWhenNullValue() {
+        WorkingDir wd = new WorkingDir();
+        String xml = wd.toXML("");
+        assertEquals("", xml);
+    }
 }

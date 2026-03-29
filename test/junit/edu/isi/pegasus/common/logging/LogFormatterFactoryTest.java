@@ -13,33 +13,94 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.format.Netlogger;
+import edu.isi.pegasus.common.logging.format.Simple;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the LogFormatterFactory class. */
 public class LogFormatterFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- class structure ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testLogFormatterFactoryIsConcreteClass() {
+        assertFalse(Modifier.isAbstract(LogFormatterFactory.class.getModifiers()));
     }
-    */
+
+    // --- DEFAULT_PACKAGE_NAME constant ---
+
+    @Test
+    public void testDefaultPackageNameConstant() {
+        assertThat(
+                LogFormatterFactory.DEFAULT_PACKAGE_NAME,
+                is("edu.isi.pegasus.common.logging.format"));
+    }
+
+    // --- loadInstance(String) by short name ---
+
+    @Test
+    public void testLoadInstanceNetloggerByShortName() {
+        LogFormatter formatter = LogFormatterFactory.loadInstance("Netlogger");
+        assertThat(formatter, instanceOf(Netlogger.class));
+    }
+
+    @Test
+    public void testLoadInstanceSimpleByShortName() {
+        LogFormatter formatter = LogFormatterFactory.loadInstance("Simple");
+        assertThat(formatter, instanceOf(Simple.class));
+    }
+
+    // --- loadInstance(String) by fully qualified name ---
+
+    @Test
+    public void testLoadInstanceNetloggerByFullyQualifiedName() {
+        LogFormatter formatter =
+                LogFormatterFactory.loadInstance("edu.isi.pegasus.common.logging.format.Netlogger");
+        assertThat(formatter, instanceOf(Netlogger.class));
+    }
+
+    @Test
+    public void testLoadInstanceSimpleByFullyQualifiedName() {
+        LogFormatter formatter =
+                LogFormatterFactory.loadInstance("edu.isi.pegasus.common.logging.format.Simple");
+        assertThat(formatter, instanceOf(Simple.class));
+    }
+
+    // --- loadInstance(String) error cases ---
+
+    @Test
+    public void testLoadInstanceThrowsForUnknownClass() {
+        assertThrows(
+                LogFormatterFactoryException.class,
+                () -> LogFormatterFactory.loadInstance("NonExistentFormatter"));
+    }
+
+    @Test
+    public void testLoadInstanceThrowsForNullImplementor() {
+        assertThrows(
+                LogFormatterFactoryException.class,
+                () -> LogFormatterFactory.loadInstance((String) null));
+    }
+
+    // --- loadInstance(PegasusProperties) error cases ---
+
+    @Test
+    public void testLoadInstanceThrowsForNullProperties() {
+        assertThrows(
+                LogFormatterFactoryException.class,
+                () -> LogFormatterFactory.loadInstance((String) null));
+    }
+
+    // --- loadSingletonInstance ---
+
+    @Test
+    public void testLoadSingletonInstanceReturnsLogFormatter() {
+        LogFormatter formatter = LogFormatterFactory.loadSingletonInstance("Simple");
+        assertThat(formatter, instanceOf(LogFormatter.class));
+    }
 }

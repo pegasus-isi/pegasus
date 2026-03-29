@@ -15,31 +15,89 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
+import java.io.StringWriter;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for ArgEntry invocation class. */
 public class ArgEntryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private ArgEntry mEntry;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mEntry = new ArgEntry();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mEntry = null;
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(ArgEntry.class));
+    }
+
+    @Test
+    public void testDefaultConstructorPosition() {
+        assertEquals(-1, mEntry.getPosition());
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        assertNull(mEntry.getValue());
+    }
+
+    @Test
+    public void testConstructorWithPosition() {
+        ArgEntry e = new ArgEntry(3);
+        assertEquals(3, e.getPosition());
+        assertNull(e.getValue());
+    }
+
+    @Test
+    public void testConstructorWithPositionAndValue() {
+        ArgEntry e = new ArgEntry(1, "hello");
+        assertEquals(1, e.getPosition());
+        assertEquals("hello", e.getValue());
+    }
+
+    @Test
+    public void testSetAndGetPosition() {
+        mEntry.setPosition(5);
+        assertEquals(5, mEntry.getPosition());
+    }
+
+    @Test
+    public void testSetAndGetValue() {
+        mEntry.setValue("myarg");
+        assertEquals("myarg", mEntry.getValue());
+    }
+
+    @Test
+    public void testAppendValue() {
+        mEntry.appendValue("foo");
+        mEntry.appendValue("bar");
+        assertEquals("foobar", mEntry.getValue());
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        mEntry.setValue("test");
+        mEntry.appendValue(null);
+        assertEquals("test", mEntry.getValue());
+    }
+
+    @Test
+    public void testToXMLContainsIdAndValue() throws Exception {
+        mEntry.setPosition(2);
+        mEntry.setValue("argval");
+        StringWriter sw = new StringWriter();
+        mEntry.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertTrue(xml.contains("id=\"2\""));
+        assertTrue(xml.contains("argval"));
+    }
 }

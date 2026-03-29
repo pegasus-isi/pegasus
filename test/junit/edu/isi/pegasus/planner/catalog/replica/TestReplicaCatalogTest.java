@@ -19,11 +19,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the TestReplicaCatalog driver class. Since TestReplicaCatalog is a CLI-only utility
+ * with a single main() method, tests are limited to structural/reflection checks.
+ */
 public class TestReplicaCatalogTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +39,38 @@ public class TestReplicaCatalogTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassLoads() {
+        assertNotNull(TestReplicaCatalog.class);
     }
-    */
+
+    @Test
+    public void testClassHasMainMethod() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        assertNotNull(main);
+    }
+
+    @Test
+    public void testMainMethodIsPublicStatic() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        int modifiers = main.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
+        assertTrue(java.lang.reflect.Modifier.isStatic(modifiers));
+    }
+
+    @Test
+    public void testMainMethodReturnTypeIsVoid() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        assertEquals(void.class, main.getReturnType());
+    }
+
+    @Test
+    public void testClassInCorrectPackage() {
+        assertEquals(
+                "edu.isi.pegasus.planner.catalog.replica",
+                TestReplicaCatalog.class.getPackage().getName());
+    }
 }

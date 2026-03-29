@@ -15,31 +15,69 @@ package edu.isi.pegasus.planner.selector.replica;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ReplicaSelectorFactoryException. */
 public class ReplicaSelectorFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertEquals(
+                "Replica Selector",
+                ReplicaSelectorFactoryException.DEFAULT_NAME,
+                "DEFAULT_NAME should be 'Replica Selector'");
     }
-    */
+
+    @Test
+    public void testConstructorWithMessage() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test error");
+        assertEquals("test error", ex.getMessage(), "Message should match");
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", "TestClass");
+        assertNotNull(ex.getMessage(), "Message should not be null");
+        assertEquals("TestClass", ex.getClassname(), "Classname should match");
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", cause);
+        assertEquals(cause, ex.getCause(), "Cause should match");
+        assertEquals(
+                ReplicaSelectorFactoryException.DEFAULT_NAME,
+                ex.getClassname(),
+                "Classname should default to DEFAULT_NAME");
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", "TestClass", cause);
+        assertEquals(cause, ex.getCause(), "Cause should match");
+        assertEquals("TestClass", ex.getClassname(), "Classname should match");
+    }
+
+    @Test
+    public void testDefaultClassname() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test");
+        assertEquals(
+                ReplicaSelectorFactoryException.DEFAULT_NAME,
+                ex.getClassname(),
+                "Default classname should be set to DEFAULT_NAME");
+    }
+
+    @Test
+    public void testIsFactoryException() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test");
+        assertInstanceOf(
+                edu.isi.pegasus.common.util.FactoryException.class,
+                ex,
+                "Should extend FactoryException");
+    }
 }

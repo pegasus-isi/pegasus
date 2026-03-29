@@ -15,31 +15,73 @@ package edu.isi.pegasus.planner.catalog;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the WorkCatalog interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class WorkCatalogTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testWorkCatalogIsInterface() {
+        assertTrue(WorkCatalog.class.isInterface(), "WorkCatalog should be an interface");
     }
-    */
+
+    @Test
+    public void testWorkCatalogExtendsCatalog() {
+        assertTrue(
+                Catalog.class.isAssignableFrom(WorkCatalog.class),
+                "WorkCatalog should extend Catalog");
+    }
+
+    @Test
+    public void testVersionConstant() {
+        assertNotNull(WorkCatalog.VERSION, "WorkCatalog VERSION should not be null");
+        assertEquals("1.0", WorkCatalog.VERSION, "WorkCatalog VERSION should be '1.0'");
+    }
+
+    @Test
+    public void testPropertyPrefixConstant() {
+        assertEquals(
+                "pegasus.catalog.work",
+                WorkCatalog.c_prefix,
+                "WorkCatalog property prefix should be 'pegasus.catalog.work'");
+    }
+
+    @Test
+    public void testDbPrefixConstant() {
+        assertEquals(
+                "pegasus.catalog.work.db",
+                WorkCatalog.DB_PREFIX,
+                "WorkCatalog DB_PREFIX should be 'pegasus.catalog.work.db'");
+    }
+
+    @Test
+    public void testHasInsertMethod() throws NoSuchMethodException {
+        java.lang.reflect.Method insert =
+                WorkCatalog.class.getMethod(
+                        "insert",
+                        String.class,
+                        String.class,
+                        String.class,
+                        String.class,
+                        String.class,
+                        java.util.Date.class,
+                        java.util.Date.class,
+                        int.class);
+        assertNotNull(insert, "WorkCatalog should have an insert method");
+    }
+
+    @Test
+    public void testWorkCatalogHasMethods() {
+        java.lang.reflect.Method[] methods = WorkCatalog.class.getMethods();
+        assertTrue(methods.length > 0, "WorkCatalog should declare methods");
+    }
+
+    @Test
+    public void testWorkCatalogVersionNotEmpty() {
+        assertFalse(WorkCatalog.VERSION.isEmpty(), "WorkCatalog VERSION should not be empty");
+    }
 }

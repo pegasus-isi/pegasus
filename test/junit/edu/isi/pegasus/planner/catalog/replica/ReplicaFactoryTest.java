@@ -202,7 +202,9 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(SimpleFile.class));
         } finally {
+            text.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
     }
@@ -237,7 +239,9 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(YAML.class));
         } finally {
+            yaml.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
     }
@@ -277,7 +281,10 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(YAML.class));
         } finally {
+            yaml.delete();
+            text.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
     }

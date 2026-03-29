@@ -15,31 +15,77 @@ package edu.isi.pegasus.planner.client;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.helpers.DefaultHandler;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the DAXValidator class. */
 public class DAXValidatorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private DAXValidator mValidator;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() throws Exception {
+        // DAXValidator only has DAXValidator(boolean verbose) constructor
+        mValidator = new DAXValidator(false);
     }
-    */
+
+    @Test
+    public void testDAXValidatorExtendsDefaultHandler() {
+        assertTrue(
+                mValidator instanceof DefaultHandler,
+                "DAXValidator should extend SAX DefaultHandler");
+    }
+
+    @Test
+    public void testSchemaNamespaceConstant() {
+        assertEquals(
+                "https://pegasus.isi.edu/schema/DAX",
+                DAXValidator.SCHEMA_NAMESPACE,
+                "SCHEMA_NAMESPACE should be the Pegasus DAX schema URI");
+    }
+
+    @Test
+    public void testInitialWarningCountIsZero() throws Exception {
+        java.lang.reflect.Field warnField = DAXValidator.class.getDeclaredField("m_warnings");
+        warnField.setAccessible(true);
+        int warnings = (int) warnField.get(mValidator);
+        assertEquals(0, warnings, "Initial warning count should be 0");
+    }
+
+    @Test
+    public void testInitialErrorCountIsZero() throws Exception {
+        java.lang.reflect.Field errField = DAXValidator.class.getDeclaredField("m_errors");
+        errField.setAccessible(true);
+        int errors = (int) errField.get(mValidator);
+        assertEquals(0, errors, "Initial error count should be 0");
+    }
+
+    @Test
+    public void testInitialFatalCountIsZero() throws Exception {
+        java.lang.reflect.Field fatalField = DAXValidator.class.getDeclaredField("m_fatals");
+        fatalField.setAccessible(true);
+        int fatals = (int) fatalField.get(mValidator);
+        assertEquals(0, fatals, "Initial fatal count should be 0");
+    }
+
+    @Test
+    public void testIsConcreteClass() {
+        assertFalse(
+                Modifier.isAbstract(DAXValidator.class.getModifiers()),
+                "DAXValidator should be a concrete class");
+    }
+
+    @Test
+    public void testSchemaNamespaceIsNotEmpty() {
+        assertFalse(
+                DAXValidator.SCHEMA_NAMESPACE.isEmpty(), "SCHEMA_NAMESPACE should not be empty");
+    }
+
+    @Test
+    public void testVendorParserClassIsNotEmpty() {
+        assertFalse(
+                DAXValidator.vendorParserClass.isEmpty(), "vendorParserClass should not be empty");
+    }
 }

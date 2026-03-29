@@ -15,31 +15,30 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Refiner interface. */
 public class RefinerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(Refiner.class.isInterface());
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertEquals("1.0", Refiner.VERSION);
+    }
+
+    @Test
+    public void testHasGetWorkflowMethod() throws Exception {
+        assertNotNull(Refiner.class.getMethod("getWorkflow"));
+    }
+
+    @Test
+    public void testGetWorkflowReturnsADag() throws Exception {
+        assertEquals(
+                edu.isi.pegasus.planner.classes.ADag.class,
+                Refiner.class.getMethod("getWorkflow").getReturnType());
+    }
 }

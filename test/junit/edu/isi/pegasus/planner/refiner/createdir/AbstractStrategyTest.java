@@ -15,31 +15,39 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for AbstractStrategy. */
 public class AbstractStrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(AbstractStrategy.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testImplementsStrategy() {
+        assertTrue(Strategy.class.isAssignableFrom(AbstractStrategy.class));
+    }
+
+    @Test
+    public void testCreateDirSuffixConstant() {
+        assertEquals("_cdir", AbstractStrategy.CREATE_DIR_SUFFIX);
+    }
+
+    @Test
+    public void testCreateDirPrefixConstant() {
+        assertEquals("create_dir_", AbstractStrategy.CREATE_DIR_PREFIX);
+    }
+
+    @Test
+    public void testHourGlassExtendsAbstractStrategy() {
+        assertTrue(AbstractStrategy.class.isAssignableFrom(HourGlass.class));
+    }
+
+    @Test
+    public void testMinimalExtendsAbstractStrategy() {
+        assertTrue(AbstractStrategy.class.isAssignableFrom(Minimal.class));
+    }
 }

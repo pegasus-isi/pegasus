@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the StagingMapperFactory class constants and structure. */
 public class StagingMapperFactoryTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,33 @@ public class StagingMapperFactoryTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageNameConstant() {
+        assertEquals(
+                "edu.isi.pegasus.planner.mapper.staging",
+                StagingMapperFactory.DEFAULT_PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testHashedStagingMapperConstant() {
+        assertEquals("Hashed", StagingMapperFactory.HASHED_STAGING_MAPPER);
+    }
+
+    @Test
+    public void testFlatStagingMapperConstant() {
+        assertEquals("Flat", StagingMapperFactory.FLAT_STAGING_MAPPER);
+    }
+
+    @Test
+    public void testFactoryClassIsPublic() {
+        int modifiers = StagingMapperFactory.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
+    }
+
+    @Test
+    public void testLoadInstanceMethodExists() throws NoSuchMethodException {
+        assertNotNull(
+                StagingMapperFactory.class.getMethod(
+                        "loadInstance", edu.isi.pegasus.planner.classes.PegasusBag.class));
+    }
 }

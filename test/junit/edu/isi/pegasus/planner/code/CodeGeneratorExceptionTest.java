@@ -15,31 +15,58 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CodeGeneratorException */
 public class CodeGeneratorExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructor() {
+        CodeGeneratorException e = new CodeGeneratorException();
+        assertNotNull(e);
+        assertNull(e.getMessage());
+        assertNull(e.getCause());
     }
-    */
+
+    @Test
+    public void testMessageConstructor() {
+        String msg = "code generation failed";
+        CodeGeneratorException e = new CodeGeneratorException(msg);
+        assertEquals(msg, e.getMessage());
+        assertNull(e.getCause());
+    }
+
+    @Test
+    public void testMessageAndCauseConstructor() {
+        String msg = "code generation failed with cause";
+        Throwable cause = new RuntimeException("root cause");
+        CodeGeneratorException e = new CodeGeneratorException(msg, cause);
+        assertEquals(msg, e.getMessage());
+        assertSame(cause, e.getCause());
+    }
+
+    @Test
+    public void testCauseOnlyConstructor() {
+        Throwable cause = new IllegalArgumentException("bad arg");
+        CodeGeneratorException e = new CodeGeneratorException(cause);
+        assertSame(cause, e.getCause());
+    }
+
+    @Test
+    public void testIsCheckedException() {
+        assertTrue(Exception.class.isAssignableFrom(CodeGeneratorException.class));
+    }
+
+    @Test
+    public void testExceptionIsThrowableAndCatchable() {
+        String msg = "test throw";
+        Exception caught = null;
+        try {
+            throw new CodeGeneratorException(msg);
+        } catch (CodeGeneratorException ex) {
+            caught = ex;
+        }
+        assertNotNull(caught);
+        assertEquals(msg, caught.getMessage());
+    }
 }

@@ -15,31 +15,53 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatusSuspend invocation class. */
 public class JobStatusSuspendTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsJobStatus() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusSuspend.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(JobStatusSuspend.class));
+    }
+
+    @Test
+    public void testDefaultConstructorDefaults() {
+        JobStatusSuspend j = new JobStatusSuspend();
+        // getSignalNumber() is the accessor method name in JobStatusSuspend
+        assertEquals(0, j.getSignalNumber());
+        assertNull(j.getValue());
+    }
+
+    @Test
+    public void testConstructorWithSignal() {
+        JobStatusSuspend j = new JobStatusSuspend((short) 19);
+        assertEquals(19, j.getSignalNumber());
+    }
+
+    @Test
+    public void testConstructorWithSignalAndValue() {
+        JobStatusSuspend j = new JobStatusSuspend((short) 17, "SIGCHLD");
+        assertEquals(17, j.getSignalNumber());
+        assertEquals("SIGCHLD", j.getValue());
+    }
+
+    @Test
+    public void testSetAndGetSignalNumber() {
+        JobStatusSuspend j = new JobStatusSuspend();
+        j.setSignalNumber((short) 20);
+        assertEquals(20, j.getSignalNumber());
+    }
+
+    @Test
+    public void testAppendValue() {
+        JobStatusSuspend j = new JobStatusSuspend();
+        j.appendValue("suspended");
+        assertEquals("suspended", j.getValue());
+    }
 }

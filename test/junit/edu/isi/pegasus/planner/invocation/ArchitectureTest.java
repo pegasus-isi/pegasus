@@ -15,31 +15,90 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
+import java.io.StringWriter;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Architecture invocation class. */
 public class ArchitectureTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Architecture mArchitecture;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mArchitecture = new Architecture();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mArchitecture = null;
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(Architecture.class));
+    }
+
+    @Test
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Architecture.class));
+    }
+
+    @Test
+    public void testDefaultConstructorInitializesNullValue() {
+        assertNull(mArchitecture.getValue());
+    }
+
+    @Test
+    public void testSetAndGetSystemName() {
+        mArchitecture.setSystemName("linux");
+        assertEquals("linux", mArchitecture.getSystemName());
+    }
+
+    @Test
+    public void testSetAndGetMachine() {
+        mArchitecture.setMachine("x86_64");
+        assertEquals("x86_64", mArchitecture.getMachine());
+    }
+
+    @Test
+    public void testSetAndGetRelease() {
+        mArchitecture.setRelease("5.4.0");
+        assertEquals("5.4.0", mArchitecture.getRelease());
+    }
+
+    @Test
+    public void testSetNodeNameNormalizesWithDomain() {
+        mArchitecture.setNodeName("myhost.example.com");
+        assertEquals("myhost", mArchitecture.getNodeName());
+        assertEquals("example.com", mArchitecture.getDomainName());
+    }
+
+    @Test
+    public void testSetNodeNameWithoutDomain() {
+        mArchitecture.setNodeName("myhost");
+        assertEquals("myhost", mArchitecture.getNodeName());
+        assertNull(mArchitecture.getDomainName());
+    }
+
+    @Test
+    public void testAppendValueBuildsString() {
+        mArchitecture.appendValue("hello");
+        mArchitecture.appendValue(" world");
+        assertEquals("hello world", mArchitecture.getValue());
+    }
+
+    @Test
+    public void testToXMLContainsSysname() throws Exception {
+        mArchitecture.setSystemName("linux");
+        mArchitecture.setMachine("x86_64");
+        mArchitecture.setRelease("5.4");
+        mArchitecture.setNodeName("host1");
+        StringWriter sw = new StringWriter();
+        mArchitecture.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertTrue(xml.contains("sysname=\"linux\""));
+        assertTrue(xml.contains("<uname"));
+    }
 }

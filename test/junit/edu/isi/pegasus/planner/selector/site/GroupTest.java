@@ -15,31 +15,51 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Group site selector. */
 public class GroupTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Group mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Group();
     }
-    */
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertNotNull(desc, "Description should not be null");
+        assertFalse(desc.isEmpty(), "Description should not be empty");
+    }
+
+    @Test
+    public void testDescriptionContainsGroup() {
+        String desc = mSelector.description().toLowerCase();
+        assertTrue(desc.contains("group"), "Description should mention 'group'");
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertInstanceOf(SiteSelector.class, mSelector, "Group should implement SiteSelector");
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertInstanceOf(Abstract.class, mSelector, "Group should extend Abstract");
+    }
+
+    @Test
+    public void testInstantiationWithDefaultConstructor() {
+        Group selector = new Group();
+        assertNotNull(selector, "Group should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testDescriptionIsNotNull() {
+        assertNotNull(mSelector.description());
+    }
 }

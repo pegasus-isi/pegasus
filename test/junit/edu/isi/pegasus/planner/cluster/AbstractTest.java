@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract cluster class structure. */
 public class AbstractTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,41 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractImplementsClusterer() {
+        // edu.isi.pegasus.planner.cluster.Abstract implements Clusterer
+        assertTrue(
+                Clusterer.class.isAssignableFrom(edu.isi.pegasus.planner.cluster.Abstract.class));
     }
-    */
+
+    @Test
+    public void testAbstractIsAbstract() {
+        int modifiers = edu.isi.pegasus.planner.cluster.Abstract.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isAbstract(modifiers));
+    }
+
+    @Test
+    public void testHorizontalImplementsClustererDirectly() {
+        // Horizontal implements Clusterer directly (not via Abstract)
+        assertFalse(
+                edu.isi.pegasus.planner.cluster.Abstract.class.isAssignableFrom(Horizontal.class));
+        assertTrue(Clusterer.class.isAssignableFrom(Horizontal.class));
+    }
+
+    @Test
+    public void testVerticalExtendsAbstract() {
+        assertTrue(edu.isi.pegasus.planner.cluster.Abstract.class.isAssignableFrom(Vertical.class));
+    }
+
+    @Test
+    public void testHorizontalInstantiation() {
+        Horizontal h = new Horizontal();
+        assertNotNull(h);
+    }
+
+    @Test
+    public void testVerticalInstantiation() {
+        Vertical v = new Vertical();
+        assertNotNull(v);
+    }
 }

@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Decaf aggregator class. */
 public class DecafTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,34 @@ public class DecafTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDecafExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Decaf.class));
     }
-    */
+
+    @Test
+    public void testDecafImplementsJobAggregator() {
+        assertTrue(JobAggregator.class.isAssignableFrom(Decaf.class));
+    }
+
+    @Test
+    public void testTransformationNamespaceConstant() {
+        assertEquals("dataflow", Decaf.TRANSFORMATION_NAMESPACE);
+    }
+
+    @Test
+    public void testTransformationNameConstant() {
+        assertEquals("decaf", Decaf.TRANSFORMATION_NAME);
+    }
+
+    @Test
+    public void testDecafExtraArgsSelectorProfileKeyConstant() {
+        assertEquals("decaf.args", Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Decaf decaf = new Decaf();
+        assertNotNull(decaf);
+    }
 }

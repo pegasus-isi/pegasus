@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the OutputMapperFactoryException class. */
 public class OutputMapperFactoryExceptionTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,49 @@ public class OutputMapperFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertTrue(
+                edu.isi.pegasus.common.util.FactoryException.class.isAssignableFrom(
+                        OutputMapperFactoryException.class));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertEquals("Output Mapper", OutputMapperFactoryException.DEFAULT_NAME);
+    }
+
+    @Test
+    public void testConstructWithMessageSetsDefaultClassname() {
+        OutputMapperFactoryException ex = new OutputMapperFactoryException("test message");
+        assertEquals("test message", ex.getMessage());
+        assertEquals(OutputMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndClassname() {
+        OutputMapperFactoryException ex =
+                new OutputMapperFactoryException("test message", "MyClass");
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        OutputMapperFactoryException ex = new OutputMapperFactoryException("test message", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals(cause, ex.getCause());
+        assertEquals(OutputMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageClassnameAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        OutputMapperFactoryException ex =
+                new OutputMapperFactoryException("test message", "MyClass", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+        assertEquals(cause, ex.getCause());
+    }
 }

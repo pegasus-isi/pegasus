@@ -13,33 +13,108 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the LogManagerFactoryException class. */
 public class LogManagerFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- class structure ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertThat(new LogManagerFactoryException("test"), instanceOf(FactoryException.class));
     }
-    */
+
+    // --- DEFAULT_NAME constant ---
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(LogManagerFactoryException.DEFAULT_NAME, is("Logger Factory"));
+    }
+
+    // --- constructor: (String) ---
+
+    @Test
+    public void testMessageOnlyConstructor() {
+        LogManagerFactoryException ex = new LogManagerFactoryException("log manager error");
+        assertThat(ex.getMessage(), is("log manager error"));
+        assertThat(ex.getClassname(), is(LogManagerFactoryException.DEFAULT_NAME));
+        assertNull(ex.getCause());
+    }
+
+    // --- constructor: (String, String) ---
+
+    @Test
+    public void testMessageAndClassnameConstructor() {
+        LogManagerFactoryException ex =
+                new LogManagerFactoryException("load error", "MyLoggerClass");
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is("MyLoggerClass"));
+        assertNull(ex.getCause());
+    }
+
+    // --- constructor: (String, Throwable) ---
+
+    @Test
+    public void testMessageAndCauseConstructor() {
+        RuntimeException cause = new RuntimeException("root cause");
+        LogManagerFactoryException ex = new LogManagerFactoryException("wrapper error", cause);
+        assertThat(ex.getMessage(), is("wrapper error"));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(LogManagerFactoryException.DEFAULT_NAME));
+    }
+
+    // --- constructor: (String, String, Throwable) ---
+
+    @Test
+    public void testMessageClassnameAndCauseConstructor() {
+        RuntimeException cause = new RuntimeException("root cause");
+        LogManagerFactoryException ex =
+                new LogManagerFactoryException("load error", "MyLoggerClass", cause);
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is("MyLoggerClass"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    // --- canBeThrown ---
+
+    @Test
+    public void testCanBeCaughtAsFactoryException() {
+        assertThrows(
+                FactoryException.class,
+                () -> {
+                    throw new LogManagerFactoryException("thrown");
+                });
+    }
+
+    @Test
+    public void testCanBeCaughtAsRuntimeException() {
+        assertThrows(
+                RuntimeException.class,
+                () -> {
+                    throw new LogManagerFactoryException("thrown");
+                });
+    }
+
+    // --- convertException ---
+
+    @Test
+    public void testConvertExceptionContainsMessage() {
+        LogManagerFactoryException ex = new LogManagerFactoryException("my error message");
+        assertThat(ex.convertException(), containsString("my error message"));
+    }
+
+    @Test
+    public void testConvertExceptionWithCauseContainsBothMessages() {
+        RuntimeException cause = new RuntimeException("root cause message");
+        LogManagerFactoryException ex = new LogManagerFactoryException("outer message", cause);
+        String converted = ex.convertException();
+        assertThat(converted, containsString("outer message"));
+        assertThat(converted, containsString("root cause message"));
+    }
 }

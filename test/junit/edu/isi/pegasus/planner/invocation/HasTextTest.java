@@ -15,31 +15,56 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for HasText interface structure. */
 public class HasTextTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(HasText.class.isInterface());
     }
-    */
+
+    @Test
+    public void testHasAppendValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("appendValue", String.class);
+        assertNotNull(m);
+    }
+
+    @Test
+    public void testHasGetValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("getValue");
+        assertNotNull(m);
+        assertEquals(String.class, m.getReturnType());
+    }
+
+    @Test
+    public void testHasSetValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("setValue", String.class);
+        assertNotNull(m);
+    }
+
+    @Test
+    public void testDataImplementsInterface() {
+        assertTrue(HasText.class.isAssignableFrom(Data.class));
+    }
+
+    @Test
+    public void testArgEntryImplementsInterface() {
+        assertTrue(HasText.class.isAssignableFrom(ArgEntry.class));
+    }
+
+    @Test
+    public void testArchitectureImplementsInterface() {
+        assertTrue(HasText.class.isAssignableFrom(Architecture.class));
+    }
+
+    @Test
+    public void testDataAppendAndGetValue() {
+        Data d = new Data();
+        d.appendValue("hello");
+        d.appendValue(" world");
+        assertEquals("hello world", d.getValue());
+    }
 }

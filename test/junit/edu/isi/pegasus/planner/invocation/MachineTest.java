@@ -15,31 +15,59 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Machine invocation class. */
 public class MachineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Machine.class));
     }
-    */
+
+    @Test
+    public void testElementName() {
+        assertEquals("machine", Machine.ELEMENT_NAME);
+    }
+
+    @Test
+    public void testDefaultConstructorZeroPageSize() {
+        Machine m = new Machine();
+        assertEquals(0L, m.getPageSize());
+    }
+
+    @Test
+    public void testSetAndGetPageSize() {
+        Machine m = new Machine();
+        m.setPageSize(4096L);
+        assertEquals(4096L, m.getPageSize());
+    }
+
+    @Test
+    public void testNullUnameByDefault() {
+        Machine m = new Machine();
+        assertNull(m.getUname());
+    }
+
+    @Test
+    public void testNullStampByDefault() {
+        Machine m = new Machine();
+        assertNull(m.getStamp());
+    }
+
+    @Test
+    public void testSetAndGetUname() {
+        Machine m = new Machine();
+        Uname u = new Uname();
+        m.setUname(u);
+        assertNotNull(m.getUname());
+    }
+
+    @Test
+    public void testSetAndGetStamp() {
+        Machine m = new Machine();
+        Stamp s = new Stamp("2024-01-01T00:00:00");
+        m.setStamp(s);
+        assertNotNull(m.getStamp());
+    }
 }

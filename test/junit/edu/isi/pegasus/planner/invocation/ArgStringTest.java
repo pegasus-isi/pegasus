@@ -15,20 +15,13 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for ArgString invocation class. */
 public class ArgStringTest {
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {}
@@ -36,10 +29,69 @@ public class ArgStringTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsArguments() {
+        assertTrue(Arguments.class.isAssignableFrom(ArgString.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(ArgString.class));
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(Modifier.isAbstract(ArgString.class.getModifiers()));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        ArgString as = new ArgString();
+        assertNull(as.getValue());
+        assertNull(as.getExecutable());
+    }
+
+    @Test
+    public void testConstructorWithExecutable() {
+        ArgString as = new ArgString("/bin/ls");
+        assertEquals("/bin/ls", as.getExecutable());
+        assertNull(as.getValue());
+    }
+
+    @Test
+    public void testConstructorWithExecutableAndValue() {
+        ArgString as = new ArgString("/bin/ls", "-la /tmp");
+        assertEquals("/bin/ls", as.getExecutable());
+        assertEquals("-la /tmp", as.getValue());
+    }
+
+    @Test
+    public void testAppendValue() {
+        ArgString as = new ArgString();
+        as.appendValue("-a");
+        as.appendValue(" -b");
+        assertEquals("-a -b", as.getValue());
+    }
+
+    @Test
+    public void testSetValue() {
+        ArgString as = new ArgString();
+        as.setValue("--verbose");
+        assertEquals("--verbose", as.getValue());
+    }
+
+    @Test
+    public void testToXMLContainsArgumentsTag() {
+        ArgString as = new ArgString("/usr/bin/myprog", "--flag");
+        String xml = as.toXML("");
+        assertTrue(xml.contains("<arguments"));
+        assertTrue(xml.contains("--flag"));
+    }
+
+    @Test
+    public void testToXMLNoContentWhenValueNull() {
+        ArgString as = new ArgString("/usr/bin/myprog");
+        String xml = as.toXML("");
+        assertTrue(xml.contains("/>"));
+    }
 }

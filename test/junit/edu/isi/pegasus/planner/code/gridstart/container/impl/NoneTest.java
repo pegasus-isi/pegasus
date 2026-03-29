@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the None container shell wrapper class. */
 public class NoneTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,28 @@ public class NoneTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testNoneExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(None.class));
     }
-    */
+
+    @Test
+    public void testNoneImplementsContainerShellWrapper() {
+        assertTrue(ContainerShellWrapper.class.isAssignableFrom(None.class));
+    }
+
+    @Test
+    public void testNoneIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(None.class.getModifiers()));
+    }
+
+    @Test
+    public void testNoneIsNotInterface() {
+        assertFalse(None.class.isInterface());
+    }
+
+    @Test
+    public void testNoneClassExists() {
+        assertNotNull(None.class);
+    }
 }

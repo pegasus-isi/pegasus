@@ -15,31 +15,50 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Random site selector. */
 public class RandomTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Random mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Random();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertNotNull(mSelector, "Random site selector should be instantiatable");
+    }
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertNotNull(desc, "Description should not be null");
+        assertFalse(desc.isEmpty(), "Description should not be empty");
+    }
+
+    @Test
+    public void testDescriptionContainsRandom() {
+        String desc = mSelector.description().toLowerCase();
+        assertTrue(desc.contains("random"), "Description should mention 'random'");
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertInstanceOf(SiteSelector.class, mSelector, "Random should implement SiteSelector");
+    }
+
+    @Test
+    public void testExtendsAbstractPerJob() {
+        assertInstanceOf(AbstractPerJob.class, mSelector, "Random should extend AbstractPerJob");
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertInstanceOf(Abstract.class, mSelector, "Random should extend Abstract");
+    }
 }

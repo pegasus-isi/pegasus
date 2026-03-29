@@ -15,31 +15,67 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Bag interface and its LabelBag implementation. */
 public class BagTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private LabelBag mBag;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mBag = new LabelBag();
     }
-    */
+
+    @Test
+    public void testBagIsInterface() {
+        assertTrue(Bag.class.isInterface(), "Bag should be an interface");
+    }
+
+    @Test
+    public void testBagHasGetMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("get", Object.class);
+        assertNotNull(m, "Bag should declare a get(Object) method");
+    }
+
+    @Test
+    public void testBagHasAddMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("add", Object.class, Object.class);
+        assertNotNull(m, "Bag should declare an add(Object, Object) method");
+    }
+
+    @Test
+    public void testBagHasContainsKeyMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("containsKey", Object.class);
+        assertNotNull(m, "Bag should declare a containsKey(Object) method");
+    }
+
+    @Test
+    public void testLabelBagImplementsBag() {
+        assertTrue(mBag instanceof Bag, "LabelBag should implement Bag");
+    }
+
+    @Test
+    public void testLabelBagAddAndGetLabel() {
+        mBag.add(LabelBag.LABEL_KEY, "partition1");
+        Object value = mBag.get(LabelBag.LABEL_KEY);
+        assertEquals("partition1", value, "LabelBag should return the added label value");
+    }
+
+    @Test
+    public void testLabelBagContainsKeyAfterAdd() {
+        mBag.add(LabelBag.LABEL_KEY, "myLabel");
+        assertTrue(
+                mBag.containsKey(LabelBag.LABEL_KEY),
+                "LabelBag.containsKey should return true after adding LABEL_KEY");
+    }
+
+    @Test
+    public void testLabelBagDefaultGetReturnsNull() {
+        assertNull(
+                mBag.get(LabelBag.LABEL_KEY),
+                "Default LabelBag should return null for LABEL_KEY before any add");
+    }
 }

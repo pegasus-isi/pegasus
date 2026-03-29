@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.catalog.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.catalog.CatalogException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteCatalogException class. */
 public class SiteCatalogExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,47 @@ public class SiteCatalogExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsCatalogException() {
+        assertTrue(CatalogException.class.isAssignableFrom(SiteCatalogException.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        SiteCatalogException ex = new SiteCatalogException();
+        assertNotNull(ex);
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        SiteCatalogException ex = new SiteCatalogException("test message");
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        SiteCatalogException ex = new SiteCatalogException("test message", cause);
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+        assertEquals(cause, ex.getCause());
+    }
+
+    @Test
+    public void testConstructorWithCauseOnly() {
+        Throwable cause = new RuntimeException("root cause");
+        SiteCatalogException ex = new SiteCatalogException(cause);
+        assertNotNull(ex);
+        assertEquals(cause, ex.getCause());
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                SiteCatalogException.class,
+                () -> {
+                    throw new SiteCatalogException("test");
+                });
+    }
 }

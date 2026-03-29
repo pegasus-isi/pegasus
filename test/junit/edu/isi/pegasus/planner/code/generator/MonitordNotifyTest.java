@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the MonitordNotify code generator class. */
 public class MonitordNotifyTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,43 @@ public class MonitordNotifyTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testNotificationsFileSuffixConstant() {
+        assertEquals(".notify", MonitordNotify.NOTIFICATIONS_FILE_SUFFIX);
     }
-    */
+
+    @Test
+    public void testWorkflowConstant() {
+        assertEquals("WORKFLOW", MonitordNotify.WORKFLOW);
+    }
+
+    @Test
+    public void testJobConstant() {
+        assertEquals("JOB", MonitordNotify.JOB);
+    }
+
+    @Test
+    public void testInvocationConstant() {
+        assertEquals("INVOCATION", MonitordNotify.INVOCATION);
+    }
+
+    @Test
+    public void testDagJobConstant() {
+        assertEquals("DAGJOB", MonitordNotify.DAG_JOB);
+    }
+
+    @Test
+    public void testDaxJobConstant() {
+        assertEquals("DAXJOB", MonitordNotify.DAX_JOB);
+    }
+
+    @Test
+    public void testDelimiterConstant() {
+        assertEquals(" ", MonitordNotify.DELIMITER);
+    }
+
+    @Test
+    public void testImplementsCodeGenerator() {
+        assertTrue(CodeGenerator.class.isAssignableFrom(MonitordNotify.class));
+    }
 }

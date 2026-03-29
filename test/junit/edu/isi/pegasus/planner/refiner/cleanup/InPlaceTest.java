@@ -15,31 +15,34 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for InPlace cleanup strategy. */
 public class InPlaceTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractCleanupStrategy() {
+        assertTrue(AbstractCleanupStrategy.class.isAssignableFrom(InPlace.class));
     }
-    */
+
+    @Test
+    public void testImplementsCleanupStrategy() {
+        assertTrue(CleanupStrategy.class.isAssignableFrom(InPlace.class));
+    }
+
+    @Test
+    public void testNumJobsPerLevelConstant() {
+        assertEquals(5.0f, InPlace.NUM_JOBS_PER_LEVEL_PER_CLEANUP_JOB, 0.0001f);
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        InPlace ip = new InPlace();
+        assertNotNull(ip);
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(InPlace.class.getModifiers()));
+    }
 }

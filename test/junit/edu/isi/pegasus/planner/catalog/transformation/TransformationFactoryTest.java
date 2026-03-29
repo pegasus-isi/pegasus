@@ -194,6 +194,7 @@ public class TransformationFactoryTest {
             assertThat(s, instanceOf(Text.class));
             assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
+            text.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -223,6 +224,7 @@ public class TransformationFactoryTest {
             assertThat(s, instanceOf(Text.class));
             assertTrue(s.isTransient(), "catalog should be transient");
         } finally {
+            text.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -262,6 +264,7 @@ public class TransformationFactoryTest {
             assertThat(s, instanceOf(YAML.class));
             assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
+            yaml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -314,6 +317,8 @@ public class TransformationFactoryTest {
             assertThat(s, instanceOf(YAML.class));
             assertFalse(s.isTransient(), "loaded catalog should not be transient");
         } finally {
+            yaml.delete();
+            xml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -459,6 +464,7 @@ public class TransformationFactoryTest {
             // maybe should be false. need to be revisited
             assertTrue(c.isTransient(), "loaded catalog should be transient");
         } finally {
+            keg.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();

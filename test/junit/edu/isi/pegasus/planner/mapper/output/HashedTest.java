@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.mapper.OutputMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Hashed output mapper class structure. */
 public class HashedTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,30 @@ public class HashedTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHashedImplementsOutputMapper() {
+        assertTrue(OutputMapper.class.isAssignableFrom(Hashed.class));
     }
-    */
+
+    @Test
+    public void testHashedExtendsAbstractFileFactoryBasedMapper() {
+        assertTrue(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Hashed.class));
+    }
+
+    @Test
+    public void testShortNameConstant() {
+        assertEquals("Hashed", Hashed.SHORT_NAME);
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Hashed hashed = new Hashed();
+        assertNotNull(hashed);
+    }
+
+    @Test
+    public void testHashedIsPublicClass() {
+        int modifiers = Hashed.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
+    }
 }

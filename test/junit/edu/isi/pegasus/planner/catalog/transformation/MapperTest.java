@@ -15,15 +15,28 @@ package edu.isi.pegasus.planner.catalog.transformation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.test.DefaultTestSetup;
+import edu.isi.pegasus.planner.test.TestSetup;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the abstract Mapper class — exercised via an anonymous concrete subclass and the static
+ * constants.
+ */
 public class MapperTest {
+
+    private TestSetup mTestSetup;
+    private PegasusBag mBag;
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -31,15 +44,60 @@ public class MapperTest {
     public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mTestSetup = new DefaultTestSetup();
+        mBag = new PegasusBag();
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        mBag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+        LogManager logger = mTestSetup.loadLogger(properties);
+        mBag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+    }
 
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPackageNameConstantIsCorrect() {
+        assertEquals("edu.isi.pegasus.planner.catalog.transformation.mapper", Mapper.PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testPackageNameConstantIsNonEmpty() {
+        assertNotNull(Mapper.PACKAGE_NAME);
+        assertFalse(Mapper.PACKAGE_NAME.isEmpty());
+    }
+
+    @Test
+    public void testAnonymousSubclassCanBeInstantiated() {
+        Mapper mapper = createMinimalMapper();
+        assertNotNull(mapper);
+    }
+
+    @Test
+    public void testGetModeReturnedBySubclass() {
+        Mapper mapper = createMinimalMapper();
+        assertEquals("TestMode", mapper.getMode());
+    }
+
+    @Test
+    public void testIsStageableMapperReturnsFalseForNonStageableMapper() {
+        Mapper mapper = createMinimalMapper();
+        // The anonymous subclass is neither Staged nor Submit, so should be false
+        assertFalse(mapper.isStageableMapper());
+    }
+
+    // Helper that constructs a trivial concrete Mapper for testing abstract class methods.
+    private Mapper createMinimalMapper() {
+        return new Mapper(mBag) {
+            @Override
+            public Map getSiteMap(String namespace, String name, String version, List siteids) {
+                return null;
+            }
+
+            @Override
+            public String getMode() {
+                return "TestMode";
+            }
+        };
+    }
 }

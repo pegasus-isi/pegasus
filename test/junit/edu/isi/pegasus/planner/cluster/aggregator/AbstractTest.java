@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract aggregator class structure. */
 public class AbstractTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,39 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractImplementsJobAggregator() {
+        assertTrue(JobAggregator.class.isAssignableFrom(Abstract.class));
     }
-    */
+
+    @Test
+    public void testAbstractIsAbstract() {
+        int modifiers = Abstract.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isAbstract(modifiers));
+    }
+
+    @Test
+    public void testSeqExecExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(SeqExec.class));
+    }
+
+    @Test
+    public void testMPIExecExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(MPIExec.class));
+    }
+
+    @Test
+    public void testAWSBatchExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(AWSBatch.class));
+    }
+
+    @Test
+    public void testDecafExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Decaf.class));
+    }
+
+    @Test
+    public void testClusteredJobPrefixConstant() {
+        assertEquals("merge_", Abstract.CLUSTERED_JOB_PREFIX);
+    }
 }

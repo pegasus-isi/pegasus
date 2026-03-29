@@ -15,31 +15,60 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Stamp invocation class. */
 public class StampTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(Stamp.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(Stamp.class));
+    }
+
+    @Test
+    public void testElementName() {
+        assertEquals("stamp", Stamp.ELEMENT_NAME);
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        Stamp s = new Stamp();
+        assertNull(s.getValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        Stamp s = new Stamp("2024-01-01T00:00:00");
+        assertEquals("2024-01-01T00:00:00", s.getValue());
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new Stamp(null));
+    }
+
+    @Test
+    public void testSetAndGetValue() {
+        Stamp s = new Stamp();
+        s.setValue("2024-06-15T12:00:00");
+        assertEquals("2024-06-15T12:00:00", s.getValue());
+    }
+
+    @Test
+    public void testAppendValue() {
+        Stamp s = new Stamp("2024-");
+        s.appendValue("01-01");
+        assertEquals("2024-01-01", s.getValue());
+    }
+
+    @Test
+    public void testGetElementName() {
+        Stamp s = new Stamp();
+        assertEquals("stamp", s.getElementName());
+    }
 }

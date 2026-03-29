@@ -15,15 +15,20 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for DirectoryLayout via LocalDirectory (concrete subclass).
+ *
+ * @author Rajiv Mayani
+ */
 public class DirectoryLayoutTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +41,83 @@ public class DirectoryLayoutTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorIsEmpty() {
+        LocalDirectory dir = new LocalDirectory();
+        assertTrue(dir.isEmpty());
     }
-    */
+
+    @Test
+    public void testSetAndGetInternalMountPoint() {
+        LocalDirectory dir = new LocalDirectory();
+        InternalMountPoint mp = new InternalMountPoint("/scratch");
+        dir.setInternalMountPoint(mp);
+        assertEquals("/scratch", dir.getInternalMountPoint().getMountPoint());
+    }
+
+    @Test
+    public void testAddFileServerMakesNotEmpty() {
+        LocalDirectory dir = new LocalDirectory();
+        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
+        fs.setSupportedOperation(FileServer.OPERATION.all);
+        dir.addFileServer(fs);
+        assertFalse(dir.isEmpty());
+    }
+
+    @Test
+    public void testGetFileServersReturnsAddedServer() {
+        LocalDirectory dir = new LocalDirectory();
+        FileServer fs = new FileServer("file", "file://", "/tmp");
+        fs.setSupportedOperation(FileServer.OPERATION.get);
+        dir.addFileServer(fs);
+        List<FileServer> servers = dir.getFileServers(FileServer.OPERATION.get);
+        assertNotNull(servers);
+        assertEquals(1, servers.size());
+        assertEquals("/tmp", servers.get(0).getMountPoint());
+    }
+
+    @Test
+    public void testResetFileServersResultsInEmpty() {
+        LocalDirectory dir = new LocalDirectory();
+        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
+        fs.setSupportedOperation(FileServer.OPERATION.all);
+        dir.addFileServer(fs);
+        dir.resetFileServers();
+        assertTrue(dir.isEmpty());
+    }
+
+    @Test
+    public void testHasFileServerForGETOperationsWithAllServer() {
+        LocalDirectory dir = new LocalDirectory();
+        FileServer fs = new FileServer("file", "file://", "/tmp");
+        fs.setSupportedOperation(FileServer.OPERATION.all);
+        dir.addFileServer(fs);
+        assertTrue(dir.hasFileServerForGETOperations());
+    }
+
+    @Test
+    public void testHasFileServerForPUTOperationsWithPutServer() {
+        LocalDirectory dir = new LocalDirectory();
+        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
+        fs.setSupportedOperation(FileServer.OPERATION.put);
+        dir.addFileServer(fs);
+        assertTrue(dir.hasFileServerForPUTOperations());
+    }
+
+    @Test
+    public void testCloneProducesEquivalentDirectory() {
+        LocalDirectory dir = new LocalDirectory();
+        InternalMountPoint mp = new InternalMountPoint("/work");
+        dir.setInternalMountPoint(mp);
+        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/work");
+        fs.setSupportedOperation(FileServer.OPERATION.all);
+        dir.addFileServer(fs);
+
+        LocalDirectory cloned = (LocalDirectory) dir.clone();
+        assertNotSame(dir, cloned);
+        assertEquals(
+                dir.getInternalMountPoint().getMountPoint(),
+                cloned.getInternalMountPoint().getMountPoint());
+        assertFalse(cloned.isEmpty());
+    }
 }

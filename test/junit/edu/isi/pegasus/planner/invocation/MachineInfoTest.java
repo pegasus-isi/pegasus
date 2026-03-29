@@ -15,31 +15,54 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for MachineInfo abstract class. */
 public class MachineInfoTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(MachineInfo.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(MachineInfo.class));
+    }
+
+    @Test
+    public void testLoadExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(Load.class));
+    }
+
+    @Test
+    public void testRAMExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(RAM.class));
+    }
+
+    @Test
+    public void testCPUExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(CPU.class));
+    }
+
+    @Test
+    public void testAddAndGetAttribute() {
+        // Use RAM (concrete subclass) to test MachineInfo's addAttribute/get
+        RAM ram = new RAM();
+        ram.addAttribute("total", "8192");
+        assertEquals("8192", ram.get("total"));
+    }
+
+    @Test
+    public void testGetMissingAttributeReturnsNull() {
+        RAM ram = new RAM();
+        assertNull(ram.get("nonexistent"));
+    }
+
+    @Test
+    public void testGetElementNameIsAbstractMethod() throws Exception {
+        java.lang.reflect.Method m = MachineInfo.class.getDeclaredMethod("getElementName");
+        assertTrue(Modifier.isAbstract(m.getModifiers()));
+    }
 }

@@ -15,31 +15,50 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.Serializable;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Invocation abstract class structure. */
 public class InvocationTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(Invocation.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testImplementsSerializable() {
+        assertTrue(Serializable.class.isAssignableFrom(Invocation.class));
+    }
+
+    @Test
+    public void testArchitectureExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Architecture.class));
+    }
+
+    @Test
+    public void testDataExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Data.class));
+    }
+
+    @Test
+    public void testJobExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Job.class));
+    }
+
+    @Test
+    public void testUsageExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Usage.class));
+    }
+
+    @Test
+    public void testStatInfoExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(StatInfo.class));
+    }
+
+    @Test
+    public void testEnvironmentExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Environment.class));
+    }
 }

@@ -15,31 +15,38 @@ package edu.isi.pegasus.common.logging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.common.logging.format.Netlogger;
+import edu.isi.pegasus.common.logging.format.Simple;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TestLogFormatter utility class. */
 public class TestLogFormatterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private TestLogFormatter test;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        test = new TestLogFormatter();
     }
-    */
+
+    @Test
+    public void testCanBeInstantiated() {
+        assertNotNull(test);
+    }
+
+    @Test
+    public void testWriteTestLogWithNetloggerDoesNotThrow() {
+        assertDoesNotThrow(() -> test.writeTestLog(new Netlogger()));
+    }
+
+    @Test
+    public void testWriteTestLogWithSimpleDoesNotThrow() {
+        assertDoesNotThrow(() -> test.writeTestLog(new Simple()));
+    }
+
+    @Test
+    public void testHasWriteTestLogMethod() throws NoSuchMethodException {
+        TestLogFormatter.class.getMethod("writeTestLog", LogFormatter.class);
+    }
 }

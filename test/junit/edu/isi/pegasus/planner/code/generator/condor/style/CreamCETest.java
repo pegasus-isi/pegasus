@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CreamCE style class. */
 public class CreamCETest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,39 @@ public class CreamCETest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCreamCEExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(CreamCE.class));
     }
-    */
+
+    @Test
+    public void testCreamCEImplementsCondorStyle() {
+        assertTrue(CondorStyle.class.isAssignableFrom(CreamCE.class));
+    }
+
+    @Test
+    public void testCreamCEIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(CreamCE.class.getModifiers()));
+    }
+
+    @Test
+    public void testCreamCEIsNotInterface() {
+        assertFalse(CreamCE.class.isInterface());
+    }
+
+    @Test
+    public void testStyleNameConstant() {
+        assertEquals("CreamCE", CreamCE.STYLE_NAME);
+    }
+
+    @Test
+    public void testGridResourceKeyNotNull() {
+        assertNotNull(CreamCE.GRID_RESOURCE_KEY);
+    }
+
+    @Test
+    public void testInstantiation() {
+        CreamCE style = new CreamCE();
+        assertNotNull(style);
+    }
 }

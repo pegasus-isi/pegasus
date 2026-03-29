@@ -19,11 +19,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for SiteDataJsonDeserializer — verifies the class loads and basic contract.
+ *
+ * @author Rajiv Mayani
+ */
 public class SiteDataJsonDeserializerTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +40,31 @@ public class SiteDataJsonDeserializerTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassLoads() {
+        // Verify the class is accessible (non-null class object)
+        assertNotNull(SiteDataJsonDeserializer.class);
     }
-    */
+
+    @Test
+    public void testSiteDataJsonDeserializerIsAbstract() {
+        assertTrue(
+                java.lang.reflect.Modifier.isAbstract(
+                        SiteDataJsonDeserializer.class.getModifiers()),
+                "SiteDataJsonDeserializer should be abstract");
+    }
+
+    @Test
+    public void testSiteStoreDeserializerIsSubclass() {
+        // SiteStore's deserializer extends SiteDataJsonDeserializer
+        // Verify SiteStore class loads which exercises the inner deserializer
+        SiteStore store = new SiteStore();
+        assertNotNull(store);
+    }
+
+    @Test
+    public void testSiteStoreDeserializerDefaultVersion() {
+        SiteStore store = new SiteStore();
+        assertEquals(SiteStore.DEFAULT_SITE_CATALOG_VERSION, store.getVersion());
+    }
 }

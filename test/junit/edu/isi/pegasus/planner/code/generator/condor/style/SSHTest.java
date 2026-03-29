@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SSH style class. */
 public class SSHTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,39 @@ public class SSHTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSSHExtendsGLite() {
+        assertTrue(GLite.class.isAssignableFrom(SSH.class));
     }
-    */
+
+    @Test
+    public void testSSHImplementsCondorStyle() {
+        assertTrue(CondorStyle.class.isAssignableFrom(SSH.class));
+    }
+
+    @Test
+    public void testSSHIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(SSH.class.getModifiers()));
+    }
+
+    @Test
+    public void testSSHIsNotInterface() {
+        assertFalse(SSH.class.isInterface());
+    }
+
+    @Test
+    public void testStyleNameConstant() {
+        assertEquals("SSH", SSH.STYLE_NAME);
+    }
+
+    @Test
+    public void testGridResourceKeyNotNull() {
+        assertNotNull(SSH.GRID_RESOURCE_KEY);
+    }
+
+    @Test
+    public void testInstantiation() {
+        SSH style = new SSH();
+        assertNotNull(style);
+    }
 }

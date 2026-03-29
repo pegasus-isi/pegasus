@@ -15,31 +15,25 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for RemoveDirectory refiner. */
 public class RemoveDirectoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertTrue(Engine.class.isAssignableFrom(RemoveDirectory.class));
     }
-    */
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(RemoveDirectory.class.getModifiers()));
+    }
+
+    @Test
+    public void testHasAddRemoveDirectoryNodesMethod() throws Exception {
+        assertNotNull(
+                RemoveDirectory.class.getMethod(
+                        "addRemoveDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class));
+    }
 }

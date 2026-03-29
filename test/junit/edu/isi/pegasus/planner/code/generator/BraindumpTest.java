@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Braindump code generator class constants and structure. */
 public class BraindumpTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,53 @@ public class BraindumpTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testBraindumpFileConstant() {
+        assertEquals("braindump.yml", Braindump.BRAINDUMP_FILE);
     }
-    */
+
+    @Test
+    public void testGeneratorTypeKeyConstant() {
+        assertEquals("type", Braindump.GENERATOR_TYPE_KEY);
+    }
+
+    @Test
+    public void testUserKeyConstant() {
+        assertEquals("user", Braindump.USER_KEY);
+    }
+
+    @Test
+    public void testUUIDKeyConstant() {
+        assertEquals("wf_uuid", Braindump.UUID_KEY);
+    }
+
+    @Test
+    public void testRootUUIDKeyConstant() {
+        assertEquals("root_wf_uuid", Braindump.ROOT_UUID_KEY);
+    }
+
+    @Test
+    public void testDAXLabelKeyConstant() {
+        assertEquals("dax_label", Braindump.DAX_LABEL_KEY);
+    }
+
+    @Test
+    public void testSubmitDirKeyConstant() {
+        assertEquals("submit_dir", Braindump.SUBMIT_DIR_KEY);
+    }
+
+    @Test
+    public void testPlannerVersionKeyConstant() {
+        assertEquals("planner_version", Braindump.PLANNER_VERSION_KEY);
+    }
+
+    @Test
+    public void testTimestampKeyConstant() {
+        assertEquals("timestamp", Braindump.TIMESTAMP_KEY);
+    }
+
+    @Test
+    public void testPropertiesKeyConstant() {
+        assertEquals("properties", Braindump.PROPERTIES_KEY);
+    }
 }

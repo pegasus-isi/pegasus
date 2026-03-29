@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.mapper.staging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.mapper.StagingMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract staging mapper class structure. */
 public class AbstractTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,36 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractImplementsStagingMapper() {
+        assertTrue(StagingMapper.class.isAssignableFrom(Abstract.class));
     }
-    */
+
+    @Test
+    public void testAbstractIsAbstractClass() {
+        int modifiers = Abstract.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isAbstract(modifiers));
+    }
+
+    @Test
+    public void testFlatExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Flat.class));
+    }
+
+    @Test
+    public void testHashedExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Hashed.class));
+    }
+
+    @Test
+    public void testFlatInstantiation() {
+        Flat flat = new Flat();
+        assertNotNull(flat);
+    }
+
+    @Test
+    public void testHashedInstantiation() {
+        Hashed hashed = new Hashed();
+        assertNotNull(hashed);
+    }
 }

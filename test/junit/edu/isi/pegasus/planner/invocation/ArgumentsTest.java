@@ -15,31 +15,61 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Arguments abstract class structure. */
 public class ArgumentsTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(Arguments.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Arguments.class));
+    }
+
+    @Test
+    public void testArgStringIsConcreteSubtype() {
+        assertTrue(Arguments.class.isAssignableFrom(ArgString.class));
+        assertFalse(Modifier.isAbstract(ArgString.class.getModifiers()));
+    }
+
+    @Test
+    public void testArgVectorIsConcreteSubtype() {
+        assertTrue(Arguments.class.isAssignableFrom(ArgVector.class));
+        assertFalse(Modifier.isAbstract(ArgVector.class.getModifiers()));
+    }
+
+    @Test
+    public void testArgStringSetExecutable() {
+        ArgString as = new ArgString();
+        as.setExecutable("/bin/bash");
+        assertEquals("/bin/bash", as.getExecutable());
+    }
+
+    @Test
+    public void testArgVectorGetValueWithEntries() {
+        ArgVector av = new ArgVector("/bin/test");
+        av.setValue(0, "arg0");
+        av.setValue(1, "arg1");
+        String value = av.getValue();
+        assertTrue(value.contains("arg0"));
+        assertTrue(value.contains("arg1"));
+    }
+
+    @Test
+    public void testArgVectorDefaultConstructor() {
+        ArgVector av = new ArgVector();
+        assertNull(av.getExecutable());
+        assertEquals("", av.getValue());
+    }
+
+    @Test
+    public void testGetValueIsAbstractlyDeclared() throws Exception {
+        java.lang.reflect.Method m = Arguments.class.getDeclaredMethod("getValue");
+        assertTrue(Modifier.isAbstract(m.getModifiers()));
+    }
 }

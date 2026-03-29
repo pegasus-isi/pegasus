@@ -15,31 +15,40 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for createdir Strategy interface. */
 public class StrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(Strategy.class.isInterface());
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertEquals("1.0", Strategy.VERSION);
+    }
+
+    @Test
+    public void testHourGlassImplementsStrategy() {
+        assertTrue(Strategy.class.isAssignableFrom(HourGlass.class));
+    }
+
+    @Test
+    public void testMinimalImplementsStrategy() {
+        assertTrue(Strategy.class.isAssignableFrom(Minimal.class));
+    }
+
+    @Test
+    public void testTentaclesImplementsStrategy() {
+        assertTrue(Strategy.class.isAssignableFrom(Tentacles.class));
+    }
+
+    @Test
+    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
+        assertNotNull(
+                Strategy.class.getMethod(
+                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class));
+    }
 }

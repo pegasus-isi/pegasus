@@ -15,31 +15,65 @@ package edu.isi.pegasus.planner.provisioner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the provisioner Edge class. */
 public class EdgeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Node mNodeA;
+    private Node mNodeB;
+    private Edge mEdge;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mNodeA = new Node("A", "jobA", 10L);
+        mNodeB = new Node("B", "jobB", 20L);
+        mEdge = new Edge(mNodeA, mNodeB, "data.txt", 1000L);
     }
-    */
+
+    @Test
+    public void testDefaultSizeConstant() {
+        assertEquals(0L, Edge.DEFAULT_SIZE, "DEFAULT_SIZE should be 0");
+    }
+
+    @Test
+    public void testDefaultBpsConstant() {
+        assertEquals(1L, Edge.DEFAULT_BPS, "DEFAULT_BPS should be 1");
+    }
+
+    @Test
+    public void testDefaultLatencyConstant() {
+        assertEquals(0L, Edge.DEFAULT_LATENCY, "DEFAULT_LATENCY should be 0");
+    }
+
+    @Test
+    public void testGetFromReturnsCorrectNode() {
+        assertEquals(mNodeA, mEdge.getFrom(), "getFrom() should return the 'from' node");
+    }
+
+    @Test
+    public void testGetToReturnsCorrectNode() {
+        assertEquals(mNodeB, mEdge.getTo(), "getTo() should return the 'to' node");
+    }
+
+    @Test
+    public void testGetCostReturnsExpectedValue() {
+        // cost = fileSize / DEFAULT_BPS + DEFAULT_LATENCY = 1000 / 1 + 0 = 1000
+        assertEquals(1000L, mEdge.getCost(), "getCost should return fileSize / BPS + latency");
+    }
+
+    @Test
+    public void testInitResetsCompletionFlag() {
+        mEdge.complete = true;
+        mEdge.init();
+        assertFalse(mEdge.complete, "After init(), complete flag should be false");
+    }
+
+    @Test
+    public void testInitResetsCompTime() {
+        mEdge.compTime = 500L;
+        mEdge.init();
+        assertEquals(0L, mEdge.compTime, "After init(), compTime should be 0");
+    }
 }

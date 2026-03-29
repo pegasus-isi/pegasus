@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorQuoteParser utility class. */
 public class CondorQuoteParserTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,57 @@ public class CondorQuoteParserTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testQuotePlainString() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello");
+        assertNotNull(result);
+        assertEquals("hello", result);
     }
-    */
+
+    @Test
+    public void testQuoteEmptyString() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("");
+        assertNotNull(result);
+        assertEquals("", result);
+    }
+
+    @Test
+    public void testQuoteStringWithSingleQuotes() throws CondorQuoteParserException {
+        // single quotes in input should be preserved
+        String result = CondorQuoteParser.quote("'test'");
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testQuoteStringWithDoubleQuoteConvertsToSingleQuote()
+            throws CondorQuoteParserException {
+        // " not enclosed in single quotes => converted to '
+        String result = CondorQuoteParser.quote("Karan \"Vahi\"");
+        assertNotNull(result);
+        assertTrue(result.contains("'Vahi'"));
+    }
+
+    @Test
+    public void testQuoteWithEncloseAddsOuterQuotes() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello", true);
+        assertNotNull(result);
+        assertTrue(result.startsWith("\""));
+    }
+
+    @Test
+    public void testQuoteWithoutEncloseNoOuterQuotes() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello", false);
+        assertNotNull(result);
+        assertFalse(result.startsWith("\""));
+    }
+
+    @Test
+    public void testQuoteClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(CondorQuoteParser.class.getModifiers()));
+    }
+
+    @Test
+    public void testQuoteClassExists() {
+        assertNotNull(CondorQuoteParser.class);
+    }
 }

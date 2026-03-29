@@ -15,31 +15,53 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Ignore invocation class. */
 public class IgnoreTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Ignore.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(Ignore.class));
+    }
+
+    @Test
+    public void testDefaultConstructorCreates() {
+        Ignore ig = new Ignore();
+        assertNotNull(ig);
+    }
+
+    @Test
+    public void testGetValueReturnsNull() {
+        // Ignore.getValue() returns "" (empty string), not null — it is a no-op store
+        Ignore ig = new Ignore();
+        assertEquals("", ig.getValue());
+    }
+
+    @Test
+    public void testAppendValueIsNoop() {
+        Ignore ig = new Ignore();
+        ig.appendValue("anything");
+        // getValue() still returns "" because Ignore discards all data
+        assertEquals("", ig.getValue());
+    }
+
+    @Test
+    public void testSetValueIsNoop() {
+        Ignore ig = new Ignore();
+        ig.setValue("something");
+        assertEquals("", ig.getValue());
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        Ignore ig = new Ignore();
+        ig.appendValue(null);
+        assertEquals("", ig.getValue());
+    }
 }

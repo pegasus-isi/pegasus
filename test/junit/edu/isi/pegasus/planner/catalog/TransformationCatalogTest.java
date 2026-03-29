@@ -15,31 +15,76 @@ package edu.isi.pegasus.planner.catalog;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the TransformationCatalog interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class TransformationCatalogTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testTransformationCatalogIsInterface() {
+        assertTrue(
+                TransformationCatalog.class.isInterface(),
+                "TransformationCatalog should be an interface");
     }
-    */
+
+    @Test
+    public void testTransformationCatalogExtendsCatalog() {
+        assertTrue(
+                Catalog.class.isAssignableFrom(TransformationCatalog.class),
+                "TransformationCatalog should extend Catalog");
+    }
+
+    @Test
+    public void testVersionConstant() {
+        assertNotNull(
+                TransformationCatalog.VERSION, "TransformationCatalog VERSION should not be null");
+        assertFalse(
+                TransformationCatalog.VERSION.isEmpty(),
+                "TransformationCatalog VERSION should not be empty");
+    }
+
+    @Test
+    public void testPropertyPrefixConstant() {
+        assertEquals(
+                "pegasus.catalog.transformation",
+                TransformationCatalog.c_prefix,
+                "TransformationCatalog property prefix should be 'pegasus.catalog.transformation'");
+    }
+
+    @Test
+    public void testFileKeyConstant() {
+        assertEquals(
+                "file",
+                TransformationCatalog.FILE_KEY,
+                "TransformationCatalog FILE_KEY should be 'file'");
+    }
+
+    @Test
+    public void testTransientKeyConstant() {
+        assertEquals(
+                "transient",
+                TransformationCatalog.TRANSIENT_KEY,
+                "TransformationCatalog TRANSIENT_KEY should be 'transient'");
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws NoSuchMethodException {
+        Method init =
+                TransformationCatalog.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class);
+        assertNotNull(init, "TransformationCatalog should have an initialize(PegasusBag) method");
+    }
+
+    @Test
+    public void testVariableExpansionKeyConstant() {
+        assertEquals(
+                "expand",
+                TransformationCatalog.VARIABLE_EXPANSION_KEY,
+                "TransformationCatalog VARIABLE_EXPANSION_KEY should be 'expand'");
+    }
 }

@@ -15,31 +15,91 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for PegasusJsonDeserializer via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class PegasusJsonDeserializerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPegasusJsonDeserializerIsAbstract() {
+        assertTrue(
+                Modifier.isAbstract(PegasusJsonDeserializer.class.getModifiers()),
+                "PegasusJsonDeserializer should be abstract");
     }
-    */
+
+    @Test
+    public void testPegasusJsonDeserializerExtendsJsonDeserializer() {
+        assertTrue(
+                JsonDeserializer.class.isAssignableFrom(PegasusJsonDeserializer.class),
+                "PegasusJsonDeserializer should extend Jackson's JsonDeserializer");
+    }
+
+    @Test
+    public void testHasComplainForIllegalKeyMethod() throws NoSuchMethodException {
+        Method m =
+                PegasusJsonDeserializer.class.getMethod(
+                        "complainForIllegalKey",
+                        String.class,
+                        String.class,
+                        com.fasterxml.jackson.databind.JsonNode.class);
+        assertNotNull(m, "PegasusJsonDeserializer should have complainForIllegalKey method");
+    }
+
+    @Test
+    public void testHasComplainForUnsupportedKeyMethod() throws NoSuchMethodException {
+        Method m =
+                PegasusJsonDeserializer.class.getMethod(
+                        "complainForUnsupportedKey",
+                        String.class,
+                        String.class,
+                        com.fasterxml.jackson.databind.JsonNode.class);
+        assertNotNull(m, "PegasusJsonDeserializer should have complainForUnsupportedKey method");
+    }
+
+    @Test
+    public void testHasComplainMethod() throws NoSuchMethodException {
+        Method m =
+                PegasusJsonDeserializer.class.getMethod(
+                        "complain",
+                        String.class,
+                        String.class,
+                        String.class,
+                        com.fasterxml.jackson.databind.JsonNode.class);
+        assertNotNull(m, "PegasusJsonDeserializer should have complain method");
+    }
+
+    @Test
+    public void testComplainForIllegalKeyIsPublic() throws NoSuchMethodException {
+        Method m =
+                PegasusJsonDeserializer.class.getMethod(
+                        "complainForIllegalKey",
+                        String.class,
+                        String.class,
+                        com.fasterxml.jackson.databind.JsonNode.class);
+        assertTrue(Modifier.isPublic(m.getModifiers()), "complainForIllegalKey should be public");
+    }
+
+    @Test
+    public void testHasCreateChecksumMethod() throws NoSuchMethodException {
+        Method m =
+                PegasusJsonDeserializer.class.getMethod(
+                        "createChecksum",
+                        com.fasterxml.jackson.databind.JsonNode.class,
+                        String.class);
+        assertNotNull(m, "PegasusJsonDeserializer should have createChecksum method");
+    }
+
+    @Test
+    public void testIsGenericClass() {
+        assertTrue(
+                PegasusJsonDeserializer.class.getTypeParameters().length > 0,
+                "PegasusJsonDeserializer should be a generic class with type parameters");
+    }
 }

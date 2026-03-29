@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SubmitMapper interface structure. */
 public class SubmitMapperTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,36 @@ public class SubmitMapperTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSubmitMapperIsInterface() {
+        assertTrue(SubmitMapper.class.isInterface());
     }
-    */
+
+    @Test
+    public void testPropertyPrefixConstant() {
+        assertEquals("pegasus.dir.submit.mapper", SubmitMapper.PROPERTY_PREFIX);
+    }
+
+    @Test
+    public void testVersionConstant() {
+        assertEquals("1.0", SubmitMapper.VERSION);
+    }
+
+    @Test
+    public void testSubmitMapperExtendsMapper() {
+        assertTrue(Mapper.class.isAssignableFrom(SubmitMapper.class));
+    }
+
+    @Test
+    public void testGetRelativeDirMethodExists() throws NoSuchMethodException {
+        assertNotNull(
+                SubmitMapper.class.getMethod(
+                        "getRelativeDir", edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testGetDirMethodExists() throws NoSuchMethodException {
+        assertNotNull(
+                SubmitMapper.class.getMethod("getDir", edu.isi.pegasus.planner.classes.Job.class));
+    }
 }

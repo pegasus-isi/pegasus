@@ -15,15 +15,19 @@ package edu.isi.pegasus.planner.transfer.classes;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link TransferContainer}. */
 public class TransferContainerTest {
+
+    private TransferContainer container;
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -31,15 +35,70 @@ public class TransferContainerTest {
     public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        container = new TransferContainer();
+    }
 
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultTXNameIsNull() {
+        assertNull(container.getTXName());
     }
-    */
+
+    @Test
+    public void testDefaultRegNameIsNull() {
+        assertNull(container.getRegName());
+    }
+
+    @Test
+    public void testSetAndGetTXName() {
+        container.setTXName("stage_in_local_0");
+        assertEquals("stage_in_local_0", container.getTXName());
+    }
+
+    @Test
+    public void testSetAndGetRegName() {
+        container.setRegName("register_local_0");
+        assertEquals("register_local_0", container.getRegName());
+    }
+
+    @Test
+    public void testInitialFileTransfersEmpty() {
+        assertTrue(container.getFileTransfers().isEmpty());
+    }
+
+    @Test
+    public void testAddSingleTransfer() {
+        FileTransfer ft = new FileTransfer();
+        container.addTransfer(ft);
+        assertEquals(1, container.getFileTransfers().size());
+    }
+
+    @Test
+    public void testInitialRegistrationFilesEmpty() {
+        assertTrue(container.getRegistrationFiles().isEmpty());
+    }
+
+    @Test
+    public void testAddRegistrationFile() {
+        FileTransfer ft = new FileTransfer();
+        container.addRegistrationFiles(ft);
+        assertEquals(1, container.getRegistrationFiles().size());
+    }
+
+    @Test
+    public void testAddComputeJob() {
+        Job job = new Job();
+        job.setJobType(Job.COMPUTE_JOB);
+        container.addComputeJob(job);
+        assertEquals(1, container.getAssociatedComputeJobs().size());
+    }
+
+    @Test
+    public void testSetTransferType() {
+        container.setTransferType(Job.STAGE_OUT_JOB);
+        // No getter exposed, but ensure no exception is thrown
+    }
 }

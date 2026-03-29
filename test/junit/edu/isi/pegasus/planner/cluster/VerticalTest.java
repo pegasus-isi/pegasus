@@ -15,31 +15,55 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Vertical clusterer class. */
 public class VerticalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Vertical mVertical;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mVertical = new Vertical();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertNotNull(mVertical, "Vertical should be instantiatable");
+    }
+
+    @Test
+    public void testImplementsClusterer() {
+        assertInstanceOf(Clusterer.class, mVertical, "Vertical should implement Clusterer");
+    }
+
+    @Test
+    public void testDescriptionNotNull() {
+        assertNotNull(mVertical.description(), "description() should not return null");
+    }
+
+    @Test
+    public void testDescriptionNotEmpty() {
+        assertFalse(mVertical.description().isEmpty(), "description() should not be empty");
+    }
+
+    @Test
+    public void testDefaultConstructorDoesNotThrow() {
+        assertDoesNotThrow(Vertical::new, "Vertical should construct without throwing");
+    }
+
+    @Test
+    public void testDescriptionIsDifferentFromHorizontal() {
+        Horizontal h = new Horizontal();
+        assertNotEquals(
+                mVertical.description(),
+                h.description(),
+                "Vertical and Horizontal descriptions should differ");
+    }
+
+    @Test
+    public void testIsInstanceOfVertical() {
+        assertInstanceOf(Vertical.class, mVertical, "Object should be an instance of Vertical");
+    }
 }

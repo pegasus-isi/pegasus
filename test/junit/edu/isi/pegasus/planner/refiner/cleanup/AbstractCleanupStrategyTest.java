@@ -15,31 +15,34 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for AbstractCleanupStrategy. */
 public class AbstractCleanupStrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(AbstractCleanupStrategy.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testImplementsCleanupStrategy() {
+        assertTrue(CleanupStrategy.class.isAssignableFrom(AbstractCleanupStrategy.class));
+    }
+
+    @Test
+    public void testCleanupJobPrefixConstant() {
+        assertEquals("clean_up_", AbstractCleanupStrategy.CLEANUP_JOB_PREFIX);
+    }
+
+    @Test
+    public void testDefaultMaxJobsConstant() {
+        assertEquals("4", AbstractCleanupStrategy.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY);
+    }
+
+    @Test
+    public void testInPlaceExtendsAbstractCleanupStrategy() {
+        assertTrue(AbstractCleanupStrategy.class.isAssignableFrom(InPlace.class));
+    }
 }

@@ -13,17 +13,21 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class HeadNodeStorageTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +40,62 @@ public class HeadNodeStorageTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorCreatesNonNullDirectories() {
+        HeadNodeStorage storage = new HeadNodeStorage();
+        assertNotNull(storage.getLocalDirectory());
+        assertNotNull(storage.getSharedDirectory());
     }
-    */
+
+    @Test
+    public void testOverloadedConstructorWithLocalAndShared() {
+        LocalDirectory local = new LocalDirectory();
+        SharedDirectory shared = new SharedDirectory();
+        HeadNodeStorage storage = new HeadNodeStorage(local, shared);
+        assertSame(local, storage.getLocalDirectory());
+        assertSame(shared, storage.getSharedDirectory());
+    }
+
+    @Test
+    public void testSetLocalDirectory() {
+        HeadNodeStorage storage = new HeadNodeStorage();
+        LocalDirectory local = new LocalDirectory();
+        InternalMountPoint mp = new InternalMountPoint("/storage/local");
+        local.setInternalMountPoint(mp);
+        storage.setLocalDirectory(local);
+        assertEquals(
+                "/storage/local",
+                storage.getLocalDirectory().getInternalMountPoint().getMountPoint());
+    }
+
+    @Test
+    public void testSetSharedDirectory() {
+        HeadNodeStorage storage = new HeadNodeStorage();
+        SharedDirectory shared = new SharedDirectory();
+        InternalMountPoint mp = new InternalMountPoint("/storage/shared");
+        shared.setInternalMountPoint(mp);
+        storage.setSharedDirectory(shared);
+        assertEquals(
+                "/storage/shared",
+                storage.getSharedDirectory().getInternalMountPoint().getMountPoint());
+    }
+
+    @Test
+    public void testToXMLContainsStorageElement() throws IOException {
+        HeadNodeStorage storage = new HeadNodeStorage();
+        StringWriter sw = new StringWriter();
+        storage.toXML(sw, "");
+        String xml = sw.toString();
+        assertThat(xml, containsString("<storage>"));
+        assertThat(xml, containsString("</storage>"));
+    }
+
+    @Test
+    public void testCloneProducesDistinctInstance() {
+        HeadNodeStorage storage = new HeadNodeStorage();
+        HeadNodeStorage cloned = (HeadNodeStorage) storage.clone();
+        assertNotSame(storage, cloned);
+        assertNotSame(storage.getLocalDirectory(), cloned.getLocalDirectory());
+        assertNotSame(storage.getSharedDirectory(), cloned.getSharedDirectory());
+    }
 }

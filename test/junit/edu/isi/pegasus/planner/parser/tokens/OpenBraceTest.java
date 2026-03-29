@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link OpenBrace} token. */
 public class OpenBraceTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,29 @@ public class OpenBraceTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCanBeInstantiated() {
+        OpenBrace ob = new OpenBrace();
+        assertNotNull(ob);
     }
-    */
+
+    @Test
+    public void testImplementsToken() {
+        OpenBrace ob = new OpenBrace();
+        assertInstanceOf(Token.class, ob);
+    }
+
+    @Test
+    public void testIsDistinctFromCloseBrace() {
+        OpenBrace ob = new OpenBrace();
+        CloseBrace cb = new CloseBrace();
+        assertNotEquals(ob.getClass(), cb.getClass());
+    }
+
+    @Test
+    public void testMultipleInstancesCanBeCreated() {
+        OpenBrace ob1 = new OpenBrace();
+        OpenBrace ob2 = new OpenBrace();
+        assertNotSame(ob1, ob2);
+    }
 }

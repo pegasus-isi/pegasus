@@ -15,31 +15,84 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the CatalogType abstract class, exercised through the concrete File and Executable
+ * subclasses.
+ */
 public class CatalogTypeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testFileExtendsCatalogType() {
+        File f = new File("test.txt");
+        assertInstanceOf(CatalogType.class, f, "File should extend CatalogType");
     }
-    */
+
+    @Test
+    public void testExecutableExtendsCatalogType() {
+        Executable e = new Executable("test-exec");
+        assertInstanceOf(CatalogType.class, e, "Executable should extend CatalogType");
+    }
+
+    @Test
+    public void testAddPhysicalFileUrl() {
+        File f = new File("test.txt");
+        f.addPhysicalFile("gsiftp://site1/test.txt");
+        List<PFN> pfns = f.getPhysicalFiles();
+        assertEquals(1, pfns.size(), "Should have 1 PFN");
+        assertEquals("gsiftp://site1/test.txt", pfns.get(0).getURL(), "PFN URL should match");
+    }
+
+    @Test
+    public void testAddPhysicalFileWithSite() {
+        File f = new File("test.txt");
+        f.addPhysicalFile("gsiftp://site1/test.txt", "site1");
+        List<PFN> pfns = f.getPhysicalFiles();
+        assertEquals(1, pfns.size(), "Should have 1 PFN");
+        assertEquals("site1", pfns.get(0).getSite(), "PFN site should match");
+    }
+
+    @Test
+    public void testAddPhysicalFilePFNObject() {
+        File f = new File("test.txt");
+        PFN pfn = new PFN("gsiftp://site2/test.txt", "site2");
+        f.addPhysicalFile(pfn);
+        List<PFN> pfns = f.getPhysicalFiles();
+        assertEquals(1, pfns.size(), "Should have 1 PFN");
+        assertEquals(pfn, pfns.get(0), "Should be same PFN object");
+    }
+
+    @Test
+    public void testAddProfile() {
+        File f = new File("test.txt");
+        f.addProfile("pegasus", "runtime", "100");
+        List<Profile> profiles = f.getProfiles();
+        assertFalse(profiles.isEmpty(), "Profiles should not be empty");
+        assertEquals("pegasus", profiles.get(0).getNameSpace(), "Namespace should match");
+    }
+
+    @Test
+    public void testAddMetaData() {
+        File f = new File("test.txt");
+        f.addMetaData("checksum", "abc123");
+        // Metadata is in the internal set
+        assertNotNull(f.getMetaData(), "Metadata should not be null");
+    }
+
+    @Test
+    public void testInitiallyEmptyPFNs() {
+        File f = new File("test.txt");
+        List<PFN> pfns = f.getPhysicalFiles();
+        assertTrue(pfns.isEmpty(), "PFNs should be empty initially");
+    }
+
+    @Test
+    public void testMultiplePFNs() {
+        File f = new File("test.txt");
+        f.addPhysicalFile("gsiftp://site1/test.txt", "site1");
+        f.addPhysicalFile("gsiftp://site2/test.txt", "site2");
+        assertEquals(2, f.getPhysicalFiles().size(), "Should have 2 PFNs");
+    }
 }

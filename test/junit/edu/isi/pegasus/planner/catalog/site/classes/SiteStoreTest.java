@@ -15,15 +15,18 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class SiteStoreTest {
+
+    private SiteStore store;
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -31,15 +34,75 @@ public class SiteStoreTest {
     public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        store = new SiteStore();
+    }
 
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorIsEmpty() {
+        assertTrue(store.isEmpty());
     }
-    */
+
+    @Test
+    public void testDefaultVersionIsSet() {
+        assertEquals(SiteStore.DEFAULT_SITE_CATALOG_VERSION, store.getVersion());
+    }
+
+    @Test
+    public void testAddEntryAndContains() {
+        SiteCatalogEntry entry = new SiteCatalogEntry("local");
+        store.addEntry(entry);
+        assertTrue(store.contains("local"));
+    }
+
+    @Test
+    public void testLookupReturnsAddedEntry() {
+        SiteCatalogEntry entry = new SiteCatalogEntry("condor_pool");
+        store.addEntry(entry);
+        SiteCatalogEntry found = store.lookup("condor_pool");
+        assertNotNull(found);
+        assertEquals("condor_pool", found.getSiteHandle());
+    }
+
+    @Test
+    public void testLookupReturnsNullForMissingSite() {
+        assertNull(store.lookup("nonexistent"));
+    }
+
+    @Test
+    public void testListReturnsSiteHandles() {
+        store.addEntry(new SiteCatalogEntry("local"));
+        store.addEntry(new SiteCatalogEntry("remote"));
+        Set<String> sites = store.list();
+        assertTrue(sites.contains("local"));
+        assertTrue(sites.contains("remote"));
+    }
+
+    @Test
+    public void testSetAndGetVersion() {
+        store.setVersion("5.0");
+        assertEquals("5.0", store.getVersion());
+    }
+
+    @Test
+    public void testCloneProducesDistinctInstance() {
+        store.addEntry(new SiteCatalogEntry("local"));
+        SiteStore cloned = (SiteStore) store.clone();
+        assertNotSame(store, cloned);
+        assertTrue(cloned.contains("local"));
+    }
+
+    @Test
+    public void testContainsReturnsFalseForAbsentSite() {
+        assertFalse(store.contains("absent_site"));
+    }
+
+    @Test
+    public void testIsEmptyFalseAfterAddingEntry() {
+        store.addEntry(new SiteCatalogEntry("local"));
+        assertFalse(store.isEmpty());
+    }
 }

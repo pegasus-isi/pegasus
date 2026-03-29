@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SUBDAXGenerator class constants and structure. */
 public class SUBDAXGeneratorTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,48 @@ public class SUBDAXGeneratorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultSubdaxCategoryKey() {
+        assertEquals("subwf", SUBDAXGenerator.DEFAULT_SUBDAX_CATEGORY_KEY);
     }
-    */
+
+    @Test
+    public void testGenerateSubdagKeyword() {
+        assertFalse(SUBDAXGenerator.GENERATE_SUBDAG_KEYWORD);
+    }
+
+    @Test
+    public void testCplannerLogicalName() {
+        assertEquals("pegasus-plan", SUBDAXGenerator.CPLANNER_LOGICAL_NAME);
+    }
+
+    @Test
+    public void testCondorDagmanNamespace() {
+        assertEquals("condor", SUBDAXGenerator.CONDOR_DAGMAN_NAMESPACE);
+    }
+
+    @Test
+    public void testCondorDagmanLogicalName() {
+        assertEquals("dagman", SUBDAXGenerator.CONDOR_DAGMAN_LOGICAL_NAME);
+    }
+
+    @Test
+    public void testNamespace() {
+        assertEquals("pegasus", SUBDAXGenerator.NAMESPACE);
+    }
+
+    @Test
+    public void testRetryLogicalName() {
+        assertEquals("pegasus-plan", SUBDAXGenerator.RETRY_LOGICAL_NAME);
+    }
+
+    @Test
+    public void testClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(SUBDAXGenerator.class.getModifiers()));
+    }
+
+    @Test
+    public void testClassIsNotInterface() {
+        assertFalse(SUBDAXGenerator.class.isInterface());
+    }
 }

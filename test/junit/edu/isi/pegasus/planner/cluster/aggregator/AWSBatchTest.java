@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the AWSBatch aggregator class. */
 public class AWSBatchTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,49 @@ public class AWSBatchTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAWSBatchExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(AWSBatch.class));
     }
-    */
+
+    @Test
+    public void testAWSBatchImplementsJobAggregator() {
+        assertTrue(JobAggregator.class.isAssignableFrom(AWSBatch.class));
+    }
+
+    @Test
+    public void testCollapseLogicalNameConstant() {
+        assertEquals("aws-batch", AWSBatch.COLLAPSE_LOGICAL_NAME);
+    }
+
+    @Test
+    public void testExecutableBasenameConstant() {
+        assertEquals("pegasus-aws-batch", AWSBatch.EXECUTABLE_BASENAME);
+    }
+
+    @Test
+    public void testPegasusAWSBatchLaunchBasenameConstant() {
+        assertEquals("pegasus-aws-batch-launch.sh", AWSBatch.PEGASUS_AWS_BATCH_LAUNCH_BASENAME);
+    }
+
+    @Test
+    public void testBatchFileTypeKeyConstant() {
+        assertEquals("BATCH_FILE_TYPE", AWSBatch.BATCH_FILE_TYPE_KEY);
+    }
+
+    @Test
+    public void testBatchFileS3URLKeyConstant() {
+        assertEquals("BATCH_FILE_S3_URL", AWSBatch.BATCH_FILE_S3_URL_KEY);
+    }
+
+    @Test
+    public void testPegasusAWSBatchBucketKeyConstant() {
+        assertEquals("PEGASUS_AWS_BATCH_BUCKET", AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY);
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        AWSBatch awsBatch = new AWSBatch();
+        assertNotNull(awsBatch);
+    }
 }

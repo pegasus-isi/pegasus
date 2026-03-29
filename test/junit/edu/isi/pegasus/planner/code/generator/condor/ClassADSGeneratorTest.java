@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for ClassADSGenerator class constants and structure. */
 public class ClassADSGeneratorTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,43 @@ public class ClassADSGeneratorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testGeneratorConstant() {
+        assertEquals("Pegasus", ClassADSGenerator.GENERATOR);
     }
-    */
+
+    @Test
+    public void testGeneratorAdKeyConstant() {
+        assertEquals("pegasus_generator", ClassADSGenerator.GENERATOR_AD_KEY);
+    }
+
+    @Test
+    public void testVersionAdKeyConstant() {
+        assertEquals("pegasus_version", ClassADSGenerator.VERSION_AD_KEY);
+    }
+
+    @Test
+    public void testRootWfUuidKeyConstant() {
+        assertEquals("pegasus_root_wf_uuid", ClassADSGenerator.ROOT_WF_UUID_KEY);
+    }
+
+    @Test
+    public void testWfUuidKeyConstant() {
+        assertEquals("pegasus_wf_uuid", ClassADSGenerator.WF_UUID_KEY);
+    }
+
+    @Test
+    public void testWfNameAdKeyConstant() {
+        assertEquals("pegasus_wf_name", ClassADSGenerator.WF_NAME_AD_KEY);
+    }
+
+    @Test
+    public void testWfTimeAdKeyConstant() {
+        assertEquals("pegasus_wf_time", ClassADSGenerator.WF_TIME_AD_KEY);
+    }
+
+    @Test
+    public void testXformationAdKeyConstant() {
+        assertEquals("pegasus_wf_xformation", ClassADSGenerator.XFORMATION_AD_KEY);
+    }
 }

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TCMode class constants. */
 public class TCModeTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,39 @@ public class TCModeTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSingleReadConstantValue() {
+        assertEquals("single", TCMode.SINGLE_READ);
     }
-    */
+
+    @Test
+    public void testMultipleReadConstantValue() {
+        assertEquals("multiple", TCMode.MULTIPLE_READ);
+    }
+
+    @Test
+    public void testOldFileTCClassConstantValue() {
+        assertEquals("OldFile", TCMode.OLDFILE_TC_CLASS);
+    }
+
+    @Test
+    public void testDefaultTCClassConstantValue() {
+        assertEquals("File", TCMode.DEFAULT_TC_CLASS);
+    }
+
+    @Test
+    public void testPackageNameConstantIsNonEmpty() {
+        assertNotNull(TCMode.PACKAGE_NAME);
+        assertFalse(TCMode.PACKAGE_NAME.isEmpty());
+    }
+
+    @Test
+    public void testSingleReadIsDistinctFromMultipleRead() {
+        assertNotEquals(TCMode.SINGLE_READ, TCMode.MULTIPLE_READ);
+    }
+
+    @Test
+    public void testOldFileTCClassIsDistinctFromDefaultTCClass() {
+        assertNotEquals(TCMode.OLDFILE_TC_CLASS, TCMode.DEFAULT_TC_CLASS);
+    }
 }

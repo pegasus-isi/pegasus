@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the OutputMapperFactory class constants and structure. */
 public class OutputMapperFactoryTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,30 @@ public class OutputMapperFactoryTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageNameConstant() {
+        assertEquals(
+                "edu.isi.pegasus.planner.mapper.output", OutputMapperFactory.DEFAULT_PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testPropertyKeyConstant() {
+        assertEquals("pegasus.dir.storage.mapper", OutputMapperFactory.PROPERTY_KEY);
+    }
+
+    @Test
+    public void testDefaultOutputMapperImplementationConstant() {
+        assertEquals("Flat", OutputMapperFactory.DEFAULT_OUTPUT_MAPPER_IMPLEMENTATION);
+    }
+
+    @Test
+    public void testHashedOutputMapperImplementationConstant() {
+        assertEquals("Hashed", OutputMapperFactory.HASHED_OUTPUT_MAPPER_IMPLEMENTATION);
+    }
+
+    @Test
+    public void testFactoryClassIsPublic() {
+        int modifiers = OutputMapperFactory.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
+    }
 }

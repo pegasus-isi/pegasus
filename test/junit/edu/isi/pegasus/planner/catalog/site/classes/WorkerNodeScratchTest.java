@@ -13,17 +13,21 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class WorkerNodeScratchTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +40,60 @@ public class WorkerNodeScratchTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorCreatesNonNullLocalAndSharedDirectories() {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        assertNotNull(scratch.getLocalDirectory());
+        assertNotNull(scratch.getSharedDirectory());
     }
-    */
+
+    @Test
+    public void testDefaultConstructorHasNullWorkerSharedDirectory() {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        assertNull(scratch.getWorkerSharedDirectory());
+    }
+
+    @Test
+    public void testSetAndGetWorkerSharedDirectory() {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        WorkerSharedDirectory wsd = new WorkerSharedDirectory();
+        scratch.setWorkerSharedDirectory(wsd);
+        assertSame(wsd, scratch.getWorkerSharedDirectory());
+    }
+
+    @Test
+    public void testOverloadedConstructorSetsDirectories() {
+        LocalDirectory local = new LocalDirectory();
+        SharedDirectory shared = new SharedDirectory();
+        WorkerNodeScratch scratch = new WorkerNodeScratch(local, shared);
+        assertSame(local, scratch.getLocalDirectory());
+        assertSame(shared, scratch.getSharedDirectory());
+    }
+
+    @Test
+    public void testToXMLContainsScratchElement() throws IOException {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        StringWriter sw = new StringWriter();
+        scratch.toXML(sw, "");
+        String xml = sw.toString();
+        assertThat(xml, containsString("<scratch>"));
+        assertThat(xml, containsString("</scratch>"));
+    }
+
+    @Test
+    public void testCloneWithNullWorkerSharedDirectory() {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        WorkerNodeScratch cloned = (WorkerNodeScratch) scratch.clone();
+        assertNotSame(scratch, cloned);
+        assertNull(cloned.getWorkerSharedDirectory());
+    }
+
+    @Test
+    public void testCloneWithWorkerSharedDirectoryIsDistinct() {
+        WorkerNodeScratch scratch = new WorkerNodeScratch();
+        WorkerSharedDirectory wsd = new WorkerSharedDirectory();
+        scratch.setWorkerSharedDirectory(wsd);
+        WorkerNodeScratch cloned = (WorkerNodeScratch) scratch.clone();
+        assertNotSame(scratch.getWorkerSharedDirectory(), cloned.getWorkerSharedDirectory());
+    }
 }

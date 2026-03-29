@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CondorGenerator class. */
 public class CondorGeneratorTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,29 @@ public class CondorGeneratorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCondorGeneratorImplementsCodeGenerator() {
+        assertTrue(CodeGenerator.class.isAssignableFrom(CondorGenerator.class));
     }
-    */
+
+    @Test
+    public void testCondorGeneratorIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(CondorGenerator.class.getModifiers()));
+    }
+
+    @Test
+    public void testCondorGeneratorClassExists() {
+        assertNotNull(CondorGenerator.class);
+    }
+
+    @Test
+    public void testCondorGeneratorIsNotInterface() {
+        assertFalse(CondorGenerator.class.isInterface());
+    }
+
+    @Test
+    public void testCondorGeneratorInstantiation() {
+        CondorGenerator gen = new CondorGenerator();
+        assertNotNull(gen);
+    }
 }

@@ -15,31 +15,85 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Patterns utility class. */
 public class PatternsTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsVersionValidSimple() {
+        assertTrue(Patterns.isVersionValid("1"), "Single integer should be a valid version");
     }
-    */
+
+    @Test
+    public void testIsVersionValidTwoPart() {
+        assertTrue(Patterns.isVersionValid("1.0"), "Two-part version should be valid");
+    }
+
+    @Test
+    public void testIsVersionValidThreePart() {
+        assertTrue(Patterns.isVersionValid("1.2.3"), "Three-part version should be valid");
+    }
+
+    @Test
+    public void testIsVersionValidRejectsAlpha() {
+        assertFalse(Patterns.isVersionValid("1.0a"), "Version with alpha suffix should be invalid");
+    }
+
+    @Test
+    public void testIsVersionValidRejectsEmpty() {
+        assertFalse(Patterns.isVersionValid(""), "Empty string should be invalid version");
+    }
+
+    @Test
+    public void testIsVersionValidRejectsDash() {
+        assertFalse(
+                Patterns.isVersionValid("1-0"), "Version with dash separator should be invalid");
+    }
+
+    @Test
+    public void testIsVersionValidRejectsFourPart() {
+        assertFalse(Patterns.isVersionValid("1.2.3.4"), "Four-part version should be invalid");
+    }
+
+    @Test
+    public void testIsNodeIdValidSimple() {
+        assertTrue(Patterns.isNodeIdValid("job1"), "Simple alphanumeric node ID should be valid");
+    }
+
+    @Test
+    public void testIsNodeIdValidWithUnderscore() {
+        assertTrue(Patterns.isNodeIdValid("my_job"), "Node ID with underscore should be valid");
+    }
+
+    @Test
+    public void testIsNodeIdValidWithDash() {
+        assertTrue(Patterns.isNodeIdValid("my-job"), "Node ID with dash should be valid");
+    }
+
+    @Test
+    public void testIsNodeIdValidStartsWithLetter() {
+        assertTrue(
+                Patterns.isNodeIdValid("A_job_1"), "Node ID starting with letter should be valid");
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsStartWithDash() {
+        assertFalse(Patterns.isNodeIdValid("-job"), "Node ID starting with dash should be invalid");
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsEmpty() {
+        assertFalse(Patterns.isNodeIdValid(""), "Empty string should be invalid node ID");
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsSpace() {
+        assertFalse(Patterns.isNodeIdValid("my job"), "Node ID with space should be invalid");
+    }
+
+    @Test
+    public void testIsNodeIdValidSingleChar() {
+        assertTrue(Patterns.isNodeIdValid("A"), "Single character node ID should be valid");
+    }
 }

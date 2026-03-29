@@ -15,31 +15,61 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CPU invocation class. */
 public class CPUTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(CPU.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(CPU.class));
+    }
+
+    @Test
+    public void testElementName() {
+        assertEquals("cpu", CPU.ELEMENT_NAME);
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        CPU cpu = new CPU();
+        assertNull(cpu.getValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        CPU cpu = new CPU("GenuineIntel");
+        assertEquals("GenuineIntel", cpu.getValue());
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new CPU(null));
+    }
+
+    @Test
+    public void testAppendValue() {
+        CPU cpu = new CPU();
+        cpu.appendValue("Intel");
+        cpu.appendValue(" Core i7");
+        assertEquals("Intel Core i7", cpu.getValue());
+    }
+
+    @Test
+    public void testGetElementName() {
+        CPU cpu = new CPU();
+        assertEquals("cpu", cpu.getElementName());
+    }
+
+    @Test
+    public void testSetValue() {
+        CPU cpu = new CPU();
+        cpu.setValue("AuthenticAMD");
+        assertEquals("AuthenticAMD", cpu.getValue());
+    }
 }

@@ -13,17 +13,19 @@
  */
 package edu.isi.pegasus.planner.catalog;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class CatalogExceptionTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +38,101 @@ public class CatalogExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorCreatesException() {
+        CatalogException ex = new CatalogException();
+        assertNotNull(ex);
+        assertNull(ex.getMessage());
+        assertNull(ex.getNextException());
     }
-    */
+
+    @Test
+    public void testStringConstructorSetsMessage() {
+        CatalogException ex = new CatalogException("test error");
+        assertEquals("test error", ex.getMessage());
+    }
+
+    @Test
+    public void testStringCauseConstructorSetsBoth() {
+        Throwable cause = new RuntimeException("root cause");
+        CatalogException ex = new CatalogException("wrapper message", cause);
+        assertEquals("wrapper message", ex.getMessage());
+        assertSame(cause, ex.getCause());
+    }
+
+    @Test
+    public void testCauseOnlyConstructor() {
+        Throwable cause = new RuntimeException("root cause");
+        CatalogException ex = new CatalogException(cause);
+        assertSame(cause, ex.getCause());
+    }
+
+    @Test
+    public void testGetNextExceptionInitiallyNull() {
+        CatalogException ex = new CatalogException("first");
+        assertNull(ex.getNextException());
+    }
+
+    @Test
+    public void testSetNextExceptionChainsSingle() {
+        CatalogException first = new CatalogException("first");
+        CatalogException second = new CatalogException("second");
+        first.setNextException(second);
+        assertSame(second, first.getNextException());
+    }
+
+    @Test
+    public void testSetNextExceptionChainsMultiple() {
+        CatalogException first = new CatalogException("first");
+        CatalogException second = new CatalogException("second");
+        CatalogException third = new CatalogException("third");
+
+        first.setNextException(second);
+        first.setNextException(third); // should be appended to end of chain
+
+        assertSame(second, first.getNextException());
+        assertSame(third, first.getNextException().getNextException());
+    }
+
+    @Test
+    public void testCatalogExceptionIsRuntimeException() {
+        CatalogException ex = new CatalogException("test");
+        assertThat(ex, instanceOf(RuntimeException.class));
+    }
+
+    @Test
+    public void testExceptionChainIterationPattern() {
+        CatalogException root = new CatalogException("first");
+        root.setNextException(new CatalogException("second"));
+        root.setNextException(new CatalogException("third"));
+
+        int count = 0;
+        for (CatalogException rce = root; rce != null; rce = rce.getNextException()) {
+            count++;
+        }
+        assertEquals(3, count, "Chain should have 3 exceptions");
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                CatalogException.class,
+                () -> {
+                    throw new CatalogException("thrown exception");
+                });
+    }
+
+    @Test
+    public void testSetNextExceptionOnSecondPositionAppends() {
+        CatalogException first = new CatalogException("first");
+        CatalogException second = new CatalogException("second");
+        first.setNextException(second);
+
+        CatalogException third = new CatalogException("third");
+        first.setNextException(third);
+
+        // third should be at the end of the chain
+        assertNull(third.getNextException());
+        assertSame(third, second.getNextException());
+    }
 }

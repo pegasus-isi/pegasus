@@ -15,31 +15,48 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Task invocation class. */
 public class TaskTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(Task.class));
     }
-    */
+
+    @Test
+    public void testElementName() {
+        assertEquals("task", Task.ELEMENT_NAME);
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Task t = new Task();
+        assertNotNull(t);
+    }
+
+    @Test
+    public void testGetElementName() {
+        Task t = new Task();
+        assertEquals("task", t.getElementName());
+    }
+
+    @Test
+    public void testAddAndGetAttribute() {
+        Task t = new Task();
+        t.addAttribute("count", "8");
+        assertEquals("8", t.get("count"));
+    }
+
+    @Test
+    public void testGetMissingAttributeReturnsNull() {
+        Task t = new Task();
+        assertNull(t.get("missing"));
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Task.class.getModifiers()));
+    }
 }

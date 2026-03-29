@@ -15,31 +15,54 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatusRegular invocation class. */
 public class JobStatusRegularTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsJobStatus() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusRegular.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorExitCodeZero() {
+        JobStatusRegular j = new JobStatusRegular();
+        assertEquals(0, j.getExitCode());
+    }
+
+    @Test
+    public void testConstructorWithExitCode() {
+        JobStatusRegular j = new JobStatusRegular((short) 42);
+        assertEquals(42, j.getExitCode());
+    }
+
+    @Test
+    public void testSetAndGetExitCode() {
+        JobStatusRegular j = new JobStatusRegular();
+        j.setExitCode((short) 1);
+        assertEquals(1, j.getExitCode());
+    }
+
+    @Test
+    public void testToXMLContainsExitcode() {
+        JobStatusRegular j = new JobStatusRegular((short) 0);
+        String xml = j.toXML("");
+        assertTrue(xml.contains("exitcode=\"0\""));
+        assertTrue(xml.contains("<regular"));
+    }
+
+    @Test
+    public void testToXMLNonZeroExitCode() {
+        JobStatusRegular j = new JobStatusRegular((short) 127);
+        String xml = j.toXML("");
+        assertTrue(xml.contains("exitcode=\"127\""));
+    }
+
+    @Test
+    public void testToXMLSelfClosingTag() {
+        JobStatusRegular j = new JobStatusRegular((short) 0);
+        String xml = j.toXML("");
+        assertTrue(xml.contains("/>"));
+    }
 }

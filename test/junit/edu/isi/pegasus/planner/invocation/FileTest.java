@@ -15,31 +15,54 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for File abstract invocation class structure. */
 public class FileTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(File.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(File.class));
+    }
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(File.class));
+    }
+
+    @Test
+    public void testDescriptorIsConcreteSubclass() {
+        assertTrue(File.class.isAssignableFrom(Descriptor.class));
+        assertFalse(Modifier.isAbstract(Descriptor.class.getModifiers()));
+    }
+
+    @Test
+    public void testTemporaryExtendsFile() {
+        assertTrue(File.class.isAssignableFrom(Temporary.class));
+    }
+
+    @Test
+    public void testRegularExtendsFile() {
+        assertTrue(File.class.isAssignableFrom(Regular.class));
+    }
+
+    @Test
+    public void testDescriptorAppendValueBuildsHexbyte() {
+        Descriptor d = new Descriptor();
+        d.appendValue("deadbeef");
+        assertEquals("deadbeef", d.getValue());
+    }
+
+    @Test
+    public void testDescriptorAppendNullIsNoop() {
+        Descriptor d = new Descriptor();
+        d.appendValue(null);
+        assertNull(d.getValue());
+    }
 }

@@ -15,31 +15,43 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatus abstract class structure. */
 public class JobStatusTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsAbstract() {
+        assertTrue(Modifier.isAbstract(JobStatus.class.getModifiers()));
     }
-    */
+
+    @Test
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(JobStatus.class));
+    }
+
+    @Test
+    public void testJobStatusRegularIsConcreteSubclass() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusRegular.class));
+        assertFalse(Modifier.isAbstract(JobStatusRegular.class.getModifiers()));
+    }
+
+    @Test
+    public void testJobStatusFailureIsConcreteSubclass() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusFailure.class));
+        assertFalse(Modifier.isAbstract(JobStatusFailure.class.getModifiers()));
+    }
+
+    @Test
+    public void testJobStatusSignalIsConcreteSubclass() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusSignal.class));
+        assertFalse(Modifier.isAbstract(JobStatusSignal.class.getModifiers()));
+    }
+
+    @Test
+    public void testJobStatusSuspendIsConcreteSubclass() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusSuspend.class));
+        assertFalse(Modifier.isAbstract(JobStatusSuspend.class.getModifiers()));
+    }
 }

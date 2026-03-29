@@ -15,31 +15,72 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CommandLine invocation class. */
 public class CommandLineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(CommandLine.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(CommandLine.class));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValues() {
+        CommandLine cl = new CommandLine();
+        assertNull(cl.getExecutable());
+        assertNull(cl.getValue());
+    }
+
+    @Test
+    public void testConstructorWithExecutable() {
+        CommandLine cl = new CommandLine("/bin/ls");
+        assertEquals("/bin/ls", cl.getExecutable());
+        assertNull(cl.getValue());
+    }
+
+    @Test
+    public void testConstructorWithExecutableAndValue() {
+        CommandLine cl = new CommandLine("/bin/ls", "-la /tmp");
+        assertEquals("/bin/ls", cl.getExecutable());
+        assertEquals("-la /tmp", cl.getValue());
+    }
+
+    @Test
+    public void testSetAndGetExecutable() {
+        CommandLine cl = new CommandLine();
+        cl.setExecutable("/usr/bin/grep");
+        assertEquals("/usr/bin/grep", cl.getExecutable());
+    }
+
+    @Test
+    public void testSetAndGetValue() {
+        CommandLine cl = new CommandLine();
+        cl.setValue("--help");
+        assertEquals("--help", cl.getValue());
+    }
+
+    @Test
+    public void testAppendValue() {
+        CommandLine cl = new CommandLine();
+        cl.appendValue("-a");
+        cl.appendValue(" -b");
+        assertEquals("-a -b", cl.getValue());
+    }
+
+    @Test
+    public void testToXMLWithExecutableAndValue() throws Exception {
+        CommandLine cl = new CommandLine("/bin/echo", "hello world");
+        StringWriter sw = new StringWriter();
+        cl.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertTrue(xml.contains("executable="));
+        assertTrue(xml.contains("hello world"));
+    }
 }

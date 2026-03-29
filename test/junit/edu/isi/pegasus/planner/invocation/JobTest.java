@@ -15,31 +15,63 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Date;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Job invocation class. */
 public class JobTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(Job.class));
     }
-    */
+
+    @Test
+    public void testConstructorWithTag() {
+        Job j = new Job("mainjob");
+        assertEquals("mainjob", j.getTag());
+    }
+
+    @Test
+    public void testSetAndGetTag() {
+        Job j = new Job("mainjob");
+        j.setTag("postjob");
+        assertEquals("postjob", j.getTag());
+    }
+
+    @Test
+    public void testSetAndGetPID() {
+        Job j = new Job("mainjob");
+        j.setPID(12345);
+        assertEquals(12345, j.getPID());
+    }
+
+    @Test
+    public void testSetAndGetDuration() {
+        Job j = new Job("mainjob");
+        j.setDuration(3.14);
+        assertEquals(3.14, j.getDuration(), 0.001);
+    }
+
+    @Test
+    public void testSetAndGetStart() {
+        Job j = new Job("mainjob");
+        Date now = new Date();
+        j.setStart(now);
+        assertEquals(now, j.getStart());
+    }
+
+    @Test
+    public void testNullUsageByDefault() {
+        Job j = new Job("mainjob");
+        assertNull(j.getUsage());
+    }
+
+    @Test
+    public void testSetAndGetUsage() {
+        Job j = new Job("mainjob");
+        Usage u = new Usage();
+        j.setUsage(u);
+        assertNotNull(j.getUsage());
+    }
 }

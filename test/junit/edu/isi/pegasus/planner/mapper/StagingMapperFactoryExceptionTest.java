@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the StagingMapperFactoryException class. */
 public class StagingMapperFactoryExceptionTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,49 @@ public class StagingMapperFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertTrue(
+                edu.isi.pegasus.common.util.FactoryException.class.isAssignableFrom(
+                        StagingMapperFactoryException.class));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertEquals("Staging Site Mapper", StagingMapperFactoryException.DEFAULT_NAME);
+    }
+
+    @Test
+    public void testConstructWithMessageSetsDefaultClassname() {
+        StagingMapperFactoryException ex = new StagingMapperFactoryException("test message");
+        assertEquals("test message", ex.getMessage());
+        assertEquals(StagingMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndClassname() {
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", "MyClass");
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        StagingMapperFactoryException ex = new StagingMapperFactoryException("test message", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals(cause, ex.getCause());
+        assertEquals(StagingMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageClassnameAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", "MyClass", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+        assertEquals(cause, ex.getCause());
+    }
 }

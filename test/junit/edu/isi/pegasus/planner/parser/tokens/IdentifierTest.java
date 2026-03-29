@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link Identifier} token. */
 public class IdentifierTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,40 @@ public class IdentifierTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsToken() {
+        Identifier id = new Identifier("myJob");
+        assertInstanceOf(Token.class, id);
     }
-    */
+
+    @Test
+    public void testGetValue() {
+        Identifier id = new Identifier("myJob");
+        assertEquals("myJob", id.getValue());
+    }
+
+    @Test
+    public void testToString() {
+        Identifier id = new Identifier("pegasus");
+        assertEquals("pegasus", id.toString());
+    }
+
+    @Test
+    public void testGetValueMatchesConstructorInput() {
+        String value = "transformation-name";
+        Identifier id = new Identifier(value);
+        assertEquals(value, id.getValue());
+    }
+
+    @Test
+    public void testEmptyValue() {
+        Identifier id = new Identifier("");
+        assertEquals("", id.getValue());
+    }
+
+    @Test
+    public void testToStringEqualsGetValue() {
+        Identifier id = new Identifier("someToken");
+        assertEquals(id.getValue(), id.toString());
+    }
 }

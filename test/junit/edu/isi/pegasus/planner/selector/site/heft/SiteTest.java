@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Site class in the HEFT package. */
 public class SiteTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,30 @@ public class SiteTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSiteInstantiationWithName() {
+        Site site = new Site("my-site");
+        assertNotNull(site);
     }
-    */
+
+    @Test
+    public void testSiteInstantiationWithNameAndProcessors() {
+        Site site = new Site("my-site", 4);
+        assertNotNull(site);
+    }
+
+    @Test
+    public void testSiteClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Site.class.getModifiers()));
+    }
+
+    @Test
+    public void testSiteClassIsNotInterface() {
+        assertFalse(Site.class.isInterface());
+    }
+
+    @Test
+    public void testSiteClassExists() {
+        assertNotNull(Site.class);
+    }
 }

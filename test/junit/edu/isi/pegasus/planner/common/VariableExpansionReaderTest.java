@@ -15,31 +15,89 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for VariableExpansionReader. */
 public class VariableExpansionReaderTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testReadSimpleLineWithoutVariables() throws IOException {
+        String content = "hello world";
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        BufferedReader br = new BufferedReader(reader);
+        String line = br.readLine();
+        br.close();
+        assertEquals("hello world", line, "Line without variables should pass through unchanged");
     }
-    */
+
+    @Test
+    public void testReadEmptyContent() throws IOException {
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(""));
+        BufferedReader br = new BufferedReader(reader);
+        String line = br.readLine();
+        br.close();
+        // readLine() returns null at EOF (empty input has no lines)
+        assertNull(line, "Read from empty string should return null (EOF)");
+    }
+
+    @Test
+    public void testReadMultipleLines() throws IOException {
+        String content = "line1\nline2\nline3";
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        BufferedReader br = new BufferedReader(reader);
+        assertEquals("line1", br.readLine(), "First line should be 'line1'");
+        assertEquals("line2", br.readLine(), "Second line should be 'line2'");
+        assertEquals("line3", br.readLine(), "Third line should be 'line3'");
+        br.close();
+    }
+
+    @Test
+    public void testReaderCanBeClosed() throws IOException {
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader("test"));
+        assertDoesNotThrow(reader::close, "close() should not throw an exception");
+    }
+
+    @Test
+    public void testReadReturnsNegativeOneAtEndOfStream() throws IOException {
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(""));
+        char[] buf = new char[10];
+        // Read beyond end: first read may consume the empty line+\n, second should be -1
+        reader.read(buf, 0, 1); // consumes the \n from empty line
+        int result = reader.read(buf, 0, 1);
+        reader.close();
+        assertEquals(-1, result, "Reading at end of stream should return -1");
+    }
+
+    @Test
+    public void testReadWithSystemPropertyVariable() {
+        // VariableExpansionReader pre-reads its input in the constructor.
+        // VariableExpander throws RuntimeException for variables not registered via
+        // PegasusProperties
+        // (system properties alone are not used). The exception is thrown during construction.
+        String propName = "test.peg.var.expansion";
+        System.setProperty(propName, "expanded_value");
+        try {
+            String content = "${" + propName + "}";
+            assertThrows(
+                    RuntimeException.class,
+                    () -> new VariableExpansionReader(new StringReader(content)),
+                    "VariableExpansionReader constructor throws for unknown variables");
+        } finally {
+            System.clearProperty(propName);
+        }
+    }
+
+    @Test
+    public void testReadContentWithSpecialCharacters() throws IOException {
+        String content = "path=/usr/local/bin:special#chars";
+        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        BufferedReader br = new BufferedReader(reader);
+        String line = br.readLine();
+        br.close();
+        assertEquals(
+                content, line, "Special characters in non-variable content should be preserved");
+    }
 }

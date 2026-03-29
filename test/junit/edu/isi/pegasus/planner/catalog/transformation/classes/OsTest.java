@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Os enumerated type class. */
 public class OsTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,64 @@ public class OsTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPredefinedConstantsHaveCorrectValues() {
+        assertEquals("LINUX", Os.LINUX.getValue());
+        assertEquals("SUNOS", Os.SUNOS.getValue());
+        assertEquals("AIX", Os.AIX.getValue());
+        assertEquals("WINDOWS", Os.WINDOWS.getValue());
     }
-    */
+
+    @Test
+    public void testFromValueReturnsKnownConstant() {
+        assertSame(Os.LINUX, Os.fromValue("LINUX"));
+        assertSame(Os.SUNOS, Os.fromValue("SUNOS"));
+        assertSame(Os.AIX, Os.fromValue("AIX"));
+        assertSame(Os.WINDOWS, Os.fromValue("WINDOWS"));
+    }
+
+    @Test
+    public void testFromValueIsCaseInsensitive() {
+        assertSame(Os.LINUX, Os.fromValue("linux"));
+        assertSame(Os.WINDOWS, Os.fromValue("Windows"));
+        assertSame(Os.AIX, Os.fromValue("aix"));
+    }
+
+    @Test
+    public void testFromStringDelegatesToFromValue() {
+        assertSame(Os.LINUX, Os.fromString("LINUX"));
+        assertSame(Os.SUNOS, Os.fromString("sunos"));
+    }
+
+    @Test
+    public void testFromValueThrowsForUnknownOs() {
+        assertThrows(IllegalStateException.class, () -> Os.fromValue("UNKNOWN_OS"));
+    }
+
+    @Test
+    public void testToStringReturnsValue() {
+        assertEquals("LINUX", Os.LINUX.toString());
+        assertEquals("WINDOWS", Os.WINDOWS.toString());
+    }
+
+    @Test
+    public void testEqualsSameInstance() {
+        assertTrue(Os.LINUX.equals(Os.LINUX));
+    }
+
+    @Test
+    public void testEqualsDifferentInstances() {
+        assertFalse(Os.LINUX.equals(Os.WINDOWS));
+    }
+
+    @Test
+    public void testHashCodeConsistentWithToString() {
+        assertEquals(Os.LINUX.toString().hashCode(), Os.LINUX.hashCode());
+    }
+
+    @Test
+    public void testErrorMessageIsNonNull() {
+        assertNotNull(Os.err);
+        assertFalse(Os.err.isEmpty());
+    }
 }

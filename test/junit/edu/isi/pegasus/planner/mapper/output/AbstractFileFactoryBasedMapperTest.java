@@ -15,15 +15,16 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.mapper.OutputMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the AbstractFileFactoryBasedMapper class structure. */
 public class AbstractFileFactoryBasedMapperTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +37,36 @@ public class AbstractFileFactoryBasedMapperTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractFileFactoryBasedMapperIsAbstract() {
+        int modifiers = AbstractFileFactoryBasedMapper.class.getModifiers();
+        assertTrue(java.lang.reflect.Modifier.isAbstract(modifiers));
     }
-    */
+
+    @Test
+    public void testImplementsOutputMapper() {
+        assertTrue(OutputMapper.class.isAssignableFrom(AbstractFileFactoryBasedMapper.class));
+    }
+
+    @Test
+    public void testFlatExtendsAbstract() {
+        assertTrue(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Flat.class));
+    }
+
+    @Test
+    public void testHashedExtendsAbstract() {
+        assertTrue(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Hashed.class));
+    }
+
+    @Test
+    public void testFlatInstantiation() {
+        Flat flat = new Flat();
+        assertNotNull(flat);
+    }
+
+    @Test
+    public void testHashedInstantiation() {
+        Hashed hashed = new Hashed();
+        assertNotNull(hashed);
+    }
 }

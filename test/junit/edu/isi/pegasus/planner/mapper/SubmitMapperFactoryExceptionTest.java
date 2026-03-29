@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SubmitMapperFactoryException class. */
 public class SubmitMapperFactoryExceptionTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,49 @@ public class SubmitMapperFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertTrue(
+                edu.isi.pegasus.common.util.FactoryException.class.isAssignableFrom(
+                        SubmitMapperFactoryException.class));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertEquals("Directory Creator", SubmitMapperFactoryException.DEFAULT_NAME);
+    }
+
+    @Test
+    public void testConstructWithMessageSetsDefaultClassname() {
+        SubmitMapperFactoryException ex = new SubmitMapperFactoryException("test message");
+        assertEquals("test message", ex.getMessage());
+        assertEquals(SubmitMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndClassname() {
+        SubmitMapperFactoryException ex =
+                new SubmitMapperFactoryException("test message", "MyClass");
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        SubmitMapperFactoryException ex = new SubmitMapperFactoryException("test message", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals(cause, ex.getCause());
+        assertEquals(SubmitMapperFactoryException.DEFAULT_NAME, ex.getClassname());
+    }
+
+    @Test
+    public void testConstructWithMessageClassnameAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        SubmitMapperFactoryException ex =
+                new SubmitMapperFactoryException("test message", "MyClass", cause);
+        assertEquals("test message", ex.getMessage());
+        assertEquals("MyClass", ex.getClassname());
+        assertEquals(cause, ex.getCause());
+    }
 }

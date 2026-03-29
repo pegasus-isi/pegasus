@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the HEFT Algorithm class constants. */
 public class AlgorithmTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,38 @@ public class AlgorithmTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAverageBandwidth() {
+        assertEquals(5.0f, Algorithm.AVERAGE_BANDWIDTH, 0.001f);
     }
-    */
+
+    @Test
+    public void testAverageDataSizeBetweenJobs() {
+        assertEquals(2.0f, Algorithm.AVERAGE_DATA_SIZE_BETWEEN_JOBS, 0.001f);
+    }
+
+    @Test
+    public void testDefaultNumberOfFreeNodes() {
+        assertEquals(10, Algorithm.DEFAULT_NUMBER_OF_FREE_NODES);
+    }
+
+    @Test
+    public void testMaximumFinishTime() {
+        assertEquals(Long.MAX_VALUE, Algorithm.MAXIMUM_FINISH_TIME);
+    }
+
+    @Test
+    public void testRuntimeProfileKeyNotNull() {
+        assertNotNull(Algorithm.RUNTIME_PROFILE_KEY);
+    }
+
+    @Test
+    public void testAlgorithmClassIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Algorithm.class.getModifiers()));
+    }
+
+    @Test
+    public void testAlgorithmClassIsNotInterface() {
+        assertFalse(Algorithm.class.isInterface());
+    }
 }

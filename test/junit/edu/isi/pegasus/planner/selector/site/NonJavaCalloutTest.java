@@ -15,31 +15,46 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the NonJavaCallout site selector. */
 public class NonJavaCalloutTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private NonJavaCallout mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new NonJavaCallout();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertNotNull(mSelector, "NonJavaCallout should be instantiatable");
+    }
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertNotNull(desc, "Description should not be null");
+        assertFalse(desc.isEmpty(), "Description should not be empty");
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertInstanceOf(
+                SiteSelector.class, mSelector, "NonJavaCallout should implement SiteSelector");
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertInstanceOf(Abstract.class, mSelector, "NonJavaCallout should extend Abstract");
+    }
+
+    @Test
+    public void testDescriptionIsString() {
+        String desc = mSelector.description();
+        assertInstanceOf(String.class, desc, "Description should be a String");
+    }
 }

@@ -15,31 +15,67 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.io.File;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for RunDirectoryFilenameFilter. */
 public class RunDirectoryFilenameFilterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private RunDirectoryFilenameFilter mFilter;
+    private File mDummyDir;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mFilter = new RunDirectoryFilenameFilter();
+        mDummyDir = new File("/tmp");
     }
-    */
+
+    @Test
+    public void testAcceptsValidRunDirectory() {
+        assertTrue(mFilter.accept(mDummyDir, "run0001"), "Filter should accept 'run0001'");
+    }
+
+    @Test
+    public void testAcceptsRunWithMaxDigits() {
+        assertTrue(mFilter.accept(mDummyDir, "run9999"), "Filter should accept 'run9999'");
+    }
+
+    @Test
+    public void testRejectsDirectoryWithoutPrefix() {
+        assertFalse(
+                mFilter.accept(mDummyDir, "0001"), "Filter should reject '0001' (no 'run' prefix)");
+    }
+
+    @Test
+    public void testRejectsDirectoryWithWrongPrefix() {
+        assertFalse(mFilter.accept(mDummyDir, "dir0001"), "Filter should reject 'dir0001'");
+    }
+
+    @Test
+    public void testRejectsRunWithTooFewDigits() {
+        assertFalse(
+                mFilter.accept(mDummyDir, "run001"),
+                "Filter should reject 'run001' (only 3 digits)");
+    }
+
+    @Test
+    public void testRejectsRunWithTooManyDigits() {
+        assertFalse(
+                mFilter.accept(mDummyDir, "run00001"),
+                "Filter should reject 'run00001' (5 digits)");
+    }
+
+    @Test
+    public void testRejectsRunWithLetters() {
+        assertFalse(mFilter.accept(mDummyDir, "run000a"), "Filter should reject 'run000a'");
+    }
+
+    @Test
+    public void testSubmitDirectoryPrefixConstant() {
+        assertEquals(
+                "run",
+                RunDirectoryFilenameFilter.SUBMIT_DIRECTORY_PREFIX,
+                "Submit directory prefix should be 'run'");
+    }
 }

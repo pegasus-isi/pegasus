@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract condor style class. */
 public class AbstractTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,33 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractImplementsCondorStyle() {
+        assertTrue(CondorStyle.class.isAssignableFrom(Abstract.class));
     }
-    */
+
+    @Test
+    public void testAbstractIsAbstractClass() {
+        assertTrue(java.lang.reflect.Modifier.isAbstract(Abstract.class.getModifiers()));
+    }
+
+    @Test
+    public void testAbstractIsNotInterface() {
+        assertFalse(Abstract.class.isInterface());
+    }
+
+    @Test
+    public void testCondorExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(Condor.class));
+    }
+
+    @Test
+    public void testCondorGlideINExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(CondorGlideIN.class));
+    }
+
+    @Test
+    public void testCreamCEExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(CreamCE.class));
+    }
 }

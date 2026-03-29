@@ -15,31 +15,70 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the GraphNodeContent interface.
+ *
+ * @author Rajiv Mayani
+ */
 public class GraphNodeContentTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testGraphNodeContentIsInterface() {
+        assertTrue(GraphNodeContent.class.isInterface(), "GraphNodeContent should be an interface");
     }
-    */
+
+    @Test
+    public void testHasSetGraphNodeReferenceMethod() throws NoSuchMethodException {
+        Method m = GraphNodeContent.class.getMethod("setGraphNodeReference", GraphNode.class);
+        assertNotNull(m, "GraphNodeContent should declare setGraphNodeReference(GraphNode)");
+    }
+
+    @Test
+    public void testSetGraphNodeReferenceMethodIsPublic() throws NoSuchMethodException {
+        Method m = GraphNodeContent.class.getMethod("setGraphNodeReference", GraphNode.class);
+        assertTrue(Modifier.isPublic(m.getModifiers()), "setGraphNodeReference should be public");
+    }
+
+    @Test
+    public void testGraphNodeHasGetContentMethod() throws NoSuchMethodException {
+        Method m = GraphNode.class.getMethod("getContent");
+        assertEquals(
+                GraphNodeContent.class,
+                m.getReturnType(),
+                "getContent() should return a GraphNodeContent");
+    }
+
+    @Test
+    public void testGraphNodeHasSetContentMethod() throws NoSuchMethodException {
+        Method m = GraphNode.class.getMethod("setContent", GraphNodeContent.class);
+        assertNotNull(m, "GraphNode should have a setContent(GraphNodeContent) method");
+    }
+
+    @Test
+    public void testGraphNodeContentPackage() {
+        assertEquals(
+                "edu.isi.pegasus.planner.partitioner.graph",
+                GraphNodeContent.class.getPackage().getName(),
+                "GraphNodeContent should be in the correct package");
+    }
+
+    @Test
+    public void testDefaultContentIsNullForNewNode() {
+        GraphNode node = new GraphNode("X", "job");
+        assertNull(
+                node.getContent(), "Default content should be null for a newly created GraphNode");
+    }
+
+    @Test
+    public void testSetContentStoresValue() {
+        GraphNode node = new GraphNode("X", "job");
+        // Use a lambda/anonymous class since it's just an interface
+        GraphNodeContent content = n -> {};
+        node.setContent(content);
+        assertNotNull(node.getContent(), "getContent should return the set content");
+    }
 }

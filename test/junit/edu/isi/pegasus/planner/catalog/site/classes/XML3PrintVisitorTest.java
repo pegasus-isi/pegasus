@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the XML3PrintVisitor class. */
 public class XML3PrintVisitorTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,35 @@ public class XML3PrintVisitorTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testXML3PrintVisitorExtendsAbstractXMLPrintVisitor() {
+        assertTrue(AbstractXMLPrintVisitor.class.isAssignableFrom(XML3PrintVisitor.class));
     }
-    */
+
+    @Test
+    public void testSchemaNamespaceConstant() {
+        assertNotNull(XML3PrintVisitor.SCHEMA_NAMESPACE);
+        assertTrue(XML3PrintVisitor.SCHEMA_NAMESPACE.contains("pegasus.isi.edu"));
+    }
+
+    @Test
+    public void testSchemaLocationConstant() {
+        assertNotNull(XML3PrintVisitor.SCHEMA_LOCATION);
+        assertTrue(XML3PrintVisitor.SCHEMA_LOCATION.endsWith(".xsd"));
+    }
+
+    @Test
+    public void testSchemaVersionConstant() {
+        assertEquals("3.0", XML3PrintVisitor.SCHEMA_VERSION);
+    }
+
+    @Test
+    public void testClassIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(XML3PrintVisitor.class.getModifiers()));
+    }
+
+    @Test
+    public void testClassIsNotInterface() {
+        assertFalse(XML3PrintVisitor.class.isInterface());
+    }
 }

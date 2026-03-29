@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.gridstart.container.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract container shell wrapper class. */
 public class AbstractTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,43 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractImplementsContainerShellWrapper() {
+        assertTrue(ContainerShellWrapper.class.isAssignableFrom(Abstract.class));
     }
-    */
+
+    @Test
+    public void testAbstractIsAbstractClass() {
+        assertTrue(java.lang.reflect.Modifier.isAbstract(Abstract.class.getModifiers()));
+    }
+
+    @Test
+    public void testSeparatorConstant() {
+        assertEquals("########################", Abstract.SEPARATOR);
+    }
+
+    @Test
+    public void testSeparatorCharConstant() {
+        assertEquals('#', Abstract.SEPARATOR_CHAR);
+    }
+
+    @Test
+    public void testPegasusLiteMessagePrefix() {
+        assertEquals("[Pegasus Lite]", Abstract.PEGASUS_LITE_MESSAGE_PREFIX);
+    }
+
+    @Test
+    public void testContainerMessagePrefix() {
+        assertEquals("[Container]", Abstract.CONTAINER_MESSAGE_PREFIX);
+    }
+
+    @Test
+    public void testMessageStringLength() {
+        assertEquals(80, Abstract.MESSAGE_STRING_LENGTH);
+    }
+
+    @Test
+    public void testNoneExtendsAbstract() {
+        assertTrue(Abstract.class.isAssignableFrom(None.class));
+    }
 }

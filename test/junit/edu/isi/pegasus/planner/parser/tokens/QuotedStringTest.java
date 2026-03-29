@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link QuotedString} token. */
 public class QuotedStringTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,35 @@ public class QuotedStringTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsToken() {
+        QuotedString qs = new QuotedString("hello");
+        assertInstanceOf(Token.class, qs);
     }
-    */
+
+    @Test
+    public void testGetValue() {
+        QuotedString qs = new QuotedString("hello world");
+        assertEquals("hello world", qs.getValue());
+    }
+
+    @Test
+    public void testEmptyStringValue() {
+        QuotedString qs = new QuotedString("");
+        assertEquals("", qs.getValue());
+    }
+
+    @Test
+    public void testValueWithSpecialCharacters() {
+        String content = "/path/to/some file with spaces";
+        QuotedString qs = new QuotedString(content);
+        assertEquals(content, qs.getValue());
+    }
+
+    @Test
+    public void testValuePreservesWhitespace() {
+        String content = "  spaces  ";
+        QuotedString qs = new QuotedString(content);
+        assertEquals(content, qs.getValue());
+    }
 }

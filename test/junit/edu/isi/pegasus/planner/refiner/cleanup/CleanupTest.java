@@ -15,31 +15,39 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Cleanup (CleanupImplementation using pegasus-transfer). */
 public class CleanupTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsCleanupImplementation() {
+        assertTrue(CleanupImplementation.class.isAssignableFrom(Cleanup.class));
     }
-    */
+
+    @Test
+    public void testTransformationNamespace() {
+        assertEquals("pegasus", Cleanup.TRANSFORMATION_NAMESPACE);
+    }
+
+    @Test
+    public void testTransformationName() {
+        assertEquals("cleanup", Cleanup.TRANSFORMATION_NAME);
+    }
+
+    @Test
+    public void testDerivationNamespace() {
+        assertEquals("pegasus", Cleanup.DERIVATION_NAMESPACE);
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Cleanup c = new Cleanup();
+        assertNotNull(c);
+    }
+
+    @Test
+    public void testIsNotAbstract() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(Cleanup.class.getModifiers()));
+    }
 }

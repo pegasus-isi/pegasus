@@ -13,33 +13,38 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class StreamGobblerCallbackTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testLambdaImplementation_receivesLines() {
+        List<String> received = new ArrayList<>();
+        StreamGobblerCallback cb = line -> received.add(line);
+        cb.work("line1");
+        cb.work("line2");
+        assertThat(received, hasItems("line1", "line2"));
+        assertThat(received.size(), is(2));
     }
-    */
+
+    @Test
+    public void testAnonymousImplementation_work() {
+        StringBuilder sb = new StringBuilder();
+        StreamGobblerCallback cb =
+                new StreamGobblerCallback() {
+                    @Override
+                    public void work(String line) {
+                        sb.append(line);
+                    }
+                };
+        cb.work("hello");
+        assertThat(sb.toString(), is("hello"));
+    }
 }

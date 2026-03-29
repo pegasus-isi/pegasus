@@ -15,31 +15,50 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for HasDescriptor interface structure. */
 public class HasDescriptorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(HasDescriptor.class.isInterface());
     }
-    */
+
+    @Test
+    public void testHasGetDescriptorMethod() throws Exception {
+        Method m = HasDescriptor.class.getMethod("getDescriptor");
+        assertNotNull(m);
+        assertEquals(int.class, m.getReturnType());
+    }
+
+    @Test
+    public void testHasSetDescriptorMethod() throws Exception {
+        Method m = HasDescriptor.class.getMethod("setDescriptor", int.class);
+        assertNotNull(m);
+    }
+
+    @Test
+    public void testDescriptorImplementsInterface() {
+        assertTrue(HasDescriptor.class.isAssignableFrom(Descriptor.class));
+    }
+
+    @Test
+    public void testFifoImplementsInterface() {
+        assertTrue(HasDescriptor.class.isAssignableFrom(Fifo.class));
+    }
+
+    @Test
+    public void testDescriptorGetDescriptorDefault() {
+        Descriptor d = new Descriptor();
+        assertEquals(-1, d.getDescriptor());
+    }
+
+    @Test
+    public void testDescriptorSetDescriptor() {
+        Descriptor d = new Descriptor();
+        d.setDescriptor(7);
+        assertEquals(7, d.getDescriptor());
+    }
 }

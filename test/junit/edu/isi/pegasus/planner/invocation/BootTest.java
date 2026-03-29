@@ -15,31 +15,54 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Boot invocation class. */
 public class BootTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertTrue(MachineInfo.class.isAssignableFrom(Boot.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(Boot.class));
+    }
+
+    @Test
+    public void testElementName() {
+        assertEquals("boot", Boot.ELEMENT_NAME);
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        Boot b = new Boot();
+        assertNull(b.getValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        Boot b = new Boot("2024-01-01T00:00:00");
+        assertEquals("2024-01-01T00:00:00", b.getValue());
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new Boot(null));
+    }
+
+    @Test
+    public void testAppendValue() {
+        Boot b = new Boot();
+        b.appendValue("2024");
+        b.appendValue("-01-01");
+        assertEquals("2024-01-01", b.getValue());
+    }
+
+    @Test
+    public void testGetElementName() {
+        Boot b = new Boot();
+        assertEquals("boot", b.getElementName());
+    }
 }

@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.common.util.FactoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyleFactoryException class. */
 public class CondorStyleFactoryExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,44 @@ public class CondorStyleFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertTrue(FactoryException.class.isAssignableFrom(CondorStyleFactoryException.class));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertEquals("Code Generator", CondorStyleFactoryException.DEFAULT_NAME);
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsDefaultName() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message");
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message", "MyClass");
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message", cause);
+        assertNotNull(ex);
+        assertEquals(cause, ex.getCause());
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleFactoryException ex =
+                new CondorStyleFactoryException("test message", "MyClass", cause);
+        assertNotNull(ex);
+        assertEquals(cause, ex.getCause());
+    }
 }

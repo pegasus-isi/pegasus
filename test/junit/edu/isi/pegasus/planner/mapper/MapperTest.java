@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Mapper interface structure. */
 public class MapperTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +36,28 @@ public class MapperTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMapperIsInterface() {
+        assertTrue(Mapper.class.isInterface());
     }
-    */
+
+    @Test
+    public void testMapperDescriptionMethodExists() throws NoSuchMethodException {
+        assertNotNull(Mapper.class.getMethod("description"));
+    }
+
+    @Test
+    public void testOutputMapperExtendsMapper() {
+        assertTrue(Mapper.class.isAssignableFrom(OutputMapper.class));
+    }
+
+    @Test
+    public void testStagingMapperExtendsMapper() {
+        assertTrue(Mapper.class.isAssignableFrom(StagingMapper.class));
+    }
+
+    @Test
+    public void testSubmitMapperExtendsMapper() {
+        assertTrue(Mapper.class.isAssignableFrom(SubmitMapper.class));
+    }
 }

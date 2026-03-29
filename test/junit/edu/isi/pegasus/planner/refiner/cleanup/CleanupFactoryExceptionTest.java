@@ -15,31 +15,44 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CleanupFactoryException. */
 public class CleanupFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertTrue(FactoryException.class.isAssignableFrom(CleanupFactoryException.class));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertEquals("File Cleanup", CleanupFactoryException.DEFAULT_NAME);
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        CleanupFactoryException ex = new CleanupFactoryException("test error");
+        assertEquals("test error", ex.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsDefaultClassname() {
+        CleanupFactoryException ex = new CleanupFactoryException("test error");
+        assertEquals("File Cleanup", ex.getClassname());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        CleanupFactoryException ex = new CleanupFactoryException("error", "InPlace");
+        assertEquals("InPlace", ex.getClassname());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CleanupFactoryException ex = new CleanupFactoryException("error", cause);
+        assertEquals(cause, ex.getCause());
+    }
 }

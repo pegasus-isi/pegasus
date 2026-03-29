@@ -15,31 +15,47 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CodeGeneratorFactory constants and structure */
 public class CodeGeneratorFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.code.generator",
+                CodeGeneratorFactory.DEFAULT_PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testCondorCodeGeneratorClassName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.code.generator.condor.CondorGenerator",
+                CodeGeneratorFactory.CONDOR_CODE_GENERATOR_CLASS);
+    }
+
+    @Test
+    public void testStampedeEventGeneratorClassName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.code.generator.Stampede",
+                CodeGeneratorFactory.STAMPEDE_EVENT_GENERATOR_CLASS);
+    }
+
+    @Test
+    public void testCondorGeneratorClassIsLoadable() throws ClassNotFoundException {
+        // Verify the condor generator class actually exists on the classpath
+        Class<?> clazz = Class.forName(CodeGeneratorFactory.CONDOR_CODE_GENERATOR_CLASS);
+        assertNotNull(clazz);
+    }
+
+    @Test
+    public void testStampedeGeneratorClassIsLoadable() throws ClassNotFoundException {
+        Class<?> clazz = Class.forName(CodeGeneratorFactory.STAMPEDE_EVENT_GENERATOR_CLASS);
+        assertNotNull(clazz);
+    }
+
+    @Test
+    public void testLoadInstanceThrowsWhenNullBag() {
+        assertThrows(NullPointerException.class, () -> CodeGeneratorFactory.loadInstance(null));
+    }
 }

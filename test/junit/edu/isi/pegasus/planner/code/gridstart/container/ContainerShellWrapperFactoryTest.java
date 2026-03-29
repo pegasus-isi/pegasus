@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ContainerShellWrapperFactory class. */
 public class ContainerShellWrapperFactoryTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,42 @@ public class ContainerShellWrapperFactoryTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertEquals(
+                "edu.isi.pegasus.planner.code.gridstart.container.impl",
+                ContainerShellWrapperFactory.DEFAULT_PACKAGE_NAME);
     }
-    */
+
+    @Test
+    public void testDockerShellWrapperClass() {
+        assertEquals("Docker", ContainerShellWrapperFactory.DOCKER_SHELL_WRAPPER_CLASS);
+    }
+
+    @Test
+    public void testSingularityShellWrapperClass() {
+        assertEquals("Singularity", ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS);
+    }
+
+    @Test
+    public void testShifterShellWrapperClass() {
+        assertEquals("Shifter", ContainerShellWrapperFactory.SHIFTER_SHELL_WRAPPER_CLASS);
+    }
+
+    @Test
+    public void testNoShellWrapperClass() {
+        assertEquals("None", ContainerShellWrapperFactory.NO_SHELL_WRAPPER_CLASS);
+    }
+
+    @Test
+    public void testContainerShortNamesNotNull() {
+        assertNotNull(ContainerShellWrapperFactory.CONTAINER_SHORT_NAMES);
+        assertTrue(ContainerShellWrapperFactory.CONTAINER_SHORT_NAMES.length > 0);
+    }
+
+    @Test
+    public void testContainerImplementingClassesNotNull() {
+        assertNotNull(ContainerShellWrapperFactory.CONTAINER_IMPLEMENTING_CLASSES);
+        assertTrue(ContainerShellWrapperFactory.CONTAINER_IMPLEMENTING_CLASSES.length > 0);
+    }
 }

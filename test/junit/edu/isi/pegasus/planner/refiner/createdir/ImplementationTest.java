@@ -15,31 +15,37 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for createdir Implementation interface. */
 public class ImplementationTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsInterface() {
+        assertTrue(Implementation.class.isInterface());
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertEquals("1.1", Implementation.VERSION);
+    }
+
+    @Test
+    public void testDefaultImplementationImplementsInterface() {
+        assertTrue(Implementation.class.isAssignableFrom(DefaultImplementation.class));
+    }
+
+    @Test
+    public void testHasMakeCreateDirJobMethod() throws Exception {
+        assertNotNull(
+                Implementation.class.getMethod(
+                        "makeCreateDirJob", String.class, String.class, String.class));
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws Exception {
+        assertNotNull(
+                Implementation.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class));
+    }
 }

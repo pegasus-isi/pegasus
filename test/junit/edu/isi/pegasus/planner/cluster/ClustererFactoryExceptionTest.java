@@ -15,31 +15,68 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ClustererFactoryException class. */
 public class ClustererFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertEquals(
+                "Clusterer",
+                ClustererFactoryException.DEFAULT_NAME,
+                "DEFAULT_NAME should be 'Clusterer'");
     }
-    */
+
+    @Test
+    public void testConstructorWithMessage() {
+        ClustererFactoryException ex = new ClustererFactoryException("test error");
+        assertNotNull(ex.getMessage(), "Message should not be null");
+        assertEquals(
+                ClustererFactoryException.DEFAULT_NAME,
+                ex.getClassname(),
+                "Classname should default to DEFAULT_NAME");
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        ClustererFactoryException ex = new ClustererFactoryException("test error", "MyClusterer");
+        assertEquals("MyClusterer", ex.getClassname(), "Classname should match");
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererFactoryException ex = new ClustererFactoryException("test error", cause);
+        assertEquals(cause, ex.getCause(), "Cause should match");
+        assertEquals(
+                ClustererFactoryException.DEFAULT_NAME,
+                ex.getClassname(),
+                "Classname should default to DEFAULT_NAME when not specified");
+    }
+
+    @Test
+    public void testConstructorWithAllParams() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererFactoryException ex =
+                new ClustererFactoryException("test error", "MyClusterer", cause);
+        assertEquals("MyClusterer", ex.getClassname(), "Classname should match");
+        assertEquals(cause, ex.getCause(), "Cause should match");
+    }
+
+    @Test
+    public void testExtendsFactoryException() {
+        ClustererFactoryException ex = new ClustererFactoryException("test");
+        assertInstanceOf(FactoryException.class, ex, "Should extend FactoryException");
+    }
+
+    @Test
+    public void testDefaultClassnameSet() {
+        ClustererFactoryException ex = new ClustererFactoryException("test");
+        assertEquals(
+                ClustererFactoryException.DEFAULT_NAME,
+                ex.getClassname(),
+                "Default classname should be set to DEFAULT_NAME");
+    }
 }

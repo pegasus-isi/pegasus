@@ -13,33 +13,47 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Additional Separator.split() tests covering the demo cases from SeparatorTest in src/ */
 public class SeparatorTestTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSplit_nameWithVersionRange() {
+        String[] x = Separator.split("test::me:a,b");
+        assertThat(x.length, is(4));
+        assertThat(x[0], is("test"));
+        assertThat(x[1], is("me"));
+        assertThat(x[2], is("a"));
+        assertThat(x[3], is("b"));
     }
-    */
+
+    @Test
+    public void testSplit_minVersionOnly() {
+        String[] x = Separator.split("me:a,");
+        assertThat(x.length, is(4));
+        assertThat(x[1], is("me"));
+        assertThat(x[2], is("a"));
+        assertNull(x[3]);
+    }
+
+    @Test
+    public void testSplit_maxVersionOnly_isIllegal() {
+        // "me:,b" (no min version, has max) is illegal per Separator spec
+        assertThrows(IllegalArgumentException.class, () -> Separator.split("me:,b"));
+    }
+
+    @Test
+    public void testSplit_illegalTripleColon() {
+        assertThrows(IllegalArgumentException.class, () -> Separator.split("illegal:::too"));
+    }
+
+    @Test
+    public void testSplit_illegalEmptyRange() {
+        assertThrows(IllegalArgumentException.class, () -> Separator.split("il::legal:,"));
+    }
 }

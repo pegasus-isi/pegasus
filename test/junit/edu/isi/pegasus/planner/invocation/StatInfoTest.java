@@ -15,31 +15,71 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for StatInfo invocation class. */
 public class StatInfoTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertTrue(Invocation.class.isAssignableFrom(StatInfo.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorUidMinusOne() {
+        StatInfo si = new StatInfo();
+        assertEquals(-1, si.getUID());
+    }
+
+    @Test
+    public void testDefaultConstructorGidMinusOne() {
+        StatInfo si = new StatInfo();
+        assertEquals(-1, si.getGID());
+    }
+
+    @Test
+    public void testSetAndGetSize() {
+        StatInfo si = new StatInfo();
+        si.setSize(4096L);
+        assertEquals(4096L, si.getSize());
+    }
+
+    @Test
+    public void testSetAndGetMode() {
+        StatInfo si = new StatInfo();
+        si.setMode(0644);
+        assertEquals(0644, si.getMode());
+    }
+
+    @Test
+    public void testSetAndGetUser() {
+        StatInfo si = new StatInfo();
+        si.setUser("testuser");
+        assertEquals("testuser", si.getUser());
+    }
+
+    @Test
+    public void testSetAndGetGroup() {
+        StatInfo si = new StatInfo();
+        si.setGroup("testgroup");
+        assertEquals("testgroup", si.getGroup());
+    }
+
+    @Test
+    public void testSetAndGetINode() {
+        StatInfo si = new StatInfo();
+        si.setINode(12345L);
+        assertEquals(12345L, si.getINode());
+    }
+
+    @Test
+    public void testToXMLContainsStatinfo() throws Exception {
+        StatInfo si = new StatInfo();
+        si.setSize(1024L);
+        StringWriter sw = new StringWriter();
+        si.toXML(sw, "", null);
+        assertTrue(sw.toString().contains("statinfo"));
+        assertTrue(sw.toString().contains("size=\"1024\""));
+    }
 }

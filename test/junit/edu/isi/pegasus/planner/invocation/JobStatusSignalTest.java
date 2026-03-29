@@ -15,31 +15,54 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatusSignal invocation class. */
 public class JobStatusSignalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsJobStatus() {
+        assertTrue(JobStatus.class.isAssignableFrom(JobStatusSignal.class));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertTrue(HasText.class.isAssignableFrom(JobStatusSignal.class));
+    }
+
+    @Test
+    public void testDefaultConstructorDefaults() {
+        JobStatusSignal j = new JobStatusSignal();
+        // getSignalNumber() is the accessor method name in JobStatusSignal
+        assertEquals(0, j.getSignalNumber());
+        assertFalse(j.getCoreFlag());
+        assertNull(j.getValue());
+    }
+
+    @Test
+    public void testConstructorWithSignal() {
+        JobStatusSignal j = new JobStatusSignal((short) 11);
+        assertEquals(11, j.getSignalNumber());
+    }
+
+    @Test
+    public void testSetAndGetSignalNumber() {
+        JobStatusSignal j = new JobStatusSignal();
+        j.setSignalNumber((short) 9);
+        assertEquals(9, j.getSignalNumber());
+    }
+
+    @Test
+    public void testSetAndGetCoreFlag() {
+        JobStatusSignal j = new JobStatusSignal();
+        j.setCoreFlag(true);
+        assertTrue(j.getCoreFlag());
+    }
+
+    @Test
+    public void testAppendValue() {
+        JobStatusSignal j = new JobStatusSignal();
+        j.appendValue("SIGSEGV");
+        assertEquals("SIGSEGV", j.getValue());
+    }
 }

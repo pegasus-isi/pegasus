@@ -19,10 +19,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the WorkerNodeStorage class. */
 public class WorkerNodeStorageTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +35,29 @@ public class WorkerNodeStorageTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testWorkerNodeStorageExtendsStorageType() {
+        assertTrue(StorageType.class.isAssignableFrom(WorkerNodeStorage.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        WorkerNodeStorage storage = new WorkerNodeStorage();
+        assertNotNull(storage);
+    }
+
+    @Test
+    public void testWorkerNodeStorageIsConcreteClass() {
+        assertFalse(java.lang.reflect.Modifier.isAbstract(WorkerNodeStorage.class.getModifiers()));
+    }
+
+    @Test
+    public void testWorkerNodeStorageIsNotInterface() {
+        assertFalse(WorkerNodeStorage.class.isInterface());
+    }
+
+    @Test
+    public void testClassExists() {
+        assertNotNull(WorkerNodeStorage.class);
+    }
 }

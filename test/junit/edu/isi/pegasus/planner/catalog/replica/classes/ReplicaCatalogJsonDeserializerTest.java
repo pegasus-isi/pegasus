@@ -13,17 +13,22 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class ReplicaCatalogJsonDeserializerTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +41,63 @@ public class ReplicaCatalogJsonDeserializerTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassLoads() {
+        assertNotNull(ReplicaCatalogJsonDeserializer.class);
     }
-    */
+
+    @Test
+    public void testClassIsAbstract() {
+        assertTrue(
+                Modifier.isAbstract(ReplicaCatalogJsonDeserializer.class.getModifiers()),
+                "ReplicaCatalogJsonDeserializer should be abstract");
+    }
+
+    @Test
+    public void testExtendsCatalogEntryJsonDeserializer() {
+        assertTrue(
+                CatalogEntryJsonDeserializer.class.isAssignableFrom(
+                        ReplicaCatalogJsonDeserializer.class),
+                "ReplicaCatalogJsonDeserializer should extend CatalogEntryJsonDeserializer");
+    }
+
+    @Test
+    public void testGetExceptionReturnsReplicaCatalogException() {
+        ReplicaCatalogJsonDeserializer<?> deserializer =
+                new ReplicaCatalogJsonDeserializer<Object>() {
+                    @Override
+                    public Object deserialize(
+                            com.fasterxml.jackson.core.JsonParser jp,
+                            com.fasterxml.jackson.databind.DeserializationContext dc)
+                            throws java.io.IOException {
+                        return null;
+                    }
+                };
+        RuntimeException ex = deserializer.getException("test error");
+        assertThat(ex, instanceOf(ReplicaCatalogException.class));
+    }
+
+    @Test
+    public void testGetExceptionMessage() {
+        ReplicaCatalogJsonDeserializer<?> deserializer =
+                new ReplicaCatalogJsonDeserializer<Object>() {
+                    @Override
+                    public Object deserialize(
+                            com.fasterxml.jackson.core.JsonParser jp,
+                            com.fasterxml.jackson.databind.DeserializationContext dc)
+                            throws java.io.IOException {
+                        return null;
+                    }
+                };
+        String msg = "replica catalog error";
+        RuntimeException ex = deserializer.getException(msg);
+        assertEquals(msg, ex.getMessage());
+    }
+
+    @Test
+    public void testClassInCorrectPackage() {
+        assertEquals(
+                "edu.isi.pegasus.planner.catalog.replica.classes",
+                ReplicaCatalogJsonDeserializer.class.getPackage().getName());
+    }
 }

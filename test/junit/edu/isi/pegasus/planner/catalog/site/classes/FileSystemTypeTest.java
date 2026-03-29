@@ -19,11 +19,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for FileSystemType via InternalMountPoint (concrete subclass).
+ *
+ * @author Rajiv Mayani
+ */
 public class FileSystemTypeTest {
+
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,10 +40,50 @@ public class FileSystemTypeTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorEmptyStrings() {
+        InternalMountPoint imp = new InternalMountPoint();
+        assertEquals("", imp.getMountPoint());
+        assertEquals("", imp.getTotalSize());
+        assertEquals("", imp.getFreeSize());
     }
-    */
+
+    @Test
+    public void testOverloadedConstructorWithAllParameters() {
+        InternalMountPoint imp = new InternalMountPoint("/data", "100GB", "50GB");
+        assertEquals("/data", imp.getMountPoint());
+        assertEquals("100GB", imp.getTotalSize());
+        assertEquals("50GB", imp.getFreeSize());
+    }
+
+    @Test
+    public void testSetAndGetMountPoint() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setMountPoint("/scratch");
+        assertEquals("/scratch", imp.getMountPoint());
+    }
+
+    @Test
+    public void testSetAndGetTotalSize() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setTotalSize("200GB");
+        assertEquals("200GB", imp.getTotalSize());
+    }
+
+    @Test
+    public void testSetAndGetFreeSize() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setFreeSize("75GB");
+        assertEquals("75GB", imp.getFreeSize());
+    }
+
+    @Test
+    public void testCloneProducesEqualButDistinctInstance() {
+        InternalMountPoint imp = new InternalMountPoint("/work", "512GB", "256GB");
+        InternalMountPoint cloned = (InternalMountPoint) imp.clone();
+        assertNotSame(imp, cloned);
+        assertEquals(imp.getMountPoint(), cloned.getMountPoint());
+        assertEquals(imp.getTotalSize(), cloned.getTotalSize());
+        assertEquals(imp.getFreeSize(), cloned.getFreeSize());
+    }
 }

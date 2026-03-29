@@ -15,31 +15,106 @@ package edu.isi.pegasus.planner.selector.transformation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Installed transformation selector. */
 public class InstalledTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Installed mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Installed();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertNotNull(mSelector, "Installed selector should be instantiatable");
+    }
+
+    @Test
+    public void testExtendsTransformationSelector() {
+        assertInstanceOf(
+                TransformationSelector.class,
+                mSelector,
+                "Installed should extend TransformationSelector");
+    }
+
+    @Test
+    public void testSelectsInstalledEntries() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry installed = new TransformationCatalogEntry("ns", "exe", "1.0");
+        installed.setType(TCType.INSTALLED);
+        installed.setResourceId("site1");
+        entries.add(installed);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertNotNull(result, "Should return a list for installed entries");
+        assertEquals(1, result.size(), "Should return 1 installed entry");
+    }
+
+    @Test
+    public void testFiltersOutStageable() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry stageable = new TransformationCatalogEntry("ns", "exe", "1.0");
+        stageable.setType(TCType.STAGEABLE);
+        stageable.setResourceId("site1");
+        entries.add(stageable);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertNull(result, "Should return null when no installed entries");
+    }
+
+    @Test
+    public void testMultipleEntries() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+
+        TransformationCatalogEntry i1 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        i1.setType(TCType.INSTALLED);
+        i1.setResourceId("site1");
+
+        TransformationCatalogEntry i2 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        i2.setType(TCType.INSTALLED);
+        i2.setResourceId("site2");
+
+        TransformationCatalogEntry s1 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        s1.setType(TCType.STAGEABLE);
+        s1.setResourceId("site3");
+
+        entries.add(i1);
+        entries.add(i2);
+        entries.add(s1);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertNotNull(result);
+        assertEquals(
+                2, result.size(), "Should return 2 installed entries, filtering out stageable");
+    }
+
+    @Test
+    public void testEmptyList() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertNull(result, "Should return null for empty input");
+    }
+
+    @Test
+    public void testReturnedEntriesAreInstalled() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry installed = new TransformationCatalogEntry("ns", "exe", "1.0");
+        installed.setType(TCType.INSTALLED);
+        installed.setResourceId("site1");
+        entries.add(installed);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        TransformationCatalogEntry selected = (TransformationCatalogEntry) result.get(0);
+        assertEquals(
+                TCType.INSTALLED, selected.getType(), "Returned entry should be of type INSTALLED");
+    }
 }

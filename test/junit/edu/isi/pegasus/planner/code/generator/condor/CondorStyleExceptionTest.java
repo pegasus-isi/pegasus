@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyleException class. */
 public class CondorStyleExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,10 +36,43 @@ public class CondorStyleExceptionTest {
     @AfterEach
     public void tearDown() {}
 
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsCodeGeneratorException() {
+        assertTrue(CodeGeneratorException.class.isAssignableFrom(CondorStyleException.class));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        CondorStyleException ex = new CondorStyleException();
+        assertNotNull(ex);
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        CondorStyleException ex = new CondorStyleException("test message");
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleException ex = new CondorStyleException("test message", cause);
+        assertNotNull(ex);
+        assertEquals("test message", ex.getMessage());
+        assertEquals(cause, ex.getCause());
+    }
+
+    @Test
+    public void testConstructorWithCauseOnly() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleException ex = new CondorStyleException(cause);
+        assertNotNull(ex);
+        assertEquals(cause, ex.getCause());
+    }
+
+    @Test
+    public void testExceptionIsThrowable() {
+        assertTrue(Throwable.class.isAssignableFrom(CondorStyleException.class));
+    }
 }
