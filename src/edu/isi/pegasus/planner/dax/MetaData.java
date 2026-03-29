@@ -43,7 +43,7 @@ public class MetaData {
      */
     public MetaData(MetaData m) {
         // create a copy
-        this(m.getKey(), m.getType(), m.getValue());
+        this(m.getType(), (m.getKey(), m.getValue());
     }
 
     /**
