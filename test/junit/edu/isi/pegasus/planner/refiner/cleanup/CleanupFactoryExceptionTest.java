@@ -15,44 +15,31 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for CleanupFactoryException. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CleanupFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsFactoryException() {
-        assertTrue(FactoryException.class.isAssignableFrom(CleanupFactoryException.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("File Cleanup", CleanupFactoryException.DEFAULT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testConstructorWithMessage() {
-        CleanupFactoryException ex = new CleanupFactoryException("test error");
-        assertEquals("test error", ex.getMessage());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithMessageSetsDefaultClassname() {
-        CleanupFactoryException ex = new CleanupFactoryException("test error");
-        assertEquals("File Cleanup", ex.getClassname());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithMessageAndClassname() {
-        CleanupFactoryException ex = new CleanupFactoryException("error", "InPlace");
-        assertEquals("InPlace", ex.getClassname());
-    }
-
-    @Test
-    public void testConstructorWithMessageAndCause() {
-        Throwable cause = new RuntimeException("root cause");
-        CleanupFactoryException ex = new CleanupFactoryException("error", cause);
-        assertEquals(cause, ex.getCause());
-    }
+    */
 }

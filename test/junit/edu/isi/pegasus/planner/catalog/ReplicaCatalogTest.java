@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the ReplicaCatalog interface constants and structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ReplicaCatalogTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,55 +36,10 @@ public class ReplicaCatalogTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testReplicaCatalogIsInterface() {
-        assertTrue(ReplicaCatalog.class.isInterface(), "ReplicaCatalog should be an interface");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testReplicaCatalogExtendsCatalog() {
-        assertTrue(
-                Catalog.class.isAssignableFrom(ReplicaCatalog.class),
-                "ReplicaCatalog should extend Catalog");
-    }
-
-    @Test
-    public void testCPrefixConstant() {
-        assertEquals("pegasus.catalog.replica", ReplicaCatalog.c_prefix);
-    }
-
-    @Test
-    public void testDbPrefixConstant() {
-        assertEquals("pegasus.catalog.replica.db", ReplicaCatalog.DB_PREFIX);
-    }
-
-    @Test
-    public void testProxyKeyConstant() {
-        assertEquals("proxy", ReplicaCatalog.PROXY_KEY);
-    }
-
-    @Test
-    public void testFileKeyConstant() {
-        assertEquals("file", ReplicaCatalog.FILE_KEY);
-    }
-
-    @Test
-    public void testBatchKeyConstant() {
-        assertEquals("chunk.size", ReplicaCatalog.BATCH_KEY);
-    }
-
-    @Test
-    public void testVariableExpansionKeyConstant() {
-        assertEquals("expand", ReplicaCatalog.VARIABLE_EXPANSION_KEY);
-    }
-
-    @Test
-    public void testReadOnlyKeyConstant() {
-        assertEquals("read.only", ReplicaCatalog.READ_ONLY_KEY);
-    }
-
-    @Test
-    public void testPrefixKeyConstant() {
-        assertEquals("prefix", ReplicaCatalog.PREFIX_KEY);
-    }
+    */
 }

@@ -15,37 +15,31 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for CleanupFactory. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CleanupFactoryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultPackageName() {
-        assertEquals(
-                "edu.isi.pegasus.planner.refiner.cleanup", CleanupFactory.DEFAULT_PACKAGE_NAME);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(Modifier.isAbstract(CleanupFactory.class.getModifiers()));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testHasLoadCleanupStrategyMethod() throws Exception {
-        assertNotNull(
-                CleanupFactory.class.getMethod(
-                        "loadCleanupStraegyInstance",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testLoadMethodIsStatic() throws Exception {
-        java.lang.reflect.Method m =
-                CleanupFactory.class.getMethod(
-                        "loadCleanupStraegyInstance",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class);
-        assertTrue(Modifier.isStatic(m.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

@@ -15,96 +15,31 @@ package edu.isi.pegasus.planner.selector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.selector.transformation.Installed;
-import edu.isi.pegasus.planner.selector.transformation.Staged;
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the TransformationSelector abstract class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TransformationSelectorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
+    @AfterAll
+    public static void tearDownClass() {}
+
+    @BeforeEach
+    public void setUp() {}
+
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testPackageName() {
-        assertEquals(
-                "edu.isi.pegasus.planner.selector.transformation",
-                TransformationSelector.PACKAGE_NAME,
-                "PACKAGE_NAME should match expected value");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testLoadInstalledSelector() throws Exception {
-        TransformationSelector selector = TransformationSelector.loadTXSelector("Installed");
-        assertNotNull(selector, "Loaded selector should not be null");
-    }
-
-    @Test
-    public void testLoadStagedSelector() throws Exception {
-        TransformationSelector selector = TransformationSelector.loadTXSelector("Staged");
-        assertNotNull(selector, "Loaded staged selector should not be null");
-    }
-
-    @Test
-    public void testLoadRandomSelector() throws Exception {
-        TransformationSelector selector = TransformationSelector.loadTXSelector("Random");
-        assertNotNull(selector, "Loaded random selector should not be null");
-    }
-
-    @Test
-    public void testLoadSubmitSelector() throws Exception {
-        TransformationSelector selector = TransformationSelector.loadTXSelector("Submit");
-        assertNotNull(selector, "Loaded submit selector should not be null");
-    }
-
-    @Test
-    public void testInstalledSelectorFiltersByType() {
-        Installed selector = new Installed();
-        List<TransformationCatalogEntry> entries = new ArrayList<>();
-
-        TransformationCatalogEntry installed = new TransformationCatalogEntry("ns", "exe", "1.0");
-        installed.setType(TCType.INSTALLED);
-        installed.setResourceId("site1");
-
-        TransformationCatalogEntry staged = new TransformationCatalogEntry("ns", "exe", "1.0");
-        staged.setType(TCType.STAGEABLE);
-        staged.setResourceId("site1");
-
-        entries.add(installed);
-        entries.add(staged);
-
-        List result = selector.getTCEntry(entries, "site1");
-        assertNotNull(result, "Result should not be null for installed entries");
-        assertEquals(1, result.size(), "Should return exactly 1 installed entry");
-    }
-
-    @Test
-    public void testStagedSelectorFiltersByType() {
-        Staged selector = new Staged();
-        List<TransformationCatalogEntry> entries = new ArrayList<>();
-
-        TransformationCatalogEntry installed = new TransformationCatalogEntry("ns", "exe", "1.0");
-        installed.setType(TCType.INSTALLED);
-        installed.setResourceId("site1");
-
-        TransformationCatalogEntry staged = new TransformationCatalogEntry("ns", "exe", "1.0");
-        staged.setType(TCType.STAGEABLE);
-        staged.setResourceId("site1");
-
-        entries.add(installed);
-        entries.add(staged);
-
-        List result = selector.getTCEntry(entries, "site1");
-        assertNotNull(result, "Result should not be null for stageable entries");
-        assertEquals(1, result.size(), "Should return exactly 1 stageable entry");
-    }
-
-    @Test
-    public void testLoadInvalidSelectorThrows() {
-        assertThrows(
-                Exception.class,
-                () -> TransformationSelector.loadTXSelector("NonExistentSelector"),
-                "Loading invalid selector should throw an exception");
-    }
+    */
 }

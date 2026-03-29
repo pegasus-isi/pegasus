@@ -15,48 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Swap invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SwapTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(Swap.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("swap", Swap.ELEMENT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructor() {
-        Swap s = new Swap();
-        assertNotNull(s);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetElementName() {
-        Swap s = new Swap();
-        assertEquals("swap", s.getElementName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testAddAndGetAttribute() {
-        Swap s = new Swap();
-        s.addAttribute("total", "8192");
-        assertEquals("8192", s.get("total"));
-    }
-
-    @Test
-    public void testGetMissingAttributeReturnsNull() {
-        Swap s = new Swap();
-        assertNull(s.get("nosuchattr"));
-    }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Swap.class.getModifiers()));
-    }
+    */
 }

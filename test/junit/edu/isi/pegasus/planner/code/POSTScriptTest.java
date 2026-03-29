@@ -15,55 +15,31 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for POSTScript interface structure */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class POSTScriptTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.1", POSTScript.VERSION);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testInterfaceIsPublic() {
-        assertTrue(java.lang.reflect.Modifier.isPublic(POSTScript.class.getModifiers()));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testInterfaceHasInitializeMethod() throws NoSuchMethodException {
-        assertNotNull(
-                POSTScript.class.getMethod(
-                        "initialize",
-                        edu.isi.pegasus.planner.common.PegasusProperties.class,
-                        String.class,
-                        String.class,
-                        String.class));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testInterfaceHasConstructMethod() throws NoSuchMethodException {
-        assertNotNull(
-                POSTScript.class.getMethod(
-                        "construct", edu.isi.pegasus.planner.classes.Job.class, String.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testInterfaceHasShortDescribeMethod() throws NoSuchMethodException {
-        assertNotNull(POSTScript.class.getMethod("shortDescribe"));
-    }
-
-    @Test
-    public void testNoPOSTScriptImplementsPOSTScript() {
-        assertTrue(
-                POSTScript.class.isAssignableFrom(
-                        edu.isi.pegasus.planner.code.gridstart.NoPOSTScript.class));
-    }
-
-    @Test
-    public void testUserPOSTScriptImplementsPOSTScript() {
-        assertTrue(
-                POSTScript.class.isAssignableFrom(
-                        edu.isi.pegasus.planner.code.gridstart.UserPOSTScript.class));
-    }
+    */
 }

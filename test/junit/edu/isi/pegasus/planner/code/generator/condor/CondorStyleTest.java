@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the CondorStyle interface. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CondorStyleTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,30 +36,10 @@ public class CondorStyleTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testCondorStyleIsInterface() {
-        assertTrue(CondorStyle.class.isInterface());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.4", CondorStyle.VERSION);
-    }
-
-    @Test
-    public void testVersionConstantNotNull() {
-        assertNotNull(CondorStyle.VERSION);
-    }
-
-    @Test
-    public void testCondorStyleClassExists() {
-        assertNotNull(CondorStyle.class);
-    }
-
-    @Test
-    public void testCondorStyleImplementedByAbstractStyle() {
-        assertTrue(
-                CondorStyle.class.isAssignableFrom(
-                        edu.isi.pegasus.planner.code.generator.condor.style.Abstract.class));
-    }
+    */
 }

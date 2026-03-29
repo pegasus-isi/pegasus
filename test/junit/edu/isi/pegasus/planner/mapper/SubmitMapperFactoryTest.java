@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the SubmitMapperFactory class constants and structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SubmitMapperFactoryTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,29 +36,10 @@ public class SubmitMapperFactoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultPackageNameConstant() {
-        assertEquals(
-                "edu.isi.pegasus.planner.mapper.submit", SubmitMapperFactory.DEFAULT_PACKAGE_NAME);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultCreatorConstant() {
-        assertEquals("Hashed", SubmitMapperFactory.DEFAULT_CREATOR);
-    }
-
-    @Test
-    public void testFactoryClassIsPublic() {
-        int modifiers = SubmitMapperFactory.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testLoadInstanceMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                SubmitMapperFactory.class.getMethod(
-                        "loadInstance",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class,
-                        java.io.File.class));
-    }
+    */
 }

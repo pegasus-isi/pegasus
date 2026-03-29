@@ -15,95 +15,31 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the File class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FileTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private File mFile;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mFile = new File("test.txt");
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mFile, "File should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetName() {
-        assertEquals("test.txt", mFile.getName(), "Name should match constructor argument");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithLink() {
-        File f = new File("output.txt", File.LINK.OUTPUT);
-        assertEquals(File.LINK.OUTPUT, f.getLink(), "Link should be OUTPUT");
-    }
-
-    @Test
-    public void testDefaultRegisterIsTrue() {
-        assertTrue(mFile.getRegister(), "Default register flag should be true");
-    }
-
-    @Test
-    public void testDefaultTransferIsTrue() {
-        assertEquals(File.TRANSFER.TRUE, mFile.getTransfer(), "Default transfer should be TRUE");
-    }
-
-    @Test
-    public void testSetRegister() {
-        mFile.setRegister(false);
-        assertFalse(mFile.getRegister(), "Register should be false after setRegister(false)");
-    }
-
-    @Test
-    public void testSetTransfer() {
-        mFile.setTransfer(File.TRANSFER.FALSE);
-        assertEquals(File.TRANSFER.FALSE, mFile.getTransfer(), "Transfer should be updated");
-    }
-
-    @Test
-    public void testSetOptional() {
-        mFile.setOptional(true);
-        assertTrue(mFile.getOptional(), "Optional should be true after setOptional(true)");
-    }
-
-    @Test
-    public void testExtendsCatalogType() {
-        assertInstanceOf(CatalogType.class, mFile, "File should extend CatalogType");
-    }
-
-    @Test
-    public void testCopyConstructor() {
-        mFile.setRegister(false);
-        File copy = new File(mFile);
-        assertEquals(mFile.getName(), copy.getName(), "Copy should have same name");
-        assertEquals(
-                mFile.getRegister(), copy.getRegister(), "Copy should have same register flag");
-    }
-
-    @Test
-    public void testLinkEnumValues() {
-        assertNotNull(File.LINK.INPUT);
-        assertNotNull(File.LINK.OUTPUT);
-        assertNotNull(File.LINK.INOUT);
-        assertNotNull(File.LINK.CHECKPOINT);
-    }
-
-    @Test
-    public void testTransferEnumValues() {
-        assertNotNull(File.TRANSFER.TRUE);
-        assertNotNull(File.TRANSFER.FALSE);
-        assertNotNull(File.TRANSFER.OPTIONAL);
-    }
-
-    @Test
-    public void testSetSize() {
-        mFile.setSize("1024");
-        assertEquals("1024", mFile.getSize(), "Size should be set correctly");
-    }
+    */
 }

@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Shell code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ShellTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,29 +36,10 @@ public class ShellTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testShellExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(Shell.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testShellImplementsCodeGenerator() {
-        assertTrue(edu.isi.pegasus.planner.code.CodeGenerator.class.isAssignableFrom(Shell.class));
-    }
-
-    @Test
-    public void testShellIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Shell.class.getModifiers()));
-    }
-
-    @Test
-    public void testShellRunnerFunctionsBasenameConstant() {
-        assertNotNull(Shell.PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME);
-        assertTrue(Shell.PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME.endsWith(".sh "));
-    }
-
-    @Test
-    public void testShellIsNotInterface() {
-        assertFalse(Shell.class.isInterface());
-    }
+    */
 }

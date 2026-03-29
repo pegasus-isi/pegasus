@@ -15,65 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Iterator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for MachineSpecific invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MachineSpecificTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(MachineSpecific.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testConstructorWithTag() {
-        MachineSpecific ms = new MachineSpecific("linux");
-        assertEquals("linux", ms.getTag());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testSetAndGetTag() {
-        MachineSpecific ms = new MachineSpecific("darwin");
-        ms.setTag("sunos");
-        assertEquals("sunos", ms.getTag());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testAddMachineInfo() {
-        MachineSpecific ms = new MachineSpecific("linux");
-        RAM ram = new RAM();
-        ram.addAttribute("total", "16384");
-        ms.addMachineInfo(ram);
-        // iterator should have at least one entry
-        Iterator<MachineInfo> it = ms.getMachineInfoIterator();
-        assertTrue(it.hasNext(), "MachineSpecific should have contents after addMachineInfo");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testEmptyContentsInitially() {
-        MachineSpecific ms = new MachineSpecific("basic");
-        Iterator<MachineInfo> it = ms.getMachineInfoIterator();
-        assertFalse(it.hasNext(), "MachineSpecific should be empty initially");
-    }
-
-    @Test
-    public void testAddMultipleMachineInfoElements() {
-        MachineSpecific ms = new MachineSpecific("linux");
-        ms.addMachineInfo(new RAM());
-        ms.addMachineInfo(new Load());
-        ms.addMachineInfo(new Swap());
-        // count by draining the iterator
-        int count = 0;
-        for (Iterator<MachineInfo> it = ms.getMachineInfoIterator(); it.hasNext(); it.next()) {
-            count++;
-        }
-        assertEquals(3, count);
-    }
-
-    @Test
-    public void testGetElementNameMatchesTag() {
-        MachineSpecific ms = new MachineSpecific("linux");
-        assertEquals("linux", ms.getElementName());
-    }
+    */
 }

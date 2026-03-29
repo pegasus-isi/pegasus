@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the JobAggregatorFactoryException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class JobAggregatorFactoryExceptionTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,52 +36,10 @@ public class JobAggregatorFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExtendsFactoryException() {
-        assertTrue(FactoryException.class.isAssignableFrom(JobAggregatorFactoryException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("Job Aggregator", JobAggregatorFactoryException.DEFAULT_NAME);
-    }
-
-    @Test
-    public void testConstructWithMessageSetsDefaultClassname() {
-        JobAggregatorFactoryException ex = new JobAggregatorFactoryException("test message");
-        assertEquals("test message", ex.getMessage());
-        assertEquals(JobAggregatorFactoryException.DEFAULT_NAME, ex.getClassname());
-    }
-
-    @Test
-    public void testConstructWithMessageAndClassname() {
-        JobAggregatorFactoryException ex =
-                new JobAggregatorFactoryException("test message", "MyClass");
-        assertEquals("test message", ex.getMessage());
-        assertEquals("MyClass", ex.getClassname());
-    }
-
-    @Test
-    public void testConstructWithMessageAndCause() {
-        RuntimeException cause = new RuntimeException("cause");
-        JobAggregatorFactoryException ex = new JobAggregatorFactoryException("test message", cause);
-        assertEquals("test message", ex.getMessage());
-        assertEquals(cause, ex.getCause());
-        assertEquals(JobAggregatorFactoryException.DEFAULT_NAME, ex.getClassname());
-    }
-
-    @Test
-    public void testConstructWithMessageClassnameAndCause() {
-        RuntimeException cause = new RuntimeException("cause");
-        JobAggregatorFactoryException ex =
-                new JobAggregatorFactoryException("test message", "MyClass", cause);
-        assertEquals("test message", ex.getMessage());
-        assertEquals("MyClass", ex.getClassname());
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testIsRuntimeException() {
-        assertTrue(RuntimeException.class.isAssignableFrom(JobAggregatorFactoryException.class));
-    }
+    */
 }

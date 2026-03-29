@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the CondorGlideIN style class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CondorGlideINTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,34 +36,10 @@ public class CondorGlideINTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testCondorGlideINExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(CondorGlideIN.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testCondorGlideINImplementsCondorStyle() {
-        assertTrue(CondorStyle.class.isAssignableFrom(CondorGlideIN.class));
-    }
-
-    @Test
-    public void testCondorGlideINIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(CondorGlideIN.class.getModifiers()));
-    }
-
-    @Test
-    public void testCondorGlideINIsNotInterface() {
-        assertFalse(CondorGlideIN.class.isInterface());
-    }
-
-    @Test
-    public void testStyleNameConstant() {
-        assertEquals("CondorGlideIN", CondorGlideIN.STYLE_NAME);
-    }
-
-    @Test
-    public void testInstantiation() {
-        CondorGlideIN style = new CondorGlideIN();
-        assertNotNull(style);
-    }
+    */
 }

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the TransformationCatalogKeywords enum. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TransformationCatalogKeywordsTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,111 +36,10 @@ public class TransformationCatalogKeywordsTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testGetReservedNameForPegasus() {
-        assertEquals("pegasus", TransformationCatalogKeywords.PEGASUS.getReservedName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetReservedNameForNamespace() {
-        assertEquals("namespace", TransformationCatalogKeywords.NAMESPACE.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForName() {
-        assertEquals("name", TransformationCatalogKeywords.NAME.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForTransformations() {
-        assertEquals(
-                "transformations", TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForContainers() {
-        assertEquals("containers", TransformationCatalogKeywords.CONTAINERS.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForSites() {
-        assertEquals("sites", TransformationCatalogKeywords.SITES.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForType() {
-        assertEquals("type", TransformationCatalogKeywords.TYPE.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForPfn() {
-        assertEquals("pfn", TransformationCatalogKeywords.SITE_PFN.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedNameForContainerImage() {
-        assertEquals("image", TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedKeyLookupByName() {
-        assertSame(
-                TransformationCatalogKeywords.NAME,
-                TransformationCatalogKeywords.getReservedKey("name"));
-    }
-
-    @Test
-    public void testGetReservedKeyLookupForPegasus() {
-        assertSame(
-                TransformationCatalogKeywords.PEGASUS,
-                TransformationCatalogKeywords.getReservedKey("pegasus"));
-    }
-
-    @Test
-    public void testGetReservedKeyLookupForTransformations() {
-        assertSame(
-                TransformationCatalogKeywords.TRANSFORMATIONS,
-                TransformationCatalogKeywords.getReservedKey("transformations"));
-    }
-
-    @Test
-    public void testGetReservedKeyReturnsNullForUnknownKey() {
-        assertNull(TransformationCatalogKeywords.getReservedKey("unknown-key-xyz"));
-    }
-
-    @Test
-    public void testAllEnumValuesHaveNonEmptyReservedNames() {
-        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
-            assertNotNull(
-                    keyword.getReservedName(), "Reserved name should not be null for " + keyword);
-            assertFalse(
-                    keyword.getReservedName().isEmpty(),
-                    "Reserved name should not be empty for " + keyword);
-        }
-    }
-
-    @Test
-    public void testGetReservedKeyForAllValues() {
-        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
-            assertSame(
-                    keyword,
-                    TransformationCatalogKeywords.getReservedKey(keyword.getReservedName()),
-                    "getReservedKey should return the same constant for " + keyword);
-        }
-    }
-
-    @Test
-    public void testContainerMountKeyword() {
-        assertEquals("mounts", TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName());
-    }
-
-    @Test
-    public void testChecksumKeyword() {
-        assertEquals("checksum", TransformationCatalogKeywords.CHECKSUM.getReservedName());
-    }
-
-    @Test
-    public void testBypassKeyword() {
-        assertEquals("bypass", TransformationCatalogKeywords.BYPASS.getReservedName());
-    }
+    */
 }

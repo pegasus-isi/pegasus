@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the PBS code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class PBSTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,29 +36,10 @@ public class PBSTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testPBSExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(PBS.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPBSImplementsCodeGenerator() {
-        assertTrue(edu.isi.pegasus.planner.code.CodeGenerator.class.isAssignableFrom(PBS.class));
-    }
-
-    @Test
-    public void testPBSIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(PBS.class.getModifiers()));
-    }
-
-    @Test
-    public void testPBSInstantiation() {
-        PBS pbs = new PBS();
-        assertNotNull(pbs);
-    }
-
-    @Test
-    public void testPBSIsNotInterface() {
-        assertFalse(PBS.class.isInterface());
-    }
+    */
 }

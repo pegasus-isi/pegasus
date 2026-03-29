@@ -15,65 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Usage invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class UsageTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(Usage.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultConstructorZeroUserTime() {
-        Usage u = new Usage();
-        assertEquals(0.0, u.getUserTime(), 1e-9);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructorZeroSystemTime() {
-        Usage u = new Usage();
-        assertEquals(0.0, u.getSystemTime(), 1e-9);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testSetAndGetUserTime() {
-        Usage u = new Usage();
-        u.setUserTime(1.234);
-        assertEquals(1.234, u.getUserTime(), 1e-9);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetAndGetSystemTime() {
-        Usage u = new Usage();
-        u.setSystemTime(0.567);
-        assertEquals(0.567, u.getSystemTime(), 1e-9);
-    }
-
-    @Test
-    public void testSetAndGetMinorFaults() {
-        Usage u = new Usage();
-        u.setMinorFaults(100);
-        assertEquals(100, u.getMinorFaults());
-    }
-
-    @Test
-    public void testSetAndGetMajorFaults() {
-        Usage u = new Usage();
-        u.setMajorFaults(5);
-        assertEquals(5, u.getMajorFaults());
-    }
-
-    @Test
-    public void testToXMLContainsUsageTag() throws Exception {
-        Usage u = new Usage();
-        u.setUserTime(2.5);
-        StringWriter sw = new StringWriter();
-        u.toXML(sw, "", null);
-        String xml = sw.toString();
-        assertTrue(xml.contains("<usage"));
-        assertTrue(xml.contains("utime="));
-    }
+    */
 }

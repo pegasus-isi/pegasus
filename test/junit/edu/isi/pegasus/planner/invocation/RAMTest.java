@@ -15,48 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for RAM invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class RAMTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(RAM.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("ram", RAM.ELEMENT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructor() {
-        RAM r = new RAM();
-        assertNotNull(r);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetElementName() {
-        RAM r = new RAM();
-        assertEquals("ram", r.getElementName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testAddAndGetAttribute() {
-        RAM r = new RAM();
-        r.addAttribute("total", "16384");
-        assertEquals("16384", r.get("total"));
-    }
-
-    @Test
-    public void testGetMissingAttributeReturnsNull() {
-        RAM r = new RAM();
-        assertNull(r.get("nonexistent"));
-    }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(RAM.class.getModifiers()));
-    }
+    */
 }

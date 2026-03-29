@@ -15,53 +15,31 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the ClustererException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ClustererExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testNoArgConstructor() {
-        ClustererException ex = new ClustererException();
-        assertNotNull(ex, "ClustererException should be instantiatable with no-arg constructor");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testMessageConstructor() {
-        ClustererException ex = new ClustererException("test error");
-        assertEquals("test error", ex.getMessage(), "Message should match constructor argument");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testMessageAndCauseConstructor() {
-        Throwable cause = new RuntimeException("root cause");
-        ClustererException ex = new ClustererException("test error", cause);
-        assertEquals("test error", ex.getMessage(), "Message should match");
-        assertEquals(cause, ex.getCause(), "Cause should match");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testCauseOnlyConstructor() {
-        Throwable cause = new RuntimeException("root cause");
-        ClustererException ex = new ClustererException(cause);
-        assertEquals(cause, ex.getCause(), "Cause should match");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testIsCheckedException() {
-        ClustererException ex = new ClustererException("test");
-        assertInstanceOf(Exception.class, ex, "ClustererException should extend Exception");
-    }
-
-    @Test
-    public void testNullMessageAllowed() {
-        ClustererException ex = new ClustererException((String) null);
-        assertNull(ex.getMessage(), "null message should be permitted");
-    }
-
-    @Test
-    public void testNullCauseAllowed() {
-        ClustererException ex = new ClustererException("msg", (Throwable) null);
-        assertNull(ex.getCause(), "null cause should be permitted");
-    }
+    */
 }

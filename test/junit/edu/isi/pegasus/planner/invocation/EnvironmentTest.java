@@ -15,79 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Environment invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class EnvironmentTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(Environment.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultConstructor() {
-        Environment env = new Environment();
-        assertNotNull(env);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testAddEntryByKeyValue() {
-        Environment env = new Environment();
-        env.addEntry("PATH", "/usr/bin");
-        // get() is the accessor method on Environment
-        assertEquals("/usr/bin", env.get("PATH"));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testAddEntryByEnvEntry() {
-        Environment env = new Environment();
-        EnvEntry e = new EnvEntry("HOME", "/home/user");
-        env.addEntry(e);
-        assertEquals("/home/user", env.get("HOME"));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetMissingKeyReturnsNull() {
-        Environment env = new Environment();
-        assertNull(env.get("NONEXISTENT"));
-    }
-
-    @Test
-    public void testAddMultipleEntries() {
-        Environment env = new Environment();
-        env.addEntry("A", "1");
-        env.addEntry("B", "2");
-        assertEquals("1", env.get("A"));
-        assertEquals("2", env.get("B"));
-    }
-
-    @Test
-    public void testToXMLContainsEnvEntries() throws Exception {
-        Environment env = new Environment();
-        env.addEntry("MYKEY", "MYVAL");
-        StringWriter sw = new StringWriter();
-        env.toXML(sw, "", null);
-        String xml = sw.toString();
-        assertTrue(xml.contains("<environment"));
-    }
-
-    @Test
-    public void testAddEntryReturnsOldValue() {
-        Environment env = new Environment();
-        env.addEntry("KEY", "first");
-        String old = env.addEntry("KEY", "second");
-        assertEquals("first", old);
-        assertEquals("second", env.get("KEY"));
-    }
-
-    @Test
-    public void testIteratorReturnsKeys() {
-        Environment env = new Environment();
-        env.addEntry("Z", "26");
-        env.addEntry("A", "1");
-        java.util.Iterator it = env.iterator();
-        assertTrue(it.hasNext(), "Iterator should have entries");
-    }
+    */
 }

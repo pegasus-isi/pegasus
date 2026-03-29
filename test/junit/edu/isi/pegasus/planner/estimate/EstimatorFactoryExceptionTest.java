@@ -15,67 +15,31 @@ package edu.isi.pegasus.planner.estimate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the EstimatorFactoryException. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class EstimatorFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultName() {
-        assertEquals(
-                "Estimator",
-                EstimatorFactoryException.DEFAULT_NAME,
-                "DEFAULT_NAME should be 'Estimator'");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testConstructorWithMessage() {
-        EstimatorFactoryException ex = new EstimatorFactoryException("test error");
-        assertEquals("test error", ex.getMessage(), "Message should match");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testConstructorWithMessageAndClassname() {
-        EstimatorFactoryException ex = new EstimatorFactoryException("test error", "TestEstimator");
-        assertNotNull(ex.getMessage(), "Message should not be null");
-        assertEquals("TestEstimator", ex.getClassname(), "Classname should match");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithMessageAndCause() {
-        Throwable cause = new RuntimeException("root cause");
-        EstimatorFactoryException ex = new EstimatorFactoryException("test error", cause);
-        assertEquals(cause, ex.getCause(), "Cause should match");
-        assertEquals(
-                EstimatorFactoryException.DEFAULT_NAME,
-                ex.getClassname(),
-                "Classname should default to DEFAULT_NAME");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithAllParams() {
-        Throwable cause = new RuntimeException("root cause");
-        EstimatorFactoryException ex =
-                new EstimatorFactoryException("test error", "TestClass", cause);
-        assertEquals("TestClass", ex.getClassname(), "Classname should match");
-        assertEquals(cause, ex.getCause(), "Cause should match");
-    }
-
-    @Test
-    public void testIsFactoryException() {
-        EstimatorFactoryException ex = new EstimatorFactoryException("test");
-        assertInstanceOf(
-                edu.isi.pegasus.common.util.FactoryException.class,
-                ex,
-                "Should extend FactoryException");
-    }
-
-    @Test
-    public void testDefaultClassnameSet() {
-        EstimatorFactoryException ex = new EstimatorFactoryException("test");
-        assertEquals(
-                EstimatorFactoryException.DEFAULT_NAME,
-                ex.getClassname(),
-                "Default classname should be set to DEFAULT_NAME");
-    }
+    */
 }

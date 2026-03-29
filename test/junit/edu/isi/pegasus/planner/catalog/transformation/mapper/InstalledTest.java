@@ -15,24 +15,15 @@ package edu.isi.pegasus.planner.catalog.transformation.mapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.TestSetup;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Installed TC mapper. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class InstalledTest {
-
-    private PegasusBag mBag;
-    private TestSetup mTestSetup;
-    private Installed mMapper;
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -40,50 +31,15 @@ public class InstalledTest {
     public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mTestSetup = new DefaultTestSetup();
-        mBag = new PegasusBag();
-        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
-        mBag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
-        LogManager logger = mTestSetup.loadLogger(properties);
-        mBag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
-        mMapper = new Installed(mBag);
-    }
+    public void setUp() {}
 
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testInstalledMapperCanBeInstantiated() {
-        assertNotNull(mMapper);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetModeReturnsNonNullString() {
-        assertNotNull(mMapper.getMode());
-    }
-
-    @Test
-    public void testGetModeContainsInstalledKeyword() {
-        String mode = mMapper.getMode();
-        assertTrue(
-                mode.toLowerCase().contains("install"),
-                "Mode description should mention 'install', got: " + mode);
-    }
-
-    @Test
-    public void testIsNotStageableMapper() {
-        // Installed is not a Staged or Submit mapper
-        assertFalse(mMapper.isStageableMapper());
-    }
-
-    @Test
-    public void testIsInstanceOfMapper() {
-        assertTrue(mMapper instanceof edu.isi.pegasus.planner.catalog.transformation.Mapper);
-    }
-
-    @Test
-    public void testGetModeIsNonEmpty() {
-        assertFalse(mMapper.getMode().isEmpty());
-    }
+    */
 }

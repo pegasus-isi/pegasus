@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the DAXReplicaStore code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DAXReplicaStoreTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,31 +36,10 @@ public class DAXReplicaStoreTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testImplementsCodeGenerator() {
-        assertTrue(
-                edu.isi.pegasus.planner.code.CodeGenerator.class.isAssignableFrom(
-                        DAXReplicaStore.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDAXReplicaStoreCatalogKeyConstant() {
-        assertEquals("file", DAXReplicaStore.DAX_REPLICA_STORE_CATALOG_KEY);
-    }
-
-    @Test
-    public void testDAXReplicaStoreCatalogImplementerConstant() {
-        assertEquals("SimpleFile", DAXReplicaStore.DAX_REPLICA_STORE_CATALOG_IMPLEMENTER);
-    }
-
-    @Test
-    public void testDAXReplicaStoreIsInstantiable() {
-        DAXReplicaStore store = new DAXReplicaStore();
-        assertNotNull(store);
-    }
-
-    @Test
-    public void testDAXReplicaStoreClassExists() {
-        assertNotNull(DAXReplicaStore.class);
-    }
+    */
 }

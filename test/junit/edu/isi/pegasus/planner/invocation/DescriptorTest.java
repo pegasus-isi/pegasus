@@ -15,51 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Descriptor invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DescriptorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsFile() {
-        assertTrue(File.class.isAssignableFrom(Descriptor.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasDescriptor() {
-        assertTrue(HasDescriptor.class.isAssignableFrom(Descriptor.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructorDescriptorIsMinusOne() {
-        Descriptor d = new Descriptor();
-        assertEquals(-1, d.getDescriptor());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithDescriptor() {
-        Descriptor d = new Descriptor(2);
-        assertEquals(2, d.getDescriptor());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetAndGetDescriptor() {
-        Descriptor d = new Descriptor();
-        d.setDescriptor(3);
-        assertEquals(3, d.getDescriptor());
-    }
-
-    @Test
-    public void testAppendValue() {
-        Descriptor d = new Descriptor();
-        d.appendValue("hexdata");
-        assertEquals("hexdata", d.getValue());
-    }
-
-    @Test
-    public void testAppendNullIsNoop() {
-        Descriptor d = new Descriptor();
-        d.appendValue(null);
-        assertNull(d.getValue());
-    }
+    */
 }

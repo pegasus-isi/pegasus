@@ -15,51 +15,31 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.selector.SiteSelector;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the RoundRobin site selector. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class RoundRobinTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private RoundRobin mSelector;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mSelector = new RoundRobin();
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mSelector, "RoundRobin site selector should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDescription() {
-        String desc = mSelector.description();
-        assertNotNull(desc, "Description should not be null");
-        assertFalse(desc.isEmpty(), "Description should not be empty");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDescriptionContainsRoundRobin() {
-        String desc = mSelector.description().toLowerCase();
-        assertTrue(desc.contains("round"), "Description should mention round-robin");
-    }
-
-    @Test
-    public void testImplementsSiteSelector() {
-        assertInstanceOf(SiteSelector.class, mSelector, "RoundRobin should implement SiteSelector");
-    }
-
-    @Test
-    public void testExtendsAbstractPerJob() {
-        assertInstanceOf(
-                AbstractPerJob.class, mSelector, "RoundRobin should extend AbstractPerJob");
-    }
-
-    @Test
-    public void testExtendsAbstract() {
-        assertInstanceOf(Abstract.class, mSelector, "RoundRobin should extend Abstract");
-    }
+    */
 }

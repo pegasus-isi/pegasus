@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.catalog.work;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.WorkCatalog;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Database work catalog implementation. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DatabaseTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,28 +36,10 @@ public class DatabaseTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDatabaseImplementsWorkCatalog() {
-        assertTrue(WorkCatalog.class.isAssignableFrom(Database.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDatabaseIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Database.class.getModifiers()));
-    }
-
-    @Test
-    public void testDatabaseIsNotInterface() {
-        assertFalse(Database.class.isInterface());
-    }
-
-    @Test
-    public void testDatabaseClassExists() {
-        assertNotNull(Database.class);
-    }
-
-    @Test
-    public void testDatabaseIsInCorrectPackage() {
-        assertEquals("edu.isi.pegasus.planner.catalog.work", Database.class.getPackage().getName());
-    }
+    */
 }

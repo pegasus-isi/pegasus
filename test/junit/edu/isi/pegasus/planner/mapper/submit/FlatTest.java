@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.mapper.submit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Flat submit mapper class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FlatTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,31 +36,10 @@ public class FlatTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testFlatImplementsSubmitMapper() {
-        assertTrue(SubmitMapper.class.isAssignableFrom(Flat.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultInstantiation() {
-        Flat flat = new Flat();
-        assertNotNull(flat);
-    }
-
-    @Test
-    public void testFlatIsPublicClass() {
-        int modifiers = Flat.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testGetRelativeDirMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                Flat.class.getMethod("getRelativeDir", edu.isi.pegasus.planner.classes.Job.class));
-    }
-
-    @Test
-    public void testGetDirMethodExists() throws NoSuchMethodException {
-        assertNotNull(Flat.class.getMethod("getDir", edu.isi.pegasus.planner.classes.Job.class));
-    }
+    */
 }

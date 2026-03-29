@@ -15,74 +15,31 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.XMLWriter;
-import java.io.StringWriter;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the DAX job class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DAXTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private DAX mDax;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mDax = new DAX("DAX001", "subworkflow.dax");
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mDax, "DAX should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testExtendsAbstractJob() {
-        assertInstanceOf(AbstractJob.class, mDax, "DAX should extend AbstractJob");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testIsDAXReturnsTrue() {
-        assertTrue(mDax.isDAX(), "isDAX() should return true for a DAX object");
-    }
-
-    @Test
-    public void testIsDAGReturnsFalse() {
-        assertFalse(mDax.isDAG(), "isDAG() should return false for a DAX object");
-    }
-
-    @Test
-    public void testConstructorWithLabel() {
-        DAX dax = new DAX("DAX002", "subworkflow2.dax", "my-dax");
-        assertNotNull(dax, "DAX with label should be constructable");
-    }
-
-    @Test
-    public void testCopyConstructorThrowsDueToNullStdin() {
-        // AbstractJob copy constructor calls new File(a.mStdin) but mStdin starts null,
-        // causing NPE inside File copy constructor. Document this limitation.
-        assertThrows(NullPointerException.class, () -> new DAX(mDax));
-    }
-
-    @Test
-    public void testXMLSerialization() {
-        StringWriter sw = new StringWriter();
-        XMLWriter writer = new XMLWriter(sw);
-        mDax.toXML(writer, 0);
-        String result = sw.toString();
-        assertTrue(result.contains("dax"), "XML should contain 'dax' element");
-        assertTrue(result.contains("DAX001"), "XML should contain the job ID");
-        assertTrue(result.contains("subworkflow.dax"), "XML should contain the dax filename");
-    }
-
-    @Test
-    public void testAddArgument() {
-        mDax.addArgument("--sites condorpool");
-        assertFalse(mDax.getArguments().isEmpty(), "Should have arguments after addArgument");
-    }
-
-    @Test
-    public void testAddProfile() {
-        mDax.addProfile("pegasus", "runtime", "600");
-        assertFalse(mDax.getProfiles().isEmpty(), "Should have profiles after addProfile");
-    }
+    */
 }

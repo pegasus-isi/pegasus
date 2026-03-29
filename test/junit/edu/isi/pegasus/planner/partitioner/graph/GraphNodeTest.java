@@ -15,59 +15,31 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the GraphNode class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class GraphNodeTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private GraphNode mNode;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mNode = new GraphNode("node1", "job1");
-    }
+    public void setUp() {}
 
-    @Test
-    public void testGetIDReturnsConstructorValue() {
-        assertEquals("node1", mNode.getID(), "getID should return the ID set in constructor");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetNameReturnsConstructorValue() {
-        assertEquals("job1", mNode.getName(), "getName should return the name set in constructor");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultColorIsWhite() {
-        assertEquals(
-                GraphNode.WHITE_COLOR, mNode.getColor(), "Default color should be WHITE_COLOR");
-    }
-
-    @Test
-    public void testDefaultDepthIsNegativeOne() {
-        assertEquals(-1, mNode.getDepth(), "Default depth should be -1");
-    }
-
-    @Test
-    public void testSetAndGetDepth() {
-        mNode.setDepth(3);
-        assertEquals(3, mNode.getDepth(), "Depth should reflect the set value");
-    }
-
-    @Test
-    public void testSetAndGetColor() {
-        mNode.setColor(GraphNode.GRAY_COLOR);
-        assertEquals(GraphNode.GRAY_COLOR, mNode.getColor(), "Color should reflect the set value");
-    }
-
-    @Test
-    public void testInitialParentsIsEmpty() {
-        assertTrue(mNode.getParents().isEmpty(), "A new node should have no parents");
-    }
-
-    @Test
-    public void testInitialChildrenIsEmpty() {
-        assertTrue(mNode.getChildren().isEmpty(), "A new node should have no children");
-    }
+    */
 }

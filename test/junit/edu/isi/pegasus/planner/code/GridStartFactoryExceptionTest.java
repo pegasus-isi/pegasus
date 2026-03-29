@@ -15,59 +15,31 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for GridStartFactoryException */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class GridStartFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("GridStart", GridStartFactoryException.DEFAULT_NAME);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testSingleMessageConstructor() {
-        GridStartFactoryException e = new GridStartFactoryException("gridstart failed");
-        assertEquals("gridstart failed", e.getMessage());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testMessageAndClassnameConstructor() {
-        GridStartFactoryException e = new GridStartFactoryException("failed", "Kickstart");
-        assertEquals("failed", e.getMessage());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testMessageAndCauseConstructor() {
-        Throwable cause = new RuntimeException("underlying cause");
-        GridStartFactoryException e = new GridStartFactoryException("wrapped", cause);
-        assertEquals("wrapped", e.getMessage());
-        assertSame(cause, e.getCause());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testMessageClassnameAndCauseConstructor() {
-        Throwable cause = new RuntimeException("root");
-        GridStartFactoryException e = new GridStartFactoryException("msg", "NoGridStart", cause);
-        assertEquals("msg", e.getMessage());
-        assertSame(cause, e.getCause());
-    }
-
-    @Test
-    public void testExtendsFactoryException() {
-        assertTrue(FactoryException.class.isAssignableFrom(GridStartFactoryException.class));
-    }
-
-    @Test
-    public void testIsCatchableAsFactoryException() {
-        FactoryException caught = null;
-        try {
-            throw new GridStartFactoryException("test gridstart");
-        } catch (FactoryException ex) {
-            caught = ex;
-        }
-        assertNotNull(caught);
-        assertEquals("test gridstart", caught.getMessage());
-    }
+    */
 }

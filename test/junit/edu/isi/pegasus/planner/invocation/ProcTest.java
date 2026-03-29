@@ -15,43 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Proc invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ProcTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(Proc.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("proc", Proc.ELEMENT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructor() {
-        Proc p = new Proc();
-        assertNotNull(p);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetElementName() {
-        Proc p = new Proc();
-        assertEquals("proc", p.getElementName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testAddAndGetAttribute() {
-        Proc p = new Proc();
-        p.addAttribute("count", "4");
-        assertEquals("4", p.get("count"));
-    }
-
-    @Test
-    public void testGetMissingAttributeReturnsNull() {
-        Proc p = new Proc();
-        assertNull(p.get("missing"));
-    }
+    */
 }

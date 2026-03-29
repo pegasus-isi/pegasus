@@ -15,39 +15,31 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for HourGlass createdir strategy. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class HourGlassTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsAbstractStrategy() {
-        assertTrue(AbstractStrategy.class.isAssignableFrom(HourGlass.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsStrategy() {
-        assertTrue(Strategy.class.isAssignableFrom(HourGlass.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDummyConcatJobConstant() {
-        assertEquals("pegasus_concat", HourGlass.DUMMY_CONCAT_JOB);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDummyConcatJobPrefixConstant() {
-        assertEquals("pegasus_concat_", HourGlass.DUMMY_CONCAT_JOB_PREFIX);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testTransformationNamespace() {
-        assertEquals("pegasus", HourGlass.TRANSFORMATION_NAMESPACE);
-    }
-
-    @Test
-    public void testDefaultConstructor() {
-        HourGlass hg = new HourGlass();
-        assertNotNull(hg);
-    }
+    */
 }

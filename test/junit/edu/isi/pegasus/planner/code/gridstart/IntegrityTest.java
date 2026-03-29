@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Integrity class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class IntegrityTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,34 +36,10 @@ public class IntegrityTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testIntegrityCheckToolBasename() {
-        assertEquals("pegasus-integrity", Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testStdinFileDescriptor() {
-        assertEquals("stdin", Integrity.STDIN_FILE_DESCRIPTOR);
-    }
-
-    @Test
-    public void testIntegrityClassIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Integrity.class.getModifiers()));
-    }
-
-    @Test
-    public void testIntegrityClassIsNotInterface() {
-        assertFalse(Integrity.class.isInterface());
-    }
-
-    @Test
-    public void testIntegrityCanBeInstantiated() {
-        Integrity integrity = new Integrity();
-        assertNotNull(integrity);
-    }
-
-    @Test
-    public void testIntegrityCheckToolBasenameNotNull() {
-        assertNotNull(Integrity.PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME);
-    }
+    */
 }

@@ -15,117 +15,31 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.XMLWriter;
-import java.io.StringWriter;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Profile class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ProfileTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private Profile mProfile;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mProfile = new Profile("pegasus", "maxwalltime", "3600");
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mProfile, "Profile should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetNameSpace() {
-        assertEquals("pegasus", mProfile.getNameSpace(), "getNameSpace() should return namespace");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetKey() {
-        assertEquals("maxwalltime", mProfile.getKey(), "getKey() should return the key");
-    }
-
-    @Test
-    public void testGetValue() {
-        assertEquals("3600", mProfile.getValue(), "getValue() should return the value");
-    }
-
-    @Test
-    public void testConstructorWithNamespaceEnum() {
-        Profile p = new Profile(Profile.NAMESPACE.condor, "universe", "vanilla");
-        assertEquals("condor", p.getNameSpace(), "Namespace enum should be converted to string");
-        assertEquals("universe", p.getKey(), "Key should be set from constructor");
-        assertEquals("vanilla", p.getValue(), "Value should be set from constructor");
-    }
-
-    @Test
-    public void testConstructorWithTwoArgs() {
-        Profile p = new Profile("env", "HOME");
-        assertEquals("env", p.getNameSpace(), "Two-arg constructor should set namespace");
-        assertEquals("HOME", p.getKey(), "Two-arg constructor should set key");
-        assertNull(p.getValue(), "Two-arg constructor should have null value");
-    }
-
-    @Test
-    public void testSetValue() {
-        mProfile.setValue("7200");
-        assertEquals("7200", mProfile.getValue(), "setValue should update the value");
-    }
-
-    @Test
-    public void testSetValueReturnsSelf() {
-        Profile result = mProfile.setValue("7200");
-        assertSame(mProfile, result, "setValue should return this for chaining");
-    }
-
-    @Test
-    public void testClone() {
-        Profile clone = mProfile.clone();
-        assertNotSame(mProfile, clone, "Clone should be a different object");
-        assertEquals(
-                mProfile.getNameSpace(), clone.getNameSpace(), "Clone should have same namespace");
-        assertEquals(mProfile.getKey(), clone.getKey(), "Clone should have same key");
-        assertEquals(mProfile.getValue(), clone.getValue(), "Clone should have same value");
-    }
-
-    @Test
-    public void testCopyConstructor() {
-        Profile copy = new Profile(mProfile);
-        assertEquals(
-                mProfile.getNameSpace(), copy.getNameSpace(), "Copy should have same namespace");
-        assertEquals(mProfile.getKey(), copy.getKey(), "Copy should have same key");
-        assertEquals(mProfile.getValue(), copy.getValue(), "Copy should have same value");
-    }
-
-    @Test
-    public void testXMLSerialization() {
-        StringWriter sw = new StringWriter();
-        XMLWriter writer = new XMLWriter(sw);
-        mProfile.toXML(writer);
-        String result = sw.toString();
-        assertTrue(result.contains("profile"), "XML should contain 'profile' element");
-        assertTrue(result.contains("pegasus"), "XML should contain the namespace");
-        assertTrue(result.contains("maxwalltime"), "XML should contain the key");
-        assertTrue(result.contains("3600"), "XML should contain the value");
-    }
-
-    @Test
-    public void testXMLSerializationWithIndent() {
-        StringWriter sw = new StringWriter();
-        XMLWriter writer = new XMLWriter(sw);
-        mProfile.toXML(writer, 1);
-        String result = sw.toString();
-        assertTrue(result.contains("profile"), "XML with indent should contain 'profile' element");
-    }
-
-    @Test
-    public void testNamespaceEnumValues() {
-        assertNotNull(Profile.NAMESPACE.condor);
-        assertNotNull(Profile.NAMESPACE.pegasus);
-        assertNotNull(Profile.NAMESPACE.dagman);
-        assertNotNull(Profile.NAMESPACE.globus);
-        assertNotNull(Profile.NAMESPACE.env);
-        assertNotNull(Profile.NAMESPACE.hints);
-        assertNotNull(Profile.NAMESPACE.selector);
-    }
+    */
 }

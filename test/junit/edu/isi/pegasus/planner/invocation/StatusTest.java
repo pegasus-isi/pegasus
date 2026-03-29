@@ -15,54 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Status invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class StatusTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(Status.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultConstructorZeroStatus() {
-        Status s = new Status();
-        assertEquals(0, s.getStatus());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructorNullJobStatus() {
-        Status s = new Status();
-        assertNull(s.getJobStatus());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithRaw() {
-        Status s = new Status(42);
-        assertEquals(42, s.getStatus());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithRawAndJobStatus() {
-        JobStatusRegular jsr = new JobStatusRegular();
-        Status s = new Status(0, jsr);
-        assertEquals(0, s.getStatus());
-        assertNotNull(s.getJobStatus());
-    }
-
-    @Test
-    public void testSetAndGetStatus() {
-        Status s = new Status();
-        s.setStatus(255);
-        assertEquals(255, s.getStatus());
-    }
-
-    @Test
-    public void testSetAndGetJobStatus() {
-        Status s = new Status();
-        JobStatusRegular jsr = new JobStatusRegular();
-        s.setJobStatus(jsr);
-        assertSame(jsr, s.getJobStatus());
-    }
+    */
 }

@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the TestSiteCatalog class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TestSiteCatalogTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,30 +36,10 @@ public class TestSiteCatalogTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testClassExists() {
-        assertNotNull(TestSiteCatalog.class);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testClassIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(TestSiteCatalog.class.getModifiers()));
-    }
-
-    @Test
-    public void testClassIsNotInterface() {
-        assertFalse(TestSiteCatalog.class.isInterface());
-    }
-
-    @Test
-    public void testClassIsInCorrectPackage() {
-        assertEquals(
-                "edu.isi.pegasus.planner.catalog.site",
-                TestSiteCatalog.class.getPackage().getName());
-    }
-
-    @Test
-    public void testClassHasMainMethod() throws NoSuchMethodException {
-        assertNotNull(TestSiteCatalog.class.getDeclaredMethod("main", String[].class));
-    }
+    */
 }

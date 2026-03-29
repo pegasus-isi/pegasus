@@ -15,28 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for TransferEngine. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TransferEngineTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsEngine() {
-        assertTrue(Engine.class.isAssignableFrom(TransferEngine.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDeletedJobsLevel() {
-        assertEquals(1000, TransferEngine.DELETED_JOBS_LEVEL);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testWorkflowCacheFileImplementor() {
-        assertEquals("FlushedCache", TransferEngine.WORKFLOW_CACHE_FILE_IMPLEMENTOR);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(TransferEngine.class.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

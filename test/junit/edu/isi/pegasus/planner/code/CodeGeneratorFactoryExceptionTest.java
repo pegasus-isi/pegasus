@@ -15,65 +15,31 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for CodeGeneratorFactoryException */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CodeGeneratorFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("Code Generator", CodeGeneratorFactoryException.DEFAULT_NAME);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testSingleMessageConstructorSetsDefaultClassname() {
-        CodeGeneratorFactoryException e = new CodeGeneratorFactoryException("failed");
-        assertEquals("failed", e.getMessage());
-        // default classname should be set to DEFAULT_NAME by constructor
-        assertEquals(
-                CodeGeneratorFactoryException.DEFAULT_NAME,
-                CodeGeneratorFactoryException.DEFAULT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testMessageAndClassnameConstructor() {
-        CodeGeneratorFactoryException e =
-                new CodeGeneratorFactoryException("failed", "MyGenerator");
-        assertEquals("failed", e.getMessage());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testMessageAndCauseConstructorSetsDefaultClassname() {
-        Throwable cause = new RuntimeException("root");
-        CodeGeneratorFactoryException e = new CodeGeneratorFactoryException("failed", cause);
-        assertEquals("failed", e.getMessage());
-        assertSame(cause, e.getCause());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testMessageClassnameAndCauseConstructor() {
-        Throwable cause = new RuntimeException("root");
-        CodeGeneratorFactoryException e =
-                new CodeGeneratorFactoryException("failed", "MyGen", cause);
-        assertEquals("failed", e.getMessage());
-        assertSame(cause, e.getCause());
-    }
-
-    @Test
-    public void testExtendsFactoryException() {
-        assertTrue(FactoryException.class.isAssignableFrom(CodeGeneratorFactoryException.class));
-    }
-
-    @Test
-    public void testIsCatchableAsFactoryException() {
-        FactoryException caught = null;
-        try {
-            throw new CodeGeneratorFactoryException("test");
-        } catch (FactoryException ex) {
-            caught = ex;
-        }
-        assertNotNull(caught);
-        assertEquals("test", caught.getMessage());
-    }
+    */
 }

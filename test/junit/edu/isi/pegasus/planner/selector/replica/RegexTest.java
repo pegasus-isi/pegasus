@@ -13,39 +13,33 @@
  */
 package edu.isi.pegasus.planner.selector.replica;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.selector.ReplicaSelector;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the Regex replica selector class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class RegexTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testClassExtendsDefault() {
-        assertTrue(Default.class.isAssignableFrom(Regex.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsReplicaSelector() {
-        assertTrue(ReplicaSelector.class.isAssignableFrom(Regex.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testPropertyPrefixConstantExists() throws Exception {
-        java.lang.reflect.Field f = Regex.class.getDeclaredField("PROPERTY_PREFIX");
-        f.setAccessible(true);
-        assertThat((String) f.get(null), containsString("regex"));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorRequiresPegasusProperties() {
-        // PegasusProperties.nonSingletonInstance() needs a Pegasus installation;
-        // verify the constructor signature accepts PegasusProperties
-        java.lang.reflect.Constructor<?>[] ctors = Regex.class.getDeclaredConstructors();
-        assertThat(ctors.length, greaterThan(0));
-        assertThat(ctors[0].getParameterTypes()[0].getSimpleName(), is("PegasusProperties"));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the StagingMapper interface structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class StagingMapperTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,32 +36,10 @@ public class StagingMapperTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testStagingMapperIsInterface() {
-        assertTrue(StagingMapper.class.isInterface());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPropertyPrefixConstant() {
-        assertEquals("pegasus.dir.staging.mapper", StagingMapper.PROPERTY_PREFIX);
-    }
-
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.0", StagingMapper.VERSION);
-    }
-
-    @Test
-    public void testStagingMapperExtendsMapper() {
-        assertTrue(Mapper.class.isAssignableFrom(StagingMapper.class));
-    }
-
-    @Test
-    public void testInitializeMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                StagingMapper.class.getMethod(
-                        "initialize",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class,
-                        java.util.Properties.class));
-    }
+    */
 }

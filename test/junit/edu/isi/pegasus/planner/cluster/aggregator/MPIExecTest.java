@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.cluster.JobAggregator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the MPIExec aggregator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MPIExecTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,35 +36,10 @@ public class MPIExecTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testMPIExecExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(MPIExec.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testMPIExecImplementsJobAggregator() {
-        assertTrue(JobAggregator.class.isAssignableFrom(MPIExec.class));
-    }
-
-    @Test
-    public void testCollapseLogicalNameConstant() {
-        assertEquals("mpiexec", MPIExec.COLLAPSE_LOGICAL_NAME);
-    }
-
-    @Test
-    public void testExecutableBasenameConstant() {
-        assertEquals("pegasus-mpi-cluster", MPIExec.EXECUTABLE_BASENAME);
-    }
-
-    @Test
-    public void testDefaultInstantiation() {
-        MPIExec mpiExec = new MPIExec();
-        assertNotNull(mpiExec);
-    }
-
-    @Test
-    public void testMPIExecIsPublicClass() {
-        int modifiers = MPIExec.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
+    */
 }

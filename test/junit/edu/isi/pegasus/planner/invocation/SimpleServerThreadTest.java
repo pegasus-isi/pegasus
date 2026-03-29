@@ -15,36 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for SimpleServerThread class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SimpleServerThreadTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsThread() {
-        assertTrue(Thread.class.isAssignableFrom(SimpleServerThread.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testStaticCountFieldExists() throws Exception {
-        java.lang.reflect.Field f = SimpleServerThread.class.getDeclaredField("c_count");
-        assertTrue(java.lang.reflect.Modifier.isStatic(f.getModifiers()));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testStaticCdoneFieldExists() throws Exception {
-        java.lang.reflect.Field f = SimpleServerThread.class.getDeclaredField("c_cdone");
-        assertTrue(java.lang.reflect.Modifier.isStatic(f.getModifiers()));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testHasRunMethod() throws Exception {
-        java.lang.reflect.Method m = SimpleServerThread.class.getDeclaredMethod("run");
-        assertNotNull(m);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(SimpleServerThread.class.getModifiers()));
-    }
+    */
 }

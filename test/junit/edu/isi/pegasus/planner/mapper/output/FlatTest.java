@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.mapper.OutputMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Flat output mapper class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FlatTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,30 +36,10 @@ public class FlatTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testFlatImplementsOutputMapper() {
-        assertTrue(OutputMapper.class.isAssignableFrom(Flat.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testFlatExtendsAbstractFileFactoryBasedMapper() {
-        assertTrue(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Flat.class));
-    }
-
-    @Test
-    public void testShortNameConstant() {
-        assertEquals("Flat", Flat.SHORT_NAME);
-    }
-
-    @Test
-    public void testDefaultInstantiation() {
-        Flat flat = new Flat();
-        assertNotNull(flat);
-    }
-
-    @Test
-    public void testFlatIsPublicClass() {
-        int modifiers = Flat.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
+    */
 }

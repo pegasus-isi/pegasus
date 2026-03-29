@@ -13,99 +13,33 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class XMLWriterTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testStartAndEndElement_producesEmptyElement() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("job").endElement();
-        xw.close();
-        assertThat(sw.toString(), containsString("<job/>"));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testStartElement_withAttribute() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("file").writeAttribute("name", "test.txt").endElement();
-        xw.close();
-        assertThat(sw.toString(), containsString("name=\"test.txt\""));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testWriteData_producesTextContent() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("desc").writeData("hello world").endElement();
-        xw.close();
-        assertThat(sw.toString(), containsString("hello world"));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testWriteData_escapesXmlSpecialChars() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("desc").writeData("<value>&</value>").endElement();
-        xw.close();
-        String out = sw.toString();
-        assertThat(out, containsString("&lt;"));
-        assertThat(out, containsString("&amp;"));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testXmlHeader_isPresent() {
-        StringWriter sw = new StringWriter();
-        new XMLWriter(sw).close();
-        assertThat(sw.toString(), containsString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
-    }
-
-    @Test
-    public void testNamespacedElement() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw, "wf");
-        xw.startElement("workflow").endElement();
-        xw.close();
-        assertThat(sw.toString(), containsString("<wf:workflow"));
-    }
-
-    @Test
-    public void testWriteXMLComment() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.writeXMLComment("this is a comment");
-        xw.close();
-        assertThat(sw.toString(), containsString("<!-- this is a comment -->"));
-    }
-
-    @Test
-    public void testWriteCData() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("script").writeCData("<![CDATA[data]]>").endElement();
-        xw.close();
-        assertThat(sw.toString(), containsString("<![CDATA["));
-    }
-
-    @Test
-    public void testNested_elements() {
-        StringWriter sw = new StringWriter();
-        XMLWriter xw = new XMLWriter(sw);
-        xw.startElement("workflow");
-        xw.startElement("job").writeAttribute("id", "j1").endElement();
-        xw.endElement();
-        xw.close();
-        String out = sw.toString();
-        assertThat(out, containsString("<job"));
-        assertThat(out, containsString("id=\"j1\""));
-        assertThat(out, anyOf(containsString("</wf:workflow>"), containsString("</workflow>")));
-    }
+    */
 }

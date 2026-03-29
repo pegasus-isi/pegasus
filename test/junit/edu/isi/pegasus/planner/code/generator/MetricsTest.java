@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Metrics code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MetricsTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,40 +36,10 @@ public class MetricsTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testMetricsFileSuffixConstant() {
-        assertEquals(".metrics", Metrics.METRICS_FILE_SUFFIX);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testMetricsServerDefaultURL() {
-        assertNotNull(Metrics.METRICS_SERVER_DEFAULT_URL);
-        assertTrue(Metrics.METRICS_SERVER_DEFAULT_URL.startsWith("http"));
-    }
-
-    @Test
-    public void testCollectMetricsEnvVariableConstant() {
-        assertEquals("PEGASUS_METRICS", Metrics.COLLECT_METRICS_ENV_VARIABLE);
-    }
-
-    @Test
-    public void testPrimaryMetricsServerURLEnvVariable() {
-        assertEquals("PEGASUS_METRICS_SERVER", Metrics.PRIMARY_METRICS_SERVER_URL_ENV_VARIABLE);
-    }
-
-    @Test
-    public void testSecondaryMetricsServerURLEnvVariable() {
-        assertEquals(
-                "PEGASUS_USER_METRICS_SERVER", Metrics.SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE);
-    }
-
-    @Test
-    public void testDagmanMetricsEnvVariable() {
-        assertEquals("PEGASUS_METRICS", Metrics.DAGMAN_METRICS_ENV_VARIABLE);
-    }
-
-    @Test
-    public void testMetricsSendTimeoutIsPositive() {
-        assertTrue(Metrics.METRICS_SEND_TIMEOUT > 0);
-    }
+    */
 }

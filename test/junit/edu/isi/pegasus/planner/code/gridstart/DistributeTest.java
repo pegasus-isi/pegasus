@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.gridstart;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.GridStart;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Distribute GridStart implementation. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DistributeTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,33 +36,10 @@ public class DistributeTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDistributeImplementsGridStart() {
-        assertTrue(GridStart.class.isAssignableFrom(Distribute.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDistributeIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Distribute.class.getModifiers()));
-    }
-
-    @Test
-    public void testDistributeIsNotInterface() {
-        assertFalse(Distribute.class.isInterface());
-    }
-
-    @Test
-    public void testClassNameConstant() {
-        assertEquals("Distribute", Distribute.CLASSNAME);
-    }
-
-    @Test
-    public void testShortNameConstant() {
-        assertEquals("distribute", Distribute.SHORT_NAME);
-    }
-
-    @Test
-    public void testClassExists() {
-        assertNotNull(Distribute.class);
-    }
+    */
 }

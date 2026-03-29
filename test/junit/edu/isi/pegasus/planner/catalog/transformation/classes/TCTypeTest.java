@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the TCType enum. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TCTypeTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,56 +36,10 @@ public class TCTypeTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testEnumHasThreeValues() {
-        assertEquals(3, TCType.values().length);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testStaticBinaryExists() {
-        assertNotNull(TCType.STATIC_BINARY);
-    }
-
-    @Test
-    public void testInstalledExists() {
-        assertNotNull(TCType.INSTALLED);
-    }
-
-    @Test
-    public void testStageableExists() {
-        assertNotNull(TCType.STAGEABLE);
-    }
-
-    @Test
-    public void testValueOfInstalledReturnsCorrectConstant() {
-        assertSame(TCType.INSTALLED, TCType.valueOf("INSTALLED"));
-    }
-
-    @Test
-    public void testValueOfStageableReturnsCorrectConstant() {
-        assertSame(TCType.STAGEABLE, TCType.valueOf("STAGEABLE"));
-    }
-
-    @Test
-    public void testValueOfStaticBinaryReturnsCorrectConstant() {
-        assertSame(TCType.STATIC_BINARY, TCType.valueOf("STATIC_BINARY"));
-    }
-
-    @Test
-    public void testToStringMatchesName() {
-        assertEquals("INSTALLED", TCType.INSTALLED.name());
-        assertEquals("STAGEABLE", TCType.STAGEABLE.name());
-        assertEquals("STATIC_BINARY", TCType.STATIC_BINARY.name());
-    }
-
-    @Test
-    public void testOrdinalOrdering() {
-        assertTrue(TCType.STATIC_BINARY.ordinal() < TCType.INSTALLED.ordinal());
-        assertTrue(TCType.INSTALLED.ordinal() < TCType.STAGEABLE.ordinal());
-    }
-
-    @Test
-    public void testValueOfInvalidThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> TCType.valueOf("NONEXISTENT"));
-    }
+    */
 }

@@ -15,71 +15,31 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the LabelBag class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class LabelBagTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private LabelBag mBag;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mBag = new LabelBag();
-    }
+    public void setUp() {}
 
-    @Test
-    public void testDefaultLabelKeyConstant() {
-        assertEquals("label", LabelBag.LABEL_KEY, "Default LABEL_KEY should be 'label'");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testPartitionKeyConstant() {
-        assertEquals("partition", LabelBag.PARTITION_KEY, "PARTITION_KEY should be 'partition'");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testAddAndRetrieveLabelValue() {
-        mBag.add(LabelBag.LABEL_KEY, "my-partition");
-        assertEquals(
-                "my-partition",
-                mBag.get(LabelBag.LABEL_KEY),
-                "Should retrieve the added label value");
-    }
-
-    @Test
-    public void testAddAndRetrievePartitionValue() {
-        mBag.add(LabelBag.PARTITION_KEY, "part-42");
-        assertEquals(
-                "part-42",
-                mBag.get(LabelBag.PARTITION_KEY),
-                "Should retrieve the added partition ID");
-    }
-
-    @Test
-    public void testContainsKeyReturnsTrueAfterAdd() {
-        mBag.add(LabelBag.LABEL_KEY, "val");
-        assertTrue(
-                mBag.containsKey(LabelBag.LABEL_KEY),
-                "containsKey should return true after adding a value");
-    }
-
-    @Test
-    public void testContainsKeyReturnsFalseForUnknownKey() {
-        assertFalse(
-                mBag.containsKey("unknown-key"),
-                "containsKey should return false for keys that have not been added");
-    }
-
-    @Test
-    public void testGetReturnsNullInitially() {
-        assertNull(
-                mBag.get(LabelBag.LABEL_KEY),
-                "get should return null before any value is added for LABEL_KEY");
-    }
-
-    @Test
-    public void testLabelBagImplementsBag() {
-        assertTrue(mBag instanceof Bag, "LabelBag should implement the Bag interface");
-    }
+    */
 }

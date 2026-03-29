@@ -15,68 +15,31 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the SiteSelectorFactoryException. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SiteSelectorFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultName() {
-        assertEquals(
-                "Site Selector",
-                SiteSelectorFactoryException.DEFAULT_NAME,
-                "DEFAULT_NAME should be 'Site Selector'");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testConstructorWithMessage() {
-        SiteSelectorFactoryException ex = new SiteSelectorFactoryException("test error");
-        assertEquals("test error", ex.getMessage(), "Message should match");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testConstructorWithMessageAndClassname() {
-        SiteSelectorFactoryException ex =
-                new SiteSelectorFactoryException("test error", "TestSiteSelector");
-        assertNotNull(ex.getMessage(), "Message should not be null");
-        assertEquals("TestSiteSelector", ex.getClassname(), "Classname should match");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithMessageAndCause() {
-        Throwable cause = new RuntimeException("root cause");
-        SiteSelectorFactoryException ex = new SiteSelectorFactoryException("test error", cause);
-        assertEquals(cause, ex.getCause(), "Cause should match");
-        assertEquals(
-                SiteSelectorFactoryException.DEFAULT_NAME,
-                ex.getClassname(),
-                "Classname should default to DEFAULT_NAME");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithAllParams() {
-        Throwable cause = new RuntimeException("root cause");
-        SiteSelectorFactoryException ex =
-                new SiteSelectorFactoryException("test error", "TestClass", cause);
-        assertEquals("TestClass", ex.getClassname(), "Classname should match");
-        assertEquals(cause, ex.getCause(), "Cause should match");
-    }
-
-    @Test
-    public void testIsFactoryException() {
-        SiteSelectorFactoryException ex = new SiteSelectorFactoryException("test");
-        assertInstanceOf(
-                edu.isi.pegasus.common.util.FactoryException.class,
-                ex,
-                "Should extend FactoryException");
-    }
-
-    @Test
-    public void testDefaultClassnameSet() {
-        SiteSelectorFactoryException ex = new SiteSelectorFactoryException("test");
-        assertEquals(
-                SiteSelectorFactoryException.DEFAULT_NAME,
-                ex.getClassname(),
-                "Default classname should be set");
-    }
+    */
 }

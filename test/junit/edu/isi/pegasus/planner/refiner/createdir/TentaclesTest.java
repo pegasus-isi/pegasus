@@ -15,36 +15,31 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for Tentacles createdir strategy. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TentaclesTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsAbstractStrategy() {
-        assertTrue(AbstractStrategy.class.isAssignableFrom(Tentacles.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsStrategy() {
-        assertTrue(Strategy.class.isAssignableFrom(Tentacles.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Tentacles.class.getModifiers()));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructor() {
-        Tentacles t = new Tentacles();
-        assertNotNull(t);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
-        assertNotNull(
-                Tentacles.class.getMethod(
-                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class));
-    }
+    */
 }

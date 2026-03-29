@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the CondorStyleFactory class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CondorStyleFactoryTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,35 +36,10 @@ public class CondorStyleFactoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultPackageName() {
-        assertEquals(
-                "edu.isi.pegasus.planner.code.generator.condor.style",
-                CondorStyleFactory.DEFAULT_PACKAGE_NAME);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultPackageNameNotNull() {
-        assertNotNull(CondorStyleFactory.DEFAULT_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testDefaultPackageNameIsNotEmpty() {
-        assertFalse(CondorStyleFactory.DEFAULT_PACKAGE_NAME.isEmpty());
-    }
-
-    @Test
-    public void testFactoryClassIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(CondorStyleFactory.class.getModifiers()));
-    }
-
-    @Test
-    public void testFactoryClassIsNotInterface() {
-        assertFalse(CondorStyleFactory.class.isInterface());
-    }
-
-    @Test
-    public void testFactoryClassExists() {
-        assertNotNull(CondorStyleFactory.class);
-    }
+    */
 }

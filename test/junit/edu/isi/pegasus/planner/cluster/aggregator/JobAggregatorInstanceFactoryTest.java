@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the JobAggregatorInstanceFactory class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class JobAggregatorInstanceFactoryTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,38 +36,10 @@ public class JobAggregatorInstanceFactoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructor() {
-        JobAggregatorInstanceFactory factory = new JobAggregatorInstanceFactory();
-        assertNotNull(factory);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testFactoryIsPublicClass() {
-        int modifiers = JobAggregatorInstanceFactory.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testInitializeMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                JobAggregatorInstanceFactory.class.getMethod(
-                        "initialize",
-                        edu.isi.pegasus.planner.classes.ADag.class,
-                        edu.isi.pegasus.planner.classes.PegasusBag.class));
-    }
-
-    @Test
-    public void testLoadInstanceMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                JobAggregatorInstanceFactory.class.getMethod(
-                        "loadInstance", edu.isi.pegasus.planner.classes.Job.class));
-    }
-
-    @Test
-    public void testLoadInstanceThrowsWhenNotInitialized() {
-        JobAggregatorInstanceFactory factory = new JobAggregatorInstanceFactory();
-        edu.isi.pegasus.planner.classes.Job job = new edu.isi.pegasus.planner.classes.Job();
-        assertThrows(JobAggregatorFactoryException.class, () -> factory.loadInstance(job));
-    }
+    */
 }

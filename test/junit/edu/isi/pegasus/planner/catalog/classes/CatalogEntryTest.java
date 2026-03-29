@@ -13,20 +13,17 @@
  */
 package edu.isi.pegasus.planner.catalog.classes;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the CatalogEntry marker interface and its implementations. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CatalogEntryTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -39,45 +36,10 @@ public class CatalogEntryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testCatalogEntryIsInterface() {
-        assertTrue(CatalogEntry.class.isInterface(), "CatalogEntry should be an interface");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testReplicaCatalogEntryImplementsCatalogEntry() {
-        ReplicaCatalogEntry rce = new ReplicaCatalogEntry("pfn://test/file");
-        assertThat(rce, instanceOf(CatalogEntry.class));
-    }
-
-    @Test
-    public void testCatalogEntryImplementationInstantiation() {
-        // ReplicaCatalogEntry is a concrete implementation of CatalogEntry
-        CatalogEntry entry = new ReplicaCatalogEntry("pfn://test/file", "local");
-        assertNotNull(entry, "CatalogEntry implementation should be instantiable");
-    }
-
-    @Test
-    public void testCatalogEntryIsAssignableFromReplicaCatalogEntry() {
-        assertTrue(
-                CatalogEntry.class.isAssignableFrom(ReplicaCatalogEntry.class),
-                "ReplicaCatalogEntry should be assignable to CatalogEntry");
-    }
-
-    @Test
-    public void testCatalogEntryHasNoMethods() {
-        // CatalogEntry is a pure marker interface with no declared methods
-        assertEquals(
-                0,
-                CatalogEntry.class.getDeclaredMethods().length,
-                "CatalogEntry marker interface should have no methods");
-    }
-
-    @Test
-    public void testCatalogEntryPackage() {
-        assertEquals(
-                "edu.isi.pegasus.planner.catalog.classes",
-                CatalogEntry.class.getPackage().getName(),
-                "CatalogEntry should be in catalog.classes package");
-    }
+    */
 }

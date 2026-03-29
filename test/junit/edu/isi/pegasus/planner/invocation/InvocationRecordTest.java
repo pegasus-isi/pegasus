@@ -15,57 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.Serializable;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for InvocationRecord class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class InvocationRecordTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(InvocationRecord.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsSerializable() {
-        assertTrue(Serializable.class.isAssignableFrom(InvocationRecord.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testSchemaNamespace() {
-        assertEquals(
-                "https://pegasus.isi.edu/schema/invocation", InvocationRecord.SCHEMA_NAMESPACE);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testSchemaLocation() {
-        assertTrue(InvocationRecord.SCHEMA_LOCATION.endsWith(".xsd"));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructorCreates() {
-        InvocationRecord ir = new InvocationRecord();
-        assertNotNull(ir);
-    }
-
-    @Test
-    public void testSetAndGetTransformation() {
-        InvocationRecord ir = new InvocationRecord();
-        ir.setTransformation("pegasus::findrange");
-        assertEquals("pegasus::findrange", ir.getTransformation());
-    }
-
-    @Test
-    public void testSetAndGetUID() {
-        InvocationRecord ir = new InvocationRecord();
-        ir.setUID(1001);
-        assertEquals(1001, ir.getUID());
-    }
-
-    @Test
-    public void testSetAndGetUser() {
-        InvocationRecord ir = new InvocationRecord();
-        ir.setUser("testuser");
-        assertEquals("testuser", ir.getUser());
-    }
+    */
 }

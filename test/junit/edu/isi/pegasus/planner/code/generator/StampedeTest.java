@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Stampede code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class StampedeTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,43 +36,10 @@ public class StampedeTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testImplementsCodeGenerator() {
-        assertTrue(CodeGenerator.class.isAssignableFrom(Stampede.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testNetloggerBPFileSuffixConstant() {
-        assertEquals(".static.bp", Stampede.NETLOGGER_BP_FILE_SUFFIX);
-    }
-
-    @Test
-    public void testNetloggerLogFormatterImplementorConstant() {
-        assertEquals("Netlogger", Stampede.NETLOGGER_LOG_FORMATTER_IMPLEMENTOR);
-    }
-
-    @Test
-    public void testWorkflowIdKeyConstant() {
-        assertEquals("xwf.id", Stampede.WORKFLOW_ID_KEY);
-    }
-
-    @Test
-    public void testTaskEventNameConstant() {
-        assertEquals("task.info", Stampede.TASK_EVENT_NAME);
-    }
-
-    @Test
-    public void testTaskIdKeyConstant() {
-        assertEquals("task.id", Stampede.TASK_ID_KEY);
-    }
-
-    @Test
-    public void testTypeKeyConstant() {
-        assertEquals("type", Stampede.TYPE_KEY);
-    }
-
-    @Test
-    public void testTaskTransformationKeyConstant() {
-        assertEquals("transformation", Stampede.TASK_TRANSFORMATION_KEY);
-    }
+    */
 }

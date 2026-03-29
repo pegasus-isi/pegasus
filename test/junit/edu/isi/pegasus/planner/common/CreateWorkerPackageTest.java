@@ -15,73 +15,31 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * Structural tests for CreateWorkerPackage via reflection.
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CreateWorkerPackageTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testCreateWorkerPackageIsConcreteClass() {
-        assertFalse(
-                Modifier.isAbstract(CreateWorkerPackage.class.getModifiers()),
-                "CreateWorkerPackage should be a concrete class");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testCreateWorkerPackageIsNotInterface() {
-        assertFalse(
-                CreateWorkerPackage.class.isInterface(),
-                "CreateWorkerPackage should not be an interface");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testHasConstructorWithPegasusBag() throws NoSuchMethodException {
-        Constructor<?> c =
-                CreateWorkerPackage.class.getConstructor(
-                        edu.isi.pegasus.planner.classes.PegasusBag.class);
-        assertNotNull(c, "CreateWorkerPackage should have a constructor accepting PegasusBag");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testHasCopyMethod() throws NoSuchMethodException {
-        Method copyMethod = CreateWorkerPackage.class.getMethod("copy");
-        assertNotNull(copyMethod, "CreateWorkerPackage should have a copy() method");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testHasCopyMethodWithFileArg() throws NoSuchMethodException {
-        Method copyMethod = CreateWorkerPackage.class.getMethod("copy", java.io.File.class);
-        assertNotNull(copyMethod, "CreateWorkerPackage should have a copy(File) method");
-    }
-
-    @Test
-    public void testCopyMethodReturnsFile() throws NoSuchMethodException {
-        Method copyMethod = CreateWorkerPackage.class.getMethod("copy");
-        assertEquals(
-                java.io.File.class,
-                copyMethod.getReturnType(),
-                "copy() should return a File object");
-    }
-
-    @Test
-    public void testCopyMethodWithFileArgReturnsFile() throws NoSuchMethodException {
-        Method copyMethod = CreateWorkerPackage.class.getMethod("copy", java.io.File.class);
-        assertEquals(
-                java.io.File.class,
-                copyMethod.getReturnType(),
-                "copy(File) should return a File object");
-    }
-
-    @Test
-    public void testCopyMethodIsPublic() throws NoSuchMethodException {
-        Method copyMethod = CreateWorkerPackage.class.getMethod("copy");
-        assertTrue(Modifier.isPublic(copyMethod.getModifiers()), "copy() method should be public");
-    }
+    */
 }

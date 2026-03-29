@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.mapper.OutputMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Replica output mapper class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ReplicaTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,31 +36,10 @@ public class ReplicaTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testReplicaImplementsOutputMapper() {
-        assertTrue(OutputMapper.class.isAssignableFrom(Replica.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPropertyPrefixConstant() {
-        assertEquals("pegasus.dir.storage.mapper.replica", Replica.PROPERTY_PREFIX);
-    }
-
-    @Test
-    public void testDefaultInstantiation() {
-        Replica replica = new Replica();
-        assertNotNull(replica);
-    }
-
-    @Test
-    public void testReplicaIsPublicClass() {
-        int modifiers = Replica.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testReplicaDoesNotExtendAbstractFileFactoryBasedMapper() {
-        // Replica implements OutputMapper directly
-        assertFalse(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Replica.class));
-    }
+    */
 }

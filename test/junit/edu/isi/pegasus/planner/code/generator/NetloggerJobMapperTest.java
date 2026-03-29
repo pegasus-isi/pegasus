@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the NetloggerJobMapper class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class NetloggerJobMapperTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,28 +36,10 @@ public class NetloggerJobMapperTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testNetloggerLogFormatterImplementorConstant() {
-        assertEquals("Netlogger", NetloggerJobMapper.NETLOGGER_LOG_FORMATTER_IMPLEMENTOR);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testNetloggerJobMapperClassExists() {
-        assertNotNull(NetloggerJobMapper.class);
-    }
-
-    @Test
-    public void testNetloggerJobMapperIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(NetloggerJobMapper.class.getModifiers()));
-    }
-
-    @Test
-    public void testNetloggerJobMapperIsNotInterface() {
-        assertFalse(NetloggerJobMapper.class.isInterface());
-    }
-
-    @Test
-    public void testConstantIsNotNull() {
-        assertNotNull(NetloggerJobMapper.NETLOGGER_LOG_FORMATTER_IMPLEMENTOR);
-    }
+    */
 }

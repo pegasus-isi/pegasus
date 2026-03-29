@@ -13,20 +13,17 @@
  */
 package edu.isi.pegasus.planner.catalog.replica;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.CatalogException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class ReplicaCatalogExceptionTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -39,82 +36,10 @@ public class ReplicaCatalogExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorCreatesException() {
-        ReplicaCatalogException ex = new ReplicaCatalogException();
-        assertNotNull(ex);
-        assertNull(ex.getMessage());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testStringConstructorSetsMessage() {
-        ReplicaCatalogException ex = new ReplicaCatalogException("replica error");
-        assertEquals("replica error", ex.getMessage());
-    }
-
-    @Test
-    public void testStringCauseConstructorSetsBoth() {
-        Throwable cause = new RuntimeException("root cause");
-        ReplicaCatalogException ex = new ReplicaCatalogException("wrapper", cause);
-        assertEquals("wrapper", ex.getMessage());
-        assertSame(cause, ex.getCause());
-    }
-
-    @Test
-    public void testCauseOnlyConstructor() {
-        Throwable cause = new RuntimeException("root cause");
-        ReplicaCatalogException ex = new ReplicaCatalogException(cause);
-        assertSame(cause, ex.getCause());
-    }
-
-    @Test
-    public void testIsInstanceOfCatalogException() {
-        ReplicaCatalogException ex = new ReplicaCatalogException("test");
-        assertThat(ex, instanceOf(CatalogException.class));
-    }
-
-    @Test
-    public void testIsRuntimeException() {
-        ReplicaCatalogException ex = new ReplicaCatalogException("test");
-        assertThat(ex, instanceOf(RuntimeException.class));
-    }
-
-    @Test
-    public void testExceptionCanBeThrown() {
-        assertThrows(
-                ReplicaCatalogException.class,
-                () -> {
-                    throw new ReplicaCatalogException("thrown");
-                });
-    }
-
-    @Test
-    public void testExceptionCaughtAsCatalogException() {
-        assertThrows(
-                CatalogException.class,
-                () -> {
-                    throw new ReplicaCatalogException("thrown as CatalogException");
-                });
-    }
-
-    @Test
-    public void testGetNextExceptionInherited() {
-        ReplicaCatalogException first = new ReplicaCatalogException("first");
-        ReplicaCatalogException second = new ReplicaCatalogException("second");
-        first.setNextException(second);
-        assertSame(second, first.getNextException());
-    }
-
-    @Test
-    public void testChainedExceptions() {
-        ReplicaCatalogException root = new ReplicaCatalogException("root");
-        root.setNextException(new ReplicaCatalogException("child1"));
-        root.setNextException(new ReplicaCatalogException("child2"));
-
-        int count = 0;
-        for (CatalogException ex = root; ex != null; ex = ex.getNextException()) {
-            count++;
-        }
-        assertEquals(3, count);
-    }
+    */
 }

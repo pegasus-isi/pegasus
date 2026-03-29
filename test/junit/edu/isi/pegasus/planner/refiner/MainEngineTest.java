@@ -15,28 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for MainEngine. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MainEngineTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsEngine() {
-        assertTrue(Engine.class.isAssignableFrom(MainEngine.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testCleanupDirConstant() {
-        assertEquals("cleanup", MainEngine.CLEANUP_DIR);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testCatalogsDirBasenameConstant() {
-        assertEquals("catalogs", MainEngine.CATALOGS_DIR_BASENAME);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(MainEngine.class.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

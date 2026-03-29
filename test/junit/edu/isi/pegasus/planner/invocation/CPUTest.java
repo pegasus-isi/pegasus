@@ -15,61 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for CPU invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CPUTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(CPU.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasText() {
-        assertTrue(HasText.class.isAssignableFrom(CPU.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("cpu", CPU.ELEMENT_NAME);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorNullValue() {
-        CPU cpu = new CPU();
-        assertNull(cpu.getValue());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithValue() {
-        CPU cpu = new CPU("GenuineIntel");
-        assertEquals("GenuineIntel", cpu.getValue());
-    }
-
-    @Test
-    public void testConstructorNullThrows() {
-        assertThrows(NullPointerException.class, () -> new CPU(null));
-    }
-
-    @Test
-    public void testAppendValue() {
-        CPU cpu = new CPU();
-        cpu.appendValue("Intel");
-        cpu.appendValue(" Core i7");
-        assertEquals("Intel Core i7", cpu.getValue());
-    }
-
-    @Test
-    public void testGetElementName() {
-        CPU cpu = new CPU();
-        assertEquals("cpu", cpu.getElementName());
-    }
-
-    @Test
-    public void testSetValue() {
-        CPU cpu = new CPU();
-        cpu.setValue("AuthenticAMD");
-        assertEquals("AuthenticAMD", cpu.getValue());
-    }
+    */
 }

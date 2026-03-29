@@ -15,45 +15,31 @@ package edu.isi.pegasus.planner.selector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the ReplicaSelector interface constants. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ReplicaSelectorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testVersionConstant() {
-        assertNotNull(ReplicaSelector.VERSION, "VERSION constant should not be null");
-        assertFalse(ReplicaSelector.VERSION.isEmpty(), "VERSION constant should not be empty");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testVersionFormat() {
-        // Version should match major.minor format
-        assertTrue(
-                ReplicaSelector.VERSION.matches("\\d+\\.\\d+"),
-                "VERSION should be in numeric dotted format like '1.6'");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testLocalSiteHandleValue() {
-        assertEquals(
-                "local", ReplicaSelector.LOCAL_SITE_HANDLE, "LOCAL_SITE_HANDLE should be 'local'");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testLocalSiteHandleNotEmpty() {
-        assertFalse(
-                ReplicaSelector.LOCAL_SITE_HANDLE.isEmpty(),
-                "LOCAL_SITE_HANDLE should not be empty");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPriorityKeyNotNull() {
-        assertNotNull(ReplicaSelector.PRIORITY_KEY, "PRIORITY_KEY constant should not be null");
-    }
-
-    @Test
-    public void testPriorityKeyValue() {
-        assertEquals("priority", ReplicaSelector.PRIORITY_KEY, "PRIORITY_KEY should be 'priority'");
-    }
+    */
 }

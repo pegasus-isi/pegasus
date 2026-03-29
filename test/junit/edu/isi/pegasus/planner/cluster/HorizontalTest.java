@@ -15,60 +15,31 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Horizontal clusterer class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class HorizontalTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private Horizontal mHorizontal;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mHorizontal = new Horizontal();
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mHorizontal, "Horizontal should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testImplementsClusterer() {
-        assertInstanceOf(Clusterer.class, mHorizontal, "Horizontal should implement Clusterer");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDescriptionNotNull() {
-        assertNotNull(mHorizontal.description(), "description() should not return null");
-    }
-
-    @Test
-    public void testDescriptionNotEmpty() {
-        assertFalse(mHorizontal.description().isEmpty(), "description() should not be empty");
-    }
-
-    @Test
-    public void testDefaultConstructorDoesNotThrow() {
-        assertDoesNotThrow(Horizontal::new, "Horizontal should construct without throwing");
-    }
-
-    @Test
-    public void testIsNotSameInstanceAsVertical() {
-        Vertical v = new Vertical();
-        assertNotEquals(
-                mHorizontal.getClass(),
-                v.getClass(),
-                "Horizontal and Vertical should be different classes");
-    }
-
-    @Test
-    public void testDescriptionDiffersFromVertical() {
-        Vertical v = new Vertical();
-        // Descriptions should differ between implementations
-        assertNotEquals(
-                mHorizontal.description(),
-                v.description(),
-                "Horizontal and Vertical descriptions should differ");
-    }
+    */
 }

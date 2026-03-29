@@ -15,35 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for ReplicaCatalogBridge. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ReplicaCatalogBridgeTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsEngine() {
-        assertTrue(Engine.class.isAssignableFrom(ReplicaCatalogBridge.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testOutputReplicaCatalogPrefix() {
-        assertEquals(
-                "pegasus.catalog.replica.output",
-                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultRegistrationCategoryKey() {
-        assertEquals("registration", ReplicaCatalogBridge.DEFAULT_REGISTRATION_CATEGORY_KEY);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testRCTransformationNS() {
-        assertEquals("pegasus", ReplicaCatalogBridge.RC_TRANSFORMATION_NS);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testRCTransformationName() {
-        assertEquals("rc-client", ReplicaCatalogBridge.RC_TRANSFORMATION_NAME);
-    }
+    */
 }

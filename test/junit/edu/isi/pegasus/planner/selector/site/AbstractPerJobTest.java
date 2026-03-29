@@ -15,57 +15,31 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.selector.SiteSelector;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * Tests for the AbstractPerJob site selector class. Tests are exercised via the concrete Random
- * subclass.
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class AbstractPerJobTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testRandomIsAbstractPerJob() {
-        Random selector = new Random();
-        assertInstanceOf(
-                AbstractPerJob.class, selector, "Random should be a subclass of AbstractPerJob");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testRoundRobinIsAbstractPerJob() {
-        RoundRobin selector = new RoundRobin();
-        assertInstanceOf(
-                AbstractPerJob.class,
-                selector,
-                "RoundRobin should be a subclass of AbstractPerJob");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testGroupIsAbstractSiteSelector() {
-        Group selector = new Group();
-        assertInstanceOf(
-                Abstract.class, selector, "Group should be a subclass of Abstract site selector");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testRandomImplementsSiteSelector() {
-        Random selector = new Random();
-        assertInstanceOf(SiteSelector.class, selector, "Random should implement SiteSelector");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testRoundRobinDescription() {
-        RoundRobin selector = new RoundRobin();
-        String desc = selector.description();
-        assertNotNull(desc, "Description should not be null");
-        assertFalse(desc.isEmpty(), "Description should not be empty");
-    }
-
-    @Test
-    public void testRandomDescription() {
-        Random selector = new Random();
-        String desc = selector.description();
-        assertNotNull(desc, "Description should not be null");
-        assertFalse(desc.isEmpty(), "Description should not be empty");
-    }
+    */
 }

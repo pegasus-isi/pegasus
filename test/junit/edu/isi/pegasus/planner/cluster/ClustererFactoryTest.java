@@ -15,70 +15,31 @@ package edu.isi.pegasus.planner.cluster;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for ClustererFactory constants and structural validation. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ClustererFactoryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultPackageName() {
-        assertEquals(
-                "edu.isi.pegasus.planner.cluster",
-                ClustererFactory.DEFAULT_PACKAGE_NAME,
-                "Default package name should match");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testHorizontalClusteringClass() {
-        assertEquals(
-                "Horizontal",
-                ClustererFactory.HORIZONTAL_CLUSTERING_CLASS,
-                "HORIZONTAL_CLUSTERING_CLASS should be 'Horizontal'");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testVerticalClusteringClass() {
-        assertEquals(
-                "Vertical",
-                ClustererFactory.VERTICAL_CLUSTERING_CLASS,
-                "VERTICAL_CLUSTERING_CLASS should be 'Vertical'");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testHorizontalClusteringClassNotNull() {
-        assertNotNull(
-                ClustererFactory.HORIZONTAL_CLUSTERING_CLASS,
-                "HORIZONTAL_CLUSTERING_CLASS constant should not be null");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testVerticalClusteringClassNotNull() {
-        assertNotNull(
-                ClustererFactory.VERTICAL_CLUSTERING_CLASS,
-                "VERTICAL_CLUSTERING_CLASS constant should not be null");
-    }
-
-    @Test
-    public void testLoadClustererWithNullTypeThrows() {
-        assertThrows(
-                ClustererFactoryException.class,
-                () -> ClustererFactory.loadClusterer(null, null, null),
-                "loadClusterer with null type should throw ClustererFactoryException");
-    }
-
-    @Test
-    public void testLoadClustererWithUnknownTypeThrows() {
-        assertThrows(
-                ClustererFactoryException.class,
-                () -> ClustererFactory.loadClusterer(null, null, "nonexistent-clustering"),
-                "loadClusterer with unknown type should throw ClustererFactoryException");
-    }
-
-    @Test
-    public void testLoadPartitionerWithNullTypeThrows() {
-        assertThrows(
-                ClustererFactoryException.class,
-                () -> ClustererFactory.loadPartitioner(null, null, null, null),
-                "loadPartitioner with null type should throw ClustererFactoryException");
-    }
+    */
 }

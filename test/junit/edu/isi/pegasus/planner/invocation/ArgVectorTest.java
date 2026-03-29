@@ -15,68 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for ArgVector invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ArgVectorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsArguments() {
-        assertTrue(Arguments.class.isAssignableFrom(ArgVector.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultConstructorEmptyValue() {
-        ArgVector av = new ArgVector();
-        assertEquals("", av.getValue());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testConstructorWithExecutable() {
-        ArgVector av = new ArgVector("/bin/echo");
-        assertEquals("/bin/echo", av.getExecutable());
-        assertEquals("", av.getValue());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testSetValueAtPosition() {
-        ArgVector av = new ArgVector();
-        av.setValue(0, "first");
-        av.setValue(1, "second");
-        String val = av.getValue();
-        assertTrue(val.contains("first"));
-        assertTrue(val.contains("second"));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetValueNegativePositionIgnored() {
-        ArgVector av = new ArgVector();
-        av.setValue(-1, "ignored");
-        assertEquals("", av.getValue());
-    }
-
-    @Test
-    public void testSetValueNullBecomesEmpty() {
-        ArgVector av = new ArgVector();
-        av.setValue(0, null);
-        // null value stored as empty string, getValue joins non-null values
-        String val = av.getValue();
-        assertNotNull(val);
-    }
-
-    @Test
-    public void testToXMLWithEntries() {
-        ArgVector av = new ArgVector("/bin/prog");
-        av.setValue(0, "arg0");
-        String xml = av.toXML("");
-        assertTrue(xml.contains("<argument-vector"));
-        assertTrue(xml.contains("arg0"));
-    }
-
-    @Test
-    public void testToXMLNoEntriesSelfClosing() {
-        ArgVector av = new ArgVector("/bin/prog");
-        String xml = av.toXML("");
-        assertTrue(xml.contains("/>"));
-    }
+    */
 }

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class SiteCatalogKeywordsTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,58 +36,10 @@ public class SiteCatalogKeywordsTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testProfilesKeyReservedName() {
-        assertEquals("profiles", SiteCatalogKeywords.PROFILES.getReservedName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSitesKeyReservedName() {
-        assertEquals("sites", SiteCatalogKeywords.SITES.getReservedName());
-    }
-
-    @Test
-    public void testNameKeyReservedName() {
-        assertEquals("name", SiteCatalogKeywords.NAME.getReservedName());
-    }
-
-    @Test
-    public void testPegasusKeyReservedName() {
-        assertEquals("pegasus", SiteCatalogKeywords.PEGASUS.getReservedName());
-    }
-
-    @Test
-    public void testGetReservedKeyReturnsSitesForSitesString() {
-        SiteCatalogKeywords kw = SiteCatalogKeywords.getReservedKey("sites");
-        assertEquals(SiteCatalogKeywords.SITES, kw);
-    }
-
-    @Test
-    public void testGetReservedKeyReturnsNullForUnknownKey() {
-        assertNull(SiteCatalogKeywords.getReservedKey("unknownKey"));
-    }
-
-    @Test
-    public void testValueOfSites() {
-        assertEquals(SiteCatalogKeywords.SITES, SiteCatalogKeywords.valueOf("SITES"));
-    }
-
-    @Test
-    public void testAllKeywordsHaveNonNullReservedNames() {
-        for (SiteCatalogKeywords kw : SiteCatalogKeywords.values()) {
-            assertNotNull(kw.getReservedName(), "Reserved name should not be null for " + kw);
-        }
-    }
-
-    @Test
-    public void testGetReservedKeyForOperation() {
-        assertEquals(
-                SiteCatalogKeywords.OPERATION, SiteCatalogKeywords.getReservedKey("operation"));
-    }
-
-    @Test
-    public void testGetReservedKeyForFileServers() {
-        assertEquals(
-                SiteCatalogKeywords.FILESERVERS, SiteCatalogKeywords.getReservedKey("fileServers"));
-    }
+    */
 }

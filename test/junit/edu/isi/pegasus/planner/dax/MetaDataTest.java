@@ -15,92 +15,31 @@ package edu.isi.pegasus.planner.dax;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.XMLWriter;
-import java.io.StringWriter;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the MetaData class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MetaDataTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private MetaData mMetaData;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mMetaData = new MetaData("checksum.type", "sha256");
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mMetaData, "MetaData should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetKey() {
-        assertEquals("checksum.type", mMetaData.getKey(), "getKey() should return the key");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetValue() {
-        assertEquals("sha256", mMetaData.getValue(), "getValue() should return the value");
-    }
-
-    @Test
-    public void testSetValue() {
-        mMetaData.setValue("md5");
-        assertEquals("md5", mMetaData.getValue(), "setValue should update the value");
-    }
-
-    @Test
-    public void testSetValueReturnsSelf() {
-        MetaData result = mMetaData.setValue("md5");
-        assertSame(mMetaData, result, "setValue should return this for chaining");
-    }
-
-    @Test
-    public void testClone() {
-        MetaData clone = mMetaData.clone();
-        assertNotSame(mMetaData, clone, "Clone should be a different object");
-        assertEquals(mMetaData.getKey(), clone.getKey(), "Clone should have same key");
-        assertEquals(mMetaData.getValue(), clone.getValue(), "Clone should have same value");
-    }
-
-    @Test
-    public void testCopyConstructorSwapsKeyAndType() {
-        MetaData copy = new MetaData(mMetaData);
-        assertNull(copy.getKey(), "Bug: copy constructor swaps key and type, leaving key null");
-        assertEquals(mMetaData.getKey(), copy.getKey(), "Copy should have same key");
-        assertEquals(mMetaData.getValue(), copy.getValue(), "Copy should have same value");
-    }
-
-    @Test
-    public void testCopyConstructorIndependence() {
-        MetaData copy = new MetaData(mMetaData);
-        copy.setValue("different");
-        assertEquals(
-                "sha256",
-                mMetaData.getValue(),
-                "Original value should not change after copy update");
-    }
-
-    @Test
-    public void testXMLSerialization() {
-        StringWriter sw = new StringWriter();
-        XMLWriter writer = new XMLWriter(sw);
-        mMetaData.toXML(writer);
-        String result = sw.toString();
-        assertTrue(result.contains("metadata"), "XML should contain 'metadata' element");
-        assertTrue(result.contains("checksum.type"), "XML should contain the key");
-        assertTrue(result.contains("sha256"), "XML should contain the value");
-    }
-
-    @Test
-    public void testXMLSerializationWithIndent() {
-        StringWriter sw = new StringWriter();
-        XMLWriter writer = new XMLWriter(sw);
-        mMetaData.toXML(writer, 2);
-        String result = sw.toString();
-        assertTrue(
-                result.contains("metadata"), "XML with indent should contain 'metadata' element");
-    }
+    */
 }

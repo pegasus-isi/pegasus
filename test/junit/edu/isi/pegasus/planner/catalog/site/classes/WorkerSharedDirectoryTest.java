@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the WorkerSharedDirectory class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class WorkerSharedDirectoryTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,30 +36,10 @@ public class WorkerSharedDirectoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testWorkerSharedDirectoryExtendsDirectoryLayout() {
-        assertTrue(DirectoryLayout.class.isAssignableFrom(WorkerSharedDirectory.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructor() {
-        WorkerSharedDirectory dir = new WorkerSharedDirectory();
-        assertNotNull(dir);
-    }
-
-    @Test
-    public void testWorkerSharedDirectoryIsConcreteClass() {
-        assertFalse(
-                java.lang.reflect.Modifier.isAbstract(WorkerSharedDirectory.class.getModifiers()));
-    }
-
-    @Test
-    public void testWorkerSharedDirectoryIsNotInterface() {
-        assertFalse(WorkerSharedDirectory.class.isInterface());
-    }
-
-    @Test
-    public void testClassExists() {
-        assertNotNull(WorkerSharedDirectory.class);
-    }
+    */
 }

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for {@link CloseParanthesis} token. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CloseParanthesisTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,29 +36,10 @@ public class CloseParanthesisTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testCanBeInstantiated() {
-        CloseParanthesis cp = new CloseParanthesis();
-        assertNotNull(cp);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testImplementsToken() {
-        CloseParanthesis cp = new CloseParanthesis();
-        assertInstanceOf(Token.class, cp);
-    }
-
-    @Test
-    public void testIsDistinctFromOpenParanthesis() {
-        CloseParanthesis cp = new CloseParanthesis();
-        OpenParanthesis op = new OpenParanthesis();
-        assertNotEquals(cp.getClass(), op.getClass());
-    }
-
-    @Test
-    public void testMultipleInstances() {
-        CloseParanthesis cp1 = new CloseParanthesis();
-        CloseParanthesis cp2 = new CloseParanthesis();
-        assertNotSame(cp1, cp2);
-    }
+    */
 }

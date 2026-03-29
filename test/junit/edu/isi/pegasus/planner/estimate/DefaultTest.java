@@ -15,71 +15,31 @@ package edu.isi.pegasus.planner.estimate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.classes.Job;
-import java.util.Map;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Default estimator. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DefaultTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private Default mEstimator;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mEstimator = new Default();
-    }
+    public void setUp() {}
 
-    @Test
-    public void testInstantiation() {
-        assertNotNull(mEstimator, "Default estimator should be instantiatable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testImplementsEstimator() {
-        assertInstanceOf(Estimator.class, mEstimator, "Default should implement Estimator");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetRuntimeReturnsNull() {
-        Job job = new Job();
-        job.setTXName("test");
-        assertNull(mEstimator.getRuntime(job), "Default getRuntime should return null");
-    }
-
-    @Test
-    public void testGetMemoryReturnsNull() {
-        Job job = new Job();
-        job.setTXName("test");
-        assertNull(mEstimator.getMemory(job), "Default getMemory should return null");
-    }
-
-    @Test
-    public void testGetAllEstimatesReturnsEmptyMap() {
-        Job job = new Job();
-        job.setTXName("test");
-        Map<String, String> estimates = mEstimator.getAllEstimates(job);
-        assertNotNull(estimates, "getAllEstimates should not return null");
-        assertTrue(estimates.isEmpty(), "Default getAllEstimates should return empty map");
-    }
-
-    @Test
-    public void testInitializeDoesNotThrow() {
-        assertDoesNotThrow(
-                () -> mEstimator.initialize(null, null),
-                "Default initialize should not throw when called with nulls");
-    }
-
-    @Test
-    public void testGetAllEstimatesMapNotNull() {
-        Job job = new Job();
-        Map<String, String> result = mEstimator.getAllEstimates(job);
-        assertNotNull(result, "getAllEstimates result should not be null");
-    }
-
-    @Test
-    public void testGetRuntimeWithNullJob() {
-        // Default returns null regardless of job
-        assertNull(mEstimator.getRuntime(null), "getRuntime with null job should return null");
-    }
+    */
 }

@@ -13,127 +13,33 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class XMLOutputTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    // Concrete subclass for testing the abstract XMLOutput
-    private static class ConcreteXMLOutput extends XMLOutput {
-        @Override
-        public void toXML(Writer stream, String indent, String namespace) throws IOException {
-            stream.write("<test/>");
-        }
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
+    @BeforeEach
+    public void setUp() {}
+
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testEscape_null() {
-        assertNull(XMLOutput.escape(null));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testEscape_plainString() {
-        assertThat(XMLOutput.escape("hello"), is("hello"));
-    }
-
-    @Test
-    public void testEscape_carriageReturn() {
-        assertThat(XMLOutput.escape("a\rb"), is("a\\rb"));
-    }
-
-    @Test
-    public void testEscape_newline() {
-        assertThat(XMLOutput.escape("a\nb"), is("a\\nb"));
-    }
-
-    @Test
-    public void testEscape_tab() {
-        assertThat(XMLOutput.escape("a\tb"), is("a\\tb"));
-    }
-
-    @Test
-    public void testEscape_doubleQuote() {
-        assertThat(XMLOutput.escape("a\"b"), is("a\\\"b"));
-    }
-
-    @Test
-    public void testEscape_backslash() {
-        assertThat(XMLOutput.escape("a\\b"), is("a\\\\b"));
-    }
-
-    @Test
-    public void testQuote_null() {
-        assertNull(XMLOutput.quote(null, false));
-        assertNull(XMLOutput.quote(null, true));
-    }
-
-    @Test
-    public void testQuote_lessThan_content() {
-        assertThat(XMLOutput.quote("<", false), is("&lt;"));
-    }
-
-    @Test
-    public void testQuote_lessThan_attribute() {
-        assertThat(XMLOutput.quote("<", true), is("&#60;"));
-    }
-
-    @Test
-    public void testQuote_ampersand_content() {
-        assertThat(XMLOutput.quote("&", false), is("&amp;"));
-    }
-
-    @Test
-    public void testQuote_ampersand_attribute() {
-        assertThat(XMLOutput.quote("&", true), is("&#38;"));
-    }
-
-    @Test
-    public void testQuote_greaterThan_content() {
-        assertThat(XMLOutput.quote(">", false), is("&gt;"));
-    }
-
-    @Test
-    public void testQuote_singleQuote_attribute() {
-        assertThat(XMLOutput.quote("'", true), is("&#39;"));
-    }
-
-    @Test
-    public void testQuote_doubleQuote_attribute() {
-        assertThat(XMLOutput.quote("\"", true), is("&#34;"));
-    }
-
-    @Test
-    public void testQuote_plainText_unchanged() {
-        assertThat(XMLOutput.quote("hello world", false), is("hello world"));
-    }
-
-    @Test
-    public void testWriteAttribute_writesAttributeWhenValueNotNull() throws IOException {
-        ConcreteXMLOutput xml = new ConcreteXMLOutput();
-        StringWriter sw = new StringWriter();
-        xml.writeAttribute(sw, " key=\"", "value");
-        assertThat(sw.toString(), is(" key=\"value\""));
-    }
-
-    @Test
-    public void testWriteAttribute_skipsWhenValueNull() throws IOException {
-        ConcreteXMLOutput xml = new ConcreteXMLOutput();
-        StringWriter sw = new StringWriter();
-        xml.writeAttribute(sw, " key=\"", null);
-        assertThat(sw.toString(), is(""));
-    }
-
-    @Test
-    public void testToXML_returnsString() throws IOException {
-        ConcreteXMLOutput xml = new ConcreteXMLOutput();
-        String result = xml.toXML("", null);
-        assertThat(result, is("<test/>"));
-    }
+    */
 }

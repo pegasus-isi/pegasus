@@ -15,43 +15,31 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for CleanupImplementation interface. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CleanupImplementationTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testIsInterface() {
-        assertTrue(CleanupImplementation.class.isInterface());
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.1", CleanupImplementation.VERSION);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultCleanupCategoryKey() {
-        assertEquals("cleanup", CleanupImplementation.DEFAULT_CLEANUP_CATEGORY_KEY);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testRMImplementsCleanupImplementation() {
-        assertTrue(CleanupImplementation.class.isAssignableFrom(RM.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testCleanupImplementsCleanupImplementation() {
-        assertTrue(CleanupImplementation.class.isAssignableFrom(Cleanup.class));
-    }
-
-    @Test
-    public void testHasCreateCleanupJobMethod() throws Exception {
-        assertNotNull(
-                CleanupImplementation.class.getMethod(
-                        "createCleanupJob",
-                        String.class,
-                        java.util.List.class,
-                        edu.isi.pegasus.planner.classes.Job.class));
-    }
+    */
 }

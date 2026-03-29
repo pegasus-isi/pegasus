@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the MapperException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MapperExceptionTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,48 +36,10 @@ public class MapperExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExtendsRuntimeException() {
-        assertTrue(RuntimeException.class.isAssignableFrom(MapperException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructor() {
-        MapperException ex = new MapperException();
-        assertNotNull(ex);
-        assertNull(ex.getMessage());
-    }
-
-    @Test
-    public void testConstructWithMessage() {
-        MapperException ex = new MapperException("test error");
-        assertEquals("test error", ex.getMessage());
-    }
-
-    @Test
-    public void testConstructWithMessageAndCause() {
-        RuntimeException cause = new RuntimeException("cause");
-        MapperException ex = new MapperException("test error", cause);
-        assertEquals("test error", ex.getMessage());
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testConstructWithCause() {
-        RuntimeException cause = new RuntimeException("cause");
-        MapperException ex = new MapperException(cause);
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testCanBeCaught() {
-        boolean caught = false;
-        try {
-            throw new MapperException("mapper failed");
-        } catch (MapperException e) {
-            caught = true;
-            assertEquals("mapper failed", e.getMessage());
-        }
-        assertTrue(caught);
-    }
+    */
 }

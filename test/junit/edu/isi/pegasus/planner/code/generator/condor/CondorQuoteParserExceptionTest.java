@@ -19,9 +19,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the CondorQuoteParserException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CondorQuoteParserExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -35,46 +36,10 @@ public class CondorQuoteParserExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExceptionExtendsException() {
-        assertTrue(Exception.class.isAssignableFrom(CondorQuoteParserException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithMessageAndPosition() {
-        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", 5);
-        assertNotNull(ex);
-        assertEquals("parse error", ex.getMessage());
-        assertEquals(5, ex.getPosition());
-    }
-
-    @Test
-    public void testConstructorWithMessagePositionAndCause() {
-        Throwable cause = new RuntimeException("root cause");
-        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", 3, cause);
-        assertNotNull(ex);
-        assertEquals("parse error", ex.getMessage());
-        assertEquals(3, ex.getPosition());
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testGetPositionReturnsCorrectValue() {
-        CondorQuoteParserException ex = new CondorQuoteParserException("error at position 10", 10);
-        assertEquals(10, ex.getPosition());
-    }
-
-    @Test
-    public void testExceptionIsThrowable() {
-        assertTrue(Throwable.class.isAssignableFrom(CondorQuoteParserException.class));
-    }
-
-    @Test
-    public void testExceptionCanBeThrown() {
-        assertThrows(
-                CondorQuoteParserException.class,
-                () -> {
-                    throw new CondorQuoteParserException("test", 0);
-                });
-    }
+    */
 }

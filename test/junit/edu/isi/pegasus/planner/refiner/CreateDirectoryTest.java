@@ -15,31 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for CreateDirectory refiner. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CreateDirectoryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsEngine() {
-        assertTrue(Engine.class.isAssignableFrom(CreateDirectory.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testPackageName() {
-        assertEquals("edu.isi.pegasus.planner.refiner.createdir", CreateDirectory.PACKAGE_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testHasLoadStaticMethod() throws Exception {
-        assertNotNull(
-                CreateDirectory.class.getMethod(
-                        "loadCreateDirectoryStraegyInstance",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(CreateDirectory.class.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

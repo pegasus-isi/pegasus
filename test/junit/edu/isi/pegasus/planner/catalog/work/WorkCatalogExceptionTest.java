@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.catalog.work;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.CatalogException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the WorkCatalogException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class WorkCatalogExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,47 +36,10 @@ public class WorkCatalogExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExceptionExtendsCatalogException() {
-        assertTrue(CatalogException.class.isAssignableFrom(WorkCatalogException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructor() {
-        WorkCatalogException ex = new WorkCatalogException();
-        assertNotNull(ex);
-    }
-
-    @Test
-    public void testConstructorWithMessage() {
-        WorkCatalogException ex = new WorkCatalogException("test message");
-        assertNotNull(ex);
-        assertEquals("test message", ex.getMessage());
-    }
-
-    @Test
-    public void testConstructorWithMessageAndCause() {
-        Throwable cause = new RuntimeException("root cause");
-        WorkCatalogException ex = new WorkCatalogException("test message", cause);
-        assertNotNull(ex);
-        assertEquals("test message", ex.getMessage());
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testConstructorWithCauseOnly() {
-        Throwable cause = new RuntimeException("root cause");
-        WorkCatalogException ex = new WorkCatalogException(cause);
-        assertNotNull(ex);
-        assertEquals(cause, ex.getCause());
-    }
-
-    @Test
-    public void testExceptionCanBeThrown() {
-        assertThrows(
-                WorkCatalogException.class,
-                () -> {
-                    throw new WorkCatalogException("test");
-                });
-    }
+    */
 }

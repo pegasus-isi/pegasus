@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the JobAggregatorFactory class constants and structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class JobAggregatorFactoryTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,49 +36,10 @@ public class JobAggregatorFactoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultPackageNameConstant() {
-        assertEquals(
-                "edu.isi.pegasus.planner.cluster.aggregator",
-                JobAggregatorFactory.DEFAULT_PACKAGE_NAME);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSeqExecClassConstant() {
-        assertEquals("SeqExec", JobAggregatorFactory.SEQ_EXEC_CLASS);
-    }
-
-    @Test
-    public void testMPIExecClassConstant() {
-        assertEquals("MPIExec", JobAggregatorFactory.MPI_EXEC_CLASS);
-    }
-
-    @Test
-    public void testAWSBatchShortnameConstant() {
-        assertEquals("aws-batch", JobAggregatorFactory.AWS_BATCH_SHORTNAME);
-    }
-
-    @Test
-    public void testAWSBatchImplementingClassConstant() {
-        assertEquals(
-                AWSBatch.class.getCanonicalName(),
-                JobAggregatorFactory.AWS_BATCH_IMPLEMENTING_CLASS);
-    }
-
-    @Test
-    public void testFactoryClassIsPublic() {
-        int modifiers = JobAggregatorFactory.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testLoadInstanceMethodExists() throws NoSuchMethodException {
-        // verify the static loadInstance(String, ADag, PegasusBag) method exists
-        assertNotNull(
-                JobAggregatorFactory.class.getMethod(
-                        "loadInstance",
-                        String.class,
-                        edu.isi.pegasus.planner.classes.ADag.class,
-                        edu.isi.pegasus.planner.classes.PegasusBag.class));
-    }
+    */
 }

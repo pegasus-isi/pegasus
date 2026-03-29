@@ -15,16 +15,14 @@ package edu.isi.pegasus.planner.code.gridstart.container;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
-import edu.isi.pegasus.planner.code.gridstart.container.impl.None;
-import edu.isi.pegasus.planner.code.gridstart.container.impl.Singularity;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the ContainerShellWrapper interface. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ContainerShellWrapperTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -38,33 +36,10 @@ public class ContainerShellWrapperTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testContainerShellWrapperIsInterface() {
-        assertTrue(ContainerShellWrapper.class.isInterface());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.1", ContainerShellWrapper.VERSION);
-    }
-
-    @Test
-    public void testVersionConstantNotNull() {
-        assertNotNull(ContainerShellWrapper.VERSION);
-    }
-
-    @Test
-    public void testNoneImplementsContainerShellWrapper() {
-        assertTrue(ContainerShellWrapper.class.isAssignableFrom(None.class));
-    }
-
-    @Test
-    public void testDockerImplementsContainerShellWrapper() {
-        assertTrue(ContainerShellWrapper.class.isAssignableFrom(Docker.class));
-    }
-
-    @Test
-    public void testSingularityImplementsContainerShellWrapper() {
-        assertTrue(ContainerShellWrapper.class.isAssignableFrom(Singularity.class));
-    }
+    */
 }

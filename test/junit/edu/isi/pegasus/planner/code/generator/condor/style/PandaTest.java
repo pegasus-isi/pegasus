@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Panda style class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class PandaTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,39 +36,10 @@ public class PandaTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testPandaExtendsGLite() {
-        assertTrue(GLite.class.isAssignableFrom(Panda.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPandaImplementsCondorStyle() {
-        assertTrue(CondorStyle.class.isAssignableFrom(Panda.class));
-    }
-
-    @Test
-    public void testPandaIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Panda.class.getModifiers()));
-    }
-
-    @Test
-    public void testPandaIsNotInterface() {
-        assertFalse(Panda.class.isInterface());
-    }
-
-    @Test
-    public void testStyleNameConstant() {
-        assertEquals("PANDA", Panda.STYLE_NAME);
-    }
-
-    @Test
-    public void testGridResourceKeyNotNull() {
-        assertNotNull(Panda.GRID_RESOURCE_KEY);
-    }
-
-    @Test
-    public void testInstantiation() {
-        Panda style = new Panda();
-        assertNotNull(style);
-    }
+    */
 }

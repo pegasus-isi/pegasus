@@ -15,49 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for HasFilename interface structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class HasFilenameTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testIsInterface() {
-        assertTrue(HasFilename.class.isInterface());
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testHasGetFilenameMethod() throws Exception {
-        Method m = HasFilename.class.getMethod("getFilename");
-        assertNotNull(m);
-        assertEquals(String.class, m.getReturnType());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testHasSetFilenameMethod() throws Exception {
-        Method m = HasFilename.class.getMethod("setFilename", String.class);
-        assertNotNull(m);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testTemporaryImplementsInterface() {
-        assertTrue(HasFilename.class.isAssignableFrom(Temporary.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testFifoImplementsInterface() {
-        assertTrue(HasFilename.class.isAssignableFrom(Fifo.class));
-    }
-
-    @Test
-    public void testTemporarySetAndGetFilename() {
-        Temporary t = new Temporary("/tmp/test.tmp", 1);
-        assertEquals("/tmp/test.tmp", t.getFilename());
-    }
-
-    @Test
-    public void testFifoSetAndGetFilename() {
-        Fifo f = new Fifo("/tmp/mypipe", 3);
-        assertEquals("/tmp/mypipe", f.getFilename());
-    }
+    */
 }

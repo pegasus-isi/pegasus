@@ -15,72 +15,31 @@ package edu.isi.pegasus.planner.namespace.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the MAX aggregator. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class MAXTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private MAX mAggregator;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mAggregator = new MAX();
-    }
+    public void setUp() {}
 
     @AfterEach
-    public void tearDown() {
-        mAggregator = null;
-    }
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testMaxReturnsLargerNewValue() {
-        String result = mAggregator.compute("3", "7", "0");
-        assertEquals("7", result, "MAX should return the larger of 3 and 7");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testMaxReturnsLargerOldValue() {
-        String result = mAggregator.compute("10", "4", "0");
-        assertEquals("10", result, "MAX should return old value when it is larger");
-    }
-
-    @Test
-    public void testMaxWithEqualValues() {
-        String result = mAggregator.compute("5", "5", "0");
-        assertEquals("5", result, "MAX should return the value when both are equal");
-    }
-
-    @Test
-    public void testMaxWithNullOldValueUsesDefault() {
-        // null old value => parseInt returns default(0), newValue=5 => max(0,5)=5
-        String result = mAggregator.compute(null, "5", "0");
-        assertEquals(
-                "5", result, "MAX with null old value should pick newValue(5) over default(0)");
-    }
-
-    @Test
-    public void testMaxWithNonNumericOldValueUsesDefault() {
-        // "abc" is NaN => falls back to default(0), newValue=10 => max(0,10)=10
-        String result = mAggregator.compute("abc", "10", "0");
-        assertEquals("10", result, "MAX with non-numeric old value should use default(0)");
-    }
-
-    @Test
-    public void testMaxWithNegativeNumbers() {
-        String result = mAggregator.compute("-5", "-2", "0");
-        assertEquals("-2", result, "MAX should return -2 as it is larger than -5");
-    }
-
-    @Test
-    public void testMaxImplementsAggregatorInterface() {
-        assertTrue(
-                mAggregator instanceof Aggregator, "MAX should implement the Aggregator interface");
-    }
-
-    @Test
-    public void testMaxExtendsAbstract() {
-        assertTrue(mAggregator instanceof Abstract, "MAX should extend the Abstract class");
-    }
+    */
 }

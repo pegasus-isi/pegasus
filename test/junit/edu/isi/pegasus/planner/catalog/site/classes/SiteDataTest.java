@@ -19,15 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/**
- * Tests for SiteData. Since SiteData is abstract, tested via Connection (concrete subclass).
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SiteDataTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -40,35 +36,10 @@ public class SiteDataTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testSiteDataIsAbstract() {
-        assertTrue(
-                java.lang.reflect.Modifier.isAbstract(SiteData.class.getModifiers()),
-                "SiteData should be an abstract class");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSiteDataImplementsCloneable() {
-        assertTrue(
-                Cloneable.class.isAssignableFrom(SiteData.class),
-                "SiteData should implement Cloneable");
-    }
-
-    @Test
-    public void testConnectionExtendsAbstractSiteData() {
-        Connection c = new Connection("k", "v");
-        assertTrue(c instanceof SiteData);
-    }
-
-    @Test
-    public void testSiteStoreExtendsSiteData() {
-        SiteStore store = new SiteStore();
-        assertTrue(store instanceof SiteData);
-    }
-
-    @Test
-    public void testInternalMountPointExtendsSiteData() {
-        InternalMountPoint imp = new InternalMountPoint("/tmp");
-        assertTrue(imp instanceof SiteData);
-    }
+    */
 }

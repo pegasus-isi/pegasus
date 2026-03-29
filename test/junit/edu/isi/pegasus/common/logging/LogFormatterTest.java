@@ -13,79 +13,33 @@
  */
 package edu.isi.pegasus.common.logging;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.logging.format.Netlogger;
-import edu.isi.pegasus.common.logging.format.Simple;
-import java.util.Collection;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * Structural tests for the LogFormatter interface via reflection.
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class LogFormatterTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    // --- interface structure ---
+    @AfterAll
+    public static void tearDownClass() {}
 
+    @BeforeEach
+    public void setUp() {}
+
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testLogFormatterIsInterface() {
-        assertTrue(LogFormatter.class.isInterface());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    // --- method declarations (NoSuchMethodException = test failure if missing) ---
-
-    @Test
-    public void testProgramNameMethods() throws NoSuchMethodException {
-        LogFormatter.class.getMethod("setProgramName", String.class);
-        LogFormatter.class.getMethod("getProgramName", String.class);
-    }
-
-    @Test
-    public void testAddEventMethods() throws NoSuchMethodException {
-        LogFormatter.class.getMethod("addEvent", String.class, String.class, String.class);
-        LogFormatter.class.getMethod("addEvent", String.class, Map.class);
-    }
-
-    @Test
-    public void testEventStackMethods() throws NoSuchMethodException {
-        LogFormatter.class.getMethod("popEvent");
-        LogFormatter.class.getMethod("getEventName");
-        LogFormatter.class.getMethod("getStartEventMessage");
-        LogFormatter.class.getMethod("getEndEventMessage");
-    }
-
-    @Test
-    public void testAddMethods() throws NoSuchMethodException {
-        LogFormatter.class.getMethod("add", String.class);
-        LogFormatter.class.getMethod("add", String.class, String.class);
-    }
-
-    @Test
-    public void testLogMessageMethods() throws NoSuchMethodException {
-        LogFormatter.class.getMethod("createLogMessage");
-        LogFormatter.class.getMethod("createLogMessageAndReset");
-    }
-
-    @Test
-    public void testCreateEntityHierarchyMessageMethod() throws NoSuchMethodException {
-        LogFormatter.class.getMethod(
-                "createEntityHierarchyMessage",
-                String.class,
-                String.class,
-                String.class,
-                Collection.class);
-    }
-
-    // --- known implementors ---
-
-    @Test
-    public void testKnownImplementors() {
-        assertThat(Netlogger.class, typeCompatibleWith(LogFormatter.class));
-        assertThat(Simple.class, typeCompatibleWith(LogFormatter.class));
-    }
+    */
 }

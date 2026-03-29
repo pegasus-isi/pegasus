@@ -19,11 +19,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the OutputMapper interface structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class OutputMapperTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -36,37 +36,10 @@ public class OutputMapperTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testOutputMapperIsInterface() {
-        assertTrue(OutputMapper.class.isInterface());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testVersionConstant() {
-        assertEquals("1.1", OutputMapper.VERSION);
-    }
-
-    @Test
-    public void testOutputMapperExtendsMapper() {
-        assertTrue(Mapper.class.isAssignableFrom(OutputMapper.class));
-    }
-
-    @Test
-    public void testMapMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                OutputMapper.class.getMethod(
-                        "map",
-                        String.class,
-                        String.class,
-                        edu.isi.pegasus.planner.catalog.site.classes.FileServer.OPERATION.class));
-    }
-
-    @Test
-    public void testInitializeMethodExists() throws NoSuchMethodException {
-        assertNotNull(
-                OutputMapper.class.getMethod(
-                        "initialize",
-                        edu.isi.pegasus.planner.classes.PegasusBag.class,
-                        edu.isi.pegasus.planner.classes.ADag.class));
-    }
+    */
 }

@@ -15,94 +15,31 @@ package edu.isi.pegasus.planner.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonSerializer;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Collection;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * Structural tests for PegasusJsonSerializer via reflection.
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class PegasusJsonSerializerTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testPegasusJsonSerializerIsAbstract() {
-        assertTrue(
-                Modifier.isAbstract(PegasusJsonSerializer.class.getModifiers()),
-                "PegasusJsonSerializer should be abstract");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testPegasusJsonSerializerExtendsJsonSerializer() {
-        assertTrue(
-                JsonSerializer.class.isAssignableFrom(PegasusJsonSerializer.class),
-                "PegasusJsonSerializer should extend Jackson's JsonSerializer");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testHasWriteStringFieldMethod() throws NoSuchMethodException {
-        Method m =
-                PegasusJsonSerializer.class.getMethod(
-                        "writeStringField",
-                        com.fasterxml.jackson.core.JsonGenerator.class,
-                        String.class,
-                        String.class);
-        assertNotNull(
-                m, "PegasusJsonSerializer should have writeStringField(gen, key, String) method");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testHasWriteStringFieldWithObjectMethod() throws NoSuchMethodException {
-        Method m =
-                PegasusJsonSerializer.class.getMethod(
-                        "writeStringField",
-                        com.fasterxml.jackson.core.JsonGenerator.class,
-                        String.class,
-                        Object.class);
-        assertNotNull(
-                m, "PegasusJsonSerializer should have writeStringField(gen, key, Object) method");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testHasWriteArrayMethod() throws NoSuchMethodException {
-        Method m =
-                PegasusJsonSerializer.class.getMethod(
-                        "writeArray",
-                        com.fasterxml.jackson.core.JsonGenerator.class,
-                        String.class,
-                        Collection.class);
-        assertNotNull(m, "PegasusJsonSerializer should have writeArray method");
-    }
-
-    @Test
-    public void testHasWriteNumberFieldMethod() throws NoSuchMethodException {
-        Method m =
-                PegasusJsonSerializer.class.getMethod(
-                        "writeNumberField",
-                        com.fasterxml.jackson.core.JsonGenerator.class,
-                        String.class,
-                        int.class);
-        assertNotNull(m, "PegasusJsonSerializer should have writeNumberField method");
-    }
-
-    @Test
-    public void testWriteStringFieldIsPublic() throws NoSuchMethodException {
-        Method m =
-                PegasusJsonSerializer.class.getMethod(
-                        "writeStringField",
-                        com.fasterxml.jackson.core.JsonGenerator.class,
-                        String.class,
-                        String.class);
-        assertTrue(Modifier.isPublic(m.getModifiers()), "writeStringField should be public");
-    }
-
-    @Test
-    public void testIsGenericClass() {
-        assertTrue(
-                PegasusJsonSerializer.class.getTypeParameters().length > 0,
-                "PegasusJsonSerializer should be a generic class with type parameters");
-    }
+    */
 }

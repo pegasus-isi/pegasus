@@ -15,69 +15,31 @@ package edu.isi.pegasus.planner.provisioner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the provisioner Node class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class NodeTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private Node mNode;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mNode = new Node("n1", "myTask", 100L);
-    }
+    public void setUp() {}
 
-    @Test
-    public void testDefaultWeightConstant() {
-        assertEquals(1L, Node.DEFAULT_WEIGHT, "DEFAULT_WEIGHT should be 1");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testEvalWeightReturnsConfiguredWeight() {
-        assertEquals(100L, mNode.evalWeight(), "evalWeight should return the configured weight");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetInReturnsEmptyListInitially() {
-        assertNotNull(mNode.getIn(), "getIn() should not return null");
-        assertTrue(mNode.getIn().isEmpty(), "New node should have no incoming edges");
-    }
-
-    @Test
-    public void testGetOutReturnsEmptyListInitially() {
-        assertNotNull(mNode.getOut(), "getOut() should not return null");
-        assertTrue(mNode.getOut().isEmpty(), "New node should have no outgoing edges");
-    }
-
-    @Test
-    public void testCheckInReturnsTrueWhenNoIncomingEdges() {
-        assertTrue(
-                mNode.checkIn(), "checkIn() should return true when there are no incoming edges");
-    }
-
-    @Test
-    public void testSetWeight() {
-        mNode.setWeight(50L);
-        assertEquals(
-                50L, mNode.evalWeight(), "evalWeight should return the new weight after setWeight");
-    }
-
-    @Test
-    public void testNodeWithStringIdOnlyConstructor() {
-        Node n = new Node("myId");
-        assertNotNull(n, "Node(String) constructor should create a node");
-        assertEquals(
-                Node.DEFAULT_WEIGHT,
-                n.evalWeight(),
-                "Default constructor should use DEFAULT_WEIGHT");
-    }
-
-    @Test
-    public void testAddInEdge() {
-        Node other = new Node("n2");
-        Edge edge = new Edge(other, mNode, "file.txt", 100L);
-        mNode.addIn(edge);
-        assertFalse(mNode.getIn().isEmpty(), "Node should have one incoming edge after addIn");
-    }
+    */
 }

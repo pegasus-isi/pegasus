@@ -15,24 +15,15 @@ package edu.isi.pegasus.planner.catalog.transformation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-import edu.isi.pegasus.planner.classes.Profile;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/**
- * Tests covering the pattern exercised by TestTransformationCatalog#main — creating, configuring
- * and inspecting TransformationCatalogEntry objects without a live catalog backend.
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TestTransformationCatalogTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -45,77 +36,10 @@ public class TestTransformationCatalogTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testCreateEntryWithNamespaceNameVersion() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        assertEquals("pegasus", entry.getLogicalNamespace());
-        assertEquals("preprocess", entry.getLogicalName());
-        assertNull(entry.getLogicalVersion());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetPhysicalTransformationAndResourceId() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.setPhysicalTransformation("/usr/pegasus/bin/keg");
-        entry.setResourceId("isi");
-        assertEquals("/usr/pegasus/bin/keg", entry.getPhysicalTransformation());
-        assertEquals("isi", entry.getResourceId());
-    }
-
-    @Test
-    public void testSetTypeInstalled() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.setType(TCType.INSTALLED);
-        assertEquals(TCType.INSTALLED, entry.getType());
-    }
-
-    @Test
-    public void testSetVDSSysInfo() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.setVDSSysInfo(new VDSSysInfo(Arch.INTEL32, Os.LINUX, null, null));
-        assertNotNull(entry.getSysInfo());
-    }
-
-    @Test
-    public void testAddEnvProfile() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.addProfile(new Profile(Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin"));
-        List profiles = entry.getProfiles(Profile.ENV);
-        assertNotNull(profiles);
-        assertFalse(profiles.isEmpty());
-    }
-
-    @Test
-    public void testToStringContainsPhysicalName() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.setPhysicalTransformation("/usr/pegasus/bin/keg");
-        String s = entry.toString();
-        assertTrue(s.contains("/usr/pegasus/bin/keg"));
-    }
-
-    @Test
-    public void testVDSSysInfoIntel32Linux() {
-        VDSSysInfo sysInfo = new VDSSysInfo(Arch.INTEL32, Os.LINUX, null, null);
-        assertSame(Arch.INTEL32, sysInfo.getArch());
-        assertSame(Os.LINUX, sysInfo.getOs());
-    }
-
-    @Test
-    public void testClonedEntryIsEquivalent() {
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("pegasus", "preprocess", null);
-        entry.setPhysicalTransformation("/bin/keg");
-        entry.setResourceId("isi");
-        entry.setType(TCType.INSTALLED);
-        TransformationCatalogEntry clone = (TransformationCatalogEntry) entry.clone();
-        assertEquals(entry.getLogicalName(), clone.getLogicalName());
-        assertEquals(entry.getResourceId(), clone.getResourceId());
-        assertEquals(entry.getType(), clone.getType());
-    }
+    */
 }

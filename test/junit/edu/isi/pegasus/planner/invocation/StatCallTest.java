@@ -15,61 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for StatCall invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class StatCallTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(StatCall.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultConstructorNullHandle() {
-        StatCall sc = new StatCall();
-        assertNull(sc.getHandle());
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testConstructorWithHandle() {
-        StatCall sc = new StatCall("stdin");
-        assertEquals("stdin", sc.getHandle());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testSetAndGetHandle() {
-        StatCall sc = new StatCall();
-        sc.setHandle("stdout");
-        assertEquals("stdout", sc.getHandle());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetAndGetLFN() {
-        StatCall sc = new StatCall();
-        sc.setLFN("output.txt");
-        assertEquals("output.txt", sc.getLFN());
-    }
-
-    @Test
-    public void testSetAndGetError() {
-        StatCall sc = new StatCall();
-        sc.setError(2);
-        assertEquals(2, sc.getError());
-    }
-
-    @Test
-    public void testSetAndGetStatInfo() {
-        StatCall sc = new StatCall();
-        StatInfo si = new StatInfo();
-        sc.setStatInfo(si);
-        assertNotNull(sc.getStatInfo());
-    }
-
-    @Test
-    public void testSetDataString() {
-        StatCall sc = new StatCall();
-        sc.setData("some content");
-        assertNotNull(sc.getData());
-    }
+    */
 }

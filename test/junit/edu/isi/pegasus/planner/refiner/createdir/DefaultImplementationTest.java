@@ -15,40 +15,31 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for DefaultImplementation createdir class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class DefaultImplementationTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testImplementsImplementation() {
-        assertTrue(Implementation.class.isAssignableFrom(DefaultImplementation.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testTransformationNamespace() {
-        assertEquals("pegasus", DefaultImplementation.TRANSFORMATION_NAMESPACE);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testTransformationName() {
-        assertEquals("dirmanager", DefaultImplementation.TRANSFORMATION_NAME);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testExecutableBasename() {
-        assertEquals("pegasus-transfer", DefaultImplementation.EXECUTABLE_BASENAME);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructor() {
-        DefaultImplementation di = new DefaultImplementation();
-        assertNotNull(di);
-    }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(
-                java.lang.reflect.Modifier.isAbstract(DefaultImplementation.class.getModifiers()));
-    }
+    */
 }

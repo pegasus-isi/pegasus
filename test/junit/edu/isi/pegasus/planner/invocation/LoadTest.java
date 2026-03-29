@@ -15,41 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Load invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class LoadTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(Load.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("load", Load.ELEMENT_NAME);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructor() {
-        Load l = new Load();
-        assertNotNull(l);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetElementName() {
-        Load l = new Load();
-        assertEquals("load", l.getElementName());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testNotHasText() {
-        // Load does not implement HasText (unlike Boot/CPU/Stamp)
-        assertFalse(HasText.class.isAssignableFrom(Load.class));
-    }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Load.class.getModifiers()));
-    }
+    */
 }

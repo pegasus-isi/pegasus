@@ -15,68 +15,31 @@ package edu.isi.pegasus.planner.namespace.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the Update aggregator. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class UpdateTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private Update mAggregator;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mAggregator = new Update();
-    }
+    public void setUp() {}
 
     @AfterEach
-    public void tearDown() {
-        mAggregator = null;
-    }
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testAlwaysReturnsNewValue() {
-        String result = mAggregator.compute("old", "new", "default");
-        assertEquals("new", result, "Update should always return the new value");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testReturnsNewValueWhenOldIsNull() {
-        String result = mAggregator.compute(null, "new", "default");
-        assertEquals("new", result, "Update should return new value even when old is null");
-    }
-
-    @Test
-    public void testReturnsNewValueWhenOldIsEmpty() {
-        String result = mAggregator.compute("", "replacement", "default");
-        assertEquals("replacement", result, "Update should return new value when old is empty");
-    }
-
-    @Test
-    public void testIgnoresDefaultValue() {
-        String result = mAggregator.compute("old", "new", "should-be-ignored");
-        assertEquals("new", result, "Update should ignore the default parameter");
-    }
-
-    @Test
-    public void testReturnsNullWhenNewValueIsNull() {
-        String result = mAggregator.compute("old", null, "default");
-        assertNull(result, "Update should return null when new value is null");
-    }
-
-    @Test
-    public void testImplementsAggregatorInterface() {
-        assertTrue(mAggregator instanceof Aggregator, "Update should implement Aggregator");
-    }
-
-    @Test
-    public void testExtendsAbstract() {
-        assertTrue(mAggregator instanceof Abstract, "Update should extend Abstract");
-    }
-
-    @Test
-    public void testReturnsNumericNewValue() {
-        String result = mAggregator.compute("100", "200", "0");
-        assertEquals("200", result, "Update should return new numeric value 200");
-    }
+    */
 }

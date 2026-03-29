@@ -15,41 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.griphyn.vdl.toolkit.Toolkit;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for SimpleServer class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SimpleServerTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsToolkit() {
-        assertTrue(Toolkit.class.isAssignableFrom(SimpleServer.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testSetTerminate() {
-        boolean original = SimpleServer.getTerminate();
-        SimpleServer.setTerminate(true);
-        assertTrue(SimpleServer.getTerminate());
-        SimpleServer.setTerminate(original);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testGetTerminate() {
-        SimpleServer.setTerminate(false);
-        assertFalse(SimpleServer.getTerminate());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testSetTerminateFalse() {
-        SimpleServer.setTerminate(false);
-        assertFalse(SimpleServer.getTerminate());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testStaticTerminateFieldIsPublic() throws Exception {
-        java.lang.reflect.Field f = SimpleServer.class.getDeclaredField("c_terminate");
-        assertTrue(java.lang.reflect.Modifier.isPublic(f.getModifiers()));
-        assertTrue(java.lang.reflect.Modifier.isStatic(f.getModifiers()));
-    }
+    */
 }

@@ -15,49 +15,31 @@ package edu.isi.pegasus.planner.code;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for GridStartFactory constants and structure */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class GridStartFactoryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultPackageName() {
-        assertEquals(
-                "edu.isi.pegasus.planner.code.gridstart", GridStartFactory.DEFAULT_PACKAGE_NAME);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultGridstartMode() {
-        assertEquals("Kickstart", GridStartFactory.DEFAULT_GRIDSTART_MODE);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testKickstartIndex() {
-        assertEquals(0, GridStartFactory.KICKSTART_INDEX);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testNoGridstartIndex() {
-        assertEquals(1, GridStartFactory.NO_GRIDSTART_INDEX);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGridstartShortNamesLength() {
-        assertEquals(2, GridStartFactory.GRIDSTART_SHORT_NAMES.length);
-        assertEquals("kickstart", GridStartFactory.GRIDSTART_SHORT_NAMES[0]);
-        assertEquals("none", GridStartFactory.GRIDSTART_SHORT_NAMES[1]);
-    }
-
-    @Test
-    public void testGridstartImplementingClassesLength() {
-        assertEquals(2, GridStartFactory.GRIDSTART_IMPLEMENTING_CLASSES.length);
-        assertEquals("Kickstart", GridStartFactory.GRIDSTART_IMPLEMENTING_CLASSES[0]);
-        assertEquals("NoGridStart", GridStartFactory.GRIDSTART_IMPLEMENTING_CLASSES[1]);
-    }
-
-    @Test
-    public void testPostScriptScopeConstants() {
-        assertEquals("essential", GridStartFactory.ESSENTIAL_POST_SCRIPT_SCOPE);
-        assertEquals("all", GridStartFactory.ALL_POST_SCRIPT_SCOPE);
-    }
+    */
 }

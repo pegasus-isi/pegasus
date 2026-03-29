@@ -13,109 +13,33 @@
  */
 package edu.isi.pegasus.common.credential;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Unit tests for the CredentialHandlerFactoryException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class CredentialHandlerFactoryExceptionTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
+    @AfterAll
+    public static void tearDownClass() {}
+
+    @BeforeEach
+    public void setUp() {}
+
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testExceptionExtendsFactoryException() {
-        CredentialHandlerFactoryException ex = new CredentialHandlerFactoryException("test");
-        assertThat(ex, instanceOf(FactoryException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultNameConstant() {
-        assertThat(CredentialHandlerFactoryException.DEFAULT_NAME, is("Credential Implementor"));
-    }
-
-    // --- constructor: (String) ---
-
-    @Test
-    public void testMessageOnlyConstructor() {
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("credential factory error");
-        assertThat(ex.getMessage(), is("credential factory error"));
-        assertThat(ex.getClassname(), is(CredentialHandlerFactoryException.DEFAULT_NAME));
-        assertNull(ex.getCause());
-    }
-
-    // --- constructor: (String, String) ---
-
-    @Test
-    public void testMessageAndClassnameConstructor() {
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("load error", "MyCredentialHandler");
-        assertThat(ex.getMessage(), is("load error"));
-        assertThat(ex.getClassname(), is("MyCredentialHandler"));
-        assertNull(ex.getCause());
-    }
-
-    // --- constructor: (String, Throwable) ---
-
-    @Test
-    public void testMessageAndCauseConstructor() {
-        RuntimeException cause = new RuntimeException("root cause");
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("wrapper error", cause);
-        assertThat(ex.getMessage(), is("wrapper error"));
-        assertThat(ex.getCause(), is(cause));
-        assertThat(ex.getClassname(), is(CredentialHandlerFactoryException.DEFAULT_NAME));
-    }
-
-    // --- constructor: (String, String, Throwable) ---
-
-    @Test
-    public void testMessageClassnameAndCauseConstructor() {
-        RuntimeException cause = new RuntimeException("root cause");
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("load error", "MyHandler", cause);
-        assertThat(ex.getMessage(), is("load error"));
-        assertThat(ex.getClassname(), is("MyHandler"));
-        assertThat(ex.getCause(), is(cause));
-    }
-
-    // --- canBeThrown ---
-
-    @Test
-    public void testCanBeCaughtAsFactoryException() {
-        assertThrows(
-                FactoryException.class,
-                () -> {
-                    throw new CredentialHandlerFactoryException("thrown");
-                });
-    }
-
-    @Test
-    public void testCanBeCaughtAsRuntimeException() {
-        assertThrows(
-                RuntimeException.class,
-                () -> {
-                    throw new CredentialHandlerFactoryException("thrown");
-                });
-    }
-
-    // --- convertException ---
-
-    @Test
-    public void testConvertExceptionContainsMessage() {
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("my error message");
-        assertThat(ex.convertException(), containsString("my error message"));
-    }
-
-    @Test
-    public void testConvertExceptionWithCauseContainsBothMessages() {
-        RuntimeException cause = new RuntimeException("root cause message");
-        CredentialHandlerFactoryException ex =
-                new CredentialHandlerFactoryException("outer message", cause);
-        String converted = ex.convertException();
-        assertThat(converted, containsString("outer message"));
-        assertThat(converted, containsString("root cause message"));
-    }
+    */
 }

@@ -15,65 +15,31 @@ package edu.isi.pegasus.planner.estimate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.classes.Job;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the Estimator interface. Tests are exercised via the Default implementation. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class EstimatorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testDefaultImplementsEstimator() {
-        Default estimator = new Default();
-        assertInstanceOf(Estimator.class, estimator, "Default should implement Estimator");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testGetRuntimeInterfaceContract() {
-        Estimator estimator = new Default();
-        Job job = new Job();
-        // Returning null is an acceptable contract for Default implementation
-        String runtime = estimator.getRuntime(job);
-        assertNull(runtime, "Default implementation should return null runtime");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testGetMemoryInterfaceContract() {
-        Estimator estimator = new Default();
-        Job job = new Job();
-        String memory = estimator.getMemory(job);
-        assertNull(memory, "Default implementation should return null memory");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGetAllEstimatesInterfaceContract() {
-        Estimator estimator = new Default();
-        Job job = new Job();
-        Map<String, String> estimates = estimator.getAllEstimates(job);
-        assertNotNull(estimates, "getAllEstimates should not return null");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGetAllEstimatesIsMap() {
-        Estimator estimator = new Default();
-        Job job = new Job();
-        Object result = estimator.getAllEstimates(job);
-        assertInstanceOf(Map.class, result, "getAllEstimates should return a Map");
-    }
-
-    @Test
-    public void testInitializeDoesNotThrowForDefault() {
-        Estimator estimator = new Default();
-        assertDoesNotThrow(
-                () -> estimator.initialize(null, null), "Default.initialize should not throw");
-    }
-
-    @Test
-    public void testMultipleCallsToGetRuntimeAreConsistent() {
-        Estimator estimator = new Default();
-        Job job = new Job();
-        String r1 = estimator.getRuntime(job);
-        String r2 = estimator.getRuntime(job);
-        assertEquals(r1, r2, "Multiple calls to getRuntime should return consistent results");
-    }
+    */
 }

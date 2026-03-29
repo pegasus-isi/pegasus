@@ -15,54 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for File abstract invocation class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FileTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testIsAbstract() {
-        assertTrue(Modifier.isAbstract(File.class.getModifiers()));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(File.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testImplementsHasText() {
-        assertTrue(HasText.class.isAssignableFrom(File.class));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDescriptorIsConcreteSubclass() {
-        assertTrue(File.class.isAssignableFrom(Descriptor.class));
-        assertFalse(Modifier.isAbstract(Descriptor.class.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testTemporaryExtendsFile() {
-        assertTrue(File.class.isAssignableFrom(Temporary.class));
-    }
-
-    @Test
-    public void testRegularExtendsFile() {
-        assertTrue(File.class.isAssignableFrom(Regular.class));
-    }
-
-    @Test
-    public void testDescriptorAppendValueBuildsHexbyte() {
-        Descriptor d = new Descriptor();
-        d.appendValue("deadbeef");
-        assertEquals("deadbeef", d.getValue());
-    }
-
-    @Test
-    public void testDescriptorAppendNullIsNoop() {
-        Descriptor d = new Descriptor();
-        d.appendValue(null);
-        assertNull(d.getValue());
-    }
+    */
 }

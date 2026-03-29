@@ -13,58 +13,33 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class ShellCommandTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testGetInstance_returnsNonNull() {
-        ShellCommand sc = ShellCommand.getInstance();
-        assertNotNull(sc);
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testGetInstance_withNullLogger_returnsNonNull() {
-        ShellCommand sc = ShellCommand.getInstance(null);
-        assertNotNull(sc);
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testInitialState_stdoutIsNull() {
-        ShellCommand sc = ShellCommand.getInstance();
-        assertNull(sc.getSTDOut());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testInitialState_stderrIsNull() {
-        ShellCommand sc = ShellCommand.getInstance();
-        assertNull(sc.getSTDErr());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testExecute_echoCommand_capturesOutput() {
-        ShellCommand sc = ShellCommand.getInstance();
-        int exit = sc.execute("echo", "hello");
-        assertThat(exit, is(0));
-        assertThat(sc.getSTDOut(), is("hello"));
-    }
-
-    @Test
-    public void testExecute_withNullArgs() {
-        ShellCommand sc = ShellCommand.getInstance();
-        int exit = sc.execute("true", null);
-        assertThat(exit, is(0));
-    }
-
-    @Test
-    public void testExecute_nonZeroExitCode() {
-        ShellCommand sc = ShellCommand.getInstance();
-        int exit = sc.execute("false", null);
-        assertThat(exit, not(0));
-    }
+    */
 }

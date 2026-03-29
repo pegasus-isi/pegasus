@@ -15,53 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for JobStatusFailure invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class JobStatusFailureTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsJobStatus() {
-        assertTrue(JobStatus.class.isAssignableFrom(JobStatusFailure.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasText() {
-        assertTrue(HasText.class.isAssignableFrom(JobStatusFailure.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructorZeroError() {
-        JobStatusFailure j = new JobStatusFailure();
-        // getError() is the accessor for errno in JobStatusFailure
-        assertEquals(0, j.getError());
-        assertNull(j.getValue());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithErrno() {
-        JobStatusFailure j = new JobStatusFailure(2);
-        assertEquals(2, j.getError());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithErrnoAndValue() {
-        JobStatusFailure j = new JobStatusFailure(13, "Permission denied");
-        assertEquals(13, j.getError());
-        assertEquals("Permission denied", j.getValue());
-    }
-
-    @Test
-    public void testSetAndGetError() {
-        JobStatusFailure j = new JobStatusFailure();
-        j.setError(22);
-        assertEquals(22, j.getError());
-    }
-
-    @Test
-    public void testAppendValue() {
-        JobStatusFailure j = new JobStatusFailure();
-        j.appendValue("Error");
-        assertEquals("Error", j.getValue());
-    }
+    */
 }

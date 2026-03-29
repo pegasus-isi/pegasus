@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.catalog.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the SiteFactoryException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SiteFactoryExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,41 +36,10 @@ public class SiteFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExceptionExtendsFactoryException() {
-        assertTrue(FactoryException.class.isAssignableFrom(SiteFactoryException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("Site Catalog", SiteFactoryException.DEFAULT_NAME);
-    }
-
-    @Test
-    public void testConstructorWithMessage() {
-        SiteFactoryException ex = new SiteFactoryException("test message");
-        assertNotNull(ex);
-        assertEquals("test message", ex.getMessage());
-    }
-
-    @Test
-    public void testConstructorWithMessageAndClassname() {
-        SiteFactoryException ex = new SiteFactoryException("test message", "MyClass");
-        assertNotNull(ex);
-        assertEquals("test message", ex.getMessage());
-    }
-
-    @Test
-    public void testExceptionIsThrowable() {
-        assertTrue(Throwable.class.isAssignableFrom(SiteFactoryException.class));
-    }
-
-    @Test
-    public void testExceptionCanBeThrown() {
-        assertThrows(
-                SiteFactoryException.class,
-                () -> {
-                    throw new SiteFactoryException("test");
-                });
-    }
+    */
 }

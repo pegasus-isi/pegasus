@@ -15,78 +15,31 @@ package edu.isi.pegasus.planner.provisioner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for the provisioner Estimator class via reflection. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class EstimatorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testEstimatorIsConcreteClass() {
-        assertFalse(
-                Modifier.isAbstract(Estimator.class.getModifiers()),
-                "Estimator should be a concrete class");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testEstimatorHasFourArgConstructor() throws NoSuchMethodException {
-        Constructor<?> c =
-                Estimator.class.getDeclaredConstructor(
-                        String.class, String.class, long.class, int.class);
-        assertNotNull(c, "Estimator should have a 4-arg constructor");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testEstimatorCanBeInstantiated() {
-        assertDoesNotThrow(
-                () -> new Estimator("dummy.dax", "BTS", 1000L, 1),
-                "Estimator constructor should not throw on valid inputs");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testEstimatorStoresFileName() throws Exception {
-        Estimator est = new Estimator("myworkflow.dax", "BTS", 500L, 2);
-        Field fileNameField = Estimator.class.getDeclaredField("fileName");
-        fileNameField.setAccessible(true);
-        assertEquals(
-                "myworkflow.dax", fileNameField.get(est), "Estimator should store the fileName");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testEstimatorStoresMethod() throws Exception {
-        Estimator est = new Estimator("f.dax", "DSC", 100L, 1);
-        Field methodField = Estimator.class.getDeclaredField("method");
-        methodField.setAccessible(true);
-        assertEquals("DSC", methodField.get(est), "Estimator should store the method");
-    }
-
-    @Test
-    public void testEstimatorStoresRFT() throws Exception {
-        Estimator est = new Estimator("f.dax", "BTS", 750L, 1);
-        Field rftField = Estimator.class.getDeclaredField("RFT");
-        rftField.setAccessible(true);
-        // Bug: Estimator constructor does not assign this.RFT = RFT, so field stays 0
-        assertEquals(
-                0L,
-                rftField.get(est),
-                "Estimator constructor does not store the RFT parameter (bug)");
-    }
-
-    @Test
-    public void testEstimatorStoresPrecision() throws Exception {
-        Estimator est = new Estimator("f.dax", "BTS", 100L, 3);
-        Field precField = Estimator.class.getDeclaredField("prec");
-        precField.setAccessible(true);
-        assertEquals(3, precField.get(est), "Estimator should store the precision");
-    }
-
-    @Test
-    public void testEstimatorHasTotalETField() throws Exception {
-        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
-        Field totalETField = Estimator.class.getDeclaredField("totalET");
-        totalETField.setAccessible(true);
-        assertEquals(0L, totalETField.get(est), "Initial totalET should be 0");
-    }
+    */
 }

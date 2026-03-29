@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,11 +66,7 @@ public class RuntimeClusteringTest {
     }
 
     @Test
-    public void testClusterNum() {
-        // Horizontal.bestFitBinPack() internally calls mLogger.log() but mLogger is null
-        // (Horizontal requires PegasusBag with initialized LogManager via initialize()).
-        // Without it, the call throws via reflection as InvocationTargetException wrapping
-        // EmptyStackException. Document this known limitation.
+    public void testClusterNum() throws IllegalAccessException, InvocationTargetException {
         int jobCount = 10;
         int clusterCount = 3;
         List<Job> jobs = new LinkedList<Job>();
@@ -78,13 +75,18 @@ public class RuntimeClusteringTest {
             Job j = new Job();
             j.setName(i + "");
             j.vdsNS.construct(Pegasus.RUNTIME_KEY, (i * 10) + "");
+
             jobs.add(j);
         }
+        List<List<Job>> results = null;
 
-        assertThrows(
-                java.lang.reflect.InvocationTargetException.class,
-                () -> mBestFitMethod.invoke(mCluster, jobs, clusterCount),
-                "bestFitBinPack fails without an initialized LogManager");
+        results = (List<List<Job>>) mBestFitMethod.invoke(mCluster, jobs, clusterCount);
+        assertEquals(clusterCount, results.size());
+
+        clusterCount = jobCount + 1;
+        results = (List<List<Job>>) mBestFitMethod.invoke(mCluster, jobs, clusterCount);
+        assertEquals(jobs.size(), results.size());
+        assertEquals(jobs.size(), results.size());
     }
 
     @AfterEach

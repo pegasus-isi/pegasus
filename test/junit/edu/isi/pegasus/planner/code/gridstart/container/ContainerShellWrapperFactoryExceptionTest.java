@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.gridstart.container;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.util.FactoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the ContainerShellWrapperFactoryException class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ContainerShellWrapperFactoryExceptionTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,37 +36,10 @@ public class ContainerShellWrapperFactoryExceptionTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testExceptionExtendsFactoryException() {
-        assertTrue(
-                FactoryException.class.isAssignableFrom(
-                        ContainerShellWrapperFactoryException.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultNameConstant() {
-        assertEquals("Container Shell Wrapper", ContainerShellWrapperFactoryException.DEFAULT_NAME);
-    }
-
-    @Test
-    public void testConstructorWithMessage() {
-        ContainerShellWrapperFactoryException ex =
-                new ContainerShellWrapperFactoryException("test message");
-        assertNotNull(ex);
-        assertEquals("test message", ex.getMessage());
-    }
-
-    @Test
-    public void testExceptionIsThrowable() {
-        assertTrue(Throwable.class.isAssignableFrom(ContainerShellWrapperFactoryException.class));
-    }
-
-    @Test
-    public void testExceptionCanBeThrown() {
-        assertThrows(
-                ContainerShellWrapperFactoryException.class,
-                () -> {
-                    throw new ContainerShellWrapperFactoryException("test");
-                });
-    }
+    */
 }

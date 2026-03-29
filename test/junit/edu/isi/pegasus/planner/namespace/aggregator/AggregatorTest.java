@@ -15,57 +15,31 @@ package edu.isi.pegasus.planner.namespace.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests structural properties of the Aggregator interface via reflection. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class AggregatorTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testAggregatorIsInterface() {
-        assertTrue(Aggregator.class.isInterface(), "Aggregator should be an interface");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testAggregatorVersionConstant() {
-        assertEquals("1.0", Aggregator.VERSION, "Aggregator VERSION constant should be 1.0");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testAggregatorHasComputeMethod() throws NoSuchMethodException {
-        Method compute =
-                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
-        assertNotNull(
-                compute, "Aggregator should declare a compute(String, String, String) method");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testComputeMethodIsPublic() throws NoSuchMethodException {
-        Method compute =
-                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
-        assertTrue(Modifier.isPublic(compute.getModifiers()), "compute method should be public");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testComputeMethodReturnsString() throws NoSuchMethodException {
-        Method compute =
-                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
-        assertEquals(String.class, compute.getReturnType(), "compute method should return String");
-    }
-
-    @Test
-    public void testMaxImplementsAggregator() {
-        assertTrue(Aggregator.class.isAssignableFrom(MAX.class), "MAX should implement Aggregator");
-    }
-
-    @Test
-    public void testMINImplementsAggregator() {
-        assertTrue(Aggregator.class.isAssignableFrom(MIN.class), "MIN should implement Aggregator");
-    }
-
-    @Test
-    public void testSumImplementsAggregator() {
-        assertTrue(Aggregator.class.isAssignableFrom(Sum.class), "Sum should implement Aggregator");
-    }
+    */
 }

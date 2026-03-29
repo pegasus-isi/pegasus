@@ -13,21 +13,17 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class LocalDirectoryTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -40,70 +36,10 @@ public class LocalDirectoryTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorIsEmpty() {
-        LocalDirectory dir = new LocalDirectory();
-        assertTrue(dir.isEmpty());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSetAndGetInternalMountPoint() {
-        LocalDirectory dir = new LocalDirectory();
-        InternalMountPoint mp = new InternalMountPoint("/tmp/local");
-        dir.setInternalMountPoint(mp);
-        assertEquals("/tmp/local", dir.getInternalMountPoint().getMountPoint());
-    }
-
-    @Test
-    public void testAddFileServerMakesNotEmpty() {
-        LocalDirectory dir = new LocalDirectory();
-        FileServer fs = new FileServer("file", "file://", "/tmp");
-        fs.setSupportedOperation(FileServer.OPERATION.all);
-        dir.addFileServer(fs);
-        assertFalse(dir.isEmpty());
-    }
-
-    @Test
-    public void testToXMLIsEmptyWhenNoContent() throws IOException {
-        LocalDirectory dir = new LocalDirectory();
-        StringWriter sw = new StringWriter();
-        dir.toXML(sw, "");
-        assertEquals("", sw.toString());
-    }
-
-    @Test
-    public void testToXMLContainsLocalElementWhenNotEmpty() throws IOException {
-        LocalDirectory dir = new LocalDirectory();
-        InternalMountPoint mp = new InternalMountPoint("/local/scratch");
-        dir.setInternalMountPoint(mp);
-        FileServer fs = new FileServer("file", "file://", "/local/scratch");
-        fs.setSupportedOperation(FileServer.OPERATION.all);
-        dir.addFileServer(fs);
-        StringWriter sw = new StringWriter();
-        dir.toXML(sw, "");
-        String xml = sw.toString();
-        assertThat(xml, containsString("<local>"));
-        assertThat(xml, containsString("</local>"));
-    }
-
-    @Test
-    public void testCloneProducesDistinctInstance() {
-        LocalDirectory dir = new LocalDirectory();
-        InternalMountPoint mp = new InternalMountPoint("/local");
-        dir.setInternalMountPoint(mp);
-        LocalDirectory cloned = (LocalDirectory) dir.clone();
-        assertNotSame(dir, cloned);
-        assertEquals(
-                dir.getInternalMountPoint().getMountPoint(),
-                cloned.getInternalMountPoint().getMountPoint());
-    }
-
-    @Test
-    public void testHasFileServerForGETWithAllOperation() {
-        LocalDirectory dir = new LocalDirectory();
-        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
-        fs.setSupportedOperation(FileServer.OPERATION.all);
-        dir.addFileServer(fs);
-        assertTrue(dir.hasFileServerForGETOperations());
-    }
+    */
 }

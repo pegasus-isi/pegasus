@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.selector.site;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Heft site selector class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class HeftTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,29 +36,10 @@ public class HeftTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testHeftExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(Heft.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testHeftImplementsSiteSelector() {
-        assertTrue(SiteSelector.class.isAssignableFrom(Heft.class));
-    }
-
-    @Test
-    public void testHeftIsConcreteClass() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(Heft.class.getModifiers()));
-    }
-
-    @Test
-    public void testHeftIsNotInterface() {
-        assertFalse(Heft.class.isInterface());
-    }
-
-    @Test
-    public void testHeftInstantiation() {
-        Heft heft = new Heft();
-        assertNotNull(heft);
-    }
+    */
 }

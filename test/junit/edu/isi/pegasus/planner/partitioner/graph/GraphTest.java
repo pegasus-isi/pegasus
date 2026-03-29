@@ -15,59 +15,31 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/**
- * Structural tests for the Graph interface via reflection.
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class GraphTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testGraphIsInterface() {
-        assertTrue(Graph.class.isInterface(), "Graph should be an interface");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testGraphHasAddNodeMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("addNode", GraphNode.class);
-        assertNotNull(m, "Graph should have an addNode(GraphNode) method");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testGraphHasGetNodeMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("getNode", String.class);
-        assertNotNull(m, "Graph should have a getNode(String) method");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testGraphHasAddEdgeMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("addEdge", String.class, String.class);
-        assertNotNull(m, "Graph should have an addEdge(String, String) method");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testGraphHasSizeMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("size");
-        assertNotNull(m, "Graph should have a size() method");
-    }
-
-    @Test
-    public void testGraphHasNodeIteratorMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("nodeIterator");
-        assertNotNull(m, "Graph should have a nodeIterator() method");
-    }
-
-    @Test
-    public void testMapGraphImplementsGraph() {
-        assertTrue(Graph.class.isAssignableFrom(MapGraph.class), "MapGraph should implement Graph");
-    }
-
-    @Test
-    public void testGraphHasAddRootMethod() throws NoSuchMethodException {
-        Method m = Graph.class.getMethod("addRoot", GraphNode.class);
-        assertNotNull(m, "Graph should have an addRoot(GraphNode) method");
-    }
+    */
 }

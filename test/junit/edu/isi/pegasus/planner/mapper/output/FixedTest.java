@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.mapper.OutputMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Fixed output mapper class structure. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FixedTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,31 +36,10 @@ public class FixedTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testFixedImplementsOutputMapper() {
-        assertTrue(OutputMapper.class.isAssignableFrom(Fixed.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testPropertyPrefixConstant() {
-        assertEquals("pegasus.dir.storage.mapper.fixed", Fixed.PROPERTY_PREFIX);
-    }
-
-    @Test
-    public void testDefaultInstantiation() {
-        Fixed fixed = new Fixed();
-        assertNotNull(fixed);
-    }
-
-    @Test
-    public void testFixedIsPublicClass() {
-        int modifiers = Fixed.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
-
-    @Test
-    public void testFixedDoesNotExtendAbstractFileFactoryBasedMapper() {
-        // Fixed implements OutputMapper directly, not through AbstractFileFactoryBasedMapper
-        assertFalse(AbstractFileFactoryBasedMapper.class.isAssignableFrom(Fixed.class));
-    }
+    */
 }

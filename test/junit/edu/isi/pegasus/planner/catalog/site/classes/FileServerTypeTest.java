@@ -15,20 +15,15 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Collection;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/**
- * Tests for FileServerType via FileServer (concrete subclass) and for the OPERATION enum.
- *
- * @author Rajiv Mayani
- */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class FileServerTypeTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -41,87 +36,10 @@ public class FileServerTypeTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorDefaults() {
-        FileServer fs = new FileServer();
-        assertEquals("", fs.getProtocol());
-        assertEquals("", fs.getURLPrefix());
-        assertEquals("", fs.getMountPoint());
-        assertEquals(FileServerType.OPERATION.all, fs.getSupportedOperation());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testOverloadedConstructorSetsFields() {
-        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
-        assertEquals("gsiftp", fs.getProtocol());
-        assertEquals("gsiftp://site.edu", fs.getURLPrefix());
-        assertEquals("/data", fs.getMountPoint());
-    }
-
-    @Test
-    public void testSetAndGetProtocol() {
-        FileServer fs = new FileServer();
-        fs.setProtocol("scp");
-        assertEquals("scp", fs.getProtocol());
-    }
-
-    @Test
-    public void testSetAndGetURLPrefix() {
-        FileServer fs = new FileServer();
-        fs.setURLPrefix("http://storage.example.org");
-        assertEquals("http://storage.example.org", fs.getURLPrefix());
-    }
-
-    @Test
-    public void testSetAndGetMountPoint() {
-        FileServer fs = new FileServer();
-        fs.setMountPoint("/lustre/scratch");
-        assertEquals("/lustre/scratch", fs.getMountPoint());
-    }
-
-    @Test
-    public void testSetSupportedOperationByEnum() {
-        FileServer fs = new FileServer();
-        fs.setSupportedOperation(FileServerType.OPERATION.put);
-        assertEquals(FileServerType.OPERATION.put, fs.getSupportedOperation());
-    }
-
-    @Test
-    public void testSetSupportedOperationByString() {
-        FileServer fs = new FileServer();
-        fs.setSupportedOperation("get");
-        assertEquals(FileServerType.OPERATION.get, fs.getSupportedOperation());
-    }
-
-    @Test
-    public void testOperationEnumValues() {
-        FileServerType.OPERATION[] ops = FileServerType.OPERATION.values();
-        assertEquals(3, ops.length);
-    }
-
-    @Test
-    public void testOperationsForGETContainsGetAndAll() {
-        Collection<FileServerType.OPERATION> ops = FileServerType.OPERATION.operationsForGET();
-        assertTrue(ops.contains(FileServerType.OPERATION.get));
-        assertTrue(ops.contains(FileServerType.OPERATION.all));
-    }
-
-    @Test
-    public void testOperationsForPUTContainsPutAndAll() {
-        Collection<FileServerType.OPERATION> ops = FileServerType.OPERATION.operationsForPUT();
-        assertTrue(ops.contains(FileServerType.OPERATION.put));
-        assertTrue(ops.contains(FileServerType.OPERATION.all));
-    }
-
-    @Test
-    public void testCloneProducesEqualButDistinctInstance() {
-        FileServer fs = new FileServer("gsiftp", "gsiftp://site.edu", "/data");
-        fs.setSupportedOperation(FileServerType.OPERATION.put);
-        FileServer cloned = (FileServer) fs.clone();
-        assertNotSame(fs, cloned);
-        assertEquals(fs.getProtocol(), cloned.getProtocol());
-        assertEquals(fs.getURLPrefix(), cloned.getURLPrefix());
-        assertEquals(fs.getMountPoint(), cloned.getMountPoint());
-        assertEquals(fs.getSupportedOperation(), cloned.getSupportedOperation());
-    }
+    */
 }

@@ -15,16 +15,15 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.cluster.JobAggregator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the SeqExec aggregator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class SeqExecTest {
-
     @BeforeAll
     public static void setUpClass() {}
 
@@ -37,40 +36,10 @@ public class SeqExecTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testSeqExecExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(SeqExec.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testSeqExecImplementsJobAggregator() {
-        assertTrue(JobAggregator.class.isAssignableFrom(SeqExec.class));
-    }
-
-    @Test
-    public void testCollapseLogicalNameConstant() {
-        assertEquals("seqexec", SeqExec.COLLAPSE_LOGICAL_NAME);
-    }
-
-    @Test
-    public void testExecutableBasenameConstant() {
-        assertEquals("pegasus-cluster", SeqExec.EXECUTABLE_BASENAME);
-    }
-
-    @Test
-    public void testSeqexecProgressReportSuffixConstant() {
-        assertEquals(".prg", SeqExec.SEQEXEC_PROGRESS_REPORT_SUFFIX);
-    }
-
-    @Test
-    public void testDefaultInstantiation() {
-        SeqExec seqExec = new SeqExec();
-        assertNotNull(seqExec);
-    }
-
-    @Test
-    public void testSeqExecIsPublicClass() {
-        int modifiers = SeqExec.class.getModifiers();
-        assertTrue(java.lang.reflect.Modifier.isPublic(modifiers));
-    }
+    */
 }

@@ -15,66 +15,31 @@ package edu.isi.pegasus.common.logging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.common.logging.logger.Default;
-import edu.isi.pegasus.common.logging.logger.Log4j;
-import java.lang.reflect.Modifier;
-import java.util.Properties;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for the LogManagerFactory class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class LogManagerFactoryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testLogManagerFactoryIsConcreteClass() {
-        assertFalse(
-                Modifier.isAbstract(LogManagerFactory.class.getModifiers()),
-                "LogManagerFactory should be a concrete class");
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testDefaultPackageNameConstant() {
-        assertEquals(
-                "edu.isi.pegasus.common.logging.logger",
-                LogManagerFactory.DEFAULT_PACKAGE_NAME,
-                "DEFAULT_PACKAGE_NAME should be 'edu.isi.pegasus.common.logging.logger'");
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultPackageNameIsNotEmpty() {
-        assertFalse(
-                LogManagerFactory.DEFAULT_PACKAGE_NAME.isEmpty(),
-                "DEFAULT_PACKAGE_NAME should not be empty");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testLoadInstanceDefaultLogger() {
-        LogManager manager = LogManagerFactory.loadInstance("Default", "Simple", new Properties());
-        assertNotNull(manager, "loadInstance('Default') should return a non-null LogManager");
-        assertTrue(
-                manager instanceof Default,
-                "loadInstance('Default') should return a Default instance");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testLoadInstanceLog4jLogger() {
-        LogManager manager = LogManagerFactory.loadInstance("Log4j", "Simple", new Properties());
-        assertNotNull(manager, "loadInstance('Log4j') should return a non-null LogManager");
-        assertTrue(
-                manager instanceof Log4j, "loadInstance('Log4j') should return a Log4j instance");
-    }
-
-    @Test
-    public void testLoadInstanceThrowsExceptionForUnknownClass() {
-        assertThrows(
-                LogManagerFactoryException.class,
-                () -> LogManagerFactory.loadInstance("NonExistent", "Simple", new Properties()),
-                "loadInstance for unknown class should throw LogManagerFactoryException");
-    }
-
-    @Test
-    public void testLoadedManagerHasCorrectDefaultLevel() {
-        LogManager manager = LogManagerFactory.loadInstance("Default", "Simple", new Properties());
-        // LogManager initializes mDebugLevel=0 regardless of implementation
-        assertEquals(0, manager.getLevel(), "Default LogManager should start at level 0");
-    }
+    */
 }

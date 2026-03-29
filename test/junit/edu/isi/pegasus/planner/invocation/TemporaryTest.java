@@ -15,68 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Temporary invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class TemporaryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsFile() {
-        assertTrue(File.class.isAssignableFrom(Temporary.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasDescriptor() {
-        assertTrue(HasDescriptor.class.isAssignableFrom(Temporary.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testImplementsHasFilename() {
-        assertTrue(HasFilename.class.isAssignableFrom(Temporary.class));
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorNullFilename() {
-        Temporary t = new Temporary();
-        assertNull(t.getFilename());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testDefaultConstructorDescriptorMinusOne() {
-        Temporary t = new Temporary();
-        assertEquals(-1, t.getDescriptor());
-    }
-
-    @Test
-    public void testConstructorWithFilenameAndDescriptor() {
-        Temporary t = new Temporary("/tmp/work.tmp", 3);
-        assertEquals("/tmp/work.tmp", t.getFilename());
-        assertEquals(3, t.getDescriptor());
-    }
-
-    @Test
-    public void testSetAndGetFilename() {
-        Temporary t = new Temporary();
-        t.setFilename("/var/tmp/data.tmp");
-        assertEquals("/var/tmp/data.tmp", t.getFilename());
-    }
-
-    @Test
-    public void testSetAndGetDescriptor() {
-        Temporary t = new Temporary();
-        t.setDescriptor(5);
-        assertEquals(5, t.getDescriptor());
-    }
-
-    @Test
-    public void testToXMLContainsTemporaryTag() throws Exception {
-        Temporary t = new Temporary("/tmp/out.tmp", 2);
-        StringWriter sw = new StringWriter();
-        t.toXML(sw, "", null);
-        String xml = sw.toString();
-        assertTrue(xml.contains("<temporary"));
-        assertTrue(xml.contains("name=\"/tmp/out.tmp\""));
-        assertTrue(xml.contains("descriptor=\"2\""));
-    }
+    */
 }

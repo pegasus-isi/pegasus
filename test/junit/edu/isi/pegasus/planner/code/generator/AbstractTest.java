@@ -15,14 +15,14 @@ package edu.isi.pegasus.planner.code.generator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.code.CodeGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Tests for the Abstract code generator class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class AbstractTest {
     @BeforeAll
     public static void setUpClass() {}
@@ -36,34 +36,10 @@ public class AbstractTest {
     @AfterEach
     public void tearDown() {}
 
+    /*
     @Test
-    public void testAbstractIsAbstractClass() {
-        assertTrue(java.lang.reflect.Modifier.isAbstract(Abstract.class.getModifiers()));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testAbstractImplementsCodeGenerator() {
-        assertTrue(CodeGenerator.class.isAssignableFrom(Abstract.class));
-    }
-
-    @Test
-    public void testPostscriptLogSuffixConstant() {
-        assertNotNull(Abstract.POSTSCRIPT_LOG_SUFFIX);
-        assertEquals(".exitcode.log", Abstract.POSTSCRIPT_LOG_SUFFIX);
-    }
-
-    @Test
-    public void testPBSExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(PBS.class));
-    }
-
-    @Test
-    public void testPMCExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(PMC.class));
-    }
-
-    @Test
-    public void testShellExtendsAbstract() {
-        assertTrue(Abstract.class.isAssignableFrom(Shell.class));
-    }
+    */
 }

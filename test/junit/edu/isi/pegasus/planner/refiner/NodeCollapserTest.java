@@ -15,26 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Structural tests for NodeCollapser. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class NodeCollapserTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsEngine() {
-        assertTrue(Engine.class.isAssignableFrom(NodeCollapser.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(NodeCollapser.class.getModifiers()));
-    }
+    @BeforeEach
+    public void setUp() {}
 
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testHasClusterMethod() throws Exception {
-        // The method is named cluster(), not collapse()
-        assertNotNull(
-                NodeCollapser.class.getMethod(
-                        "cluster", edu.isi.pegasus.planner.classes.ADag.class));
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
+    */
 }

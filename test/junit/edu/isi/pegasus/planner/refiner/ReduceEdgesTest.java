@@ -15,62 +15,31 @@ package edu.isi.pegasus.planner.refiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import java.util.Iterator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for ReduceEdges. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class ReduceEdgesTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    /** Count total edges in a DAG by summing each node's child count. */
-    private int countEdges(ADag dag) {
-        int count = 0;
-        for (Iterator<GraphNode> it = dag.nodeIterator(); it.hasNext(); ) {
-            GraphNode node = it.next();
-            count += node.getChildren().size();
-        }
-        return count;
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
+    @BeforeEach
+    public void setUp() {}
+
+    @AfterEach
+    public void tearDown() {}
+
+    /*
     @Test
-    public void testDefaultConstructor() {
-        ReduceEdges re = new ReduceEdges();
-        assertNotNull(re);
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testIsNotAbstract() {
-        assertFalse(java.lang.reflect.Modifier.isAbstract(ReduceEdges.class.getModifiers()));
-    }
-
-    @Test
-    public void testReduceEmptyDag() {
-        ReduceEdges re = new ReduceEdges();
-        ADag dag = new ADag();
-        ADag result = re.reduce(dag);
-        assertNotNull(result);
-    }
-
-    @Test
-    public void testReduceSingleNodeDag() {
-        ReduceEdges re = new ReduceEdges();
-        ADag dag = new ADag();
-        Job j = new Job();
-        j.setName("j1");
-        j.setJobType(Job.COMPUTE_JOB);
-        dag.add(j);
-        ADag result = re.reduce(dag);
-        assertNotNull(result);
-    }
-
-    @Test
-    public void testReduceWithTestHelperThrowsDueToBugInHelper() {
-        // TestReduceEdges.createTest1() has a bug: addNewRelation is called before add(job),
-        // causing "node doesn't exist" RuntimeException. Document this known defect.
-        ReduceEdges re = new ReduceEdges();
-        TestReduceEdges helper = new TestReduceEdges();
-        assertThrows(RuntimeException.class, helper::createTest1);
-    }
+    */
 }

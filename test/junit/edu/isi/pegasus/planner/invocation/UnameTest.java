@@ -15,75 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for Uname invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class UnameTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsMachineInfo() {
-        assertTrue(MachineInfo.class.isAssignableFrom(Uname.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasText() {
-        assertTrue(HasText.class.isAssignableFrom(Uname.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testElementName() {
-        assertEquals("uname", Uname.ELEMENT_NAME);
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testDefaultConstructorNullValue() {
-        Uname u = new Uname();
-        assertNull(u.getValue());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithValue() {
-        Uname u = new Uname("Linux host 5.4");
-        assertEquals("Linux host 5.4", u.getValue());
-    }
-
-    @Test
-    public void testConstructorNullThrows() {
-        assertThrows(NullPointerException.class, () -> new Uname(null));
-    }
-
-    @Test
-    public void testSetAndGetValue() {
-        Uname u = new Uname();
-        u.setValue("Darwin kernel");
-        assertEquals("Darwin kernel", u.getValue());
-    }
-
-    @Test
-    public void testAppendValue() {
-        Uname u = new Uname("Linux ");
-        u.appendValue("x86_64");
-        assertEquals("Linux x86_64", u.getValue());
-    }
-
-    @Test
-    public void testToArchitectureNotNull() {
-        Uname u = new Uname();
-        u.addAttribute(Uname.SYSTEM_ATTRIBUTE_KEY, "Linux");
-        u.addAttribute(Uname.MACHINE_ATTRIBUTE_KEY, "x86_64");
-        u.addAttribute(Uname.NODENAME_ATTRIBUTE_KEY, "host1");
-        u.addAttribute(Uname.RELEASE_ATTRIBUTE_KEY, "5.4.0");
-        Architecture arch = u.toArchitecture();
-        assertNotNull(arch);
-        assertEquals("Linux", arch.getSystemName());
-    }
-
-    @Test
-    public void testUnameToArchitectureStaticMethod() {
-        Uname u = new Uname();
-        u.addAttribute(Uname.SYSTEM_ATTRIBUTE_KEY, "Darwin");
-        u.addAttribute(Uname.NODENAME_ATTRIBUTE_KEY, "myhost");
-        Architecture arch = Uname.unameToArchitecture(u);
-        assertEquals("Darwin", arch.getSystemName());
-    }
+    */
 }

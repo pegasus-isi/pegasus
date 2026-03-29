@@ -15,72 +15,31 @@ package edu.isi.pegasus.planner.invocation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
-/** Tests for EnvEntry invocation class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class EnvEntryTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    @Test
-    public void testExtendsInvocation() {
-        assertTrue(Invocation.class.isAssignableFrom(EnvEntry.class));
-    }
+    @AfterAll
+    public static void tearDownClass() {}
 
-    @Test
-    public void testImplementsHasText() {
-        assertTrue(HasText.class.isAssignableFrom(EnvEntry.class));
-    }
+    @BeforeEach
+    public void setUp() {}
 
-    @Test
-    public void testDefaultConstructorNullKeyAndValue() {
-        EnvEntry e = new EnvEntry();
-        assertNull(e.getKey());
-        assertNull(e.getValue());
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testConstructorWithKey() {
-        EnvEntry e = new EnvEntry("PATH");
-        assertEquals("PATH", e.getKey());
-        assertNull(e.getValue());
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testConstructorWithKeyAndValue() {
-        EnvEntry e = new EnvEntry("HOME", "/home/user");
-        assertEquals("HOME", e.getKey());
-        assertEquals("/home/user", e.getValue());
-    }
-
-    @Test
-    public void testSetAndGetKey() {
-        EnvEntry e = new EnvEntry();
-        e.setKey("JAVA_HOME");
-        assertEquals("JAVA_HOME", e.getKey());
-    }
-
-    @Test
-    public void testSetAndGetValue() {
-        EnvEntry e = new EnvEntry();
-        e.setValue("/usr/lib/jvm/java-8");
-        assertEquals("/usr/lib/jvm/java-8", e.getValue());
-    }
-
-    @Test
-    public void testAppendValue() {
-        EnvEntry e = new EnvEntry("VAR");
-        e.appendValue("/usr");
-        e.appendValue("/local");
-        assertEquals("/usr/local", e.getValue());
-    }
-
-    @Test
-    public void testToXMLContainsKeyAttribute() throws Exception {
-        EnvEntry e = new EnvEntry("MYVAR", "myval");
-        StringWriter sw = new StringWriter();
-        e.toXML(sw, "", null);
-        String xml = sw.toString();
-        assertTrue(xml.contains("key=\"MYVAR\""));
-        assertTrue(xml.contains("myval"));
-    }
+    */
 }

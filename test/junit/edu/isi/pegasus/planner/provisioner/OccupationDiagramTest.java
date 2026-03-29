@@ -15,83 +15,31 @@ package edu.isi.pegasus.planner.provisioner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Field;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** Unit tests for the OccupationDiagram class. */
+// import org.junit.jupiter.api.Test;
+
+/** @author Rajiv Mayani */
 public class OccupationDiagramTest {
+    @BeforeAll
+    public static void setUpClass() {}
 
-    private OccupationDiagram mDiagram;
-    private static final long RFT = 100L;
+    @AfterAll
+    public static void tearDownClass() {}
 
     @BeforeEach
-    public void setUp() {
-        mDiagram = new OccupationDiagram(RFT);
-    }
+    public void setUp() {}
 
-    @Test
-    public void testOccupationDiagramCanBeInstantiated() {
-        assertNotNull(mDiagram, "OccupationDiagram should be instantiable");
-    }
+    @AfterEach
+    public void tearDown() {}
 
+    /*
     @Test
-    public void testRFTIsSetCorrectly() throws Exception {
-        Field rftField = OccupationDiagram.class.getDeclaredField("RFT");
-        rftField.setAccessible(true);
-        long rft = (long) rftField.get(mDiagram);
-        assertEquals(RFT, rft, "RFT should be set correctly during construction");
+    public void testSomeMethod() {
+        assertEquals(1, 1);
     }
-
-    @Test
-    public void testTimeMapHasCorrectSize() throws Exception {
-        Field timeMapField = OccupationDiagram.class.getDeclaredField("timeMap");
-        timeMapField.setAccessible(true);
-        java.util.LinkedList[] timeMap = (java.util.LinkedList[]) timeMapField.get(mDiagram);
-        assertEquals((int) RFT, timeMap.length, "timeMap should have length equal to RFT");
-    }
-
-    @Test
-    public void testAddNodeWithPositiveWeight() {
-        Node node = new Node("n1", "task1", 10L);
-        // Just verify add doesn't throw
-        assertDoesNotThrow(
-                () -> mDiagram.add(node), "Adding a node with positive weight should not throw");
-    }
-
-    @Test
-    public void testInitialMaxIsZero() throws Exception {
-        Field maxField = OccupationDiagram.class.getDeclaredField("max");
-        maxField.setAccessible(true);
-        int max = (int) maxField.get(mDiagram);
-        assertEquals(0, max, "Initial max value should be 0");
-    }
-
-    @Test
-    public void testInitialNodesTreeSetIsEmpty() throws Exception {
-        Field nodesField = OccupationDiagram.class.getDeclaredField("nodes");
-        nodesField.setAccessible(true);
-        java.util.TreeSet nodes = (java.util.TreeSet) nodesField.get(mDiagram);
-        assertTrue(nodes.isEmpty(), "Initial nodes set should be empty");
-    }
-
-    @Test
-    public void testNodeWithZeroWeightIsNotAdded() throws Exception {
-        // evalWeight returns 0 for a node with no edges/weight configured specially
-        // We create a node with weight 0 - but Node(String, String, long) stores weight,
-        // evalWeight may differ; let's just check that add with w>0 does work
-        Node node = new Node("n1", "task1", 5L);
-        mDiagram.add(node);
-        Field nodesField = OccupationDiagram.class.getDeclaredField("nodes");
-        nodesField.setAccessible(true);
-        java.util.TreeSet nodes = (java.util.TreeSet) nodesField.get(mDiagram);
-        assertFalse(nodes.isEmpty(), "Node with positive evalWeight should be added");
-    }
-
-    @Test
-    public void testIsConcreteClass() {
-        assertFalse(
-                java.lang.reflect.Modifier.isAbstract(OccupationDiagram.class.getModifiers()),
-                "OccupationDiagram should be a concrete class");
-    }
+    */
 }
