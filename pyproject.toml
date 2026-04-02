@@ -1,0 +1,112 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pegasus-wms"
+version = "5.2.0"
+description = "Pegasus Workflow Management System"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    { name = "Pegasus Team", email = "pegasus@isi.edu" },
+]
+keywords = ["scientific workflows"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Java",
+    "Programming Language :: C",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    # Core
+    "PyYAML",
+    "click>=8.0",
+    # Worker / transfer
+    "six>=1.9.0",
+    "boto3>1.12",
+    "globus-sdk>=3.23.0,<4",
+    # CLI / tools
+    "GitPython",
+    "pamela",
+    "pika",
+    # Web service / dashboard
+    "werkzeug<3.1.0",
+    "Flask>=2.2,<3.0",
+    "Flask-Caching",
+    "requests",
+    # Database
+    "sqlalchemy>=1.4",
+]
+
+[project.urls]
+Documentation = "https://pegasus.isi.edu/documentation/"
+Repository = "https://github.com/pegasus-isi/pegasus"
+Issues = "https://github.com/pegasus-isi/pegasus/issues"
+Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
+
+[project.scripts]
+# Main unified entry point
+pegasus = "Pegasus.cli.main:cli"
+
+# Backward-compatible legacy entry points
+pegasus-status         = "Pegasus.cli.main:pegasus_status"
+pegasus-run            = "Pegasus.cli.main:pegasus_run"
+pegasus-analyzer       = "Pegasus.cli.main:pegasus_analyzer"
+pegasus-statistics     = "Pegasus.cli.main:pegasus_statistics"
+pegasus-remove         = "Pegasus.cli.main:pegasus_remove"
+pegasus-plan           = "Pegasus.cli.main:pegasus_plan"
+pegasus-version        = "Pegasus.cli.main:pegasus_version"
+pegasus-rc-client      = "Pegasus.cli.main:pegasus_rc_client"
+pegasus-tc-converter   = "Pegasus.cli.main:pegasus_tc_converter"
+pegasus-rc-converter   = "Pegasus.cli.main:pegasus_rc_converter"
+pegasus-sc-converter   = "Pegasus.cli.main:pegasus_sc_converter"
+pegasus-aws-batch      = "Pegasus.cli.main:pegasus_aws_batch"
+pegasus-monitord       = "Pegasus.cli.main:pegasus_monitord"
+pegasus-dagman         = "Pegasus.cli.main:pegasus_dagman"
+pegasus-db-admin       = "Pegasus.cli.main:pegasus_db_admin"
+pegasus-exitcode       = "Pegasus.cli.main:pegasus_exitcode"
+pegasus-graphviz       = "Pegasus.cli.main:pegasus_graphviz"
+pegasus-init           = "Pegasus.cli.main:pegasus_init"
+pegasus-metadata       = "Pegasus.cli.main:pegasus_metadata"
+pegasus-preflight-check = "Pegasus.cli.main:pegasus_preflight_check"
+pegasus-service        = "Pegasus.cli.main:pegasus_service"
+pegasus-submitdir      = "Pegasus.cli.main:pegasus_submitdir"
+pegasus-cwl-converter  = "Pegasus.cli.main:pegasus_cwl_converter"
+pegasus-em             = "Pegasus.cli.main:pegasus_em"
+pegasus-config         = "Pegasus.cli.main:pegasus_config"
+pegasus-transfer       = "Pegasus.cli.main:pegasus_transfer"
+pegasus-s3             = "Pegasus.cli.main:pegasus_s3"
+pegasus-integrity      = "Pegasus.cli.main:pegasus_integrity"
+pegasus-checkpoint     = "Pegasus.cli.main:pegasus_checkpoint"
+pegasus-globus-online  = "Pegasus.cli.main:pegasus_globus_online"
+pegasus-globus-online-init = "Pegasus.cli.main:pegasus_globus_online_init"
+pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
+pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
+
+[project.optional-dependencies]
+postgresql = ["psycopg2"]
+mysql = ["pymysql"]
+cwl = ["cwl-utils>=0.11", "jsonschema>=3.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"Pegasus.data" = ["**/*"]
+"Pegasus.service" = ["**/*.html", "**/*.css", "**/*.js", "**/*.png", "**/*.gif", "**/*.ico"]

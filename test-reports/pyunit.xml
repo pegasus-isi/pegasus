@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="7" failures="0" skipped="0" tests="7" time="6.474" timestamp="2026-03-26T21:22:43.121911+00:00" hostname="cpu001"><testcase classname="" name="test.cli.test_pegasus_cwl_converter" time="0.000"><error message="collection failure">ImportError while importing test module '/work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/cli/test_pegasus_cwl_converter.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test/cli/test_pegasus_cwl_converter.py:9: in &lt;module&gt;
+    from cwl_utils import parser_v1_1 as cwl
+E   ImportError: cannot import name 'parser_v1_1' from 'cwl_utils' (/work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/.tox/py312/lib/python3.12/site-packages/cwl_utils/__init__.py)</error></testcase><testcase classname="" name="test.test_properties" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_properties' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_properties.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_properties.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase><testcase classname="" name="test.test_replica_catalog" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_replica_catalog' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_replica_catalog.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_replica_catalog.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase><testcase classname="" name="test.test_site_catalog" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_site_catalog' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_site_catalog.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_site_catalog.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase><testcase classname="" name="test.test_transformation_catalog" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_transformation_catalog' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_transformation_catalog.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_transformation_catalog.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase><testcase classname="" name="test.test_utils" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_utils' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_utils.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_utils.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase><testcase classname="" name="test.test_workflow" time="0.000"><error message="collection failure">import file mismatch:
+imported module 'test_workflow' has this __file__ attribute:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/api/test_workflow.py
+which is not the same as the test file we want to collect:
+  /work/pi_baldikacti_umass_edu/berent/pegasus-dev/pegasus/test/test_workflow.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules</error></testcase></testsuite></testsuites>

@@ -1,0 +1,821 @@
+swagger: "2.0"
+info:
+  title: Ensemble Manager API
+  description: |
+    # Pegasus Ensemble Manager API
+  termsOfService: https://pegasus.isi.edu
+  contact:
+    name: API Support
+    url: https://pegasus.isi.edu
+    email: pegasus-users@isi.edu
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0
+  version: "1"
+host: localhost:5000
+basePath: /api/v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  basic:
+    type: basic
+    description: Basic authentication
+
+parameters:
+  query:
+    name: query
+    in: query
+    required: false
+    type: string
+    description: "A query to filter out records."
+  order:
+    name: order
+    in: query
+    required: false
+    type: string
+    description: "Result sorting criteria."
+  start-index:
+    name: start-index
+    in: query
+    default: 1
+    minimum: 1
+    type: integer
+    description: Return results starting from record <start-index> (0 indexed)
+  max-results:
+    name: max-results
+    in: query
+    minimum: 0
+    description: Max no. of records to return
+    type: integer
+  pretty-print:
+    name: pretty-print
+    in: query
+    default: False
+    type: boolean
+    description: Enable or disable pretty printing of the output
+
+  em-name:
+    name: em-name
+    in: path
+    required: true
+    type: string
+    description: Ensemble Name
+  wf-name:
+    name: wf-name
+    in: path
+    required: true
+    type: string
+    description: Workflow Name
+  t-name:
+    name: t-name
+    in: path
+    required: true
+    type: string
+    description: Trigger Name
+
+responses:
+  # general error responses
+  authentication-error:
+    description: Not authenticated
+    schema:
+      $ref: "#/definitions/Error"
+
+  bad-request-error:
+    description: Bad request
+    schema:
+      $ref: "#/definitions/Error"
+
+  unprocessable-entity:
+    description: Unprocessable entity
+    schema:
+      $ref: "#/definitions/Error"
+
+  not-found-error:
+    description: Resource not found
+    schema:
+      $ref: "#/definitions/Error"
+
+  default-error:
+    description: Internal server error
+    schema:
+      $ref: "#/definitions/Error"
+
+  # ensemble related responses
+  #example-items:
+  #  description: Success
+  #  schema:
+  #    type: object
+  #    properties:
+  #      records:
+  #        type: array
+  #        items:
+  #        type: string
+  #      total: <- absolute num records found for that type
+  #        type: integer
+  #      filtered: <- number of records after applying any filtering criteria
+  #        type: integer
+  #
+  # /ensembles  <- returns all; total and filtered will be the same
+  # /ensembles?query=name like 'abc%'  <- return whatever matches like expr, total is total num, filtered will be num that matches
+
+  ensemble:
+    description: Success
+    schema:
+      $ref: "#/definitions/Ensemble"
+
+  ensemble-array:
+    description: Success
+    schema:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/definitions/Ensemble"
+        total:
+          type: integer
+        filtered:
+          type: integer
+      required:
+        - records
+        - total
+        - filtered
+
+  workflow:
+    description: Success
+    schema:
+      $ref: "#/definitions/Workflow"
+
+  workflow-array:
+    description: Success
+    schema:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/definitions/Workflow"
+        total:
+          type: integer
+        filtered:
+          type: integer
+      required:
+        - records
+        - total
+        - filtered
+
+  trigger:
+    description: Success
+    schema:
+      $ref: "#/definitions/Trigger"
+
+  trigger-array:
+    description: success
+    schema:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/definitions/Trigger"
+        total:
+          type: integer
+        filtered:
+          type: integer
+
+paths:
+  # ensemble routes
+  /ensembles:
+    parameters:
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: list-ensembles
+      summary: List all ensembles
+      description: Returns a list of all ensembles.
+      tags:
+        - Ensemble
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/ensemble-array"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        default:
+          $ref: "#/responses/default-error"
+    post:
+      operationId: create-ensemble
+      summary: Create an ensemble
+      description: Creates a new ensemble with the given name.
+      tags:
+        - Ensemble
+      parameters:
+        - name: em-name
+          in: body
+          description: The name of the ensemble to create
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                minLength: 1
+      responses:
+        "201":
+          $ref: "#/responses/ensemble"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: get-ensemble
+      summary: Get an ensemble by name
+      description: Returns a specific ensemble.
+      tags:
+        - Ensemble
+      responses:
+        "200":
+          $ref: "#/responses/ensemble"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+    patch:
+      operationId: modify-ensemble
+      summary: Modify an existing ensemble
+      description: |
+        Configure max_planning and/or max_running for the given ensemble. max_planning
+        limits the number of workflows in the ensemble that can be planned concurrently.
+        max_running limits the number of workflows in the ensemble that can be running
+        concurrently. These parameters are set to 1 by default.
+      tags:
+        - Ensemble
+      parameters:
+        - name: em-config
+          in: body
+          schema:
+            type: object
+            properties:
+              max_planning:
+                type: integer
+                minimum: 1
+              max_running:
+                type: integer
+                minimum: 1
+            additionalProperties: false
+      responses:
+        "200":
+          $ref: "#/responses/ensemble"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/workflows:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: get-ensemble-workflows
+      summary: List workflows belonging to the given ensemble
+      description: |
+        Returns a list of workflows belonging to the given ensemble.
+      tags:
+        - Workflow
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/workflow-array"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+    post:
+      operationId: create-ensemble-workflow
+      summary: Create a workflow under the given ensemble
+      description: |
+        Create/submit a workflow as part of the given ensemble.
+      tags:
+        - Workflow
+      parameters:
+        - name: em-workflow
+          in: body
+          description: Parameters required to submit a workflow to the given ensemble
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              priority:
+                type: integer
+                default: 0
+              basedir:
+                type: string
+                description: Current working directory
+              plan_command:
+                type: string
+                description: Command used to invoke workflow plan script
+                example: "/home/tanaka/workflow.py arg1 arg2"
+            required:
+              - name
+              - priority
+              - basedir
+              - plan_command
+            additionalProperties: false
+      responses:
+        "200":
+          $ref: "#/responses/workflow"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/workflows/{wf-name}:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: get-ensemble-workflow
+      summary: Get a specific workflow from the given ensemble
+      description: Returns the requested workflow belonging to the given ensemble.
+      tags:
+        - Workflow
+      responses:
+        "200":
+          $ref: "#/responses/workflow"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+    patch:
+      operationId: modify-ensemble-workflow
+      summary: Update workflow priority
+      description: Update workflow priority.
+      tags:
+        - Workflow
+      parameters:
+        - name: wf-config
+          in: body
+          description: Workflow parameters to be updated
+          schema:
+            type: object
+            properties:
+              priority:
+                type: integer
+                description: higher value means higher priority; negative values allowed
+            additionalProperties: false
+      responses:
+        "200":
+          $ref: "#/responses/workflow"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensemble/{em-name}/workflows/{wf-name}/abort:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+    patch:
+      operationId: abort-ensemble-workflow
+      summary: Mark the given workflow to be aborted
+      description: |
+        Sets the state of the given workflow to "ABORTED". The ensemble manager
+        will then proceed to abort the workflow. This operation is asynchronous
+        and does not happen immediately.
+      tags:
+        - Workflow
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensemble/{em-name}/workflows/{wf-name}/replan:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+    patch:
+      operationId: replan-ensemble-workflow
+      summary: Mark the given workflow to be replanned
+      description: |
+        Sets the state of the given workflow to "READY". The ensemble manager will
+        then proceed to replan the workflow. This operation is asynchronous
+        and does not happen immediately.
+      tags:
+        - Workflow
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensemble/{em-name}/workflows/{wf-name}/rerun:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+    patch:
+      operationId: rerun-ensemble-workflow
+      summary: Mark the given workflow to be rerun
+      description: |
+        Sets the state of the given workflow to "QUEUED". The ensemble manager will
+        then proceed to rerun the workflow. This operation is asynchronous
+        and does not happen immediately.
+      tags:
+        - Workflow
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/workflows/{wf-name}/analyze:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+    get:
+      operationId: analyze-ensemble-workflow
+      summary: See pegasus-analyzer output for given workflow
+      description: |
+        Returns pegasus-analyzer output as a string for the given workflow.
+      tags:
+        - Workflow
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  # trigger routes
+  /ensembles/{em-name}/triggers:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: get-ensemble-triggers
+      summary: Get triggers belonging to the given ensemble
+      description: Returns a list of triggers belonging to the given ensemble.
+      tags:
+        - Trigger
+      parameters:
+        - $ref: "#/parameters/query"
+        - $ref: "#/parameters/order"
+        - $ref: "#/parameters/start-index"
+        - $ref: "#/parameters/max-results"
+      responses:
+        "200":
+          $ref: "#/responses/trigger-array"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/triggers/{t-name}:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/wf-name"
+      - $ref: "#/parameters/t-name"
+      - $ref: "#/parameters/pretty-print"
+    get:
+      operationId: get-ensemble-trigger
+      summary: Get a specific trigger belonging to a given ensemble
+      description: Returns a specific trigger belonging to the given ensemble
+      tags:
+        - Trigger
+      responses:
+        "200":
+          $ref: "#/responses/trigger"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+    delete:
+      operationId: delete-ensemble-trigger
+      summary: Delete a specific trigger belonging to a given ensemble
+      description: |
+        Deletes a specific trigger belonging to a given ensemble.
+      tags:
+        - Trigger
+      responses:
+        "204":
+          description: No Content
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/triggers/cron:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/pretty-print"
+    post:
+      operationId: create-ensemble-cron-trigger
+      summary: Create a cron based trigger for the given ensemble
+      description: Create a cron based trigger for the given ensemble
+      tags:
+        - Trigger
+      parameters:
+        - name: cron-trigger
+          in: body
+          description: Cron trigger parameters
+          schema:
+            $ref: "#/definitions/CronTrigger"
+      responses:
+        "200":
+          $ref: "#/responses/trigger"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+  /ensembles/{em-name}/triggers/file-pattern:
+    parameters:
+      - $ref: "#/parameters/em-name"
+      - $ref: "#/parameters/pretty-print"
+    post:
+      operationId: create-ensemble-file-pattern-trigger
+      summary: Create a file pattern based cron trigger for the given ensemble
+      description: |
+        Create a file pattern based cron trigger for the given ensemble.
+      tags:
+        - Trigger
+      parameters:
+        - name: file-pattern-trigger
+          in: body
+          description: File pattern trigger parameters
+          schema:
+            $ref: "#/definitions/FilePatternTrigger"
+      responses:
+        "200":
+          $ref: "#/responses/trigger"
+        "400":
+          $ref: "#/responses/bad-request-error"
+        "401":
+          $ref: "#/responses/authentication-error"
+        "404":
+          $ref: "#/responses/not-found-error"
+        default:
+          $ref: "#/responses/default-error"
+
+definitions:
+  Error:
+    type: object
+    properties:
+      id:
+        type: string
+        pattern: "^[0-9A-Fa-f]+$"
+      code:
+        type: string
+        pattern: "^[A-Z0-9_]+$"
+      message:
+        type: string
+    required:
+      - id
+      - code
+      - message
+
+  Ensemble:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      created:
+        type: string
+        format: date-time
+      updated:
+        type: string
+        format: date-time
+      state:
+        type: string
+        enum:
+          - "ACTIVE"
+          - "HELD"
+          - "PAUSED"
+      max_running:
+        type: integer
+        minimum: 1
+      max_planning:
+        type: integer
+        minimum: 1
+    required:
+      - id
+      - name
+      - created
+      - updated
+      - state
+      - max_running
+      - max_planning
+
+  Workflow:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      created:
+        type: string
+        format: date-time
+      updated:
+        type: string
+        format: date-time
+      state:
+        type: string
+        enum:
+          - "READY"
+          - "PLANNING"
+          - "PLAN_FAILED"
+          - "QUEUED"
+          - "RUN_FAILED"
+          - "RUNNING"
+          - "FAILED"
+          - "SUCCESSFUL"
+          - "ABORTED"
+      priority:
+        type: integer
+      wf_uuid:
+        type: string
+    required:
+      - id
+      - name
+      - created
+      - updated
+      - state
+      - priority
+      - wf_uuid
+
+  Trigger:
+    type: object
+    discriminator: trigger_type
+    properties:
+      id:
+        type: integer
+      ensemble_id:
+        type: integer
+      name:
+        type: string
+      trigger_type:
+        type: string
+      state:
+        type: string
+        enum:
+          - READY
+          - RUNNING
+          - FAILED
+          - STOPPED
+      workflow:
+        type: object
+        properties:
+          script:
+            type: string
+            description: |
+              An absolute path to the workflow planning script. This script
+              should invoke pegasus-plan directly or through the Python API.
+              The "submit" flag in pegasus-plan cannot be used here.
+            example: "/home/tanaka/workflow.py"
+          args:
+            type: string
+    required:
+      - trigger_type
+      - name
+      - state
+      - workflow
+
+  CronTrigger:
+    type: object
+    allOf:
+      - $ref: "#/definitions/Trigger"
+      - type: object
+        properties:
+          args:
+            type: object
+            properties:
+              interval:
+                type: integer
+                minimum: 1
+                description: |
+                  Duration of each interval, in seconds, that this trigger will
+                  submit a new workflow to the ensemble manager.
+              timeout:
+                type: integer
+                minimum: 0
+                description: Timeout duration, specified in seconds.
+
+  FilePatternTrigger:
+    type: object
+    allOf:
+      - $ref: "#/definitions/Trigger"
+      - type: object
+        properties:
+          args:
+            type: object
+            properties:
+              interval:
+                type: integer
+                minimum: 1
+                description: |
+                  Duration of each interval, in seconds, that this trigger will
+                  submit a new workflow to the ensemble manager.
+              timeout:
+                type: integer
+                minimum: 0
+                description: Timeout duration, specified in seconds.
+              file_patterns:
+                type: array
+                items:
+                  type: string
+                  description: |
+                    The file pattern must be an absolute path and should be acceptable
+                    by Python3.5+ glob.glob.
+                  example:
+                    - "/home/tanaka/inputs/*.txt"
+                    - "/images/?.gif"
+                    - "/images/[0-9].*"

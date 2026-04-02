@@ -1,0 +1,12 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "pegasus::worker",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "pegasus", "url": "http://download.pegasus.isi.edu/pegasus/5.0.5/pegasus-worker-5.0.5-x86_64_rhel_7.tar.gz" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:////home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/pegasus-worker-5.0.5-x86_64_rhel_7.tar.gz" }
+   ] }
+]

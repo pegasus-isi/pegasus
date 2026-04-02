@@ -1,0 +1,32 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-04-23T01:00:54Z
+pegasus: 5.0.4
+sites:
+- name: local
+  arch: x86_64
+  os.type: linux
+  os.release: rhel
+  os.version: '7'
+  directories:
+  - type: sharedScratch
+    path: /home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch
+    sharedFileSystem: false
+    fileServers:
+    - url: file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch
+      operation: all
+  - type: localStorage
+    path: /home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site
+    sharedFileSystem: false
+    fileServers:
+    - url: file:///home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site
+      operation: all
+- name: condorpool
+  directories: []
+  profiles:
+    condor:
+      universe: vanilla
+    pegasus:
+      style: condor
+      data.configuration: condorio

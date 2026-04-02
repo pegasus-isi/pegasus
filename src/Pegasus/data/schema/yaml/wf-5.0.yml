@@ -1,0 +1,199 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+$defs:
+  # --- abstractJob 'use' types ------------------------------------------------
+  linkType:
+    enum:
+      - none
+      - input
+      - output
+      - inout
+      - checkpoint
+
+  # --- abstractJob's 'use' ----------------------------------------------------
+  use:
+    type: object
+    properties:
+      lfn:
+        type: string
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+      type:
+        $ref: "#/$defs/linkType"
+      stageOut:
+        type: boolean
+      registerReplica:
+        type: boolean
+      optional:
+        type: boolean
+      size:
+        type: string
+      namespace:
+        type: string
+      version:
+        $ref: "common.yml#/$defs/versionString"
+      executable:
+        type: boolean
+      bypass:
+        type: boolean
+      forPlanning:
+        type: boolean
+    additionalProperties: false
+    required:
+      - lfn
+      - type
+
+  # --- workflow job types -----------------------------------------------------
+  abstractJob:
+    type: object
+    properties:
+      id:
+        $ref: "common.yml#/$defs/nodeIdString"
+      nodeLabel:
+        type: string
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+      arguments:
+        type: array
+        items:
+          anyOf:
+            - type: string
+            - type: number
+        minItems: 0
+      stdin:
+        type: string
+      stdout:
+        type: string
+      stderr:
+        type: string
+      uses:
+        type: array
+        items:
+          $ref: "#/$defs/use"
+        minItems: 0
+
+      profiles:
+        $ref: "common.yml#/$defs/profiles"
+      hooks:
+        $ref: "common.yml#/$defs/hooks"
+    required:
+      - id
+      - arguments
+      - uses
+
+  job:
+    allOf:
+      - $ref: "#/$defs/abstractJob"
+      - properties:
+          type:
+            const: job
+          name:
+            type: string
+          namespace:
+            type: string
+          version:
+            $ref: "common.yml#/$defs/versionString"
+        required:
+          - type
+          - name
+
+  dag:
+    allOf:
+      - $ref: "#/$defs/abstractJob"
+      - properties:
+          type:
+            const: condorWorkflow
+          file:
+            type: string
+        required:
+          - type
+          - file
+
+  dax:
+    allOf:
+      - $ref: "#/$defs/abstractJob"
+      - properties:
+          type:
+            const: pegasusWorkflow
+          file:
+            type: string
+        required:
+          - type
+          - file
+
+  # --- parent child dependencies ----------------------------------------------
+  parent:
+    type: object
+    properties:
+      id:
+        ref: "common.yml#/$defs/nodeIdString"
+      children:
+        type: array
+        items:
+          $ref: "common.yml#/$defs/nodeIdString"
+        minItems: 1
+    required:
+      - id
+
+# --- dax schema ---------------------------------------------------------------
+type: object
+properties:
+  pegasus:
+    $ref: "common.yml#/$defs/versionString"
+  name:
+    $ref: "common.yml#/$defs/filenameSafeString"
+  version:
+    $ref: "common.yml#/$defs/versionString"
+  siteCatalog:
+    oneOf:
+      - $ref: sc-5.0.yml
+      - properties:
+          $ref:
+            type: string
+            format: iri
+        required:
+          - $ref
+  replicaCatalog:
+    oneOf:
+      - $ref: "rc-5.0.yml#/$defs/inlineReplicaCatalog"
+  # for future work if rc becomes reuseable
+  #      - properties:
+  #           $ref:
+  #             type: string
+  #             format: iri
+  #        required: [$ref]
+  transformationCatalog:
+    oneOf:
+      - $ref: "tc-5.0.yml#/$defs/inlineTransformationCatalog"
+  # for future work if tc becomes reuseable
+  #      - properties:
+  #          $ref:
+  #            type: string
+  #            format: iri
+  #        required: [$ref]
+  jobs:
+    type: array
+    items:
+      anyOf:
+        - $ref: "#/$defs/job"
+        - $ref: "#/$defs/dag"
+        - $ref: "#/$defs/dax"
+    minItems: 1
+  jobDependencies:
+    type: array
+    items:
+      $ref: "#/$defs/parent"
+    minItems: 0
+  profiles:
+    $ref: "common.yml#/$defs/profiles"
+  hooks:
+    $ref: "common.yml#/$defs/hooks"
+  metadata:
+    $ref: "common.yml#/$defs/metadata"
+required:
+  - pegasus
+  - name
+  - jobs
+additionalProperties: false
+patternProperties:
+  ^x-:
+    $ref: "common.yml#/$defs/vendorExtension"

@@ -1,0 +1,8 @@
+TASK OK /bin/date
+TASK FAIL /bin/false
+TASK NO /bin/date
+# Should not exist
+TASK FAIL2 /tmp/foobarbaz
+
+EDGE OK FAIL
+EDGE FAIL NO

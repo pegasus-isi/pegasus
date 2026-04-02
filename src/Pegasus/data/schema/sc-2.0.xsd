@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/sitecatalog" xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0">
+   <xs:simpleType name="ProfileNamespace">
+      <xs:annotation>
+         <xs:documentation>defines the legal namespaces of execution profiles.</xs:documentation>
+      </xs:annotation>
+      <xs:restriction base="xs:NMTOKEN">
+         <xs:enumeration value="pegasus"/>
+         <xs:enumeration value="condor"/>
+         <xs:enumeration value="dagman"/>
+         <xs:enumeration value="env"/>
+         <xs:enumeration value="hints"/>
+         <xs:enumeration value="globus"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:attributeGroup name="GlobusVersionInfo">
+      <xs:annotation>
+         <xs:documentation>A set of attributes to define a Globus version.</xs:documentation>
+      </xs:annotation>
+      <xs:attribute name="major" type="xs:positiveInteger" use="required"/>
+      <xs:attribute name="minor" type="xs:nonNegativeInteger" use="required"/>
+      <xs:attribute name="patch" type="xs:nonNegativeInteger" use="optional"/>
+   </xs:attributeGroup>
+   <xs:element name="sitecatalog">
+      <xs:annotation>
+         <xs:documentation>root element aggregating all sites information there is.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:sequence maxOccurs="unbounded">
+            <xs:element name="site">
+               <xs:annotation>
+                  <xs:documentation>Describes a single site</xs:documentation>
+               </xs:annotation>
+               <xs:complexType>
+                  <xs:sequence>
+                     <xs:element name="profile" minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                           <xs:documentation>Administrative profile defaults associated with a site.</xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                           <xs:simpleContent>
+                              <xs:extension base="xs:string">
+                                 <xs:attribute name="namespace" type="ProfileNamespace" use="required"/>
+                                 <xs:attribute name="key" type="xs:string" use="required"/>
+                              </xs:extension>
+                           </xs:simpleContent>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="lrc" maxOccurs="unbounded">
+                        <xs:annotation>
+                           <xs:documentation>Each site may report to multiple LRCs.</xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                           <xs:attribute name="url" type="xs:anyURI" use="required"/>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="gridftp" maxOccurs="unbounded">
+                        <xs:annotation>
+                           <xs:documentation>Each site may have multiple gridftp servers.</xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                           <xs:sequence>
+                              <xs:element name="bandwidth" minOccurs="0" maxOccurs="unbounded">
+                                 <xs:annotation>
+                                    <xs:documentation>Stores the bandwidth informaion related to each gridftp server.</xs:documentation>
+                                 </xs:annotation>
+                                 <xs:complexType>
+                                    <xs:attribute name="dest-subnet" type="xs:string" use="required"/>
+                                    <xs:attribute name="avg-bandwidth" type="xs:float" use="required"/>
+                                    <xs:attribute name="max-bandwidth" type="xs:float" use="required"/>
+                                    <xs:attribute name="min-bandwidth" type="xs:float" use="required"/>
+                                    <xs:attribute name="avg-bandwidth-range1" type="xs:float" use="optional"/>
+                                    <xs:attribute name="avg-bandwidth-range2" type="xs:float" use="optional"/>
+                                    <xs:attribute name="avg-bandwidth-range3" type="xs:float" use="optional"/>
+                                    <xs:attribute name="avg-bandwidth-range4" type="xs:float" use="optional"/>
+                                 </xs:complexType>
+                              </xs:element>
+                           </xs:sequence>
+                           <xs:attribute name="url" type="xs:anyURI" use="required">
+                              <xs:annotation>
+                                 <xs:documentation>The URL (actually, it may be more a URI, but hey, so what) is the access URL to the gridftp server. Each pool may have multiple gridftp servers, or run multiple versions of Globus on different ports.</xs:documentation>
+                              </xs:annotation>
+                           </xs:attribute>
+                           <xs:attribute name="storage" type="xs:string" use="optional" default="/">
+                              <xs:annotation>
+                                 <xs:documentation>This element is the storage mount point prefix. Of course, this may get turned over into other things, augmented by user and system requirements etc. I believe that default works quite well for default Globus setups. </xs:documentation>
+                              </xs:annotation>
+                           </xs:attribute>
+                           <xs:attributeGroup ref="GlobusVersionInfo"/>
+                           <xs:attribute name="total-size" type="xs:decimal" use="optional"/>
+                           <xs:attribute name="free-size" type="xs:decimal" use="optional"/>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="jobmanager" maxOccurs="unbounded">
+                        <xs:annotation>
+                           <xs:documentation>Each site supports various (usually two) jobmanagers.</xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                           <xs:attribute name="universe" type="xs:token" use="required">
+                              <xs:annotation>
+                                 <xs:documentation>The universe name is actually the primary key for the jobmanager identification.</xs:documentation>
+                              </xs:annotation>
+                           </xs:attribute>
+                           <xs:attribute name="url" type="xs:string" use="required">
+                              <xs:annotation>
+                                 <xs:documentation>The contact string is the secondary key for any job manager.</xs:documentation>
+                              </xs:annotation>
+                           </xs:attribute>
+                           <xs:attributeGroup ref="GlobusVersionInfo">
+                              <xs:annotation>
+                                 <xs:documentation>Any pool may have multiple versions of Globus installed, and these versions may have multiple jobmanagers listening on different ports.</xs:documentation>
+                              </xs:annotation>
+                           </xs:attributeGroup>
+                           <xs:attribute name="free-mem" type="xs:string" use="optional"/>
+                           <xs:attribute name="total-mem" type="xs:string" use="optional"/>
+                           <xs:attribute name="max-count" type="xs:string" use="optional"/>
+                           <xs:attribute name="max-cpu-time" type="xs:string" use="optional"/>
+                           <xs:attribute name="running-jobs" type="xs:nonNegativeInteger" use="optional"/>
+                           <xs:attribute name="jobs-in-queue" type="xs:nonNegativeInteger" use="optional"/>
+                           <xs:attribute name="idle-nodes" type="xs:nonNegativeInteger" use="optional"/>
+                           <xs:attribute name="total-nodes" type="xs:nonNegativeInteger" use="optional"/>
+                           <xs:attribute name="os" type="xs:string" use="optional"/>
+                           <xs:attribute name="arch" type="xs:string" use="optional"/>
+                           <xs:attribute name="type" type="xs:string" use="optional"/>
+                           <xs:attribute name="subnet" type="xs:string" use="optional"/>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="workdirectory" default="/tmp">
+                        <xs:annotation>
+                           <xs:documentation>Each site may have one and only one work directory mount point.</xs:documentation>
+                        </xs:annotation>
+                        <xs:complexType>
+                           <xs:simpleContent>
+                              <xs:extension base="xs:string">
+                                 <xs:attribute name="total-size" type="xs:decimal" use="optional"/>
+                                 <xs:attribute name="free-size" type="xs:decimal" use="optional"/>
+                              </xs:extension>
+                           </xs:simpleContent>
+                        </xs:complexType>
+                     </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="handle" type="xs:ID" use="required"/>
+                  <xs:attribute name="gridlaunch" type="xs:string" use="optional">
+                     <xs:annotation>
+                        <xs:documentation>This is the path to grid launch. As attributes are optional, each pool can have at most one grid launch path. More does not make sense, unless there are different launchers for different remote schedulers, and a pool supports more than two (fork + one other) remote schedulers. </xs:documentation>
+                     </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="sysinfo" type="xs:string" use="optional" default="INTEL32::LINUX"/>
+               </xs:complexType>
+            </xs:element>
+         </xs:sequence>
+         <xs:attribute name="version" type="xs:decimal" use="optional" default="1.0"/>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

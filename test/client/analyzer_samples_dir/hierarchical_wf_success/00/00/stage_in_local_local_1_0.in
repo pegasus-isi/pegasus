@@ -1,0 +1,37 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "sites.yml",
+   "id": 1,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/mzalam/hierar/hierarichal-sample-wf/sites.yml", "priority": 50 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./sites.yml" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "inner_diamond_workflow_tc.yml",
+   "id": 2,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow_tc.yml", "priority": 50 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow_tc.yml" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "inner_diamond_workflow.pegasus.properties",
+   "id": 3,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.pegasus.properties", "priority": 50 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow.pegasus.properties" }
+   ] }
+]

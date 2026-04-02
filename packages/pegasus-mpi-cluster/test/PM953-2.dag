@@ -1,1 +1,0 @@
-TASK foo -c 3 numactl --show

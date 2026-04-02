@@ -1,0 +1,16 @@
+{
+  "root_workflow_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+  "workflow_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+  "wf_metadata": {
+    "wf.api": "python"
+  },
+  "graph": {
+    "jobs": {
+      "cleanup_process_0_local": {},
+      "register_local_0_0": {},
+      "stage_out_local_local_0_0": {},
+      "ls_ID0000001": {},
+      "create_dir_process_0_local": {}
+    }
+  }
+}

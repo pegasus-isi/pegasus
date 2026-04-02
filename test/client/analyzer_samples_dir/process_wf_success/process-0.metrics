@@ -1,0 +1,42 @@
+{
+  "client": "pegasus-plan",
+  "version": "5.0.5",
+  "wf_api": "python",
+  "type": "metrics",
+  "start_time": 1.677911012922E9,
+  "end_time": 1.677911017077E9,
+  "duration": 4.155,
+  "exitcode": 0,
+  "root_wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+  "wf_uuid": "f00c0056-abd4-4e8e-b793-24eb760dda1f",
+  "data_config": "condorio",
+  "planner_args": "--conf pegasus.properties --dir submit --sites condorpool --output-sites local --cleanup leaf --force workflow.yml ",
+  "uses_pmc": false,
+  "wf_metrics": {
+    "compute_tasks": 1,
+    "dax_tasks": 0,
+    "dag_tasks": 0,
+    "total_tasks": 1,
+    "deleted_tasks": 0,
+    "dax_input_files": 0,
+    "dax_inter_files": 0,
+    "dax_output_files": 1,
+    "dax_total_files": 1,
+    "compute_jobs": 1,
+    "clustered_jobs": 0,
+    "si_tx_jobs": 0,
+    "so_tx_jobs": 1,
+    "inter_tx_jobs": 0,
+    "reg_jobs": 1,
+    "cleanup_jobs": 1,
+    "create_dir_jobs": 1,
+    "dax_jobs": 0,
+    "dag_jobs": 0,
+    "chmod_jobs": 0,
+    "total_jobs": 5
+  },
+  "app_metrics": {
+    "name": "process"
+  }
+}
+

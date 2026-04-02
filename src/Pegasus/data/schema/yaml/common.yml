@@ -1,0 +1,130 @@
+# Defined here are schemas reused throughout.
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$defs:
+  # --- string formats ---------------------------------------------------------
+  versionString:
+    type: string
+    pattern: '^[0-9]+(\.[0-9]+(\.[0-9]+)?)?$'
+
+  nodeIdString:
+    type: string
+    pattern: '^[\-0-9a-zA-Z\_]+$'
+
+  filenameSafeString:
+    type: string
+    pattern: '^[\u0161-\u55295\u57344-\u65533\u65535-\u1114111\-0-9a-zA-Z\_]+$'
+    description: Valid filenames (cannot contain /)
+
+  # --- metadata ---------------------------------------------------------------
+  metadata:
+    type: object
+    patternProperties:
+      '[\u0161-\u55295\u57344-\u65533\u65535-\u1114111a-zA-Z0-9\._]+':
+        oneOf:
+          - type: string
+          - type: number
+      ^x-:
+        $ref: "#/$defs/vendorExtension"
+    minProperties: 1
+    additionalProperties: false
+
+  # --- profiles ---------------------------------------------------------------
+  genericProfilePropertyType:
+    type: object
+    patternProperties:
+      '^(?!x-)[+.a-zA-Z0-9_-]+$':
+        oneOf:
+          - type: string
+          - type: number
+      ^x-:
+        $ref: "#/$defs/vendorExtension"
+    additionalProperties: false
+
+  profiles:
+    type: object
+    properties:
+      env:
+        type: object
+        patternProperties:
+          '^(?!x-)[\_\.\-a-zA-Z0-9_]+$':
+            oneOf:
+              - type: string
+              - type: number
+          ^x-:
+            $ref: "#/$defs/vendorExtension"
+        additionalProperties: false
+      condor:
+        $ref: "#/$defs/genericProfilePropertyType"
+      globus:
+        $ref: "#/$defs/genericProfilePropertyType"
+      dagman:
+        $ref: "#/$defs/genericProfilePropertyType"
+      pegasus:
+        $ref: "#/$defs/genericProfilePropertyType"
+      hints:
+        $ref: "#/$defs/genericProfilePropertyType"
+      selector:
+        $ref: "#/$defs/genericProfilePropertyType"
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "#/$defs/vendorExtension"
+
+  # --- hooks (notifications) --------------------------------------------------
+  eventType:
+    enum:
+      - never
+      - start
+      - error
+      - success
+      - end
+      - all
+
+  shellHook:
+    type: object
+    properties:
+      _on:
+        $ref: "#/$defs/eventType"
+      cmd:
+        type: string
+    additionalProperties: false
+    required:
+      - cmd
+      - _on
+
+  # adding a new xxHook should be as follows:
+  # newHook:
+  #   properties:
+  #     _on:
+  #       $ref: '#/$defs/eventType'
+  #     ... <- any properties specific to this hook
+  #   additionalProperties: false
+  #   required:
+  #     - _on
+  #     - any properties specific to this hook
+
+  hooks:
+    type: object
+    properties:
+      shell:
+        type: array
+        items:
+          $ref: "#/$defs/shellHook"
+        minItems: 0
+    # adding more hooks
+    # newHandler:
+    #   type: array
+    #   items:
+    #     $ref: '#/$defs/newHook'
+    #   minItems: 0
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "#/$defs/vendorExtension"
+
+  # --- any vendor specific properties that may need to be added ---------------
+  vendorExtension:
+    description: "Any property starting with x- is valid."
+    additionalProperties: true
+    additionalItems: true

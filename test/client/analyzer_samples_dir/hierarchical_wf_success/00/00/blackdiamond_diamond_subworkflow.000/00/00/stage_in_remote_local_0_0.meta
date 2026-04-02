@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "pegasus.html",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "313",
+      "ctime": "2023-03-04T09:02:01.843368",
+      "checksum.type": "sha256",
+      "checksum.value": "802da25c9659db059de19f14c01528c081576ceeb43bb3510931f0573fc3d18d",
+      "checksum.timing": "0.031"
+    }
+  }
+]

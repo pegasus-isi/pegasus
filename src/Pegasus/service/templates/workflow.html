@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Home Page - Title{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function () {
+        $("#workflow_list").dataTable({
+          pagingType: "full_numbers",
+          processing: true,
+          serverSide: true,
+          ajax: {
+            url: "{{ url_for ('.index') }}",
+            data: function (aoData) {
+              aoData.time_filter = $("#time_filter").val();
+            },
+            dataSrc: function (json) {
+              var data = json.data;
+              var urlTmpl =
+                "{{ url_for('.workflow', root_wf_id='-11-', wf_uuid='-22-') }}";
+
+              for (var i = 0; i < data.length; i++) {
+                data[i].DT_RowClass = data[i].archived
+                  ? "archived"
+                  : data[i].state.toLowerCase();
+                data[i].dax_label = $("<a>" + data[i].dax_label + "</a>").attr(
+                  "href",
+                  urlTmpl
+                    .replace("-11-", data[i].wf_id)
+                    .replace("-22-", data[i].wf_uuid)
+                )[0].outerHTML;
+
+                if (data[i].status > 0 && data[i].reason) {
+                  data[i].state = data[i].state + " (" + data[i].reason + ")";
+                }
+              }
+              return data;
+            },
+          },
+          autoWidth: false,
+          order: [[4, "desc"]],
+          columns: [
+            { data: "dax_label" },
+            { data: "submit_hostname" },
+            { data: "submit_dir" },
+            {
+              data: "state",
+              createdCell: function (td, v, data) {
+                console.log(v, data);
+                if (data.archived) {
+                  $(td).addClass("bg-secondary text-white text-center");
+                } else {
+                  switch (v) {
+                    case "Running":
+                      $(td).addClass("bg-primary text-white text-center");
+                      break;
+                    case "Successful":
+                      $(td).addClass("bg-success text-white text-center");
+                      break;
+                    case "Failed":
+                      $(td).addClass("bg-danger text-white text-center");
+                      break;
+                  }
+                }
+
+                $(td).text(v);
+              },
+            },
+            {
+              data: "timestamp",
+              sClass: "text-nowrap",
+              render: function (v) {
+                var d = new Date(v * 1000);
+                return d.toDateString() + " " + d.toLocaleTimeString();
+              },
+            },
+          ],
+        });
+
+        $("#time_filter").change(function () {
+          $("#workflow_list").dataTable().fnDraw();
+        });
+    });
+</script>
+{% endblock %}
+{% block title_header %}Workflow Listing{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col-sm">
+        <div class="card border-primary">
+            <div class="card-body p-0">
+                <h5 class="card-title text-center text-white bg-primary py-3">Running</h5>
+                <h1 class="card-text text-center text-primary pb-3">{{ counts.others or 0 }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="card border-success">
+            <div class="card-body p-0">
+                <h5 class="card-title text-center text-white bg-success py-3">Successful</h5>
+                <h1 class="card-text text-center text-success pb-3">{{ counts.success or 0 }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="card border-danger">
+            <div class="card-body p-0">
+                <h5 class="card-title text-center text-white bg-danger py-3">Failed</h5>
+                <h1 class="card-text text-center text-danger pb-3">{{ counts.fail or 0 }}</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="row">
+    <div id="table_wrapper" class="col-sm">
+        <label for="time_filter" class="control-label">Show results for </label>
+        <div style="display: inline-block; margin-bottom: .5em;">
+            <select id="time_filter" name="time_filter" class="form-control" style="width: auto;">
+                <option value="all">all</option>
+                <option value="day">last day</option>
+                <option value="week">last week</option>
+                <option value="month">last month</option>
+                <option value="year">last year</option>
+            </select>
+        </div>
+
+        <table id="workflow_list" class="table table-striped w-100">
+            <thead>
+            <tr>
+                <th>Workflow Label</th>
+                <th>Submit Host</th>
+                <th>Submit Directory</th>
+                <th>State</th>
+                <th>Submitted On</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

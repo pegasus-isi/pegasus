@@ -1,0 +1,184 @@
+- invocation: True
+  version: 3.0
+  start: 2023-03-03T22:24:50.108-08:00
+  duration: 2.775
+  transformation: "pegasus::rc-client"
+  derivation: "null"
+  resource: "local"
+  wf-label: "process"
+  wf-stamp: "2023-03-03T21:52:43-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 133770
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-03T22:24:50.201-08:00
+    duration: 2.683
+    pid: 133773
+    usage:
+      utime: 3.364
+      stime: 0.637
+      maxrss: 155648
+      minflt: 85079
+      majflt: 0
+      nswap: 0
+      inblock: 248
+      outblock: 1792
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 9298
+      nivcsw: 58
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /home/mzalam/pegasus-5.0.5/bin/pegasus-rc-client
+      mode: 0o100755
+      size: 614
+      inode: 209458966
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-02-17T10:23:44-08:00
+      atime: 2023-03-03T22:10:15-08:00
+      ctime: 2023-03-03T22:10:08-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+      - "--prefix"
+      - "pegasus.catalog.replica.output"
+      - "--conf"
+      - "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001/pegasus.5327005374169176428.properties"
+      - "-v"
+      - "--meta"
+      - "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001/00/00/ls_ID0000001.meta"
+      - "--insert"
+      - "/home/mzalam/processwf/submit/mzalam/pegasus/process/run0001/00/00/register_local_0_0.in"
+    procs:
+  jobids:
+    condor: 6.0
+  cwd: /home/mzalam/processwf/submit/mzalam/pegasus/process/run0001
+  usage:
+    utime: 0.024
+    stime: 0.061
+    maxrss: 4868
+    minflt: 190
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 5
+    nivcsw: 6
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 21276484
+    ram_shared: 221964
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18799792
+    cpu_count: 24
+    cpu_speed: 2500
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.54
+    load_min5: 0.51
+    load_min15: 0.43
+    procs_total: 496
+    procs_running: 2
+    procs_sleeping: 304
+    procs_other: 190
+    procs_vmsize: 87511908
+    procs_rss: 9554720
+    task_total: 1459
+    task_running: 2
+    task_sleeping: 1267
+    task_other: 190
+  files:
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 3075
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-01-25T15:24:15-08:00
+      atime: 2023-01-25T15:24:15-08:00
+      ctime: 2023-01-25T15:24:15-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_133768/ks.out.2dnhBW
+      descriptor: 3
+      mode: 0o100600
+      size: 153
+      inode: 140417303
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-03T22:24:52-08:00
+      atime: 2023-03-03T22:24:50-08:00
+      ctime: 2023-03-03T22:24:52-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        2023.03.03 22:24:52.414 PST:   Database version: '5.0.5' (sqlite:////home/mzalam/processwf/submit/mzalam/pegasus/process/run0001/process-0.replicas.db) 
+        
+    stderr:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_133768/ks.err.E4QjXf
+      descriptor: 4
+      mode: 0o100600
+      size: 76
+      inode: 140417304
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-03T22:24:52-08:00
+      atime: 2023-03-03T22:24:50-08:00
+      ctime: 2023-03-03T22:24:52-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        #Successfully worked on    : 1 lines.
+        #Worked on total number of : 1 lines.
+        
+    metadata:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_133768/ks.meta.EDCLWS
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 140417305
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-03T22:24:50-08:00
+      atime: 2023-03-03T22:24:50-08:00
+      ctime: 2023-03-03T22:24:50-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23

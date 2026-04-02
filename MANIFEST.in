@@ -1,0 +1,26 @@
+# Java source code (compiled during pip install from sdist)
+recursive-include java_src *.java
+
+# C/C++ source code (compiled during pip install from sdist)
+recursive-include c_src *.c *.cpp *.h Makefile *.sh
+
+# Pre-compiled JAR dependencies
+recursive-include share/pegasus/java *.jar
+
+# Package data (schemas, shell helpers, config files)
+recursive-include src/Pegasus/data *
+
+# Legacy data layout (until migration is complete)
+#recursive-include share/pegasus/schema *
+#recursive-include share/pegasus/sh *
+#recursive-include share/pegasus/notification *
+#recursive-include share/pegasus/htcondor *
+#recursive-include etc *
+
+# Build properties
+include build.properties
+
+# Documentation
+include README.md
+include LICENSE
+include RELEASE_NOTES

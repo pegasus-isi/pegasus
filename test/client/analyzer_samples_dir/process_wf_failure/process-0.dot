@@ -1,0 +1,16 @@
+digraph E {
+size="8.0,10.0"
+ratio=fill
+node [shape=ellipse]
+edge [arrowhead=normal, arrowsize=1.0]
+	"cleanup_process_0_local" [color=deepskyblue,style=filled,label="cleanup_process_0_local"]
+	"register_local_0_0" [color=orange,style=filled,label="register_local_0_0"]
+	"stage_out_local_local_0_0" [color=goldenrod,style=filled,label="stage_out_local_local_0_0"]
+	"ls_ID0000001" [color=blueviolet,style=filled,label="ls_ID0000001"]
+	"create_dir_process_0_local" [color=darkturquoise,style=filled,label="create_dir_process_0_local"]
+
+	"stage_out_local_local_0_0" -> "cleanup_process_0_local"
+	"stage_out_local_local_0_0" -> "register_local_0_0"
+	"ls_ID0000001" -> "stage_out_local_local_0_0"
+	"create_dir_process_0_local" -> "ls_ID0000001"
+}

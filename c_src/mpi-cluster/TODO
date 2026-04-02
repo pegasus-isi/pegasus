@@ -1,0 +1,12 @@
+This is a list of items that are planned in future versions of pegasus-mpi-cluster.
+
+* Have workers send task stdout/stderr via I/O forwarding
+* Implement a better, object-oriented logging interface
+* Allow runtime estimates to be specified in DAG with -r/--runtime
+* Implement hard limits on task runtime
+* Add BFS and DFS mode via level-based priority?
+* Add support for more sophisticated scheduling? (e.g. homogeneous task 
+  scheduling like FCFS, EFT, ETF, HLFET, MCP, DCP, MD, and others described 
+  in the DCP paper) Some algorithms could use the priority as a strict 
+  priority, some could use the priority as a runtime estimate, and some could 
+  use priority as a weight.

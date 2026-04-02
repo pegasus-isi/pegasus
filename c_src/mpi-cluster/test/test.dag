@@ -1,0 +1,5 @@
+# Simple test DAG
+TASK  Alpha  /bin/echo Alpha
+TASK Beta /bin/echo Beta
+
+EDGE Alpha Beta

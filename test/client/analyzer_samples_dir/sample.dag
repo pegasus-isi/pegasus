@@ -1,0 +1,14 @@
+SUBDAG EXTERNAL job0 b c d
+SUBDAG EXTERNAL job1 x y
+SUBDAG EXTERNAL job0 i j k
+
+JOB job2 sub1
+JOB job3
+JOB job2 sub2
+JOB pegasus-plan-job sub3
+
+SCRIPT PRE job4 sgfwrgegr
+SCRIPT PRE job2 dhrdghd
+SCRIPT PRE
+
+VARS job5 ls

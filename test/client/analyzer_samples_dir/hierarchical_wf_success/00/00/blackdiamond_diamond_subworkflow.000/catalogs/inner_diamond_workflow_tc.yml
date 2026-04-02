@@ -1,0 +1,21 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-04-23T01:00:54Z
+pegasus: 5.0.4
+transformations:
+- name: preprocess
+  sites:
+  - name: condorpool
+    pfn: /usr/bin/pegasus-keg
+    type: stageable
+- name: findrange
+  sites:
+  - name: condorpool
+    pfn: /usr/bin/pegasus-keg
+    type: stageable
+- name: analyze
+  sites:
+  - name: condorpool
+    pfn: /usr/bin/pegasus-keg
+    type: stageable

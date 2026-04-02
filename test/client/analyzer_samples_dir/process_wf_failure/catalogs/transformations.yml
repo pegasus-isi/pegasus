@@ -1,0 +1,11 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-03-23T23:09:21Z
+pegasus: 5.0.4
+transformations:
+- name: ls
+  sites:
+  - name: condorpool
+    pfn: /bin/ls
+    type: installed

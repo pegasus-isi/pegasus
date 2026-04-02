@@ -1,0 +1,14 @@
+2023-03-04 01:06:00: PegasusLite: version 5.0.5
+2023-03-04 01:06:00: Executing on host workflow.isi.edu IP=128.9.46.53
+
+########################[Pegasus Lite] Setting up workdir ########################
+2023-03-04 01:06:00: Not creating a new work directory as it is already set to /home/mzalam/wf/condor/local/execute/dir_190666
+
+##############[Pegasus Lite] Figuring out the worker package to use ##############
+2023-03-04 01:06:00: The job contained a Pegasus worker package
+tar: write error
+
+##################### Checking file integrity for input files #####################
+
+######################[Pegasus Lite] Executing the user task ######################
+PegasusLite: exitcode 0

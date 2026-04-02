@@ -1,0 +1,28 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-05-23T09:10:05Z
+pegasus: 5.0.4
+sites:
+- name: local
+  directories:
+  - type: sharedScratch
+    path: /home/mzalam/covid/scratch
+    sharedFileSystem: true
+    fileServers:
+    - url: file:///home/mzalam/covid/scratch
+      operation: all
+  - type: localStorage
+    path: /home/mzalam/covid/outputs
+    sharedFileSystem: true
+    fileServers:
+    - url: file:///home/mzalam/covid/outputs
+      operation: all
+- name: condorpool
+  directories: []
+  profiles:
+    condor:
+      universe: vanilla
+    pegasus:
+      style: condor
+      data.configuration: condorio

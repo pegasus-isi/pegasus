@@ -1,0 +1,13 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "analyze",
+   "id": 1,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "condorpool", "url": "file:///usr/bin/pegasus-keg", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow/./analyze" }
+   ] }
+]

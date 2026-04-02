@@ -1,0 +1,12 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "chebi_dict.pickle",
+   "id": 1,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi_dict.pickle" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/covid/outputs/chebi_dict.pickle" }
+   ] }
+]

@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+
+'''
+Pegasus utility for sending workflow notifications over email
+
+'''
+
+##
+#  Copyright 2007-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the 'License');
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an 'AS IS' BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import os
+import sys
+import pwd
+import optparse
+import glob
+import smtplib
+import subprocess
+import mimetypes
+import yaml
+import email
+import email.mime.application
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+__author__ = 'Mats Rynge <rynge@isi.edu>'
+
+# --- functions -----------------------------------------------------------------------
+
+
+def usage(parser):
+    print('')
+    print('Usage: This tool is used by pegasus-monitord to send event notifications')
+    print('over email. A set of environment variables are expected to be set:')
+    print('   PEGASUS_BIN_DIR')
+    print('   PEGASUS_SUBMIT_DIR')
+    print('   PEGASUS_EVENT')
+    print('   PEGASUS_EVENT_TIMESTAMP_ISO')
+    print('   PEGASUS_JOBID')
+    print('   PEGASUS_STATUS (only for end events)')
+    print('')
+    parser.print_help()
+    print('')
+    myexit(1)
+    
+
+def validate_env_var(key):
+    if not key in os.environ:
+        raise RuntimeError(key + ' is not defined in the current environment')
+
+
+def send_using_smtp(sender, recipient, msg):
+    server = smtplib.SMTP('localhost')
+    server.sendmail(sender, recipient, msg)
+    server.quit()
+    
+    
+def send_using_sendmail(sender, recipient, msg):
+    p = os.popen('/usr/sbin/sendmail -t', 'w')
+    p.write(msg)
+    rc = p.close()
+    if rc is not None and rc >> 8:
+        raise RuntimeError('Sendmail exit status: %d' % (rc >> 8))
+
+
+def backticks(cmd_line):
+    '''
+    what would a python program be without some perl love?
+    '''
+    return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0].decode()
+
+
+def myexit(rc):
+    '''
+    system exit without a stack trace - silly python
+    '''
+    try:
+        sys.exit(rc)
+    except SystemExit:
+        sys.exit(rc)
+
+
+# --- main ----------------------------------------------------------------------------
+
+# Configure command line option parser
+parser = optparse.OptionParser()
+parser.add_option('-t', '--to', action = 'append', dest = 'to_address',
+                  help = 'The To: email address. Defines the recipient(s) for the notification. Default is current user.')
+parser.add_option('-f', '--from', action = 'store', dest = 'from_address',
+                  help = 'The From: email address. Defaults to the required To: address.')
+parser.add_option('-r', '--report', action = 'store', dest = 'report',
+                  help = 'Include workflow report. Valid values are: none pegasus-statistics pegasus-analyzer pegasus-status (default)')
+
+
+# Parse command line options
+(options, args) = parser.parse_args()
+to_address = pwd.getpwuid(os.getuid()).pw_name
+if options.to_address != None:
+    to_address = ','.join(options.to_address)
+from_address = to_address
+if options.from_address != None:
+    from_address = options.from_address
+report = 'pegasus-status'
+if options.report != None:
+    report = str.lower(options.report)
+        
+try:
+    validate_env_var('PEGASUS_BIN_DIR')
+    validate_env_var('PEGASUS_SUBMIT_DIR')
+    validate_env_var('PEGASUS_EVENT')
+    validate_env_var('PEGASUS_EVENT_TIMESTAMP_ISO')
+    validate_env_var('PEGASUS_JOBID')
+except RuntimeError as err:
+    print(err, file=sys.stderr)
+    usage(parser)
+
+# read the braindump file
+braindump = {}
+with open('braindump.yml') as file:
+    braindump = yaml.load(file)
+
+# Create a text/plain message
+msg = MIMEMultipart()
+
+msg['From'] = from_address
+msg['To'] = to_address
+msg['Subject'] = '** Pegasus Notification - ' + \
+                 os.environ['PEGASUS_JOBID'] + ' - ' + \
+                 os.environ['PEGASUS_EVENT'] + ' **'
+
+body = '***** Pegasus Workflow Event ****\r\n' + \
+       '\r\n' + \
+       'Time:     ' + os.environ['PEGASUS_EVENT_TIMESTAMP_ISO'] + '\r\n' + \
+       'Workflow: ' + os.environ['PEGASUS_SUBMIT_DIR'] + '\r\n' + \
+       'Job id:   ' + os.environ['PEGASUS_JOBID'] + '\r\n' + \
+       'Event:    ' + os.environ['PEGASUS_EVENT'] + '\r\n'
+    
+if 'PEGASUS_STATUS' in os.environ:
+    body = body + \
+           'Status: ' + os.environ['PEGASUS_STATUS'] + '\r\n'
+    
+# pegasus-status report
+if report == 'pegasus-status':
+    try:
+        out = '\r\n\r\npegasus-status:\r\n\r\n' + \
+              backticks(os.environ['PEGASUS_BIN_DIR'] + '/pegasus-status --noutf8 --nocolor' + \
+                        ' --noqueue' + \
+                        ' ' + os.environ['PEGASUS_SUBMIT_DIR'] + ' 2>&1') 
+        body = body + out
+    except Exception as err:
+        print('Error running pegasus-status: ' + str(err), file=sys.stderr)
+
+# pegasus-statistics report
+if report == 'pegasus-statistics':
+    try:
+        out = '\r\n\r\npegasus-statistics:\r\n\r\n' + \
+              backticks('touch ' + os.environ['PEGASUS_SUBMIT_DIR'] + '/monitord.done' + \
+                        ' && ' + \
+                        os.environ['PEGASUS_BIN_DIR'] + '/pegasus-statistics' + \
+                        ' --ignore-db-inconsistency ' + \
+                        os.environ['PEGASUS_SUBMIT_DIR'] + ' 2>&1' )
+        body = body + out
+    except Exception as err:
+        print('Error running pegasus-analyzer: ' + str(err), file=sys.stderr)
+
+# pegasus-analyzer report             
+if report == 'pegasus-analyzer':
+    try:
+        out = '\r\n\r\npegasus-analyzer:\r\n\r\n' + \
+              backticks(os.environ['PEGASUS_BIN_DIR'] + '/pegasus-analyzer -d ' + \
+                        os.environ['PEGASUS_SUBMIT_DIR'] + ' 2>&1' )
+        body = body + out
+    except Exception as err:
+        print('Error running pegasus-analyzer: ' + str(err), file=sys.stderr)
+
+msg.attach(MIMEText(body))
+
+# for start events, check if we can generate abstract/dag images automatically
+if os.environ['PEGASUS_EVENT'] == 'start':
+    try:
+        abstract_fname = braindump['dax']
+        dag_fname = braindump['dag']
+        # only generate the images if the workflow is small enough
+        if os.path.getsize(dag_fname) < 100000000:
+
+            # first the dot files - this should always work
+            backticks(os.environ['PEGASUS_BIN_DIR'] + '/pegasus-graphviz ' + \
+                      '--nosimplify -o abstract.dot ' + abstract_fname + ' >/dev/null 2>&1')
+            backticks(os.environ['PEGASUS_BIN_DIR'] + '/pegasus-graphviz ' + \
+                      '-o dag.dot ' + dag_fname + ' >/dev/null 2>&1')
+
+            # now try dot, which might not be installed
+            backticks('dot -Tsvg -oabstract.svg abstract.dot >/dev/null') 
+            backticks('dot -Tsvg -odag.svg dag.dot >/dev/null') 
+
+            # if we get here, it is save to attach the files to the email
+            fp = open('abstract.svg', 'rb')
+            att =  email.mime.application.MIMEApplication(fp.read(),_subtype='svg')
+            fp.close()
+            att.add_header('Content-Disposition','attachment',filename='abstract.svg')
+            msg.attach(att)
+
+            fp = open('dag.svg', 'rb')
+            att =  email.mime.application.MIMEApplication(fp.read(),_subtype='svg')
+            fp.close()
+            att.add_header('Content-Disposition','attachment',filename='planned.svg')
+            msg.attach(att)
+
+    except Exception as err:
+        print('Unable to generate workflow images: ' + str(err), file=sys.stderr)
+
+# try to send using smtp first, and if that does not work, sendmail
+try:
+    send_using_smtp(from_address, to_address, msg.as_string())
+except Exception as e1:
+    try:
+        send_using_sendmail(from_address, to_address, msg.as_string())
+    except Exception as e2:
+        print('Unable to send email:\n' + str(e1) + '\n' + str(e2), file=sys.stderr)
+        myexit(1)
+
+myexit(0)

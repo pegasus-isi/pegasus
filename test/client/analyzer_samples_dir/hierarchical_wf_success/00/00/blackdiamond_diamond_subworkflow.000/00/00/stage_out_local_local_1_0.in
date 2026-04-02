@@ -1,0 +1,25 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "f.c2",
+   "id": 1,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow/./f.c2" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site/f.c2" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "f.c1",
+   "id": 2,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow/./f.c1" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/mzalam/hierar/hierarichal-sample-wf/outputs/local-site/f.c1" }
+   ] }
+]

@@ -1,0 +1,37 @@
+digraph E {
+size="8.0,10.0"
+ratio=fill
+node [shape=ellipse]
+edge [arrowhead=normal, arrowsize=1.0]
+	"curl_ID0000001" [color=blueviolet,style=filled,label="curl_ID0000001"]
+	"create_dir_hierarchical-workflow_0_local" [color=darkturquoise,style=filled,label="create_dir_hierarchical-workflow_0_local"]
+	"stage_out_local_local_2_0" [color=goldenrod,style=filled,label="stage_out_local_local_2_0"]
+	"stage_out_local_local_1_0" [color=goldenrod,style=filled,label="stage_out_local_local_1_0"]
+	"stage_out_local_local_0_0" [color=goldenrod,style=filled,label="stage_out_local_local_0_0"]
+	"wc_ID0000002" [color=blueviolet,style=filled,label="wc_ID0000002"]
+	"stage_worker_local_hierarchical-workflow_0_local" [color=gold,style=filled,label="stage_worker_local_hierarchical-workflow_0_local"]
+	"stage_in_local_local_1_0" [color=gold,style=filled,label="stage_in_local_local_1_0"]
+	"cleanup_hierarchical-workflow_0_local" [color=deepskyblue,style=filled,label="cleanup_hierarchical-workflow_0_local"]
+	"register_local_2_0" [color=orange,style=filled,label="register_local_2_0"]
+	"register_local_1_0" [color=orange,style=filled,label="register_local_1_0"]
+	"register_local_0_0" [color=orange,style=filled,label="register_local_0_0"]
+	"pegasus-plan_diamond_subworkflow" [color=grey,style=filled,label="pegasus-plan_diamond_subworkflow"]
+
+	"curl_ID0000001" -> "stage_out_local_local_0_0"
+	"curl_ID0000001" -> "pegasus-plan_diamond_subworkflow"
+	"create_dir_hierarchical-workflow_0_local" -> "curl_ID0000001"
+	"create_dir_hierarchical-workflow_0_local" -> "stage_in_local_local_1_0"
+	"stage_out_local_local_2_0" -> "register_local_2_0"
+	"stage_out_local_local_2_0" -> "cleanup_hierarchical-workflow_0_local"
+	"stage_out_local_local_1_0" -> "register_local_1_0"
+	"stage_out_local_local_1_0" -> "cleanup_hierarchical-workflow_0_local"
+	"stage_out_local_local_0_0" -> "register_local_0_0"
+	"stage_out_local_local_0_0" -> "cleanup_hierarchical-workflow_0_local"
+	"wc_ID0000002" -> "stage_out_local_local_2_0"
+	"stage_worker_local_hierarchical-workflow_0_local" -> "curl_ID0000001"
+	"stage_worker_local_hierarchical-workflow_0_local" -> "stage_in_local_local_1_0"
+	"stage_in_local_local_1_0" -> "pegasus-plan_diamond_subworkflow"
+	"pegasus-plan_diamond_subworkflow" -> "stage_out_local_local_1_0"
+	"pegasus-plan_diamond_subworkflow" -> "wc_ID0000002"
+	"pegasus-plan_diamond_subworkflow" -> "cleanup_hierarchical-workflow_0_local"
+}

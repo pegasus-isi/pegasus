@@ -1,0 +1,9 @@
+TASK A echo A
+TASK B echo B
+TASK C echo C
+TASK D echo D
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D

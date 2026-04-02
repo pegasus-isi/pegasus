@@ -1,0 +1,66 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-04-23T11:55:58Z
+pegasus: 5.0.4
+name: hierarchical-workflow
+jobs:
+- type: job
+  name: curl
+  id: ID0000001
+  arguments:
+  - -o
+  - pegasus.html
+  - http://pegasus.isi.edu
+  uses:
+  - lfn: pegasus.html
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: pegasusWorkflow
+  file: inner_diamond_workflow.yml
+  id: diamond_subworkflow
+  arguments:
+  - --conf
+  - inner_diamond_workflow.pegasus.properties
+  - --output-sites
+  - local
+  - -vvv
+  - --basename
+  - inner
+  uses:
+  - lfn: inner_diamond_workflow_tc.yml
+    type: input
+  - lfn: f.d
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: inner_diamond_workflow.pegasus.properties
+    type: input
+  - lfn: inner_diamond_workflow.yml
+    type: input
+  - lfn: sites.yml
+    type: input
+  - lfn: pegasus.html
+    type: input
+- type: job
+  name: wc
+  id: ID0000002
+  stdout: count.txt
+  arguments:
+  - -l
+  - f.d
+  uses:
+  - lfn: f.d
+    type: input
+  - lfn: count.txt
+    type: output
+    stageOut: true
+    registerReplica: true
+jobDependencies:
+- id: ID0000001
+  children:
+  - diamond_subworkflow
+- id: diamond_subworkflow
+  children:
+  - ID0000002

@@ -1,0 +1,66 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-05-23T09:10:05Z
+pegasus: 5.0.4
+transformations:
+- name: chebi_drug_loader
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/chebi_drug_loader.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: doid_term_loader
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/doid_term_loader.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: go_term_loader
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/go_term_loader.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: pubmed_parser
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/pubmed_parser.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: pubmed_chunked_parsing
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/pubmed_chunking.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: feature_extractor
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/feature_extractor.py
+    type: stageable
+    arch: x86_64
+    os.type: linux
+    container: docker_container
+- name: combine_features
+  sites:
+  - name: condorpool
+    pfn: /home/mzalam/covid/bin/combine_features.sh
+    type: stageable
+    arch: x86_64
+    os.type: linux
+containers:
+- name: docker_container
+  type: docker
+  image: docker:///zaiyancse/drug-combo-container:light
+  bypass: true

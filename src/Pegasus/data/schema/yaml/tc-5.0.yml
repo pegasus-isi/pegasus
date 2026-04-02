@@ -1,0 +1,148 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+$defs:
+  # --- a transformation entry -------------------------------------------------
+  transformation:
+    type: object
+    properties:
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+      namespace:
+        type: string
+      name:
+        type: string
+      version:
+        type: string
+      hooks:
+        $ref: "common.yml#/$defs/hooks"
+      profiles:
+        $ref: "common.yml#/$defs/profiles"
+      requires:
+        type: array
+        items:
+          type: string
+          description: "Namespace::Name:Version (Namespace:: and :Version may be omitted)"
+          examples: ["example::keg:1.0"]
+      checksum:
+        type: object
+        description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
+        patternProperties:
+          "^(sha256)$":
+            type: string
+        additionalProperties: false
+      sites:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            arch:
+              $ref: "sc-5.0.yml#/$defs/arch"
+            os.type:
+              $ref: "sc-5.0.yml#/$defs/os.type"
+            os.release:
+              type: string
+            os.version:
+              $ref: "common.yml#/$defs/versionString"
+            pfn:
+              type: string
+            profiles:
+              $ref: "common.yml#/$defs/profiles"
+            metadata:
+              $ref: "common.yml#/$defs/metadata"
+            type:
+              type: string
+              enum:
+                - stageable
+                - installed
+            bypass:
+              type: boolean
+            container:
+              type: string
+          required:
+            - name
+            - type
+            - pfn
+          additionalProperties: false
+          patternProperties:
+            ^x-:
+              $ref: "common.yml#/$defs/vendorExtension"
+        minItems: 1
+    required:
+      - name
+      - sites
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- a container entry ------------------------------------------------------
+  container:
+    type: object
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+        enum:
+          - docker
+          - singularity
+          - shifter
+      image:
+        type: string
+      image.site:
+        type: string
+      mounts:
+        type: array
+        items:
+          type: string
+      bypass:
+        type: boolean
+      checksum:
+        type: object
+        description: "To add new checksum types update pattern '^(sha256|<new type>|..)$'"
+        patternProperties:
+          "^(sha256)$":
+            type: string
+        additionalProperties: false
+      metadata:
+        $ref: "common.yml#/$defs/metadata"
+      profiles:
+        $ref: "common.yml#/$defs/profiles"
+    required:
+      - name
+      - type
+      - image
+    additionalProperties: false
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+  # --- schema when inlined in dax ---------------------------------------------
+  inlineTransformationCatalog:
+    type: object
+    properties:
+      pegasus:
+        $ref: "common.yml#/$defs/versionString"
+      transformations:
+        type: array
+        items:
+          $ref: "#/$defs/transformation"
+        minItems: 1
+      containers:
+        type: array
+        items:
+          $ref: "#/$defs/container"
+        minItems: 0
+    required:
+      - transformations
+    patternProperties:
+      ^x-:
+        $ref: "common.yml#/$defs/vendorExtension"
+
+# --- schema for standalone file -----------------------------------------------
+allOf:
+  - $ref: "#/$defs/inlineTransformationCatalog"
+  - type: object
+    required:
+      - pegasus

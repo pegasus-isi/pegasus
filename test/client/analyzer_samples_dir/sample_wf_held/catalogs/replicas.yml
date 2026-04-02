@@ -1,0 +1,22 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-05-23T09:10:05Z
+pegasus: 5.0.4
+replicas:
+- lfn: chebi.obo
+  pfns:
+  - site: local
+    pfn: /home/mzalam/covid/data/obofiles/chebi.obo
+- lfn: doid.obo
+  pfns:
+  - site: local
+    pfn: /home/mzalam/covid/data/obofiles/doid.obo
+- lfn: go.obo
+  pfns:
+  - site: local
+    pfn: /home/mzalam/covid/data/obofiles/go.obo
+- lfn: pubmed-covid-set.txt
+  pfns:
+  - site: local
+    pfn: /home/mzalam/covid/data/datafiles/pmc-covid19-073022.txt

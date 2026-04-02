@@ -1,0 +1,19 @@
+{% extends "base-error.html" %}
+{% block title %}Master Database - Not found{% endblock %}
+{% block title_header %}Master Workflow Database Not Found{% endblock %}
+{% block navigation_bar %}-{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col">
+        <h3>Possible Reasons</h3>
+        <ul>
+            <li>
+                No workflows have been run using Pegasus 4.2.0 or above.
+            </li>
+            <li>
+                The master database URL provided to the pegasus service is invalid.
+            </li>
+        </ul>
+    </div>
+</section>
+{% endblock %}

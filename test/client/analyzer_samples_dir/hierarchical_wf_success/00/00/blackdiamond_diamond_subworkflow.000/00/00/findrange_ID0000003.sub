@@ -1,0 +1,44 @@
+######################################################################
+# PEGASUS WMS GENERATED SUBMIT FILE
+# DAG : blackdiamond, Index = 0, Count = null
+# SUBMIT FILE NAME : findrange_ID0000003.sub
+######################################################################
+stream_error  = false
+stream_output = false
+environment = "LANG=en_US.UTF-8 CONDOR_JOBID=$(cluster).$(process) PEGASUS_WF_UUID=160be601-bda4-45fb-86cd-9cf7a269bb22 PEGASUS_WF_LABEL=blackdiamond PEGASUS_DAG_JOB_ID=findrange_ID0000003 PEGASUS_SITE=condorpool"
++WantIOProxy = True
+error = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000//00/00/findrange_ID0000003.err
+executable = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/findrange_ID0000003.sh
+initialdir = /home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow
+log = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/inner.log
+notification = NEVER
+output = /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000//00/00/findrange_ID0000003.out
+periodic_release = False
+periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)
+priority = 30
+should_transfer_files = YES
+submit_event_user_notes = pool:condorpool
+transfer_executable = true
+transfer_input_files = findrange,f.b2,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus-worker-5.0.5-x86_64_rhel_8.tar.gz,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/preprocess_ID0000001.meta,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/00/00/stage_in_local_local_1_0.meta,/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow.000/pegasus-lite-common.sh
+transfer_output_files = f.c2
+universe = vanilla
+when_to_transfer_output = ON_EXIT
++pegasus_generator = "Pegasus"
++pegasus_root_wf_uuid = "48f759a4-165f-47d6-8c32-571649ce311b"
++pegasus_wf_uuid = "160be601-bda4-45fb-86cd-9cf7a269bb22"
++pegasus_version = "5.0.5"
++pegasus_wf_name = "blackdiamond-0"
++pegasus_wf_time = "20230304T010215-0800"
++pegasus_wf_xformation = "findrange"
++pegasus_wf_dax_job_id = "ID0000003"
++pegasus_wf_dag_job_id = "findrange_ID0000003"
++pegasus_job_class = 1
++pegasus_site = "condorpool"
++pegasus_job_runtime = 0
++pegasus_cores = 1
++pegasus_gpus = 1
++pegasus_cluster_size = 1
+queue
+######################################################################
+# END OF SUBMIT FILE
+######################################################################

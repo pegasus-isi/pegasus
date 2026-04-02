@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/PDAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema//PDAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0">
+	<xs:element name="pdag">
+		<xs:annotation>
+			<xs:documentation>partition DAG in XML</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="partition" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>partition specification in terms of job making up the partition</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="job" minOccurs="0" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>logical name of the job and logical id, as in the dax</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:attribute name="name" type="xs:string" use="required"/>
+									<xs:attribute name="id" type="xs:ID" use="required"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="child" minOccurs="0" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>child node referring to a job in the partition</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="parent" maxOccurs="unbounded">
+											<xs:annotation>
+												<xs:documentation>parent node referring to a job in the partition</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:attribute name="ref" type="xs:IDREF" use="required"/>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="ref" type="xs:IDREF" use="required"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" type="xs:string" use="required"/>
+						<xs:attribute name="index" type="xs:nonNegativeInteger" use="required"/>
+						<xs:attribute name="id" type="xs:ID" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="child" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>child node referring to a partition</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="parent" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>parent node referring to a partition</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:attribute name="ref" type="xs:IDREF" use="required"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="ref" type="xs:IDREF" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string" use="required"/>
+			<xs:attribute name="index" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="count" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="version" type="xs:string" use="optional"/>
+		</xs:complexType>
+		<xs:unique name="UniqueJobID">
+			<xs:selector xpath="partition/job"/>
+			<xs:field xpath="@id"/>
+		</xs:unique>
+	</xs:element>
+</xs:schema>

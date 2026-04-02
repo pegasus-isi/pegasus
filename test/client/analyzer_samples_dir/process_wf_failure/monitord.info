@@ -1,0 +1,5 @@
+monitord_job_sequence 4
+monitord_dagman_out_sequence 268
+monitord_workflow_restart_count 1
+create_dir_process_0_local 0
+ls_ID0000001 1

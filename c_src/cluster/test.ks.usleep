@@ -1,0 +1,10 @@
+/opt/pegasus/latest/bin/kickstart /bin/usleep 500000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 450000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 400000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 350000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 300000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 250000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 200000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 150000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 100000
+/opt/pegasus/latest/bin/kickstart /bin/usleep 50000

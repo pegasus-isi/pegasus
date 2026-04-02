@@ -1,0 +1,42 @@
+{
+  "client": "pegasus-plan",
+  "version": "5.0.5",
+  "wf_api": "python",
+  "type": "metrics",
+  "start_time": 1.677959763858E9,
+  "end_time": 1.677959768064E9,
+  "duration": 4.206,
+  "exitcode": 0,
+  "root_wf_uuid": "06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8",
+  "wf_uuid": "06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8",
+  "data_config": "condorio",
+  "planner_args": "--conf pegasus.properties --dir /home/mzalam/hierar/hierarichal-sample-wf/submit --sites condorpool --output-site local --cleanup leaf --force workflow.yml ",
+  "uses_pmc": false,
+  "wf_metrics": {
+    "compute_tasks": 2,
+    "dax_tasks": 1,
+    "dag_tasks": 0,
+    "total_tasks": 3,
+    "deleted_tasks": 0,
+    "dax_input_files": 4,
+    "dax_inter_files": 2,
+    "dax_output_files": 1,
+    "dax_total_files": 7,
+    "compute_jobs": 2,
+    "clustered_jobs": 0,
+    "si_tx_jobs": 2,
+    "so_tx_jobs": 3,
+    "inter_tx_jobs": 0,
+    "reg_jobs": 3,
+    "cleanup_jobs": 1,
+    "create_dir_jobs": 1,
+    "dax_jobs": 1,
+    "dag_jobs": 0,
+    "chmod_jobs": 0,
+    "total_jobs": 13
+  },
+  "app_metrics": {
+    "name": "hierarchical-workflow"
+  }
+}
+

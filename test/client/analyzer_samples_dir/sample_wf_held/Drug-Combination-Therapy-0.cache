@@ -1,0 +1,4 @@
+docker_container docker:///zaiyancse/drug-combo-container:light site="CONTAINER_SITE"
+chebi.obo file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi.obo site="local"
+chebi_drug_loader file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi_drug_loader site="local"
+chebi_dict.pickle file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi_dict.pickle site="local"

@@ -1,0 +1,179 @@
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T11:56:17.901-08:00
+  duration: 2.324
+  transformation: "pegasus::dirmanager"
+  derivation: "null"
+  resource: "local"
+  wf-label: "hierarchical-workflow"
+  wf-stamp: "2023-03-04T11:55:58-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 381700
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T11:56:17.988-08:00
+    duration: 2.237
+    pid: 381702
+    usage:
+      utime: 0.170
+      stime: 0.067
+      maxrss: 19592
+      minflt: 11066
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 16
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 57
+      nivcsw: 5
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /home/mzalam/pegasus-5.0.5/bin/pegasus-transfer
+      mode: 0o100755
+      size: 2998
+      inode: 209458954
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-02-17T12:35:27-08:00
+      atime: 2023-03-03T22:10:15-08:00
+      ctime: 2023-03-03T22:10:08-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+    procs:
+  jobids:
+    condor: 97.0
+  cwd: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_381694
+  usage:
+    utime: 0.019
+    stime: 0.057
+    maxrss: 2548
+    minflt: 142
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 4
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 19270756
+    ram_shared: 230408
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18894768
+    cpu_count: 24
+    cpu_speed: 2500
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.69
+    load_min5: 0.43
+    load_min15: 0.39
+    procs_total: 465
+    procs_running: 2
+    procs_sleeping: 290
+    procs_other: 173
+    procs_vmsize: 86633336
+    procs_rss: 9282920
+    task_total: 1428
+    task_running: 2
+    task_sleeping: 1253
+    task_other: 173
+  files:
+    stdin:
+      descriptor_number: 0
+      mode: 0o10600
+      size: 0
+      inode: 433025746
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:56:17-08:00
+      atime: 2023-03-04T11:56:17-08:00
+      ctime: 2023-03-04T11:56:17-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    stdout:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_381694/ks.out.EOj6zT
+      descriptor: 3
+      mode: 0o100600
+      size: 1083
+      inode: 204518222
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-03-04T11:56:20-08:00
+      atime: 2023-03-04T11:56:17-08:00
+      ctime: 2023-03-04T11:56:20-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+      data_truncated: false
+      data: |
+        2023-03-04 11:56:18,146    INFO:  Reading URL pairs from stdin
+        2023-03-04 11:56:18,147    INFO:  1 transfers loaded
+        2023-03-04 11:56:18,147    INFO:  PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/local/bin
+        2023-03-04 11:56:18,147    INFO:  LD_LIBRARY_PATH=
+        2023-03-04 11:56:18,199    INFO:  --------------------------------------------------------------------------------
+        2023-03-04 11:56:18,199    INFO:  Starting transfers - attempt 1
+        2023-03-04 11:56:20,202    INFO:  /bin/mkdir -p '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0003' 
+        2023-03-04 11:56:20,212    INFO:  --------------------------------------------------------------------------------
+        2023-03-04 11:56:20,212    INFO:  Stats: no local files in the transfer set
+        2023-03-04 11:56:20,212    INFO:  All transfers completed successfully.
+        
+    stderr:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_381694/ks.err.ukub0T
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 204518223
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:56:17-08:00
+      atime: 2023-03-04T11:56:17-08:00
+      ctime: 2023-03-04T11:56:17-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    metadata:
+      temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_381694/ks.meta.VZ7Iu2
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 204518224
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T11:56:17-08:00
+      atime: 2023-03-04T11:56:17-08:00
+      ctime: 2023-03-04T11:56:17-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23

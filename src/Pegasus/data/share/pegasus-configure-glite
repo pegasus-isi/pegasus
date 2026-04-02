@@ -1,0 +1,103 @@
+#!/bin/bash
+set -e
+#set -x
+
+#  PM-1868 Wrap str in quotes since PEGASUS_HOME path can have a space in it
+BINDIR="`dirname "$0"`"
+
+eval $("$BINDIR"/pegasus-config --sh-dump)
+
+PEGASUS_GLITE_DIR=$PEGASUS_SHARE_DIR/htcondor/glite
+
+if [ $# -gt 1 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "Usage: $0 [-h] [GLITE_LOCATION]"
+    exit 1
+fi
+
+if [ "$(uname -s)" == "Darwin" ]; then
+    echo "WARNING: Condor doesn't normally ship with glite on OSX, so this is unlikely to work"
+fi
+
+if ! which condor_config_val >/dev/null 2>&1; then
+    echo "ERROR: Unable to find condor_config_val: Specify GLITE_LOCATION or add Condor to your PATH"
+    exit 1
+fi
+
+# PM-1897 BLAHP configuration naming/layout changed - the rest of this
+# script has a "new" and "old" way of handling the config
+BLAHPD_LOCATION=$(condor_config_val BLAHPD_LOCATION 2>/dev/null || true)
+GLITE_LOCATION=$(condor_config_val GLITE_LOCATION 2>/dev/null || true)
+
+# user provided override
+if [ $# -eq 1 ]; then
+    BLAHPD_LOCATION=$1
+
+    if [ ! -d "$BLAHPD_LOCATION" ]; then
+        echo "Directory does not exist: $BLAHPD_LOCATION"
+        exit 1
+    fi
+fi
+
+# new way
+if [ -d "$BLAHPD_LOCATION" ]; then
+    # in case of RPM installs, we need to from /usr to /
+    if [ "$BLAHPD_LOCATION" = "/usr" ]; then
+        BLAHPD_LOCATION=""
+    fi
+    BLAHPD_CONFIG="$BLAHPD_LOCATION/etc/blah.config"
+    BLAHPD_SCRIPTS_DIR="$BLAHPD_LOCATION/etc/blahp"
+
+# old way
+elif [ -d "$GLITE_LOCATION" ]; then
+    BLAHPD_CONFIG="$GLITE_LOCATION/etc/batch_gahp.config"
+    BLAHPD_SCRIPTS_DIR="$GLITE_LOCATION/bin"
+fi
+
+for f in "$BLAHPD_CONFIG" "$BLAHPD_SCRIPTS_DIR"; do
+    if [ ! -e "$f" ]; then
+        echo "ERROR: It looks like your BLAHPD_LOCATION / GLITE_LOCATION is not correct"
+        echo "Missing file/directory: $f"
+        echo "If Condor is not installed, then you will need to install it before proceeding."
+        echo "If you have Condor installed, then you might be missing the condor-externals package."
+        echo "If you are on Mac OS X, then your Condor probably doesn't have glite."
+        echo "Please confirm your BLAHPD_LOCATION / GLITE_LOCATION and try again"
+        exit 1
+    fi
+done
+
+# Copy all the pegasus scripts to the glite bin dir
+for f in "$PEGASUS_GLITE_DIR"/*.{sh,py}; do
+    echo "Installing "`basename "$f"`" into $BLAHPD_SCRIPTS_DIR/"
+    cp "$f" $BLAHPD_SCRIPTS_DIR/
+done
+
+# Edit GLITE_CONFIG to add moab support
+echo "Adding moab support to batch_gahp.config"
+BLAHPD_CONFIG_BAK=$BLAHPD_CONFIG.$(date +%F)
+cp $BLAHPD_CONFIG $BLAHPD_CONFIG_BAK
+awk '
+BEGIN {
+    FS="=";
+    has_binpath=0;
+}
+{
+    if ($1 == "supported_lrms") {
+        if (index($2,"moab")>0) {
+            print($0);
+        } else {
+            print($0",moab");
+        }
+    } else {
+        print($0);
+    }
+    if ($1 == "moab_binpath") {
+        has_binpath=1;
+    }
+}
+END {
+    if (!has_binpath) {
+        print("moab_binpath=`which msub 2>/dev/null|sed '\''s|/[^/]*$||'\''`")
+    }
+}
+' $BLAHPD_CONFIG_BAK > $BLAHPD_CONFIG
+

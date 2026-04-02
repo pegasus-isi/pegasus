@@ -4,7 +4,20 @@ Pegasus Workflow Management System (v5.2.0-dev). Multi-language scientific workf
 
 ## Build System
 
-Ant-based build with Make for C components. Default target is `dist`.
+Dual build system: `pip install .` for Python+Java+C unified build, Ant for legacy dist packaging.
+
+### pip-based build (primary)
+
+```bash
+pip install .           # Build and install everything (Python + Java + C)
+pip install -e .        # Editable/development install
+PEGASUS_NO_JAVA=1 pip install .  # Skip Java compilation
+PEGASUS_NO_C=1 pip install .     # Skip C compilation
+```
+
+Project defined in `pyproject.toml` (setuptools backend). Custom build commands in `setup.py` compile Java and C during install.
+
+### Ant-based build (legacy dist packaging)
 
 ```bash
 ant dist              # Build binary distribution (no docs)
@@ -17,27 +30,32 @@ ant clean             # Remove all build artifacts
 
 Java source/target level: 1.8. Version defined in `build.properties`.
 
+## CLI
+
+All CLI entry points are Click subcommands under the top-level `pegasus` command:
+
+```bash
+pegasus --help          # Show all subcommands
+pegasus plan            # Run the planner (Java)
+pegasus status          # Check workflow status
+pegasus analyzer        # Analyze workflow failures
+pegasus config --bin    # Query installation paths
+```
+
+Legacy `pegasus-<tool>` commands still work via `[project.scripts]` entries in `pyproject.toml`.
+
+CLI source: `src/Pegasus/cli/main.py` (lazy-loaded subcommand group).
+
 ## Testing
 
 ```bash
+tox                   # Run Python tests (all Python versions)
+tox -e py310          # Run Python tests with specific Python
+tox -e lint           # Run linting (ruff)
 ant test              # Run ALL tests (builds dist first, then python → java → c → transfer)
-ant test-python       # Run Python tests via tox (all 4 packages)
+ant test-python       # Run Python tests via tox
 ant test-java         # Run Java JUnit tests
 ant test-c            # Run C unit tests (kickstart + PMC)
-ant test-kickstart    # Kickstart tests only
-ant test-pmc          # pegasus-mpi-cluster tests only
-ant test-transfer     # Transfer utility tests
-```
-
-### Python tests individually
-
-Each Python package under `packages/` has its own `tox.ini`. To run tests for a single package:
-
-```bash
-cd packages/pegasus-python && tox -e py310
-cd packages/pegasus-api && tox -e py310
-cd packages/pegasus-common && tox -e py310
-cd packages/pegasus-worker && tox -e py310
 ```
 
 Test framework is pytest. Reports go to `test-reports/`.
@@ -45,13 +63,12 @@ Test framework is pytest. Reports go to `test-reports/`.
 ## Code Formatting
 
 ```bash
-ant code-format-python   # Format all Python code
+ant code-format-python   # Format all Python code (ruff)
 ant code-format-java     # Format all Java code (AOSP style via google-java-format)
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
-- **Java**: google-java-format 1.7, AOSP style. Applies to `src/**/*.java` and `test/junit/**/*.java`
-- Pre-commit hooks available in `.pre-commit-config.yaml`
+- **Java**: google-java-format 1.7, AOSP style. Applies to `java_src/**/*.java` and `test/junit/**/*.java`
 
 ## Architecture
 
@@ -63,9 +80,9 @@ C/C++ (Execution)  — Job wrappers (kickstart), clustering, test job generation
 
 ## Source Locations
 
-### Java — `src/`
+### Java — `java_src/`
 
-Main planner: `src/edu/isi/pegasus/planner/` with these packages:
+Main planner: `java_src/edu/isi/pegasus/planner/` with these packages:
 
 | Package | Purpose |
 |---------|---------|
@@ -87,31 +104,41 @@ Main planner: `src/edu/isi/pegasus/planner/` with these packages:
 
 Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, `org.griphyn.vdl.*`
 
-### Python — `packages/`
+### Python — `src/Pegasus/`
 
-Four namespace packages sharing the `Pegasus` namespace:
+Single unified package (merged from former `pegasus-api`, `pegasus-common`, `pegasus-python`, `pegasus-worker`):
 
-| Package | What it provides |
-|---------|-----------------|
-| `pegasus-api/` | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs) |
-| `pegasus-common/` | Shared utilities (`braindump`, YAML/JSON handling, client utils) |
-| `pegasus-python/` | CLI tools, monitoring daemon, database layer, dashboard, statistics |
-| `pegasus-worker/` | Worker-side execution: data transfer (`transfer.py`, `s3.py`), worker utils |
+| Module | What it provides |
+|--------|-----------------|
+| `api/` | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs) |
+| `braindump.py`, `yaml.py`, `json.py` | Shared utilities (braindump, YAML/JSON handling) |
+| `cli/` | CLI tools (Click subcommands), monitoring daemon |
+| `db/` | Database layer |
+| `service/` | Dashboard web service |
+| `monitoring/` | Workflow monitoring |
+| `transfer/`, `s3.py` | Worker-side data transfer |
 
-Python source lives under `packages/<pkg>/src/Pegasus/`.
+### C/C++ — `c_src/`
 
-### C/C++ — `packages/`
+| Directory | Language | Purpose |
+|-----------|----------|---------|
+| `kickstart/` | C | Job execution wrapper, metadata capture, checksumming |
+| `cluster/` | C | Groups multiple jobs into clustered execution |
+| `keg/` | C++ | Synthetic job generator for testing |
+| `mpi-cluster/` | C++ | MPI-based distributed job clustering |
 
-| Package | Language | Purpose |
-|---------|----------|---------|
-| `pegasus-kickstart/` | C | Job execution wrapper, metadata capture, checksumming |
-| `pegasus-cluster/` | C | Groups multiple jobs into clustered execution |
-| `pegasus-keg/` | C++ | Synthetic job generator for testing |
-| `pegasus-mpi-cluster/` | C++ | MPI-based distributed job clustering |
+### Package Data — `src/Pegasus/data/`
 
-### Executables — `bin/`
+Runtime data bundled with the Python package:
 
-Key CLI entry points: `pegasus-plan` (main planner), `pegasus-rc-client`, `pegasus-tc-converter`, `pegasus-sc-converter`, `pegasus-version`.
+| Directory | Contents |
+|-----------|----------|
+| `java/` | JAR dependencies (planner, AWS, etc.) |
+| `schema/` | XML/XSD/YAML schemas |
+| `sh/` | Shell helpers (java.sh, pegasus-lite-*.sh) |
+| `notification/` | Notification scripts |
+| `htcondor/` | HTCondor configuration |
+| `share/` | pegasus-configure-glite |
 
 ## Configuration and Catalogs
 

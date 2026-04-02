@@ -1,0 +1,42 @@
+{
+  "client": "pegasus-plan",
+  "version": "5.0.5",
+  "wf_api": "python",
+  "type": "metrics",
+  "start_time": 1.678036206319E9,
+  "end_time": 1.678036211365E9,
+  "duration": 5.046,
+  "exitcode": 0,
+  "root_wf_uuid": "7a53210c-eb8a-4986-8c14-80e6e523598f",
+  "wf_uuid": "7a53210c-eb8a-4986-8c14-80e6e523598f",
+  "data_config": "condorio",
+  "planner_args": "--output-sites local --cleanup inplace --submit workflow.yml --json ",
+  "uses_pmc": false,
+  "wf_metrics": {
+    "compute_tasks": 1,
+    "dax_tasks": 0,
+    "dag_tasks": 0,
+    "total_tasks": 1,
+    "deleted_tasks": 0,
+    "dax_input_files": 1,
+    "dax_inter_files": 0,
+    "dax_output_files": 1,
+    "dax_total_files": 2,
+    "compute_jobs": 1,
+    "clustered_jobs": 0,
+    "si_tx_jobs": 1,
+    "so_tx_jobs": 1,
+    "inter_tx_jobs": 0,
+    "reg_jobs": 1,
+    "cleanup_jobs": 3,
+    "create_dir_jobs": 1,
+    "dax_jobs": 0,
+    "dag_jobs": 0,
+    "chmod_jobs": 0,
+    "total_jobs": 8
+  },
+  "app_metrics": {
+    "name": "Drug-Combination-Therapy"
+  }
+}
+

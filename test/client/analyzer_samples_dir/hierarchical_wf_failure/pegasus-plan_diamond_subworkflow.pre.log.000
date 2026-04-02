@@ -1,0 +1,50 @@
+2023.03.04 11:57:14.206 PST: [INFO]  Planner launched in the following directory /tmp/pegasus.rEvgVexx6 
+2023.03.04 11:57:14.210 PST: [INFO]  Planner invoked with following arguments --conf inner_diamond_workflow.pegasus.properties --dir /home/mzalam/hierar/hierarichal-sample-wf/submit --relative-dir mzalam/pegasus/hierarchical-workflow/run0003/00/00/./blackdiamond_diamond_subworkflow --relative-submit-dir mzalam/pegasus/hierarchical-workflow/run0003/00/00/./blackdiamond_diamond_subworkflow --basename inner --sites condorpool --cache /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/pegasus-plan_diamond_subworkflow.cache --output-map /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/pegasus-plan_diamond_subworkflow.output.map --output-sites local --cleanup none --verbose --verbose --verbose --deferred /home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.yml  
+2023.03.04 11:57:14.212 PST: [CONFIG]  Pegasus Properties set by the user 
+2023.03.04 11:57:14.212 PST: [CONFIG]  pegasus.home.bindir=/home/mzalam/pegasus-5.0.5/bin 
+2023.03.04 11:57:14.212 PST: [CONFIG]  pegasus.home.schemadir=/home/mzalam/pegasus-5.0.5/share/pegasus/schema 
+2023.03.04 11:57:14.212 PST: [CONFIG]  pegasus.home.sharedstatedir=/home/mzalam/pegasus-5.0.5/share/pegasus 
+2023.03.04 11:57:14.212 PST: [CONFIG]  pegasus.home.sysconfdir=/home/mzalam/pegasus-5.0.5/etc 
+2023.03.04 11:57:14.213 PST: [CONFIG]  pegasus.log.*=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/pegasus-plan_diamond_subworkflow.pre.log 
+2023.03.04 11:57:14.213 PST: [CONFIG]  pegasus.transfer.worker.package=true 
+2023.03.04 11:57:14.213 PST: [CONFIG]  pegasus.workflow.root.uuid=06031cb1-d2e1-41d8-9e8b-45c9a77e3eb8 
+2023.03.04 11:57:15.026 PST: [INFO] event.pegasus.add.data-dependencies dax.id blackdiamond-0  - STARTED 
+2023.03.04 11:57:15.027 PST: [DEBUG]  Adding Data Dependency edge findrange_ID0000003 -> analyze_ID0000004 
+2023.03.04 11:57:15.027 PST: [DEBUG]  Adding Data Dependency edge findrange_ID0000002 -> analyze_ID0000004 
+2023.03.04 11:57:15.027 PST: [DEBUG]  Adding Data Dependency edge preprocess_ID0000001 -> findrange_ID0000003 
+2023.03.04 11:57:15.027 PST: [DEBUG]  Adding Data Dependency edge preprocess_ID0000001 -> findrange_ID0000002 
+2023.03.04 11:57:15.027 PST: [INFO] event.pegasus.add.data-dependencies dax.id blackdiamond-0  (0.001 seconds) - FINISHED 
+2023.03.04 11:57:15.074 PST: [DEBUG]  Parsed DAX with following metrics {"compute_tasks":4,"dax_tasks":0,"dag_tasks":0,"total_tasks":4,"deleted_tasks":0,"dax_input_files":1,"dax_inter_files":4,"dax_output_files":1,"dax_total_files":6,"compute_jobs":4,"clustered_jobs":0,"si_tx_jobs":0,"so_tx_jobs":0,"inter_tx_jobs":0,"reg_jobs":0,"cleanup_jobs":0,"create_dir_jobs":0,"dax_jobs":0,"dag_jobs":0,"chmod_jobs":0,"total_jobs":4,"mDAXLabel":"blackdiamond"} 
+2023.03.04 11:57:15.077 PST: [DEBUG]  Ignoring exception encountered while loading site catalog 
+ [1]: Unable to instantiate Site Catalog  at edu.isi.pegasus.planner.catalog.site.SiteFactory.loadInstance(SiteFactory.java:218)
+ [2]: edu.isi.pegasus.planner.catalog.site.impl.YAML caught edu.isi.pegasus.planner.catalog.site.SiteCatalogException Please specify the property pegasus.catalog.site.file in your properties file or have the file sites.yml in the current working directory  at edu.isi.pegasus.planner.catalog.site.impl.YAML.connect(YAML.java:99) 
+2023.03.04 11:57:15.077 PST: [DEBUG]  Sites loaded are [] 
+2023.03.04 11:57:15.084 PST: [CONFIG]  Constructed default site catalog entry for local site <site  handle="local" arch="x86_64" os="linux" osrelease="" osversion="" glibc="">
+	<directory  type="shared-storage">
+		<file-server protocol="file" url="file:///" mount-point="/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/./wf-output" operation="all"/>
+		<internal-mount-point mount-point="/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/./wf-output"/>
+	</directory>
+	<directory  type="shared-scratch">
+		<file-server protocol="file" url="file:///" mount-point="/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/./wf-scratch/LOCAL" operation="all"/>
+		<internal-mount-point mount-point="/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/00/00/./wf-scratch/LOCAL"/>
+	</directory>
+	<profile namespace="env" key="PEGASUS_HOME" >/home/mzalam/pegasus-5.0.5</profile>
+</site>
+ 
+2023.03.04 11:57:15.085 PST: [CONFIG]  Set environment profile for local site PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin 
+2023.03.04 11:57:15.085 PST: [CONFIG]  Set environment profile for local site PYTHONPATH=/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages 
+2023.03.04 11:57:15.085 PST: [CONFIG]  Constructed default site catalog entry for condorpool site <site  handle="condorpool" arch="x86_64" os="linux" osrelease="" osversion="" glibc="">
+	<profile namespace="pegasus" key="style" >condor</profile>
+</site>
+ 
+2023.03.04 11:57:15.145 PST: [DEBUG]  Mount Under Scratch Directories [/tmp, /var/tmp] 
+2023.03.04 11:57:15.146 PST: [DEBUG]  Style  detected for site condorpool is class edu.isi.pegasus.planner.code.generator.condor.style.Condor 
+2023.03.04 11:57:15.146 PST: [DEBUG]  Style  detected for site local is class edu.isi.pegasus.planner.code.generator.condor.style.Condor 
+2023.03.04 11:57:15.146 PST: [DEBUG]  Execution sites are [condorpool] 
+2023.03.04 11:57:15.150 PST: [CONFIG]  Transformation Catalog Type used YAML TC 
+2023.03.04 11:57:15.151 PST: [FATAL ERROR]  
+ [1]:  Unable to instantiate Transformation Catalog  at edu.isi.pegasus.planner.catalog.transformation.TransformationFactory.loadInstance(TransformationFactory.java:164)
+ [2]: edu.isi.pegasus.planner.catalog.transformation.impl.YAML caught java.lang.RuntimeException The File to be used as TC should be defined with the property pegasus.catalog.transformation.file at edu.isi.pegasus.planner.catalog.transformation.impl.YAML.connect(YAML.java:167) 
+ERROR while logging metrics The metrics file location is not yet initialized
+2023.03.04 11:57:15.153 PST: [DEBUG]  Exiting with non-zero exit-code 2 
+2023.03.04 11:57:15.153 PST: [INFO] event.pegasus.planner planner.version 5.0.5  (0.962 seconds) - FINISHED 

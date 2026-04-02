@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Charts{% endblock %}
+{% block javascript_includes %}
+
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/highcharts-more.js"></script>
+<script type="text/javascript" src="//code.highcharts.com/4.1.4/modules/exporting.js"></script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+
+    jobDistribution.data = {{ job_dist | tojson | safe }};
+
+    function accordianCreate (event, ui)
+    {
+        initJobDistributionData(1);
+        plotJobDistributionChart();
+    }
+
+    function init ()
+    {
+        highChartsInitialization();
+        accordianCreate();
+        $("#charts-accordion").on("show.bs.collapse", function (e) {
+            activateEventHandler(e);
+        })
+    }
+
+    $(function ()
+    {
+        init();
+    });
+</script>
+{% endblock %}
+{% block navigation_bar %}
+<li class="breadcrumb-item"><a href="{{ url_for ('.workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a></li>
+<li class="breadcrumb-item active" aria-current="page">Charts</li>
+{% endblock %}
+{% block title_header %}Charts{% endblock %}
+{% block content %}
+<section class="row">
+    <div class="col">
+        <div class="accordion" id="charts-accordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#job-distribution" aria-expanded="true" aria-controls="job-distribution">
+                        Job Distribution
+                    </button>
+                </h2>
+
+                <div id="job-distribution" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#charts-accordion">
+                    <div class="accordion-body">
+                        <section class="row">
+                            <div class="col">
+                                <div id="job_distribution">No information available.</div>
+                            </div>
+                        </section>
+                        <section class="row">
+                            <div class="col text-center">
+                                <div id="job_distribution_options" class="btn-group" role="group" aria-label="Job Distribution Options">
+                                    <a id="by_count" name="job_dist" class="btn btn-primary" onclick="jobDistributionGraphToggle(1);">By Count</a>
+                                    <a id="by_time" name="job_dist" class="btn btn-primary" onclick="jobDistributionGraphToggle(2);">By Time</a>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#time-chart" aria-expanded="false" aria-controls="time-chart">
+                        Time Chart
+                    </button>
+                </h2>
+
+                <div id="time-chart" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#charts-accordion" href="{{ url_for ('.time_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <section class="row">
+                            <div class="col">
+                                <div id="time_chart">No information available.</div>
+                            </div>
+                        </section>
+                        <section class="row">
+                            <div class="col text-center">
+                                <div id="time_chart_options" class="btn-group" role="group" aria-label="Time Chart Options">
+                                    <a id="by_job" name="by_job" class="btn btn-primary" onclick="timeChartToggle(1);">By Jobs</a>
+                                    <a id="by_runtime" name="by_runtime" class="btn btn-primary" onclick="timeChartToggle(2);">By Invocations</a>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#gantt-chart" aria-expanded="false" aria-controls="gantt-chart">
+                        Gantt Chart
+                    </button>
+                </h2>
+
+                <div id="gantt-chart" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#charts-accordion" href="{{ url_for ('.gantt_chart', root_wf_id = root_wf_id, wf_id = wf_id) }}">
+                    <div class="accordion-body">
+                        <div id="gantt_chart" style="height: 800px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

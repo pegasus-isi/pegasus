@@ -1,0 +1,164 @@
+/*
+ * Dashboard Style
+ */
+ .logo {
+    font-family: 'Stardos Stencil', cursive;
+    font-size: 1.5em;
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+.table-fixed td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-button {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.copy-button-hover {
+    color: #31708f;
+}
+
+.copy-button:active, .copy-button:focus {
+    outline: none;
+    border: none;
+}
+
+.copy-button:before {
+    font-family: 'Font Awesome 5 Free';
+    font-size: 1.33333333em;
+    vertical-align: -15%;
+    content: '\f0c5';
+}
+
+.file-browser {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+}
+
+.file-browser:hover {
+    color: #31708f;
+    text-decoration: none;
+}
+
+.file-browser:active, .file-browser:focus {
+    outline: none;
+    border: none;
+}
+
+.file-browser:before {
+    font-family: 'Font Awesome 5 Free';
+    font-size: 1.33333333em;
+    vertical-align: -15%;
+    content: '\f07b';
+}
+
+.file-list {
+    height: 100vh;
+    overflow: scroll;
+}
+
+.file-list ul {
+    list-style: none;
+}
+
+.file-list ul:first-child {
+    padding-left: 1em;
+}
+
+.file-list .directory {
+    cursor: pointer;
+}
+
+.file-list .directory .collapsed:before {
+    font-family: 'Font Awesome 5 Free';
+    font-size: 1.1em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\f07b';
+}
+
+.file-list .directory:before {
+    font-family: 'Font Awesome 5 Free';
+    font-size: 1.1em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\f07c';
+}
+
+.file-list ul li:before {
+    font-family: 'Font Awesome 5 Free';
+    font-size: 1.2em;
+    vertical-align: -15%;
+    padding-right: .2em;
+    content: '\f15b';
+}
+
+/*
+ * Sticky Footer
+ */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 150px;
+}
+
+a img {
+    border: none;
+}
+
+.footer_icon {
+    height: 68px;
+}
+
+/*
+ * Bootstrap overrides
+ */
+html {
+    font-family: sans-serif !important;
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    margin: 0;
+    margin-bottom: 150px;
+    font-size: 15px !important;
+}
+
+.row {
+    margin-bottom: 1.5em;
+}
+
+.breadcrumb li {
+    margin-bottom: 0px;
+    vertical-align: middle;
+}
+
+table.dataTable tr.successful > td:first-child, table.dataTable tr.successful > th:first-child {
+    border-left: 2px solid #28a745;
+}
+table.dataTable tr.running > td:first-child, table.dataTable tr.running > th:first-child {
+    border-left: 2px solid #007bff;
+}
+table.dataTable tr.failed > td:first-child, table.dataTable tr.failed > th:first-child {
+    border-left: 2px solid #dc3545;
+}
+table.dataTable tr.failing > td:first-child, table.dataTable tr.failing > th:first-child {
+    border-left: 2px solid #ffc107;
+}
+table.dataTable tr.archived > td:first-child, table.dataTable tr.archived > th:first-child {
+    border-left: 2px solid #6c757d;
+}

@@ -1,0 +1,42 @@
+digraph E {
+size="8.0,10.0"
+ratio=fill
+node [shape=ellipse]
+edge [arrowhead=normal, arrowsize=1.0]
+	"stage_in_remote_local_0_0" [color=gold,style=filled,label="stage_in_remote_local_0_0"]
+	"preprocess_ID0000001" [color=blueviolet,style=filled,label="preprocess_ID0000001"]
+	"stage_out_local_local_2_0" [color=goldenrod,style=filled,label="stage_out_local_local_2_0"]
+	"stage_out_local_local_1_0" [color=goldenrod,style=filled,label="stage_out_local_local_1_0"]
+	"stage_out_local_local_0_0" [color=goldenrod,style=filled,label="stage_out_local_local_0_0"]
+	"stage_in_local_local_0_0" [color=gold,style=filled,label="stage_in_local_local_0_0"]
+	"stage_in_local_local_1_0" [color=gold,style=filled,label="stage_in_local_local_1_0"]
+	"findrange_ID0000003" [color=blueviolet,style=filled,label="findrange_ID0000003"]
+	"stage_in_local_local_2_0" [color=gold,style=filled,label="stage_in_local_local_2_0"]
+	"findrange_ID0000002" [color=blueviolet,style=filled,label="findrange_ID0000002"]
+	"create_dir_blackdiamond_0_local" [color=darkturquoise,style=filled,label="create_dir_blackdiamond_0_local"]
+	"register_local_2_0" [color=orange,style=filled,label="register_local_2_0"]
+	"analyze_ID0000004" [color=blueviolet,style=filled,label="analyze_ID0000004"]
+	"register_local_1_0" [color=orange,style=filled,label="register_local_1_0"]
+	"register_local_0_0" [color=orange,style=filled,label="register_local_0_0"]
+
+	"stage_in_remote_local_0_0" -> "preprocess_ID0000001"
+	"preprocess_ID0000001" -> "stage_out_local_local_0_0"
+	"preprocess_ID0000001" -> "findrange_ID0000003"
+	"preprocess_ID0000001" -> "findrange_ID0000002"
+	"stage_out_local_local_2_0" -> "register_local_2_0"
+	"stage_out_local_local_1_0" -> "register_local_1_0"
+	"stage_out_local_local_0_0" -> "register_local_0_0"
+	"stage_in_local_local_0_0" -> "preprocess_ID0000001"
+	"stage_in_local_local_1_0" -> "findrange_ID0000003"
+	"stage_in_local_local_1_0" -> "findrange_ID0000002"
+	"findrange_ID0000003" -> "analyze_ID0000004"
+	"findrange_ID0000003" -> "stage_out_local_local_1_0"
+	"stage_in_local_local_2_0" -> "analyze_ID0000004"
+	"findrange_ID0000002" -> "analyze_ID0000004"
+	"findrange_ID0000002" -> "stage_out_local_local_1_0"
+	"create_dir_blackdiamond_0_local" -> "stage_in_remote_local_0_0"
+	"create_dir_blackdiamond_0_local" -> "stage_in_local_local_0_0"
+	"create_dir_blackdiamond_0_local" -> "stage_in_local_local_1_0"
+	"create_dir_blackdiamond_0_local" -> "stage_in_local_local_2_0"
+	"analyze_ID0000004" -> "stage_out_local_local_2_0"
+}

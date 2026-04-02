@@ -1,0 +1,8 @@
+TASK one -c 1 /bin/sh -c "echo one $PMC_AFFINITY"
+TASK two -c 2 /bin/sh -c "echo two $PMC_AFFINITY"
+TASK four -c 4 /bin/sh -c "echo four $PMC_AFFINITY"
+TASK eight -c 8 /bin/sh -c "echo eight $PMC_AFFINITY"
+TASK four2 -c 4 /bin/sh -c "echo four2 $PMC_AFFINITY"
+TASK two2 -c 2 /bin/sh -c "echo two2 $PMC_AFFINITY"
+TASK two3 -c 2 /bin/sh -c "echo two3 $PMC_AFFINITY"
+TASK two4 -c 2 /bin/sh -c "echo two4 $PMC_AFFINITY"

@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi.obo", "recursive": "False" } }
+  ,
+  {
+    "id": 2,
+    "type": "remove",
+    "target": { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013/./chebi_drug_loader", "recursive": "False" } }
+]

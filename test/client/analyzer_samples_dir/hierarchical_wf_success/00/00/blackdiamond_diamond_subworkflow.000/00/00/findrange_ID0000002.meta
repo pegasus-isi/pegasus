@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "f.c1",
+    "_type": "file",
+    "_attributes": {
+      "user": "mzalam",
+      "size": "519",
+      "ctime": "2023-03-04T01:03:56-08:00",
+      "checksum.type": "sha256",
+      "checksum.value": "10b3f2e2c377af935e5a70540412d74fc2350158f5b5b9cc494ecd9a272cb66b",
+      "checksum.timing": "0.0"
+    }
+  }
+]

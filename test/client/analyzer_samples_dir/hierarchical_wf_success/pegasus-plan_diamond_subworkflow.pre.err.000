@@ -1,0 +1,256 @@
+2023-03-04 01:02:11: PegasusLite: version 5.0.5
+2023-03-04 01:02:12: Executing on host workflow.isi.edu IP=128.9.46.53
+
+########################[Pegasus Lite] Setting up workdir ########################
+2023-03-04 01:02:12: Checking /tmp for potential use as work space... 
+2023-03-04 01:02:12:   Workdir is /tmp/pegasus.EReATmFz3 - 35G available
+2023-03-04 01:02:12: Changing cwd to /tmp/pegasus.EReATmFz3
+
+###################### Staging in input data and executables ######################
+2023-03-04 01:02:12,273    INFO:  Reading URL pairs from stdin
+2023-03-04 01:02:12,274    INFO:  3 transfers loaded
+2023-03-04 01:02:12,274    INFO:  PATH=/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin
+2023-03-04 01:02:12,274    INFO:  LD_LIBRARY_PATH=
+2023-03-04 01:02:12,323    INFO:  --------------------------------------------------------------------------------
+2023-03-04 01:02:12,323    INFO:  Starting transfers - attempt 1
+2023-03-04 01:02:14,326    INFO:  /bin/cp -f -R -L '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow.pegasus.properties' '/tmp/pegasus.EReATmFz3/inner_diamond_workflow.pegasus.properties'
+2023-03-04 01:02:14,337    INFO:  /bin/cp -f -R -L '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow_tc.yml' '/tmp/pegasus.EReATmFz3/inner_diamond_workflow_tc.yml'
+2023-03-04 01:02:14,346    INFO:  /bin/cp -f -R -L '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./sites.yml' '/tmp/pegasus.EReATmFz3/sites.yml'
+2023-03-04 01:02:14,353    INFO:  --------------------------------------------------------------------------------
+2023-03-04 01:02:14,354    INFO:  Stats: Total 3 transfers, 1.3 KB transferred in 2 seconds. Rate: 662.6 B/s (5.2 Kb/s)
+2023-03-04 01:02:14,354    INFO:         Between sites local->local : 3 transfers, 1.3 KB transferred in 2 seconds. Rate: 662.6 B/s (5.2 Kb/s)
+2023-03-04 01:02:14,354    INFO:  All transfers completed successfully.
+Can't open ./.chirp.config file
+cannot chirp_connect to condor_starter
+	Error: 2 (No such file or directory)
+2023-03-04 01:02:14: condor_chirp test failed - disabling chirping
+
+######################[Pegasus Lite] Executing the user task ######################
+- invocation: True
+  version: 3.0
+  start: 2023-03-04T01:02:14.412-08:00
+  duration: 5.346
+  transformation: "pegasus-plan_diamond_subworkflow.pre.sh"
+  derivation: "diamond_subworkflow"
+  resource: "local"
+  wf-label: "hierarchical-workflow"
+  wf-stamp: "2023-03-04T01:00:54-08:00"
+  interface: enp129s0
+  hostaddr: 128.9.46.53
+  hostname: workflow.isi.edu
+  pid: 187570
+  uid: 8073
+  user: mzalam
+  gid: 1018
+  group: div23
+  umask: 0o0022
+  mainjob:
+    start: 2023-03-04T01:02:14.500-08:00
+    duration: 5.258
+    pid: 187571
+    usage:
+      utime: 6.227
+      stime: 1.104
+      maxrss: 230688
+      minflt: 157222
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 20104
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 15528
+      nivcsw: 177
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /home/mzalam/pegasus-5.0.5/bin/pegasus-plan
+      mode: 0o100755
+      size: 897
+      inode: 209458959
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2023-02-17T10:23:44-08:00
+      atime: 2023-03-03T22:10:15-08:00
+      ctime: 2023-03-03T22:10:08-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    argument_vector:
+      - "-Dpegasus.log.*=/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/pegasus-plan_diamond_subworkflow.pre.log"
+      - "-Dpegasus.workflow.root.uuid=48f759a4-165f-47d6-8c32-571649ce311b"
+      - "--conf"
+      - "inner_diamond_workflow.pegasus.properties"
+      - "--dir"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit"
+      - "--relative-dir"
+      - "mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow"
+      - "--relative-submit-dir"
+      - "mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow"
+      - "--basename"
+      - "inner"
+      - "--sites"
+      - "condorpool"
+      - "--cache"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.cache"
+      - "--output-map"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/00/00/pegasus-plan_diamond_subworkflow.output.map"
+      - "--output-sites"
+      - "local"
+      - "--cleanup"
+      - "none"
+      - "--verbose"
+      - "--verbose"
+      - "--verbose"
+      - "--deferred"
+      - "/home/mzalam/hierar/hierarichal-sample-wf/inner_diamond_workflow.yml"
+    procs:
+  jobids:
+  cwd: /tmp/pegasus.EReATmFz3
+  usage:
+    utime: 0.018
+    stime: 0.060
+    maxrss: 2680
+    minflt: 138
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 6
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: workflow.isi.edu
+    uname_release: 4.18.0-425.10.1.el8_7.x86_64
+    uname_machine: x86_64
+    ram_total: 65653728
+    ram_free: 20713780
+    ram_shared: 230276
+    ram_buffer: 10616
+    swap_total: 20971516
+    swap_free: 18878896
+    cpu_count: 24
+    cpu_speed: 2500
+    cpu_vendor: GenuineIntel
+    cpu_model: Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz
+    load_min1: 0.62
+    load_min5: 0.43
+    load_min15: 0.34
+    procs_total: 468
+    procs_running: 1
+    procs_sleeping: 288
+    procs_other: 179
+    procs_vmsize: 86776800
+    procs_rss: 9307364
+    task_total: 1432
+    task_running: 1
+    task_sleeping: 1252
+    task_other: 179
+  files:
+    f.d:
+      error: 2
+      lfn: "f.d"
+      file_name: f.d
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 3075
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-01-25T15:24:15-08:00
+      atime: 2023-01-25T15:24:15-08:00
+      ctime: 2023-01-25T15:24:15-08:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    stdout:
+      temporary_name: /tmp/ks.out.YWykf3
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 2500
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:02:14-08:00
+      atime: 2023-03-04T01:02:14-08:00
+      ctime: 2023-03-04T01:02:14-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    stderr:
+      temporary_name: /tmp/ks.err.gfD99n
+      descriptor: 4
+      mode: 0o100600
+      size: 0
+      inode: 2501
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:02:14-08:00
+      atime: 2023-03-04T01:02:14-08:00
+      ctime: 2023-03-04T01:02:14-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+    metadata:
+      temporary_name: /tmp/ks.meta.rHmRT6
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 2506
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2023-03-04T01:02:14-08:00
+      atime: 2023-03-04T01:02:14-08:00
+      ctime: 2023-03-04T01:02:14-08:00
+      uid: 8073
+      user: mzalam
+      gid: 1018
+      group: div23
+
+---------------pegasus-multipart
+- transfer_attempts:
+  - src_url: "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow.pegasus.properties"
+    src_label: "local"
+    dst_url: "file:///tmp/pegasus.EReATmFz3/inner_diamond_workflow.pegasus.properties"
+    dst_label: "local"
+    success: True
+    start: 1677920534
+    duration: 0.0
+    lfn: "inner_diamond_workflow.pegasus.properties"
+    bytes: 130
+  - src_url: "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./inner_diamond_workflow_tc.yml"
+    src_label: "local"
+    dst_url: "file:///tmp/pegasus.EReATmFz3/inner_diamond_workflow_tc.yml"
+    dst_label: "local"
+    success: True
+    start: 1677920534
+    duration: 0.0
+    lfn: "inner_diamond_workflow_tc.yml"
+    bytes: 406
+  - src_url: "file:///home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/./sites.yml"
+    src_label: "local"
+    dst_url: "file:///tmp/pegasus.EReATmFz3/sites.yml"
+    dst_label: "local"
+    success: True
+    start: 1677920534
+    duration: 0.0
+    lfn: "sites.yml"
+    bytes: 843
+2023-03-04 01:02:19: /tmp/pegasus.EReATmFz3 cleaned up
+PegasusLite: exitcode 0

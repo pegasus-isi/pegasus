@@ -1,0 +1,52 @@
+# multiple line text-based transformation catalog: 2020-04-17T19:52:42.179-08:00
+tr example::keg:1.0 { 
+
+  #specify profiles that apply for all the sites for the transformation 
+  #in each site entry the profile can be overriden 
+
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
+
+  site isi {
+    # environment to be set when the job is run in the container
+    # overrides env profiles specified in the container
+    profile env "HELLo" "WORLD"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    
+    profile condor "FOO" "bar"
+    
+    pfn "/path/to/keg"
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+      
+    # INSTALLED means pfn refers to path in the container.
+    # STAGEABLE means the executable can be staged into the container
+    type "INSTALLED" 
+
+    #optional attribute to specify the container to use
+    container "centos-pegasus"
+  }
+}
+
+cont centos-pegasus{
+     # can be either docker or singularity or shifter
+     type "docker"
+
+     # URL to image in a docker|singularity hub|shitfer repo url OR
+     # URL to an existing docker image exported as a tar file or singularity image
+     image "docker:///rynge/montage:latest" 
+
+     # optional site attribute to tell pegasus which site tar file
+     # exists. useful for handling file URL's correctly
+     image_site "optional site"
+
+     # mount information to mount host directories into container 
+     # format src-dir:dest-dir[:options]
+     mount "/Volumes/Work/lfs1:/shared-data/:ro"
+
+     # environment to be set when the job is run in the container
+     # only env profiles are supported
+     profile env "JAVA_HOME" "/opt/java/1.6"	    
+}

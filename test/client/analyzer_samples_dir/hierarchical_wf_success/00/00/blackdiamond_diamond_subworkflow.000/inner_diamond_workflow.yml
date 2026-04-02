@@ -1,0 +1,102 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-04-23T01:00:54Z
+pegasus: 5.0.4
+name: blackdiamond
+jobs:
+- type: job
+  name: preprocess
+  id: ID0000001
+  arguments:
+  - -a
+  - preprocess
+  - -T
+  - '20'
+  - -i
+  - pegasus.html
+  - -o
+  - f.b1
+  - f.b2
+  uses:
+  - lfn: f.b1
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: f.b2
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: pegasus.html
+    type: input
+- type: job
+  name: findrange
+  id: ID0000002
+  arguments:
+  - -a
+  - findrange
+  - -T
+  - '20'
+  - -i
+  - f.b1
+  - -o
+  - f.c1
+  uses:
+  - lfn: f.b1
+    type: input
+  - lfn: f.c1
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: findrange
+  id: ID0000003
+  arguments:
+  - -a
+  - findrange
+  - -T
+  - '20'
+  - -i
+  - f.b2
+  - -o
+  - f.c2
+  uses:
+  - lfn: f.b2
+    type: input
+  - lfn: f.c2
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: analyze
+  id: ID0000004
+  arguments:
+  - -a
+  - analyze
+  - -T
+  - '20'
+  - -i
+  - f.c1
+  - f.c2
+  - -o
+  - f.d
+  uses:
+  - lfn: f.d
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: f.c1
+    type: input
+  - lfn: f.c2
+    type: input
+jobDependencies:
+- id: ID0000001
+  children:
+  - ID0000002
+  - ID0000003
+- id: ID0000002
+  children:
+  - ID0000004
+- id: ID0000003
+  children:
+  - ID0000004

@@ -1,0 +1,19 @@
+x-pegasus:
+  apiLang: python
+  createdBy: mzalam
+  createdOn: 03-05-23T09:10:05Z
+pegasus: 5.0.4
+name: Drug-Combination-Therapy
+jobs:
+- type: job
+  name: chebi_drug_loader
+  id: ID0000001
+  arguments: []
+  uses:
+  - lfn: chebi.obo
+    type: input
+  - lfn: chebi_dict.pickle
+    type: output
+    stageOut: true
+    registerReplica: true
+jobDependencies: []

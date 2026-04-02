@@ -1,0 +1,6 @@
+[
+  {
+    "id": 1,
+    "type": "mkdir",
+    "target": { "site_label": "local", "url": "file:///home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013" } }
+]

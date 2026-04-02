@@ -1,0 +1,24 @@
+{
+  "root_workflow_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+  "workflow_uuid": "48f759a4-165f-47d6-8c32-571649ce311b",
+  "wf_metadata": {
+    "wf.api": "python"
+  },
+  "graph": {
+    "jobs": {
+      "curl_ID0000001": {},
+      "create_dir_hierarchical-workflow_0_local": {},
+      "stage_out_local_local_2_0": {},
+      "stage_out_local_local_1_0": {},
+      "stage_out_local_local_0_0": {},
+      "wc_ID0000002": {},
+      "stage_worker_local_hierarchical-workflow_0_local": {},
+      "stage_in_local_local_1_0": {},
+      "cleanup_hierarchical-workflow_0_local": {},
+      "register_local_2_0": {},
+      "register_local_1_0": {},
+      "register_local_0_0": {},
+      "pegasus-plan_diamond_subworkflow": {}
+    }
+  }
+}
