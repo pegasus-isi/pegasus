@@ -13,11 +13,15 @@
  */
 package edu.isi.pegasus.planner.transfer.sls;
 
+import static edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_IMPLEMENTER;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -25,6 +29,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -35,6 +40,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.SLS;
 import java.io.File;
 import java.util.ArrayList;
@@ -42,6 +48,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -124,6 +131,8 @@ public class Transfer implements SLS {
      */
     protected boolean mTransfersOnHostOS;
 
+    protected PegasusBag mBag;
+
     /** The default constructor. */
     public Transfer() {}
 
@@ -134,6 +143,7 @@ public class Transfer implements SLS {
      */
     @Override
     public void initialize(PegasusBag bag) {
+        mBag = bag;
         mProps = bag.getPegasusProperties();
         bag.getPlannerOptions();
         mLogger = bag.getLogger();
@@ -272,6 +282,103 @@ public class Transfer implements SLS {
     }
 
     /**
+     * Generates a second level staging file of the input files to the worker node directory for DAX
+     * / pegasusWorkflow jobs. The only files that are considered are those that have forPlanning
+     * flag set to true.
+     *
+     * @param job job for which the file is being created
+     * @param fileName name of the file that needs to be written out.
+     * @param stagingSiteServer the file server on the staging site to be used for retrieval of
+     *     files i.e the get operation
+     * @param stagingSiteDirectory directory on the head node of the staging site.
+     * @param workerNodeDirectory worker node directory
+     * @param onlyContainer boolean indicating if sls inputs should be generated only for container
+     *     files associated with the job.
+     * @return a Collection of FileTransfer objects listing the transfers that need to be done.
+     * @see #needsSLSInputTransfers( Job)
+     */
+    public Collection<FileTransfer> determineSLSInputTransfers(
+            DAXJob job,
+            String fileName,
+            FileServer stagingSiteServer,
+            String stagingSiteDirectory,
+            String workerNodeDirectory,
+            boolean onlyContainer) {
+
+        Collection<FileTransfer> result = new LinkedList();
+        String destDir = workerNodeDirectory;
+
+        // for pegasusWorkflow job that is being set to run via
+        // PegasusLite there is no container involved
+        if (onlyContainer) {
+            return result;
+        }
+
+        if (job.getContainer() != null) {
+            // dax job can never run in a container
+            throw new RuntimeException(
+                    "The pegasusWorkflow job"
+                            + " "
+                            + job.getID()
+                            + " "
+                            + "incorrectly set to run via container -"
+                            + " "
+                            + job.getContainer());
+        }
+
+        if (job.getInputFiles().isEmpty()) {
+            return result;
+        }
+
+        String cacheFile = job.getInputWorkflowCacheFile();
+
+        ReplicaCatalog simpleFile = loadInputWorkflowCacheFile(job, cacheFile);
+
+        try {
+            for (PegasusFile pf : job.getInputFiles()) {
+                String lfn = pf.getLFN();
+                Collection<ReplicaCatalogEntry> rces = simpleFile.lookup(lfn);
+                if (rces.isEmpty()) {
+                    throw new RuntimeException(
+                            "For job"
+                                    + " "
+                                    + job.getID()
+                                    + " "
+                                    + "unable to determine a location to stage-in file"
+                                    + " "
+                                    + lfn
+                                    + " in cache file "
+                                    + cacheFile);
+                }
+
+                FileTransfer ft = new FileTransfer();
+
+                for (ReplicaCatalogEntry rce : rces) {
+                    ft.addSource(rce);
+                }
+                String destURLScheme = PegasusURL.FILE_URL_SCHEME; // default is file URL
+
+                // destination
+                StringBuilder url = new StringBuilder();
+                url.append(destURLScheme)
+                        .append("//")
+                        .append(destDir)
+                        .append(File.separator)
+                        .append(pf.getLFN());
+                ft.addDestination(job.getSiteHandle(), url.toString());
+
+                result.add(ft);
+            }
+        } finally {
+            if (simpleFile != null) {
+                simpleFile.close();
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Generates a second level staging file of the input files to the worker node directory.
      *
      * @param job job for which the file is being created
@@ -300,6 +407,17 @@ public class Transfer implements SLS {
                     "Not Writing out a SLS input file for job " + job.getName(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;
+        }
+
+        // GH-2179  PM-1898 special handling for dax jobs
+        if (job instanceof DAXJob) {
+            return this.determineSLSInputTransfers(
+                    (DAXJob) job,
+                    fileName,
+                    stagingSiteServer,
+                    stagingSiteDirectory,
+                    workerNodeDirectory,
+                    onlyContainer);
         }
 
         // GH-2105 PM-1875 we escape variable if job run in container AND
@@ -1128,5 +1246,42 @@ public class Transfer implements SLS {
                 .append(new File(lfn).getName());
 
         return replacedURL.toString();
+    }
+
+    /**
+     * Loads a replica catalog back end from the cache file
+     *
+     * @param job
+     * @param cacheFile
+     * @return
+     */
+    private ReplicaCatalog loadInputWorkflowCacheFile(DAXJob job, String cacheFile) {
+        if (cacheFile == null) {
+            throw new RuntimeException(
+                    "The pegasusWorkflow job"
+                            + " "
+                            + job.getID()
+                            + " "
+                            + "is not associated with a cache file");
+        }
+
+        Properties cacheProps = new Properties();
+        // all cache files are loaded in readonly mode
+        cacheProps.setProperty(ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true");
+        // set the appropriate property to designate path to file
+        cacheProps.setProperty(ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, cacheFile);
+        mLogger.log(
+                "Loading sub workflow input cache file: " + cacheFile,
+                LogManager.DEBUG_MESSAGE_LEVEL);
+        ReplicaCatalog simpleFile = null;
+        try {
+            simpleFile =
+                    ReplicaFactory.loadInstance(
+                            CACHE_REPLICA_CATALOG_IMPLEMENTER, this.mBag, cacheProps);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "For job " + job.getID() + " unable to load workflow cache file " + cacheFile);
+        }
+        return simpleFile;
     }
 }

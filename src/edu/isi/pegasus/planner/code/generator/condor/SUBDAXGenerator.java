@@ -606,7 +606,7 @@ public class SUBDAXGenerator {
             // by the file factory
             submitDirectory = new File(submitDirectory, job.getRelativeSubmitDirectory());
 
-            Job dagJob =
+            DAXJob dagJob =
                     constructDAGJob(
                             job,
                             submitDirectory,
@@ -617,6 +617,11 @@ public class SUBDAXGenerator {
 
             // PM-846 add a +pegasus_execution_sites classad
             insertExecutionSitesClassAd(job, options.getExecutionSites());
+
+            if (wfCacheFile != null) {
+                // GH-2179 need to propogate the input workflow cache file
+                dagJob.setInputWorkflowCacheFile(wfCacheFile);
+            }
 
             File wrapper =
                     constructPlannerPrescriptWrapper(
@@ -651,7 +656,7 @@ public class SUBDAXGenerator {
         // create a shallow clone job for the prescript to be generated.
         // we need to do this as the dagJob refers to condor dagman instance
         // not the prescript
-        Job preScriptJob = new DAXJob();
+        DAXJob preScriptJob = new DAXJob();
 
         // PM-1179 we need to tie this back into the graph
         // as we are creating a new job and using that
@@ -677,6 +682,11 @@ public class SUBDAXGenerator {
         }
         preScriptJob.setInputFiles(inputs);
         preScriptJob.setOutputFiles(dagJob.getOutputFiles());
+
+        // GH-2179 , PM-1898,  set any job specific input cache file
+        // into the  prescript job as we want the right input paths
+        // in the generated pegasus lite wrapper for the sub workflow job
+        preScriptJob.setInputWorkflowCacheFile(((DAXJob) dagJob).getInputWorkflowCacheFile());
 
         // arguments are just $@ since the prescript in the invocation contains
         // the arguments
@@ -797,11 +807,11 @@ public class SUBDAXGenerator {
      * @param basenamePrefix the basename to be assigned to the files associated with DAGMan
      * @return the constructed DAG job.
      */
-    protected Job constructDAGJob(
+    protected DAXJob constructDAGJob(
             Job subdaxJob, File directory, File subdaxDirectory, String basenamePrefix) {
 
         // for time being use the old functions.
-        Job job = new DAXJob();
+        DAXJob job = new DAXJob();
 
         // PM-1179 we need to tie this back into the graph
         // as we are creating a new job and using that
@@ -1121,7 +1131,7 @@ public class SUBDAXGenerator {
         // Relative                   ./local-hierarchy-0.cache
         // String rootSubmitDir = this.mPegasusPlanOptions.getSubmitDirectory();
         // String relative = "."  + absolute.substring( absolute.indexOf( rootSubmitDir ) +
-        // rootSubmitDir.length() );
+        // rootSubmitDir.length()
 
         // PM-1088 have to return absolute as prescript is executed in scratch dir not submit dir
         return absolute;
