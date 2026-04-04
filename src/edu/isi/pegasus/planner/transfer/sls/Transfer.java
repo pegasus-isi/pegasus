@@ -332,7 +332,7 @@ public class Transfer implements SLS {
 
         String cacheFile = job.getInputWorkflowCacheFile();
 
-        // GH-2179 input.cache file contains all the locations of 
+        // GH-2179 input.cache file contains all the locations of
         // files that a parent compute job might have generated for the
         // pegasusWorkflow job
         ReplicaCatalog simpleFile = loadInputWorkflowCacheFile(job, cacheFile);
@@ -344,14 +344,22 @@ public class Transfer implements SLS {
 
             for (PegasusFile pf : job.getInputFiles()) {
                 String lfn = pf.getLFN();
-                
+
                 // all input files for pegasusWorkflow job that are generated
                 // by parent compute jobs appear in the input.cache file for the job
-                Collection<ReplicaCatalogEntry> rces = simpleFile.lookup(lfn);
+                Collection<ReplicaCatalogEntry> sources = simpleFile.lookup(lfn);
 
-                if (rces.isEmpty()) {
-                    // if not available in input.cache file that we revert
-                    // to creating the location w.r.t staging site
+                if (sources.isEmpty()) {
+                    // check if bypass staing is turned on for this file
+                    if (pf.doBypassStaging()) {
+                        sources = this.retrieveBypassedLocation(job, pf, computeSite);
+                    }
+                }
+
+                if (sources.isEmpty()) {
+                    // if not available in input.cache and also bypass is false for
+                    // the file then we revert to creating the location
+                    // w.r.t staging site
                     boolean useFileURLAsSource =
                             this.useFileURLAsSource(computeSiteEntry, stagingSite);
                     StringBuilder url = new StringBuilder();
@@ -375,12 +383,12 @@ public class Transfer implements SLS {
                             .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
 
                     url.append(File.separator).append(lfn);
-                    rces.add(new ReplicaCatalogEntry(url.toString(), stagingSite));
+                    sources.add(new ReplicaCatalogEntry(url.toString(), stagingSite));
                 }
 
                 FileTransfer ft = new FileTransfer();
 
-                for (ReplicaCatalogEntry rce : rces) {
+                for (ReplicaCatalogEntry rce : sources) {
                     ft.addSource(rce);
                 }
                 String destURLScheme = PegasusURL.FILE_URL_SCHEME; // default is file URL
