@@ -332,23 +332,50 @@ public class Transfer implements SLS {
 
         String cacheFile = job.getInputWorkflowCacheFile();
 
+        // GH-2179 input.cache file contains all the locations of 
+        // files that a parent compute job might have generated for the
+        // pegasusWorkflow job
         ReplicaCatalog simpleFile = loadInputWorkflowCacheFile(job, cacheFile);
 
         try {
+            String stagingSite = job.getStagingSiteHandle();
+            String computeSite = job.getSiteHandle();
+            SiteCatalogEntry computeSiteEntry = this.mSiteStore.lookup(computeSite);
+
             for (PegasusFile pf : job.getInputFiles()) {
                 String lfn = pf.getLFN();
+                
+                // all input files for pegasusWorkflow job that are generated
+                // by parent compute jobs appear in the input.cache file for the job
                 Collection<ReplicaCatalogEntry> rces = simpleFile.lookup(lfn);
+
                 if (rces.isEmpty()) {
-                    throw new RuntimeException(
-                            "For job"
-                                    + " "
-                                    + job.getID()
-                                    + " "
-                                    + "unable to determine a location to stage-in file"
-                                    + " "
-                                    + lfn
-                                    + " in cache file "
-                                    + cacheFile);
+                    // if not available in input.cache file that we revert
+                    // to creating the location w.r.t staging site
+                    boolean useFileURLAsSource =
+                            this.useFileURLAsSource(computeSiteEntry, stagingSite);
+                    StringBuilder url = new StringBuilder();
+                    if (useFileURLAsSource) {
+                        // construct the source URL as a file url
+                        url.append(PegasusURL.FILE_URL_SCHEME)
+                                .append("//")
+                                .append(stagingSiteDirectory);
+                        mLogger.log(
+                                "Using file url for lfn " + lfn + " " + url,
+                                LogManager.TRACE_MESSAGE_LEVEL);
+
+                    } else {
+                        url.append(
+                                mSiteStore.getExternalWorkDirectoryURL(
+                                        stagingSiteServer, stagingSite));
+                    }
+
+                    // PM-833 append the relative staging site add on directory
+                    url.append(File.separator)
+                            .append(mStagingMapper.getRelativeDirectory(stagingSite, lfn));
+
+                    url.append(File.separator).append(lfn);
+                    rces.add(new ReplicaCatalogEntry(url.toString(), stagingSite));
                 }
 
                 FileTransfer ft = new FileTransfer();
