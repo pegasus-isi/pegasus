@@ -495,24 +495,22 @@ public class Transfer implements SLS {
             Collection<ReplicaCatalogEntry> sources = new LinkedList();
             boolean symlink = false;
             if (pf.doBypassStaging()) {
-                // PM-698
-                // we retrieve the URL from the Planner Cache as a get URL
-                // bypassed URL's are stored as GET urls in the cache and
-                // associated with the compute site
-
-                // PM 1002 first we try and find a tighter match on the compute site
-                // and then the loose match
-                cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get);
-                if (cacheLocations.isEmpty()) {
-                    mLogger.log(
-                            constructMessage(
-                                    job,
-                                    lfn,
-                                    "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
-                            LogManager.WARNING_MESSAGE_LEVEL);
+                sources = this.retrieveBypassedLocation(job, pf, computeSite);
+                // update the symlink flag for the bypass case
+                for (ReplicaCatalogEntry rce : sources) {
+                    symlink =
+                            this.symlinkingEnabled(
+                                    pf,
+                                    symlinkingEnabledForJob,
+                                    // source URL logically on the same site where job is to be run
+                                    // AND
+                                    // source URL is a file URL
+                                    rce.getResourceHandle().equals(job.getSiteHandle())
+                                            && rce.getPFN().startsWith(PegasusURL.FILE_URL_SCHEME));
                 }
             }
-            if (cacheLocations == null || cacheLocations.isEmpty()) {
+            // if (cacheLocations == null || cacheLocations.isEmpty()) {
+            if (sources.isEmpty()) {
                 String stagingSite = job.getStagingSiteHandle();
 
                 // PM-1787 PM-1789 the source URL can be a file URL if source URL logically on the
@@ -553,27 +551,6 @@ public class Transfer implements SLS {
 
                 // ft.addSource( stagingSite, url.toString() );
                 sources.add(new ReplicaCatalogEntry(url.toString(), stagingSite));
-            } else {
-                // construct the URL wrt to the planner cache location
-                // PM-1014 go through all the candidates returned from the planner cache
-                for (ReplicaCatalogEntry cacheLocation : cacheLocations) {
-                    url = new StringBuffer();
-                    url.append(cacheLocation.getPFN());
-
-                    // ft.addSource(cacheLocation);
-                    sources.add((ReplicaCatalogEntry) cacheLocation.clone());
-
-                    symlink =
-                            this.symlinkingEnabled(
-                                    pf,
-                                    symlinkingEnabledForJob,
-                                    // source URL logically on the same site where job is to be run
-                                    // AND
-                                    // source URL is a file URL
-                                    cacheLocation.getResourceHandle().equals(job.getSiteHandle())
-                                            && url.toString()
-                                                    .startsWith(PegasusURL.FILE_URL_SCHEME));
-                }
             }
 
             if (containerLFN != null) {
@@ -1083,6 +1060,68 @@ public class Transfer implements SLS {
         return (stagingSite.equals(computeSiteEntry.getSiteHandle())
                         && computeSiteEntry.hasSharedFileSystem())
                 || (stagingSite.equals("local") && computeSiteEntry.isVisibleToLocalSite());
+    }
+
+    protected Collection<ReplicaCatalogEntry> retrieveBypassedLocation(
+            Job job, PegasusFile pf, String computeSite) {
+        Collection<ReplicaCatalogEntry> sources = new LinkedList();
+        Collection<ReplicaCatalogEntry> cacheLocations = null;
+        String lfn = pf.getLFN();
+
+        // sanity check
+        if (!pf.doBypassStaging()) {
+            throw new RuntimeException(
+                    constructMessage(
+                            job,
+                            lfn,
+                            "Bypass flag not set, but trying to retrieve bypassed location"));
+        }
+
+        // PM-698
+        // we retrieve the URL from the Planner Cache as a get URL
+        // bypassed URL's are stored as GET urls in the cache and
+        // associated with the compute site
+
+        // PM 1002 first we try and find a tighter match on the compute site
+        // and then the loose match
+        cacheLocations = mPlannerCache.lookupAllEntries(lfn, computeSite, OPERATION.get);
+        if (cacheLocations.isEmpty()) {
+            mLogger.log(
+                    constructMessage(
+                            job,
+                            lfn,
+                            "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+
+        if (cacheLocations.isEmpty()) {
+            // return an empty list
+            return sources;
+        }
+
+        // construct the URL wrt to the planner cache location
+        // PM-1014 go through all the candidates returned from the planner cache
+        for (ReplicaCatalogEntry cacheLocation : cacheLocations) {
+            StringBuilder url = new StringBuilder();
+            url.append(cacheLocation.getPFN());
+
+            // ft.addSource(cacheLocation);
+            sources.add((ReplicaCatalogEntry) cacheLocation.clone());
+            /*
+            symlink =
+                    this.symlinkingEnabled(
+                            pf,
+                            symlinkingEnabledForJob,
+                            // source URL logically on the same site where job is to be run
+                            // AND
+                            // source URL is a file URL
+                            cacheLocation.getResourceHandle().equals(job.getSiteHandle())
+                                    && url.toString()
+                                            .startsWith(PegasusURL.FILE_URL_SCHEME));
+            */
+        }
+
+        return sources;
     }
 
     /**
