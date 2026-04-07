@@ -13,33 +13,126 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for WorkingDir invocation class. */
 public class WorkingDirTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(WorkingDir.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertThat(HasText.class.isAssignableFrom(WorkingDir.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        WorkingDir wd = new WorkingDir();
+        assertThat(wd.getValue(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        WorkingDir wd = new WorkingDir("/scratch/run1");
+        assertThat(wd.getValue(), is("/scratch/run1"));
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new WorkingDir(null));
+    }
+
+    @Test
+    public void testSetAndGetValue() {
+        WorkingDir wd = new WorkingDir();
+        wd.setValue("/home/user/jobs");
+        assertThat(wd.getValue(), is("/home/user/jobs"));
+    }
+
+    @Test
+    public void testAppendValue() {
+        WorkingDir wd = new WorkingDir("/home/");
+        wd.appendValue("user");
+        assertThat(wd.getValue(), is("/home/user"));
+    }
+
+    @Test
+    public void testToXMLStringContainsCwd() {
+        WorkingDir wd = new WorkingDir("/scratch/workflow");
+        String xml = wd.toXML("");
+        assertThat(xml, containsString("<cwd>"));
+        assertThat(xml, containsString("/scratch/workflow"));
+        assertThat(xml, containsString("</cwd>"));
+    }
+
+    @Test
+    public void testToXMLStringEmptyWhenNullValue() {
+        WorkingDir wd = new WorkingDir();
+        String xml = wd.toXML("");
+        assertThat(xml, is(""));
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        WorkingDir wd = new WorkingDir("/scratch");
+
+        wd.appendValue(null);
+
+        assertThat(wd.getValue(), is("/scratch"));
+    }
+
+    @Test
+    public void testSetValueNullClearsValue() {
+        WorkingDir wd = new WorkingDir("/scratch");
+
+        wd.setValue(null);
+
+        assertThat(wd.getValue(), is(nullValue()));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        WorkingDir wd = new WorkingDir();
+
+        IOException exception =
+                assertThrows(IOException.class, () -> wd.toString(new StringWriter()));
+
+        assertThat(
+                exception.getMessage(),
+                is("method not implemented, please contact vds-support@griphyn.org"));
+    }
+
+    @Test
+    public void testToXMLWriterUsesNamespaceAndEscapesValue() throws IOException {
+        WorkingDir wd = new WorkingDir("/scratch/<run>");
+        StringWriter writer = new StringWriter();
+
+        wd.toXML(writer, "  ", "inv");
+
+        String xml = writer.toString();
+        assertThat(xml.startsWith("  <inv:cwd>"), is(true));
+        assertThat(xml, containsString("/scratch/&lt;run&gt;"));
+        assertThat(xml.endsWith("</inv:cwd>" + System.lineSeparator()), is(true));
+    }
+
+    @Test
+    public void testToXMLWriterWithNullValueWritesNothing() throws IOException {
+        WorkingDir wd = new WorkingDir();
+        StringWriter writer = new StringWriter();
+
+        wd.toXML(writer, "", "inv");
+
+        assertThat(writer.toString(), is(""));
+    }
 }

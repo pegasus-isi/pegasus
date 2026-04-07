@@ -13,33 +13,112 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Arguments abstract class structure. */
 public class ArgumentsTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class TestArguments extends Arguments {
+        private String mValue;
 
-    @BeforeEach
-    public void setUp() {}
+        TestArguments() {
+            super();
+        }
 
-    @AfterEach
-    public void tearDown() {}
+        TestArguments(String executable) {
+            super(executable);
+        }
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        public String getValue() {
+            return mValue;
+        }
+
+        @Override
+        public void toXML(Writer stream, String indent, String namespace) {}
     }
-    */
+
+    @Test
+    public void testArgumentsIsAbstract() {
+        assertThat(Modifier.isAbstract(Arguments.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Arguments.class), is(true));
+    }
+
+    @Test
+    public void testArgStringIsConcreteSubtype() {
+        assertThat(Arguments.class.isAssignableFrom(ArgString.class), is(true));
+        assertThat(Modifier.isAbstract(ArgString.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testArgVectorIsConcreteSubtype() {
+        assertThat(Arguments.class.isAssignableFrom(ArgVector.class), is(true));
+        assertThat(Modifier.isAbstract(ArgVector.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testArgStringSetExecutable() {
+        ArgString as = new ArgString();
+        as.setExecutable("/bin/bash");
+        assertThat(as.getExecutable(), is("/bin/bash"));
+    }
+
+    @Test
+    public void testArgVectorGetValueWithEntries() {
+        ArgVector av = new ArgVector("/bin/test");
+        av.setValue(0, "arg0");
+        av.setValue(1, "arg1");
+        String value = av.getValue();
+        assertThat(value, containsString("arg0"));
+        assertThat(value, containsString("arg1"));
+    }
+
+    @Test
+    public void testArgVectorDefaultConstructor() {
+        ArgVector av = new ArgVector();
+        assertThat(av.getExecutable(), nullValue());
+        assertThat(av.getValue(), is(""));
+    }
+
+    @Test
+    public void testGetValueIsAbstractlyDeclared() throws Exception {
+        java.lang.reflect.Method m = Arguments.class.getDeclaredMethod("getValue");
+        assertThat(Modifier.isAbstract(m.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testExecutableConstructorStoresExecutable() {
+        TestArguments arguments = new TestArguments("/bin/sh");
+
+        assertThat(arguments.getExecutable(), is("/bin/sh"));
+    }
+
+    @Test
+    public void testSetExecutableAllowsResetToNull() {
+        TestArguments arguments = new TestArguments("/bin/sh");
+        arguments.setExecutable(null);
+
+        assertThat(arguments.getExecutable(), nullValue());
+    }
+
+    @Test
+    public void testBaseToStringWriterThrowsIOException() {
+        TestArguments arguments = new TestArguments();
+        StringWriter writer = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> arguments.toString(writer));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
 }

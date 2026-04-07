@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.planner.namespace.aggregator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the Sum aggregator. */
 public class SumTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Sum mAggregator;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mAggregator = new Sum();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mAggregator = null;
     }
-    */
+
+    @Test
+    public void testSumOfTwoPositiveNumbers() {
+        String result = mAggregator.compute("3", "7", "0");
+        assertThat(result, is("10"));
+    }
+
+    @Test
+    public void testSumWithZero() {
+        String result = mAggregator.compute("5", "0", "0");
+        assertThat(result, is("5"));
+    }
+
+    @Test
+    public void testSumWithBothZero() {
+        String result = mAggregator.compute("0", "0", "0");
+        assertThat(result, is("0"));
+    }
+
+    @Test
+    public void testSumWithNullOldValueUsesDefault() {
+        // null old value => parseInt(null, "0")=0, newValue=5 => 0+5=5
+        String result = mAggregator.compute(null, "5", "0");
+        assertThat(result, is("5"));
+    }
+
+    @Test
+    public void testSumWithNonNumericValueUsesDefault() {
+        // "abc" => parseInt returns default(2), newValue=3 => 2+3=5
+        String result = mAggregator.compute("abc", "3", "2");
+        assertThat(result, is("5"));
+    }
+
+    @Test
+    public void testSumWithNegativeNumbers() {
+        String result = mAggregator.compute("-3", "10", "0");
+        assertThat(result, is("7"));
+    }
+
+    @Test
+    public void testSumWithNullNewValueUsesDefault() {
+        String result = mAggregator.compute("4", null, "9");
+        assertThat(result, is("13"));
+    }
+
+    @Test
+    public void testSumWithBothInvalidValuesUsesDefaultTwice() {
+        String result = mAggregator.compute("bad", "worse", "6");
+        assertThat(result, is("12"));
+    }
+
+    @Test
+    public void testSumWithInvalidDefaultThrows() {
+        assertThrows(NumberFormatException.class, () -> mAggregator.compute("1", "2", "bad"));
+    }
+
+    @Test
+    public void testSumImplementsAggregatorInterface() {
+        assertThat(mAggregator instanceof Aggregator, is(true));
+    }
+
+    @Test
+    public void testSumExtendsAbstract() {
+        assertThat(mAggregator instanceof Abstract, is(true));
+    }
 }

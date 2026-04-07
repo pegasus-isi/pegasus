@@ -13,33 +13,85 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link ScannerException}. */
 public class ScannerExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorWithLinenoAndMessage() {
+        ScannerException e = new ScannerException(42, "unexpected token");
+        assertThat(e.getLineNumber(), is(42));
+        assertThat(e.getMessage(), containsString("42"));
+        assertThat(e.getMessage(), containsString("unexpected token"));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessageOnly() {
+        ScannerException e = new ScannerException("parse error");
+        assertThat(e.getLineNumber(), is(-1));
+        assertThat(e.getMessage(), is("parse error"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndException() {
+        Exception cause = new Exception("root cause");
+        ScannerException e = new ScannerException("wrapped error", cause);
+        assertThat(e.getLineNumber(), is(-1));
+        assertThat(e.getMessage(), containsString("wrapped error"));
+        assertThat(e.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testConstructorWithLinenoAndException() {
+        Exception cause = new Exception("cause");
+        ScannerException e = new ScannerException(10, cause);
+        assertThat(e.getLineNumber(), is(10));
+        assertThat(e.getMessage(), containsString("10"));
+    }
+
+    @Test
+    public void testConstructorWithLineNumberReaderAndMessage() throws Exception {
+        LineNumberReader reader = new LineNumberReader(new StringReader("a\nb\nc"));
+        reader.readLine();
+        reader.readLine();
+
+        ScannerException e = new ScannerException(reader, "reader failure");
+        assertThat(e.getLineNumber(), is(2));
+        assertThat(e.getMessage(), containsString("line 2"));
+        assertThat(e.getMessage(), containsString("reader failure"));
+    }
+
+    @Test
+    public void testConstructorWithNegativeLinenoPreservesValue() {
+        ScannerException e = new ScannerException(-5, "unexpected token");
+        assertThat(e.getLineNumber(), is(-5));
+        assertThat(e.getMessage(), containsString("line -5"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullException() {
+        ScannerException e = new ScannerException("wrapped error", null);
+        assertThat(e.getLineNumber(), is(-1));
+        assertThat(e.getMessage(), is("message - wrapped error:"));
+        assertThat(e.getCause(), nullValue());
+    }
+
+    @Test
+    public void testIsRuntimeException() {
+        ScannerException e = new ScannerException("test");
+        assertThat(e, instanceOf(RuntimeException.class));
+    }
+
+    @Test
+    public void testLineNumberNegativeOneWhenNoLine() {
+        ScannerException e = new ScannerException("no line info");
+        assertThat(e.getLineNumber(), is(-1));
+    }
 }

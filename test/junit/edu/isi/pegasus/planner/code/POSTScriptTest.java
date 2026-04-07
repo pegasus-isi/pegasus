@@ -13,33 +13,89 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for POSTScript interface structure */
 public class POSTScriptTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(POSTScript.VERSION, is("1.1"));
     }
-    */
+
+    @Test
+    public void testInterfaceIsPublic() {
+        assertThat(java.lang.reflect.Modifier.isPublic(POSTScript.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testInterfaceHasInitializeMethod() throws NoSuchMethodException {
+        assertThat(
+                POSTScript.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.common.PegasusProperties.class,
+                        String.class,
+                        String.class,
+                        String.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testInterfaceHasConstructMethod() throws NoSuchMethodException {
+        assertThat(
+                POSTScript.class.getMethod(
+                        "construct", edu.isi.pegasus.planner.classes.Job.class, String.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testInterfaceHasShortDescribeMethod() throws NoSuchMethodException {
+        assertThat(POSTScript.class.getMethod("shortDescribe"), notNullValue());
+    }
+
+    @Test
+    public void testNoPOSTScriptImplementsPOSTScript() {
+        assertThat(
+                POSTScript.class.isAssignableFrom(
+                        edu.isi.pegasus.planner.code.gridstart.NoPOSTScript.class),
+                is(true));
+    }
+
+    @Test
+    public void testUserPOSTScriptImplementsPOSTScript() {
+        assertThat(
+                POSTScript.class.isAssignableFrom(
+                        edu.isi.pegasus.planner.code.gridstart.UserPOSTScript.class),
+                is(true));
+    }
+
+    @Test
+    public void testTypeIsAnInterface() {
+        assertThat(POSTScript.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testVersionConstantIsNotEmpty() {
+        assertThat(POSTScript.VERSION.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testInterfaceDeclaresExpectedMethodNames() {
+        List<String> methodNames = Arrays.asList("initialize", "construct", "shortDescribe");
+
+        for (String methodName : methodNames) {
+            assertThat(
+                    Arrays.stream(POSTScript.class.getDeclaredMethods())
+                            .map(Method::getName)
+                            .anyMatch(methodName::equals),
+                    is(true));
+        }
+    }
 }

@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -76,7 +78,7 @@ public class ADAGTest {
 
         // System.out.println(result);
 
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -124,9 +126,7 @@ public class ADAGTest {
         result = result.replaceAll(pattern2, createdBy);
         expected = expected.replaceAll(pattern2, createdBy);
 
-        // System.out.println(result);
-
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -447,22 +447,27 @@ public class ADAGTest {
 
         System.out.println(result);
 
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
 
         // validate against schema
         wf.writeToFile("/tmp/diamond.yml", ADAG.FORMAT.yaml);
         Callback c = new DAX2CDAG();
         PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
-        DAXParser5 parser = new DAXParser5(bag, "5.0");
-        c.initialize(bag, "/tmp/diamond.yml");
+        try {
+            PegasusProperties props = PegasusProperties.nonSingletonInstance();
+            bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+            bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
+            DAXParser5 parser = new DAXParser5(bag, "5.0");
+            c.initialize(bag, "/tmp/diamond.yml");
 
-        boolean isValid = parser.validate("/tmp/diamond.yml");
+            boolean isValid = parser.validate("/tmp/diamond.yml");
 
-        System.err.println("Validation of file: " + parser.validate("/tmp/diamond.yml"));
+            System.err.println("Validation of file: " + parser.validate("/tmp/diamond.yml"));
 
-        assertEquals(isValid, true);
+            assertThat(isValid, is(true));
+        } finally {
+
+        }
     }
 
     // @Test
@@ -492,6 +497,6 @@ public class ADAGTest {
                             wf.toYAML();
                         });
 
-        assertTrue(e.getMessage().contains("Use Executable.addRequirement()"));
+        assertThat(e.getMessage(), containsString("Use Executable.addRequirement()"));
     }
 }

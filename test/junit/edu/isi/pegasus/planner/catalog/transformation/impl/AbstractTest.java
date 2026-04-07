@@ -13,33 +13,84 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractClassShape() throws Exception {
+        assertThat(Modifier.isAbstract(Abstract.class.getModifiers()), is(true));
+        assertThat(Abstract.class.getInterfaces()[0], is(TransformationCatalog.class));
+
+        Field loggerField = Abstract.class.getDeclaredField("mLogger");
+        Field propsField = Abstract.class.getDeclaredField("mProps");
+        Field transientField = Abstract.class.getDeclaredField("mTransient");
+
+        assertThat(loggerField.getType(), is(LogManager.class));
+        assertThat(propsField.getType(), is(PegasusProperties.class));
+        assertThat(transientField.getType(), is(boolean.class));
     }
-    */
+
+    @Test
+    public void testModifyForFileURLsInstalledEntryConvertsFileUrlToPath() {
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry.setType(TCType.INSTALLED);
+        entry.setPhysicalTransformation("file:///bin/pegasus-plan");
+
+        TransformationCatalogEntry result = Abstract.modifyForFileURLS(entry);
+
+        assertThat(result, sameInstance(entry));
+        assertThat(entry.getPhysicalTransformation(), equalTo("/bin/pegasus-plan"));
+    }
+
+    @Test
+    public void testModifyForFileURLsStageableEntryConvertsAbsolutePathToFileUrl() {
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry.setType(TCType.STAGEABLE);
+        entry.setPhysicalTransformation("/opt/pegasus/bin/tool");
+
+        TransformationCatalogEntry result = Abstract.modifyForFileURLS(entry);
+
+        assertThat(result, sameInstance(entry));
+        assertThat(entry.getPhysicalTransformation(), equalTo("file:///opt/pegasus/bin/tool"));
+    }
+
+    @Test
+    public void testModifyForFileURLsStringOverloadHandlesInstalledAndStageablePfns() {
+        assertThat(
+                Abstract.modifyForFileURLS("file:///usr/bin/kickstart", TCType.INSTALLED.name()),
+                is("/usr/bin/kickstart"));
+        assertThat(
+                Abstract.modifyForFileURLS("/srv/stageable/tool", TCType.STAGEABLE.name()),
+                is("file:///srv/stageable/tool"));
+    }
+
+    @Test
+    public void testModifyForFileURLsReturnsInputForNullOrUnchangedValues() {
+        assertThat(
+                Abstract.modifyForFileURLS((String) null, TCType.INSTALLED.name()),
+                is(nullValue()));
+
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry.setType(TCType.INSTALLED);
+        entry.setPhysicalTransformation("gsiftp://example/path/tool");
+
+        assertThat(Abstract.modifyForFileURLS(entry), is(sameInstance(entry)));
+        assertThat(entry.getPhysicalTransformation(), equalTo("gsiftp://example/path/tool"));
+    }
 }

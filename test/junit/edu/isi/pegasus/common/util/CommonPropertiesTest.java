@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -31,12 +33,14 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
+import org.junitpioneer.jupiter.RestoreSystemProperties;
 
 /**
  * Test class to test the Common Properties that loads the various properties
  *
  * @author Karan Vahi
  */
+@RestoreSystemProperties
 public class CommonPropertiesTest {
 
     private static int mTestNumber = 1;
@@ -45,6 +49,7 @@ public class CommonPropertiesTest {
     private LogManager mLogger;
 
     private Map<String, String> mOriginalEnv;
+    private boolean mCanMutateEnv;
 
     public CommonPropertiesTest() {}
 
@@ -52,6 +57,7 @@ public class CommonPropertiesTest {
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mOriginalEnv = System.getenv();
+        mCanMutateEnv = CommonPropertiesTest.canMutateEnv();
         mTestSetup.setInputDirectory(this.getClass());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
@@ -65,11 +71,14 @@ public class CommonPropertiesTest {
     public void tearDown() throws Exception {
         mLogger = null;
         mTestSetup = null;
-        CommonPropertiesTest.setEnv(this.mOriginalEnv);
+        if (mCanMutateEnv) {
+            CommonPropertiesTest.setEnv(this.mOriginalEnv);
+        }
     }
 
     @Test
     public void testPropertiesFromEnv() throws IOException, Exception {
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
 
@@ -83,14 +92,15 @@ public class CommonPropertiesTest {
         CommonProperties p = new CommonProperties(null);
         Properties envP = p.retrievePropertiesFromEnvironment();
 
-        assertTrue(envP.containsKey(expectedKey));
-        assertEquals(expectedValue, envP.getProperty(expectedKey));
+        assertThat(envP.containsKey(expectedKey), is(true));
+        assertThat(envP.getProperty(expectedKey), is(expectedValue));
 
         mLogger.logEventCompletion();
     }
 
     @Test
     public void testOrderPropsFileandEnv() throws Exception {
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
 
@@ -109,7 +119,7 @@ public class CommonPropertiesTest {
             CommonProperties p = new CommonProperties(f.getAbsolutePath());
 
             // property in env should overrides property in property file
-            assertEquals(expectedValue, p.getProperty(expectedKey));
+            assertThat(p.getProperty(expectedKey), is(expectedValue));
             mLogger.logEventCompletion();
         } finally {
             f.delete();
@@ -118,6 +128,7 @@ public class CommonPropertiesTest {
 
     @Test
     public void testOrderSystemandEnv() throws Exception {
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
 
@@ -134,25 +145,17 @@ public class CommonPropertiesTest {
         System.setProperty(expectedKey, expectedValue);
         CommonProperties p = new CommonProperties(null);
 
-        try {
-            assertEquals(expectedValue, p.getProperty(expectedKey));
-        } finally {
-            // important, as we are setting the property in the JVM
-            // if not clear other unit tests get affected!
-            System.clearProperty(expectedKey);
-        }
+        assertThat(p.getProperty(expectedKey), is(expectedValue));
         mLogger.logEventCompletion();
     }
 
     @Test
     // PM-1917
     public void testOrderPropsFileandHostWideProps() throws Exception {
-
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
         String etcPropKey = "pegasus.home.sysconfdir";
-        String existingEtc = System.getProperty(etcPropKey);
-
         File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
         System.setProperty(etcPropKey, newEtc.getAbsolutePath());
         // write out a pegasus.properties file in the test etc dir
@@ -173,13 +176,8 @@ public class CommonPropertiesTest {
         try {
             // the value from the conf properties file overrides the hostwide
             // props in the pegasus install etc dir
-            assertEquals(propValue, p.getProperty(testKey));
+            assertThat(p.getProperty(testKey), is(propValue));
         } finally {
-            // important, as we are setting the property in the JVM
-            // if not clear other unit tests get affected!
-            if (existingEtc != null) {
-                System.setProperty(etcPropKey, existingEtc);
-            }
             etcFile.delete();
             newEtc.delete();
             propsFile.delete();
@@ -190,12 +188,10 @@ public class CommonPropertiesTest {
     @Test
     // PM-1917
     public void testUnionPropsFileandHostWideProps() throws Exception {
-
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
         String etcPropKey = "pegasus.home.sysconfdir";
-        String existingEtc = System.getProperty(etcPropKey);
-
         File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
         System.setProperty(etcPropKey, newEtc.getAbsolutePath());
         // write out a pegasus.properties file in the test etc dir
@@ -215,14 +211,9 @@ public class CommonPropertiesTest {
         pw.close();
         CommonProperties p = new CommonProperties(propsFile.getAbsolutePath());
         try {
-            assertEquals(etcValue, p.getProperty(etcKey));
-            assertEquals(propValue, p.getProperty(propKey));
+            assertThat(p.getProperty(etcKey), is(etcValue));
+            assertThat(p.getProperty(propKey), is(propValue));
         } finally {
-            // important, as we are setting the property in the JVM
-            // if not clear other unit tests get affected!
-            if (existingEtc != null) {
-                System.setProperty(etcPropKey, existingEtc);
-            }
             etcFile.delete();
             newEtc.delete();
             propsFile.delete();
@@ -233,12 +224,10 @@ public class CommonPropertiesTest {
     @Test
     // PM-1917
     public void testHostWideProps() throws Exception {
-
+        Assumptions.assumeTrue(mCanMutateEnv, "process environment mutation is unavailable");
         mLogger.logEventStart(
                 "test.common.util.CommonProperties", "set", Integer.toString(mTestNumber++));
         String etcPropKey = "pegasus.home.sysconfdir";
-        String existingEtc = System.getProperty(etcPropKey);
-
         File newEtc = Files.createTempDirectory("pegasus-etc").toFile();
         System.setProperty(etcPropKey, newEtc.getAbsolutePath());
         // write out a pegasus.properties file in the test etc dir
@@ -251,13 +240,8 @@ public class CommonPropertiesTest {
 
         CommonProperties p = new CommonProperties(null);
         try {
-            assertEquals(testValue, p.getProperty(testKey));
+            assertThat(p.getProperty(testKey), is(testValue));
         } finally {
-            // important, as we are setting the property in the JVM
-            // if not clear other unit tests get affected!
-            if (existingEtc != null) {
-                System.setProperty(etcPropKey, existingEtc);
-            }
             propsFile.delete();
             newEtc.delete();
         }
@@ -298,6 +282,15 @@ public class CommonPropertiesTest {
                     map.putAll(newenv);
                 }
             }
+        }
+    }
+
+    private static boolean canMutateEnv() {
+        try {
+            setEnv(Collections.emptyMap());
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }

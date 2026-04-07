@@ -17,6 +17,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -31,28 +32,12 @@ import edu.isi.pegasus.planner.classes.Profile;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class SiteCatalogEntryTest {
 
     public SiteCatalogEntryTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testSiteCatalogEntrySerialization() throws IOException {
@@ -113,8 +98,7 @@ public class SiteCatalogEntryTest {
                         + "  idleNodes: 3\n"
                         + "  totalNodes: 40\n";
         String actual = mapper.writeValueAsString(entry);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -149,10 +133,10 @@ public class SiteCatalogEntryTest {
                         + "  x-ext: true";
 
         SiteCatalogEntry entry = mapper.readValue(test, SiteCatalogEntry.class);
-        assertNotNull(entry);
-        assertEquals("condor_pool", entry.getSiteHandle());
-        assertEquals(Architecture.x86_64, entry.getArchitecture());
-        assertEquals(OS.linux, entry.getSysInfo().getOS());
+        assertThat(entry, is(notNullValue()));
+        assertThat(entry.getSiteHandle(), is("condor_pool"));
+        assertThat(entry.getArchitecture(), is(Architecture.x86_64));
+        assertThat(entry.getSysInfo().getOS(), is(OS.linux));
 
         testGridGateway(
                 entry,
@@ -190,10 +174,10 @@ public class SiteCatalogEntryTest {
 
         String test = "name: chameleon\n" + "arch: aarch64\n" + "os.type: linux\n";
         SiteCatalogEntry entry = mapper.readValue(test, SiteCatalogEntry.class);
-        assertNotNull(entry);
-        assertEquals("chameleon", entry.getSiteHandle());
-        assertEquals(Architecture.aarch64, entry.getArchitecture());
-        assertEquals(OS.linux, entry.getSysInfo().getOS());
+        assertThat(entry, is(notNullValue()));
+        assertThat(entry.getSiteHandle(), is("chameleon"));
+        assertThat(entry.getArchitecture(), is(Architecture.aarch64));
+        assertThat(entry.getSysInfo().getOS(), is(OS.linux));
     }
 
     private void testGridGateway(
@@ -203,25 +187,25 @@ public class SiteCatalogEntryTest {
             String contact) {
 
         GridGateway gw = entry.getGridGateway(jobType);
-        assertNotNull(gw);
-        assertEquals(schedulerType, gw.getScheduler());
-        assertEquals(contact, gw.getContact());
+        assertThat(gw, is(notNullValue()));
+        assertThat(gw.getScheduler(), is(schedulerType));
+        assertThat(gw.getContact(), is(contact));
     }
 
     protected void testDirectory(Directory directory, Directory.TYPE type, String path) {
-        assertNotNull(directory);
-        assertEquals(type, directory.getType());
+        assertThat(directory, is(notNullValue()));
+        assertThat(directory.getType(), is(type));
         InternalMountPoint mp = directory.getInternalMountPoint();
-        assertNotNull(mp);
-        assertEquals(path, mp.getMountPoint());
+        assertThat(mp, is(notNullValue()));
+        assertThat(mp.getMountPoint(), is(path));
     }
 
     protected void testProfile(SiteCatalogEntry entry, String namespace, String key, String value) {
         List<Profile> pProfs = entry.getProfiles().getProfiles(namespace);
-        assertNotNull(pProfs);
-        assertEquals(1, pProfs.size());
+        assertThat(pProfs, is(notNullValue()));
+        assertThat(pProfs.size(), is(1));
         Profile style = pProfs.get(0);
-        assertEquals(style.getProfileKey(), key);
-        assertEquals(style.getProfileValue(), value);
+        assertThat(style.getProfileKey(), is(key));
+        assertThat(style.getProfileValue(), is(value));
     }
 }

@@ -13,33 +13,71 @@
  */
 package edu.isi.ikcap.workflows.util.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class EscapeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorEscapesQuotesAndBackslashes() {
+        Escape escape = new Escape();
+
+        assertThat(escape.escape("a\"b\\c'd"), is("a\\\"b\\\\c\\'d"));
+        assertThat(escape.unescape("a\\\"b\\\\c\\'d"), is("a\"b\\c'd"));
     }
-    */
+
+    @Test
+    public void testCustomConstructorCanSkipEscapingTheEscapeCharacterItself() {
+        Escape escape = new Escape("xy", '!', false);
+
+        assertThat(escape.escape("axby!"), is("a!xb!y!"));
+        assertThat(escape.unescape("a!xb!y!"), is("axby"));
+    }
+
+    @Test
+    public void testEscapeCharacterIsAddedWhenEscapeEscapeIsEnabled() throws Exception {
+        Escape escape = new Escape("xy", '!', true);
+
+        assertThat(escape.escape("axby!"), is("a!xb!y!!"));
+
+        assertThat(
+                ((String) ReflectionTestUtils.getField(escape, "m_escapable")).indexOf('!') != -1,
+                is(true));
+    }
+
+    @Test
+    public void testNullHandlingAndUnknownEscapeRoundTrip() {
+        Escape escape = new Escape();
+
+        assertThat(escape.escape(null), is(nullValue()));
+        assertThat(escape.unescape(null), is(nullValue()));
+        assertThat(escape.unescape("abc\\n"), is("abc\\n"));
+    }
+
+    @Test
+    public void testMainPrintsCurrentEscapeAndUnescapeViews() {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            System.setOut(new PrintStream(output));
+            Escape.main(new String[] {"a\"b"});
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String text = output.toString();
+        assertThat(text, containsString("raw s  > a\"b"));
+        assertThat(text, containsString("e(s)   > a\\\"b"));
+        assertThat(text, containsString("u(e(s))> a\"b"));
+        assertThat(text, containsString("u(s)   > a\"b"));
+    }
 }

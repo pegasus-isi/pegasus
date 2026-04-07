@@ -13,33 +13,178 @@
  */
 package edu.isi.pegasus.aws.batch.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.lang.reflect.Method;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Properties;
+import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+import software.amazon.awssdk.services.batch.model.JobStatus;
+import software.amazon.awssdk.services.batch.model.ListJobsRequest;
 
 /** @author Rajiv Mayani */
 public class SynchTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Synch synch;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        synch = new Synch();
     }
-    */
+
+    // --- constants: prefixes and identifiers ---
+
+    @Test
+    public void testArnAndS3PrefixConstants() {
+        assertThat(Synch.ARN_PREFIX, is("arn:aws"));
+        assertThat(Synch.S3_PREFIX, is("s3://"));
+    }
+
+    @Test
+    public void testPropertyPrefixConstants() {
+        assertThat(Synch.AWS_PROPERTY_PREFIX, is("aws"));
+        assertThat(Synch.AWS_BATCH_PROPERTY_PREFIX, is("aws.batch"));
+    }
+
+    @Test
+    public void testRegionConstant() {
+        assertThat(Synch.US_EAST_1_REGION, is("us-east-1"));
+    }
+
+    // --- constants: naming suffixes ---
+
+    @Test
+    public void testNamingSuffixConstants() {
+        assertThat(Synch.JOB_DEFINITION_SUFFIX, is("-job-definition"));
+        assertThat(Synch.JOB_QUEUE_SUFFIX, is("-job-queue"));
+        assertThat(Synch.COMPUTE_ENV_SUFFIX, is("-compute-env"));
+        assertThat(Synch.S3_BUCKET_SUFFIX, is("-bucket"));
+    }
+
+    // --- constants: exit codes ---
+
+    @Test
+    public void testExitCodeConstants() {
+        assertThat(Synch.TASK_FAILURE_EXITCODE, is(1));
+        assertThat(Synch.NON_TASK_FAILURE_EXITCODE, is(2));
+    }
+
+    // --- constants: limits and timing ---
+
+    @Test
+    public void testAwsBatchMaxJobsConstant() {
+        assertThat(Synch.AWS_BATCH_MAX_JOBS_SUPPORTED_IN_API, is(100));
+    }
+
+    @Test
+    public void testMaxSleepTimeConstant() {
+        assertThat(Synch.MAX_SLEEP_TIME, is(32_000L));
+    }
+
+    // --- constants: environment variables and sentinels ---
+
+    @Test
+    public void testEnvironmentVariableKeyConstants() {
+        assertThat(Synch.TRANSFER_INPUT_FILES_KEY, is("TRANSFER_INPUT_FILES"));
+        assertThat(Synch.PEGASUS_AWS_BATCH_ENV_KEY, is("PEGASUS_AWS_BATCH_BUCKET"));
+        assertThat(Synch.PEGASUS_JOB_NAME_ENV_KEY, is("PEGASUS_JOB_NAME"));
+    }
+
+    @Test
+    public void testNullValueConstant() {
+        assertThat(Synch.NULL_VALUE, is("NULL"));
+    }
+
+    @Test
+    public void testCloudWatchLogGroupConstant() {
+        assertThat(Synch.CLOUD_WATCH_BATCH_LOG_GROUP, is("/aws/batch/job"));
+    }
+
+    // --- BATCH_ENTITY_TYPE enum ---
+
+    @Test
+    public void testBatchEntityTypeEnumValues() {
+        Synch.BATCH_ENTITY_TYPE[] values = Synch.BATCH_ENTITY_TYPE.values();
+        assertThat(
+                values,
+                arrayContainingInAnyOrder(
+                        Synch.BATCH_ENTITY_TYPE.compute_environment,
+                        Synch.BATCH_ENTITY_TYPE.job_definition,
+                        Synch.BATCH_ENTITY_TYPE.job_queue,
+                        Synch.BATCH_ENTITY_TYPE.s3_bucket));
+    }
+
+    // --- createListJobRequest ---
+
+    @Test
+    public void testCreateListJobRequestFields() {
+        ListJobsRequest req = synch.createListJobRequest("my-queue-arn", JobStatus.RUNNING);
+        assertThat(req.jobQueue(), is("my-queue-arn"));
+        assertThat(req.jobStatus(), is(JobStatus.RUNNING.name()));
+    }
+
+    @Test
+    public void testCreateListJobRequestWithDifferentStatuses() {
+        for (JobStatus status :
+                new JobStatus[] {
+                    JobStatus.SUBMITTED,
+                    JobStatus.PENDING,
+                    JobStatus.RUNNABLE,
+                    JobStatus.STARTING,
+                    JobStatus.RUNNING,
+                    JobStatus.SUCCEEDED,
+                    JobStatus.FAILED
+                }) {
+            ListJobsRequest req = synch.createListJobRequest("arn:queue", status);
+            assertThat(req.jobStatus(), is(status.name()));
+        }
+    }
+
+    @Test
+    public void testConstructorInitializesExpectedDefaults() throws Exception {
+        assertThat((List<?>) ReflectionTestUtils.getField(synch, "mSubmitResponses"), is(empty()));
+        assertThat(ReflectionTestUtils.getField(synch, "mDoneWithJobSubmits"), is(false));
+        assertThat(ReflectionTestUtils.getField(synch, "mExitCode"), is(0));
+    }
+
+    @Test
+    public void testSignalToExitAfterJobsCompleteFlipsFlag() throws Exception {
+        Properties properties = new Properties();
+        properties.setProperty("aws.account", "123456789012");
+        properties.setProperty("aws.region", Synch.US_EAST_1_REGION);
+        properties.setProperty("aws.batch.prefix", "synch-test");
+        synch.initialze(
+                properties,
+                Level.INFO,
+                new EnumMap<Synch.BATCH_ENTITY_TYPE, String>(Synch.BATCH_ENTITY_TYPE.class));
+
+        assertThat(synch.receivedSignalToExitAfterJobsComplete(), is(false));
+
+        synch.signalToExitAfterJobsComplete();
+
+        assertThat(synch.receivedSignalToExitAfterJobsComplete(), is(true));
+    }
+
+    @Test
+    public void testSelectedMethodSignatures() throws Exception {
+        Method initialize =
+                Synch.class.getMethod(
+                        "initialze",
+                        java.util.Properties.class,
+                        org.apache.logging.log4j.Level.class,
+                        java.util.EnumMap.class);
+        Method setup = Synch.class.getMethod("setup", java.util.EnumMap.class, boolean.class);
+        Method main = Synch.class.getMethod("main", String[].class);
+
+        assertThat(initialize.getReturnType(), is(Void.TYPE));
+        assertThat(setup.getReturnType(), is(Void.TYPE));
+        assertThat(main.getReturnType(), is(Void.TYPE));
+        assertThat(initialize.getExceptionTypes(), arrayContaining(java.io.IOException.class));
+    }
 }

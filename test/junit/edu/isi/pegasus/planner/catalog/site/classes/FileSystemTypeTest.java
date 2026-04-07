@@ -13,33 +13,90 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for FileSystemType via InternalMountPoint (concrete subclass).
+ *
+ * @author Rajiv Mayani
+ */
 public class FileSystemTypeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorEmptyStrings() {
+        InternalMountPoint imp = new InternalMountPoint();
+        assertThat(imp.getMountPoint(), is(""));
+        assertThat(imp.getTotalSize(), is(""));
+        assertThat(imp.getFreeSize(), is(""));
     }
-    */
+
+    @Test
+    public void testOverloadedConstructorWithAllParameters() {
+        InternalMountPoint imp = new InternalMountPoint("/data", "100GB", "50GB");
+        assertThat(imp.getMountPoint(), is("/data"));
+        assertThat(imp.getTotalSize(), is("100GB"));
+        assertThat(imp.getFreeSize(), is("50GB"));
+    }
+
+    @Test
+    public void testSetAndGetMountPoint() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setMountPoint("/scratch");
+        assertThat(imp.getMountPoint(), is("/scratch"));
+    }
+
+    @Test
+    public void testSetAndGetTotalSize() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setTotalSize("200GB");
+        assertThat(imp.getTotalSize(), is("200GB"));
+    }
+
+    @Test
+    public void testSetAndGetFreeSize() {
+        InternalMountPoint imp = new InternalMountPoint();
+        imp.setFreeSize("75GB");
+        assertThat(imp.getFreeSize(), is("75GB"));
+    }
+
+    @Test
+    public void testCloneProducesEqualButDistinctInstance() {
+        InternalMountPoint imp = new InternalMountPoint("/work", "512GB", "256GB");
+        InternalMountPoint cloned = (InternalMountPoint) imp.clone();
+        assertNotSame(imp, cloned);
+        assertThat(cloned.getMountPoint(), is(imp.getMountPoint()));
+        assertThat(cloned.getTotalSize(), is(imp.getTotalSize()));
+        assertThat(cloned.getFreeSize(), is(imp.getFreeSize()));
+    }
+
+    @Test
+    public void testCloneIsIndependentOfOriginalMutations() {
+        InternalMountPoint original = new InternalMountPoint("/work", "512GB", "256GB");
+        InternalMountPoint cloned = (InternalMountPoint) original.clone();
+
+        original.setMountPoint("/changed");
+        original.setTotalSize("1024GB");
+        original.setFreeSize("128GB");
+
+        assertThat(cloned.getMountPoint(), is("/work"));
+        assertThat(cloned.getTotalSize(), is("512GB"));
+        assertThat(cloned.getFreeSize(), is("256GB"));
+    }
+
+    @Test
+    public void testSettersOverrideConstructorValues() {
+        InternalMountPoint imp = new InternalMountPoint("/data", "100GB", "50GB");
+
+        imp.setMountPoint("/scratch");
+        imp.setTotalSize("200GB");
+        imp.setFreeSize("75GB");
+
+        assertThat(imp.getMountPoint(), is("/scratch"));
+        assertThat(imp.getTotalSize(), is("200GB"));
+        assertThat(imp.getFreeSize(), is("75GB"));
+    }
 }

@@ -13,33 +13,134 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.cluster.Clusterer;
+import edu.isi.pegasus.planner.cluster.ClustererException;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class ClustererCallbackTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInitializeStoresPropertiesAndClusterer() throws Exception {
+        ClustererCallback callback = new ClustererCallback();
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        RecordingClusterer clusterer = new RecordingClusterer();
+
+        callback.initialize(properties, clusterer);
+
+        assertThat(ReflectionTestUtils.getField(callback, "mProps"), is(notNullValue()));
+        assertThat(
+                ReflectionTestUtils.getField(callback, "mClusterer"), is(sameInstance(clusterer)));
     }
-    */
+
+    @Test
+    public void testCbPartitionDelegatesToClusterer() {
+        ClustererCallback callback = new ClustererCallback();
+        RecordingClusterer clusterer = new RecordingClusterer();
+        callback.initialize(PegasusProperties.nonSingletonInstance(), clusterer);
+
+        Partition partition = new Partition(Arrays.asList(new GraphNode("jobA")), "p1");
+
+        callback.cbPartition(partition);
+
+        assertThat(clusterer.lastPartition, is(notNullValue()));
+    }
+
+    @Test
+    public void testCbParentsDelegatesToClusterer() {
+        ClustererCallback callback = new ClustererCallback();
+        RecordingClusterer clusterer = new RecordingClusterer();
+        callback.initialize(PegasusProperties.nonSingletonInstance(), clusterer);
+
+        List parents = Arrays.asList("parent-1");
+
+        callback.cbParents("child-1", parents);
+
+        assertThat(clusterer.lastChildPartitionId, is("child-1"));
+        assertThat(clusterer.lastParents, is(notNullValue()));
+    }
+
+    @Test
+    public void testCbPartitionThrowsIfUninitialized() {
+        ClustererCallback callback = new ClustererCallback();
+        Partition partition = new Partition(Arrays.asList(new GraphNode("jobA")), "p1");
+
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, () -> callback.cbPartition(partition));
+
+        assertThat(
+                exception.getMessage(), is("Callback needs to be initialized before being used"));
+    }
+
+    @Test
+    public void testCbParentsWrapsClustererException() {
+        ClustererCallback callback = new ClustererCallback();
+        RecordingClusterer clusterer = new RecordingClusterer();
+        clusterer.parentsException = new ClustererException("boom");
+        callback.initialize(PegasusProperties.nonSingletonInstance(), clusterer);
+
+        RuntimeException exception =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> callback.cbParents("child-1", Collections.singletonList("parent-1")));
+
+        assertThat(
+                exception.getMessage(),
+                containsString("ClustererCallback cbParents( String, List )"));
+        assertThat(exception.getCause(), is(sameInstance(clusterer.parentsException)));
+    }
+
+    @Test
+    public void testCbDoneIsNoOp() {
+        ClustererCallback callback = new ClustererCallback();
+
+        assertDoesNotThrow(callback::cbDone);
+    }
+
+    private static final class RecordingClusterer implements Clusterer {
+        private Partition lastPartition;
+        private String lastChildPartitionId;
+        private List lastParents;
+        private ClustererException parentsException;
+
+        @Override
+        public void initialize(
+                edu.isi.pegasus.planner.classes.ADag dag,
+                edu.isi.pegasus.planner.classes.PegasusBag bag)
+                throws ClustererException {}
+
+        @Override
+        public void determineClusters(Partition partition) throws ClustererException {
+            lastPartition = partition;
+        }
+
+        @Override
+        public void parents(String partitionID, List parents) throws ClustererException {
+            if (parentsException != null) {
+                throw parentsException;
+            }
+            lastChildPartitionId = partitionID;
+            lastParents = parents;
+        }
+
+        @Override
+        public edu.isi.pegasus.planner.classes.ADag getClusteredDAG() throws ClustererException {
+            return null;
+        }
+
+        @Override
+        public String description() {
+            return "recording";
+        }
+    }
 }

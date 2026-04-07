@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.common;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -76,14 +78,14 @@ public class PegasusPropertiesTest {
                 "pegasus.catalog.site.sites." + site + ".profiles.condor." + key, value);
 
         Profiles p = properties.getSiteProfiles(site);
-        assertNotNull(p);
+        assertThat(p, notNullValue());
         for (Profiles.NAMESPACES ns : Profiles.NAMESPACES.values()) {
             Namespace n = p.get(ns);
             if (ns.toString().equals("condor")) {
-                assertEquals(1, n.size(), "Namspace should be of size");
-                assertEquals(value, n.get(key), "Value of key " + key);
+                assertThat(n.size(), is(1));
+                assertThat(n.get(key), is(value));
             } else {
-                assertTrue(n.isEmpty(), "Namepsace " + n.namespaceName() + " should be empty");
+                assertThat(n.isEmpty(), is(true));
             }
         }
         mLogger.logEventCompletion();
@@ -109,8 +111,8 @@ public class PegasusPropertiesTest {
 
         String value = Integer.toString(properties.getMaxSupportedYAMLDocSize());
 
-        assertNotNull(value);
-        assertEquals(expected, value);
+        assertThat(value, notNullValue());
+        assertThat(value, is(expected));
 
         mLogger.logEventCompletion();
     }

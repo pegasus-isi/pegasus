@@ -39,7 +39,7 @@ public class SeparatorTestTest {
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        assertThat(1, is(1));
     }
     */
 }

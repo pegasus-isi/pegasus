@@ -13,33 +13,81 @@
  */
 package edu.isi.pegasus.planner.selector;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ReplicaSelector interface constants. */
 public class ReplicaSelectorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(ReplicaSelector.VERSION, notNullValue());
+        assertThat(ReplicaSelector.VERSION.isEmpty(), is(false));
     }
-    */
+
+    @Test
+    public void testVersionFormat() {
+        // Version should match major.minor format
+        assertThat(ReplicaSelector.VERSION.matches("\\d+\\.\\d+"), is(true));
+    }
+
+    @Test
+    public void testLocalSiteHandleValue() {
+        assertThat(ReplicaSelector.LOCAL_SITE_HANDLE, is("local"));
+    }
+
+    @Test
+    public void testLocalSiteHandleNotEmpty() {
+        assertThat(ReplicaSelector.LOCAL_SITE_HANDLE.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testPriorityKeyNotNull() {
+        assertThat(ReplicaSelector.PRIORITY_KEY, notNullValue());
+    }
+
+    @Test
+    public void testPriorityKeyValue() {
+        assertThat(ReplicaSelector.PRIORITY_KEY, is("priority"));
+    }
+
+    @Test
+    public void testReplicaSelectorIsInterface() {
+        assertThat(ReplicaSelector.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        ReplicaSelector.class
+                                .getMethod(
+                                        "selectAndOrderReplicas",
+                                        edu.isi.pegasus.planner.classes.ReplicaLocation.class,
+                                        String.class,
+                                        Boolean.TYPE)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ReplicaLocation.class));
+        assertThat(
+                (Object)
+                        ReplicaSelector.class
+                                .getMethod(
+                                        "selectReplica",
+                                        edu.isi.pegasus.planner.classes.ReplicaLocation.class,
+                                        String.class,
+                                        Boolean.TYPE)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry.class));
+        assertThat(
+                (Object) ReplicaSelector.class.getMethod("description").getReturnType(),
+                is((Object) String.class));
+    }
+
+    @Test
+    public void testReplicaSelectorDeclaresExpectedMethods() {
+        assertThat(ReplicaSelector.class.getDeclaredMethods().length, is(3));
+    }
 }

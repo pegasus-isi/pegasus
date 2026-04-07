@@ -13,33 +13,51 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatus abstract class structure. */
 public class JobStatusTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(JobStatus.class), is(true));
     }
-    */
+
+    @Test
+    public void testJobStatusIsAbstract() {
+        assertThat(Modifier.isAbstract(JobStatus.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testJobStatusRegularIsConcreteSubclass() {
+        assertThat(JobStatus.class.isAssignableFrom(JobStatusRegular.class), is(true));
+        assertThat(Modifier.isAbstract(JobStatusRegular.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testJobStatusFailureIsConcreteSubclass() {
+        assertThat(JobStatus.class.isAssignableFrom(JobStatusFailure.class), is(true));
+        assertThat(Modifier.isAbstract(JobStatusFailure.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testJobStatusSignalIsConcreteSubclass() {
+        assertThat(JobStatus.class.isAssignableFrom(JobStatusSignal.class), is(true));
+        assertThat(Modifier.isAbstract(JobStatusSignal.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testJobStatusSuspendIsConcreteSubclass() {
+        assertThat(JobStatus.class.isAssignableFrom(JobStatusSuspend.class), is(true));
+        assertThat(Modifier.isAbstract(JobStatusSuspend.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testJobStatusDeclaresNoAdditionalMethods() {
+        assertThat(JobStatus.class.getDeclaredMethods().length, is(0));
+    }
 }

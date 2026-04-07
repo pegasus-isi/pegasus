@@ -13,33 +13,114 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Patterns utility class. */
 public class PatternsTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIsVersionValidSimple() {
+        assertThat(Patterns.isVersionValid("1"), is(true));
     }
-    */
+
+    @Test
+    public void testIsVersionValidTwoPart() {
+        assertThat(Patterns.isVersionValid("1.0"), is(true));
+    }
+
+    @Test
+    public void testIsVersionValidThreePart() {
+        assertThat(Patterns.isVersionValid("1.2.3"), is(true));
+    }
+
+    @Test
+    public void testIsVersionValidRejectsAlpha() {
+        assertThat(Patterns.isVersionValid("1.0a"), is(false));
+    }
+
+    @Test
+    public void testIsVersionValidRejectsEmpty() {
+        assertThat(Patterns.isVersionValid(""), is(false));
+    }
+
+    @Test
+    public void testIsVersionValidRejectsDash() {
+        assertThat(Patterns.isVersionValid("1-0"), is(false));
+    }
+
+    @Test
+    public void testIsVersionValidRejectsFourPart() {
+        assertThat(Patterns.isVersionValid("1.2.3.4"), is(false));
+    }
+
+    @Test
+    public void testIsNodeIdValidSimple() {
+        assertThat(Patterns.isNodeIdValid("job1"), is(true));
+    }
+
+    @Test
+    public void testIsNodeIdValidWithUnderscore() {
+        assertThat(Patterns.isNodeIdValid("my_job"), is(true));
+    }
+
+    @Test
+    public void testIsNodeIdValidWithDash() {
+        assertThat(Patterns.isNodeIdValid("my-job"), is(true));
+    }
+
+    @Test
+    public void testIsNodeIdValidStartsWithLetter() {
+        assertThat(Patterns.isNodeIdValid("A_job_1"), is(true));
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsStartWithDash() {
+        assertThat(Patterns.isNodeIdValid("-job"), is(false));
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsEmpty() {
+        assertThat(Patterns.isNodeIdValid(""), is(false));
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsSpace() {
+        assertThat(Patterns.isNodeIdValid("my job"), is(false));
+    }
+
+    @Test
+    public void testIsNodeIdValidSingleChar() {
+        assertThat(Patterns.isNodeIdValid("A"), is(true));
+    }
+
+    @Test
+    public void testIsValidUsesProvidedPatternDirectly() {
+        Pattern lowerCasePattern = Pattern.compile("^[a-z]{3}$");
+
+        assertThat(Patterns.isValid(lowerCasePattern, "abc"), is(true));
+        assertThat(Patterns.isValid(lowerCasePattern, "ab1"), is(false));
+    }
+
+    @Test
+    public void testIsNodeIdValidAllowsLeadingDigit() {
+        assertThat(Patterns.isNodeIdValid("1_job"), is(true));
+    }
+
+    @Test
+    public void testIsNodeIdValidRejectsNonAsciiPunctuation() {
+        assertThat(Patterns.isNodeIdValid("job.name"), is(false));
+    }
+
+    @Test
+    public void testIsVersionValidNullCurrentlyThrowsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () -> Patterns.isVersionValid(null),
+                "Null version input currently throws via Pattern.matcher");
+    }
 }

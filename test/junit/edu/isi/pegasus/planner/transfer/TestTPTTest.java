@@ -13,33 +13,46 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TestTPTTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void buildStateDefaultsToFalseForUnknownSite() {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        TPT tpt = new TPT(properties);
+
+        tpt.buildState();
+
+        assertThat(tpt.stageInThirdParty("X"), is(false));
+        assertThat(tpt.interThirdParty("X"), is(false));
+        assertThat(tpt.stageOutThirdParty("X"), is(false));
     }
-    */
+
+    @Test
+    public void buildStateRespectsGlobalThirdPartyProperties() {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        properties.setProperty(TPT.ALL_TPT_PROPERTY, "*");
+        TPT tpt = new TPT(properties);
+
+        tpt.buildState();
+
+        assertThat(tpt.stageInThirdParty("X"), is(true));
+        assertThat(tpt.interThirdParty("X"), is(true));
+        assertThat(tpt.stageOutThirdParty("X"), is(true));
+    }
+
+    @Test
+    public void testPegasusURLExtractionMatchesHarnessExample() {
+        PegasusURL url = new PegasusURL("file:///gpfs-wan/karan.txt");
+
+        assertThat(url.getHost(), equalTo(""));
+        assertThat(url.getPath(), equalTo("/gpfs-wan/karan.txt"));
+    }
 }

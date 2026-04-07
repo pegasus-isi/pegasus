@@ -13,33 +13,93 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Cleanup (CleanupImplementation using pegasus-transfer). */
 public class CleanupTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsCleanupImplementation() {
+        assertThat(CleanupImplementation.class.isAssignableFrom(Cleanup.class), is(true));
     }
-    */
+
+    @Test
+    public void testTransformationNamespace() {
+        assertThat(Cleanup.TRANSFORMATION_NAMESPACE, is("pegasus"));
+    }
+
+    @Test
+    public void testTransformationName() {
+        assertThat(Cleanup.TRANSFORMATION_NAME, is("cleanup"));
+    }
+
+    @Test
+    public void testDerivationNamespace() {
+        assertThat(Cleanup.DERIVATION_NAMESPACE, is("pegasus"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Cleanup c = new Cleanup();
+        assertThat(c, notNullValue());
+    }
+
+    @Test
+    public void testAdditionalConstants() {
+        assertThat(Cleanup.TRANSFORMATION_VERSION, nullValue());
+        assertThat(Cleanup.DERIVATION_NAME, is("cleanup"));
+        assertThat(Cleanup.DERIVATION_VERSION, nullValue());
+        assertThat(Cleanup.EXECUTABLE_BASENAME, is("pegasus-transfer"));
+        assertThat(Cleanup.DESCRIPTION, containsString("transfer client"));
+    }
+
+    @Test
+    public void testGetCompleteTransformationName() {
+        assertThat(Cleanup.getCompleteTranformationName(), is("pegasus::cleanup"));
+    }
+
+    @Test
+    public void testHasThreeArgumentCreateCleanupJobMethod() throws Exception {
+        assertThat(
+                (Object)
+                        Cleanup.class
+                                .getMethod(
+                                        "createCleanupJob",
+                                        String.class,
+                                        java.util.List.class,
+                                        edu.isi.pegasus.planner.classes.Job.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testHasFourArgumentCreateCleanupJobMethod() throws Exception {
+        assertThat(
+                (Object)
+                        Cleanup.class
+                                .getMethod(
+                                        "createCleanupJob",
+                                        String.class,
+                                        java.util.List.class,
+                                        edu.isi.pegasus.planner.classes.Job.class,
+                                        String.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testInitializeMethodReturnsVoid() throws Exception {
+        assertThat(
+                (Object)
+                        Cleanup.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+    }
 }

@@ -13,33 +13,85 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Random site selector. */
 public class RandomTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Random mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Random();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertThat(mSelector, notNullValue());
+    }
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertThat(desc, not(isEmptyOrNullString()));
+    }
+
+    @Test
+    public void testDescriptionContainsRandom() {
+        String desc = mSelector.description().toLowerCase();
+        assertThat(desc.toLowerCase(), containsString("random"));
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertThat(mSelector, instanceOf(SiteSelector.class));
+    }
+
+    @Test
+    public void testExtendsAbstractPerJob() {
+        assertThat(mSelector, instanceOf(AbstractPerJob.class));
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertThat(mSelector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testDescriptionExactValue() {
+        assertThat(mSelector.description(), is("Random Site Selection"));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                Random.class
+                        .getMethod("initialize", edu.isi.pegasus.planner.classes.PegasusBag.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                Random.class
+                        .getMethod(
+                                "mapJob",
+                                edu.isi.pegasus.planner.classes.Job.class,
+                                java.util.List.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(Random.class.getMethod("description").getReturnType(), is(String.class));
+    }
+
+    @Test
+    public void testPrivateSelectRandomSiteMethodExists() throws Exception {
+        assertThat(
+                Random.class
+                        .getDeclaredMethod("selectRandomSite", java.util.List.class)
+                        .getReturnType(),
+                is(String.class));
+    }
 }

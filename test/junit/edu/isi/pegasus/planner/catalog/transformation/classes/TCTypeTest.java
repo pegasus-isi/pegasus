@@ -13,33 +13,92 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Arrays;
+import java.util.EnumSet;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TCType enum. */
 public class TCTypeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testEnumHasThreeValues() {
+        assertThat(TCType.values().length, is(3));
     }
-    */
+
+    @Test
+    public void testStaticBinaryExists() {
+        assertThat(TCType.STATIC_BINARY, is(notNullValue()));
+    }
+
+    @Test
+    public void testInstalledExists() {
+        assertThat(TCType.INSTALLED, is(notNullValue()));
+    }
+
+    @Test
+    public void testStageableExists() {
+        assertThat(TCType.STAGEABLE, is(notNullValue()));
+    }
+
+    @Test
+    public void testValueOfInstalledReturnsCorrectConstant() {
+        assertThat(TCType.valueOf("INSTALLED"), is(TCType.INSTALLED));
+    }
+
+    @Test
+    public void testValueOfStageableReturnsCorrectConstant() {
+        assertThat(TCType.valueOf("STAGEABLE"), is(TCType.STAGEABLE));
+    }
+
+    @Test
+    public void testValueOfStaticBinaryReturnsCorrectConstant() {
+        assertThat(TCType.valueOf("STATIC_BINARY"), is(TCType.STATIC_BINARY));
+    }
+
+    @Test
+    public void testToStringMatchesName() {
+        assertThat(TCType.INSTALLED.name(), is("INSTALLED"));
+        assertThat(TCType.STAGEABLE.name(), is("STAGEABLE"));
+        assertThat(TCType.STATIC_BINARY.name(), is("STATIC_BINARY"));
+    }
+
+    @Test
+    public void testOrdinalOrdering() {
+        assertThat(TCType.STATIC_BINARY.ordinal() < TCType.INSTALLED.ordinal(), is(true));
+        assertThat(TCType.INSTALLED.ordinal() < TCType.STAGEABLE.ordinal(), is(true));
+    }
+
+    @Test
+    public void testValueOfInvalidThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> TCType.valueOf("NONEXISTENT"));
+    }
+
+    @Test
+    public void testTypeIsEnum() {
+        assertThat(TCType.class.isEnum(), is(true));
+    }
+
+    @Test
+    public void testValuesAreDeclaredInExpectedOrder() {
+        assertThat(
+                Arrays.asList(TCType.values()),
+                is(Arrays.asList(TCType.STATIC_BINARY, TCType.INSTALLED, TCType.STAGEABLE)));
+    }
+
+    @Test
+    public void testValueOfIsCaseSensitive() {
+        assertThrows(IllegalArgumentException.class, () -> TCType.valueOf("installed"));
+    }
+
+    @Test
+    public void testEnumSetContainsAllDeclaredConstants() {
+        assertThat(
+                EnumSet.allOf(TCType.class),
+                is(EnumSet.of(TCType.STATIC_BINARY, TCType.INSTALLED, TCType.STAGEABLE)));
+    }
 }

@@ -13,33 +13,69 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Load invocation class. */
 public class LoadTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertThat(MachineInfo.class.isAssignableFrom(Load.class), is(true));
     }
-    */
+
+    @Test
+    public void testElementName() {
+        assertThat(Load.ELEMENT_NAME, is("load"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Load l = new Load();
+        assertThat(l, is(notNullValue()));
+    }
+
+    @Test
+    public void testGetElementName() {
+        Load l = new Load();
+        assertThat(l.getElementName(), is("load"));
+    }
+
+    @Test
+    public void testNotHasText() {
+        // Load does not implement HasText (unlike Boot/CPU/Stamp)
+        assertThat(HasText.class.isAssignableFrom(Load.class), is(false));
+    }
+
+    @Test
+    public void testInheritedToStringWriterThrowsIOException() {
+        Load load = new Load();
+        StringWriter sw = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> load.toString(sw));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
+
+    @Test
+    public void testInheritedToXMLUsesSelfClosingTagAndAttributes() throws Exception {
+        Load load = new Load();
+        load.addAttribute("one", "1");
+        load.addAttribute("two", "2&3");
+        StringWriter sw = new StringWriter();
+
+        load.toXML(sw, null, "inv");
+
+        String xml = sw.toString();
+        assertThat(xml, containsString("<inv:load"));
+        assertThat(xml, containsString("one=\"1\""));
+        assertThat(xml, containsString("two=\"2&amp;amp;3\""));
+        assertThat(xml, containsString("/>"));
+    }
 }

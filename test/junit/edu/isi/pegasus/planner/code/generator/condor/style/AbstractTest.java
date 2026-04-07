@@ -13,33 +13,183 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract condor style class. */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    private static final class TestStyle extends Abstract {
+        private final List<Job> mAppliedJobs = new ArrayList<Job>();
+
+        @Override
+        public void apply(Job job) throws CondorStyleException {
+            mAppliedJobs.add(job);
+        }
+
+        List<Job> appliedJobs() {
+            return mAppliedJobs;
+        }
+
+        boolean encryptCredentialForFileTransfer() {
+            return mEncryptCredentialForFileTX;
+        }
+
+        SiteStore siteStore() {
+            return mSiteStore;
+        }
+
+        LogManager logger() {
+            return mLogger;
+        }
+
+        CredentialHandlerFactory credentialFactory() {
+            return mCredentialFactory;
+        }
+
+        PegasusProperties properties() {
+            return mProps;
+        }
+
+        List<String> mountUnderScratchDirs() {
+            return mMountUnderScratchDirs;
+        }
+    }
+
+    @Test
+    public void testAbstractImplementsCondorStyle() {
+        assertThat(CondorStyle.class.isAssignableFrom(Abstract.class), is(true));
+    }
+
+    @Test
+    public void testCondorExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(Condor.class), is(true));
+    }
+
+    @Test
+    public void testCondorGlideINExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(CondorGlideIN.class), is(true));
+    }
+
+    @Test
+    public void testCreamCEExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(CreamCE.class), is(true));
+    }
+
+    @Test
+    public void testAbstractClassIsAbstract() {
+        assertThat(java.lang.reflect.Modifier.isAbstract(Abstract.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testInitializePopulatesCoreFieldsAndEncryptFlag() throws Exception {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.credential.encrypt", "false");
+
+        SiteStore store = new SiteStore();
+        NoOpLogManager logger = new NoOpLogManager();
+        CredentialHandlerFactory factory = new CredentialHandlerFactory();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.SITE_STORE, store);
+
+        TestStyle style = new TestStyle();
+        style.initialize(bag, factory);
+
+        assertThat(style.properties(), sameInstance(props));
+        assertThat(style.siteStore(), sameInstance(store));
+        assertThat(style.logger(), sameInstance(logger));
+        assertThat(style.credentialFactory(), sameInstance(factory));
+        assertThat(style.mountUnderScratchDirs(), notNullValue());
+        assertThat(style.encryptCredentialForFileTransfer(), is(false));
+    }
+
+    @Test
+    public void testApplyAggregatedJobDelegatesToChildrenThenAggregate() throws Exception {
+        TestStyle style = new TestStyle();
+        AggregatedJob aggregated = new AggregatedJob();
+        Job child1 = new Job();
+        child1.setName("child1");
+        child1.setLogicalID("child1");
+        aggregated.setName("cluster");
+        aggregated.add(child1);
+
+        style.apply(aggregated);
+
+        assertThat(style.appliedJobs().size(), is(2));
+        assertThat(style.appliedJobs().get(0), sameInstance(child1));
+        assertThat(style.appliedJobs().get(1), sameInstance(aggregated));
+    }
+
+    @Test
+    public void testApplySiteCatalogEntryIsNoOp() throws Exception {
+        TestStyle style = new TestStyle();
+
+        assertDoesNotThrow(() -> style.apply(new SiteCatalogEntry()));
+        assertThat(style.appliedJobs().isEmpty(), is(true));
+    }
 }

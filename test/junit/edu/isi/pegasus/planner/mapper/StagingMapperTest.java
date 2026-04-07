@@ -13,33 +13,78 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the StagingMapper interface structure. */
 public class StagingMapperTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPropertyPrefixConstant() {
+        assertThat(StagingMapper.PROPERTY_PREFIX, is("pegasus.dir.staging.mapper"));
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertThat(StagingMapper.VERSION, is("1.0"));
+    }
+
+    @Test
+    public void testStagingMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(StagingMapper.class), is(true));
+    }
+
+    @Test
+    public void testInitializeMethodExists() throws NoSuchMethodException {
+        assertThat(
+                StagingMapper.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        java.util.Properties.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testStagingMapperIsInterface() {
+        assertThat(StagingMapper.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMapToRelativeDirectoryMethodSignature() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                StagingMapper.class.getMethod(
+                        "mapToRelativeDirectory",
+                        edu.isi.pegasus.planner.classes.Job.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry.class,
+                        String.class);
+
+        assertThat(method.getReturnType(), is(java.io.File.class));
+    }
+
+    @Test
+    public void testGetRelativeDirectoryMethodSignature() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                StagingMapper.class.getMethod("getRelativeDirectory", String.class, String.class);
+
+        assertThat(method.getReturnType(), is(java.io.File.class));
+    }
+
+    @Test
+    public void testMapMethodThrowsMapperException() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                StagingMapper.class.getMethod(
+                        "map",
+                        edu.isi.pegasus.planner.classes.Job.class,
+                        java.io.File.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.FileServer.OPERATION.class,
+                        String.class);
+
+        assertThat(method.getReturnType(), is(String.class));
+        assertArrayEquals(new Class<?>[] {MapperException.class}, method.getExceptionTypes());
+    }
 }

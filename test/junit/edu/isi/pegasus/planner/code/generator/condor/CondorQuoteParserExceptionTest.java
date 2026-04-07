@@ -13,33 +13,78 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorQuoteParserException class. */
 public class CondorQuoteParserExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsException() {
+        assertThat(Exception.class.isAssignableFrom(CondorQuoteParserException.class), is(true));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessageAndPosition() {
+        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", 5);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("parse error"));
+        assertThat(ex.getPosition(), is(5));
+    }
+
+    @Test
+    public void testConstructorWithMessagePositionAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", 3, cause);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("parse error"));
+        assertThat(ex.getPosition(), is(3));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testGetPositionReturnsCorrectValue() {
+        CondorQuoteParserException ex = new CondorQuoteParserException("error at position 10", 10);
+        assertThat(ex.getPosition(), is(10));
+    }
+
+    @Test
+    public void testExceptionIsThrowable() {
+        assertThat(Throwable.class.isAssignableFrom(CondorQuoteParserException.class), is(true));
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                CondorQuoteParserException.class,
+                () -> {
+                    throw new CondorQuoteParserException("test", 0);
+                });
+    }
+
+    @Test
+    public void testConstructorWithNullCausePreservesMessageAndPosition() {
+        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", 7, null);
+
+        assertThat(ex.getMessage(), is("parse error"));
+        assertThat(ex.getPosition(), is(7));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testNegativePositionIsPreserved() {
+        CondorQuoteParserException ex = new CondorQuoteParserException("parse error", -1);
+
+        assertThat(ex.getPosition(), is(-1));
+    }
+
+    @Test
+    public void testExceptionExtendsCheckedExceptionNotRuntimeException() {
+        assertThat(
+                RuntimeException.class.isAssignableFrom(CondorQuoteParserException.class),
+                is(false));
+    }
 }

@@ -1,5 +1,8 @@
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -21,56 +24,56 @@ public class VersionTest {
     @Test
     public void testVersion() {
         String version = ver.getVersion();
-        assertTrue(version != null);
-        assertTrue(version.matches("\\d+[.]\\d+[.]\\d+(-(dev|alpha|beta|rc).\\d+)?"));
+        assertThat(version, is(notNullValue()));
+        assertThat(version.matches("\\d+[.]\\d+[.]\\d+(-(dev|alpha|beta|rc).\\d+)?"), is(true));
     }
 
     @Test
     public void testMajorMinorPatch() {
         String major = ver.getMajor();
-        assertTrue(major != null);
-        assertTrue(major.matches("\\d+"));
+        assertThat(major, is(notNullValue()));
+        assertThat(major.matches("\\d+"), is(true));
 
         String minor = ver.getMinor();
-        assertTrue(minor != null);
-        assertTrue(minor.matches("\\d+"));
+        assertThat(minor, is(notNullValue()));
+        assertThat(minor.matches("\\d+"), is(true));
 
         String patch = ver.getPatch();
-        assertTrue(patch != null);
-        assertTrue(patch.matches("\\d+(-(dev|alpha|beta|rc).\\d+)?"));
+        assertThat(patch, is(notNullValue()));
+        assertThat(patch.matches("\\d+(-(dev|alpha|beta|rc).\\d+)?"), is(true));
 
         String version = ver.getVersion();
-        assertEquals(version, major + "." + minor + "." + patch);
+        assertThat(version, is(major + "." + minor + "." + patch));
     }
 
     @Test
     public void testTimestamp() {
         String ts = ver.getTimestamp();
-        assertTrue(ts != null);
-        assertTrue(ts.matches("\\d{14}Z"));
+        assertThat(ts, is(notNullValue()));
+        assertThat(ts.matches("\\d{14}Z"), is(true));
     }
 
     @Test
     public void testPlatform() {
         String plat = ver.getPlatform();
-        assertTrue(plat != null);
+        assertThat(plat, is(notNullValue()));
     }
 
     @Test
     public void testArchitceture() {
         SysInfo.Architecture arch = ver.getArchitecture();
-        assertTrue(arch != null);
+        assertThat(arch, is(notNullValue()));
     }
 
     @Test
     public void testOS() {
         SysInfo.OS os = ver.getOS();
-        assertTrue(os != null);
+        assertThat(os, is(notNullValue()));
     }
 
     @Test
     public void testOSReleaese() {
         SysInfo.OS_RELEASE release = ver.getOSRelease();
-        assertTrue(release != null);
+        assertThat(release, is(notNullValue()));
     }
 }

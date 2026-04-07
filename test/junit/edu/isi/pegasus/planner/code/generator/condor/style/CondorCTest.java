@@ -13,33 +13,167 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import java.io.PrintStream;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorC style class. */
 public class CondorCTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    private static final class TestCondorC extends CondorC {
+        String gridResource(Job job) throws Exception {
+            return constructGridResource(job);
+        }
+
+        void setSiteStore(SiteStore store) {
+            mSiteStore = store;
+        }
+
+        void setLogger(LogManager logger) {
+            mLogger = logger;
+        }
+    }
+
+    private TestCondorC newStyleWithSite(String siteHandle, String contact) {
+        GridGateway gateway =
+                new GridGateway(
+                        GridGateway.TYPE.condor, contact, GridGateway.SCHEDULER_TYPE.condor);
+        gateway.setJobType(GridGateway.JOB_TYPE.compute);
+
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle(siteHandle);
+        site.addGridGateway(gateway);
+
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestCondorC style = new TestCondorC();
+        style.setSiteStore(store);
+        style.setLogger(new NoOpLogManager());
+        return style;
+    }
+
+    @Test
+    public void testCondorCExtendsCondor() {
+        assertThat(Condor.class.isAssignableFrom(CondorC.class), is(true));
+    }
+
+    @Test
+    public void testCondorCImplementsCondorStyle() {
+        assertThat(CondorStyle.class.isAssignableFrom(CondorC.class), is(true));
+    }
+
+    @Test
+    public void testRemoteUniverseKeyNotNull() {
+        assertThat(CondorC.REMOTE_UNIVERSE_KEY, notNullValue());
+    }
+
+    @Test
+    public void testShouldTransferFilesKeyNotNull() {
+        assertThat(CondorC.SHOULD_TRANSFER_FILES_KEY, notNullValue());
+    }
+
+    @Test
+    public void testWhenToTransferOutputKeyNotNull() {
+        assertThat(CondorC.WHEN_TO_TRANSFER_OUTPUT_KEY, notNullValue());
+    }
+
+    @Test
+    public void testStyleNameConstant() {
+        assertThat(CondorC.STYLE_NAME, is("CondorC"));
+    }
+
+    @Test
+    public void testConstructGridResourceUsesExplicitCollector() throws Exception {
+        TestCondorC style = newStyleWithSite("condorc", "schedd.example");
+        Job job = new Job();
+        job.setSiteHandle("condorc");
+        job.condorVariables.construct(CondorC.COLLECTOR_KEY, "collector.example");
+
+        assertThat(style.gridResource(job), is("condor schedd.example collector.example"));
+        assertThat(job.condorVariables.containsKey(CondorC.COLLECTOR_KEY), is(false));
+    }
+
+    @Test
+    public void testConstructGridResourceFallsBackToContactForCollector() throws Exception {
+        TestCondorC style = newStyleWithSite("condorc", "schedd.example");
+        Job job = new Job();
+        job.setSiteHandle("condorc");
+
+        assertThat(style.gridResource(job), is("condor schedd.example schedd.example"));
+    }
+
+    @Test
+    public void testConstructGridResourceThrowsWhenGridGatewayMissing() {
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle("missing");
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestCondorC style = new TestCondorC();
+        style.setSiteStore(store);
+        style.setLogger(new NoOpLogManager());
+
+        Job job = new Job();
+        job.setSiteHandle("missing");
+
+        Exception e = assertThrows(Exception.class, () -> style.gridResource(job));
+        assertThat(e.getMessage(), containsString("Grid Gateway not specified"));
+    }
 }

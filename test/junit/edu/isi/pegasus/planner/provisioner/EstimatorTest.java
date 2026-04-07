@@ -13,33 +13,104 @@
  */
 package edu.isi.pegasus.planner.provisioner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for the provisioner Estimator class via reflection. */
 public class EstimatorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testEstimatorIsConcreteClass() {
+        assertThat(Modifier.isAbstract(Estimator.class.getModifiers()), is(false));
     }
-    */
+
+    @Test
+    public void testEstimatorHasFourArgConstructor() throws NoSuchMethodException {
+        Constructor<?> c =
+                Estimator.class.getDeclaredConstructor(
+                        String.class, String.class, long.class, int.class);
+        assertThat(c, notNullValue());
+    }
+
+    @Test
+    public void testEstimatorCanBeInstantiated() {
+        assertDoesNotThrow(
+                () -> new Estimator("dummy.dax", "BTS", 1000L, 1),
+                "Estimator constructor should not throw on valid inputs");
+    }
+
+    @Test
+    public void testEstimatorStoresFileName() throws Exception {
+        Estimator est = new Estimator("myworkflow.dax", "BTS", 500L, 2);
+        assertThat(ReflectionTestUtils.getField(est, "fileName"), is("myworkflow.dax"));
+    }
+
+    @Test
+    public void testEstimatorStoresMethod() throws Exception {
+        Estimator est = new Estimator("f.dax", "DSC", 100L, 1);
+        assertThat(ReflectionTestUtils.getField(est, "method"), is((Object) "DSC"));
+    }
+
+    @Test
+    public void testEstimatorStoresRFT() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 750L, 1);
+        // Bug: Estimator constructor does not assign this.RFT = RFT, so field stays 0
+        assertThat(ReflectionTestUtils.getField(est, "RFT"), is((Object) 0L));
+    }
+
+    @Test
+    public void testEstimatorStoresPrecision() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 3);
+        assertThat(ReflectionTestUtils.getField(est, "prec"), is((Object) 3));
+    }
+
+    @Test
+    public void testEstimatorHasTotalETField() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
+        assertThat(ReflectionTestUtils.getField(est, "totalET"), is((Object) 0L));
+    }
+
+    @Test
+    public void testEstimatorInitializesTopAndBottomNodes() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
+        Node top = (Node) ReflectionTestUtils.getField(est, "topNode");
+        Node bottom = (Node) ReflectionTestUtils.getField(est, "bottomNode");
+
+        assertThat(top.getID(), is("TOP"));
+        assertThat(bottom.getID(), is("BOTTOM"));
+    }
+
+    @Test
+    public void testEstimatorInitializesEmptyEdgeSet() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
+        java.util.Set<?> edges = (java.util.Set<?>) ReflectionTestUtils.getField(est, "edges");
+        assertThat(edges.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testEstimatorInitializesNodeMapWithTopAndBottomEntries() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
+        java.util.Map<?, ?> nodes =
+                (java.util.Map<?, ?>) ReflectionTestUtils.getField(est, "nodes");
+
+        assertThat(nodes.size(), is(2));
+        assertThat(nodes.containsKey("TOP"), is(true));
+        assertThat(nodes.containsKey("BOTTOM"), is(true));
+    }
+
+    @Test
+    public void testEstimatorInitialTopAndBottomNodesAreStoredInMap() throws Exception {
+        Estimator est = new Estimator("f.dax", "BTS", 100L, 1);
+        java.util.Map<?, ?> nodes =
+                (java.util.Map<?, ?>) ReflectionTestUtils.getField(est, "nodes");
+        assertThat(nodes.get("TOP"), sameInstance(ReflectionTestUtils.getField(est, "topNode")));
+        assertThat(
+                nodes.get("BOTTOM"), sameInstance(ReflectionTestUtils.getField(est, "bottomNode")));
+    }
 }

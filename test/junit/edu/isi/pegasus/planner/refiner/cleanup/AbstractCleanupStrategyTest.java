@@ -13,33 +13,67 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for AbstractCleanupStrategy. */
 public class AbstractCleanupStrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsCleanupStrategy() {
+        assertThat(CleanupStrategy.class.isAssignableFrom(AbstractCleanupStrategy.class), is(true));
     }
-    */
+
+    @Test
+    public void testCleanupJobPrefixConstant() {
+        assertThat(AbstractCleanupStrategy.CLEANUP_JOB_PREFIX, is("clean_up_"));
+    }
+
+    @Test
+    public void testDefaultMaxJobsConstant() {
+        assertThat(AbstractCleanupStrategy.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY, is("4"));
+    }
+
+    @Test
+    public void testInPlaceExtendsAbstractCleanupStrategy() {
+        assertThat(AbstractCleanupStrategy.class.isAssignableFrom(InPlace.class), is(true));
+    }
+
+    @Test
+    public void testAbstractCleanupStrategyIsAbstract() {
+        assertThat(Modifier.isAbstract(AbstractCleanupStrategy.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testAdditionalConstants() {
+        assertThat(AbstractCleanupStrategy.NO_PROFILE_VALUE, is(-1));
+        assertThat(AbstractCleanupStrategy.CLEANUP_SOURCE_SITE_KEY, is("cleanup_source_site"));
+        assertThat(AbstractCleanupStrategy.DUMMY_LOCAL_CONTAINER_SITE, is("localC"));
+    }
+
+    @Test
+    public void testInitializeAndAddCleanupJobsSignatures() throws Exception {
+        Method initialize =
+                AbstractCleanupStrategy.class.getMethod(
+                        "initialize", PegasusBag.class, CleanupImplementation.class);
+        Method addCleanupJobs =
+                AbstractCleanupStrategy.class.getMethod("addCleanupJobs", Graph.class);
+        assertThat((Object) initialize.getReturnType(), is((Object) void.class));
+        assertThat((Object) addCleanupJobs.getReturnType(), is((Object) Graph.class));
+    }
+
+    @Test
+    public void testProtectedHelperMethodsExist() throws Exception {
+        assertThat(AbstractCleanupStrategy.class.getDeclaredMethod("reset"), notNullValue());
+        assertThat(
+                AbstractCleanupStrategy.class.getDeclaredMethod("typeStageOut", int.class),
+                notNullValue());
+    }
 }

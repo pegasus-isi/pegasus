@@ -13,33 +13,72 @@
  */
 package edu.isi.pegasus.planner.selector;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteSelector interface constants. */
 public class SiteSelectorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(SiteSelector.VERSION, notNullValue());
+        assertThat(SiteSelector.VERSION.isEmpty(), is(false));
     }
-    */
+
+    @Test
+    public void testVersionFormat() {
+        assertThat(SiteSelector.VERSION.matches("\\d+\\.\\d+"), is(true));
+    }
+
+    @Test
+    public void testSiteNotFoundConstantNotNull() {
+        assertThat(SiteSelector.SITE_NOT_FOUND, notNullValue());
+    }
+
+    @Test
+    public void testSiteNotFoundValue() {
+        assertThat(SiteSelector.SITE_NOT_FOUND, is("NONE"));
+    }
+
+    @Test
+    public void testSiteNotFoundNotEmpty() {
+        assertThat(SiteSelector.SITE_NOT_FOUND.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testSiteSelectorIsInterface() {
+        assertThat(SiteSelector.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        SiteSelector.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        SiteSelector.class
+                                .getMethod(
+                                        "mapWorkflow",
+                                        edu.isi.pegasus.planner.classes.ADag.class,
+                                        java.util.List.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object) SiteSelector.class.getMethod("description").getReturnType(),
+                is((Object) String.class));
+    }
+
+    @Test
+    public void testSiteSelectorDeclaresExpectedMethods() {
+        assertThat(SiteSelector.class.getDeclaredMethods().length, is(3));
+    }
 }

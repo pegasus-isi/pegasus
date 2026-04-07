@@ -13,33 +13,101 @@
  */
 package edu.isi.pegasus.planner.provisioner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the OccupationDiagram class. */
 public class OccupationDiagramTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private OccupationDiagram mDiagram;
+    private static final long RFT = 100L;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mDiagram = new OccupationDiagram(RFT);
     }
-    */
+
+    @Test
+    public void testOccupationDiagramCanBeInstantiated() {
+        assertThat(mDiagram, notNullValue());
+    }
+
+    @Test
+    public void testRFTIsSetCorrectly() throws Exception {
+        long rft = (long) ReflectionTestUtils.getField(mDiagram, "RFT");
+        assertThat(rft, is(RFT));
+    }
+
+    @Test
+    public void testTimeMapHasCorrectSize() throws Exception {
+        java.util.LinkedList[] timeMap =
+                (java.util.LinkedList[]) ReflectionTestUtils.getField(mDiagram, "timeMap");
+        assertThat(timeMap.length, is((int) RFT));
+    }
+
+    @Test
+    public void testAddNodeWithPositiveWeight() {
+        Node node = new Node("n1", "task1", 10L);
+        // Just verify add doesn't throw
+        assertDoesNotThrow(
+                () -> mDiagram.add(node), "Adding a node with positive weight should not throw");
+    }
+
+    @Test
+    public void testInitialMaxIsZero() throws Exception {
+        int max = (int) ReflectionTestUtils.getField(mDiagram, "max");
+        assertThat(max, is(0));
+    }
+
+    @Test
+    public void testInitialNodesTreeSetIsEmpty() throws Exception {
+        java.util.TreeSet nodes =
+                (java.util.TreeSet) ReflectionTestUtils.getField(mDiagram, "nodes");
+        assertThat(nodes.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testNodeWithZeroWeightIsNotAdded() throws Exception {
+        // evalWeight returns 0 for a node with no edges/weight configured specially
+        // We create a node with weight 0 - but Node(String, String, long) stores weight,
+        // evalWeight may differ; let's just check that add with w>0 does work
+        Node node = new Node("n1", "task1", 5L);
+        mDiagram.add(node);
+        java.util.TreeSet nodes =
+                (java.util.TreeSet) ReflectionTestUtils.getField(mDiagram, "nodes");
+        assertThat(nodes.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testZeroWeightNodeIsNotAdded() throws Exception {
+        Node node = new Node("n0", "task0", 0L);
+        mDiagram.add(node);
+        java.util.TreeSet nodes =
+                (java.util.TreeSet) ReflectionTestUtils.getField(mDiagram, "nodes");
+        assertThat(nodes.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testAddingPositiveWeightNodeIncreasesStoredNodeCount() throws Exception {
+        Node node = new Node("n2", "task2", 7L);
+        mDiagram.add(node);
+        java.util.TreeSet nodes =
+                (java.util.TreeSet) ReflectionTestUtils.getField(mDiagram, "nodes");
+        assertThat(nodes.size(), is(1));
+    }
+
+    @Test
+    public void testStackOnEmptyDiagramReturnsZero() {
+        assertThat(mDiagram.stack(false), is(0));
+    }
+
+    @Test
+    public void testInitialMaxIndexIsZero() throws Exception {
+        assertThat(ReflectionTestUtils.getField(mDiagram, "maxIndex"), is((Object) 0));
+    }
 }

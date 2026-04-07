@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
@@ -36,19 +38,19 @@ public class GliteEscapeTest {
     @Test
     public void testBasic() {
         String value = "AB";
-        assertEquals(value, ge.escape(value));
+        assertThat(ge.escape(value), is(value));
     }
 
     @Test
     public void testValWithSpaces() {
         String value = "A B";
-        assertEquals("A\\ B", ge.escape(value));
+        assertThat(ge.escape(value), is("A\\ B"));
     }
 
     @Test
     public void testValWithDoubleQuotes() {
         String value = "A\"B";
-        assertEquals("A\\\\\"B", ge.escape(value));
+        assertThat(ge.escape(value), is("A\\\\\"B"));
     }
 
     @Test

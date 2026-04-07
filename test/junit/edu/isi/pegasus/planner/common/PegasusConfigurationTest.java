@@ -15,6 +15,8 @@
 
 package edu.isi.pegasus.planner.common;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -23,9 +25,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties.PEGASUS_MODE;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,12 +46,6 @@ public class PegasusConfigurationTest {
     private static int mTestNumber = 1;
 
     public PegasusConfigurationTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -132,7 +126,7 @@ public class PegasusConfigurationTest {
     private void testComputeLogLevel(PEGASUS_MODE mode, PlannerOptions options, int expected) {
         PegasusConfiguration pc = new PegasusConfiguration(mLogger);
         int actual = pc.computeLogLevel(mode, options);
-        assertEquals(expected, actual, "Computed Log Level does not match");
+        assertThat(actual, is(expected));
     }
 
     @AfterEach

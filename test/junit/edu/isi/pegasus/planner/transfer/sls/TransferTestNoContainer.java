@@ -14,7 +14,8 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static edu.isi.pegasus.planner.transfer.sls.TransferTest.mTestNumber;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -90,7 +91,7 @@ public class TransferTestNoContainer extends TransferTest {
         t.initialize(mBag);
         SiteCatalogEntry compute = mBag.getHandleToSiteStore().lookup("compute");
         compute.addProfile(new Profile("pegasus", Pegasus.LOCAL_VISIBLE_KEY, "True"));
-        assertEquals("use file URL as source:", t.useFileURLAsSource(compute, "local"), true);
+        assertThat("use file URL as source:", t.useFileURLAsSource(compute, "local"), is(true));
         mLogger.logEventCompletion();
     }
 

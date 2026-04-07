@@ -13,33 +13,54 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link OpenBrace} token. */
 public class OpenBraceTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCanBeInstantiated() {
+        OpenBrace ob = new OpenBrace();
+        assertThat(ob, is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testImplementsToken() {
+        OpenBrace ob = new OpenBrace();
+        assertThat(ob, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testIsDistinctFromCloseBrace() {
+        OpenBrace ob = new OpenBrace();
+        CloseBrace cb = new CloseBrace();
+        assertNotEquals(ob.getClass(), cb.getClass());
+    }
+
+    @Test
+    public void testMultipleInstancesCanBeCreated() {
+        OpenBrace ob1 = new OpenBrace();
+        OpenBrace ob2 = new OpenBrace();
+        assertNotSame(ob1, ob2);
+    }
+
+    @Test
+    public void testDeclaresNoFields() {
+        assertThat(OpenBrace.class.getDeclaredFields().length, is(0));
+    }
+
+    @Test
+    public void testDeclaresOnlyDefaultConstructor() {
+        assertThat(OpenBrace.class.getDeclaredConstructors().length, is(1));
+        assertThat(OpenBrace.class.getDeclaredConstructors()[0].getParameterCount(), is(0));
+    }
+
+    @Test
+    public void testDeclaresNoAdditionalMethods() {
+        assertThat(OpenBrace.class.getDeclaredMethods().length, is(0));
+    }
 }

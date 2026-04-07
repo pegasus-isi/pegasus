@@ -13,33 +13,54 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class SiteCatalogXMLParserTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInterfaceShape() {
+        assertThat(
+                "SiteCatalogXMLParser should be an interface",
+                SiteCatalogXMLParser.class.isInterface(),
+                is(true));
+        assertThat(
+                "SiteCatalogXMLParser should not extend other interfaces",
+                SiteCatalogXMLParser.class.getInterfaces().length,
+                is(0));
     }
-    */
+
+    @Test
+    public void testGetSiteStoreMethodSignature() throws Exception {
+        Method method = SiteCatalogXMLParser.class.getMethod("getSiteStore");
+
+        assertThat(
+                "getSiteStore should return SiteStore",
+                method.getReturnType(),
+                sameInstance((Class<?>) SiteStore.class));
+        assertThat(
+                "interface methods should be public",
+                Modifier.isPublic(method.getModifiers()),
+                is(true));
+        assertThat(
+                "interface methods should be abstract",
+                Modifier.isAbstract(method.getModifiers()),
+                is(true));
+    }
+
+    @Test
+    public void testDeclaredMethodCount() {
+        assertThat(
+                "SiteCatalogXMLParser should declare one method",
+                SiteCatalogXMLParser.class.getDeclaredMethods().length,
+                is(1));
+    }
 }

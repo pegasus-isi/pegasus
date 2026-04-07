@@ -13,33 +13,151 @@
  */
 package edu.isi.pegasus.planner.selector.replica;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Restricted replica selector. */
 public class RestrictedTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Restricted mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Restricted(PegasusProperties.nonSingletonInstance());
     }
-    */
+
+    @Test
+    public void testDescription() {
+        assertThat(mSelector.description(), is("Restricted"));
+    }
+
+    @Test
+    public void testSelectReplicaNoPreferredOrIgnored() {
+        // Without preferred/ignored config, behaves like Default selector
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site1/test.txt", "site1"));
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site2/test.txt", "site2"));
+
+        ReplicaCatalogEntry rce = mSelector.selectReplica(rl, "site1", false);
+        assertThat(rce, notNullValue());
+    }
+
+    @Test
+    public void testSelectReplicaWithPreferredSite() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.site1.prefer.stagein.sites", "site2");
+        Restricted selector = new Restricted(props);
+
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site2/test.txt", "site2"));
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site3/test.txt", "site3"));
+
+        ReplicaCatalogEntry rce = selector.selectReplica(rl, "site1", false);
+        assertThat(rce, notNullValue());
+        assertThat(rce.getResourceHandle(), is("site2"));
+    }
+
+    @Test
+    public void testSelectReplicaWithIgnoredSite() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.site1.ignore.stagein.sites", "site2");
+        Restricted selector = new Restricted(props);
+
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site2/test.txt", "site2"));
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site3/test.txt", "site3"));
+
+        ReplicaCatalogEntry rce = selector.selectReplica(rl, "site1", false);
+        assertThat(rce, notNullValue());
+        assertThat(rce.getResourceHandle(), is("site3"));
+    }
+
+    @Test
+    public void testSelectReplicaThrowsWhenAllIgnored() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.site1.ignore.stagein.sites", "site2");
+        Restricted selector = new Restricted(props);
+
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://site2/test.txt", "site2"));
+
+        assertThrows(
+                RuntimeException.class,
+                () -> selector.selectReplica(rl, "site1", false),
+                "Should throw when only available site is ignored");
+    }
+
+    @Test
+    public void testGloballyPreferredSite() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.*.prefer.stagein.sites", "preferred-site");
+        Restricted selector = new Restricted(props);
+
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://preferred-site/test.txt", "preferred-site"));
+        rl.addPFN(new ReplicaCatalogEntry("gsiftp://other-site/test.txt", "other-site"));
+
+        ReplicaCatalogEntry rce = selector.selectReplica(rl, "site1", false);
+        assertThat(rce, notNullValue());
+        assertThat(rce.getResourceHandle(), is("preferred-site"));
+    }
+
+    @Test
+    public void testSelectReplicaFileURLFromPreferredSiteReturned() {
+        ReplicaLocation rl = new ReplicaLocation();
+        rl.setLFN("test.txt");
+        // file URL from preferred site should be returned immediately
+        rl.addPFN(new ReplicaCatalogEntry("file:///tmp/test.txt", "site1"));
+
+        ReplicaCatalogEntry rce = mSelector.selectReplica(rl, "site1", false);
+        assertThat(rce, notNullValue());
+        assertThat(rce.getPFN(), is("file:///tmp/test.txt"));
+    }
+
+    @Test
+    public void testGetPropertyBuildsExpectedKey() {
+        assertThat(
+                mSelector.getProperty("site1", "prefer.stagein.sites"),
+                is("pegasus.selector.replica.site1.prefer.stagein.sites"));
+    }
+
+    @Test
+    public void testGlobalPreferenceAndIgnoreHelpers() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.*.prefer.stagein.sites", "preferred-site");
+        props.setProperty("pegasus.selector.replica.*.ignore.stagein.sites", "ignored-site");
+        Restricted selector = new Restricted(props);
+
+        assertThat(selector.globallyPreferred("preferred-site"), is(true));
+        assertThat(selector.globallyIgnored("ignored-site"), is(true));
+        assertThat(selector.globallyPreferred("other-site"), is(false));
+        assertThat(selector.globallyIgnored("other-site"), is(false));
+    }
+
+    @Test
+    public void testPreferredSiteIsRecognizedEvenWhenAlsoIgnored() throws Exception {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.replica.site1.prefer.stagein.sites", "site2");
+        props.setProperty("pegasus.selector.replica.site1.ignore.stagein.sites", "site2");
+        Restricted selector = new Restricted(props);
+
+        java.lang.reflect.Method populate =
+                Restricted.class.getDeclaredMethod("populateSiteMaps", String.class);
+        populate.setAccessible(true);
+        populate.invoke(selector, "site1");
+
+        assertThat(selector.prefer("site2", "site1"), is(true));
+    }
 }

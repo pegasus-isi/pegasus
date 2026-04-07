@@ -13,33 +13,73 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for HasFilename interface structure. */
 public class HasFilenameTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHasFilenameIsInterface() {
+        assertThat(HasFilename.class.isInterface(), is(true));
     }
-    */
+
+    @Test
+    public void testHasGetFilenameMethod() throws Exception {
+        Method m = HasFilename.class.getMethod("getFilename");
+        assertThat(m, notNullValue());
+        assertThat(m.getReturnType(), is(String.class));
+    }
+
+    @Test
+    public void testHasSetFilenameMethod() throws Exception {
+        Method m = HasFilename.class.getMethod("setFilename", String.class);
+        assertThat(m, notNullValue());
+        assertThat(m.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testTemporaryImplementsInterface() {
+        assertThat(HasFilename.class.isAssignableFrom(Temporary.class), is(true));
+    }
+
+    @Test
+    public void testFifoImplementsInterface() {
+        assertThat(HasFilename.class.isAssignableFrom(Fifo.class), is(true));
+    }
+
+    @Test
+    public void testTemporarySetAndGetFilename() {
+        Temporary t = new Temporary("/tmp/test.tmp", 1);
+        assertThat(t.getFilename(), is("/tmp/test.tmp"));
+    }
+
+    @Test
+    public void testFifoSetAndGetFilename() {
+        Fifo f = new Fifo("/tmp/mypipe", 3);
+        assertThat(f.getFilename(), is("/tmp/mypipe"));
+    }
+
+    @Test
+    public void testInterfaceMethodsArePublicAndAbstract() throws Exception {
+        Method getter = HasFilename.class.getMethod("getFilename");
+        Method setter = HasFilename.class.getMethod("setFilename", String.class);
+
+        assertThat(Modifier.isPublic(getter.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(getter.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(setter.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(setter.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testFifoSetFilenameUpdatesStoredFilename() {
+        Fifo f = new Fifo("/tmp/mypipe", 3);
+        f.setFilename("/tmp/otherpipe");
+
+        assertThat(f.getFilename(), is("/tmp/otherpipe"));
+    }
 }

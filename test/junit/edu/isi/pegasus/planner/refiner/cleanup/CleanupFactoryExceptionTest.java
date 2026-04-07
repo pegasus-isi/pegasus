@@ -13,33 +13,69 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CleanupFactoryException. */
 public class CleanupFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(CleanupFactoryException.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(CleanupFactoryException.DEFAULT_NAME, is("File Cleanup"));
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        CleanupFactoryException ex = new CleanupFactoryException("test error");
+        assertThat(ex.getMessage(), is("test error"));
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsDefaultClassname() {
+        CleanupFactoryException ex = new CleanupFactoryException("test error");
+        assertThat(ex.getClassname(), is("File Cleanup"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        CleanupFactoryException ex = new CleanupFactoryException("error", "InPlace");
+        assertThat(ex.getClassname(), is("InPlace"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CleanupFactoryException ex = new CleanupFactoryException("error", cause);
+        assertThat(ex.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCauseUsesDefaultClassname() {
+        CleanupFactoryException ex = new CleanupFactoryException("error", (Throwable) null);
+        assertThat(ex.getClassname(), is("File Cleanup"));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullClassnamePreservesNull() {
+        CleanupFactoryException ex = new CleanupFactoryException("error", (String) null);
+        assertThat(ex.getClassname(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithMessageNullClassnameAndNullCausePreservesNull() {
+        CleanupFactoryException ex = new CleanupFactoryException("error", null, null);
+        assertThat(ex.getClassname(), nullValue());
+        assertThat(ex.getCause(), nullValue());
+    }
 }

@@ -362,14 +362,14 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </javac>
   </target>
 
-  <target name="compile-junit" depends="setup,compile-common,compile-planner" description="Compile java unit tests">
+  <target name="compile-junit" depends="setup,compile-common,compile-planner,compile-aws-batch" description="Compile java unit tests">
     <javac destdir="${test.src}" srcdir="test/junit"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
-           includes="edu/isi/pegasus/**/*.java"
            includeantruntime="false">
       <classpath>
         <path refid="build.classpath"/>
+        <path refid="build.aws.classpath"/>
         <path refid="java.test.classpath"/>
         <path location="${build.src}"/>
       </classpath>
@@ -695,7 +695,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
     </exec>
   </target>
 
-  <target name="test-java" depends="jar,jar-junit,compile-pegasus-common,compile-pegasus-python,compile-externals" description="Run java unit tests">
+  <target name="test-java" depends="jar,jar-aws-batch,jar-junit,compile-pegasus-common,compile-pegasus-python,compile-externals" description="Run java unit tests">
     <!-- Copy required YAML schemas -->
     <!-- Copied from dist-common, can be replaced by a new, shared target -->
     <mkdir dir="${dist.share}"/>
@@ -735,6 +735,7 @@ pegasus.build.git.hash=${pegasus.build.git.hash}
         <path refid="build.aws.classpath"/>
         <path refid="java.test.classpath"/>
         <path location="${dist.jars}/pegasus.jar"/>
+        <path location="${dist.jars}/pegasus-aws-batch.jar"/>
         <path location="${dist.jars}/pegasus-test.jar"/>
         <path location="${dist.jars}/vdl.jar"/>
       </classpath>

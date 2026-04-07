@@ -16,15 +16,15 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,20 +37,11 @@ public class TransformationStoreTest {
 
     public TransformationStoreTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     // TODO add test methods here.
     // The methods must be annotated with annotation @Test. For example:
@@ -88,7 +79,7 @@ public class TransformationStoreTest {
         entry.setContainer(c);
         TransformationStore store = new TransformationStore();
         store.sanityCheck(entry);
-        assertTrue(containerName.contentEquals(c.getLFN()));
+        assertThat(c.getLFN(), is(containerName));
     }
 
     @ParameterizedTest
@@ -111,8 +102,6 @@ public class TransformationStoreTest {
                         () -> {
                             store.sanityCheck(entry);
                         });
-        assertTrue(
-                e.getMessage().contains("matches associated container's computed LFN"),
-                "Exception thrown was " + e);
+        assertThat(e.getMessage(), containsString("matches associated container's computed LFN"));
     }
 }

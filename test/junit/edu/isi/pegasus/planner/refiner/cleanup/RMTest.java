@@ -13,33 +13,97 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for RM cleanup implementation. */
 public class RMTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsCleanupImplementation() {
+        assertThat(CleanupImplementation.class.isAssignableFrom(RM.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultRmLogicalName() {
+        assertThat(RM.DEFAULT_RM_LOGICAL_NAME, is("rm"));
+    }
+
+    @Test
+    public void testDefaultRmLocation() {
+        assertThat(RM.DEFAULT_RM_LOCATION, is("/bin/rm"));
+    }
+
+    @Test
+    public void testDefaultPriorityKey() {
+        assertThat(RM.DEFAULT_PRIORITY_KEY, is("1000"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        RM rm = new RM();
+        assertThat(rm, notNullValue());
+    }
+
+    @Test
+    public void testInitializeMethodReturnsVoid() throws Exception {
+        assertThat(
+                (Object)
+                        RM.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+    }
+
+    @Test
+    public void testCreateCleanupJobOverloadsReturnJob() throws Exception {
+        assertThat(
+                (Object)
+                        RM.class
+                                .getMethod(
+                                        "createCleanupJob",
+                                        String.class,
+                                        java.util.List.class,
+                                        edu.isi.pegasus.planner.classes.Job.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+        assertThat(
+                (Object)
+                        RM.class
+                                .getMethod(
+                                        "createCleanupJob",
+                                        String.class,
+                                        java.util.List.class,
+                                        edu.isi.pegasus.planner.classes.Job.class,
+                                        String.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testGetTCEntryMethodExists() throws Exception {
+        assertThat(
+                (Object) RM.class.getDeclaredMethod("getTCEntry", String.class).getReturnType(),
+                is(
+                        (Object)
+                                edu.isi.pegasus.planner.catalog.transformation
+                                        .TransformationCatalogEntry.class));
+    }
+
+    @Test
+    public void testDefaultTCEntryMethodExists() throws Exception {
+        java.lang.reflect.Method method = RM.class.getDeclaredMethod("defaultTCEntry");
+        assertThat(
+                (Object) method.getReturnType(),
+                is(
+                        (Object)
+                                edu.isi.pegasus.planner.catalog.transformation
+                                        .TransformationCatalogEntry.class));
+        assertThat(java.lang.reflect.Modifier.isStatic(method.getModifiers()), is(true));
+    }
 }

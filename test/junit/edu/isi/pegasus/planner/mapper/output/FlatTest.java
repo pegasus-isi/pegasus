@@ -15,31 +15,80 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
+import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Flat output mapper class structure. */
 public class FlatTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testFlatImplementsOutputMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                OutputMapper.class.isAssignableFrom(Flat.class), org.hamcrest.Matchers.is(true));
     }
-    */
+
+    @Test
+    public void testFlatExtendsAbstractFileFactoryBasedMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                AbstractFileFactoryBasedMapper.class.isAssignableFrom(Flat.class),
+                org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testShortNameConstant() {
+        org.hamcrest.MatcherAssert.assertThat(Flat.SHORT_NAME, org.hamcrest.Matchers.is("Flat"));
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Flat flat = new Flat();
+        org.hamcrest.MatcherAssert.assertThat(flat, org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testFlatIsPublicClass() {
+        int modifiers = Flat.class.getModifiers();
+        org.hamcrest.MatcherAssert.assertThat(
+                java.lang.reflect.Modifier.isPublic(modifiers), org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testDescriptionReturnsExpectedText() {
+        org.hamcrest.MatcherAssert.assertThat(
+                new Flat().description(), org.hamcrest.Matchers.is("Flat Directory Mapper"));
+    }
+
+    @Test
+    public void testGetShortNameReturnsConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                new Flat().getShortName(), org.hamcrest.Matchers.is(Flat.SHORT_NAME));
+    }
+
+    @Test
+    public void testInstantiateFileFactoryReturnsVirtualFlatFileFactory() {
+        Flat flat = new Flat();
+        flat.mSiteStore = new SiteStore();
+
+        org.hamcrest.MatcherAssert.assertThat(
+                flat.instantiateFileFactory(new PegasusBag(), new ADag())
+                        instanceof VirtualFlatFileFactory,
+                org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testCreateAndGetAddOnReturnsFactoryPathForLfn() {
+        Flat flat = new Flat();
+        flat.mSiteStore = new SiteStore();
+        flat.mFactory = flat.instantiateFileFactory(new PegasusBag(), new ADag());
+
+        String addOn = flat.createAndGetAddOn("f.out", "local", false);
+
+        org.hamcrest.MatcherAssert.assertThat(addOn, org.hamcrest.Matchers.notNullValue());
+        org.hamcrest.MatcherAssert.assertThat(
+                addOn.endsWith("f.out"), org.hamcrest.Matchers.is(true));
+    }
 }

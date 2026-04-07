@@ -15,8 +15,10 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -29,15 +31,15 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,34 +77,21 @@ public class YAMLTest {
     private static final String EXPANDED_ARCH = "x86_64";
     private static final String EXPANDED_OS = "linux";
     private static final String EXPANDED_KEG_PATH = "file:///usr/bin/pegasus-keg";
-
-    @BeforeAll
-    public static void setUpClass() {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("SITE", EXPANDED_SITE);
-        testEnvVariables.put("NAMESPACE", EXPANDED_NAMESPACE);
-        testEnvVariables.put("NAME", EXPANDED_NAME);
-        testEnvVariables.put("VERSION", EXPANDED_VERSION);
-        testEnvVariables.put("ARCH", EXPANDED_ARCH);
-        testEnvVariables.put("OS", EXPANDED_OS);
-        testEnvVariables.put("KEGPATH", EXPANDED_KEG_PATH);
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-    }
-
-    @AfterAll
-    public static void tearDownClass() {}
+    private File mExpandedCatalogFile;
 
     public YAMLTest() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
-    public final void setUp() {
+    public final void setUp() throws IOException {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         mTestSetup.setInputDirectory(this.getClass());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
         mProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+        mExpandedCatalogFile =
+                expandCatalogFile(new File(mTestSetup.getInputDirectory(), CORRECT_FILE), ".yml");
 
         mLogger = mTestSetup.loadLogger(mProps);
         mLogger.setLevel(LogManager.INFO_MESSAGE_LEVEL);
@@ -113,13 +102,20 @@ public class YAMLTest {
 
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory(), CORRECT_FILE).getAbsolutePath());
+                mExpandedCatalogFile.getAbsolutePath());
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
                 TransformationFactory.YAML_CATALOG_IMPLEMENTOR);
         mCatalog = (YAML) TransformationFactory.loadInstance(mBag);
 
         mLogger.logEventCompletion();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (mExpandedCatalogFile != null) {
+            mExpandedCatalogFile.delete();
+        }
     }
 
     @Test
@@ -129,10 +125,10 @@ public class YAMLTest {
                 "whole-count-test",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> entries = mCatalog.getContents();
-        assertEquals(4, entries.size(), "Expected total number of entries");
+        assertThat(entries.size(), is(4));
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
+        assertThat(kegEntries.size(), is(2));
         mLogger.logEventCompletion();
     }
 
@@ -144,7 +140,7 @@ public class YAMLTest {
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
+        assertThat(kegEntries.size(), is(2));
         mLogger.logEventCompletion();
     }
 
@@ -158,9 +154,9 @@ public class YAMLTest {
                 mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = kegEntries.get(0);
         Container containerInfo = entry.getContainer();
-        assertEquals("centos-pegasus", containerInfo.getName());
-        assertEquals("optional site", containerInfo.getImageSite());
-        assertEquals("docker:///rynge/montage:latest", containerInfo.getImageURL().getURL());
+        assertThat(containerInfo.getName(), is("centos-pegasus"));
+        assertThat(containerInfo.getImageSite(), is("optional site"));
+        assertThat(containerInfo.getImageURL().getURL(), is("docker:///rynge/montage:latest"));
         testProfile(containerInfo, Profile.ENV, "JAVA_HOME", "/opt/java/1.6");
         mLogger.logEventCompletion();
     }
@@ -168,7 +164,7 @@ public class YAMLTest {
     private void testProfile(Container containerInfo, String env, String key, String value) {
         Profile p = new Profile(env, key, value);
         List profiles = containerInfo.getProfiles();
-        assertTrue(profiles.contains(p), "Entry " + containerInfo);
+        assertThat(profiles.contains(p), is(true));
     }
 
     @Test
@@ -181,17 +177,14 @@ public class YAMLTest {
                 mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = entries.get(0);
         SysInfo info = entry.getSysInfo();
-        assertEquals("INSTALLED", entry.getType().name(), "Expected attribute ");
-        assertEquals(null, entry.getLogicalNamespace(), "Expected attribute ");
-        assertEquals("myxform", entry.getLogicalName(), "Expected attribute ");
-        assertEquals(null, entry.getLogicalVersion(), "Expected attribute ");
-        assertEquals("condorpool", entry.getResourceId(), "Expected attribute ");
-        assertEquals("/usr/bin/true", entry.getPhysicalTransformation(), "Expected attribute ");
-        assertEquals(
-                Architecture.x86_64.toString(),
-                info.getArchitecture().name(),
-                "Expected attribute ");
-        assertEquals(OS.linux.toString(), info.getOS().name(), "Expected attribute ");
+        assertThat(entry.getType().name(), is("INSTALLED"));
+        assertThat(entry.getLogicalNamespace(), is((String) null));
+        assertThat(entry.getLogicalName(), is("myxform"));
+        assertThat(entry.getLogicalVersion(), is((String) null));
+        assertThat(entry.getResourceId(), is("condorpool"));
+        assertThat(entry.getPhysicalTransformation(), is("/usr/bin/true"));
+        assertThat(info.getArchitecture().name(), is(Architecture.x86_64.toString()));
+        assertThat(info.getOS().name(), is(OS.linux.toString()));
         testProfile(entry, Profile.METADATA, "key", "value");
         testProfile(entry, Profile.METADATA, "appmodel", "myxform.aspen");
         testProfile(entry, Profile.METADATA, "version", "2.0");
@@ -215,7 +208,9 @@ public class YAMLTest {
         try {
             catalog.initialize(mBag);
         } catch (RuntimeException e) {
-            assertTrue(e.getCause().getMessage().contains("unknown: is not defined in the schema"));
+            assertThat(
+                    e.getCause().getMessage(),
+                    containsString("unknown: is not defined in the schema"));
         }
     }
 
@@ -233,12 +228,7 @@ public class YAMLTest {
         mErrorProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                 new File(mTestSetup.getInputDirectory(), EMPTY_FILE).getAbsolutePath());
-        try {
-            mCorrectCatalog.initialize(mBag);
-        } catch (RuntimeException e) {
-            assertTrue(false);
-        }
-        assertTrue(true);
+        assertDoesNotThrow(() -> mCorrectCatalog.initialize(mBag));
     }
 
     @Test
@@ -252,14 +242,13 @@ public class YAMLTest {
                         EXPANDED_NAMESPACE, EXPANDED_NAME, EXPECTED_VERSION, EXPANDED_SITE, null);
         TransformationCatalogEntry expanded = kegEntries.get(0);
         SysInfo info = expanded.getSysInfo();
-        assertEquals(EXPANDED_NAMESPACE, expanded.getLogicalNamespace(), "Expected attribute ");
-        assertEquals(EXPANDED_NAME, expanded.getLogicalName(), "Expected attribute ");
-        assertEquals(EXPECTED_VERSION, expanded.getLogicalVersion(), "Expected attribute ");
-        assertEquals(EXPANDED_SITE, expanded.getResourceId(), "Expected attribute ");
-        assertEquals(EXPANDED_ARCH, info.getArchitecture().name(), "Expected attribute ");
-        assertEquals(EXPANDED_OS, info.getOS().name(), "Expected attribute ");
-        assertEquals(
-                EXPANDED_KEG_PATH, expanded.getPhysicalTransformation(), "Expected attribute ");
+        assertThat(expanded.getLogicalNamespace(), is(EXPANDED_NAMESPACE));
+        assertThat(expanded.getLogicalName(), is(EXPANDED_NAME));
+        assertThat(expanded.getLogicalVersion(), is(EXPECTED_VERSION));
+        assertThat(expanded.getResourceId(), is(EXPANDED_SITE));
+        assertThat(info.getArchitecture().name(), is(EXPANDED_ARCH));
+        assertThat(info.getOS().name(), is(EXPANDED_OS));
+        assertThat(expanded.getPhysicalTransformation(), is(EXPANDED_KEG_PATH));
 
         mLogger.logEventCompletion();
     }
@@ -281,11 +270,9 @@ public class YAMLTest {
         try {
             catalog.initialize(mBag);
         } catch (RuntimeException e) {
-            assertTrue(
-                    e.getCause()
-                            .getMessage()
-                            .contains(
-                                    "{$.transformations[0].sites: is missing but it is required}"));
+            assertThat(
+                    e.getCause().getMessage(),
+                    containsString("{$.transformations[0].sites: is missing but it is required}"));
         }
     }
 
@@ -293,6 +280,22 @@ public class YAMLTest {
             TransformationCatalogEntry entry, String namespace, String key, String value) {
         Profile p = new Profile(namespace, key, value);
         List profiles = entry.getProfiles(namespace);
-        assertTrue(profiles.contains(p), "Entry " + entry);
+        assertThat(profiles.contains(p), is(true));
+    }
+
+    private File expandCatalogFile(File source, String suffix) throws IOException {
+        String content = new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8);
+        content =
+                content.replace("${NAME}", EXPANDED_NAME)
+                        .replace("${NAMESPACE}", EXPANDED_NAMESPACE)
+                        .replace("${VERSION}", EXPANDED_VERSION)
+                        .replace("${SITE}", EXPANDED_SITE)
+                        .replace("${ARCH}", EXPANDED_ARCH)
+                        .replace("${OS}", EXPANDED_OS)
+                        .replace("${KEGPATH}", EXPANDED_KEG_PATH);
+
+        File expanded = File.createTempFile("tcf", suffix);
+        Files.write(expanded.toPath(), Collections.singleton(content), StandardCharsets.UTF_8);
+        return expanded;
     }
 }

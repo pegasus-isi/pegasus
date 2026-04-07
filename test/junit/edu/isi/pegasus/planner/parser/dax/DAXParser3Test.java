@@ -5,7 +5,8 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -19,9 +20,7 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.LinkedList;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,12 +40,6 @@ public class DAXParser3Test {
 
     /** The parsed DAX file */
     private ADag mParsedDAX;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -87,7 +80,7 @@ public class DAXParser3Test {
         Job j = (Job) n.getContent();
         String args = j.getArguments();
         // System.out.println( "@" + args + "@" + args.length() + args.charAt( 0 ));
-        assertEquals("", args);
+        assertThat(args, is(""));
         mLogger.logEventCompletion();
     }
 
@@ -102,7 +95,7 @@ public class DAXParser3Test {
         Job j = (Job) n.getContent();
         String args = j.getArguments();
         // System.out.println( "@" + args + "@" + args.length() + args.charAt( 0 ));
-        assertEquals("", args);
+        assertThat(args, is(""));
         mLogger.logEventCompletion();
     }
 
@@ -117,7 +110,7 @@ public class DAXParser3Test {
         Job j = (Job) n.getContent();
         String args = j.getArguments();
         System.out.println("@" + args + "@" + args.length());
-        assertEquals("-a findrange -T 60 -i f.b2 -o f.c2", args);
+        assertThat(args, is("-a findrange -T 60 -i f.b2 -o f.c2"));
         mLogger.logEventCompletion();
     }
 
@@ -132,7 +125,7 @@ public class DAXParser3Test {
         Job j = (Job) n.getContent();
         String args = j.getArguments();
         System.out.println("@" + args + "@" + args.length());
-        assertEquals("-a analyze -T 60 -if.c1,f.c2 -of.d", args);
+        assertThat(args, is("-a analyze -T 60 -if.c1,f.c2 -of.d"));
         mLogger.logEventCompletion();
     }
 
@@ -147,9 +140,10 @@ public class DAXParser3Test {
         Job j = (Job) n.getContent();
         String args = j.getArguments();
         System.out.println("@" + args + "@" + args.length());
-        assertEquals(
-                "--frame-files --V1:V-HrecV2-967640000-10000.gwf --L1:L-L1_LDAS_C02_L2-967648128-128.gwf --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz --user-tag FULL_DATA",
-                args);
+        assertThat(
+                args,
+                is(
+                        "--frame-files --V1:V-HrecV2-967640000-10000.gwf --L1:L-L1_LDAS_C02_L2-967648128-128.gwf --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz --user-tag FULL_DATA"));
         mLogger.logEventCompletion();
     }
 
@@ -161,7 +155,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "name";
-        assertEquals(name, XMLParser.makeDAGManCompliant(name));
+        assertThat(XMLParser.makeDAGManCompliant(name), is(name));
         mLogger.logEventCompletion();
     }
 
@@ -173,7 +167,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "blackdiamond.dax";
-        assertEquals("blackdiamond_dax", XMLParser.makeDAGManCompliant(name));
+        assertThat(XMLParser.makeDAGManCompliant(name), is("blackdiamond_dax"));
         mLogger.logEventCompletion();
     }
 
@@ -185,7 +179,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "blackdiamond+dax";
-        assertEquals("blackdiamond_dax", XMLParser.makeDAGManCompliant(name));
+        assertThat(XMLParser.makeDAGManCompliant(name), is("blackdiamond_dax"));
         mLogger.logEventCompletion();
     }
 
@@ -197,7 +191,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "black.diamond+dax";
-        assertEquals("black_diamond_dax", XMLParser.makeDAGManCompliant(name));
+        assertThat(XMLParser.makeDAGManCompliant(name), is("black_diamond_dax"));
         mLogger.logEventCompletion();
     }
 
@@ -209,7 +203,7 @@ public class DAXParser3Test {
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
         String name = "black.diam.ond+dax++";
-        assertEquals("black_diam_ond_dax__", XMLParser.makeDAGManCompliant(name));
+        assertThat(XMLParser.makeDAGManCompliant(name), is("black_diam_ond_dax__"));
         mLogger.logEventCompletion();
     }
 

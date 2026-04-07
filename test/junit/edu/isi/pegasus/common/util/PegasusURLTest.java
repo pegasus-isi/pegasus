@@ -13,15 +13,15 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,12 +38,6 @@ public class PegasusURLTest {
     private LogManager mLogger;
 
     public PegasusURLTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -170,9 +164,9 @@ public class PegasusURLTest {
     private void testURL(String url, String protocol, String host, String path, String urlPrefix) {
         System.out.println("Testing URL " + url);
         PegasusURL pURL = new PegasusURL(url);
-        assertEquals(protocol, pURL.getProtocol(), url + " unable to parse protocol ");
-        assertEquals(host, pURL.getHost(), url + " unable to parse host ");
-        assertEquals(path, pURL.getPath(), url + " unable to parse path ");
-        assertEquals(urlPrefix, pURL.getURLPrefix(), url + " unable to parse urlprefix ");
+        assertThat(pURL.getProtocol(), is(protocol));
+        assertThat(pURL.getHost(), is(host));
+        assertThat(pURL.getPath(), is(path));
+        assertThat(pURL.getURLPrefix(), is(urlPrefix));
     }
 }

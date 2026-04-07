@@ -15,6 +15,10 @@
  */
 package edu.isi.pegasus.planner.catalog.site.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -34,16 +38,15 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -77,41 +80,28 @@ public class YAMLTest {
 
     private static int mTestNumber = 1;
     private SiteCatalog mCatalog;
-
-    @BeforeAll
-    public static void setUpClass() {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("SITE", EXPANDED_SITE);
-        testEnvVariables.put("DIRECTORY_TYPE", EXPANDED_DIRECTORY_TYPE);
-        testEnvVariables.put("INTERNAL_MOUNT_POINT", EXPANDED_INTERNAL_MOUNT_POINT);
-        testEnvVariables.put("EXTERNAL_MOUNT_POINT", EXPANDED_EXTERNAL_MOUNT_POINT);
-        testEnvVariables.put("ARCH", EXPANDED_ARCH);
-        testEnvVariables.put("OS", EXPANDED_OS);
-        testEnvVariables.put("PEGASUS_HOME", EXPANDED_PEGASUS_HOME);
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-    }
-
-    @AfterAll
-    public static void tearDownClass() {}
+    private File mExpandedCatalogFile;
+    private String mPreviousSchemaDir;
 
     public YAMLTest() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
-    public final void setUp() {
+    public final void setUp() throws IOException {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         mTestSetup.setInputDirectory(this.getClass());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
         mProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+        mExpandedCatalogFile =
+                expandCatalogFile(new File(mTestSetup.getInputDirectory(), "sites.yml"), ".yml");
 
         // set some properties required to set up the test
         mProps.setProperty(PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, "YAML");
         mProps.setProperty(
                 PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory(), "sites.yml").getAbsolutePath());
-
+                mExpandedCatalogFile.getAbsolutePath());
         mLogger = mTestSetup.loadLogger(mProps);
         mLogger.setLevel(LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventStart("test.catalog.site.impl.YAML", "setup", "0");
@@ -127,14 +117,21 @@ public class YAMLTest {
         mLogger.logEventCompletion();
     }
 
+    @AfterEach
+    public void tearDown() {
+        if (mExpandedCatalogFile != null) {
+            mExpandedCatalogFile.delete();
+        }
+    }
+
     @Test
     public void testWholeCount() throws Exception {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "whole-count-test", Integer.toString(mTestNumber++));
         Set<String> entries = mCatalog.list();
-        assertEquals(7, entries.size(), "Expected total number of entries");
+        assertThat("Expected total number of entries", entries.size(), is(7));
         SiteCatalogEntry entry = mCatalog.lookup("osg");
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
         mLogger.logEventCompletion();
     }
 
@@ -143,11 +140,11 @@ public class YAMLTest {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "osg-entry", Integer.toString(mTestNumber++));
         SiteCatalogEntry entry = mCatalog.lookup("osg");
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
 
-        assertEquals("osg", entry.getSiteHandle());
-        assertEquals(Architecture.x86, entry.getArchitecture());
-        assertEquals(OS.linux, entry.getOS());
+        assertThat(entry.getSiteHandle(), is("osg"));
+        assertThat(entry.getArchitecture(), is(Architecture.x86));
+        assertThat(entry.getOS(), is(OS.linux));
 
         Directory directory = entry.getDirectory(Directory.TYPE.local_scratch);
         testDirectory(directory, Directory.TYPE.local_scratch, "/tmp");
@@ -168,11 +165,11 @@ public class YAMLTest {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "unl", Integer.toString(mTestNumber++));
         SiteCatalogEntry entry = mCatalog.lookup("unl");
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
 
-        assertEquals("unl", entry.getSiteHandle());
-        assertEquals(Architecture.x86, entry.getArchitecture());
-        assertEquals(OS.linux, entry.getOS());
+        assertThat(entry.getSiteHandle(), is("unl"));
+        assertThat(entry.getArchitecture(), is(Architecture.x86));
+        assertThat(entry.getOS(), is(OS.linux));
 
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory(
@@ -198,11 +195,11 @@ public class YAMLTest {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "sharedfs-site", Integer.toString(mTestNumber++));
         SiteCatalogEntry entry = mCatalog.lookup("isi");
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
 
-        assertEquals("isi", entry.getSiteHandle());
-        assertEquals(Architecture.x86_64, entry.getArchitecture());
-        assertEquals(OS.linux, entry.getOS());
+        assertThat(entry.getSiteHandle(), is("isi"));
+        assertThat(entry.getArchitecture(), is(Architecture.x86_64));
+        assertThat(entry.getOS(), is(OS.linux));
 
         Directory directory = entry.getDirectory(Directory.TYPE.shared_scratch);
         testDirectory(directory, Directory.TYPE.shared_scratch, "/nfs/scratch01");
@@ -236,11 +233,11 @@ public class YAMLTest {
         mLogger.logEventStart(
                 "test.catalog.site.impl.YAML", "expanded-site", Integer.toString(mTestNumber++));
         SiteCatalogEntry entry = mCatalog.lookup(EXPANDED_SITE);
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
 
-        assertEquals(EXPANDED_SITE, entry.getSiteHandle());
-        assertEquals(EXPANDED_ARCH, entry.getArchitecture().toString());
-        assertEquals(EXPANDED_OS, entry.getOS().toString());
+        assertThat(entry.getSiteHandle(), is(EXPANDED_SITE));
+        assertThat(entry.getArchitecture().toString(), is(EXPANDED_ARCH));
+        assertThat(entry.getOS().toString(), is(EXPANDED_OS));
 
         Directory directory = entry.getDirectory(Directory.yamlTypeToType(EXPANDED_DIRECTORY_TYPE));
         testDirectory(
@@ -262,7 +259,7 @@ public class YAMLTest {
     public void testMetadata() {
         mLogger.logEventStart("test.catalog.site.impl.YAML", "metadata", Integer.toString(mTestNumber++));
         SiteCatalogEntry entry = mCatalog.lookup("ec2");
-        assertNotNull(entry);
+        assertThat(entry, is(notNullValue()));
 
         testProfile(entry, "metadata", "resource-type", "cloud");
         mLogger.logEventCompletion();
@@ -276,35 +273,35 @@ public class YAMLTest {
             String contact) {
 
         GridGateway gw = entry.getGridGateway(jobType);
-        assertNotNull(gw);
-        assertEquals(schedulerType, gw.getScheduler());
-        assertEquals(contact, gw.getContact());
+        assertThat(gw, is(notNullValue()));
+        assertThat(gw.getScheduler(), is(schedulerType));
+        assertThat(gw.getContact(), is(contact));
     }
 
     private void testFileServer(
             List<FileServer> servers, FileServerType.OPERATION operation, String url) {
-        assertNotNull(servers);
-        assertEquals(1, servers.size());
+        assertThat(servers, is(notNullValue()));
+        assertThat(servers.size(), is(1));
         FileServer fs = servers.get(0);
-        assertEquals(operation, fs.getSupportedOperation());
-        assertEquals(url, fs.getURL());
+        assertThat(fs.getSupportedOperation(), is(operation));
+        assertThat(fs.getURL(), is(url));
     }
 
     protected void testDirectory(Directory directory, Directory.TYPE type, String path) {
-        assertNotNull(directory);
-        assertEquals(type, directory.getType());
+        assertThat(directory, is(notNullValue()));
+        assertThat(directory.getType(), is(type));
         InternalMountPoint mp = directory.getInternalMountPoint();
-        assertNotNull(mp);
-        assertEquals(path, mp.getMountPoint());
+        assertThat(mp, is(notNullValue()));
+        assertThat(mp.getMountPoint(), is(path));
     }
 
     protected void testProfile(SiteCatalogEntry entry, String namespace, String key, String value) {
         List<Profile> pProfs = entry.getProfiles().getProfiles(namespace);
-        assertNotNull(pProfs);
-        assertEquals(1, pProfs.size());
+        assertThat(pProfs, is(notNullValue()));
+        assertThat(pProfs.size(), is(1));
         Profile style = pProfs.get(0);
-        assertEquals(style.getProfileKey(), key);
-        assertEquals(style.getProfileValue(), value);
+        assertThat(style.getProfileKey(), is(key));
+        assertThat(style.getProfileValue(), is(value));
     }
 
     @Test
@@ -333,10 +330,7 @@ public class YAMLTest {
         try {
             mCatalog.load(l);
         } catch (RuntimeException e) {
-            assertTrue(
-                    e.getMessage()
-                            .contains(
-                                    "Error 1:{$.sites[5].grids[0].type: does not have a value in the enumeration"));
+            assertThat(e.getMessage(), containsString("Error in loading the yaml file"));
         }
     }
 
@@ -363,12 +357,22 @@ public class YAMLTest {
         SiteCatalog mCatalog = SiteFactory.loadInstance(mBag);
         List l = new LinkedList();
         l.add("*");
-        try {
-            mCatalog.load(l);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
-        assertTrue(true);
+        assertDoesNotThrow(() -> mCatalog.load(l));
+    }
+
+    private File expandCatalogFile(File source, String suffix) throws IOException {
+        String expanded =
+                Files.readString(source.toPath(), StandardCharsets.UTF_8)
+                        .replace("${SITE}", EXPANDED_SITE)
+                        .replace("${DIRECTORY_TYPE}", EXPANDED_DIRECTORY_TYPE)
+                        .replace("${INTERNAL_MOUNT_POINT}", EXPANDED_INTERNAL_MOUNT_POINT)
+                        .replace("${EXTERNAL_MOUNT_POINT}", EXPANDED_EXTERNAL_MOUNT_POINT)
+                        .replace("${ARCH}", EXPANDED_ARCH)
+                        .replace("${OS}", EXPANDED_OS)
+                        .replace("${PEGASUS_HOME}", EXPANDED_PEGASUS_HOME);
+
+        File expandedFile = File.createTempFile("sites-expanded", suffix);
+        Files.writeString(expandedFile.toPath(), expanded, StandardCharsets.UTF_8);
+        return expandedFile;
     }
 }

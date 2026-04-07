@@ -13,33 +13,64 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.Serializable;
+import java.lang.reflect.Modifier;
+import org.griphyn.vdl.Chimera;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Invocation abstract class structure. */
 public class InvocationTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsSerializable() {
+        assertThat(Serializable.class.isAssignableFrom(Invocation.class), is(true));
     }
-    */
+
+    @Test
+    public void testInvocationIsAbstract() {
+        assertThat(Modifier.isAbstract(Invocation.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testExtendsChimera() {
+        assertThat(Chimera.class.isAssignableFrom(Invocation.class), is(true));
+    }
+
+    @Test
+    public void testArchitectureExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Architecture.class), is(true));
+    }
+
+    @Test
+    public void testDataExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Data.class), is(true));
+    }
+
+    @Test
+    public void testJobExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Job.class), is(true));
+    }
+
+    @Test
+    public void testUsageExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Usage.class), is(true));
+    }
+
+    @Test
+    public void testStatInfoExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(StatInfo.class), is(true));
+    }
+
+    @Test
+    public void testEnvironmentExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Environment.class), is(true));
+    }
+
+    @Test
+    public void testCommandLineExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(CommandLine.class), is(true));
+    }
 }

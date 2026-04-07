@@ -13,33 +13,80 @@
  */
 package edu.isi.pegasus.planner.catalog.work;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.util.CommonProperties;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.planner.catalog.WorkCatalog;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class WorkFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageConstant() {
+        assertThat(WorkFactory.DEFAULT_PACKAGE, equalTo("edu.isi.pegasus.planner.catalog.work"));
     }
-    */
+
+    @Test
+    public void testLoadInstanceRejectsNullCommonProperties() {
+        NullPointerException exception =
+                assertThrows(
+                        NullPointerException.class,
+                        () -> WorkFactory.loadInstance((CommonProperties) null));
+
+        assertThat(exception.getMessage(), is("invalid properties"));
+    }
+
+    @Test
+    public void testLoadInstanceRejectsMissingCatalogImplementorProperty() throws Exception {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+
+        WorkFactoryException exception =
+                assertThrows(
+                        WorkFactoryException.class, () -> WorkFactory.loadInstance(properties));
+
+        assertThat(getClassname(exception), nullValue());
+        assertThat(exception.getCause(), is(notNullValue()));
+        assertThat(exception.getCause().getMessage(), containsString(WorkCatalog.c_prefix));
+    }
+
+    @Test
+    public void testLoadInstanceAcceptsShortClassNameAndPrefixesDefaultPackage() throws Exception {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        properties.setProperty(WorkCatalog.c_prefix, "Database");
+
+        WorkFactoryException exception =
+                assertThrows(
+                        WorkFactoryException.class, () -> WorkFactory.loadInstance(properties));
+
+        assertThat(
+                getClassname(exception), equalTo("edu.isi.pegasus.planner.catalog.work.Database"));
+    }
+
+    @Test
+    public void testLoadInstanceAcceptsFullyQualifiedClassName() throws Exception {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        properties.setProperty(
+                WorkCatalog.c_prefix, "edu.isi.pegasus.planner.catalog.work.Database");
+
+        WorkFactoryException exception =
+                assertThrows(
+                        WorkFactoryException.class, () -> WorkFactory.loadInstance(properties));
+
+        assertThat(
+                getClassname(exception), equalTo("edu.isi.pegasus.planner.catalog.work.Database"));
+    }
+
+    private static String getClassname(FactoryException exception) {
+        return (String) ReflectionTestUtils.getField(exception, "mClassname");
+    }
 }

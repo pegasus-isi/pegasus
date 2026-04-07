@@ -13,7 +13,8 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FactoryException;
@@ -27,9 +28,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -47,12 +45,6 @@ public class JobPlacerTest {
     private LogManager mLogger;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     private Refiner mTXRefiner;
 
@@ -83,9 +75,6 @@ public class JobPlacerTest {
             throw new FactoryException("Transfer Engine ", e);
         }
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @ParameterizedTest
     @CsvSource(
@@ -123,13 +112,13 @@ public class JobPlacerTest {
         JobPlacer jp = new JobPlacer(mTXRefiner);
         boolean expected = Boolean.parseBoolean(expectedValue);
 
-        assertEquals(
-                expected,
+        assertThat(
                 jp.runTransferRemotely(
                         Boolean.parseBoolean(ftForContainerToSubmitHost),
                         Boolean.parseBoolean(forSymlink),
                         Boolean.parseBoolean(isLocalTransfer),
-                        Boolean.parseBoolean(isRemoteTransfer)));
+                        Boolean.parseBoolean(isRemoteTransfer)),
+                is(expected));
     }
 
     @ParameterizedTest
@@ -175,12 +164,12 @@ public class JobPlacerTest {
         ft.addSource(sourceSite, sourceURL);
         ft.addDestination(stagingSite, "scp://example.com/scratch/f.in");
 
-        assertEquals(expected, jp.runTransferRemotely(stagingSiteEntry, ft));
+        assertThat(jp.runTransferRemotely(stagingSiteEntry, ft), is(expected));
     }
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        assertThat(1, is(1));
     }
      */
 }

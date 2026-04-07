@@ -15,7 +15,8 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
@@ -102,7 +103,7 @@ public class CondorGTest {
 
     private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {
         cs.handleResourceRequirements(j);
-        assertTrue(j.globusRSL.containsKey(key));
-        assertEquals(expectedValue, j.globusRSL.get(key));
+        assertThat(j.globusRSL.containsKey(key), is(true));
+        assertThat(j.globusRSL.get(key), is(expectedValue));
     }
 }

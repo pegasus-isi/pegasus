@@ -13,33 +13,112 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.code.CodeGeneratorException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyleException class. */
 public class CondorStyleExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsCodeGeneratorException() {
+        assertThat(
+                CodeGeneratorException.class.isAssignableFrom(CondorStyleException.class),
+                is(true));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        CondorStyleException ex = new CondorStyleException();
+        assertThat(ex, notNullValue());
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        CondorStyleException ex = new CondorStyleException("test message");
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("test message"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleException ex = new CondorStyleException("test message", cause);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithCauseOnly() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleException ex = new CondorStyleException(cause);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testExceptionIsThrowable() {
+        assertThat(Throwable.class.isAssignableFrom(CondorStyleException.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorHasNullMessageAndCause() {
+        CondorStyleException ex = new CondorStyleException();
+
+        assertThat(ex.getMessage(), is((String) null));
+        assertThat(ex.getCause(), is((Throwable) null));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCause() {
+        CondorStyleException ex = new CondorStyleException("test message", null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is((Throwable) null));
+    }
+
+    @Test
+    public void testConstructorWithNullCauseOnly() {
+        CondorStyleException ex = new CondorStyleException((Throwable) null);
+
+        assertThat(ex.getMessage(), is((String) null));
+        assertThat(ex.getCause(), is((Throwable) null));
+    }
+
+    @Test
+    public void testExceptionIsCheckedNotRuntime() {
+        assertThat(RuntimeException.class.isAssignableFrom(CondorStyleException.class), is(false));
+    }
+
+    @Test
+    public void testConstructorWithCauseOnlyUsesCauseToStringAsMessage() {
+        IllegalStateException cause = new IllegalStateException("root cause");
+
+        CondorStyleException ex = new CondorStyleException(cause);
+
+        assertThat(ex.getMessage(), is(cause.toString()));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithNullMessageAndCausePreservesCause() {
+        IllegalArgumentException cause = new IllegalArgumentException("bad input");
+
+        CondorStyleException ex = new CondorStyleException(null, cause);
+
+        assertThat(ex.getMessage(), is((String) null));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithNullMessageOnly() {
+        CondorStyleException ex = new CondorStyleException((String) null);
+
+        assertThat(ex.getMessage(), is((String) null));
+        assertThat(ex.getCause(), is((Throwable) null));
+    }
 }

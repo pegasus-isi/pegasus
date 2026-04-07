@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -20,8 +22,6 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,12 +38,6 @@ public class CondorVersionTest {
     private CondorVersion mVersion;
 
     public CondorVersionTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -104,10 +98,7 @@ public class CondorVersionTest {
     public void testVersionString(String expected, String input) {
         Matcher matcher = mVersion.mPattern.matcher(input);
         if (matcher.matches()) {
-            assertEquals(
-                    expected,
-                    matcher.group(1),
-                    "Version computed from " + input + " does not match");
+            assertThat(matcher.group(1), is(expected));
             return;
         }
         throw new RuntimeException("Unable to parse condor version from " + input);
@@ -116,7 +107,7 @@ public class CondorVersionTest {
     private void testNumericValue(long expected, long actual) {
         mLogger.logEventStart(
                 "test.common.util.CondorVersion", "set", Integer.toString(mTestNumber++));
-        assertEquals(expected, actual, "Computed numeric value of condor version mismatch");
+        assertThat(actual, is(expected));
         mLogger.logEventCompletion();
     }
 }

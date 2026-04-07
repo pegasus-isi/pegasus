@@ -17,6 +17,9 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -30,8 +33,6 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,12 +50,6 @@ public class TransformationTest {
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void testBaseTransformation() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -63,12 +58,12 @@ public class TransformationTest {
         String test = "namespace: \"example\"\n" + "name: \"keg\"\n" + "version: \"1.0\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -85,8 +80,8 @@ public class TransformationTest {
                         + "    os.type: \"macosx\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
         expected.setResourceId("isi");
@@ -96,7 +91,7 @@ public class TransformationTest {
         sys.setArchitecture(SysInfo.Architecture.x86);
         sys.setOS(SysInfo.OS.macosx);
         expected.setSysInfo(sys);
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -113,8 +108,8 @@ public class TransformationTest {
                         + "    os.type: \"linux\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
         expected.setResourceId("isi");
@@ -124,7 +119,7 @@ public class TransformationTest {
         sys.setArchitecture(SysInfo.Architecture.aarch64);
         sys.setOS(SysInfo.OS.linux);
         expected.setSysInfo(sys);
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -144,15 +139,15 @@ public class TransformationTest {
                         + "    clusters.num: \"1\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
         expected.addProfile(new Profile("env", "APP_HOME", "/tmp/myscratch"));
         expected.addProfile(new Profile("env", "JAVA_HOME", "/opt/java/1.6"));
         expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -174,8 +169,8 @@ public class TransformationTest {
                         + "    clusters.num: \"1\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -183,7 +178,7 @@ public class TransformationTest {
         expected.addProfile(new Profile("env", "JAVA_HOME", "/opt/java/1.6"));
         expected.addProfile(new Profile("pegasus", "clusters.num", "1"));
         expected.addProfile(new Profile("metadata", "user", "karan"));
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -201,8 +196,8 @@ public class TransformationTest {
                         + "  user: \"karan\"";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -213,7 +208,7 @@ public class TransformationTest {
                         Metadata.CHECKSUM_VALUE_KEY,
                         "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9"));
         expected.addProfile(new Profile("metadata", "user", "karan"));
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -229,8 +224,8 @@ public class TransformationTest {
                         + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -240,7 +235,7 @@ public class TransformationTest {
                         "metadata",
                         Metadata.CHECKSUM_VALUE_KEY,
                         "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9"));
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -260,14 +255,14 @@ public class TransformationTest {
                         + "      cmd: /bin/echo \"Finished\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
         expected.addNotification(new Invoke(Invoke.WHEN.start, "/bin/date"));
         expected.addNotification(new Invoke(Invoke.WHEN.end, "/bin/echo \"Finished\""));
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -292,8 +287,8 @@ public class TransformationTest {
                         + "    os.version: \"1.0\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -307,7 +302,7 @@ public class TransformationTest {
         sys.setOSRelease("fc");
         sys.setOSVersion("1.0");
         expected.setSysInfo(sys);
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -324,8 +319,8 @@ public class TransformationTest {
                         + "    arch: \"x86\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
         expected.setResourceId("isi");
@@ -335,7 +330,7 @@ public class TransformationTest {
         sys.setArchitecture(SysInfo.Architecture.x86);
         sys.setOS(SysInfo.OS.linux);
         expected.setSysInfo(sys);
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -353,8 +348,8 @@ public class TransformationTest {
                         + "    arch: \"x86\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected = new TransformationCatalogEntry(null, "keg", null);
         expected.setResourceId("isi");
@@ -365,7 +360,7 @@ public class TransformationTest {
         sys.setArchitecture(SysInfo.Architecture.x86);
         sys.setOS(SysInfo.OS.linux);
         expected.setSysInfo(sys);
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -387,15 +382,15 @@ public class TransformationTest {
                         + "        JAVA_HOME: \"/opt/java/1.7\"\n";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
         expected.setResourceId("isi");
         expected.setType(TCType.INSTALLED);
         expected.addProfile(new Profile("env", "JAVA_HOME", "/opt/java/1.7"));
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -413,8 +408,8 @@ public class TransformationTest {
                         + "    container: centos-pegasus";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -422,7 +417,7 @@ public class TransformationTest {
         expected.setType(TCType.INSTALLED);
         expected.setPhysicalTransformation("/path/to/keg");
         expected.setContainer(new Container("centos-pegasus"));
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -441,8 +436,8 @@ public class TransformationTest {
                         + "  - \"dependent.keg\"";
 
         Transformation tx = mapper.readValue(test, Transformation.class);
-        assertNotNull(tx);
-        assertEquals(1, tx.getTransformationCatalogEntries().size());
+        assertThat(tx, is(notNullValue()));
+        assertThat(tx.getTransformationCatalogEntries().size(), is(1));
         TransformationCatalogEntry actual = tx.getTransformationCatalogEntries().get(0);
         TransformationCatalogEntry expected =
                 new TransformationCatalogEntry("example", "keg", "1.0");
@@ -450,7 +445,7 @@ public class TransformationTest {
         expected.setType(TCType.INSTALLED);
         expected.setPhysicalTransformation("/path/to/keg");
         expected.addDependantTransformation("dependent.keg");
-        assertEquals(expected.toString(), actual.toString());
+        assertThat(actual.toString(), is(expected.toString()));
     }
 
     @Test
@@ -496,6 +491,6 @@ public class TransformationTest {
 
         Transformation tx = mapper.readValue(test, Transformation.class);
         // System.err.println(tx.getTransformationCatalogEntries());
-        assertNotNull(tx);
+        assertThat(tx, is(notNullValue()));
     }
 }

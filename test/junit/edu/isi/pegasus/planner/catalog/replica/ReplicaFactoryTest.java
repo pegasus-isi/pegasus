@@ -16,6 +16,8 @@ package edu.isi.pegasus.planner.catalog.replica;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -31,9 +33,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,12 +59,6 @@ public class ReplicaFactoryTest {
 
     public ReplicaFactoryTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
@@ -77,9 +71,6 @@ public class ReplicaFactoryTest {
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         mLogger.logEventCompletion();
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testWithTypeMentionedFile() throws Exception {
@@ -202,7 +193,9 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(SimpleFile.class));
         } finally {
+            text.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
     }
@@ -237,7 +230,9 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(YAML.class));
         } finally {
+            yaml.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
     }
@@ -277,9 +272,118 @@ public class ReplicaFactoryTest {
             ReplicaCatalog c = ReplicaFactory.loadInstance(bag);
             assertThat(c, instanceOf(YAML.class));
         } finally {
+            yaml.delete();
+            text.delete();
             dir.delete();
+            tempFile.delete();
         }
         mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testExplicitImplementorLoadsShortNameSimpleFile() throws Exception {
+        File text = createTempReplicaTextFile();
+        Properties connectProps = new Properties();
+        connectProps.setProperty(ReplicaCatalog.FILE_KEY, text.getAbsolutePath());
+
+        try {
+            mLogger.logEventStart("test.catalog.replica.factory", "short-name-simplefile", "0");
+            ReplicaCatalog rc =
+                    ReplicaFactory.loadInstance(
+                            "SimpleFile", getPegasusBagWithPlannerDir(), connectProps);
+
+            assertThat(rc, instanceOf(SimpleFile.class));
+            assertThat(
+                    connectProps.getProperty(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY),
+                    equalTo(
+                            Integer.toString(
+                                    PegasusProperties.nonSingletonInstance()
+                                            .getMaxSupportedYAMLDocSize())));
+        } finally {
+            mLogger.logEventCompletion();
+            text.delete();
+        }
+    }
+
+    @Test
+    public void testExplicitImplementorLoadsFileAliasAsSimpleFile() throws Exception {
+        File text = createTempReplicaTextFile();
+        Properties connectProps = new Properties();
+        connectProps.setProperty(ReplicaCatalog.FILE_KEY, text.getAbsolutePath());
+
+        try {
+            mLogger.logEventStart("test.catalog.replica.factory", "file-alias-simplefile", "0");
+            ReplicaCatalog rc =
+                    ReplicaFactory.loadInstance(
+                            "File", getPegasusBagWithPlannerDir(), connectProps);
+
+            assertThat(rc, instanceOf(SimpleFile.class));
+        } finally {
+            mLogger.logEventCompletion();
+            text.delete();
+        }
+    }
+
+    @Test
+    public void testLoadInstanceWithNullImplementorThrows() {
+        NullPointerException exception =
+                assertThrows(
+                        NullPointerException.class,
+                        () ->
+                                ReplicaFactory.loadInstance(
+                                        null, getPegasusBagWithPlannerDir(), new Properties()));
+
+        assertThat(exception.getMessage(), equalTo("Invalid catalog implementor passed"));
+    }
+
+    @Test
+    public void testLoadInstanceWithNullPropertiesInBagThrows() {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File(mTestSetup.getInputDirectory()));
+
+        NullPointerException exception =
+                assertThrows(
+                        NullPointerException.class, () -> ReplicaFactory.loadInstance(bag, null));
+
+        assertThat(exception.getMessage(), equalTo("Invalid NULL properties passed"));
+    }
+
+    @Test
+    public void testLoadInstanceWithoutConfiguredReplicaCatalogFallsBackToDefaultImplementor() {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+
+        try {
+            mLogger.logEventStart(
+                    "test.catalog.replica.factory", "default-implementor-fallback", "0");
+            RuntimeException exception =
+                    assertThrows(
+                            RuntimeException.class, () -> ReplicaFactory.loadInstance(bag, null));
+
+            assertThat(
+                    exception.getMessage(),
+                    containsString(ReplicaFactory.CONNECT_TO_RC_FAILED_MESSAGE));
+            assertThat(
+                    exception.getMessage(),
+                    containsString(ReplicaFactory.DEFAULT_CATALOG_IMPLEMENTOR));
+        } finally {
+            mLogger.logEventCompletion();
+        }
+    }
+
+    @Test
+    public void testLoadInstanceWithNullLoggerInBagThrows() {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File(mTestSetup.getInputDirectory()));
+
+        NullPointerException exception =
+                assertThrows(
+                        NullPointerException.class, () -> ReplicaFactory.loadInstance(bag, null));
+
+        assertThat(exception.getMessage(), equalTo("Invalid Logger passed"));
     }
 
     private PegasusBag getPegasusBag(PegasusProperties props) {
@@ -287,5 +391,35 @@ public class ReplicaFactoryTest {
         bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         return bag;
+    }
+
+    private PegasusBag getPegasusBagWithPlannerDir() {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File(mTestSetup.getInputDirectory()));
+        return bag;
+    }
+
+    private File createTempReplicaTextFile() throws Exception {
+        File text = File.createTempFile("replica-factory-", ".rc");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(text))) {
+            writer.write("f.a file:///tmp/f.a site=\"local\"");
+        }
+        return text;
+    }
+
+    private File createTempReplicaYAML() throws Exception {
+        File yaml = File.createTempFile("replica-factory-", ".yml");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(yaml))) {
+            writer.write("pegasus: \"5.0\"\n");
+            writer.write("replicas:\n");
+            writer.write("  - lfn: \"f.a\"\n");
+            writer.write("    pfns:\n");
+            writer.write("      - pfn: \"file:///tmp/f.a\"\n");
+            writer.write("        site: \"local\"\n");
+        }
+        return yaml;
     }
 }

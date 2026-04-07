@@ -13,33 +13,94 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the AbstractPerJob site selector class. Tests are exercised via the concrete Random
+ * subclass.
+ */
 public class AbstractPerJobTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testRandomIsAbstractPerJob() {
+        Random selector = new Random();
+        assertThat(selector, instanceOf(AbstractPerJob.class));
     }
-    */
+
+    @Test
+    public void testRoundRobinIsAbstractPerJob() {
+        RoundRobin selector = new RoundRobin();
+        assertThat(selector, instanceOf(AbstractPerJob.class));
+    }
+
+    @Test
+    public void testGroupIsAbstractSiteSelector() {
+        Group selector = new Group();
+        assertThat(selector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testRandomImplementsSiteSelector() {
+        Random selector = new Random();
+        assertThat(selector, instanceOf(SiteSelector.class));
+    }
+
+    @Test
+    public void testRoundRobinDescription() {
+        RoundRobin selector = new RoundRobin();
+        String desc = selector.description();
+        assertThat(desc, not(isEmptyOrNullString()));
+    }
+
+    @Test
+    public void testRandomDescription() {
+        Random selector = new Random();
+        String desc = selector.description();
+        assertThat(desc, not(isEmptyOrNullString()));
+    }
+
+    @Test
+    public void testAbstractPerJobIsAbstractAndExtendsAbstract() {
+        assertThat(Modifier.isAbstract(AbstractPerJob.class.getModifiers()), is(true));
+        assertThat(Abstract.class.isAssignableFrom(AbstractPerJob.class), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                AbstractPerJob.class
+                        .getMethod(
+                                "mapWorkflow",
+                                edu.isi.pegasus.planner.classes.ADag.class,
+                                java.util.List.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                AbstractPerJob.class
+                        .getMethod(
+                                "mapJob",
+                                edu.isi.pegasus.planner.classes.Job.class,
+                                java.util.List.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+    }
+
+    @Test
+    public void testMapJobIsAbstract() throws Exception {
+        assertThat(
+                Modifier.isAbstract(
+                        AbstractPerJob.class
+                                .getMethod(
+                                        "mapJob",
+                                        edu.isi.pegasus.planner.classes.Job.class,
+                                        java.util.List.class)
+                                .getModifiers()),
+                is(true));
+    }
 }

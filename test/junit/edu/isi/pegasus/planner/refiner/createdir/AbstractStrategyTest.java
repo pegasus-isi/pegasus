@@ -13,33 +13,85 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for AbstractStrategy. */
 public class AbstractStrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(AbstractStrategy.class), is(true));
     }
-    */
+
+    @Test
+    public void testCreateDirSuffixConstant() {
+        assertThat(AbstractStrategy.CREATE_DIR_SUFFIX, is("_cdir"));
+    }
+
+    @Test
+    public void testCreateDirPrefixConstant() {
+        assertThat(AbstractStrategy.CREATE_DIR_PREFIX, is("create_dir_"));
+    }
+
+    @Test
+    public void testHourGlassExtendsAbstractStrategy() {
+        assertThat(AbstractStrategy.class.isAssignableFrom(HourGlass.class), is(true));
+    }
+
+    @Test
+    public void testMinimalExtendsAbstractStrategy() {
+        assertThat(AbstractStrategy.class.isAssignableFrom(Minimal.class), is(true));
+    }
+
+    @Test
+    public void testAbstractStrategyIsAbstract() {
+        assertThat(Modifier.isAbstract(AbstractStrategy.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testInitializeAndHelperMethodSignatures() throws Exception {
+        assertThat(
+                (Object)
+                        AbstractStrategy.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                                        Implementation.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        AbstractStrategy.class
+                                .getMethod(
+                                        "getCreateDirJobName",
+                                        edu.isi.pegasus.planner.classes.ADag.class,
+                                        String.class)
+                                .getReturnType(),
+                is((Object) String.class));
+        assertThat(
+                (Object)
+                        AbstractStrategy.class
+                                .getMethod(
+                                        "getCreateDirSites",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) java.util.Set.class));
+    }
+
+    @Test
+    public void testGetCreateDirSitesIsStatic() throws Exception {
+        assertThat(
+                Modifier.isStatic(
+                        AbstractStrategy.class
+                                .getMethod(
+                                        "getCreateDirSites",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getModifiers()),
+                is(true));
+    }
 }

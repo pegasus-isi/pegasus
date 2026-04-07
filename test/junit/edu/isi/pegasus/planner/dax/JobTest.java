@@ -13,34 +13,20 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.XMLWriter;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class JobTest {
 
     public JobTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testJobArgumentsSerialization() {
@@ -67,7 +53,7 @@ public class JobTest {
 
         System.out.println(result);
 
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -95,7 +81,7 @@ public class JobTest {
 
         System.out.println(result);
 
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -126,7 +112,7 @@ public class JobTest {
 
         System.out.println(result);
 
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     protected String chopComments(String input) {

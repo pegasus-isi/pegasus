@@ -13,33 +13,93 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class DAX2MetadataTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void getConstructedObjectBeforeParsingThrows() {
+        DAX2Metadata metadata = new DAX2Metadata();
+
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, metadata::getConstructedObject);
+
+        assertThat(exception.getMessage(), is("Method called before the metadata was parsed"));
     }
-    */
+
+    @Test
+    public void cbDocumentStoresParsedMetadataAndDefaults() {
+        DAX2Metadata metadata = new DAX2Metadata();
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("name", "diamond");
+        attributes.put("version", "5.0.4");
+
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, () -> metadata.cbDocument(attributes));
+
+        assertThat(exception.getMessage(), is(DAX2Metadata.PARSING_DONE_ERROR_MESSAGE));
+
+        Map<?, ?> constructed = (Map<?, ?>) metadata.getConstructedObject();
+        assertThat(constructed.get("name"), is("diamond"));
+        assertThat(constructed.get("version"), is("5.0.4"));
+        assertThat(constructed.get("index"), is(DAX2Metadata.DEFAULT_ADAG_INDEX_ATTRIBUTE));
+        assertThat(constructed.get("count"), is(DAX2Metadata.DEFAULT_ADAG_COUNT_ATTRIBUTE));
+    }
+
+    @Test
+    public void cbDocumentPreservesExplicitCountAndIndex() {
+        DAX2Metadata metadata = new DAX2Metadata();
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("name", "partitioned");
+        attributes.put("version", "5.1.0");
+        attributes.put("index", "2");
+        attributes.put("count", "7");
+
+        assertThrows(RuntimeException.class, () -> metadata.cbDocument(attributes));
+
+        Map<?, ?> constructed = (Map<?, ?>) metadata.getConstructedObject();
+        assertThat(constructed.get("index"), is("2"));
+        assertThat(constructed.get("count"), is("7"));
+    }
+
+    @Test
+    public void initializeAcceptsPegasusBag() {
+        DAX2Metadata metadata = new DAX2Metadata();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+
+        assertDoesNotThrow(() -> metadata.initialize(bag, "workflow.dax"));
+    }
+
+    @Test
+    public void cbMetadataIsANoOp() {
+        DAX2Metadata metadata = new DAX2Metadata();
+
+        assertDoesNotThrow(() -> metadata.cbMetadata(null));
+    }
+
+    @Test
+    public void unsupportedCallbacksThrowUnsupportedOperationException() {
+        DAX2Metadata metadata = new DAX2Metadata();
+
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbWfInvoke(null));
+        assertThrows(
+                UnsupportedOperationException.class, () -> metadata.cbCompoundTransformation(null));
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbFile(null));
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbExecutable(null));
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbChildren("a", null));
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbReplicaStore(null));
+        assertThrows(
+                UnsupportedOperationException.class, () -> metadata.cbTransformationStore(null));
+        assertThrows(UnsupportedOperationException.class, () -> metadata.cbSiteStore(null));
+    }
 }

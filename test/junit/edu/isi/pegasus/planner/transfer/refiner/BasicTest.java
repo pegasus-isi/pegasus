@@ -13,33 +13,82 @@
  */
 package edu.isi.pegasus.planner.transfer.refiner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class BasicTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testBasicExtendsMultipleFTPerXFERJobRefinerAndDescriptionConstant() {
+        assertThat(Basic.class.getSuperclass(), is(MultipleFTPerXFERJobRefiner.class));
+        assertThat(Basic.DESCRIPTION, is("Default Multiple Refinement "));
     }
-    */
+
+    @Test
+    public void testConstructorAndSelectedMethodSignatures() throws Exception {
+        assertThat(
+                Basic.class.getDeclaredConstructor(ADag.class, PegasusBag.class),
+                is(notNullValue()));
+
+        Method addStageInSimple =
+                Basic.class.getDeclaredMethod(
+                        "addStageInXFERNodes", Job.class, Collection.class, Collection.class);
+        Method addStageInDetailed =
+                Basic.class.getDeclaredMethod(
+                        "addStageInXFERNodes",
+                        Job.class,
+                        Collection.class,
+                        String.class,
+                        Implementation.class);
+        Method addInterSite =
+                Basic.class.getDeclaredMethod(
+                        "addInterSiteTXNodes", Job.class, Collection.class, boolean.class);
+
+        assertThat(addStageInSimple.getReturnType(), is(void.class));
+        assertThat(addStageInDetailed.getReturnType(), is(void.class));
+        assertThat(addInterSite.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testDeclaredFieldTypes() throws Exception {
+        Field logMsg = Basic.class.getDeclaredField("mLogMsg");
+        Field fileTable = Basic.class.getDeclaredField("mFileTable");
+        Field relationsMap = Basic.class.getDeclaredField("mRelationsMap");
+        Field createRegistrationJobs = Basic.class.getDeclaredField("mCreateRegistrationJobs");
+
+        assertThat(logMsg.getType(), is(String.class));
+        assertThat(fileTable.getType(), is(Map.class));
+        assertThat(relationsMap.getType(), is(Map.class));
+        assertThat(createRegistrationJobs.getType(), is(Boolean.class));
+    }
+
+    @Test
+    public void testProtectedHelperMethodsExist() throws Exception {
+        Method addRelation =
+                Basic.class.getDeclaredMethod(
+                        "addRelation", String.class, String.class, String.class, boolean.class);
+        Method constructFileKey =
+                Basic.class.getDeclaredMethod("constructFileKey", String.class, String.class);
+        Method getJobPriority = Basic.class.getDeclaredMethod("getJobPriority", Job.class);
+
+        assertThat(Modifier.isPublic(addRelation.getModifiers()), is(true));
+        assertThat(addRelation.getReturnType(), is(void.class));
+        assertThat(constructFileKey.getReturnType(), is(String.class));
+        assertThat(getJobPriority.getReturnType(), is(int.class));
+    }
 }

@@ -13,33 +13,72 @@
  */
 package edu.isi.pegasus.planner.selector.site.heft;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Processor class. */
 public class ProcessorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInstantiation() {
+        Processor p = new Processor();
+        assertThat(p, notNullValue());
     }
-    */
+
+    @Test
+    public void testGetAvailableTimeInitiallyReturnsStart() {
+        Processor p = new Processor();
+        // When no job scheduled, endTime=0. If start > endTime, return start
+        assertThat(p.getAvailableTime(5L), is(5L));
+    }
+
+    @Test
+    public void testGetAvailableTimeWhenEndTimeGreaterThanStart() {
+        Processor p = new Processor();
+        p.scheduleJob(0L, 100L);
+        // endTime=100, start=50: since 100 > 50, return endTime=100
+        assertThat(p.getAvailableTime(50L), is(100L));
+    }
+
+    @Test
+    public void testGetAvailableTimeWhenStartGreaterThanEndTime() {
+        Processor p = new Processor();
+        p.scheduleJob(0L, 10L);
+        // endTime=10, start=50: since 10 <= 50, return start=50
+        assertThat(p.getAvailableTime(50L), is(50L));
+    }
+
+    @Test
+    public void testScheduleJob() {
+        Processor p = new Processor();
+        p.scheduleJob(10L, 20L);
+        // After scheduling, end time is 20. start=0 < 20, so available time = 20
+        assertThat(p.getAvailableTime(0L), is(20L));
+    }
+
+    @Test
+    public void testConstructorInitializesPrivateFieldsToZero() throws Exception {
+        Processor p = new Processor();
+        assertThat((Long) ReflectionTestUtils.getField(p, "mStartTime"), is(0L));
+        assertThat((Long) ReflectionTestUtils.getField(p, "mEndTime"), is(0L));
+    }
+
+    @Test
+    public void testGetAvailableTimeReturnsStartWhenEqualToEndTime() {
+        Processor p = new Processor();
+        p.scheduleJob(10L, 20L);
+
+        assertThat(p.getAvailableTime(20L), is(20L));
+    }
+
+    @Test
+    public void testScheduleJobUpdatesPrivateStartAndEndTimeFields() throws Exception {
+        Processor p = new Processor();
+        p.scheduleJob(7L, 13L);
+        assertThat((Long) ReflectionTestUtils.getField(p, "mStartTime"), is(7L));
+        assertThat((Long) ReflectionTestUtils.getField(p, "mEndTime"), is(13L));
+    }
 }

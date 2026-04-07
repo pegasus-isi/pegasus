@@ -13,33 +13,134 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Panda style class. */
 public class PandaTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class TestPanda extends Panda {
+        String gridResource(Job job) throws Exception {
+            return constructGridResource(job);
+        }
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        void setSiteStore(SiteStore store) {
+            mSiteStore = store;
+        }
     }
-    */
+
+    private TestPanda newStyleWithSite(
+            String siteHandle,
+            GridGateway.TYPE gatewayType,
+            String contact,
+            GridGateway.SCHEDULER_TYPE scheduler) {
+        GridGateway gateway = new GridGateway(gatewayType, contact, scheduler);
+        gateway.setJobType(GridGateway.JOB_TYPE.compute);
+
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle(siteHandle);
+        site.addGridGateway(gateway);
+
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestPanda style = new TestPanda();
+        style.setSiteStore(store);
+        return style;
+    }
+
+    @Test
+    public void testPandaExtendsGLite() {
+        assertThat(GLite.class.isAssignableFrom(Panda.class), is(true));
+    }
+
+    @Test
+    public void testPandaImplementsCondorStyle() {
+        assertThat(CondorStyle.class.isAssignableFrom(Panda.class), is(true));
+    }
+
+    @Test
+    public void testStyleNameConstant() {
+        assertThat(Panda.STYLE_NAME, is("PANDA"));
+    }
+
+    @Test
+    public void testGridResourceKeyNotNull() {
+        assertThat(Panda.GRID_RESOURCE_KEY, notNullValue());
+    }
+
+    @Test
+    public void testInstantiation() {
+        Panda style = new Panda();
+        assertThat(style, notNullValue());
+    }
+
+    @Test
+    public void testConstructGridResourceUsesGatewayTypeAndPandaPrefix() throws Exception {
+        TestPanda style =
+                newStyleWithSite(
+                        "panda",
+                        GridGateway.TYPE.condor,
+                        "submit.example",
+                        GridGateway.SCHEDULER_TYPE.slurm);
+        Job job = new Job();
+        job.setSiteHandle("panda");
+
+        assertThat(style.gridResource(job), is("condor panda submit.example "));
+    }
+
+    @Test
+    public void testConstructGridResourceThrowsWhenContactMissing() {
+        TestPanda style =
+                newStyleWithSite(
+                        "panda", GridGateway.TYPE.condor, null, GridGateway.SCHEDULER_TYPE.slurm);
+        Job job = new Job();
+        job.setSiteHandle("panda");
+
+        CondorStyleException e =
+                assertThrows(CondorStyleException.class, () -> style.gridResource(job));
+        assertThat(e.getMessage(), containsString("Grid Gateway not specified"));
+    }
+
+    @Test
+    public void testConstructGridResourceRejectsForkScheduler() {
+        TestPanda style =
+                newStyleWithSite(
+                        "panda",
+                        GridGateway.TYPE.batch,
+                        "submit.example",
+                        GridGateway.SCHEDULER_TYPE.fork);
+        Job job = new Job();
+        job.setSiteHandle("panda");
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> style.gridResource(job));
+        assertThat(e.getMessage(), containsString("Please specify a valid scheduler"));
+    }
+
+    @Test
+    public void testConstructGridResourceNullGatewayCurrentlyThrowsNullPointerException() {
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle("missing");
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestPanda style = new TestPanda();
+        style.setSiteStore(store);
+
+        Job job = new Job();
+        job.setSiteHandle("missing");
+
+        assertThrows(NullPointerException.class, () -> style.gridResource(job));
+    }
 }

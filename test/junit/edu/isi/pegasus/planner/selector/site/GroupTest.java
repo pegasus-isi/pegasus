@@ -13,33 +13,84 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Group site selector. */
 public class GroupTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Group mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Group();
     }
-    */
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertThat(desc, not(isEmptyOrNullString()));
+    }
+
+    @Test
+    public void testDescriptionContainsGroup() {
+        String desc = mSelector.description().toLowerCase();
+        assertThat(desc.toLowerCase(), containsString("group"));
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertThat(mSelector, instanceOf(SiteSelector.class));
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertThat(mSelector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testInstantiationWithDefaultConstructor() {
+        Group selector = new Group();
+        assertThat(selector, notNullValue());
+    }
+
+    @Test
+    public void testDescriptionIsNotNull() {
+        assertThat(mSelector.description(), notNullValue());
+    }
+
+    @Test
+    public void testDescriptionExactValue() {
+        assertThat(
+                mSelector.description(),
+                is(
+                        "Site selector doing clustering on the basis of key group in pegasus namespace"));
+    }
+
+    @Test
+    public void testPrivateConstantsAndFieldsExist() throws Exception {
+        java.lang.reflect.Field defaultGroup = Group.class.getDeclaredField("mDefaultGroup");
+        java.lang.reflect.Field groupMap = Group.class.getDeclaredField("mGroupMap");
+        java.lang.reflect.Field selector = Group.class.getDeclaredField("mSelector");
+
+        defaultGroup.setAccessible(true);
+
+        assertThat(defaultGroup.get(null), is("default"));
+        assertThat(groupMap.getType(), is(java.util.Map.class));
+        assertThat(selector.getType(), is(AbstractPerJob.class));
+    }
+
+    @Test
+    public void testPrivateInsertMethodExists() throws Exception {
+        assertThat(
+                Group.class
+                        .getDeclaredMethod("insert", edu.isi.pegasus.planner.classes.Job.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+    }
 }

@@ -13,33 +13,48 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for CleanupEngine. */
 public class CleanupEngineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(CleanupEngine.class), is(true));
     }
-    */
+
+    @Test
+    public void testHasAddCleanupJobsMethod() throws Exception {
+        assertThat(
+                CleanupEngine.class.getDeclaredMethod(
+                        "addCleanupJobs", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testHasPegasusBagConstructor() throws Exception {
+        Constructor<CleanupEngine> constructor =
+                CleanupEngine.class.getDeclaredConstructor(PegasusBag.class);
+        assertThat(constructor, notNullValue());
+    }
+
+    @Test
+    public void testAddCleanupJobsReturnsADag() throws Exception {
+        Method method = CleanupEngine.class.getDeclaredMethod("addCleanupJobs", ADag.class);
+        assertThat((Object) method.getReturnType(), is((Object) ADag.class));
+    }
+
+    @Test
+    public void testCleanupEngineDeclaresOnlyConstructorAndCleanupMethod() {
+        assertThat(CleanupEngine.class.getDeclaredConstructors().length, is(1));
+        assertThat(CleanupEngine.class.getDeclaredMethods().length, is(1));
+    }
 }

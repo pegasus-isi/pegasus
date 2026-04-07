@@ -13,33 +13,100 @@
  */
 package edu.isi.pegasus.planner.provisioner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the provisioner Node class. */
 public class NodeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Node mNode;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mNode = new Node("n1", "myTask", 100L);
     }
-    */
+
+    @Test
+    public void testDefaultWeightConstant() {
+        assertThat(Node.DEFAULT_WEIGHT, is(1L));
+    }
+
+    @Test
+    public void testEvalWeightReturnsConfiguredWeight() {
+        assertThat(mNode.evalWeight(), is(100L));
+    }
+
+    @Test
+    public void testGetInReturnsEmptyListInitially() {
+        assertThat(mNode.getIn(), notNullValue());
+        assertThat(mNode.getIn().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetOutReturnsEmptyListInitially() {
+        assertThat(mNode.getOut(), notNullValue());
+        assertThat(mNode.getOut().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testCheckInReturnsTrueWhenNoIncomingEdges() {
+        assertThat(mNode.checkIn(), is(true));
+    }
+
+    @Test
+    public void testSetWeight() {
+        mNode.setWeight(50L);
+        assertThat(mNode.evalWeight(), is(50L));
+    }
+
+    @Test
+    public void testNodeWithStringIdOnlyConstructor() {
+        Node n = new Node("myId");
+        assertThat(n, notNullValue());
+        assertThat(n.evalWeight(), is(Node.DEFAULT_WEIGHT));
+    }
+
+    @Test
+    public void testAddInEdge() {
+        Node other = new Node("n2");
+        Edge edge = new Edge(other, mNode, "file.txt", 100L);
+        mNode.addIn(edge);
+        assertThat(mNode.getIn().isEmpty(), is(false));
+    }
+
+    @Test
+    public void testGetIDReturnsConfiguredIdentifier() {
+        assertThat(mNode.getID(), is("n1"));
+    }
+
+    @Test
+    public void testIsTopAndIsBottomForIsolatedNode() {
+        assertThat(mNode.isTop(), is(true));
+        assertThat(mNode.isBottom(), is(true));
+    }
+
+    @Test
+    public void testAddOutDoesNotDuplicateSameEdge() {
+        Node child = new Node("n2");
+        Edge edge = new Edge(mNode, child, "file.txt", 100L);
+        mNode.addOut(edge);
+        mNode.addOut(edge);
+        assertThat(mNode.getOut().size(), is(1));
+    }
+
+    @Test
+    public void testInitOutMarksOutgoingEdgesCompleteAndSetsCompTime() {
+        Node child = new Node("n2");
+        Edge edge = new Edge(mNode, child, "file.txt", 100L);
+        mNode.addOut(edge);
+
+        mNode.initOut(true, 42L);
+
+        assertThat(edge.complete, is(true));
+        assertThat(edge.compTime, is(42L));
+    }
 }

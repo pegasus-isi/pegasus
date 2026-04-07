@@ -13,33 +13,91 @@
  */
 package edu.isi.ikcap.workflows.util.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class LogEventTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSingleEntityConstructorInitializesFields() throws Exception {
+        LogEvent event = new LogEvent("event.sample", "planner", "job.id", "ID0001");
+
+        assertThat(getField(event, "_eventName"), is("event.sample"));
+        assertThat(getField(event, "_progName"), is("planner"));
+        assertThat((String) getField(event, "_eventId"), startsWith("event.sample_"));
+
+        Map<?, ?> entityMap = (Map<?, ?>) getField(event, "_entityIdMap");
+        assertThat(entityMap.size(), is(1));
+        assertThat(entityMap.get("job.id"), is("ID0001"));
     }
-    */
+
+    @Test
+    public void testCreateStartLogMessageIncludesProgramAndEntityIds() {
+        LogEvent event = new LogEvent("event.sample", "planner", "job.id", "ID0001");
+
+        String message = event.createStartLogMsg().toString();
+
+        assertThat(message, containsString("event=event.sample.start"));
+        assertThat(message, containsString("prog=planner"));
+        assertThat(message, containsString("job.id=ID0001"));
+        assertThat(message, containsString("ts="));
+    }
+
+    @Test
+    public void testCreateLogAndEndMessagesUseCurrentEventNames() {
+        LogEvent event = new LogEvent("event.sample", "planner", "job.id", "ID0001");
+
+        String logMessage = event.createLogMsg().toString();
+        String endMessage = event.createEndLogMsg().toString();
+
+        assertThat(logMessage, containsString("event=event.sample "));
+        assertThat(logMessage, not(containsString("prog=planner")));
+        assertThat(endMessage, containsString("event=event.sample.end"));
+        assertThat(endMessage, containsString("job.id=ID0001"));
+    }
+
+    @Test
+    public void testMapConstructorUsesProvidedEntityMapContents() {
+        Map<String, String> entities = new HashMap<String, String>();
+        entities.put("dax.id", "dax-42");
+        entities.put("request.id", "request-7");
+
+        LogEvent event = new LogEvent("event.aggregate", "planner", entities);
+        String message = event.createLogMsg().toString();
+
+        assertThat(message, containsString("dax.id=dax-42"));
+        assertThat(message, containsString("request.id=request-7"));
+    }
+
+    @Test
+    public void testCreateIdHierarchyLogMessageUsesCurrentChildFormatting() {
+        String message =
+                LogEvent.createIdHierarchyLogMsg(
+                                "parent.type",
+                                "parent-1",
+                                "child.type",
+                                Arrays.asList("childA", "childB").iterator())
+                        .toString();
+
+        assertThat(message, containsString("event=event.id.creation"));
+        assertThat(message, containsString("parent.id.type=parent.type"));
+        assertThat(message, containsString("parent.id=parent-1"));
+        assertThat(message, containsString("child.ids.type=child.type"));
+        assertThat(message, containsString("child.ids={childA,childB,}"));
+    }
+
+    private Object getField(Object target, String name) throws Exception {
+        return ReflectionTestUtils.getField(target, name);
+    }
 }

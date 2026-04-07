@@ -15,31 +15,143 @@ package edu.isi.pegasus.planner.mapper.submit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.mapper.SubmitMapper;
+import java.io.File;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Hashed submit mapper class structure. */
 public class HashedTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHashedImplementsSubmitMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                SubmitMapper.class.isAssignableFrom(Hashed.class), org.hamcrest.Matchers.is(true));
     }
-    */
+
+    @Test
+    public void testMultiplicatorPropertyKeyConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                Hashed.MULIPLICATOR_PROPERTY_KEY, org.hamcrest.Matchers.is("hashed.multiplier"));
+    }
+
+    @Test
+    public void testDefaultMultiplicatorFactorConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                Hashed.DEFAULT_MULTIPLICATOR_FACTOR, org.hamcrest.Matchers.is(5));
+    }
+
+    @Test
+    public void testLevelsPropertyKeyConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                Hashed.LEVELS_PROPERTY_KEY, org.hamcrest.Matchers.is("hashed.levels"));
+    }
+
+    @Test
+    public void testDefaultLevelsConstant() {
+        org.hamcrest.MatcherAssert.assertThat(Hashed.DEFAULT_LEVELS, org.hamcrest.Matchers.is(2));
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Hashed hashed = new Hashed();
+        org.hamcrest.MatcherAssert.assertThat(hashed, org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testHashedIsPublicClass() {
+        int modifiers = Hashed.class.getModifiers();
+        org.hamcrest.MatcherAssert.assertThat(
+                java.lang.reflect.Modifier.isPublic(modifiers), org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testInitializeSetsBaseDirectoryAndFactory() throws Exception {
+        Hashed hashed = new Hashed();
+        Properties properties = new Properties();
+        properties.setProperty(Hashed.MULIPLICATOR_PROPERTY_KEY, "7");
+        properties.setProperty(Hashed.LEVELS_PROPERTY_KEY, "3");
+        File base = new File("/tmp/submit-base");
+
+        hashed.initialize(bagFor(base, "wf"), properties, base);
+
+        org.hamcrest.MatcherAssert.assertThat(
+                ReflectionTestUtils.getField(hashed, "mBaseDir"), org.hamcrest.Matchers.is(base));
+
+        org.hamcrest.MatcherAssert.assertThat(
+                ReflectionTestUtils.getField(hashed, "mFactory"),
+                org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testDescriptionIncludesDefaultFactorySettingsAfterInitialize() {
+        Hashed hashed = new Hashed();
+        File base = new File("/tmp/submit-base");
+
+        hashed.initialize(bagFor(base, "wf"), new Properties(), base);
+
+        org.hamcrest.MatcherAssert.assertThat(
+                hashed.description(),
+                org.hamcrest.Matchers.is(
+                        "Hashed Directory Mapper with multiplier as 5 and levels 2"));
+    }
+
+    @Test
+    public void testDescriptionIncludesConfiguredFactorySettings() {
+        Hashed hashed = new Hashed();
+        Properties properties = new Properties();
+        properties.setProperty(Hashed.MULIPLICATOR_PROPERTY_KEY, "7");
+        properties.setProperty(Hashed.LEVELS_PROPERTY_KEY, "3");
+        File base = new File("/tmp/submit-base");
+
+        hashed.initialize(bagFor(base, "wf"), properties, base);
+
+        org.hamcrest.MatcherAssert.assertThat(
+                hashed.description(),
+                org.hamcrest.Matchers.is(
+                        "Hashed Directory Mapper with multiplier as 7 and levels 3"));
+    }
+
+    @Test
+    public void testGetRelativeDirReturnsRelativePath() {
+        Hashed hashed = new Hashed();
+        File base = new File("/tmp/submit-base");
+        hashed.initialize(bagFor(base, "wf"), new Properties(), base);
+
+        Job job = new Job();
+        job.setName("jobA");
+
+        File relative = hashed.getRelativeDir(job);
+        org.hamcrest.MatcherAssert.assertThat(relative, org.hamcrest.Matchers.notNullValue());
+        org.hamcrest.MatcherAssert.assertThat(
+                relative.isAbsolute(), org.hamcrest.Matchers.is(false));
+    }
+
+    @Test
+    public void testGetDirReturnsPathUnderSubmitDirectory() {
+        Hashed hashed = new Hashed();
+        File base = new File("/tmp/submit-base");
+        hashed.initialize(bagFor(base, "wf"), new Properties(), base);
+
+        Job job = new Job();
+        job.setName("jobA");
+
+        File dir = hashed.getDir(job);
+        org.hamcrest.MatcherAssert.assertThat(dir, org.hamcrest.Matchers.notNullValue());
+        org.hamcrest.MatcherAssert.assertThat(
+                dir.getPath().startsWith(new File(base, "wf").getPath()),
+                org.hamcrest.Matchers.is(true));
+    }
+
+    private PegasusBag bagFor(File base, String relative) {
+        PegasusBag bag = new PegasusBag();
+        PlannerOptions options = new PlannerOptions();
+        options.setSubmitDirectory(base.getPath(), relative);
+        bag.add(PegasusBag.PLANNER_OPTIONS, options);
+        return bag;
+    }
 }

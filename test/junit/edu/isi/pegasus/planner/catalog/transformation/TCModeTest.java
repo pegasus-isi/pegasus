@@ -13,33 +13,78 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TCMode class constants. */
 public class TCModeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSingleReadConstantValue() {
+        assertThat(TCMode.SINGLE_READ, is("single"));
     }
-    */
+
+    @Test
+    public void testMultipleReadConstantValue() {
+        assertThat(TCMode.MULTIPLE_READ, is("multiple"));
+    }
+
+    @Test
+    public void testOldFileTCClassConstantValue() {
+        assertThat(TCMode.OLDFILE_TC_CLASS, is("OldFile"));
+    }
+
+    @Test
+    public void testDefaultTCClassConstantValue() {
+        assertThat(TCMode.DEFAULT_TC_CLASS, is("File"));
+    }
+
+    @Test
+    public void testPackageNameConstantIsNonEmpty() {
+        assertThat(TCMode.PACKAGE_NAME, is(notNullValue()));
+        assertThat(TCMode.PACKAGE_NAME.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testSingleReadIsDistinctFromMultipleRead() {
+        assertNotEquals(TCMode.SINGLE_READ, TCMode.MULTIPLE_READ);
+    }
+
+    @Test
+    public void testOldFileTCClassIsDistinctFromDefaultTCClass() {
+        assertNotEquals(TCMode.OLDFILE_TC_CLASS, TCMode.DEFAULT_TC_CLASS);
+    }
+
+    @Test
+    public void testGetImplementingClassMapsSingleReadToOldFile() throws Exception {
+        assertThat(invokeGetImplementingClass("single"), is(TCMode.OLDFILE_TC_CLASS));
+    }
+
+    @Test
+    public void testGetImplementingClassMapsMultipleReadCaseInsensitivelyToOldFile()
+            throws Exception {
+        assertThat(invokeGetImplementingClass("  MuLtIpLe  "), is(TCMode.OLDFILE_TC_CLASS));
+    }
+
+    @Test
+    public void testGetImplementingClassReturnsCustomClassNameWhenNotLegacyMode() throws Exception {
+        assertThat(invokeGetImplementingClass("CustomTC"), is("CustomTC"));
+    }
+
+    @Test
+    public void testGetImplementingClassReturnsDefaultClassNameUnchanged() throws Exception {
+        assertThat(
+                invokeGetImplementingClass(TCMode.DEFAULT_TC_CLASS), is(TCMode.DEFAULT_TC_CLASS));
+    }
+
+    private String invokeGetImplementingClass(String value) throws Exception {
+        Method method = TCMode.class.getDeclaredMethod("getImplementingClass", String.class);
+        method.setAccessible(true);
+        return (String) method.invoke(null, value);
+    }
 }

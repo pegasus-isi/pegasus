@@ -13,33 +13,67 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link Identifier} token. */
 public class IdentifierTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsToken() {
+        Identifier id = new Identifier("myJob");
+        assertThat(id, instanceOf(Token.class));
     }
-    */
+
+    @Test
+    public void testGetValue() {
+        Identifier id = new Identifier("myJob");
+        assertThat(id.getValue(), is("myJob"));
+    }
+
+    @Test
+    public void testToString() {
+        Identifier id = new Identifier("pegasus");
+        assertThat(id.toString(), is("pegasus"));
+    }
+
+    @Test
+    public void testGetValueMatchesConstructorInput() {
+        String value = "transformation-name";
+        Identifier id = new Identifier(value);
+        assertThat(id.getValue(), is(value));
+    }
+
+    @Test
+    public void testEmptyValue() {
+        Identifier id = new Identifier("");
+        assertThat(id.getValue(), is(""));
+    }
+
+    @Test
+    public void testToStringEqualsGetValue() {
+        Identifier id = new Identifier("someToken");
+        assertThat(id.toString(), is(id.getValue()));
+    }
+
+    @Test
+    public void testNullValueIsPreserved() {
+        Identifier id = new Identifier(null);
+        assertThat(id.getValue(), is(nullValue()));
+        assertThat(id.toString(), is(nullValue()));
+    }
+
+    @Test
+    public void testDeclaresSinglePrivateStringField() throws Exception {
+        assertThat(Identifier.class.getDeclaredFields().length, is(1));
+        assertThat(Identifier.class.getDeclaredField("m_value").getType(), is(String.class));
+    }
+
+    @Test
+    public void testDeclaresExpectedPublicMethods() {
+        assertThat(Identifier.class.getDeclaredMethods().length, is(2));
+    }
 }

@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.HashMap;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class PartitionerFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstants() {
+        assertThat(
+                PartitionerFactory.DEFAULT_PACKAGE_NAME, is("edu.isi.pegasus.planner.partitioner"));
+        assertThat(PartitionerFactory.LEVEL_BASED_PARTITIONING_CLASS, is("BFS"));
+        assertThat(PartitionerFactory.LABEL_BASED_PARTITIONING_CLASS, is("Label"));
+        assertThat(PartitionerFactory.HORIZONTAL_PARTITIONING_CLASS, is("Horizontal"));
+        assertThat(PartitionerFactory.WHOLE_WF_PARTITIONING_CLASS, is("Whole"));
+        assertThat(PartitionerFactory.DEFAULT_PARTITIONING_CLASS, is("BFS"));
     }
-    */
+
+    @Test
+    public void testLoadInstanceWithNullPropertiesThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        PartitionerFactory.loadInstance(
+                                null, new GraphNode("root"), new HashMap<>(), "Label"));
+    }
+
+    @Test
+    public void testLoadInstanceWithCaseInsensitiveShortClassNameLoadsLabel() throws Exception {
+        Partitioner partitioner =
+                PartitionerFactory.loadInstance(
+                        PegasusProperties.nonSingletonInstance(),
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        "Label");
+
+        assertThat(partitioner, is(notNullValue()));
+        assertThat(partitioner.getClass(), is(Label.class));
+    }
+
+    @Test
+    public void testLoadInstanceWithFullyQualifiedClassNameLoadsLabel() throws Exception {
+        Partitioner partitioner =
+                PartitionerFactory.loadInstance(
+                        PegasusProperties.nonSingletonInstance(),
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        "edu.isi.pegasus.planner.partitioner.Label");
+
+        assertThat(partitioner, is(notNullValue()));
+        assertThat(partitioner.getClass(), is(Label.class));
+    }
 }

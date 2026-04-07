@@ -13,33 +13,157 @@
  */
 package edu.isi.pegasus.common.credential.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.PrintStream;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class BotoConfigTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInitializeUsesLocalSitePegasusProfileForLocalCredentialPath() throws Exception {
+        BotoConfig credential = new BotoConfig();
+        PegasusBag bag = createBagWithLocalSite("/site/boto/local.cfg", null);
+
+        credential.initialize(bag);
+
+        assertThat(
+                ReflectionTestUtils.getField(credential, "mLocalCredentialPath"),
+                is("/site/boto/local.cfg"));
+        assertThat(credential.getPath(), is("/site/boto/local.cfg"));
     }
-    */
+
+    @Test
+    public void testGetPathPrefersSiteSpecificPegasusProfileOverLocalFallback() {
+        BotoConfig credential = new BotoConfig();
+        SiteStore store = new SiteStore();
+
+        SiteCatalogEntry local = new SiteCatalogEntry("local");
+        local.getProfiles()
+                .addProfile(Profiles.NAMESPACES.pegasus, "boto_config", "/site/boto/local.cfg");
+        store.addEntry(local);
+
+        SiteCatalogEntry remote = new SiteCatalogEntry("aws-batch");
+        remote.getProfiles()
+                .addProfile(Profiles.NAMESPACES.pegasus, "boto_config", "/site/boto/remote.cfg");
+        store.addEntry(remote);
+
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.SITE_STORE, store);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, new NoOpLogManager());
+
+        credential.initialize(bag);
+
+        assertThat(credential.getPath("aws-batch"), is("/site/boto/remote.cfg"));
+        assertThat(credential.getPath("unknown-site"), is("/site/boto/local.cfg"));
+    }
+
+    @Test
+    public void testGetLocalPathFallsBackToLocalEnvProfileWhenPegasusProfileMissing() {
+        BotoConfig credential = new BotoConfig();
+        PegasusBag bag = createBagWithLocalSite(null, "/site/boto/from-env.cfg");
+
+        credential.initialize(bag);
+
+        assertThat(credential.getLocalPath(), is("/site/boto/from-env.cfg"));
+    }
+
+    @Test
+    public void testGetLocalPathReturnsNullWhenNoProfilesOrEnvironmentAreAvailable() {
+        BotoConfig credential = new BotoConfig();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.SITE_STORE, new SiteStore());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, new NoOpLogManager());
+
+        credential.initialize(bag);
+
+        assertThat(credential.getLocalPath(), is(nullValue()));
+    }
+
+    @Test
+    public void testAccessorMethodsExposeCurrentConstantsAndFormatting() {
+        BotoConfig credential = new BotoConfig();
+        BotoConfig baseNameCredential = new BotoConfig();
+        baseNameCredential.initialize(createBagWithLocalSite("/tmp/boto/boto.cfg", null));
+
+        assertThat(credential.getProfileKey(), is("BOTO_CONFIG"));
+        assertThat(credential.getEnvironmentVariable("aws-batch"), is("BOTO_CONFIG_aws_batch"));
+        assertThat(credential.getDescription(), is("Boto Config File Credential Handler"));
+        assertThat(baseNameCredential.getBaseName("missing-site"), is("boto.cfg"));
+    }
+
+    private PegasusBag createBagWithLocalSite(
+            String localPegasusCredential, String localEnvCredential) {
+        SiteStore store = new SiteStore();
+        SiteCatalogEntry local = new SiteCatalogEntry("local");
+        if (localPegasusCredential != null) {
+            local.getProfiles()
+                    .addProfile(Profiles.NAMESPACES.pegasus, "boto_config", localPegasusCredential);
+        }
+        if (localEnvCredential != null) {
+            local.getProfiles()
+                    .addProfile(
+                            Profiles.NAMESPACES.env,
+                            BotoConfig.BOTO_CONFIG_FILE_VARIABLE,
+                            localEnvCredential);
+        }
+        store.addEntry(local);
+
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.SITE_STORE, store);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, new NoOpLogManager());
+        return bag;
+    }
+
+    private static final class NoOpLogManager extends LogManager {
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
+
+        @Override
+        public void configure(boolean prefixTimestamp) {}
+
+        @Override
+        protected void setLevel(int level, boolean info) {}
+
+        @Override
+        public int getLevel() {
+            return LogManager.INFO_MESSAGE_LEVEL;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
+    }
 }

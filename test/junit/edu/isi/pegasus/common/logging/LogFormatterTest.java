@@ -13,33 +13,129 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.format.Netlogger;
+import edu.isi.pegasus.common.logging.format.Simple;
+import java.util.Collection;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the LogFormatter interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class LogFormatterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- method declarations (NoSuchMethodException = test failure if missing) ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testProgramNameMethods() throws NoSuchMethodException {
+        LogFormatter.class.getMethod("setProgramName", String.class);
+        LogFormatter.class.getMethod("getProgramName", String.class);
     }
-    */
+
+    @Test
+    public void testAddEventMethods() throws NoSuchMethodException {
+        LogFormatter.class.getMethod("addEvent", String.class, String.class, String.class);
+        LogFormatter.class.getMethod("addEvent", String.class, Map.class);
+    }
+
+    @Test
+    public void testEventStackMethods() throws NoSuchMethodException {
+        LogFormatter.class.getMethod("popEvent");
+        LogFormatter.class.getMethod("getEventName");
+        LogFormatter.class.getMethod("getStartEventMessage");
+        LogFormatter.class.getMethod("getEndEventMessage");
+    }
+
+    @Test
+    public void testAddMethods() throws NoSuchMethodException {
+        LogFormatter.class.getMethod("add", String.class);
+        LogFormatter.class.getMethod("add", String.class, String.class);
+    }
+
+    @Test
+    public void testLogMessageMethods() throws NoSuchMethodException {
+        LogFormatter.class.getMethod("createLogMessage");
+        LogFormatter.class.getMethod("createLogMessageAndReset");
+    }
+
+    @Test
+    public void testCreateEntityHierarchyMessageMethod() throws NoSuchMethodException {
+        LogFormatter.class.getMethod(
+                "createEntityHierarchyMessage",
+                String.class,
+                String.class,
+                String.class,
+                Collection.class);
+    }
+
+    // --- known implementors ---
+
+    @Test
+    public void testKnownImplementors() {
+        assertThat(Netlogger.class, typeCompatibleWith(LogFormatter.class));
+        assertThat(Simple.class, typeCompatibleWith(LogFormatter.class));
+    }
+
+    @Test
+    public void testLogFormatterIsInterface() {
+        assertThat(LogFormatter.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws NoSuchMethodException {
+        assertThat(
+                LogFormatter.class.getMethod("setProgramName", String.class).getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                LogFormatter.class.getMethod("getProgramName", String.class).getReturnType(),
+                is(String.class));
+        assertThat(
+                LogFormatter.class
+                        .getMethod("addEvent", String.class, String.class, String.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                LogFormatter.class.getMethod("addEvent", String.class, Map.class).getReturnType(),
+                is(Void.TYPE));
+        assertThat(LogFormatter.class.getMethod("popEvent").getReturnType(), is(Event.class));
+        assertThat(LogFormatter.class.getMethod("getEventName").getReturnType(), is(String.class));
+        assertThat(
+                LogFormatter.class.getMethod("getStartEventMessage").getReturnType(),
+                is(String.class));
+        assertThat(
+                LogFormatter.class.getMethod("getEndEventMessage").getReturnType(),
+                is(String.class));
+        assertThat(
+                LogFormatter.class.getMethod("add", String.class).getReturnType(),
+                is(LogFormatter.class));
+        assertThat(
+                LogFormatter.class.getMethod("add", String.class, String.class).getReturnType(),
+                is(LogFormatter.class));
+        assertThat(
+                LogFormatter.class.getMethod("createLogMessage").getReturnType(), is(String.class));
+        assertThat(
+                LogFormatter.class.getMethod("createLogMessageAndReset").getReturnType(),
+                is(String.class));
+        assertThat(
+                LogFormatter.class
+                        .getMethod(
+                                "createEntityHierarchyMessage",
+                                String.class,
+                                String.class,
+                                String.class,
+                                Collection.class)
+                        .getReturnType(),
+                is(String.class));
+    }
+
+    @Test
+    public void testLogFormatterDeclaresExpectedNumberOfMethods() {
+        assertThat(LogFormatter.class.getDeclaredMethods().length, is(13));
+    }
 }

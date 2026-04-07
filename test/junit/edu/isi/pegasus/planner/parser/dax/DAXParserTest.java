@@ -13,33 +13,39 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class DAXParserTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInterfaceShape() {
+        assertThat(DAXParser.class.isInterface(), is(true));
+        assertThat(DAXParser.class.getInterfaces().length, is(0));
     }
-    */
+
+    @Test
+    public void testMethodSignatures() throws Exception {
+        Method parse = DAXParser.class.getMethod("parse", String.class);
+        Method setCallback = DAXParser.class.getMethod("setDAXCallback", Callback.class);
+        Method getCallback = DAXParser.class.getMethod("getDAXCallback");
+
+        assertThat(parse.getReturnType(), is(Void.TYPE));
+        assertThat(setCallback.getReturnType(), is(Void.TYPE));
+        assertThat(getCallback.getReturnType(), is(Callback.class));
+
+        assertThat(Modifier.isPublic(parse.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(parse.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testDeclaredMethodCount() {
+        assertThat(DAXParser.class.getDeclaredMethods().length, is(3));
+    }
 }

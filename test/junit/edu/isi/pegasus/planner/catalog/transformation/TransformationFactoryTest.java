@@ -16,6 +16,8 @@ package edu.isi.pegasus.planner.catalog.transformation;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -39,9 +41,7 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,12 +66,6 @@ public class TransformationFactoryTest {
 
     public TransformationFactoryTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
@@ -84,8 +78,12 @@ public class TransformationFactoryTest {
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         mLogger.log(
                 "System conf dir " + properties.getSysConfDir(), LogManager.DEBUG_MESSAGE_LEVEL);
-        // pick test files from etc dir of the pegasus install
-        mTestSetup.setInputDirectory(properties.getSysConfDir().getAbsolutePath());
+        // In the workspace test environment there may be no installed system conf dir.
+        File inputDir =
+                (properties.getSysConfDir() == null)
+                        ? new File("etc").getAbsoluteFile()
+                        : properties.getSysConfDir().getAbsoluteFile();
+        mTestSetup.setInputDirectory(inputDir.getAbsolutePath());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
         mLogger.logEventCompletion();
@@ -109,7 +107,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
-        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
+        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
         mLogger.logEventCompletion();
     }
 
@@ -125,7 +123,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(Text.class));
-        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
+        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
         mLogger.logEventCompletion();
     }
 
@@ -143,7 +141,7 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
-        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
+        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
         mLogger.logEventCompletion();
     }
 
@@ -159,8 +157,53 @@ public class TransformationFactoryTest {
                 new File(mTestSetup.getInputDirectory() + "/yaml/", "tc.yml").getAbsolutePath());
         TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
         assertThat(tc, instanceOf(YAML.class));
-        assertFalse(tc.isTransient(), "loaded catalog should not be transient");
+        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
         mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void testLoadInstanceWithNullPropertiesThrowsException() {
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File("."));
+
+        TransformationFactoryException exception =
+                assertThrows(
+                        TransformationFactoryException.class,
+                        () -> TransformationFactory.loadInstance(bag));
+
+        assertThat(exception.getMessage(), containsString("Invalid NULL properties passed"));
+    }
+
+    @Test
+    public void testLoadInstanceWithNullDirectoryThrowsException() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+
+        TransformationFactoryException exception =
+                assertThrows(
+                        TransformationFactoryException.class,
+                        () -> TransformationFactory.loadInstance(bag));
+        assertThat(
+                exception.getMessage(),
+                containsString("Unable to instantiate Transformation Catalog"));
+    }
+
+    @Test
+    public void testLoadInstanceWithNullLoggerThrowsException() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File("."));
+
+        TransformationFactoryException exception =
+                assertThrows(
+                        TransformationFactoryException.class,
+                        () -> TransformationFactory.loadInstance(bag));
+
+        assertThat(exception.getMessage(), containsString("Invalid Logger passed"));
     }
 
     @Test
@@ -192,8 +235,9 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(Text.class));
-            assertFalse(s.isTransient(), "loaded catalog should not be transient");
+            assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
         } finally {
+            text.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -221,8 +265,9 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(Text.class));
-            assertTrue(s.isTransient(), "catalog should be transient");
+            assertThat(s.isTransient(), is(true));
         } finally {
+            text.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -260,8 +305,9 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
-            assertFalse(s.isTransient(), "loaded catalog should not be transient");
+            assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
         } finally {
+            yaml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -312,8 +358,10 @@ public class TransformationFactoryTest {
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
             assertThat(s, instanceOf(YAML.class));
-            assertFalse(s.isTransient(), "loaded catalog should not be transient");
+            assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
         } finally {
+            yaml.delete();
+            xml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -454,11 +502,12 @@ public class TransformationFactoryTest {
             List<TransformationCatalogEntry> entries =
                     c.lookup(
                             null, expected.getLogicalName(), null, (String) null, TCType.STAGEABLE);
-            assertEquals(num, entries.size(), "Number of entries retrieved from TC");
-            assertEquals(expected, entries.get(0), "Transformation retrieved from TC as ");
+            assertThat(entries.size(), is(num));
+            assertThat(entries.get(0), is(expected));
             // maybe should be false. need to be revisited
-            assertTrue(c.isTransient(), "loaded catalog should be transient");
+            assertThat("loaded catalog should be transient", c.isTransient(), is(true));
         } finally {
+            keg.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -468,6 +517,7 @@ public class TransformationFactoryTest {
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+        bag.add(PegasusBag.PLANNER_DIRECTORY, new File("."));
         return bag;
     }
 }

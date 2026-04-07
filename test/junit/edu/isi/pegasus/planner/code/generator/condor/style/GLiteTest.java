@@ -15,7 +15,10 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -58,32 +61,32 @@ public class GLiteTest {
 
     @Test
     public void testBasicPBSTimestampFormatting() {
-        assertEquals("00:00:00", gs.pbsFormattedTimestamp("0"));
+        assertThat(gs.pbsFormattedTimestamp("0"), is("00:00:00"));
     }
 
     @Test
     public void testMinutePBSTimestampFormatting() {
-        assertEquals("00:11:00", gs.pbsFormattedTimestamp("11"));
+        assertThat(gs.pbsFormattedTimestamp("11"), is("00:11:00"));
     }
 
     @Test
     public void testHourConversionPBSTimestampFormatting() {
-        assertEquals("01:00:00", gs.pbsFormattedTimestamp("60"));
+        assertThat(gs.pbsFormattedTimestamp("60"), is("01:00:00"));
     }
 
     @Test
     public void test2HourConversionPBSTimestampFormatting() {
-        assertEquals("01:09:00", gs.pbsFormattedTimestamp("69"));
+        assertThat(gs.pbsFormattedTimestamp("69"), is("01:09:00"));
     }
 
     @Test
     public void test3HourConversionPBSTimestampFormatting() {
-        assertEquals("02:49:00", gs.pbsFormattedTimestamp("169"));
+        assertThat(gs.pbsFormattedTimestamp("169"), is("02:49:00"));
     }
 
     @Test
     public void test4HourConversionPBSTimestampFormatting() {
-        assertEquals("28:10:00", gs.pbsFormattedTimestamp("1690"));
+        assertThat(gs.pbsFormattedTimestamp("1690"), is("28:10:00"));
     }
 
     @Test
@@ -339,21 +342,15 @@ public class GLiteTest {
         String expectedGlobusKey = Globus.pegasusProfilesToRSLKey().get(pegasusProfileKey);
         if (!pegasusProfileKey.equals(Pegasus.GPUS_KEY)) {
             // we have no mapping for the GPU's key
-            assertNotNull(
-                    expectedGlobusKey,
-                    "Unable to map pegasus key to globus RSL - " + pegasusProfileKey);
-            assertTrue(
-                    j.globusRSL.containsKey(expectedGlobusKey),
-                    "Job does not contain globus rsl key - " + expectedGlobusKey);
-            assertEquals(expectedValue, j.globusRSL.get(expectedGlobusKey), "Expected value");
+            assertThat(expectedGlobusKey, notNullValue());
+            assertThat(j.globusRSL.containsKey(expectedGlobusKey), is(true));
+            assertThat(j.globusRSL.get(expectedGlobusKey), is(expectedValue));
         }
 
         String expectedClassAdKey =
                 ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(pegasusProfileKey);
         System.err.println(ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys());
-        assertNotNull(
-                expectedClassAdKey,
-                "Unable to map pegasus key " + pegasusProfileKey + " to classad key");
+        assertThat(expectedClassAdKey, notNullValue());
 
         // CORES=="$(my.pegasus_cores)"
         // .*CORES=="\$\(my\.(.*)\)".*
@@ -369,7 +366,7 @@ public class GLiteTest {
         while (m.find()) {
             value = m.group(1);
         }
-        assertEquals(expectedClassAdKey, value);
+        assertThat(value, is(expectedClassAdKey));
     }
 
     private void testWithRegex(Job j, String gridResource, String regex, String expected)
@@ -382,6 +379,6 @@ public class GLiteTest {
         while (m.find()) {
             value = m.group(1);
         }
-        assertEquals(expected, value);
+        assertThat(value, is(expected));
     }
 }

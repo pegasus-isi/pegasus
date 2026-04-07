@@ -13,33 +13,68 @@
  */
 package edu.isi.pegasus.planner.selector.site.heft;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Site class in the HEFT package. */
 public class SiteTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSiteInstantiationWithName() {
+        Site site = new Site("my-site");
+        assertThat(site, notNullValue());
     }
-    */
+
+    @Test
+    public void testSiteInstantiationWithNameAndProcessors() {
+        Site site = new Site("my-site", 4);
+        assertThat(site, notNullValue());
+    }
+
+    @Test
+    public void testSiteClassExists() {
+        assertThat(Site.class, notNullValue());
+    }
+
+    @Test
+    public void testGetNameAndAvailableProcessors() {
+        Site site = new Site("submit", 4);
+
+        assertThat(site.getName(), is("submit"));
+        assertThat(site.getAvailableProcessors(), is(4));
+    }
+
+    @Test
+    public void testGetAvailableTimeUsesUnusedProcessorAtRequestedStart() throws Exception {
+        Site site = new Site("compute", 2);
+
+        assertThat(site.getAvailableTime(5L), is(5L));
+
+        assertThat(((List) ReflectionTestUtils.getField(site, "mProcessors")).size(), is(1));
+    }
+
+    @Test
+    public void testScheduleJobRequiresTentativeSchedulingFirst() {
+        Site site = new Site("compute", 1);
+
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, () -> site.scheduleJob(0L, 10L));
+        assertThat(exception.getMessage(), containsString("tentatively scheduled first"));
+    }
+
+    @Test
+    public void testScheduleJobResetsCurrentProcessorAndUpdatesAvailability() throws Exception {
+        Site site = new Site("compute", 1);
+
+        assertThat(site.getAvailableTime(3L), is(3L));
+        site.scheduleJob(3L, 9L);
+        assertThat(site.getAvailableTime(4L), is(9L));
+
+        assertThat((Integer) ReflectionTestUtils.getField(site, "mCurrentProcessorIndex"), is(0));
+    }
 }

@@ -13,12 +13,10 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -26,18 +24,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 public class UnitConverterTest {
 
     public UnitConverterTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @ParameterizedTest
     @CsvSource(
@@ -57,7 +43,7 @@ public class UnitConverterTest {
             },
             nullValues = {"null"})
     public void testToMB(String value, long expected) {
-        assertEquals(expected, UnitConverter.toMB(value));
+        assertThat(UnitConverter.toMB(value), is(expected));
     }
 
     @ParameterizedTest
@@ -78,7 +64,7 @@ public class UnitConverterTest {
             },
             nullValues = {"null"})
     public void testToKB(String value, long expected) {
-        assertEquals(expected, UnitConverter.toKB(value));
+        assertThat(UnitConverter.toKB(value), is(expected));
     }
 
     // TODO add test methods here.

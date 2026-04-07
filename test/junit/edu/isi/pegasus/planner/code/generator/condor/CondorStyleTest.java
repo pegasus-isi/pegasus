@@ -13,33 +13,77 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyle interface. */
 public class CondorStyleTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(CondorStyle.VERSION, is("1.4"));
     }
-    */
+
+    @Test
+    public void testVersionConstantNotNull() {
+        assertThat(CondorStyle.VERSION, notNullValue());
+    }
+
+    @Test
+    public void testCondorStyleClassExists() {
+        assertThat(CondorStyle.class, notNullValue());
+    }
+
+    @Test
+    public void testCondorStyleImplementedByAbstractStyle() {
+        assertThat(
+                CondorStyle.class.isAssignableFrom(
+                        edu.isi.pegasus.planner.code.generator.condor.style.Abstract.class),
+                is(true));
+    }
+
+    @Test
+    public void testCondorStyleIsInterface() {
+        assertThat(CondorStyle.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testInitializeMethodSignature() throws Exception {
+        Method method =
+                CondorStyle.class.getMethod(
+                        "initialize", PegasusBag.class, CredentialHandlerFactory.class);
+
+        assertThat(method.getExceptionTypes(), arrayContaining(CondorStyleException.class));
+    }
+
+    @Test
+    public void testApplyMethodForSiteCatalogEntrySignature() throws Exception {
+        Method method = CondorStyle.class.getMethod("apply", SiteCatalogEntry.class);
+
+        assertThat(method.getExceptionTypes(), arrayContaining(CondorStyleException.class));
+    }
+
+    @Test
+    public void testApplyMethodForJobSignature() throws Exception {
+        Method method = CondorStyle.class.getMethod("apply", Job.class);
+
+        assertThat(method.getExceptionTypes(), arrayContaining(CondorStyleException.class));
+    }
+
+    @Test
+    public void testApplyMethodForAggregatedJobSignature() throws Exception {
+        Method method = CondorStyle.class.getMethod("apply", AggregatedJob.class);
+
+        assertThat(method.getExceptionTypes(), arrayContaining(CondorStyleException.class));
+    }
 }

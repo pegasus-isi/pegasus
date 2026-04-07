@@ -13,33 +13,90 @@
  */
 package edu.isi.pegasus.planner.namespace.aggregator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the Update aggregator. */
 public class UpdateTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Update mAggregator;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mAggregator = new Update();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mAggregator = null;
     }
-    */
+
+    @Test
+    public void testAlwaysReturnsNewValue() {
+        String result = mAggregator.compute("old", "new", "default");
+        assertThat(result, is("new"));
+    }
+
+    @Test
+    public void testReturnsNewValueWhenOldIsNull() {
+        String result = mAggregator.compute(null, "new", "default");
+        assertThat(result, is("new"));
+    }
+
+    @Test
+    public void testReturnsNewValueWhenOldIsEmpty() {
+        String result = mAggregator.compute("", "replacement", "default");
+        assertThat(result, is("replacement"));
+    }
+
+    @Test
+    public void testIgnoresDefaultValue() {
+        String result = mAggregator.compute("old", "new", "should-be-ignored");
+        assertThat(result, is("new"));
+    }
+
+    @Test
+    public void testReturnsNullWhenNewValueIsNull() {
+        String result = mAggregator.compute("old", null, "default");
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void testImplementsAggregatorInterface() {
+        assertThat(mAggregator instanceof Aggregator, is(true));
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertThat(mAggregator instanceof Abstract, is(true));
+    }
+
+    @Test
+    public void testReturnsNumericNewValue() {
+        String result = mAggregator.compute("100", "200", "0");
+        assertThat(result, is("200"));
+    }
+
+    @Test
+    public void testReturnsEmptyStringWhenNewValueIsEmpty() {
+        String result = mAggregator.compute("old", "", "default");
+        assertThat(result, is(""));
+    }
+
+    @Test
+    public void testReturnsNullWhenAllInputsAreNull() {
+        String result = mAggregator.compute(null, null, null);
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void testIgnoresNullDefaultWhenNewValuePresent() {
+        String result = mAggregator.compute("old", "replacement", null);
+        assertThat(result, is("replacement"));
+    }
 }

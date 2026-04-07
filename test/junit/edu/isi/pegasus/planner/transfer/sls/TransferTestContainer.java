@@ -14,6 +14,8 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static edu.isi.pegasus.planner.transfer.sls.TransferTest.mTestNumber;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
@@ -26,9 +28,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,12 +36,6 @@ public class TransferTestContainer extends TransferTest {
 
     public TransferTestContainer() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         super.setUp();
@@ -50,9 +43,6 @@ public class TransferTestContainer extends TransferTest {
         // within the container
         mProps.setProperty(PegasusProperties.PEGASUS_TRANSFER_CONTAINER_ON_HOST, "false");
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     // PM-1893
@@ -78,12 +68,12 @@ public class TransferTestContainer extends TransferTest {
         this.testStageIn("compute", expectedOutput);
         // the container with the job should have a mount point associated
         Container c = j.getContainer();
-        assertNotNull(c.getMountPoints());
-        assertEquals(1, c.getMountPoints().size());
+        assertThat(c.getMountPoints(), notNullValue());
+        assertThat(c.getMountPoints().size(), is(1));
         Container.MountPoint expectedMP = new Container.MountPoint();
         expectedMP.setSourceDirectory("/internal/workflows/compute/shared-scratch");
         expectedMP.setDestinationDirectory("/internal/workflows/compute/shared-scratch");
-        assertEquals(expectedMP, c.getMountPoints().toArray()[0]);
+        assertThat(c.getMountPoints().toArray()[0], is(expectedMP));
     }
 
     @Test

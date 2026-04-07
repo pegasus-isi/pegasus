@@ -17,6 +17,9 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -31,8 +34,6 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -54,12 +55,6 @@ public class ReplicaStoreTest {
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void testSingleReplica() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -75,8 +70,8 @@ public class ReplicaStoreTest {
                         + "        site: \"local\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-        assertNotNull(store);
-        assertEquals(1, store.getLFNCount());
+        assertThat(store, is(notNullValue()));
+        assertThat(store.getLFNCount(), is(1));
         testBasicReplicaLocation(
                 store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
     }
@@ -101,8 +96,8 @@ public class ReplicaStoreTest {
                         + "        site: \"isi\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-        assertNotNull(store);
-        assertEquals(2, store.getLFNCount());
+        assertThat(store, is(notNullValue()));
+        assertThat(store.getLFNCount(), is(2));
         testBasicReplicaLocation(
                 store.get("f.a"), "f.a", "file:///Volumes/data/input/f.a", "local");
         testBasicReplicaLocation(store.get("f.b"), "f.b", "file:///Volumes/data/input/f.b", "isi");
@@ -125,19 +120,19 @@ public class ReplicaStoreTest {
                         + "      sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-        assertNotNull(store);
-        assertEquals(1, store.getLFNCount());
+        assertThat(store, is(notNullValue()));
+        assertThat(store.getLFNCount(), is(1));
         ReplicaLocation rl = store.get("f.a");
-        assertNotNull(rl);
-        assertEquals("f.a", rl.getLFN());
+        assertThat(rl, is(notNullValue()));
+        assertThat(rl.getLFN(), is("f.a"));
         ReplicaCatalogEntry rce = rl.getPFN(0);
         ReplicaCatalogEntry expected = new ReplicaCatalogEntry("file:///Volumes/data/input/f.a");
         expected.addAttribute("site", "local");
-        assertEquals(expected, rce);
-        assertEquals("sha256", rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY));
-        assertEquals(
+        assertThat(rce, is(expected));
+        assertThat(rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY), is("sha256"));
+        assertThat(
                 "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9",
-                rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY));
+                is(rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY)));
     }
 
     @Test
@@ -159,20 +154,20 @@ public class ReplicaStoreTest {
                         + "      user: \"karan\"";
 
         ReplicaStore store = mapper.readValue(test, ReplicaStore.class);
-        assertNotNull(store);
-        assertEquals(1, store.getLFNCount());
+        assertThat(store, is(notNullValue()));
+        assertThat(store.getLFNCount(), is(1));
         ReplicaLocation rl = store.get("f.a");
-        assertNotNull(rl);
-        assertEquals("f.a", rl.getLFN());
+        assertThat(rl, is(notNullValue()));
+        assertThat(rl.getLFN(), is("f.a"));
         ReplicaCatalogEntry rce = rl.getPFN(0);
         ReplicaCatalogEntry expected = new ReplicaCatalogEntry("file:///Volumes/data/input/f.a");
         expected.addAttribute("site", "local");
-        assertEquals(expected, rce);
-        assertEquals("sha256", rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY));
-        assertEquals(
+        assertThat(rce, is(expected));
+        assertThat(rl.getMetadata(Metadata.CHECKSUM_TYPE_KEY), is("sha256"));
+        assertThat(
                 "a08d9d7769cffb96a910a4b6c2be7bfd85d461c9",
-                rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY));
-        assertEquals("karan", rl.getMetadata("user"));
+                is(rl.getMetadata(Metadata.CHECKSUM_VALUE_KEY)));
+        assertThat(rl.getMetadata("user"), is("karan"));
     }
 
     @Test
@@ -260,15 +255,16 @@ public class ReplicaStoreTest {
                         + "  metadata:\n"
                         + "    user: \"vahi\"\n";
         String actual = mapper.writeValueAsString(store);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     private void testBasicReplicaLocation(
             ReplicaLocation actual, String lfn, String pfn, String site) {
-        assertNotNull(actual);
-        assertEquals(lfn, actual.getLFN());
+        assertThat(actual, is(notNullValue()));
+        assertThat(actual.getLFN(), is(lfn));
         ReplicaCatalogEntry rce = actual.getPFN(0);
         ReplicaCatalogEntry expected = new ReplicaCatalogEntry(pfn);
         expected.addAttribute("site", site);
+        assertThat(rce, is(expected));
     }
 }

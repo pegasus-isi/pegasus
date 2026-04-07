@@ -13,33 +13,84 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the MapperException class. */
 public class MapperExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsRuntimeException() {
+        assertThat(RuntimeException.class.isAssignableFrom(MapperException.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        MapperException ex = new MapperException();
+        assertThat(ex, is(org.hamcrest.Matchers.notNullValue()));
+        assertThat(ex.getMessage(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructWithMessage() {
+        MapperException ex = new MapperException("test error");
+        assertThat(ex.getMessage(), is("test error"));
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        MapperException ex = new MapperException("test error", cause);
+        assertThat(ex.getMessage(), is("test error"));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+    }
+
+    @Test
+    public void testConstructWithCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        MapperException ex = new MapperException(cause);
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+    }
+
+    @Test
+    public void testCanBeCaught() {
+        boolean caught = false;
+        try {
+            throw new MapperException("mapper failed");
+        } catch (MapperException e) {
+            caught = true;
+            assertThat(e.getMessage(), is("mapper failed"));
+        }
+        assertThat(caught, is(true));
+    }
+
+    @Test
+    public void testCauseOnlyConstructorUsesCauseToStringAsMessage() {
+        IllegalStateException cause = new IllegalStateException("bad state");
+
+        MapperException ex = new MapperException(cause);
+
+        assertThat(ex.getMessage(), is(cause.toString()));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+    }
+
+    @Test
+    public void testCauseOnlyConstructorAllowsNullCause() {
+        MapperException ex = new MapperException((Throwable) null);
+
+        assertThat(ex.getMessage(), is(nullValue()));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorAllowsNullCause() {
+        MapperException ex = new MapperException("mapper failed", null);
+
+        assertThat(ex.getMessage(), is("mapper failed"));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
 }

@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.File;
+import java.nio.file.Files;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class PDAXWriterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstants() {
+        assertThat(PDAXWriter.XML_VERSION, is("2.0"));
+        assertThat(PDAXWriter.XML_NAMESPACE, is("https://pegasus.isi.edu/schema"));
     }
-    */
+
+    @Test
+    public void testConstructorStoresNameAndFilename() throws Exception {
+        File file = Files.createTempFile("pdax-writer", ".xml").toFile();
+        PDAXWriter writer = new PDAXWriter("workflow", file.getAbsolutePath());
+
+        assertThat(ReflectionTestUtils.getField(writer, "mName"), is("workflow"));
+        assertThat(ReflectionTestUtils.getField(writer, "mFileName"), is(file.getAbsolutePath()));
+        writer.close();
+    }
+
+    @Test
+    public void testWriteHeaderEmitsExpectedPdaxPreamble() throws Exception {
+        File file = Files.createTempFile("pdax-writer", ".xml").toFile();
+        PDAXWriter writer = new PDAXWriter("workflow", file.getAbsolutePath());
+
+        writer.writeHeader();
+        writer.close();
+
+        String contents = Files.readString(file.toPath());
+        assertThat(contents.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"), is(true));
+        assertThat(
+                contents.contains("<pdag xmlns=\"https://pegasus.isi.edu/schema/PDAX\""), is(true));
+        assertThat(contents.contains("name=\"workflow\""), is(true));
+        assertThat(contents.contains("version=\"2.0\""), is(true));
+    }
+
+    @Test
+    public void testWriteAndWritelnFollowedByClosePersistContent() throws Exception {
+        File file = Files.createTempFile("pdax-writer", ".xml").toFile();
+        PDAXWriter writer = new PDAXWriter("workflow", file.getAbsolutePath());
+
+        writer.write("alpha");
+        writer.writeln("beta");
+        writer.close();
+
+        String contents = Files.readString(file.toPath());
+        assertThat(contents.contains("alphabeta"), is(true));
+        assertThat(contents.contains("</pdag>"), is(true));
+    }
 }

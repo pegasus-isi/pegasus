@@ -13,7 +13,8 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -22,9 +23,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,12 +38,6 @@ public class PegasusSubmitDAGTest {
     private static int mTestNum = 1;
 
     public PegasusSubmitDAGTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -66,9 +58,6 @@ public class PegasusSubmitDAGTest {
         mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.logEventStart("test.code.generator.condor.PegasusSubmitDAG", "setup", "0");
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testEmpty() {
@@ -103,7 +92,7 @@ public class PegasusSubmitDAGTest {
         envProfiles.construct("PEGASUS_METRICS", "true");
         String actual = d.getUpdatedDAGManEnv(existing, envProfiles);
         // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
         mLogger.logEventCompletion();
     }
 }

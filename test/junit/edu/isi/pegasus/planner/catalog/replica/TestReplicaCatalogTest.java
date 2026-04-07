@@ -13,33 +13,46 @@
  */
 package edu.isi.pegasus.planner.catalog.replica;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the TestReplicaCatalog driver class. Since TestReplicaCatalog is a CLI-only utility
+ * with a single main() method, tests are limited to structural/reflection checks.
+ */
 public class TestReplicaCatalogTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassHasMainMethod() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        assertThat(main, is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testMainMethodIsPublicStatic() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        int modifiers = main.getModifiers();
+        assertThat(java.lang.reflect.Modifier.isPublic(modifiers), is(true));
+        assertThat(java.lang.reflect.Modifier.isStatic(modifiers), is(true));
+    }
+
+    @Test
+    public void testMainMethodReturnTypeIsVoid() throws NoSuchMethodException {
+        java.lang.reflect.Method main =
+                TestReplicaCatalog.class.getDeclaredMethod("main", String[].class);
+        assertThat(main.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testClassInCorrectPackage() {
+        assertThat(
+                TestReplicaCatalog.class.getPackage().getName(),
+                is("edu.isi.pegasus.planner.catalog.replica"));
+    }
 }

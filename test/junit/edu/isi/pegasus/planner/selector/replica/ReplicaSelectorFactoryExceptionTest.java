@@ -13,33 +13,86 @@
  */
 package edu.isi.pegasus.planner.selector.replica;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ReplicaSelectorFactoryException. */
 public class ReplicaSelectorFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertThat(
+                "Replica Selector",
+                ReplicaSelectorFactoryException.DEFAULT_NAME,
+                equalTo("Replica Selector"));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessage() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test error");
+        assertThat(ex.getMessage(), equalTo("test error"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", "TestClass");
+        assertThat(ex.getMessage(), notNullValue());
+        assertThat(ex.getClassname(), equalTo("TestClass"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", cause);
+        assertThat(ex.getCause(), sameInstance(cause));
+        assertThat(ex.getClassname(), equalTo(ReplicaSelectorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", "TestClass", cause);
+        assertThat(ex.getCause(), sameInstance(cause));
+        assertThat(ex.getClassname(), equalTo("TestClass"));
+    }
+
+    @Test
+    public void testDefaultClassname() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test");
+        assertThat(ex.getClassname(), equalTo(ReplicaSelectorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testIsFactoryException() {
+        ReplicaSelectorFactoryException ex = new ReplicaSelectorFactoryException("test");
+        assertThat(ex, instanceOf(edu.isi.pegasus.common.util.FactoryException.class));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCauseUsesDefaultClassname() {
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", (Throwable) null);
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), equalTo(ReplicaSelectorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullClassnamePreservesNull() {
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", (String) null);
+        assertThat(ex.getClassname(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithNullClassnameAndNullCausePreservesNullClassname() {
+        ReplicaSelectorFactoryException ex =
+                new ReplicaSelectorFactoryException("test error", null, null);
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), nullValue());
+    }
 }

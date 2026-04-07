@@ -16,6 +16,9 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
@@ -79,22 +82,22 @@ public class MetaRCTest {
 
     @Test
     public void simpleChecksOnMetaFile() {
-        assertEquals(2, mMetaRC.list().size(), "Number of Entries in RC ");
-        assertFalse(mMetaRC.list().contains("f.a"));
-        assertTrue(mMetaRC.list().contains("f.b1"));
-        assertTrue(mMetaRC.list().contains("f.b2"));
+        assertThat(mMetaRC.list().size(), is(2));
+        assertThat(mMetaRC.list().contains("f.a"), is(false));
+        assertThat(mMetaRC.list().contains("f.b1"), is(true));
+        assertThat(mMetaRC.list().contains("f.b2"), is(true));
     }
 
     @Test
     public void checkParsedRCE() {
         String lfn = "f.b1";
-        assertEquals(2, mMetaRC.list().size(), "Number of Entries in RC ");
-        assertTrue(mMetaRC.list().contains(lfn), "Replica Catalog should contain lfn");
+        assertThat(mMetaRC.list().size(), is(2));
+        assertThat(mMetaRC.list().contains(lfn), is(true));
         Collection<ReplicaCatalogEntry> rces = mMetaRC.lookup(lfn);
-        assertEquals(1, rces.size(), "There should be only one rce for lfn " + lfn);
+        assertThat(rces.size(), is(1));
         for (ReplicaCatalogEntry rce : rces) {
-            assertNull(rce.getPFN(), "PFN for RCE should be null");
-            assertEquals(6, rce.getAttributeCount(), "Number of Entries in RC ");
+            assertThat(rce.getPFN(), is(nullValue()));
+            assertThat(rce.getAttributeCount(), is(6));
             assertAttribute("user", "bamboo", rce);
 
             assertAttribute("size", "56", rce);
@@ -112,13 +115,13 @@ public class MetaRCTest {
     public void lookupWholeCatalogWithConstraints() {
         Map<String, Collection<ReplicaCatalogEntry>> m = mMetaRC.lookup(new HashMap());
         String lfn = "f.b1";
-        assertEquals(2, m.entrySet().size(), "Number of Entries in map ");
-        assertTrue(m.containsKey(lfn), "MAP should contain lfn");
+        assertThat(m.entrySet().size(), is(2));
+        assertThat(m.containsKey(lfn), is(true));
         Collection<ReplicaCatalogEntry> rces = m.get(lfn);
-        assertEquals(1, rces.size(), "There should be only one rce for lfn " + lfn);
+        assertThat(rces.size(), is(1));
         for (ReplicaCatalogEntry rce : rces) {
-            assertNull(rce.getPFN(), "PFN for RCE should be null");
-            assertEquals(6, rce.getAttributeCount(), "Number of attributes found");
+            assertThat(rce.getPFN(), is(nullValue()));
+            assertThat(rce.getAttributeCount(), is(6));
             assertAttribute("user", "bamboo", rce);
 
             assertAttribute("size", "56", rce);
@@ -136,7 +139,7 @@ public class MetaRCTest {
     public void simpleInsert() {
         mMetaRC.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = mMetaRC.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
     }
 
     @Test
@@ -150,7 +153,7 @@ public class MetaRCTest {
         rc.addAttribute("size", "100GB");
         Collection<ReplicaCatalogEntry> c = mMetaRC.lookup("a");
         // System.err.println(c);
-        assertTrue(c.contains(rc));
+        assertThat(c.contains(rc), is(true));
     }
 
     @Test
@@ -161,10 +164,10 @@ public class MetaRCTest {
         mMetaRC.insert("a", new ReplicaCatalogEntry("c", "handle"));
 
         Collection<ReplicaCatalogEntry> c = mMetaRC.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", "handle")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "handle")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", "handle")), is(true));
     }
 
     @AfterEach
@@ -174,6 +177,6 @@ public class MetaRCTest {
 
     private void assertAttribute(
             String expectedKey, String expectedValue, ReplicaCatalogEntry rce) {
-        assertEquals(rce.getAttribute(expectedKey), expectedValue);
+        assertThat(rce.getAttribute(expectedKey), is(expectedValue));
     }
 }

@@ -13,33 +13,102 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorQuoteParser utility class. */
 public class CondorQuoteParserTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testQuotePlainString() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello");
+        assertThat(result, is("hello"));
     }
-    */
+
+    @Test
+    public void testQuoteEmptyString() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("");
+        assertThat(result, is(""));
+    }
+
+    @Test
+    public void testQuoteStringWithSingleQuotes() throws CondorQuoteParserException {
+        // single quotes in input should be preserved
+        String result = CondorQuoteParser.quote("'test'");
+        assertThat(result, notNullValue());
+    }
+
+    @Test
+    public void testQuoteStringWithDoubleQuoteConvertsToSingleQuote()
+            throws CondorQuoteParserException {
+        // " not enclosed in single quotes => converted to '
+        String result = CondorQuoteParser.quote("Karan \"Vahi\"");
+        assertThat(result, containsString("'Vahi'"));
+    }
+
+    @Test
+    public void testQuoteWithEncloseAddsOuterQuotes() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello", true);
+        assertThat(result, notNullValue());
+        assertThat(result.startsWith("\""), is(true));
+    }
+
+    @Test
+    public void testQuoteWithoutEncloseNoOuterQuotes() throws CondorQuoteParserException {
+        String result = CondorQuoteParser.quote("hello", false);
+        assertThat(result, notNullValue());
+        assertThat(result.startsWith("\""), is(false));
+    }
+
+    @Test
+    public void testQuoteClassExists() {
+        assertThat(CondorQuoteParser.class, notNullValue());
+    }
+
+    @Test
+    public void testEscapedSingleQuotesBecomeDoubledSingleQuotes()
+            throws CondorQuoteParserException {
+        assertThat(CondorQuoteParser.quote("\\'Test Input\\'"), is("''Test Input''"));
+    }
+
+    @Test
+    public void testEscapedDoubleQuotesBecomeDoubledDoubleQuotes()
+            throws CondorQuoteParserException {
+        assertThat(CondorQuoteParser.quote("\\\"Test Input\\\""), is("\"\"Test Input\"\""));
+    }
+
+    @Test
+    public void testDoubleQuotesInsideSingleQuotesAreDoubled() throws CondorQuoteParserException {
+        assertThat(CondorQuoteParser.quote("'Test \"Input\"'"), is("'Test \"\"Input\"\"'"));
+    }
+
+    @Test
+    public void testQuoteEmptyStringWithEncloseAddsBothQuotes() throws CondorQuoteParserException {
+        assertThat(CondorQuoteParser.quote("", true), is("\"\""));
+    }
+
+    @Test
+    public void testQuoteThrowsForTrailingBackslash() {
+        CondorQuoteParserException exception =
+                assertThrows(CondorQuoteParserException.class, () -> CondorQuoteParser.quote("\\"));
+
+        assertThat(exception.getMessage(), containsString("Unexpected end of input"));
+        assertThat(exception.getPosition(), is(1));
+    }
+
+    @Test
+    public void testQuoteThrowsForUnmatchedSingleQuotes() {
+        CondorQuoteParserException exception =
+                assertThrows(
+                        CondorQuoteParserException.class,
+                        () -> CondorQuoteParser.quote("'unterminated"));
+
+        assertThat(exception.getMessage(), containsString("Unmatched Single Quotes"));
+        assertThat(exception.getPosition(), is(13));
+    }
 }

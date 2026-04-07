@@ -13,33 +13,62 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Tentacles createdir strategy. */
 public class TentaclesTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractStrategy() {
+        assertThat(AbstractStrategy.class.isAssignableFrom(Tentacles.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(Tentacles.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Tentacles t = new Tentacles();
+        assertThat(t, notNullValue());
+    }
+
+    @Test
+    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
+        assertThat(
+                Tentacles.class.getMethod(
+                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testPublicMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        Tentacles.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                                        Implementation.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        Tentacles.class
+                                .getMethod(
+                                        "addCreateDirectoryNodes",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+    }
+
+    @Test
+    public void testTentaclesDeclaresExpectedMethods() {
+        assertThat(Tentacles.class.getDeclaredMethods().length, is(2));
+    }
 }

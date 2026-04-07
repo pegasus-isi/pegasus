@@ -13,33 +13,125 @@
  */
 package edu.isi.pegasus.planner.selector.site.heft;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the HeftBag class constants and interface. */
 public class HeftBagTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHeftBagImplementsBag() {
+        assertThat(Bag.class.isAssignableFrom(HeftBag.class), is(true));
     }
-    */
+
+    @Test
+    public void testAvgComputeTimeConstant() {
+        assertThat(HeftBag.AVG_COMPUTE_TIME, notNullValue());
+        assertThat(HeftBag.AVG_COMPUTE_TIME.intValue(), equalTo(0));
+    }
+
+    @Test
+    public void testDownwardRankConstant() {
+        assertThat(HeftBag.DOWNWARD_RANK, notNullValue());
+        assertThat(HeftBag.DOWNWARD_RANK.intValue(), equalTo(1));
+    }
+
+    @Test
+    public void testUpwardRankConstant() {
+        assertThat(HeftBag.UPWARD_RANK, notNullValue());
+        assertThat(HeftBag.UPWARD_RANK.intValue(), equalTo(2));
+    }
+
+    @Test
+    public void testActualStartTimeConstant() {
+        assertThat(HeftBag.ACTUAL_START_TIME, notNullValue());
+        assertThat(HeftBag.ACTUAL_START_TIME.intValue(), equalTo(3));
+    }
+
+    @Test
+    public void testActualFinishTimeConstant() {
+        assertThat(HeftBag.ACTUAL_FINISH_TIME, notNullValue());
+        assertThat(HeftBag.ACTUAL_FINISH_TIME.intValue(), equalTo(4));
+    }
+
+    @Test
+    public void testScheduledSiteConstant() {
+        assertThat(HeftBag.SCHEDULED_SITE, notNullValue());
+        assertThat(HeftBag.SCHEDULED_SITE.intValue(), equalTo(5));
+    }
+
+    @Test
+    public void testHeftInfoArrayLength() {
+        assertThat(HeftBag.HEFTINFO, notNullValue());
+        assertThat(HeftBag.HEFTINFO.length, equalTo(6));
+    }
+
+    @Test
+    public void testDefaultConstructorInitializesZeroAndEmptyValues() {
+        HeftBag bag = new HeftBag();
+
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.AVG_COMPUTE_TIME)).floatValue(),
+                closeTo(0.0, 0.001));
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.DOWNWARD_RANK)).floatValue(),
+                closeTo(0.0, 0.001));
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.UPWARD_RANK)).floatValue(), closeTo(0.0, 0.001));
+        assertThat(((Long) bag.get(HeftBag.ACTUAL_START_TIME)).longValue(), equalTo(0L));
+        assertThat(((Long) bag.get(HeftBag.ACTUAL_FINISH_TIME)).longValue(), equalTo(0L));
+        assertThat(bag.get(HeftBag.SCHEDULED_SITE), equalTo(""));
+    }
+
+    @Test
+    public void testAddAndGetForAllSupportedKeys() {
+        HeftBag bag = new HeftBag();
+
+        assertThat(bag.add(HeftBag.AVG_COMPUTE_TIME, Float.valueOf(3.5f)), is(true));
+        assertThat(bag.add(HeftBag.DOWNWARD_RANK, Float.valueOf(7.5f)), is(true));
+        assertThat(bag.add(HeftBag.UPWARD_RANK, Float.valueOf(2.5f)), is(true));
+        assertThat(bag.add(HeftBag.ACTUAL_START_TIME, Long.valueOf(11L)), is(true));
+        assertThat(bag.add(HeftBag.ACTUAL_FINISH_TIME, Long.valueOf(19L)), is(true));
+        assertThat(bag.add(HeftBag.SCHEDULED_SITE, "condorpool"), is(true));
+
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.AVG_COMPUTE_TIME)).floatValue(),
+                closeTo(3.5, 0.001));
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.DOWNWARD_RANK)).floatValue(),
+                closeTo(7.5, 0.001));
+        assertThat(
+                (double) ((Float) bag.get(HeftBag.UPWARD_RANK)).floatValue(), closeTo(2.5, 0.001));
+        assertThat(((Long) bag.get(HeftBag.ACTUAL_START_TIME)).longValue(), equalTo(11L));
+        assertThat(((Long) bag.get(HeftBag.ACTUAL_FINISH_TIME)).longValue(), equalTo(19L));
+        assertThat(bag.get(HeftBag.SCHEDULED_SITE), equalTo("condorpool"));
+    }
+
+    @Test
+    public void testContainsKeyCurrentRangeBehavior() {
+        HeftBag bag = new HeftBag();
+
+        assertThat(bag.containsKey(HeftBag.AVG_COMPUTE_TIME), is(true));
+        assertThat(bag.containsKey(HeftBag.DOWNWARD_RANK), is(true));
+        assertThat(bag.containsKey(HeftBag.UPWARD_RANK), is(true));
+        assertThat(bag.containsKey(HeftBag.ACTUAL_START_TIME), is(false));
+        assertThat(bag.containsKey(HeftBag.ACTUAL_FINISH_TIME), is(false));
+        assertThat(bag.containsKey(HeftBag.SCHEDULED_SITE), is(false));
+        assertThat(bag.containsKey("not-an-integer"), is(false));
+    }
+
+    @Test
+    public void testAddInvalidKeyReturnsFalseAndGetInvalidKeyThrows() {
+        HeftBag bag = new HeftBag();
+
+        assertThat(bag.add(Integer.valueOf(99), Float.valueOf(1.0f)), is(false));
+
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, () -> bag.get(Integer.valueOf(99)));
+        assertThat(exception.getMessage(), containsString("Wrong Heft key"));
+    }
 }

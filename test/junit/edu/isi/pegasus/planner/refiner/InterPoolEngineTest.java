@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -27,8 +29,6 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,12 +51,6 @@ public class InterPoolEngineTest {
     private TestSetup mTestSetup;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     public InterPoolEngineTest() {}
 
@@ -96,7 +90,7 @@ public class InterPoolEngineTest {
         mLogger.logEventStart(
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
-        assertFalse(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY));
+        assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(false));
         mLogger.logEventCompletion();
     }
 
@@ -111,8 +105,8 @@ public class InterPoolEngineTest {
         mLogger.logEventStart(
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
-        assertTrue(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY));
-        assertEquals(site, j.getSiteHandle());
+        assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(true));
+        assertThat(j.getSiteHandle(), is(site));
         mLogger.logEventCompletion();
     }
 
@@ -127,8 +121,8 @@ public class InterPoolEngineTest {
         mLogger.logEventStart(
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
-        assertTrue(engine.incorporateHint(j, Selector.PFN_HINT_KEY));
-        assertEquals(pfn, j.getRemoteExecutable());
+        assertThat(engine.incorporateHint(j, Selector.PFN_HINT_KEY), is(true));
+        assertThat(j.getRemoteExecutable(), is(pfn));
         mLogger.logEventCompletion();
     }
 
@@ -146,9 +140,9 @@ public class InterPoolEngineTest {
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
         // execution site will also incorporate pfn if present
-        assertTrue(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY));
-        assertEquals(pfn, j.getRemoteExecutable());
-        assertEquals(pfn, j.getRemoteExecutable());
+        assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(true));
+        assertThat(j.getRemoteExecutable(), is(pfn));
+        assertThat(j.getRemoteExecutable(), is(pfn));
         mLogger.logEventCompletion();
     }
 
@@ -163,8 +157,8 @@ public class InterPoolEngineTest {
         mLogger.logEventStart(
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
-        assertTrue(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY));
-        assertEquals(site, j.getSiteHandle());
+        assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(true));
+        assertThat(j.getSiteHandle(), is(site));
         mLogger.logEventCompletion();
     }
 
@@ -180,9 +174,9 @@ public class InterPoolEngineTest {
         mLogger.logEventStart(
                 "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
         InterPoolEngine engine = new InterPoolEngine(dag, mBag);
-        assertTrue(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY));
+        assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(true));
         // selector profile is preferred
-        assertEquals(site, j.getSiteHandle());
+        assertThat(j.getSiteHandle(), is(site));
         mLogger.logEventCompletion();
     }
 }

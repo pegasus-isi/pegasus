@@ -13,7 +13,8 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,8 +24,6 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +41,6 @@ public class MetadataTest {
         mTestSetup.setInputDirectory(this.getClass());
     }
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void serializationWithNoMetadata() throws IOException {
         ObjectMapper mapper =
@@ -64,7 +57,7 @@ public class MetadataTest {
 
         String actual = mapper.writeValueAsString(rl);
 
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -92,7 +85,7 @@ public class MetadataTest {
 
         String actual = mapper.writeValueAsString(rl);
 
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -116,7 +109,7 @@ public class MetadataTest {
 
         String actual = mapper.writeValueAsString(rl);
         // System.out.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -148,6 +141,6 @@ public class MetadataTest {
 
         String actual = mapper.writeValueAsString(rl);
         // System.out.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 }

@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.transfer.sls;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -39,9 +41,7 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
@@ -63,12 +63,6 @@ public abstract class TransferTest {
     protected static int mTestNumber = 1;
 
     public TransferTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -124,10 +118,10 @@ public abstract class TransferTest {
         dir.setType(Directory.TYPE.shared_scratch);
         dir.setSharedFileSystemAccess(sharedFileSystem);
         compute.addDirectory(dir);
-        assertEquals(
-                expectedValue,
+        assertThat(
+                "use file URL as source:",
                 t.useFileURLAsSource(compute, stagingSite),
-                "use file URL as source:");
+                is(expectedValue));
         mLogger.logEventCompletion();
     }
 
@@ -136,10 +130,10 @@ public abstract class TransferTest {
         mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
         Transfer t = new Transfer();
         t.initialize(mBag);
-        assertEquals(
-                expectedValue,
+        assertThat(
+                "Symlinking enabled for job:",
                 t.symlinkingEnabled(job, workflowSymlinking),
-                "Symlinking enabled for job:");
+                is(expectedValue));
         mLogger.logEventCompletion();
     }
 
@@ -151,10 +145,10 @@ public abstract class TransferTest {
         mLogger.logEventStart("test.transfer.sls.transfer", "set", Integer.toString(mTestNumber++));
         Transfer t = new Transfer();
         t.initialize(mBag);
-        assertEquals(
-                expectedValue,
+        assertThat(
+                "Symlinking enabled for file:",
                 t.symlinkingEnabled(pf, symlinkingEnabledForJob, useFileURLAsSource),
-                "Symlinking enabled for file:");
+                is(expectedValue));
         mLogger.logEventCompletion();
     }
 
@@ -176,7 +170,8 @@ public abstract class TransferTest {
             c.addMountPoint(mp);
         }
         t.updateSourceFileURLForContainerizedJob(c, new PegasusFile("f.in"), source, "ID1");
-        assertEquals(expectedReplacedURL, source.getPFN(), "source file url in containerized jobs");
+        assertThat(
+                "source file url in containerized jobs", source.getPFN(), is(expectedReplacedURL));
         mLogger.logEventCompletion();
     }
 
@@ -202,8 +197,8 @@ public abstract class TransferTest {
                 t.determineSLSOutputTransfers(
                         job, inputFile.getLFN(), stagingSiteServer, stagingSiteDirectory, "$PWD");
         // System.err.println(result);
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertThat(result, notNullValue());
+        assertThat(result.size(), is(1));
         testFileTransfer(expected, (FileTransfer) result.toArray()[0]);
         mLogger.logEventCompletion();
     }
@@ -245,26 +240,26 @@ public abstract class TransferTest {
                         "$PWD",
                         false);
         // System.err.println(result);
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertThat(result, notNullValue());
+        assertThat(result.size(), is(1));
         testFileTransfer(expected, (FileTransfer) result.toArray()[0]);
         mLogger.logEventCompletion();
     }
 
     protected void testFileTransfer(FileTransfer expected, FileTransfer actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getLFN(), actual.getLFN());
-        assertEquals(expected.getLinkage(), actual.getLinkage());
-        assertEquals(expected.getTransferFlag(), actual.getTransferFlag());
-        assertTrue(expected.getRegisterFlag() == actual.getRegisterFlag());
-        assertEquals(expected.getSourceURLCount(), actual.getSourceURLCount());
-        assertEquals(expected.getDestURLCount(), actual.getDestURLCount());
+        assertThat(actual, notNullValue());
+        assertThat(actual.getLFN(), is(expected.getLFN()));
+        assertThat(actual.getLinkage(), is(expected.getLinkage()));
+        assertThat(actual.getTransferFlag(), is(expected.getTransferFlag()));
+        assertThat(actual.getRegisterFlag(), is(expected.getRegisterFlag()));
+        assertThat(actual.getSourceURLCount(), is(expected.getSourceURLCount()));
+        assertThat(actual.getDestURLCount(), is(expected.getDestURLCount()));
 
         // we only expect 1 source and destination URL for these unit tests
-        assertEquals(expected.getSourceURLCount(), 1);
-        assertEquals(actual.getDestURLCount(), 1);
-        assertEquals(expected.getSourceURL(), actual.getSourceURL());
-        assertEquals(expected.getDestURL(), actual.getDestURL());
+        assertThat(expected.getSourceURLCount(), is(1));
+        assertThat(actual.getDestURLCount(), is(1));
+        assertThat(actual.getSourceURL(), is(expected.getSourceURL()));
+        assertThat(actual.getDestURL(), is(expected.getDestURL()));
     }
 
     protected ADag constructTestWorkflow() {

@@ -13,33 +13,128 @@
  */
 package edu.isi.pegasus.common.credential;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.lang.reflect.Method;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the CredentialHandlerFactory class via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class CredentialHandlerFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private CredentialHandlerFactory factory;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        factory = new CredentialHandlerFactory();
     }
-    */
+
+    @Test
+    public void testDefaultPackageNameConstant() {
+        assertThat(
+                CredentialHandlerFactory.DEFAULT_PACKAGE_NAME,
+                is("edu.isi.pegasus.common.credential.impl"));
+    }
+
+    // --- loadInstance before initialize ---
+
+    @Test
+    public void testLoadInstanceThrowsWhenNotInitialized() {
+        assertThrows(
+                CredentialHandlerFactoryException.class,
+                () -> factory.loadInstance(CredentialHandler.TYPE.x509));
+    }
+
+    // --- implementingClassNameTable (via reflection) ---
+
+    @Test
+    public void testAllExpectedTypesAreMapped() throws Exception {
+        Map<CredentialHandler.TYPE, String> table = getImplementingClassNameTable();
+        assertThat(
+                table.keySet(),
+                hasItems(
+                        CredentialHandler.TYPE.credentials,
+                        CredentialHandler.TYPE.http,
+                        CredentialHandler.TYPE.x509,
+                        CredentialHandler.TYPE.irods,
+                        CredentialHandler.TYPE.boto,
+                        CredentialHandler.TYPE.googlep12,
+                        CredentialHandler.TYPE.ssh));
+    }
+
+    @Test
+    public void testS3TypeIsNotMapped() throws Exception {
+        // s3 was intentionally removed (PM-1831): transfers now rely on credentials.conf
+        Map<CredentialHandler.TYPE, String> table = getImplementingClassNameTable();
+        assertThat(table.keySet(), not(hasItem(CredentialHandler.TYPE.s3)));
+    }
+
+    @Test
+    public void testAllMappedClassNamesAreNonEmpty() throws Exception {
+        Map<CredentialHandler.TYPE, String> table = getImplementingClassNameTable();
+        assertThat(table.isEmpty(), is(false));
+        for (Map.Entry<CredentialHandler.TYPE, String> entry : table.entrySet()) {
+            assertThat(
+                    "class name for type " + entry.getKey() + " must not be empty",
+                    entry.getValue(),
+                    not(emptyString()));
+        }
+    }
+
+    @Test
+    public void testAllMappedClassNamesAreSimpleBaseNames() throws Exception {
+        // the factory prepends DEFAULT_PACKAGE_NAME at load time; the table holds only basenames
+        Map<CredentialHandler.TYPE, String> table = getImplementingClassNameTable();
+        for (Map.Entry<CredentialHandler.TYPE, String> entry : table.entrySet()) {
+            assertThat(
+                    "class name for type " + entry.getKey() + " should be a simple basename",
+                    entry.getValue(),
+                    not(containsString(".")));
+        }
+    }
+
+    @Test
+    public void testConstructorInitializesExpectedDefaults() throws Exception {
+        assertThat(ReflectionTestUtils.getField(factory, "mInitialized"), is(false));
+        assertThat(
+                (Map<?, ?>) ReflectionTestUtils.getField(factory, "mImplementingClassTable"),
+                anEmptyMap());
+    }
+
+    @Test
+    public void testImplementingClassNameTableReturnsSameCachedMap() throws Exception {
+        Map<CredentialHandler.TYPE, String> first = getImplementingClassNameTable();
+        Map<CredentialHandler.TYPE, String> second = getImplementingClassNameTable();
+
+        assertThat(second, is(sameInstance(first)));
+    }
+
+    @Test
+    public void testLoadInstanceBeforeInitializeUsesExpectedMessage() {
+        CredentialHandlerFactoryException exception =
+                assertThrows(
+                        CredentialHandlerFactoryException.class,
+                        () -> factory.loadInstance(CredentialHandler.TYPE.http));
+
+        assertThat(
+                exception.getMessage(),
+                containsString("Credential impelmentors needs to be initialized first"));
+    }
+
+    // --- helper ---
+
+    @SuppressWarnings("unchecked")
+    private Map<CredentialHandler.TYPE, String> getImplementingClassNameTable() throws Exception {
+        Method m = CredentialHandlerFactory.class.getDeclaredMethod("implementingClassNameTable");
+        m.setAccessible(true);
+        return (Map<CredentialHandler.TYPE, String>) m.invoke(null);
+    }
 }

@@ -13,33 +13,42 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TestNamespaceTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void pegasusAndCondorExposeExpectedNamespaceNames() {
+        Pegasus pegasus = new Pegasus();
+        Condor condor = new Condor();
+
+        assertThat(pegasus.namespaceName(), is(Pegasus.NAMESPACE_NAME));
+        assertThat(condor.namespaceName(), is(Condor.NAMESPACE_NAME));
     }
-    */
+
+    @Test
+    public void pegasusDeprecatedTableContainsKnownMappings() {
+        Map deprecated = new Pegasus().deprecatedTable();
+
+        assertThat(
+                deprecated.get(Pegasus.DEPRECATED_BUNDLE_STAGE_IN_KEY),
+                is(Pegasus.BUNDLE_STAGE_IN_KEY));
+        assertThat(deprecated.get(Pegasus.DEPRECATED_CHANGE_DIR_KEY), is(Pegasus.CHANGE_DIR_KEY));
+    }
+
+    @Test
+    public void condorDeprecatedTableIsUnsupported() {
+        UnsupportedOperationException exception =
+                assertThrows(
+                        UnsupportedOperationException.class, () -> new Condor().deprecatedTable());
+
+        assertThat(exception.getMessage(), containsString(Condor.NAMESPACE_NAME));
+    }
 }

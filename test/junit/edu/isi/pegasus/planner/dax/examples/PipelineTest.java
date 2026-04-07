@@ -13,8 +13,6 @@
  */
 package edu.isi.pegasus.planner.dax.examples;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +37,7 @@ public class PipelineTest {
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        assertThat(1, is(1));
     }
     */
 }

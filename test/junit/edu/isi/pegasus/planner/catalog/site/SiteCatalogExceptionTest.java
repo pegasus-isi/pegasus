@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.planner.catalog.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.CatalogException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteCatalogException class. */
 public class SiteCatalogExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsCatalogException() {
+        assertThat(CatalogException.class.isAssignableFrom(SiteCatalogException.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        SiteCatalogException ex = new SiteCatalogException();
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is(nullValue()));
+        assertThat(ex.getNextException(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        SiteCatalogException ex = new SiteCatalogException("test message");
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        SiteCatalogException ex = new SiteCatalogException("test message", cause);
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithCauseOnly() {
+        Throwable cause = new RuntimeException("root cause");
+        SiteCatalogException ex = new SiteCatalogException(cause);
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getMessage(), is(cause.toString()));
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                SiteCatalogException.class,
+                () -> {
+                    throw new SiteCatalogException("test");
+                });
+    }
+
+    @Test
+    public void testExceptionIsRuntimeException() {
+        SiteCatalogException ex = new SiteCatalogException("test");
+
+        assertThat(ex, is(org.hamcrest.Matchers.instanceOf(RuntimeException.class)));
+    }
+
+    @Test
+    public void testConstructorWithNullCauseOnly() {
+        SiteCatalogException ex = new SiteCatalogException((Throwable) null);
+
+        assertThat(ex.getCause(), is(nullValue()));
+        assertThat(ex.getMessage(), is(nullValue()));
+    }
+
+    @Test
+    public void testSetNextExceptionAppendsToTail() {
+        SiteCatalogException root = new SiteCatalogException("root");
+        SiteCatalogException child1 = new SiteCatalogException("child1");
+        SiteCatalogException child2 = new SiteCatalogException("child2");
+
+        root.setNextException(child1);
+        root.setNextException(child2);
+
+        assertThat(root.getNextException(), is(child1));
+        assertThat(child1.getNextException(), is(child2));
+        assertThat(child2.getNextException(), is(nullValue()));
+    }
 }

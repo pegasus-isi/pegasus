@@ -13,33 +13,48 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Refiner interface. */
 public class RefinerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(Refiner.VERSION, is("1.0"));
     }
-    */
+
+    @Test
+    public void testHasGetWorkflowMethod() throws Exception {
+        assertThat(Refiner.class.getMethod("getWorkflow"), notNullValue());
+    }
+
+    @Test
+    public void testGetWorkflowReturnsADag() throws Exception {
+        assertThat(
+                (Object) Refiner.class.getMethod("getWorkflow").getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+    }
+
+    @Test
+    public void testRefinerIsInterface() {
+        assertThat(Refiner.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testGetWorkflowMethodIsPublicAndAbstract() throws Exception {
+        Method method = Refiner.class.getMethod("getWorkflow");
+        assertThat(Modifier.isPublic(method.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(method.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testRefinerDeclaresOnlyGetWorkflowMethod() {
+        assertThat(Refiner.class.getDeclaredMethods().length, is(1));
+    }
 }

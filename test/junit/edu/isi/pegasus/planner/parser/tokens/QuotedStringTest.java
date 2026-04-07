@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link QuotedString} token. */
 public class QuotedStringTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testImplementsToken() {
+        QuotedString qs = new QuotedString("hello");
+        assertThat(qs, instanceOf(Token.class));
     }
-    */
+
+    @Test
+    public void testGetValue() {
+        QuotedString qs = new QuotedString("hello world");
+        assertThat(qs.getValue(), is("hello world"));
+    }
+
+    @Test
+    public void testEmptyStringValue() {
+        QuotedString qs = new QuotedString("");
+        assertThat(qs.getValue(), is(""));
+    }
+
+    @Test
+    public void testValueWithSpecialCharacters() {
+        String content = "/path/to/some file with spaces";
+        QuotedString qs = new QuotedString(content);
+        assertThat(qs.getValue(), is(content));
+    }
+
+    @Test
+    public void testValuePreservesWhitespace() {
+        String content = "  spaces  ";
+        QuotedString qs = new QuotedString(content);
+        assertThat(qs.getValue(), is(content));
+    }
+
+    @Test
+    public void testNullValueIsPreserved() {
+        QuotedString qs = new QuotedString(null);
+        assertThat(qs.getValue(), is(nullValue()));
+    }
+
+    @Test
+    public void testDeclaresSinglePrivateStringField() throws Exception {
+        assertThat(QuotedString.class.getDeclaredFields().length, is(1));
+        assertThat(QuotedString.class.getDeclaredField("m_value").getType(), is(String.class));
+    }
+
+    @Test
+    public void testDeclaresOnlyGetterMethod() {
+        assertThat(QuotedString.class.getDeclaredMethods().length, is(1));
+    }
 }

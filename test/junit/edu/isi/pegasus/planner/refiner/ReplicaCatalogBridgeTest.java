@@ -13,33 +13,79 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for ReplicaCatalogBridge. */
 public class ReplicaCatalogBridgeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(ReplicaCatalogBridge.class), is(true));
     }
-    */
+
+    @Test
+    public void testOutputReplicaCatalogPrefix() {
+        assertThat(
+                ReplicaCatalogBridge.OUTPUT_REPLICA_CATALOG_PREFIX,
+                is("pegasus.catalog.replica.output"));
+    }
+
+    @Test
+    public void testDefaultRegistrationCategoryKey() {
+        assertThat(ReplicaCatalogBridge.DEFAULT_REGISTRATION_CATEGORY_KEY, is("registration"));
+    }
+
+    @Test
+    public void testRCTransformationNS() {
+        assertThat(ReplicaCatalogBridge.RC_TRANSFORMATION_NS, is("pegasus"));
+    }
+
+    @Test
+    public void testRCTransformationName() {
+        assertThat(ReplicaCatalogBridge.RC_TRANSFORMATION_NAME, is("rc-client"));
+    }
+
+    @Test
+    public void testAdditionalConstants() {
+        assertThat(ReplicaCatalogBridge.RC_DERIVATION_VERSION, is("1.0"));
+        assertThat(ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_IMPLEMENTER, is("SimpleFile"));
+        assertThat(ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_IMPLEMENTER, is("Directory"));
+    }
+
+    @Test
+    public void testHasDagAndPegasusBagConstructor() throws Exception {
+        Constructor<ReplicaCatalogBridge> constructor =
+                ReplicaCatalogBridge.class.getDeclaredConstructor(ADag.class, PegasusBag.class);
+        assertThat(constructor, notNullValue());
+    }
+
+    @Test
+    public void testSelectedMethodReturnTypes() throws Exception {
+        Method filesMethod = ReplicaCatalogBridge.class.getMethod("getFilesInReplica");
+        Method closeMethod = ReplicaCatalogBridge.class.getMethod("closeConnection");
+        assertThat((Object) filesMethod.getReturnType(), is((Object) java.util.Set.class));
+        assertThat((Object) closeMethod.getReturnType(), is((Object) void.class));
+    }
+
+    @Test
+    public void testInitializeOverloadsExist() throws Exception {
+        assertThat(
+                ReplicaCatalogBridge.class.getMethod("initialize", ADag.class, PegasusBag.class),
+                notNullValue());
+        assertThat(
+                ReplicaCatalogBridge.class.getMethod(
+                        "initialize",
+                        ADag.class,
+                        edu.isi.pegasus.planner.common.PegasusProperties.class,
+                        edu.isi.pegasus.planner.classes.PlannerOptions.class),
+                notNullValue());
+    }
 }

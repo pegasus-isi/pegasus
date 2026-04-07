@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.transfer.sls;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -29,9 +31,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,12 +45,6 @@ public class TransferTestOSDF extends TransferTest {
     private final String OSDF_ENDPOINT_URL = "osdf:///ospool/ospool-ap2140/pegasuswfs";
 
     public TransferTestOSDF() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     @Override
@@ -120,10 +114,7 @@ public class TransferTestOSDF extends TransferTest {
         // also check for transfer_input_files
 
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
-        assertEquals(
-                sourceOSDFURL,
-                job.condorVariables.getIPFilesForTransfer(),
-                "job transfer_input_files");
+        assertThat(job.condorVariables.getIPFilesForTransfer(), is(sourceOSDFURL));
     }
 
     public void testOSDFStageOut(
@@ -140,10 +131,7 @@ public class TransferTestOSDF extends TransferTest {
 
         // f.out=osdf:///ospool/ospool-ap2140/pegasuswfs/./f.out
         String expectedREMap = lfn + "=" + sourceOSDFURL;
-        assertEquals(
-                expectedREMap,
-                job.condorVariables.getOutputRemapsForTransfer(),
-                "job output remaps");
+        assertThat(job.condorVariables.getOutputRemapsForTransfer(), is(expectedREMap));
     }
 
     @Override

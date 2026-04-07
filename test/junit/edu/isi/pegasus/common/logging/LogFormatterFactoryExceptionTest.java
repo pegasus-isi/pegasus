@@ -13,33 +13,138 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the LogFormatterFactoryException class. */
 public class LogFormatterFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- class structure ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertThat(new LogFormatterFactoryException("test"), instanceOf(FactoryException.class));
     }
-    */
+
+    // --- DEFAULT_NAME constant ---
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(LogFormatterFactoryException.DEFAULT_NAME, is("Log Formatter"));
+    }
+
+    // --- constructor: (String) ---
+
+    @Test
+    public void testMessageOnlyConstructor() {
+        LogFormatterFactoryException ex = new LogFormatterFactoryException("log formatter error");
+        assertThat(ex.getMessage(), is("log formatter error"));
+        assertThat(ex.getClassname(), is(LogFormatterFactoryException.DEFAULT_NAME));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    // --- constructor: (String, String) ---
+
+    @Test
+    public void testMessageAndClassnameConstructor() {
+        LogFormatterFactoryException ex =
+                new LogFormatterFactoryException("load error", "MyFormatter");
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is("MyFormatter"));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    // --- constructor: (String, Throwable) ---
+
+    @Test
+    public void testMessageAndCauseConstructor() {
+        RuntimeException cause = new RuntimeException("root cause");
+        LogFormatterFactoryException ex = new LogFormatterFactoryException("wrapper error", cause);
+        assertThat(ex.getMessage(), is("wrapper error"));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(LogFormatterFactoryException.DEFAULT_NAME));
+    }
+
+    // --- constructor: (String, String, Throwable) ---
+
+    @Test
+    public void testMessageClassnameAndCauseConstructor() {
+        RuntimeException cause = new RuntimeException("root cause");
+        LogFormatterFactoryException ex =
+                new LogFormatterFactoryException("load error", "MyFormatter", cause);
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is("MyFormatter"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    // --- canBeThrown ---
+
+    @Test
+    public void testCanBeCaughtAsFactoryException() {
+        assertThrows(
+                FactoryException.class,
+                () -> {
+                    throw new LogFormatterFactoryException("thrown");
+                });
+    }
+
+    @Test
+    public void testCanBeCaughtAsRuntimeException() {
+        assertThrows(
+                RuntimeException.class,
+                () -> {
+                    throw new LogFormatterFactoryException("thrown");
+                });
+    }
+
+    // --- convertException ---
+
+    @Test
+    public void testConvertExceptionContainsMessage() {
+        LogFormatterFactoryException ex = new LogFormatterFactoryException("my error message");
+        assertThat(ex.convertException(), containsString("my error message"));
+    }
+
+    @Test
+    public void testConvertExceptionWithCauseContainsBothMessages() {
+        RuntimeException cause = new RuntimeException("root cause message");
+        LogFormatterFactoryException ex = new LogFormatterFactoryException("outer message", cause);
+        String converted = ex.convertException();
+        assertThat(converted, containsString("outer message"));
+        assertThat(converted, containsString("root cause message"));
+    }
+
+    @Test
+    public void testMessageAndNullCauseUsesDefaultClassname() {
+        LogFormatterFactoryException ex =
+                new LogFormatterFactoryException("wrapper error", (Throwable) null);
+
+        assertThat(ex.getMessage(), is("wrapper error"));
+        assertThat(ex.getCause(), is(nullValue()));
+        assertThat(ex.getClassname(), is(LogFormatterFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndNullClassnamePreservesNull() {
+        LogFormatterFactoryException ex =
+                new LogFormatterFactoryException("load error", (String) null);
+
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is(nullValue()));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    @Test
+    public void testMessageNullClassnameAndNullCausePreservesNull() {
+        LogFormatterFactoryException ex =
+                new LogFormatterFactoryException("load error", null, null);
+
+        assertThat(ex.getMessage(), is("load error"));
+        assertThat(ex.getClassname(), is(nullValue()));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
 }

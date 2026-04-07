@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for MainEngine. */
 public class MainEngineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(MainEngine.class), is(true));
     }
-    */
+
+    @Test
+    public void testCleanupDirConstant() {
+        assertThat(MainEngine.CLEANUP_DIR, is("cleanup"));
+    }
+
+    @Test
+    public void testCatalogsDirBasenameConstant() {
+        assertThat(MainEngine.CATALOGS_DIR_BASENAME, is("catalogs"));
+    }
+
+    @Test
+    public void testHasAdagAndPegasusBagConstructor() throws Exception {
+        Constructor<MainEngine> constructor =
+                MainEngine.class.getDeclaredConstructor(ADag.class, PegasusBag.class);
+        assertThat(constructor, notNullValue());
+    }
+
+    @Test
+    public void testRunPlannerReturnsADag() throws Exception {
+        Method method = MainEngine.class.getMethod("runPlanner");
+        assertThat((Object) method.getReturnType(), is((Object) ADag.class));
+    }
+
+    @Test
+    public void testGetterMethodsReturnExpectedTypes() throws Exception {
+        assertThat(
+                (Object) MainEngine.class.getMethod("getCleanupDAG").getReturnType(),
+                is((Object) ADag.class));
+        assertThat(
+                (Object) MainEngine.class.getMethod("getPegasusBag").getReturnType(),
+                is((Object) PegasusBag.class));
+    }
+
+    @Test
+    public void testSetToStringMethodSignature() throws Exception {
+        Method method =
+                MainEngine.class.getMethod("setToString", java.util.Set.class, String.class);
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
 }

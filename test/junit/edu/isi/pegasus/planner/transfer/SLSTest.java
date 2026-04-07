@@ -13,33 +13,97 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.io.File;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class SLSTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSLSIsInterfaceAndVersionConstant() {
+        assertThat(SLS.class.isInterface(), is(true));
+        assertThat(SLS.VERSION, equalTo("1.4"));
     }
-    */
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                SLS.class.getDeclaredMethod("initialize", PegasusBag.class).getReturnType(),
+                equalTo(void.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("doesCondorModifications").getReturnType(),
+                equalTo(boolean.class));
+        assertThat(
+                SLS.class
+                        .getDeclaredMethod("invocationString", Job.class, File.class)
+                        .getReturnType(),
+                equalTo(String.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("needsSLSInputTransfers", Job.class).getReturnType(),
+                equalTo(boolean.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("needsSLSOutputTransfers", Job.class).getReturnType(),
+                equalTo(boolean.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("getSLSInputLFN", Job.class).getReturnType(),
+                equalTo(String.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("getSLSOutputLFN", Job.class).getReturnType(),
+                equalTo(String.class));
+        assertThat(
+                SLS.class
+                        .getDeclaredMethod(
+                                "determineSLSInputTransfers",
+                                Job.class,
+                                String.class,
+                                FileServer.class,
+                                String.class,
+                                String.class,
+                                boolean.class)
+                        .getReturnType(),
+                equalTo(Collection.class));
+        assertThat(
+                SLS.class
+                        .getDeclaredMethod(
+                                "determineSLSOutputTransfers",
+                                Job.class,
+                                String.class,
+                                FileServer.class,
+                                String.class,
+                                String.class)
+                        .getReturnType(),
+                equalTo(Collection.class));
+        assertThat(
+                SLS.class
+                        .getDeclaredMethod(
+                                "modifyJobForWorkerNodeExecution",
+                                Job.class,
+                                String.class,
+                                String.class,
+                                String.class)
+                        .getReturnType(),
+                equalTo(boolean.class));
+        assertThat(
+                SLS.class.getDeclaredMethod("getDescription").getReturnType(),
+                equalTo(String.class));
+    }
+
+    @Test
+    public void testSLSDeclaresExpectedMethods() {
+        Method[] methods = SLS.class.getDeclaredMethods();
+        assertThat(methods.length, equalTo(11));
+        for (Method method : methods) {
+            assertThat(Modifier.isPublic(method.getModifiers()), is(true));
+            assertThat(Modifier.isAbstract(method.getModifiers()), is(true));
+        }
+    }
 }

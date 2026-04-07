@@ -13,33 +13,90 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for JobStatusRegular invocation class. */
 public class JobStatusRegularTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsJobStatus() {
+        assertThat(JobStatus.class.isAssignableFrom(JobStatusRegular.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorExitCodeZero() {
+        JobStatusRegular j = new JobStatusRegular();
+        assertThat(j.getExitCode(), is((short) 0));
+    }
+
+    @Test
+    public void testConstructorWithExitCode() {
+        JobStatusRegular j = new JobStatusRegular((short) 42);
+        assertThat(j.getExitCode(), is((short) 42));
+    }
+
+    @Test
+    public void testSetAndGetExitCode() {
+        JobStatusRegular j = new JobStatusRegular();
+        j.setExitCode((short) 1);
+        assertThat(j.getExitCode(), is((short) 1));
+    }
+
+    @Test
+    public void testToXMLContainsExitcode() {
+        JobStatusRegular j = new JobStatusRegular((short) 0);
+        String xml = j.toXML("");
+        assertThat(xml, containsString("exitcode=\"0\""));
+        assertThat(xml, containsString("<regular"));
+    }
+
+    @Test
+    public void testToXMLNonZeroExitCode() {
+        JobStatusRegular j = new JobStatusRegular((short) 127);
+        String xml = j.toXML("");
+        assertThat(xml, containsString("exitcode=\"127\""));
+    }
+
+    @Test
+    public void testToXMLSelfClosingTag() {
+        JobStatusRegular j = new JobStatusRegular((short) 0);
+        String xml = j.toXML("");
+        assertThat(xml, containsString("/>"));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        JobStatusRegular j = new JobStatusRegular((short) 5);
+        StringWriter sw = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> j.toString(sw));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
+
+    @Test
+    public void testToXMLWriterUsesNamespacePrefix() throws Exception {
+        JobStatusRegular j = new JobStatusRegular((short) 12);
+        StringWriter sw = new StringWriter();
+
+        j.toXML(sw, null, "inv");
+
+        String xml = sw.toString();
+        assertThat(xml, is("<inv:regular exitcode=\"12\"/>"));
+    }
+
+    @Test
+    public void testNegativeExitCodeIsSerialized() {
+        JobStatusRegular j = new JobStatusRegular((short) -1);
+
+        String xml = j.toXML("");
+
+        assertThat(xml, containsString("exitcode=\"-1\""));
+    }
 }

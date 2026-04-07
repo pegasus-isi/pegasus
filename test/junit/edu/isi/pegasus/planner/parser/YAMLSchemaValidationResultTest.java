@@ -13,33 +13,82 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class YAMLSchemaValidationResultTest {
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        org.hamcrest.MatcherAssert.assertThat(1, org.hamcrest.Matchers.is(1));
     }
     */
+
+    @Test
+    public void testDefaults() {
+        YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
+
+        assertThat("Default success flag should be false", result.isSuccess(), is(false));
+        assertThat(
+                "Default error-message list should be null", result.getErrorMessage(), nullValue());
+    }
+
+    @Test
+    public void testSettersAndGetters() {
+        YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
+        List<String> errors = Arrays.asList("first", "second");
+
+        result.setSuccess(true);
+        result.setErrorMessage(errors);
+
+        assertThat("setSuccess should update the success flag", result.isSuccess(), is(true));
+        assertThat(
+                "Setter should store the provided list reference",
+                result.getErrorMessage(),
+                sameInstance(errors));
+    }
+
+    @Test
+    public void testErrorMessageListIsLiveReference() {
+        YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
+        List<String> errors = new ArrayList<String>();
+        errors.add("first");
+        result.setErrorMessage(errors);
+
+        errors.add("second");
+
+        assertThat(
+                "The stored error-message list should reflect later mutations to the same list",
+                result.getErrorMessage(),
+                is(Arrays.asList("first", "second")));
+    }
+
+    @Test
+    public void testToStringFormatsCurrentStateAndRequiresErrorList() {
+        YAMLSchemaValidationResult result = new YAMLSchemaValidationResult();
+        result.setSuccess(true);
+        result.setErrorMessage(Arrays.asList("error-one"));
+
+        assertThat(
+                "toString should render the current success flag and error messages",
+                result.toString(),
+                is("success = true\t error messages = [error-one]"));
+
+        YAMLSchemaValidationResult empty = new YAMLSchemaValidationResult();
+        assertThrows(
+                NullPointerException.class,
+                empty::toString,
+                "Current toString implementation requires a non-null error-message list");
+    }
 }

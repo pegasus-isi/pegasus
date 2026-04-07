@@ -13,33 +13,133 @@
  */
 package edu.isi.pegasus.planner.catalog.work;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.WorkCatalog;
+import java.io.PrintStream;
+import java.util.Properties;
+import org.apache.logging.log4j.Level;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Database work catalog implementation. */
 public class DatabaseTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    private static final class TestDatabase extends Database {
+        TestDatabase() {
+            super();
+            this.mLogger = new NoOpLogManager();
+            this.mLogger.setLevel(Level.DEBUG);
+        }
+    }
+
+    @Test
+    public void testDatabaseImplementsWorkCatalog() {
+        assertThat(WorkCatalog.class.isAssignableFrom(Database.class), is(true));
+    }
+
+    @Test
+    public void testDatabaseClassExists() {
+        assertThat(Database.class, is(notNullValue()));
+    }
+
+    @Test
+    public void testDatabaseIsInCorrectPackage() {
+        assertThat(
+                Database.class.getPackage().getName(), is("edu.isi.pegasus.planner.catalog.work"));
+    }
+
+    @Test
+    public void testDefaultConstructorStartsClosed() {
+        Database database = new TestDatabase();
+
+        assertThat(database.isClosed(), is(true));
+    }
+
+    @Test
+    public void testCloseOnUnconnectedDatabaseIsSafe() {
+        Database database = new TestDatabase();
+
+        database.close();
+
+        assertThat(database.isClosed(), is(true));
+    }
+
+    @Test
+    public void testConnectWithMissingUrlReturnsFalse() {
+        Database database = new TestDatabase();
+        Properties props = new Properties();
+        props.setProperty("db.user", "pegasus");
+
+        assertThat(database.connect(props), is(false));
+        assertThat(database.isClosed(), is(true));
+    }
+
+    @Test
+    public void testConnectWithInvalidDriverReturnsFalse() {
+        Database database = new TestDatabase();
+        Properties props = new Properties();
+        props.setProperty("db.driver", "com.example.DoesNotExist");
+        props.setProperty("db.url", "jdbc:invalid:test");
+
+        assertThat(database.connect(props), is(false));
+        assertThat(database.isClosed(), is(true));
+    }
+
+    @Test
+    public void testConnectWithInvalidUrlReturnsFalse() {
+        Database database = new TestDatabase();
+        Properties props = new Properties();
+        props.setProperty("db.url", "jdbc:invalid:test");
+
+        assertThat(database.connect(props), is(false));
+        assertThat(database.isClosed(), is(true));
+    }
 }

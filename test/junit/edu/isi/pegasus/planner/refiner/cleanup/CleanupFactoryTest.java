@@ -13,33 +13,75 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for CleanupFactory. */
 public class CleanupFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertThat(
+                CleanupFactory.DEFAULT_PACKAGE_NAME, is("edu.isi.pegasus.planner.refiner.cleanup"));
     }
-    */
+
+    @Test
+    public void testHasLoadCleanupStrategyMethod() throws Exception {
+        assertThat(
+                CleanupFactory.class.getMethod(
+                        "loadCleanupStraegyInstance",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testLoadMethodIsStatic() throws Exception {
+        java.lang.reflect.Method m =
+                CleanupFactory.class.getMethod(
+                        "loadCleanupStraegyInstance",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class);
+        assertThat(Modifier.isStatic(m.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testHasLoadCleanupImplementationMethod() throws Exception {
+        assertThat(
+                CleanupFactory.class.getMethod(
+                        "loadCleanupImplementationInstance",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testImplementationLoadMethodIsStatic() throws Exception {
+        java.lang.reflect.Method m =
+                CleanupFactory.class.getMethod(
+                        "loadCleanupImplementationInstance",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class);
+        assertThat(Modifier.isStatic(m.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testFactoryMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        CleanupFactory.class
+                                .getMethod(
+                                        "loadCleanupStraegyInstance",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) CleanupStrategy.class));
+        assertThat(
+                (Object)
+                        CleanupFactory.class
+                                .getMethod(
+                                        "loadCleanupImplementationInstance",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) CleanupImplementation.class));
+    }
 }

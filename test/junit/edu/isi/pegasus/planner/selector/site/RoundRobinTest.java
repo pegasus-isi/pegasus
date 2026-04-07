@@ -13,33 +13,98 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the RoundRobin site selector. */
 public class RoundRobinTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private RoundRobin mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new RoundRobin();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertThat(mSelector, notNullValue());
+    }
+
+    @Test
+    public void testDescription() {
+        String desc = mSelector.description();
+        assertThat(desc, notNullValue());
+        assertThat(desc, not(isEmptyString()));
+    }
+
+    @Test
+    public void testDescriptionContainsRoundRobin() {
+        String desc = mSelector.description().toLowerCase();
+        assertThat(desc, containsString("round"));
+    }
+
+    @Test
+    public void testImplementsSiteSelector() {
+        assertThat(mSelector, instanceOf(SiteSelector.class));
+    }
+
+    @Test
+    public void testExtendsAbstractPerJob() {
+        assertThat(mSelector, instanceOf(AbstractPerJob.class));
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertThat(mSelector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testDescriptionExactValue() {
+        assertThat(
+                mSelector.description(),
+                equalTo("Round Robin Scheduling per level of the workflow"));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                RoundRobin.class
+                        .getMethod("initialize", edu.isi.pegasus.planner.classes.PegasusBag.class)
+                        .getReturnType(),
+                equalTo(Void.TYPE));
+        assertThat(
+                RoundRobin.class
+                        .getMethod(
+                                "mapJob",
+                                edu.isi.pegasus.planner.classes.Job.class,
+                                java.util.List.class)
+                        .getReturnType(),
+                equalTo(Void.TYPE));
+        assertThat(
+                RoundRobin.class.getMethod("description").getReturnType(), equalTo(String.class));
+    }
+
+    @Test
+    public void testPrivateHelpersAndFieldsExist() throws Exception {
+        assertThat(
+                RoundRobin.class
+                        .getDeclaredMethod("initialiseList", java.util.List.class)
+                        .getReturnType(),
+                equalTo(Void.TYPE));
+        assertThat(
+                RoundRobin.class
+                        .getDeclaredMethod("listToString", java.util.List.class)
+                        .getReturnType(),
+                equalTo(String.class));
+        assertThat(
+                RoundRobin.class.getDeclaredField("mCurrentLevel").getType(), equalTo(int.class));
+        assertThat(
+                RoundRobin.class.getDeclaredField("mExecPools").getType(),
+                equalTo(java.util.LinkedList.class));
+    }
 }

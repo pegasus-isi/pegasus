@@ -13,33 +13,241 @@
  */
 package edu.isi.pegasus.planner.cluster.aggregator;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Abstract aggregator class structure. */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    private static final class TestAggregator extends Abstract {
+        private boolean mAbortOnFirstJobFailure;
+
+        TestAggregator() {
+            this.mLogger = new NoOpLogManager();
+            this.mDefaultArguments = "";
+        }
+
+        @Override
+        public String aggregatedJobArguments(AggregatedJob job) {
+            return "";
+        }
+
+        @Override
+        public void setAbortOnFirstJobFailure(boolean fail) {
+            mAbortOnFirstJobFailure = fail;
+        }
+
+        @Override
+        public boolean abortOnFristJobFailure() {
+            return mAbortOnFirstJobFailure;
+        }
+
+        @Override
+        public boolean entryNotInTC(String site) {
+            return false;
+        }
+
+        @Override
+        public String getClusterExecutableLFN() {
+            return "test-cluster";
+        }
+
+        @Override
+        public String getClusterExecutableBasename() {
+            return "test-cluster";
+        }
+
+        @Override
+        public boolean topologicalOrderingRequired() {
+            return false;
+        }
+
+        String commentFor(Job job, int taskid) {
+            return getCommentString(job, taskid);
+        }
+
+        String commentFor(int taskid, String transformationName, String daxId) {
+            return getCommentString(taskid, transformationName, daxId);
+        }
+
+        void updateDirectory(String directory) {
+            setDirectory(directory);
+        }
+
+        String directory() {
+            return mDirectory;
+        }
+    }
+
+    private final TestAggregator mAggregator = new TestAggregator();
+
+    @Test
+    public void testAbstractImplementsJobAggregator() {
+        assertThat(JobAggregator.class.isAssignableFrom(Abstract.class), is(true));
+    }
+
+    @Test
+    public void testSeqExecExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(SeqExec.class), is(true));
+    }
+
+    @Test
+    public void testMPIExecExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(MPIExec.class), is(true));
+    }
+
+    @Test
+    public void testAWSBatchExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(AWSBatch.class), is(true));
+    }
+
+    @Test
+    public void testDecafExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(Decaf.class), is(true));
+    }
+
+    @Test
+    public void testClusteredJobPrefixConstant() {
+        assertThat(Abstract.CLUSTERED_JOB_PREFIX, is("merge_"));
+    }
+
+    @Test
+    public void testGetCompleteTransformationNameUsesPegasusNamespace() {
+        assertThat(Abstract.getCompleteTranformationName("seqexec"), is("pegasus::seqexec"));
+    }
+
+    @Test
+    public void testSetDirectoryUsesCurrentDirectoryFallback() {
+        mAggregator.updateDirectory(null);
+
+        assertThat(mAggregator.directory(), is("."));
+    }
+
+    @Test
+    public void testSetDirectoryPreservesExplicitPath() {
+        mAggregator.updateDirectory("build/submit");
+
+        assertThat(mAggregator.directory(), is("build/submit"));
+    }
+
+    @Test
+    public void testGetCommentStringForExplicitValues() {
+        assertThat(
+                mAggregator.commentFor(3, "pegasus::keg:1.0", "dax-job"),
+                is("#@ 3 pegasus::keg:1.0 dax-job "));
+    }
+
+    @Test
+    public void testGetCommentStringForJobUsesTransformationAndDaxId() {
+        Job job = new Job();
+        job.namespace = "ns";
+        job.logicalName = "task";
+        job.version = "1.0";
+        job.setJobType(Job.COMPUTE_JOB);
+        job.setLogicalID("ID0001");
+
+        assertThat(mAggregator.commentFor(job, 2), is("#@ 2 ns::task:1.0 ID0001 "));
+    }
+
+    @Test
+    public void testConstructAbstractAggregatedJobReturnsNullForEmptyList() {
+        assertThat(
+                mAggregator.constructAbstractAggregatedJob(
+                        java.util.Collections.emptyList(), "name", "id"),
+                nullValue());
+    }
+
+    @Test
+    public void testConstructAbstractAggregatedJobBuildsMergedJobMetadata() {
+        Job first = new Job();
+        first.setName("j1");
+        first.setLogicalID("ID0001");
+        first.setSiteHandle("local");
+        first.setStagingSiteHandle("staging");
+        first.inputFiles =
+                new HashSet(Arrays.asList(new edu.isi.pegasus.planner.classes.PegasusFile("in1")));
+        first.outputFiles =
+                new HashSet(Arrays.asList(new edu.isi.pegasus.planner.classes.PegasusFile("out1")));
+
+        Job second = new Job();
+        second.setName("j2");
+        second.setLogicalID("ID0002");
+        second.setSiteHandle("local");
+        second.setStagingSiteHandle("staging");
+        second.inputFiles =
+                new HashSet(Arrays.asList(new edu.isi.pegasus.planner.classes.PegasusFile("in2")));
+        second.outputFiles =
+                new HashSet(Arrays.asList(new edu.isi.pegasus.planner.classes.PegasusFile("out2")));
+
+        AggregatedJob merged =
+                mAggregator.constructAbstractAggregatedJob(
+                        Arrays.asList(first, second), "task", "cluster-1");
+
+        assertThat(merged, notNullValue());
+        assertThat(merged.getName(), is("merge_task_cluster-1"));
+        assertThat(merged.getLogicalID(), is("cluster-1"));
+        assertThat(merged.getSiteHandle(), is("local"));
+        assertThat(merged.getStagingSiteHandle(), is("staging"));
+        assertThat(merged.getInputFiles().size(), is(2));
+        assertThat(merged.getOutputFiles().size(), is(2));
+        assertThat(merged.getJobAggregator(), sameInstance(mAggregator));
+        assertThat(merged.namespace, is("pegasus"));
+        assertThat(merged.logicalName, is("test-cluster"));
+        assertThat(merged.version, nullValue());
+    }
 }

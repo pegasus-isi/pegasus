@@ -13,33 +13,100 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Regular invocation class. */
 public class RegularTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFile() {
+        assertThat(File.class.isAssignableFrom(Regular.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasFilename() {
+        assertThat(HasFilename.class.isAssignableFrom(Regular.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorNullFilename() {
+        Regular r = new Regular();
+        assertThat(r.getFilename(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithFilename() {
+        Regular r = new Regular("/tmp/output.txt");
+        assertThat(r.getFilename(), is("/tmp/output.txt"));
+    }
+
+    @Test
+    public void testSetAndGetFilename() {
+        Regular r = new Regular();
+        r.setFilename("/data/file.dat");
+        assertThat(r.getFilename(), is("/data/file.dat"));
+    }
+
+    @Test
+    public void testToXMLContainsNameAttribute() throws Exception {
+        Regular r = new Regular("/tmp/myfile.txt");
+        StringWriter sw = new StringWriter();
+        r.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertThat(xml, containsString("name=\"/tmp/myfile.txt\""));
+        assertThat(xml, containsString("<file"));
+    }
+
+    @Test
+    public void testToXMLSelfClosingWhenNoContent() throws Exception {
+        Regular r = new Regular("/tmp/empty.txt");
+        StringWriter sw = new StringWriter();
+        r.toXML(sw, "", null);
+        assertThat(sw.toString(), containsString("/>"));
+    }
+
+    @Test
+    public void testSetValueReplacesHexContent() {
+        Regular r = new Regular("/tmp/data.bin");
+        r.appendValue("abcd");
+
+        r.setValue("deadbeef");
+
+        assertThat(r.getValue(), is("deadbeef"));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        Regular r = new Regular("/tmp/data.bin");
+
+        IOException exception =
+                assertThrows(IOException.class, () -> r.toString(new StringWriter()));
+
+        assertThat(
+                exception.getMessage(),
+                is("method not implemented, please contact vds-support@griphyn.org"));
+    }
+
+    @Test
+    public void testToXMLWithContentUsesNamespaceAndClosingTag() throws Exception {
+        Regular r = new Regular("/tmp/data.bin");
+        r.setValue("deadbeef");
+
+        StringWriter sw = new StringWriter();
+        r.toXML(sw, "  ", "inv");
+
+        String xml = sw.toString();
+        assertThat(xml.startsWith("  <inv:file"), is(true));
+        assertThat(xml, containsString("name=\"/tmp/data.bin\""));
+        assertThat(xml, containsString(">deadbeef</inv:file>"));
+        assertThat(xml.endsWith(System.lineSeparator()), is(true));
+    }
 }

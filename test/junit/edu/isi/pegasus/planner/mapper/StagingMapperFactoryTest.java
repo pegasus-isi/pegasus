@@ -13,33 +13,120 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the StagingMapperFactory class constants and structure. */
 public class StagingMapperFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageNameConstant() {
+        assertThat(
+                StagingMapperFactory.DEFAULT_PACKAGE_NAME,
+                is("edu.isi.pegasus.planner.mapper.staging"));
     }
-    */
+
+    @Test
+    public void testHashedStagingMapperConstant() {
+        assertThat(StagingMapperFactory.HASHED_STAGING_MAPPER, is("Hashed"));
+    }
+
+    @Test
+    public void testFlatStagingMapperConstant() {
+        assertThat(StagingMapperFactory.FLAT_STAGING_MAPPER, is("Flat"));
+    }
+
+    @Test
+    public void testFactoryClassIsPublic() {
+        int modifiers = StagingMapperFactory.class.getModifiers();
+        assertThat(java.lang.reflect.Modifier.isPublic(modifiers), is(true));
+    }
+
+    @Test
+    public void testLoadInstanceMethodExists() throws NoSuchMethodException {
+        assertThat(
+                StagingMapperFactory.class.getMethod(
+                        "loadInstance", edu.isi.pegasus.planner.classes.PegasusBag.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testLoadInstanceRejectsMissingProperties() {
+        PegasusBag bag = new PegasusBag();
+
+        StagingMapperFactoryException exception =
+                assertThrows(
+                        StagingMapperFactoryException.class,
+                        () -> StagingMapperFactory.loadInstance(bag));
+
+        assertThat(exception.getMessage(), is("Instantiating Staging Mapper "));
+        assertThat(exception.getClassname(), is(org.hamcrest.Matchers.nullValue()));
+        assertThat(exception.getCause(), is(notNullValue()));
+        assertThat(exception.getCause().getMessage(), containsString("Invalid properties passed"));
+    }
+
+    @Test
+    public void testLoadInstanceWithExplicitClassInitializesMapper() throws Exception {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty(StagingMapper.PROPERTY_PREFIX, TrackingStagingMapper.class.getName());
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        StagingMapper mapper = StagingMapperFactory.loadInstance(bag);
+
+        assertThat(mapper instanceof TrackingStagingMapper, is(true));
+        TrackingStagingMapper tracking = (TrackingStagingMapper) mapper;
+        assertThat(tracking.initializedBag, is(sameInstance(bag)));
+        assertThat(tracking.initializedProperties, is(notNullValue()));
+    }
+
+    public static class TrackingStagingMapper implements StagingMapper {
+        PegasusBag initializedBag;
+        Properties initializedProperties;
+
+        @Override
+        public String description() {
+            return "tracking";
+        }
+
+        @Override
+        public void initialize(PegasusBag bag, Properties properties) {
+            initializedBag = bag;
+            initializedProperties = properties;
+        }
+
+        @Override
+        public File mapToRelativeDirectory(Job job, SiteCatalogEntry site, String lfn) {
+            return new File(lfn);
+        }
+
+        @Override
+        public File getRelativeDirectory(String site, String lfn) {
+            return new File(lfn);
+        }
+
+        @Override
+        public String map(
+                Job job,
+                File addOn,
+                SiteCatalogEntry site,
+                FileServer.OPERATION operation,
+                String lfn)
+                throws MapperException {
+            return lfn;
+        }
+    }
 }

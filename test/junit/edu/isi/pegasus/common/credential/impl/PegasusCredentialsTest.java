@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.common.credential.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
@@ -33,9 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -54,12 +53,6 @@ public class PegasusCredentialsTest {
 
     public PegasusCredentialsTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
@@ -75,9 +68,6 @@ public class PegasusCredentialsTest {
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
         mLogger.logEventCompletion();
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testVerifyForHTTPCredsWithNonExistantFile() throws IOException {
@@ -250,12 +240,7 @@ public class PegasusCredentialsTest {
                                 CredentialHandler credentials = factory.loadInstance(type);
                                 credentials.verify(new Job(), type, credFile.getAbsolutePath());
                             });
-            assertTrue(
-                    exception.getMessage().contains(expectedException.getMessage()),
-                    "EXCEPTION MESSAGE "
-                            + exception.getMessage()
-                            + " DOES NOT CONTAIN "
-                            + expectedException.getMessage());
+            assertThat(exception.getMessage(), containsString(expectedException.getMessage()));
         }
         mLogger.logEventCompletion();
     }
@@ -301,10 +286,8 @@ public class PegasusCredentialsTest {
         CredentialHandler credentials = factory.loadInstance(CredentialHandler.TYPE.credentials);
         credentials.verify(new Job(), type, credFile.getAbsolutePath());
 
-        assertEquals(
-                exists,
-                credentials.hasCredential(type, credFile.getAbsolutePath(), endPoint),
-                endPoint + " existence in cred file");
+        assertThat(
+                credentials.hasCredential(type, credFile.getAbsolutePath(), endPoint), is(exists));
 
         mLogger.logEventCompletion();
     }
