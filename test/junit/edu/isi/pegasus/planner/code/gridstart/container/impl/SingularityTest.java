@@ -31,9 +31,6 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,12 +50,6 @@ public class SingularityTest {
     private ADag mDAG;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     private ContainerShellWrapperFactory mFactory;
 
@@ -98,9 +89,6 @@ public class SingularityTest {
         mLogger.logEventCompletion();
     }
 
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void testSingularityInit() {
         mLogger.logEventStart(
@@ -108,10 +96,9 @@ public class SingularityTest {
                 "set",
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        assertEquals(
-                "singularity_init python3-minimal.sif",
+        assertThat(
                 singularityInstance(j).containerInit(j).toString(),
-                "singularity initiation");
+                is("singularity_init python3-minimal.sif"));
         mLogger.logEventCompletion();
     }
 
@@ -124,10 +111,7 @@ public class SingularityTest {
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         String expected =
                 "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh";
-        assertEquals(
-                expected,
-                singularityInstance(j).containerRun(j).toString(),
-                "singularity run command");
+        assertThat(singularityInstance(j).containerRun(j).toString(), is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -141,10 +125,10 @@ public class SingularityTest {
         Container c = j.getContainer();
         c.addMountPoint("/shared/scratch:/scratch");
         // get the part of singularity run with the options
-        assertEquals(
-                "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR --bind /shared/scratch:/scratch python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+        assertThat(
                 singularityInstance(j).containerRun(j).toString(),
-                "--bind option should be in singularity exec invocation");
+                is(
+                        "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR --bind /shared/scratch:/scratch python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 
@@ -158,11 +142,9 @@ public class SingularityTest {
         j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_KEY, "srun");
         j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY, "--kill-on-bad-exit");
         // get the part of singularity run with the options
-        assertTrue(
-                singularityInstance(j)
-                        .containerRun(j)
-                        .toString()
-                        .startsWith("srun --kill-on-bad-exit"));
+        assertThat(
+                singularityInstance(j).containerRun(j).toString(),
+                startsWith("srun --kill-on-bad-exit"));
         mLogger.logEventCompletion();
     }
 
@@ -174,10 +156,10 @@ public class SingularityTest {
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         j.vdsNS.construct(Pegasus.GPUS_KEY, "5");
-        assertEquals(
-                "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+        assertThat(
                 singularityInstance(j).containerRun(j).toString(),
-                "singularity exec should have -nv option");
+                is(
+                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 
@@ -189,10 +171,10 @@ public class SingularityTest {
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         j.condorVariables.construct(Condor.REQUEST_GPUS_KEY, "5");
-        assertEquals(
-                "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh",
+        assertThat(
                 singularityInstance(j).containerRun(j).toString(),
-                "singluarity exec");
+                is(
+                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 
@@ -205,8 +187,7 @@ public class SingularityTest {
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         // nothing to rm, as cleanup taken care by pegasus lite removal
         // of workdir
-        assertEquals(
-                "", singularityInstance(j).containerRemove(j).toString(), "singularity rm command");
+        assertThat(singularityInstance(j).containerRemove(j).toString(), is(""));
         mLogger.logEventCompletion();
     }
 
@@ -217,10 +198,7 @@ public class SingularityTest {
                 "set",
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        assertEquals(
-                "/srv",
-                singularityInstance(j).getContainerWorkingDirectory(),
-                "container working dir");
+        assertThat(singularityInstance(j).getContainerWorkingDirectory(), is("/srv"));
         mLogger.logEventCompletion();
     }
 

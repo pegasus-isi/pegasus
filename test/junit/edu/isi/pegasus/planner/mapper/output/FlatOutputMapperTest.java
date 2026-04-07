@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,9 +57,6 @@ public class FlatOutputMapperTest {
     public static void setUpClass() {
         mTestNum = 1;
     }
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -100,16 +96,18 @@ public class FlatOutputMapperTest {
 
         String lfn = "f.a";
         String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
-        assertEquals(
-                "file:///test/junit/output/mapper/blackdiamond/outputs/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 pfn,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "file:///test/junit/output/mapper/blackdiamond/outputs/f.a"));
 
         pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
-        assertEquals(
-                "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 pfn,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/f.a"));
 
         List<NameValue<String, String>> pfns =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -143,18 +141,22 @@ public class FlatOutputMapperTest {
         OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
-        assertEquals(
-                "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "file:///test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
-        assertEquals(
-                "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
-                        + relativeDir
-                        + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -189,18 +191,22 @@ public class FlatOutputMapperTest {
         OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
-        assertEquals(
-                "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "file:///test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
-        assertEquals(
-                "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
-                        + relativeDir
-                        + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);
@@ -236,18 +242,22 @@ public class FlatOutputMapperTest {
         OutputMapper mapper = OutputMapperFactory.loadInstance(new ADag(), mBag);
 
         String deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
-        assertEquals(
-                "file:///test/junit/output/mapper/blackdiamond/outputs/" + relativeDir + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "file:///test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         deepPFN = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
-        assertEquals(
-                "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
-                        + relativeDir
-                        + "/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 deepPFN,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is(
+                        "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/"
+                                + relativeDir
+                                + "/f.a"));
 
         List<NameValue<String, String>> deepPFNS =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);

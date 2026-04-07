@@ -13,33 +13,54 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link CloseParanthesis} token. */
 public class CloseParanthesisTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCanBeInstantiated() {
+        CloseParanthesis cp = new CloseParanthesis();
+        assertThat(cp, is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testImplementsToken() {
+        CloseParanthesis cp = new CloseParanthesis();
+        assertThat(cp, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testIsDistinctFromOpenParanthesis() {
+        CloseParanthesis cp = new CloseParanthesis();
+        OpenParanthesis op = new OpenParanthesis();
+        assertNotEquals(cp.getClass(), op.getClass());
+    }
+
+    @Test
+    public void testMultipleInstances() {
+        CloseParanthesis cp1 = new CloseParanthesis();
+        CloseParanthesis cp2 = new CloseParanthesis();
+        assertNotSame(cp1, cp2);
+    }
+
+    @Test
+    public void testDeclaresNoFields() {
+        assertThat(CloseParanthesis.class.getDeclaredFields().length, is(0));
+    }
+
+    @Test
+    public void testDeclaresOnlyDefaultConstructor() {
+        assertThat(CloseParanthesis.class.getDeclaredConstructors().length, is(1));
+        assertThat(CloseParanthesis.class.getDeclaredConstructors()[0].getParameterCount(), is(0));
+    }
+
+    @Test
+    public void testDeclaresNoAdditionalMethods() {
+        assertThat(CloseParanthesis.class.getDeclaredMethods().length, is(0));
+    }
 }

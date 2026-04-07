@@ -13,33 +13,63 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.invocation.ArgEntry;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class IVSElementTest {
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        org.hamcrest.MatcherAssert.assertThat(1, org.hamcrest.Matchers.is(1));
     }
     */
+
+    @Test
+    public void testConstructorStoresNameAndInvocationReference() {
+        ArgEntry invocation = new ArgEntry(1, "value");
+        IVSElement element = new IVSElement("job", invocation);
+
+        assertThat("Constructor should store the element name", element.m_name, is("job"));
+        assertThat(
+                "Constructor should preserve the invocation object reference",
+                element.m_obj,
+                sameInstance(invocation));
+    }
+
+    @Test
+    public void testConstructorCopiesNameStringInstance() {
+        String originalName = new String("site");
+        IVSElement element = new IVSElement(originalName, new ArgEntry());
+
+        assertThat("Copied name should keep the same characters", element.m_name, is("site"));
+        assertThat(
+                "Constructor currently creates a defensive String copy for the name",
+                element.m_name,
+                not(sameInstance(originalName)));
+    }
+
+    @Test
+    public void testConstructorAllowsNullInvocation() {
+        IVSElement element = new IVSElement("profile", null);
+
+        assertThat("Name should still be stored", element.m_name, is("profile"));
+        assertThat("Invocation reference may be null", element.m_obj, nullValue());
+    }
+
+    @Test
+    public void testConstructorRejectsNullName() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new IVSElement(null, new ArgEntry()),
+                "Null names currently trigger the String copy constructor failure");
+    }
 }

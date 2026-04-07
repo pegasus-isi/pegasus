@@ -13,33 +13,113 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.format.NetloggerEvent;
+import edu.isi.pegasus.common.logging.format.SimpleEvent;
+import java.util.Collection;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for the Event interface via reflection. */
 public class EventTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- method declarations (NoSuchMethodException = test failure if missing) ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testNoArgMethods() throws NoSuchMethodException {
+        Event.class.getMethod("getEventName");
+        Event.class.getMethod("getStartEventMessage");
+        Event.class.getMethod("getEndEventMessage");
+        Event.class.getMethod("reset");
+        Event.class.getMethod("createLogMessage");
+        Event.class.getMethod("createLogMessageAndReset");
     }
-    */
+
+    @Test
+    public void testProgramNameMethods() throws NoSuchMethodException {
+        Event.class.getMethod("setProgramName", String.class);
+        Event.class.getMethod("getProgramName", String.class);
+    }
+
+    @Test
+    public void testAddMethod() throws NoSuchMethodException {
+        Event.class.getMethod("add", String.class, String.class);
+    }
+
+    @Test
+    public void testSetEventMethods() throws NoSuchMethodException {
+        Event.class.getMethod("setEvent", String.class, String.class, String.class);
+        Event.class.getMethod("setEvent", String.class, Map.class);
+    }
+
+    @Test
+    public void testCreateEntityHierarchyMessageMethod() throws NoSuchMethodException {
+        Event.class.getMethod(
+                "createEntityHierarchyMessage",
+                String.class,
+                String.class,
+                String.class,
+                Collection.class);
+    }
+
+    // --- known implementors ---
+
+    @Test
+    public void testKnownImplementors() {
+        assertThat(NetloggerEvent.class, typeCompatibleWith(Event.class));
+        assertThat(SimpleEvent.class, typeCompatibleWith(Event.class));
+    }
+
+    @Test
+    public void testEventIsInterfaceAndExtendsCloneable() {
+        assertThat(Event.class.isInterface(), is(true));
+        assertThat(Cloneable.class.isAssignableFrom(Event.class), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws NoSuchMethodException {
+        assertThat(
+                Event.class.getMethod("setProgramName", String.class).getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                Event.class.getMethod("getProgramName", String.class).getReturnType(),
+                is(String.class));
+        assertThat(
+                Event.class
+                        .getMethod("setEvent", String.class, String.class, String.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                Event.class.getMethod("setEvent", String.class, Map.class).getReturnType(),
+                is(Void.TYPE));
+        assertThat(Event.class.getMethod("getEventName").getReturnType(), is(String.class));
+        assertThat(Event.class.getMethod("getStartEventMessage").getReturnType(), is(String.class));
+        assertThat(Event.class.getMethod("getEndEventMessage").getReturnType(), is(String.class));
+        assertThat(Event.class.getMethod("reset").getReturnType(), is(Void.TYPE));
+        assertThat(
+                Event.class.getMethod("add", String.class, String.class).getReturnType(),
+                is(Event.class));
+        assertThat(Event.class.getMethod("createLogMessage").getReturnType(), is(String.class));
+        assertThat(
+                Event.class.getMethod("createLogMessageAndReset").getReturnType(),
+                is(String.class));
+        assertThat(
+                Event.class
+                        .getMethod(
+                                "createEntityHierarchyMessage",
+                                String.class,
+                                String.class,
+                                String.class,
+                                Collection.class)
+                        .getReturnType(),
+                is(String.class));
+    }
+
+    @Test
+    public void testEventDeclaresExpectedNumberOfMethods() {
+        assertThat(Event.class.getDeclaredMethods().length, is(12));
+    }
 }

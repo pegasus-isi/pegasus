@@ -13,33 +13,85 @@
  */
 package edu.isi.pegasus.planner.code.gridstart.container;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
+import edu.isi.pegasus.planner.code.gridstart.container.impl.None;
+import edu.isi.pegasus.planner.code.gridstart.container.impl.Shifter;
+import edu.isi.pegasus.planner.code.gridstart.container.impl.Singularity;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ContainerShellWrapper interface. */
 public class ContainerShellWrapperTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(ContainerShellWrapper.VERSION, is("1.1"));
     }
-    */
+
+    @Test
+    public void testVersionConstantNotNull() {
+        assertThat(ContainerShellWrapper.VERSION, notNullValue());
+    }
+
+    @Test
+    public void testNoneImplementsContainerShellWrapper() {
+        assertThat(ContainerShellWrapper.class.isAssignableFrom(None.class), is(true));
+    }
+
+    @Test
+    public void testDockerImplementsContainerShellWrapper() {
+        assertThat(ContainerShellWrapper.class.isAssignableFrom(Docker.class), is(true));
+    }
+
+    @Test
+    public void testSingularityImplementsContainerShellWrapper() {
+        assertThat(ContainerShellWrapper.class.isAssignableFrom(Singularity.class), is(true));
+    }
+
+    @Test
+    public void testShifterImplementsContainerShellWrapper() {
+        assertThat(ContainerShellWrapper.class.isAssignableFrom(Shifter.class), is(true));
+    }
+
+    @Test
+    public void testContainerShellWrapperIsInterface() {
+        assertThat(ContainerShellWrapper.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testInitializeMethodSignature() throws Exception {
+        Method method =
+                ContainerShellWrapper.class.getMethod("initialize", PegasusBag.class, ADag.class);
+
+        assertThat((Object) method.getReturnType(), is((Object) void.class));
+    }
+
+    @Test
+    public void testWrapMethodForJobSignature() throws Exception {
+        Method method = ContainerShellWrapper.class.getMethod("wrap", Job.class);
+
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
+
+    @Test
+    public void testWrapMethodForAggregatedJobSignature() throws Exception {
+        Method method = ContainerShellWrapper.class.getMethod("wrap", AggregatedJob.class);
+
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
+
+    @Test
+    public void testDescribeMethodSignature() throws Exception {
+        Method method = ContainerShellWrapper.class.getMethod("describe");
+
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
 }

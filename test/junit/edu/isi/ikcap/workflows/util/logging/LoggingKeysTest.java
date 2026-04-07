@@ -13,33 +13,53 @@
  */
 package edu.isi.ikcap.workflows.util.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class LoggingKeysTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInterfaceShape() {
+        assertThat(LoggingKeys.class.isInterface(), is(true));
+        assertThat(LoggingKeys.class.getInterfaces().length, is(0));
     }
-    */
+
+    @Test
+    public void testRepresentativeConstantValues() {
+        assertThat(LoggingKeys.MSG_ID, is("msgid"));
+        assertThat(LoggingKeys.EVENT_ID_KEY, is("eventId"));
+        assertThat(LoggingKeys.PROG, is("prog"));
+        assertThat(LoggingKeys.CATALOG_URL, is("catalog.url"));
+        assertThat(LoggingKeys.EVENT_PEGASUS_PLAN, is("event.pegasus.plan"));
+        assertThat(LoggingKeys.DATA_CHARACTERIZATION_PROGRAM, is("DataCharacterization"));
+        assertThat(LoggingKeys.PERFMETRIC_TIME_DURATION, is("perfmetric.time.duration"));
+    }
+
+    @Test
+    public void testDeclaredFieldShape() throws Exception {
+        Field msgId = LoggingKeys.class.getField("MSG_ID");
+        Field dataCharacterization = LoggingKeys.class.getField("DATA_CHARACTERIZATION_PROGRAM");
+
+        assertThat(msgId.getType(), is(String.class));
+        assertThat(Modifier.isPublic(msgId.getModifiers()), is(true));
+        assertThat(Modifier.isStatic(msgId.getModifiers()), is(true));
+        assertThat(Modifier.isFinal(msgId.getModifiers()), is(true));
+
+        assertThat(dataCharacterization.getType(), is(String.class));
+        assertThat(Modifier.isPublic(dataCharacterization.getModifiers()), is(true));
+        assertThat(Modifier.isStatic(dataCharacterization.getModifiers()), is(true));
+        assertThat(Modifier.isFinal(dataCharacterization.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testDeclaredMethodAndFieldCounts() {
+        assertThat(LoggingKeys.class.getDeclaredMethods().length, is(0));
+        assertThat(LoggingKeys.class.getDeclaredFields().length, is(105));
+    }
 }

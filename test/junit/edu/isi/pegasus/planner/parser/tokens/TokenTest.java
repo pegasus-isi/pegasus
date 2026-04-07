@@ -13,33 +13,73 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the {@link Token} interface and its concrete implementations as Token instances. Token
+ * is an empty marker interface; tests verify all concrete types implement it.
+ */
 public class TokenTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testIdentifierIsToken() {
+        Token t = new Identifier("someId");
+        assertThat(t, instanceOf(Token.class));
     }
-    */
+
+    @Test
+    public void testQuotedStringIsToken() {
+        Token t = new QuotedString("quoted");
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testOpenBraceIsToken() {
+        Token t = new OpenBrace();
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testCloseBraceIsToken() {
+        Token t = new CloseBrace();
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testOpenParanthesisIsToken() {
+        Token t = new OpenParanthesis();
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testCloseParanthesisIsToken() {
+        Token t = new CloseParanthesis();
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testTransformationCatalogReservedWordIsToken() {
+        Token t = TransformationCatalogReservedWord.symbolTable().get("tr");
+        assertThat(t, is(notNullValue()));
+        assertThat(t, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testTokenIsInterface() {
+        assertThat(Token.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testTokenDeclaresNoMethods() {
+        assertThat(Token.class.getDeclaredMethods().length, is(0));
+    }
+
+    @Test
+    public void testTokenDeclaresNoFields() {
+        assertThat(Token.class.getDeclaredFields().length, is(0));
+    }
 }

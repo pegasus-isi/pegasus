@@ -13,33 +13,83 @@
  */
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Bag interface and its LabelBag implementation. */
 public class BagTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private LabelBag mBag;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mBag = new LabelBag();
     }
-    */
+
+    @Test
+    public void testBagHasGetMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("get", Object.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testBagHasAddMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("add", Object.class, Object.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testBagHasContainsKeyMethod() throws NoSuchMethodException {
+        Method m = Bag.class.getMethod("containsKey", Object.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testLabelBagImplementsBag() {
+        assertThat(mBag instanceof Bag, is(true));
+    }
+
+    @Test
+    public void testLabelBagAddAndGetLabel() {
+        mBag.add(LabelBag.LABEL_KEY, "partition1");
+        Object value = mBag.get(LabelBag.LABEL_KEY);
+        assertThat(value, is("partition1"));
+    }
+
+    @Test
+    public void testLabelBagContainsKeyAfterAdd() {
+        mBag.add(LabelBag.LABEL_KEY, "myLabel");
+        assertThat(mBag.containsKey(LabelBag.LABEL_KEY), is(true));
+    }
+
+    @Test
+    public void testLabelBagDefaultGetReturnsNull() {
+        assertThat(mBag.get(LabelBag.LABEL_KEY), is(nullValue()));
+    }
+
+    @Test
+    public void testBagIsInterface() {
+        assertThat(Bag.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testBagMethodReturnTypes() throws NoSuchMethodException {
+        assertThat(Bag.class.getMethod("get", Object.class).getReturnType(), is(Object.class));
+        assertThat(
+                Bag.class.getMethod("add", Object.class, Object.class).getReturnType(),
+                is(boolean.class));
+        assertThat(
+                Bag.class.getMethod("containsKey", Object.class).getReturnType(),
+                is(boolean.class));
+    }
+
+    @Test
+    public void testBagDeclaresOnlyExpectedMethods() {
+        assertThat(Bag.class.getDeclaredMethods().length, is(3));
+    }
 }

@@ -13,33 +13,166 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CodeGenerator interface structure */
 public class CodeGeneratorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    @Test
+    public void testVersionConstantExists() {
+        assertThat(CodeGenerator.VERSION, is("1.5"));
+    }
+
+    @Test
+    public void testInterfaceIsPublic() {
+        assertThat(
+                java.lang.reflect.Modifier.isPublic(CodeGenerator.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testInterfaceHasInitializeMethod() throws NoSuchMethodException {
+        // Verify initialize(PegasusBag) method is declared
+        assertThat(
+                CodeGenerator.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testInterfaceHasGenerateCodeMethod() throws NoSuchMethodException {
+        assertThat(
+                CodeGenerator.class.getMethod(
+                        "generateCode", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testCondorGeneratorImplementsCodeGenerator() {
+        assertThat(
+                CodeGenerator.class.isAssignableFrom(
+                        edu.isi.pegasus.planner.code.generator.condor.CondorGenerator.class),
+                is(true));
+    }
+
+    @Test
+    public void testTypeIsAnInterface() {
+        assertThat(CodeGenerator.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testInterfaceHasSingleJobGenerateCodeMethod() throws NoSuchMethodException {
+        assertThat(
+                CodeGenerator.class.getMethod(
+                        "generateCode",
+                        edu.isi.pegasus.planner.classes.ADag.class,
+                        edu.isi.pegasus.planner.classes.Job.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testInterfaceDeclaresStartMonitoringAndResetMethods() throws NoSuchMethodException {
+        assertThat(CodeGenerator.class.getMethod("startMonitoring"), notNullValue());
+        assertThat(CodeGenerator.class.getMethod("reset"), notNullValue());
+    }
+
+    @Test
+    public void testMutatingMethodsDeclareCodeGeneratorException() throws NoSuchMethodException {
+        assertDeclaresCodeGeneratorException(
+                CodeGenerator.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class));
+        assertDeclaresCodeGeneratorException(
+                CodeGenerator.class.getMethod(
+                        "generateCode", edu.isi.pegasus.planner.classes.ADag.class));
+        assertDeclaresCodeGeneratorException(
+                CodeGenerator.class.getMethod(
+                        "generateCode",
+                        edu.isi.pegasus.planner.classes.ADag.class,
+                        edu.isi.pegasus.planner.classes.Job.class));
+        assertDeclaresCodeGeneratorException(CodeGenerator.class.getMethod("reset"));
+    }
+
+    @Test
+    public void testReplaceCondorScratchDirInArgumentsForSharedFsJob() {
+        Job job = new Job();
+        job.setName("jobA");
+        job.setDataConfiguration(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE);
+        job.setArguments("--dir $_CONDOR_SCRATCH_DIR/run");
+
+        CodeGenerator.replaceCondorScratchDirInArguments(job, new NoOpLogManager(), "/scratch");
+
+        assertThat(job.getArguments(), is("--dir /scratch/run"));
+    }
+
+    @Test
+    public void testReplaceCondorScratchDirInArgumentsLeavesNonSharedFsJobUntouched() {
+        Job job = new Job();
+        job.setName("jobB");
+        job.setDataConfiguration("nonsharedfs");
+        job.setArguments("--dir $_CONDOR_SCRATCH_DIR/run");
+
+        CodeGenerator.replaceCondorScratchDirInArguments(job, new NoOpLogManager(), "/scratch");
+
+        assertThat(job.getArguments(), is("--dir $_CONDOR_SCRATCH_DIR/run"));
+    }
+
+    private void assertDeclaresCodeGeneratorException(Method method) {
+        assertThat(
+                Arrays.asList(method.getExceptionTypes()).contains(CodeGeneratorException.class),
+                is(true));
+    }
 }

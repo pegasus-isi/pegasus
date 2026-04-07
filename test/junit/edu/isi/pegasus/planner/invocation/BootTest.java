@@ -13,33 +13,98 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Boot invocation class. */
 public class BootTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertThat(MachineInfo.class.isAssignableFrom(Boot.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertThat(HasText.class.isAssignableFrom(Boot.class), is(true));
+    }
+
+    @Test
+    public void testElementName() {
+        assertThat(Boot.ELEMENT_NAME, is("boot"));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        Boot b = new Boot();
+        assertThat(b.getValue(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        Boot b = new Boot("2024-01-01T00:00:00");
+        assertThat(b.getValue(), is("2024-01-01T00:00:00"));
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new Boot(null));
+    }
+
+    @Test
+    public void testAppendValue() {
+        Boot b = new Boot();
+        b.appendValue("2024");
+        b.appendValue("-01-01");
+        assertThat(b.getValue(), is("2024-01-01"));
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        Boot b = new Boot("2024-01-01");
+        b.appendValue(null);
+
+        assertThat(b.getValue(), is("2024-01-01"));
+    }
+
+    @Test
+    public void testSetValueReplacesAppendedContent() {
+        Boot b = new Boot();
+        b.appendValue("old");
+        b.setValue("new");
+
+        assertThat(b.getValue(), is("new"));
+    }
+
+    @Test
+    public void testSetValueNullClearsValue() {
+        Boot b = new Boot("2024-01-01");
+        b.setValue(null);
+
+        assertThat(b.getValue(), nullValue());
+    }
+
+    @Test
+    public void testGetElementName() {
+        Boot b = new Boot();
+        assertThat(b.getElementName(), is("boot"));
+    }
+
+    @Test
+    public void testInheritedToXMLIncludesAttributesAndEscapedValue() throws Exception {
+        Boot b = new Boot("a&b");
+        b.addAttribute("source", "bios&firmware");
+        StringWriter sw = new StringWriter();
+
+        b.toXML(sw, null, "inv");
+
+        String xml = sw.toString();
+        assertThat(xml, containsString("<inv:boot"));
+        assertThat(xml, containsString("source=\"bios&amp;amp;firmware\""));
+        assertThat(xml, containsString(">a&amp;b</inv:boot>"));
+    }
 }

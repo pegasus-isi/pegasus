@@ -13,33 +13,53 @@
  */
 package edu.isi.pegasus.planner.catalog.work;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class WorkFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultNameConstant() {
+        assertThat(WorkFactoryException.DEFAULT_NAME, equalTo("Work Catalog"));
     }
-    */
+
+    @Test
+    public void testMessageOnlyConstructorUsesDefaultClassname() throws Exception {
+        WorkFactoryException exception = new WorkFactoryException("message");
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(getClassname(exception), equalTo(WorkFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorUsesDefaultClassname() throws Exception {
+        Throwable cause = new IllegalStateException("boom");
+        WorkFactoryException exception = new WorkFactoryException("message", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(exception.getCause(), is(sameInstance(cause)));
+        assertThat(getClassname(exception), equalTo(WorkFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testExplicitClassnameAndCauseConstructorPreservesValues() throws Exception {
+        Throwable cause = new IllegalArgumentException("bad");
+        WorkFactoryException exception =
+                new WorkFactoryException("message", "custom-work-module", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(exception.getCause(), is(sameInstance(cause)));
+        assertThat(getClassname(exception), equalTo("custom-work-module"));
+    }
+
+    private static String getClassname(WorkFactoryException exception) {
+        return (String) ReflectionTestUtils.getField(exception, "mClassname");
+    }
 }

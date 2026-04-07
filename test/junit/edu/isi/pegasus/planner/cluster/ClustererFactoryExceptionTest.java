@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ClustererFactoryException class. */
 public class ClustererFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertThat(ClustererFactoryException.DEFAULT_NAME, is("Clusterer"));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessage() {
+        ClustererFactoryException ex = new ClustererFactoryException("test error");
+        assertThat(ex.getMessage(), notNullValue());
+        assertThat(ex.getClassname(), is(ClustererFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        ClustererFactoryException ex = new ClustererFactoryException("test error", "MyClusterer");
+        assertThat(ex.getClassname(), is("MyClusterer"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererFactoryException ex = new ClustererFactoryException("test error", cause);
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(ClustererFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithAllParams() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererFactoryException ex =
+                new ClustererFactoryException("test error", "MyClusterer", cause);
+        assertThat(ex.getClassname(), is("MyClusterer"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testExtendsFactoryException() {
+        ClustererFactoryException ex = new ClustererFactoryException("test");
+        assertThat(ex, instanceOf(FactoryException.class));
+    }
+
+    @Test
+    public void testDefaultClassnameSet() {
+        ClustererFactoryException ex = new ClustererFactoryException("test");
+        assertThat(ex.getClassname(), is(ClustererFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageOnlyConstructorPreservesMessage() {
+        ClustererFactoryException ex = new ClustererFactoryException("specific error");
+        assertThat(ex.getMessage(), is("specific error"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorAllowsNullCause() {
+        ClustererFactoryException ex =
+                new ClustererFactoryException("test error", (Throwable) null);
+        assertThat(ex.getMessage(), is("test error"));
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is(ClustererFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructorAllowsNullCause() {
+        ClustererFactoryException ex =
+                new ClustererFactoryException("test error", "NamedClusterer", null);
+        assertThat(ex.getMessage(), is("test error"));
+        assertThat(ex.getClassname(), is("NamedClusterer"));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorAllowsNullClassname() {
+        ClustererFactoryException ex = new ClustererFactoryException("test error", (String) null);
+        assertThat(ex.getMessage(), is("test error"));
+        assertThat(ex.getClassname(), nullValue());
+    }
 }

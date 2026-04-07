@@ -13,33 +13,62 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerCache;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for TransferEngine. */
 public class TransferEngineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(TransferEngine.class), is(true));
     }
-    */
+
+    @Test
+    public void testDeletedJobsLevel() {
+        assertThat(TransferEngine.DELETED_JOBS_LEVEL, is(1000));
+    }
+
+    @Test
+    public void testWorkflowCacheFileImplementor() {
+        assertThat(TransferEngine.WORKFLOW_CACHE_FILE_IMPLEMENTOR, is("FlushedCache"));
+    }
+
+    @Test
+    public void testAdditionalConstants() {
+        assertThat(TransferEngine.WORKFLOW_CACHE_REPLICA_CATALOG_KEY, is("file"));
+        assertThat(TransferEngine.REFINER_NAME, is("TranferEngine"));
+    }
+
+    @Test
+    public void testHasExpectedConstructor() throws Exception {
+        Constructor<TransferEngine> constructor =
+                TransferEngine.class.getDeclaredConstructor(
+                        ADag.class, PegasusBag.class, List.class, List.class);
+        assertThat(constructor, notNullValue());
+    }
+
+    @Test
+    public void testAddTransferNodesReturnsVoid() throws Exception {
+        Method method =
+                TransferEngine.class.getMethod(
+                        "addTransferNodes", ReplicaCatalogBridge.class, PlannerCache.class);
+        assertThat((Object) method.getReturnType(), is((Object) void.class));
+    }
+
+    @Test
+    public void testGetStagingSiteReturnsString() throws Exception {
+        Method method = TransferEngine.class.getMethod("getStagingSite", Job.class);
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
 }

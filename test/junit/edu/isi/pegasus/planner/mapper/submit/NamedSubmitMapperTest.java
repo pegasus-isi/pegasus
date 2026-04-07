@@ -168,10 +168,10 @@ public class NamedSubmitMapperTest {
 
     private void test(Job j, File baseDir, String expectedDir, File actualDir) {
         try {
-            assertEquals(
-                    expectedDir,
+            org.hamcrest.MatcherAssert.assertThat(
+                    "Job " + j.getName() + " not mapped to right location ",
                     actualDir.getPath(),
-                    "Job " + j.getName() + " not mapped to right location ");
+                    org.hamcrest.Matchers.is(expectedDir));
         } finally {
             if (actualDir != null && !actualDir.getPath().equals(".")) {
                 // cleanup any relative directory that was created

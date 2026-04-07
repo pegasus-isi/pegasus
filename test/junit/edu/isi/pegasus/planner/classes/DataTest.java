@@ -13,33 +13,207 @@
  */
 package edu.isi.pegasus.planner.classes;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Vector;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the Data abstract base class.
+ *
+ * <p>Because Data is abstract, tests use a minimal concrete subclass {@code ConcreteData} defined
+ * at the bottom of this file.
+ *
+ * @author Rajiv Mayani
+ */
 public class DataTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // -----------------------------------------------------------------------
+    // Construction
+    // -----------------------------------------------------------------------
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultConstructorInitializesLogMsg() {
+        ConcreteData d = new ConcreteData();
+        // mLogMsg should be initialised to empty string, not null
+        assertThat(d.mLogMsg, is(notNullValue()));
+        assertThat(d.mLogMsg, is(""));
     }
-    */
+
+    @Test
+    public void testDefaultConstructorInitializesLogger() {
+        ConcreteData d = new ConcreteData();
+        assertThat(d.mLogger, is(notNullValue()));
+    }
+
+    @Test
+    public void testDataIsAbstractAndCloneable() {
+        assertThat(java.lang.reflect.Modifier.isAbstract(Data.class.getModifiers()), is(true));
+        assertThat(Cloneable.class.isAssignableFrom(Data.class), is(true));
+    }
+
+    // -----------------------------------------------------------------------
+    // vectorToString
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testVectorToStringEmptyVector() {
+        ConcreteData d = new ConcreteData();
+        Vector<String> v = new Vector<String>();
+        String result = d.vectorToString("heading", v);
+        // heading should be present, no elements
+        assertThat(result, containsString("heading"));
+    }
+
+    @Test
+    public void testVectorToStringSingleElement() {
+        ConcreteData d = new ConcreteData();
+        Vector<String> v = new Vector<String>();
+        v.add("apple");
+        String result = d.vectorToString("fruits", v);
+        assertThat(result, containsString("fruits"));
+        assertThat(result, containsString("apple"));
+    }
+
+    @Test
+    public void testVectorToStringMultipleElements() {
+        ConcreteData d = new ConcreteData();
+        Vector<String> v = new Vector<String>();
+        v.add("one");
+        v.add("two");
+        v.add("three");
+        String result = d.vectorToString("numbers", v);
+        assertThat(result, containsString("one"));
+        assertThat(result, containsString("two"));
+        assertThat(result, containsString("three"));
+    }
+
+    @Test
+    public void testVectorToStringPreservesVectorIterationOrder() {
+        ConcreteData d = new ConcreteData();
+        Vector<String> v = new Vector<String>();
+        v.add("first");
+        v.add("second");
+
+        String result = d.vectorToString("items", v);
+
+        assertThat(result.indexOf("first") < result.indexOf("second"), is(true));
+    }
+
+    @Test
+    public void testVectorToStringStartsWithNewline() {
+        ConcreteData d = new ConcreteData();
+        Vector<String> v = new Vector<String>();
+        String result = d.vectorToString("head", v);
+        assertThat(result.startsWith("\n"), is(true));
+    }
+
+    // -----------------------------------------------------------------------
+    // setToString
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSetToStringEmptySet() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        String result = d.setToString(s, ",");
+        assertThat(result, is(""));
+    }
+
+    @Test
+    public void testSetToStringSingleElement() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        s.add("alpha");
+        String result = d.setToString(s, ",");
+        assertThat(result, is("alpha"));
+    }
+
+    @Test
+    public void testSetToStringMultipleElementsContainsDelimiter() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        s.add("x");
+        s.add("y");
+        // Result should contain both values joined by the delimiter (no trailing delimiter)
+        String result = d.setToString(s, ":");
+        // Both elements should be present
+        assertThat(result, containsString("x"));
+        assertThat(result, containsString("y"));
+        // Delimiter should appear exactly once (between two elements)
+        assertThat(result, containsString(":"));
+    }
+
+    @Test
+    public void testSetToStringNoTrailingDelimiter() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        s.add("only");
+        String result = d.setToString(s, ";");
+        // Single element: no delimiter at all
+        assertThat(result.endsWith(";"), is(false));
+    }
+
+    @Test
+    public void testSetToStringWithSpaceDelimiter() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        s.add("hello");
+        String result = d.setToString(s, " ");
+        assertThat(result, is("hello"));
+    }
+
+    @Test
+    public void testSetToStringWithMultiCharacterDelimiterHasNoTrailingDelimiter() {
+        ConcreteData d = new ConcreteData();
+        Set<String> s = new HashSet<String>();
+        s.add("alpha");
+        s.add("beta");
+
+        String result = d.setToString(s, "::");
+
+        assertThat(result.endsWith("::"), is(false));
+        assertThat(result, anyOf(is("alpha::beta"), is("beta::alpha")));
+    }
+
+    // -----------------------------------------------------------------------
+    // toString (via the concrete subclass)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testToStringReturnsExpectedValue() {
+        ConcreteData d = new ConcreteData("custom-text");
+        assertThat(d.toString(), is("custom-text"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Minimal concrete subclass used for testing
+    // -----------------------------------------------------------------------
+
+    /**
+     * A minimal concrete implementation of the abstract {@link Data} class that is used only within
+     * this test file.
+     */
+    static class ConcreteData extends Data {
+
+        private final String mText;
+
+        ConcreteData() {
+            this("");
+        }
+
+        ConcreteData(String text) {
+            super();
+            this.mText = text;
+        }
+
+        @Override
+        public String toString() {
+            return mText;
+        }
+    }
 }

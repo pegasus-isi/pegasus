@@ -39,7 +39,7 @@ public class IVPTestTest {
     /*
     @Test
     public void testSomeMethod() {
-        assertEquals(1, 1);
+        org.hamcrest.MatcherAssert.assertThat(1, org.hamcrest.Matchers.is(1));
     }
     */
 }

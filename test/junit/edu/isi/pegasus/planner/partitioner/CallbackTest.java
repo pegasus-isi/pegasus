@@ -13,33 +13,42 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class CallbackTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCallbackIsInterface() {
+        assertThat(Callback.class.isInterface(), is(true));
     }
-    */
+
+    @Test
+    public void testMethodSignatures() throws Exception {
+        Method cbPartition = Callback.class.getDeclaredMethod("cbPartition", Partition.class);
+        Method cbParents = Callback.class.getDeclaredMethod("cbParents", String.class, List.class);
+        Method cbDone = Callback.class.getDeclaredMethod("cbDone");
+
+        assertThat(cbPartition.getReturnType(), is(void.class));
+        assertThat(cbParents.getReturnType(), is(void.class));
+        assertThat(cbDone.getReturnType(), is(void.class));
+        assertThat(Modifier.isPublic(cbPartition.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(cbPartition.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(cbParents.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(cbParents.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(cbDone.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(cbDone.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testCallbackDeclaresOnlyExpectedMethods() {
+        assertThat(Callback.class.getDeclaredMethods().length, is(3));
+    }
 }

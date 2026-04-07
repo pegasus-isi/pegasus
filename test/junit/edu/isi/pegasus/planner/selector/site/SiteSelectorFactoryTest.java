@@ -13,33 +13,101 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteSelectorFactory class. */
 public class SiteSelectorFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultPackageName() {
+        assertThat(
+                SiteSelectorFactory.DEFAULT_PACKAGE_NAME,
+                equalTo("edu.isi.pegasus.planner.selector.site"));
     }
-    */
+
+    @Test
+    public void testDefaultSiteSelector() {
+        assertThat(SiteSelectorFactory.DEFAULT_SITE_SELECTOR, equalTo("Random"));
+    }
+
+    @Test
+    public void testDefaultPackageNameNotNull() {
+        assertThat(SiteSelectorFactory.DEFAULT_PACKAGE_NAME, notNullValue());
+    }
+
+    @Test
+    public void testDefaultSiteSelectorNotNull() {
+        assertThat(SiteSelectorFactory.DEFAULT_SITE_SELECTOR, notNullValue());
+    }
+
+    @Test
+    public void testFactoryClassExists() {
+        assertThat(SiteSelectorFactory.class, notNullValue());
+    }
+
+    @Test
+    public void testLoadInstanceRejectsMissingProperties() {
+        PegasusBag bag = new PegasusBag();
+
+        SiteSelectorFactoryException exception =
+                assertThrows(
+                        SiteSelectorFactoryException.class,
+                        () -> SiteSelectorFactory.loadInstance(bag));
+
+        assertThat(exception.getMessage(), equalTo("Instantiating SiteSelector "));
+        assertThat(exception.getClassname(), nullValue());
+        assertThat(exception.getCause(), notNullValue());
+        assertThat(exception.getCause().getMessage(), containsString("Invalid properties passed"));
+    }
+
+    @Test
+    public void testLoadInstanceWithExplicitClassInitializesSelector() throws Exception {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.site", TrackingSiteSelector.class.getName());
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        SiteSelector selector = SiteSelectorFactory.loadInstance(bag);
+
+        assertThat(selector, instanceOf(TrackingSiteSelector.class));
+        assertThat(((TrackingSiteSelector) selector).initializedBag, sameInstance(bag));
+    }
+
+    @Test
+    public void testLoadInstanceDefaultsWhenPropertyIsBlank() throws Exception {
+        PegasusBag bag = new PegasusBag();
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+        props.setProperty("pegasus.selector.site", " ");
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+
+        SiteSelector selector = SiteSelectorFactory.loadInstance(bag);
+
+        assertThat(selector, instanceOf(Random.class));
+    }
+
+    public static class TrackingSiteSelector implements SiteSelector {
+        PegasusBag initializedBag;
+
+        @Override
+        public void initialize(PegasusBag bag) {
+            initializedBag = bag;
+        }
+
+        @Override
+        public void mapWorkflow(ADag workflow, List sites) {}
+
+        @Override
+        public String description() {
+            return "tracking";
+        }
+    }
 }

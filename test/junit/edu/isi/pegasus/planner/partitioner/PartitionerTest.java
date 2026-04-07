@@ -13,33 +13,81 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class PartitionerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPartitionerIsAbstract() {
+        assertThat(Modifier.isAbstract(Partitioner.class.getModifiers()), is(true));
     }
-    */
+
+    private static final class StubPartitioner extends Partitioner {
+
+        StubPartitioner(GraphNode root, Map graph, PegasusProperties properties) {
+            super(root, graph, properties);
+        }
+
+        @Override
+        public void determinePartitions(Callback c) {}
+
+        @Override
+        public String description() {
+            return "stub";
+        }
+    }
+
+    @Test
+    public void testConstants() {
+        assertThat(Partitioner.PACKAGE_NAME, is("edu.isi.pegasus.planner.partitioner"));
+        assertThat(Partitioner.VERSION, is("1.2"));
+    }
+
+    @Test
+    public void testConstructorStoresRootGraphLoggerAndProperties() throws Exception {
+        GraphNode root = new GraphNode("root");
+        Map<String, GraphNode> graph = new HashMap<>();
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+
+        StubPartitioner partitioner = new StubPartitioner(root, graph, properties);
+
+        assertThat(ReflectionTestUtils.getField(partitioner, "mRoot"), is(sameInstance(root)));
+        assertThat(ReflectionTestUtils.getField(partitioner, "mGraph"), is(sameInstance(graph)));
+        assertThat(
+                ReflectionTestUtils.getField(partitioner, "mProps"), is(sameInstance(properties)));
+        assertThat(ReflectionTestUtils.getField(partitioner, "mLogger"), is(notNullValue()));
+        assertThat(
+                ReflectionTestUtils.getField(partitioner, "mLogger") instanceof LogManager,
+                is(true));
+    }
+
+    @Test
+    public void testDeclaredAbstractMethodsAndConstructorSignature() throws Exception {
+        Method determinePartitions =
+                Partitioner.class.getDeclaredMethod("determinePartitions", Callback.class);
+        Method description = Partitioner.class.getDeclaredMethod("description");
+
+        assertThat(Modifier.isAbstract(determinePartitions.getModifiers()), is(true));
+        assertThat(determinePartitions.getReturnType(), is(void.class));
+        assertThat(Modifier.isAbstract(description.getModifiers()), is(true));
+        assertThat(description.getReturnType(), is(String.class));
+
+        assertThat(
+                Partitioner.class.getDeclaredConstructor(
+                        GraphNode.class, Map.class, PegasusProperties.class),
+                is(notNullValue()));
+    }
 }

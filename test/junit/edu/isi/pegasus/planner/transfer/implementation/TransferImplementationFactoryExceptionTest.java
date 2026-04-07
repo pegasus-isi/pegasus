@@ -13,33 +13,52 @@
  */
 package edu.isi.pegasus.planner.transfer.implementation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TransferImplementationFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertThat(
+                TransferImplementationFactoryException.DEFAULT_NAME, is("Transfer Implementation"));
     }
-    */
+
+    @Test
+    public void testMessageOnlyConstructorUsesDefaultClassname() {
+        TransferImplementationFactoryException exception =
+                new TransferImplementationFactoryException("message");
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(
+                exception.getClassname(), is(TransferImplementationFactoryException.DEFAULT_NAME));
+        assertThat(exception.getCause(), nullValue());
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorUsesDefaultClassname() {
+        RuntimeException cause = new RuntimeException("boom");
+        TransferImplementationFactoryException exception =
+                new TransferImplementationFactoryException("message", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(
+                exception.getClassname(), is(TransferImplementationFactoryException.DEFAULT_NAME));
+        assertThat(exception.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testExplicitClassnameAndCauseConstructorPreservesValues() {
+        IllegalStateException cause = new IllegalStateException("bad");
+        TransferImplementationFactoryException exception =
+                new TransferImplementationFactoryException("message", "CustomImpl", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(exception.getClassname(), is("CustomImpl"));
+        assertThat(exception.getCause(), sameInstance(cause));
+    }
 }

@@ -13,33 +13,87 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class MetaTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorDefaultsToClosedAndWritable() throws Exception {
+        Meta meta = new Meta();
+
+        assertThat(meta.isClosed(), is(true));
+        assertThat((Boolean) ReflectionTestUtils.getField(meta, "mQuote"), is(false));
+        assertThat((Boolean) ReflectionTestUtils.getField(meta, "m_readonly"), is(false));
     }
-    */
+
+    @Test
+    public void testConnectStringRejectsNullFilename() {
+        Meta meta = new Meta();
+
+        assertThat(meta.connect((String) null), is(false));
+        assertThat(meta.isClosed(), is(true));
+    }
+
+    @Test
+    public void testConnectPropertiesParsesQuoteAndReadonlyEvenWithoutFile() throws Exception {
+        Meta meta = new Meta();
+        Properties props = new Properties();
+        props.setProperty("quote", "true");
+        props.setProperty(YAML.READ_ONLY_KEY, "true");
+
+        assertThat(meta.connect(props), is(false));
+        assertThat((Boolean) ReflectionTestUtils.getField(meta, "mQuote"), is(true));
+        assertThat((Boolean) ReflectionTestUtils.getField(meta, "m_readonly"), is(true));
+    }
+
+    @Test
+    public void testLookupAndLookupNoAttributesUseInjectedInMemoryMap() throws Exception {
+        Meta meta = new Meta();
+        ReplicaCatalogEntry entry = new ReplicaCatalogEntry("file:///tmp/data.txt", "local");
+        ReplicaLocation location =
+                new ReplicaLocation("lfn", java.util.Collections.singletonList(entry));
+        location.addMetadata("checksum.type", "sha256");
+
+        Map<String, ReplicaLocation> map = new LinkedHashMap<String, ReplicaLocation>();
+        map.put("lfn", location);
+        ReflectionTestUtils.setField(meta, "mLFN", map);
+
+        assertThat(meta.lookup("lfn", "local"), equalTo("file:///tmp/data.txt"));
+
+        Collection<ReplicaCatalogEntry> result = meta.lookup("lfn");
+        assertThat(result.size(), is(1));
+        ReplicaCatalogEntry lookedUp = result.iterator().next();
+        assertThat(lookedUp.getAttribute("checksum.type"), is("sha256"));
+
+        Set<String> pfns = meta.lookupNoAttributes("lfn");
+        assertThat(pfns, is(java.util.Collections.singleton("file:///tmp/data.txt")));
+    }
+
+    @Test
+    public void testCloseClearsReadonlyCatalog() throws Exception {
+        Meta meta = new Meta();
+        ReflectionTestUtils.setField(meta, "mFilename", "/tmp/meta.yml");
+        ReflectionTestUtils.setField(meta, "mLFN", new LinkedHashMap<String, ReplicaLocation>());
+        ReflectionTestUtils.setField(meta, "m_readonly", true);
+
+        meta.close();
+
+        assertThat(meta.isClosed(), is(true));
+        assertThat(ReflectionTestUtils.getField(meta, "mFilename"), nullValue());
+    }
 }

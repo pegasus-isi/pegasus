@@ -13,33 +13,108 @@
  */
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the GraphNode class. */
 public class GraphNodeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private GraphNode mNode;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mNode = new GraphNode("node1", "job1");
     }
-    */
+
+    @Test
+    public void testGetIDReturnsConstructorValue() {
+        assertThat(mNode.getID(), is("node1"));
+    }
+
+    @Test
+    public void testGetNameReturnsConstructorValue() {
+        assertThat(mNode.getName(), is("job1"));
+    }
+
+    @Test
+    public void testDefaultColorIsWhite() {
+        assertThat(mNode.getColor(), is(GraphNode.WHITE_COLOR));
+    }
+
+    @Test
+    public void testDefaultDepthIsNegativeOne() {
+        assertThat(mNode.getDepth(), is(-1));
+    }
+
+    @Test
+    public void testSetAndGetDepth() {
+        mNode.setDepth(3);
+        assertThat(mNode.getDepth(), is(3));
+    }
+
+    @Test
+    public void testSetAndGetColor() {
+        mNode.setColor(GraphNode.GRAY_COLOR);
+        assertThat(mNode.getColor(), is(GraphNode.GRAY_COLOR));
+    }
+
+    @Test
+    public void testInitialParentsIsEmpty() {
+        assertThat(mNode.getParents().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testInitialChildrenIsEmpty() {
+        assertThat(mNode.getChildren().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testSetContentStoresValueAndSetsBackReference() {
+        AtomicReference<GraphNode> reference = new AtomicReference<>();
+        GraphNodeContent content = reference::set;
+
+        mNode.setContent(content);
+
+        assertThat(mNode.getContent(), is(sameInstance(content)));
+        assertThat(reference.get(), is(sameInstance(mNode)));
+    }
+
+    @Test
+    public void testAddAndRemoveParentAndChild() {
+        GraphNode parent = new GraphNode("parent", "job-parent");
+        GraphNode child = new GraphNode("child", "job-child");
+
+        mNode.addParent(parent);
+        mNode.addChild(child);
+        assertThat(mNode.getParents().contains(parent), is(true));
+        assertThat(mNode.getChildren().contains(child), is(true));
+
+        mNode.removeParent(parent);
+        mNode.removeChild(child);
+        assertThat(mNode.getParents().contains(parent), is(false));
+        assertThat(mNode.getChildren().contains(child), is(false));
+    }
+
+    @Test
+    public void testResetEdgesClearsParentsAndChildren() {
+        mNode.addParent(new GraphNode("parent", "job-parent"));
+        mNode.addChild(new GraphNode("child", "job-child"));
+
+        mNode.resetEdges();
+
+        assertThat(mNode.getParents().isEmpty(), is(true));
+        assertThat(mNode.getChildren().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testSetAndGetBag() {
+        Bag bag = new LabelBag();
+        mNode.setBag(bag);
+        assertThat(mNode.getBag(), is(sameInstance(bag)));
+    }
 }

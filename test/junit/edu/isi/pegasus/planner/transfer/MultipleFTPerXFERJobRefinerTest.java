@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class MultipleFTPerXFERJobRefinerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMultipleFTPerXFERJobRefinerIsAbstractAndExtendsAbstractRefiner() {
+        assertThat(Modifier.isAbstract(MultipleFTPerXFERJobRefiner.class.getModifiers()), is(true));
+        assertThat(
+                MultipleFTPerXFERJobRefiner.class.getSuperclass(),
+                sameInstance(AbstractRefiner.class));
     }
-    */
+
+    @Test
+    public void testConstructorSignature() throws Exception {
+        Constructor<MultipleFTPerXFERJobRefiner> constructor =
+                MultipleFTPerXFERJobRefiner.class.getDeclaredConstructor(
+                        ADag.class, PegasusBag.class);
+
+        assertThat(Modifier.isPublic(constructor.getModifiers()), is(true));
+        assertThat(constructor.getParameterCount(), equalTo(2));
+        assertThat(MultipleFTPerXFERJobRefiner.class.getDeclaredConstructors().length, equalTo(1));
+    }
+
+    @Test
+    public void testLoadImplementationsMethodSignature() throws Exception {
+        Method method =
+                MultipleFTPerXFERJobRefiner.class.getDeclaredMethod(
+                        "loadImplementations", PegasusBag.class);
+
+        assertThat(method.getReturnType(), equalTo(void.class));
+        assertThat(Modifier.isPublic(method.getModifiers()), is(true));
+        assertThat(method.getExceptionTypes().length, equalTo(1));
+        assertThat(
+                method.getExceptionTypes()[0],
+                sameInstance(TransferImplementationFactoryException.class));
+    }
+
+    @Test
+    public void testPrivateCheckCompatibilityMethodExists() throws Exception {
+        Method method =
+                MultipleFTPerXFERJobRefiner.class.getDeclaredMethod(
+                        "checkCompatibility", Implementation.class);
+
+        assertThat(method.getReturnType(), equalTo(void.class));
+        assertThat(Modifier.isPrivate(method.getModifiers()), is(true));
+        assertThat(method.getParameterCount(), equalTo(1));
+    }
 }

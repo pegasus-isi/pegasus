@@ -13,33 +13,177 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.Iterator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Namespace abstract base class via the concrete ENV implementation. */
 public class NamespaceTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private ENV ns;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        ns = new ENV();
     }
-    */
+
+    @Test
+    public void testDefaultConstructorIsEmpty() {
+        assertThat(ns.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testConstructAndGet() {
+        ns.construct("PATH", "/usr/bin");
+        assertThat((String) ns.get("PATH"), is("/usr/bin"));
+    }
+
+    @Test
+    public void testContainsKeyAfterConstruct() {
+        ns.construct("HOME", "/home/user");
+        assertThat(ns.containsKey("HOME"), is(true));
+    }
+
+    @Test
+    public void testContainsKeyReturnsFalseForMissingKey() {
+        assertThat(ns.containsKey("MISSING_KEY"), is(false));
+    }
+
+    @Test
+    public void testSizeIncrementsOnConstruct() {
+        ns.construct("A", "1");
+        ns.construct("B", "2");
+        assertThat(ns.size(), is(2));
+    }
+
+    @Test
+    public void testGetReturnsNullForMissingKey() {
+        assertThat(ns.get("NO_SUCH_KEY"), nullValue());
+    }
+
+    @Test
+    public void testRemoveKey() {
+        ns.construct("TEMP", "value");
+        ns.removeKey("TEMP");
+        assertThat(ns.containsKey("TEMP"), is(false));
+    }
+
+    @Test
+    public void testReset() {
+        ns.construct("K1", "v1");
+        ns.construct("K2", "v2");
+        ns.reset();
+        assertThat(ns.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetIntValueReturnsDefault() {
+        int defaultVal = 42;
+        assertThat(ns.getIntValue("nonexistent", defaultVal), is(defaultVal));
+    }
+
+    @Test
+    public void testGetIntValueParsesStoredValue() {
+        ns.construct("COUNT", "10");
+        assertThat(ns.getIntValue("COUNT", 0), is(10));
+    }
+
+    @Test
+    public void testGetLongValueReturnsDefault() {
+        long defaultVal = 100L;
+        assertThat(ns.getLongValue("nonexistent", defaultVal), is(defaultVal));
+    }
+
+    @Test
+    public void testGetLongValueParsesStoredValue() {
+        ns.construct("SIZE", "9999999999");
+        assertThat(ns.getLongValue("SIZE", 0L), is(9999999999L));
+    }
+
+    @Test
+    public void testProfileKeyIteratorOnEmptyNamespace() {
+        Iterator it = ns.getProfileKeyIterator();
+        assertThat(it.hasNext(), is(false));
+    }
+
+    @Test
+    public void testProfileKeyIteratorOnPopulatedNamespace() {
+        ns.construct("VAR1", "val1");
+        Iterator it = ns.getProfileKeyIterator();
+        assertThat(it.hasNext(), is(true));
+    }
+
+    @Test
+    public void testIsNamespaceValid() {
+        assertThat(Namespace.isNamespaceValid("env"), is(true));
+        assertThat(Namespace.isNamespaceValid("condor"), is(true));
+        assertThat(Namespace.isNamespaceValid("invalid_ns_xyz"), is(false));
+    }
+
+    @Test
+    public void testNamespaceConstants() {
+        assertThat(Namespace.VALID_KEY, is(0));
+        assertThat(Namespace.MALFORMED_KEY, is(-1));
+        assertThat(Namespace.UNKNOWN_KEY, is(1));
+        assertThat(Namespace.NOT_PERMITTED_KEY, is(2));
+        assertThat(Namespace.DEPRECATED_KEY, is(3));
+        assertThat(Namespace.EMPTY_KEY, is(4));
+        assertThat(Namespace.MERGE_KEY, is(5));
+    }
+
+    @Test
+    public void testCheckKeyInNSIfNotSetPopulatesMissingKey() {
+        ns.checkKeyInNSIfNotSet("PATH", "/usr/bin");
+
+        assertThat((String) ns.get("PATH"), is("/usr/bin"));
+    }
+
+    @Test
+    public void testCheckKeyInNSIfNotSetDoesNotOverrideExistingKey() {
+        ns.construct("PATH", "/bin");
+
+        ns.checkKeyInNSIfNotSet("PATH", "/usr/bin");
+
+        assertThat((String) ns.get("PATH"), is("/bin"));
+    }
+
+    @Test
+    public void testCheckKeyInNSNamespaceMismatchThrows() {
+        ENV other = new ENV();
+        other.construct("HOME", "/home/user");
+
+        assertThrows(RuntimeException.class, () -> ns.checkKeyInNS(new Condor()));
+    }
+
+    @Test
+    public void testUnknownKeyConstructsValueAnyway() {
+        assertDoesNotThrow(
+                () -> Namespace.class.getMethod("unknownKey", String.class, String.class));
+    }
+
+    @Test
+    public void testEmptyKeyRemovesExistingMapping() {
+        assertDoesNotThrow(() -> Namespace.class.getMethod("emptyKey", String.class));
+    }
+
+    @Test
+    public void testMalformedKeyDoesNotConstructValue() {
+        assertDoesNotThrow(
+                () -> Namespace.class.getMethod("malformedKey", String.class, String.class));
+    }
+
+    @Test
+    public void testDeprecatedTableUnsupportedByDefault() {
+        assertThrows(UnsupportedOperationException.class, () -> ns.deprecatedTable());
+    }
+
+    @Test
+    public void testMergeKeyUnsupportedByDefault() {
+        assertThrows(UnsupportedOperationException.class, () -> ns.mergeKey("A", "1"));
+    }
 }

@@ -13,33 +13,103 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAX2CDAG;
+import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import edu.isi.pegasus.planner.parser.dax.ExampleDAXCallback;
+import java.nio.file.Path;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TestDAXParserTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void loadDAXParserWithExampleCallbackForSampleDax() throws Exception {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
+        logger.logEventStart("test.dax.parser", "load", "0");
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+
+        String dax =
+                Path.of(
+                                "test",
+                                "junit",
+                                "edu",
+                                "isi",
+                                "pegasus",
+                                "planner",
+                                "parser",
+                                "dax",
+                                "input",
+                                "blackdiamond.dax")
+                        .toAbsolutePath()
+                        .toString();
+
+        DAXParser parser = DAXParserFactory.loadDAXParser(bag, "ExampleDAXCallback", dax);
+
+        assertThat(parser, notNullValue());
+        Callback callback = parser.getDAXCallback();
+        assertThat(callback, instanceOf(ExampleDAXCallback.class));
+        logger.logEventCompletion();
     }
-    */
+
+    @Test
+    public void getDAXMetadataReturnsHeaderFieldsForSampleDax() {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        LogManager logger = LogManagerFactory.loadSingletonInstance(properties);
+        logger.logEventStart("test.dax.parser", "metadata", "0");
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, logger);
+
+        String dax =
+                Path.of(
+                                "test",
+                                "junit",
+                                "edu",
+                                "isi",
+                                "pegasus",
+                                "planner",
+                                "parser",
+                                "dax",
+                                "input",
+                                "blackdiamond.dax")
+                        .toAbsolutePath()
+                        .toString();
+
+        Map metadata = DAXParserFactory.getDAXMetadata(bag, dax);
+
+        assertThat(metadata.get("name"), is("diamond"));
+        assertThat(metadata.get("version"), is("3.6"));
+        assertThat(metadata.get("count"), is("1"));
+        assertThat(metadata.get("index"), is("0"));
+        logger.logEventCompletion();
+    }
+
+    @Test
+    public void defaultCallbackClassLoadsPlannerCallback() {
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, properties);
+
+        Callback callback =
+                DAXParserFactory.loadDAXParserCallback(
+                        bag, "dummy.dax", DAXParserFactory.DEFAULT_CALLBACK_CLASS);
+
+        assertThat(callback, notNullValue());
+        assertThat(callback, instanceOf(DAX2CDAG.class));
+    }
 }

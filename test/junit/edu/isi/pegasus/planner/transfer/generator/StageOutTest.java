@@ -14,8 +14,7 @@
 package edu.isi.pegasus.planner.transfer.generator;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -45,11 +44,10 @@ import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.RestoreSystemProperties;
 
 /** @author Karan Vahi */
 public class StageOutTest {
@@ -65,12 +63,6 @@ public class StageOutTest {
     private ADag mDAG;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     public StageOutTest() {}
 
@@ -132,13 +124,13 @@ public class StageOutTest {
         job.setStagingSiteHandle(job.getSiteHandle());
 
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // in this case only a local file transfer object is created
-        assertTrue(soFTX[1].isEmpty());
-        assertNotNull(soFTX[0]);
+        assertThat(soFTX[1].isEmpty(), is(true));
+        assertThat(soFTX[0], notNullValue());
         Collection<FileTransfer> remoteStageOutFtxs = soFTX[0];
-        assertEquals(1, remoteStageOutFtxs.size());
+        assertThat(remoteStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) remoteStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -189,14 +181,14 @@ public class StageOutTest {
         job.setStagingSiteHandle(job.getSiteHandle());
 
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a file server and output site a gsiftp
         // no stageout transfers locally
-        assertTrue(soFTX[0].isEmpty());
-        assertNotNull(soFTX[1]);
+        assertThat(soFTX[0].isEmpty(), is(true));
+        assertThat(soFTX[1], notNullValue());
         Collection<FileTransfer> remoteStageOutFtxs = soFTX[1];
-        assertEquals(1, remoteStageOutFtxs.size());
+        assertThat(remoteStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) remoteStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -228,14 +220,14 @@ public class StageOutTest {
         job.setStagingSiteHandle(job.getSiteHandle());
 
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a gridftp (non file) server and output site a gsiftp
         // So stageout transfers will happen locally
-        assertTrue(soFTX[1].isEmpty());
-        assertNotNull(soFTX[0]);
+        assertThat(soFTX[1].isEmpty(), is(true));
+        assertThat(soFTX[0], notNullValue());
         Collection<FileTransfer> localStageOutFtxs = soFTX[0];
-        assertEquals(1, localStageOutFtxs.size());
+        assertThat(localStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -276,14 +268,14 @@ public class StageOutTest {
 
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
         job.closeOutputMapper();
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a gridftp (non file) server and output site a gsiftp
         // So stageout transfers will happen locally
-        assertTrue(soFTX[1].isEmpty());
-        assertNotNull(soFTX[0]);
+        assertThat(soFTX[1].isEmpty(), is(true));
+        assertThat(soFTX[0], notNullValue());
         Collection<FileTransfer> localStageOutFtxs = soFTX[0];
-        assertEquals(1, localStageOutFtxs.size());
+        assertThat(localStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -298,10 +290,10 @@ public class StageOutTest {
 
         // additional check for the output map file
         String mapperPath = job.getOutputMapperBackendPath();
-        assertNotNull(mapperPath);
+        assertThat(mapperPath, notNullValue());
         ReplicaCatalog rc = this.loadMapperBackend(mapperPath);
-        assertNotNull(rc);
-        assertEquals(expectedSource, rc.lookup("f.d", computeSite));
+        assertThat(rc, notNullValue());
+        assertThat(rc.lookup("f.d", computeSite), is(expectedSource));
 
         // make sure the mapper file is deleted
         File mapperFile = new File(mapperPath);
@@ -316,6 +308,7 @@ public class StageOutTest {
      * loaded.
      */
     @Test
+    @RestoreSystemProperties
     public void testStageOutToOutputMapperLocationWithSystemPropertySet() throws IOException {
         mLogger.logEventStart(
                 "test.transfer.generator.stageout", "set", Integer.toString(mTestNumber++));
@@ -348,8 +341,6 @@ public class StageOutTest {
         } finally {
             // delete the map file generated in the test
             mapFile.delete();
-            // remove the set properties
-            System.getProperties().remove(key);
         }
 
         mLogger.logEventCompletion();
@@ -408,14 +399,14 @@ public class StageOutTest {
 
         // test for location of f.out that is staged to output site
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a gridftp (non file) server and output site a gsiftp
         // So stageout transfers will happen locally
-        assertTrue(soFTX[1].isEmpty());
-        assertNotNull(soFTX[0]);
+        assertThat(soFTX[1].isEmpty(), is(true));
+        assertThat(soFTX[0], notNullValue());
         Collection<FileTransfer> localStageOutFtxs = soFTX[0];
-        assertEquals(1, localStageOutFtxs.size());
+        assertThat(localStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -431,14 +422,14 @@ public class StageOutTest {
         // test for location of f.out that is staged to output map location
         // achieved by setting output site to null
         soFTX = so.constructFileTX(job, null);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a gridftp (non file) server and output site a gsiftp
         // So stageout transfers will happen locally
-        assertTrue(soFTX[1].isEmpty());
-        assertNotNull(soFTX[0]);
+        assertThat(soFTX[1].isEmpty(), is(true));
+        assertThat(soFTX[0], notNullValue());
         localStageOutFtxs = soFTX[0];
-        assertEquals(1, localStageOutFtxs.size());
+        assertThat(localStageOutFtxs.size(), is(1));
 
         actualOutput = (FileTransfer) localStageOutFtxs.toArray()[0];
         expectedOutput = new FileTransfer();
@@ -502,14 +493,14 @@ public class StageOutTest {
         job.setStagingSiteHandle(job.getSiteHandle());
 
         Collection<FileTransfer>[] soFTX = so.constructFileTX(job, outputSite);
-        assertEquals(soFTX.length, 2);
+        assertThat(soFTX.length, is(2));
 
         // compute site has a file server and output site a gsiftp
         // no stageout transfers locally
-        assertTrue(soFTX[0].isEmpty());
-        assertNotNull(soFTX[1]);
+        assertThat(soFTX[0].isEmpty(), is(true));
+        assertThat(soFTX[1], notNullValue());
         Collection<FileTransfer> remoteStageOutFtxs = soFTX[1];
-        assertEquals(1, remoteStageOutFtxs.size());
+        assertThat(remoteStageOutFtxs.size(), is(1));
 
         FileTransfer actualOutput = (FileTransfer) remoteStageOutFtxs.toArray()[0];
         FileTransfer expectedOutput = new FileTransfer();
@@ -524,19 +515,19 @@ public class StageOutTest {
     }
 
     private void testFileTransfer(FileTransfer expected, FileTransfer actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getLFN(), actual.getLFN());
-        assertEquals(expected.getLinkage(), actual.getLinkage());
-        assertEquals(expected.getTransferFlag(), actual.getTransferFlag());
-        assertTrue(expected.getRegisterFlag() == actual.getRegisterFlag());
-        assertEquals(expected.getSourceURLCount(), actual.getSourceURLCount());
-        assertEquals(expected.getDestURLCount(), actual.getDestURLCount());
+        assertThat(actual, notNullValue());
+        assertThat(actual.getLFN(), is(expected.getLFN()));
+        assertThat(actual.getLinkage(), is(expected.getLinkage()));
+        assertThat(actual.getTransferFlag(), is(expected.getTransferFlag()));
+        assertThat(actual.getRegisterFlag(), is(expected.getRegisterFlag()));
+        assertThat(actual.getSourceURLCount(), is(expected.getSourceURLCount()));
+        assertThat(actual.getDestURLCount(), is(expected.getDestURLCount()));
 
         // we only expect 1 source and destination URL for these unit tests
-        assertEquals(expected.getSourceURLCount(), 1);
-        assertEquals(actual.getDestURLCount(), 1);
-        assertEquals(expected.getSourceURL(), actual.getSourceURL());
-        assertEquals(expected.getDestURL(), actual.getDestURL());
+        assertThat(expected.getSourceURLCount(), is(1));
+        assertThat(actual.getDestURLCount(), is(1));
+        assertThat(actual.getSourceURL(), is(expected.getSourceURL()));
+        assertThat(actual.getDestURL(), is(expected.getDestURL()));
     }
 
     @AfterEach

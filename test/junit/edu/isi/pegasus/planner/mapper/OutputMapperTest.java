@@ -13,33 +13,89 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the OutputMapper interface structure. */
 public class OutputMapperTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(OutputMapper.VERSION, is("1.1"));
     }
-    */
+
+    @Test
+    public void testOutputMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(OutputMapper.class), is(true));
+    }
+
+    @Test
+    public void testMapMethodExists() throws NoSuchMethodException {
+        assertThat(
+                OutputMapper.class.getMethod(
+                        "map",
+                        String.class,
+                        String.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.FileServer.OPERATION.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testInitializeMethodExists() throws NoSuchMethodException {
+        assertThat(
+                OutputMapper.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        edu.isi.pegasus.planner.classes.ADag.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testOutputMapperIsInterface() {
+        assertThat(OutputMapper.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testOverloadedMapMethodExistsAndThrowsMapperException()
+            throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                OutputMapper.class.getMethod(
+                        "map",
+                        String.class,
+                        String.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.FileServer.OPERATION.class,
+                        boolean.class);
+
+        assertThat(method.getReturnType(), is(edu.isi.pegasus.planner.classes.NameValue.class));
+        assertArrayEquals(new Class<?>[] {MapperException.class}, method.getExceptionTypes());
+    }
+
+    @Test
+    public void testMapAllMethodExistsAndThrowsMapperException() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                OutputMapper.class.getMethod(
+                        "mapAll",
+                        String.class,
+                        String.class,
+                        edu.isi.pegasus.planner.catalog.site.classes.FileServer.OPERATION.class);
+
+        assertThat(method.getReturnType(), is(java.util.List.class));
+        assertArrayEquals(new Class<?>[] {MapperException.class}, method.getExceptionTypes());
+    }
+
+    @Test
+    public void testInitializeMethodThrowsMapperException() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                OutputMapper.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        edu.isi.pegasus.planner.classes.ADag.class);
+
+        assertThat(method.getReturnType(), is(void.class));
+        assertArrayEquals(new Class<?>[] {MapperException.class}, method.getExceptionTypes());
+    }
 }

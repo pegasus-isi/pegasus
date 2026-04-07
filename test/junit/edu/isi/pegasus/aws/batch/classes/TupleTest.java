@@ -13,33 +13,93 @@
  */
 package edu.isi.pegasus.aws.batch.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TupleTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorSetsFields() {
+        Tuple<String, Integer> t = new Tuple<>("hello", 42);
+        assertThat(t.x, is("hello"));
+        assertThat(t.y, is(42));
     }
-    */
+
+    @Test
+    public void testGetKeyAndValue() {
+        Tuple<String, String> t = new Tuple<>("key", "value");
+        assertThat(t.getKey(), is("key"));
+        assertThat(t.getValue(), is("value"));
+    }
+
+    @Test
+    public void testToStringFormat() {
+        Tuple<String, Integer> t = new Tuple<>("alpha", 7);
+        assertThat(t.toString(), is("alpha , 7"));
+    }
+
+    @Test
+    public void testToStringWithNullX() {
+        Tuple<String, String> t = new Tuple<>(null, "val");
+        assertThat(t.toString(), is("null , val"));
+    }
+
+    @Test
+    public void testToStringWithNullY() {
+        Tuple<String, String> t = new Tuple<>("key", null);
+        assertThat(t.toString(), is("key , null"));
+    }
+
+    @Test
+    public void testNullValues() {
+        Tuple<String, String> t = new Tuple<>(null, null);
+        assertThat(t.getKey(), is(nullValue()));
+        assertThat(t.getValue(), is(nullValue()));
+    }
+
+    @Test
+    public void testIntegerTuple() {
+        Tuple<Integer, Integer> t = new Tuple<>(1, 2);
+        assertThat(t.getKey(), is(1));
+        assertThat(t.getValue(), is(2));
+        assertThat(t.toString(), is("1 , 2"));
+    }
+
+    @Test
+    public void testFieldsArePublicAndFinal() throws Exception {
+        Field xField = Tuple.class.getDeclaredField("x");
+        Field yField = Tuple.class.getDeclaredField("y");
+
+        assertThat(Modifier.isPublic(xField.getModifiers()), is(true));
+        assertThat(Modifier.isFinal(xField.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(yField.getModifiers()), is(true));
+        assertThat(Modifier.isFinal(yField.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testConstructorAcceptsTwoObjectParameters() throws Exception {
+        Constructor<?> constructor = Tuple.class.getConstructor(Object.class, Object.class);
+
+        assertThat(constructor, is(notNullValue()));
+        assertThat(constructor.getParameterCount(), is(2));
+    }
+
+    @Test
+    public void testDeclaredMethodReturnTypes() throws Exception {
+        Method getKey = Tuple.class.getMethod("getKey");
+        Method getValue = Tuple.class.getMethod("getValue");
+        Method toString = Tuple.class.getMethod("toString");
+
+        assertThat(getKey.getReturnType(), is(Object.class));
+        assertThat(getValue.getReturnType(), is(Object.class));
+        assertThat(toString.getReturnType(), is(String.class));
+    }
 }

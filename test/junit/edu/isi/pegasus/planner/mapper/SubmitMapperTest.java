@@ -13,33 +13,76 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SubmitMapper interface structure. */
 public class SubmitMapperTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testPropertyPrefixConstant() {
+        assertThat(SubmitMapper.PROPERTY_PREFIX, is("pegasus.dir.submit.mapper"));
     }
-    */
+
+    @Test
+    public void testVersionConstant() {
+        assertThat(SubmitMapper.VERSION, is("1.0"));
+    }
+
+    @Test
+    public void testSubmitMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(SubmitMapper.class), is(true));
+    }
+
+    @Test
+    public void testGetRelativeDirMethodExists() throws NoSuchMethodException {
+        assertThat(
+                SubmitMapper.class.getMethod(
+                        "getRelativeDir", edu.isi.pegasus.planner.classes.Job.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testGetDirMethodExists() throws NoSuchMethodException {
+        assertThat(
+                SubmitMapper.class.getMethod("getDir", edu.isi.pegasus.planner.classes.Job.class),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testSubmitMapperIsInterface() {
+        assertThat(SubmitMapper.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testInitializeMethodSignature() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                SubmitMapper.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        java.util.Properties.class,
+                        java.io.File.class);
+
+        assertThat(method.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testGetRelativeDirReturnsFile() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                SubmitMapper.class.getMethod(
+                        "getRelativeDir", edu.isi.pegasus.planner.classes.Job.class);
+
+        assertThat(method.getReturnType(), is(java.io.File.class));
+    }
+
+    @Test
+    public void testGetDirReturnsFile() throws NoSuchMethodException {
+        java.lang.reflect.Method method =
+                SubmitMapper.class.getMethod("getDir", edu.isi.pegasus.planner.classes.Job.class);
+
+        assertThat(method.getReturnType(), is(java.io.File.class));
+    }
 }

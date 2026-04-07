@@ -13,33 +13,27 @@
  */
 package edu.isi.pegasus.planner.catalog.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TestSiteCatalog class structure. */
 public class TestSiteCatalogTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testClassIsInCorrectPackage() {
+        assertThat(
+                TestSiteCatalog.class.getPackage().getName(),
+                is("edu.isi.pegasus.planner.catalog.site"));
     }
-    */
+
+    @Test
+    public void testClassHasMainMethod() throws NoSuchMethodException {
+        assertThat(
+                TestSiteCatalog.class.getDeclaredMethod("main", String[].class),
+                is(notNullValue()));
+    }
 }

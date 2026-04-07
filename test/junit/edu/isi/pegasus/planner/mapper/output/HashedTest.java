@@ -15,31 +15,93 @@ package edu.isi.pegasus.planner.mapper.output;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.mapper.OutputMapper;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Hashed output mapper class structure. */
 public class HashedTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHashedImplementsOutputMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                OutputMapper.class.isAssignableFrom(Hashed.class), org.hamcrest.Matchers.is(true));
     }
-    */
+
+    @Test
+    public void testHashedExtendsAbstractFileFactoryBasedMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                AbstractFileFactoryBasedMapper.class.isAssignableFrom(Hashed.class),
+                org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testShortNameConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                Hashed.SHORT_NAME, org.hamcrest.Matchers.is("Hashed"));
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Hashed hashed = new Hashed();
+        org.hamcrest.MatcherAssert.assertThat(hashed, org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testHashedIsPublicClass() {
+        int modifiers = Hashed.class.getModifiers();
+        org.hamcrest.MatcherAssert.assertThat(
+                java.lang.reflect.Modifier.isPublic(modifiers), org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testDescriptionReturnsExpectedText() {
+        org.hamcrest.MatcherAssert.assertThat(
+                new Hashed().description(), org.hamcrest.Matchers.is("Hashed Directory Mapper"));
+    }
+
+    @Test
+    public void testGetShortNameReturnsConstant() {
+        org.hamcrest.MatcherAssert.assertThat(
+                new Hashed().getShortName(), org.hamcrest.Matchers.is(Hashed.SHORT_NAME));
+    }
+
+    @Test
+    public void testInstantiateFileFactoryReturnsVirtualDecimalHashedFileFactory() {
+        Hashed hashed = new Hashed();
+        hashed.mSiteStore = new SiteStore();
+
+        org.hamcrest.MatcherAssert.assertThat(
+                hashed.instantiateFileFactory(new PegasusBag(), new ADag())
+                        instanceof VirtualDecimalHashedFileFactory,
+                org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testCreateAndGetAddOnTracksExistingLfnForSite() throws Exception {
+        Hashed hashed = new Hashed();
+        hashed.mSiteStore = new SiteStore();
+        hashed.mFactory = hashed.instantiateFileFactory(new PegasusBag(), new ADag());
+        hashed.mOutputSites = Collections.singleton("local");
+        invokeResetLFNAddOnCache(hashed);
+
+        String created = hashed.createAndGetAddOn("f.out", "local", false);
+        String existing = hashed.createAndGetAddOn("f.out", "local", true);
+
+        org.hamcrest.MatcherAssert.assertThat(created, org.hamcrest.Matchers.notNullValue());
+        org.hamcrest.MatcherAssert.assertThat(existing, org.hamcrest.Matchers.is(created));
+        org.hamcrest.MatcherAssert.assertThat(
+                created.endsWith("f.out"), org.hamcrest.Matchers.is(true));
+    }
+
+    private static void invokeResetLFNAddOnCache(Hashed hashed) throws Exception {
+        Method method = Hashed.class.getDeclaredMethod("resetLFNAddOnCache");
+        method.setAccessible(true);
+        method.invoke(hashed);
+    }
 }

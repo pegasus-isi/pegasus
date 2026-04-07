@@ -7,6 +7,8 @@ package edu.isi.pegasus.planner.catalog.transformation.classes;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -22,8 +24,6 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.IOException;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,12 +40,6 @@ public class ContainerTest {
 
         mTestSetup.setInputDirectory(this.getClass());
     }
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testSingularityFileCVMFS() {
@@ -187,16 +181,16 @@ public class ContainerTest {
     public void testMountPoint(
             String actual, String expectedSource, String expectedDest, String options) {
         MountPoint mp = new MountPoint(actual);
-        assertEquals(expectedSource, mp.getSourceDirectory());
-        assertEquals(expectedDest, mp.getDestinationDirectory());
-        assertEquals(options, mp.getMountOptions());
+        assertThat(mp.getSourceDirectory(), is(expectedSource));
+        assertThat(mp.getDestinationDirectory(), is(expectedDest));
+        assertThat(mp.getMountOptions(), is(options));
     }
 
     public void testSingulartiy(String name, String expectedLFN, String url) {
         Container c = new Container(name);
         c.setType(Container.TYPE.singularity);
         String lfn = c.computeLFN(new PegasusURL(url));
-        assertEquals(expectedLFN, lfn);
+        assertThat(lfn, is(expectedLFN));
     }
 
     @Test
@@ -215,11 +209,11 @@ public class ContainerTest {
                         + "  env:\n"
                         + "    JAVA_HOME: /opt/java/1.6";
         Container c = mapper.readValue(test, Container.class);
-        assertNotNull(c);
-        assertEquals(Container.TYPE.docker, c.getType());
-        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-        assertFalse(c.bypassStaging());
-        assertEquals(2, c.getMountPoints().size());
+        assertThat(c, is(notNullValue()));
+        assertThat(c.getType(), is(Container.TYPE.docker));
+        assertThat(c.getImageURL().getURL(), is("docker:///rynge/montage:latest"));
+        assertThat(c.bypassStaging(), is(false));
+        assertThat(c.getMountPoints().size(), is(2));
         assertThat(
                 c.getMountPoints(), hasItem(new MountPoint("/Volumes/Work/lfs1:/shared-data/:ro")));
         assertThat(
@@ -242,10 +236,10 @@ public class ContainerTest {
                         + "  sha256: \"a08d9d7769cffb96a910a4b6c2be7bfd85d461c9\"\n";
 
         Container c = mapper.readValue(test, Container.class);
-        assertNotNull(c);
-        assertEquals(Container.TYPE.docker, c.getType());
-        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-        assertFalse(c.bypassStaging());
+        assertThat(c, is(notNullValue()));
+        assertThat(c.getType(), is(Container.TYPE.docker));
+        assertThat(c.getImageURL().getURL(), is("docker:///rynge/montage:latest"));
+        assertThat(c.bypassStaging(), is(false));
         List<Profile> profiles = c.getProfiles("metadata");
         assertThat(
                 profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
@@ -270,10 +264,10 @@ public class ContainerTest {
                         + "bypass: true\n";
 
         Container c = mapper.readValue(test, Container.class);
-        assertNotNull(c);
-        assertEquals(Container.TYPE.docker, c.getType());
-        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-        assertTrue(c.bypassStaging());
+        assertThat(c, is(notNullValue()));
+        assertThat(c.getType(), is(Container.TYPE.docker));
+        assertThat(c.getImageURL().getURL(), is("docker:///rynge/montage:latest"));
+        assertThat(c.bypassStaging(), is(true));
     }
 
     @Test
@@ -292,10 +286,10 @@ public class ContainerTest {
                         + "    JAVA_HOME: /opt/java/1.6";
 
         Container c = mapper.readValue(test, Container.class);
-        assertNotNull(c);
-        assertEquals(Container.TYPE.docker, c.getType());
-        assertEquals("docker:///rynge/montage:latest", c.getImageURL().getURL());
-        assertFalse(c.bypassStaging());
+        assertThat(c, is(notNullValue()));
+        assertThat(c.getType(), is(Container.TYPE.docker));
+        assertThat(c.getImageURL().getURL(), is("docker:///rynge/montage:latest"));
+        assertThat(c.bypassStaging(), is(false));
         List<Profile> profiles = c.getProfiles("metadata");
         assertThat(
                 profiles, hasItem(new Profile("metadata", Metadata.CHECKSUM_TYPE_KEY, "sha256")));
@@ -341,7 +335,7 @@ public class ContainerTest {
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n";
 
         String actual = mapper.writeValueAsString(c);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -365,7 +359,7 @@ public class ContainerTest {
                         + "bypass: true\n";
 
         String actual = mapper.writeValueAsString(c);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -400,7 +394,6 @@ public class ContainerTest {
                         + "  sha256: \"dsadsadsa093232\"\n";
 
         String actual = mapper.writeValueAsString(c);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 }

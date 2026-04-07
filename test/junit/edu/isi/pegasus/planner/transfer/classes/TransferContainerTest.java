@@ -13,33 +13,131 @@
  */
 package edu.isi.pegasus.planner.transfer.classes;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Job;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link TransferContainer}. */
 public class TransferContainerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private TransferContainer container;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        container = new TransferContainer();
     }
-    */
+
+    @Test
+    public void testDefaultTXNameIsNull() {
+        assertThat(container.getTXName(), nullValue());
+    }
+
+    @Test
+    public void testDefaultRegNameIsNull() {
+        assertThat(container.getRegName(), nullValue());
+    }
+
+    @Test
+    public void testSetAndGetTXName() {
+        container.setTXName("stage_in_local_0");
+        assertThat(container.getTXName(), equalTo("stage_in_local_0"));
+    }
+
+    @Test
+    public void testSetAndGetRegName() {
+        container.setRegName("register_local_0");
+        assertThat(container.getRegName(), equalTo("register_local_0"));
+    }
+
+    @Test
+    public void testInitialFileTransfersEmpty() {
+        assertThat(container.getFileTransfers().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testAddSingleTransfer() {
+        FileTransfer ft = new FileTransfer();
+        container.addTransfer(ft);
+        assertThat(container.getFileTransfers().size(), equalTo(1));
+    }
+
+    @Test
+    public void testInitialRegistrationFilesEmpty() {
+        assertThat(container.getRegistrationFiles().isEmpty(), is(true));
+    }
+
+    @Test
+    public void testAddRegistrationFile() {
+        FileTransfer ft = new FileTransfer();
+        container.addRegistrationFiles(ft);
+        assertThat(container.getRegistrationFiles().size(), equalTo(1));
+    }
+
+    @Test
+    public void testAddComputeJob() {
+        Job job = new Job();
+        job.setJobType(Job.COMPUTE_JOB);
+        container.addComputeJob(job);
+        assertThat(container.getAssociatedComputeJobs().size(), equalTo(1));
+    }
+
+    @Test
+    public void testSetTransferType() {
+        container.setTransferType(Job.STAGE_OUT_JOB);
+        // No getter exposed, but ensure no exception is thrown
+    }
+
+    @Test
+    public void testAddTransferCollectionAddsAllEntries() {
+        FileTransfer first = new FileTransfer();
+        FileTransfer second = new FileTransfer();
+
+        container.addTransfer(Arrays.asList(first, second));
+
+        assertThat(container.getFileTransfers().size(), equalTo(2));
+        assertThat(container.getFileTransfers().contains(first), is(true));
+        assertThat(container.getFileTransfers().contains(second), is(true));
+    }
+
+    @Test
+    public void testAddRegistrationFilesCollectionAddsAllEntries() {
+        FileTransfer first = new FileTransfer();
+        FileTransfer second = new FileTransfer();
+
+        container.addRegistrationFiles(Arrays.asList(first, second));
+
+        assertThat(container.getRegistrationFiles().size(), equalTo(2));
+        assertThat(container.getRegistrationFiles().contains(first), is(true));
+        assertThat(container.getRegistrationFiles().contains(second), is(true));
+    }
+
+    @Test
+    public void testAddComputeJobFiltersDuplicateJobs() {
+        Job job = new Job();
+        job.setJobType(Job.COMPUTE_JOB);
+
+        container.addComputeJob(job);
+        container.addComputeJob(job);
+
+        assertThat(container.getAssociatedComputeJobs().size(), equalTo(1));
+    }
+
+    @Test
+    public void testDefaultAndUpdatedTransferTypeFieldValue() throws Exception {
+        assertThat(
+                (Integer) ReflectionTestUtils.getField(container, "mTransferType"),
+                equalTo(Job.STAGE_IN_JOB));
+
+        container.setTransferType(Job.STAGE_OUT_JOB);
+
+        assertThat(
+                (Integer) ReflectionTestUtils.getField(container, "mTransferType"),
+                equalTo(Job.STAGE_OUT_JOB));
+    }
 }

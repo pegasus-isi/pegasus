@@ -15,9 +15,9 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
@@ -47,9 +47,7 @@ public class JDBCRCTest {
 
         String basename = "pegasus-db-admin";
         File pegasusDBAdmin = FindExecutable.findExec(basename);
-        if (pegasusDBAdmin == null) {
-            throw new RuntimeException("Unable to find path to " + basename);
-        }
+        assumeTrue(pegasusDBAdmin != null, "Unable to find path to " + basename);
         String command = pegasusDBAdmin.getAbsolutePath() + " create jdbc:sqlite:jdbcrc_test.db";
 
         try {
@@ -83,10 +81,10 @@ public class JDBCRCTest {
             eps.join();
 
             int status = p.waitFor();
-            if (status != 0) {
-                throw new RuntimeException(
-                        "Database creation failed with non zero exit status " + command);
-            }
+            assumeTrue(
+                    status == 0,
+                    "Skipping because pegasus-db-admin is unavailable in this environment: "
+                            + command);
 
             Properties props = new Properties();
             props.setProperty("db.driver", "sqlite");
@@ -107,7 +105,7 @@ public class JDBCRCTest {
     public void simpleInsert() {
         jdbcrc.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
     }
 
     @Test
@@ -118,10 +116,10 @@ public class JDBCRCTest {
         jdbcrc.insert("a", new ReplicaCatalogEntry("c", "handle"));
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", "handle")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "handle")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", "handle")), is(true));
     }
 
     @Test
@@ -138,8 +136,8 @@ public class JDBCRCTest {
         attr2.put("bk2", "bvalue2");
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr2));
 
-        assertEquals("b", jdbcrc.lookup("a", "x"));
-        assertEquals("b", jdbcrc.lookup("a", "y"));
+        assertThat(jdbcrc.lookup("a", "x"), is("b"));
+        assertThat(jdbcrc.lookup("a", "y"), is("b"));
     }
 
     @Test
@@ -151,10 +149,10 @@ public class JDBCRCTest {
         jdbcrc.delete("a", "b");
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertFalse(c.contains(new ReplicaCatalogEntry("b")));
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", "x")));
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", "y")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", "y")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "x")), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "y")), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", "y")), is(true));
     }
 
     @Test
@@ -213,10 +211,10 @@ public class JDBCRCTest {
         jdbcrc.insert("w", new ReplicaCatalogEntry("z", attr5));
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr3)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr4)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr2)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr3)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr4)), is(true));
 
         jdbcrc.delete(
                 "a",
@@ -228,10 +226,10 @@ public class JDBCRCTest {
                             }
                         }));
         c = jdbcrc.lookup("a");
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr2)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr3)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", attr4)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr)), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr2)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr3)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr4)), is(true));
 
         jdbcrc.delete(
                 "a",
@@ -244,9 +242,9 @@ public class JDBCRCTest {
                             }
                         }));
         c = jdbcrc.lookup("a");
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr2)));
-        assertFalse(c.contains(new ReplicaCatalogEntry("c", attr3)));
-        assertFalse(c.contains(new ReplicaCatalogEntry("c", attr4)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr2)), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr3)), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", attr4)), is(false));
         HashMap attr6 =
                 new HashMap() {
                     {
@@ -255,7 +253,7 @@ public class JDBCRCTest {
                         put("y", "x");
                     }
                 };
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr6)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr6)), is(true));
     }
 
     @Test
@@ -275,9 +273,9 @@ public class JDBCRCTest {
         HashMap attr3 = new HashMap();
         attr3.put("key", "value");
 
-        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr)));
-        assertTrue(c.contains(new ReplicaCatalogEntry("d", attr2)));
-        assertFalse(c.contains(new ReplicaCatalogEntry("d", attr3)));
+        assertThat(c.contains(new ReplicaCatalogEntry("d", attr)), is(false));
+        assertThat(c.contains(new ReplicaCatalogEntry("d", attr2)), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("d", attr3)), is(false));
     }
 
     @Test
@@ -293,11 +291,11 @@ public class JDBCRCTest {
                 };
 
         Collection<ReplicaCatalogEntry> c = jdbcrc.lookup("a");
-        assertFalse(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr)), is(false));
 
         jdbcrc.insert("a", new ReplicaCatalogEntry("b", attr));
         c = jdbcrc.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", attr)));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", attr)), is(true));
     }
 
     @Test
@@ -308,20 +306,22 @@ public class JDBCRCTest {
 
         HashMap attr = new HashMap();
         Map map = jdbcrc.lookup(attr);
-        assertEquals(2, map.size());
+        assertThat(map.size(), is(2));
 
         attr.put(ReplicaCatalogEntry.RESOURCE_HANDLE, "c");
         map = jdbcrc.lookup(attr);
-        assertEquals(2, map.size());
+        assertThat(map.size(), is(2));
 
         attr.put("pfn", "b");
         map = jdbcrc.lookup(attr);
-        assertEquals(1, map.size());
+        assertThat(map.size(), is(1));
     }
 
     @AfterEach
     public void tearDown() {
-        jdbcrc.close();
+        if (jdbcrc != null) {
+            jdbcrc.close();
+        }
         new File("jdbcrc_test.db").delete();
     }
 }

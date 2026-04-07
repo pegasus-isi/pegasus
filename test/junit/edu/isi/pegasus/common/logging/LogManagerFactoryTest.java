@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.common.logging;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.logger.Default;
+import edu.isi.pegasus.common.logging.logger.Log4j;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.lang.reflect.Modifier;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the LogManagerFactory class. */
 public class LogManagerFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testLogManagerFactoryIsConcreteClass() {
+        assertThat(Modifier.isAbstract(LogManagerFactory.class.getModifiers()), is(false));
     }
-    */
+
+    @Test
+    public void testDefaultPackageNameConstant() {
+        assertThat(
+                LogManagerFactory.DEFAULT_PACKAGE_NAME,
+                is("edu.isi.pegasus.common.logging.logger"));
+    }
+
+    @Test
+    public void testDefaultPackageNameIsNotEmpty() {
+        assertThat(LogManagerFactory.DEFAULT_PACKAGE_NAME.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testLoadInstanceDefaultLogger() {
+        LogManager manager = LogManagerFactory.loadInstance("Default", "Simple", new Properties());
+        assertThat(manager, is(notNullValue()));
+        assertThat(manager, instanceOf(Default.class));
+    }
+
+    @Test
+    public void testLoadInstanceLog4jLogger() {
+        LogManager manager = LogManagerFactory.loadInstance("Log4j", "Simple", new Properties());
+        assertThat(manager, is(notNullValue()));
+        assertThat(manager, instanceOf(Log4j.class));
+    }
+
+    @Test
+    public void testLoadInstanceThrowsExceptionForUnknownClass() {
+        assertThrows(
+                LogManagerFactoryException.class,
+                () -> LogManagerFactory.loadInstance("NonExistent", "Simple", new Properties()),
+                "loadInstance for unknown class should throw LogManagerFactoryException");
+    }
+
+    @Test
+    public void testLoadedManagerHasCorrectDefaultLevel() {
+        LogManager manager = LogManagerFactory.loadInstance("Default", "Simple", new Properties());
+        // LogManager initializes mDebugLevel=0 regardless of implementation
+        assertThat(manager.getLevel(), is(0));
+    }
+
+    @Test
+    public void testLoadInstanceThrowsForNullPropertiesOverload() {
+        assertThrows(
+                LogManagerFactoryException.class,
+                () -> LogManagerFactory.loadInstance((PegasusProperties) null));
+    }
+
+    @Test
+    public void testLoadSingletonInstanceReturnsSeededSingleton() throws Exception {
+        LogManager seeded = new Default();
+        ReflectionTestUtils.setField(LogManagerFactory.class, "mSingletonInstance", seeded);
+
+        LogManager result =
+                LogManagerFactory.loadSingletonInstance(PegasusProperties.nonSingletonInstance());
+
+        assertThat(result, sameInstance(seeded));
+    }
+
+    @Test
+    public void testPropertiesOverloadMethodSignature() throws Exception {
+        assertThat(
+                LogManagerFactory.class
+                        .getMethod("loadInstance", PegasusProperties.class)
+                        .getReturnType(),
+                is(LogManager.class));
+    }
 }

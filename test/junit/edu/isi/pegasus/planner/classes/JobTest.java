@@ -5,17 +5,16 @@
  */
 package edu.isi.pegasus.planner.classes;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -27,36 +26,24 @@ public class JobTest {
 
     public JobTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void testDAGManCompliantJobNameNoSub() throws IOException {
-        assertEquals("preprocess", Job.makeDAGManCompliant("preprocess"));
+        assertThat(Job.makeDAGManCompliant("preprocess"), is("preprocess"));
     }
 
     @Test
     public void testDAGManCompliantJobNameWithDots() throws IOException {
-        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre.proc.ess"));
+        assertThat(Job.makeDAGManCompliant("pre.proc.ess"), is("pre_proc_ess"));
     }
 
     @Test
     public void testDAGManCompliantJobNameWithPlus() throws IOException {
-        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre+proc+ess"));
+        assertThat(Job.makeDAGManCompliant("pre+proc+ess"), is("pre_proc_ess"));
     }
 
     @Test
     public void testDAGManCompliantJobNameWithEquals() throws IOException {
-        assertEquals("pre_proc_ess", Job.makeDAGManCompliant("pre=proc+ess"));
+        assertThat(Job.makeDAGManCompliant("pre=proc+ess"), is("pre_proc_ess"));
     }
 
     @Test
@@ -71,11 +58,11 @@ public class JobTest {
                         + "version: \"2.0\"";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
-        assertEquals("diamond", job.getTXNamespace());
-        assertEquals("2.0", job.getTXVersion());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
+        assertThat(job.getTXNamespace(), is("diamond"));
+        assertThat(job.getTXVersion(), is("2.0"));
     }
 
     @Test
@@ -90,10 +77,10 @@ public class JobTest {
                         + "  [\"-a\", \"preprocess\", \"-T60\", \"-i\", \"f.a\", \"-o\", \"f.b1\", \"f.b2\"]";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
-        assertEquals("-a preprocess -T60 -i f.a -o f.b1 f.b2", job.getArguments());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
+        assertThat(job.getArguments(), is("-a preprocess -T60 -i f.a -o f.b1 f.b2"));
     }
 
     @Test
@@ -104,9 +91,9 @@ public class JobTest {
         String test = "id: ID000001\n" + "name: preprocess\n" + "nodeLabel: pre-process";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
         // nodeLabel is not parsed into by the planner. making sure no error is thrown
     }
 
@@ -129,12 +116,12 @@ public class JobTest {
                         + "    stageOut: true";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
         Collection<PegasusFile> inputs = job.getInputFiles();
-        assertNotNull(inputs);
-        assertEquals(1, inputs.size());
+        assertThat(inputs, is(notNullValue()));
+        assertThat(inputs.size(), is(1));
 
         PegasusFile expectedInput = new PegasusFile();
         expectedInput.setLinkage(PegasusFile.LINKAGE.input);
@@ -160,12 +147,12 @@ public class JobTest {
                         + "    stageOut: true\n";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
         Collection<PegasusFile> outputs = job.getOutputFiles();
-        assertNotNull(outputs);
-        assertEquals(1, outputs.size());
+        assertThat(outputs, is(notNullValue()));
+        assertThat(outputs.size(), is(1));
 
         PegasusFile expectedOutput = new PegasusFile();
         expectedOutput.setLinkage(PegasusFile.LINKAGE.output);
@@ -184,10 +171,10 @@ public class JobTest {
         String test = "id: ID000001\n" + "name: preprocess\n" + "stdin: job.in";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
-        assertEquals("job.in", job.getStdIn());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
+        assertThat(job.getStdIn(), is("job.in"));
     }
 
     @Test
@@ -198,10 +185,10 @@ public class JobTest {
         String test = "id: ID000001\n" + "name: preprocess\n" + "stderr: job.err";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
-        assertEquals("job.err", job.getStdErr());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
+        assertThat(job.getStdErr(), is("job.err"));
     }
 
     @Test
@@ -212,10 +199,10 @@ public class JobTest {
         String test = "id: ID000001\n" + "name: preprocess\n" + "stdout: job.out";
 
         Job job = mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000001", job.getLogicalID());
-        assertEquals("preprocess", job.getTXName());
-        assertEquals("job.out", job.getStdOut());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000001"));
+        assertThat(job.getTXName(), is("preprocess"));
+        assertThat(job.getStdOut(), is("job.out"));
     }
 
     @Test
@@ -234,13 +221,13 @@ public class JobTest {
                         + "    registerReplica: False";
 
         DAXJob job = (DAXJob) mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000002", job.getLogicalID());
-        assertEquals("finalization.dax", job.getDAXLFN());
-        assertEquals(Job.DAX_JOB, job.getJobType());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000002"));
+        assertThat(job.getDAXLFN(), is("finalization.dax"));
+        assertThat(job.getJobType(), is(Job.DAX_JOB));
         Collection<PegasusFile> inputs = job.getInputFiles();
-        assertNotNull(inputs);
-        assertEquals(1, inputs.size());
+        assertThat(inputs, is(notNullValue()));
+        assertThat(inputs.size(), is(1));
 
         PegasusFile expectedInput = new PegasusFile();
         expectedInput.setLinkage(PegasusFile.LINKAGE.input);
@@ -284,13 +271,13 @@ public class JobTest {
                         + "    registerReplica: False";
 
         DAGJob job = (DAGJob) mapper.readValue(test, Job.class);
-        assertNotNull(job);
-        assertEquals("ID000002", job.getLogicalID());
-        assertEquals("finalization.dag", job.getDAGLFN());
-        assertEquals(Job.DAG_JOB, job.getJobType());
+        assertThat(job, is(notNullValue()));
+        assertThat(job.getLogicalID(), is("ID000002"));
+        assertThat(job.getDAGLFN(), is("finalization.dag"));
+        assertThat(job.getJobType(), is(Job.DAG_JOB));
         Collection<PegasusFile> inputs = job.getInputFiles();
-        assertNotNull(inputs);
-        assertEquals(1, inputs.size());
+        assertThat(inputs, is(notNullValue()));
+        assertThat(inputs.size(), is(1));
 
         PegasusFile expectedInput = new PegasusFile();
         expectedInput.setLinkage(PegasusFile.LINKAGE.input);
@@ -322,7 +309,7 @@ public class JobTest {
     public void testStagedExecutableBasename() throws IOException {
         Job j = new Job();
         j.setTransformation("pegasus", "keg", "5.0");
-        assertEquals("pegasus-keg-5.0", j.getStagedExecutableBaseName());
+        assertThat(j.getStagedExecutableBaseName(), is("pegasus-keg-5.0"));
     }
 
     // PM-1806
@@ -330,7 +317,7 @@ public class JobTest {
     public void testStagedExecutableBasenameWithDots() throws IOException {
         Job j = new Job();
         j.setTransformation("pegasus.namespace", "keg.rajiv", "5.0");
-        assertEquals("pegasus.namespace-keg.rajiv-5.0", j.getStagedExecutableBaseName());
+        assertThat(j.getStagedExecutableBaseName(), is("pegasus.namespace-keg.rajiv-5.0"));
     }
 
     // PM-1806
@@ -338,14 +325,14 @@ public class JobTest {
     public void testStagedExecutableBasenameWithDotInName() throws IOException {
         Job j = new Job();
         j.setTransformation(null, "keg.rajiv", null);
-        assertEquals("keg.rajiv", j.getStagedExecutableBaseName());
+        assertThat(j.getStagedExecutableBaseName(), is("keg.rajiv"));
     }
 
     private void testPegasusFile(PegasusFile expected, PegasusFile actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getLFN(), actual.getLFN());
-        assertEquals(expected.getLinkage(), actual.getLinkage());
-        assertEquals(expected.getTransferFlag(), actual.getTransferFlag());
-        assertTrue(expected.getRegisterFlag() == actual.getRegisterFlag());
+        assertThat(actual, is(notNullValue()));
+        assertThat(actual.getLFN(), is(expected.getLFN()));
+        assertThat(actual.getLinkage(), is(expected.getLinkage()));
+        assertThat(actual.getTransferFlag(), is(expected.getTransferFlag()));
+        assertThat(expected.getRegisterFlag() == actual.getRegisterFlag(), is(true));
     }
 }

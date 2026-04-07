@@ -13,33 +13,34 @@
  */
 package edu.isi.pegasus.planner.transfer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class MultipleFTPerXFERJobTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMultipleFTPerXFERJobIsInterface() {
+        assertThat(MultipleFTPerXFERJob.class.isInterface(), is(true));
+        assertThat(MultipleFTPerXFERJob.class.getInterfaces().length, equalTo(0));
     }
-    */
+
+    @Test
+    public void testMultipleFTPerXFERJobDeclaresNoMethods() {
+        Method[] methods = MultipleFTPerXFERJob.class.getDeclaredMethods();
+        assertThat(methods.length, equalTo(0));
+    }
+
+    @Test
+    public void testMultipleFTPerXFERJobDeclaresNoFields() {
+        Field[] fields = MultipleFTPerXFERJob.class.getDeclaredFields();
+        assertThat(fields.length, equalTo(0));
+        assertThat(Modifier.isAbstract(MultipleFTPerXFERJob.class.getModifiers()), is(true));
+        assertThat(Modifier.isInterface(MultipleFTPerXFERJob.class.getModifiers()), is(true));
+    }
 }

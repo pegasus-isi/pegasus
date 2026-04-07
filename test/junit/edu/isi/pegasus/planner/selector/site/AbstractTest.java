@@ -13,33 +13,97 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the Abstract site selector class. Uses concrete subclasses to exercise the abstract
+ * base.
+ */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testRandomImplementsAbstract() {
+        Random selector = new Random();
+        assertThat(selector, instanceOf(Abstract.class));
     }
-    */
+
+    @Test
+    public void testRoundRobinImplementsAbstract() {
+        RoundRobin selector = new RoundRobin();
+        assertThat(selector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testGroupImplementsAbstract() {
+        Group selector = new Group();
+        assertThat(selector, instanceOf(Abstract.class));
+    }
+
+    @Test
+    public void testAbstractImplementsSiteSelector() {
+        Random selector = new Random();
+        assertThat(selector, instanceOf(SiteSelector.class));
+    }
+
+    @Test
+    public void testRandomCanBeInstantiated() {
+        assertDoesNotThrow(Random::new, "Random should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testRoundRobinCanBeInstantiated() {
+        assertDoesNotThrow(
+                RoundRobin::new, "RoundRobin should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testGroupCanBeInstantiated() {
+        assertDoesNotThrow(Group::new, "Group should be instantiatable with no-arg constructor");
+    }
+
+    @Test
+    public void testAbstractIsAbstract() {
+        assertThat(Modifier.isAbstract(Abstract.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testInitializeMethodReturnsVoid() throws Exception {
+        assertThat(
+                Abstract.class
+                        .getMethod("initialize", edu.isi.pegasus.planner.classes.PegasusBag.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+    }
+
+    @Test
+    public void testProtectedFieldsExistWithExpectedTypes() throws Exception {
+        assertThat(
+                Abstract.class.getDeclaredField("mProps").getType(),
+                is(edu.isi.pegasus.planner.common.PegasusProperties.class));
+        assertThat(
+                Abstract.class.getDeclaredField("mLogger").getType(),
+                is(edu.isi.pegasus.common.logging.LogManager.class));
+        assertThat(
+                Abstract.class.getDeclaredField("mSiteStore").getType(),
+                is(edu.isi.pegasus.planner.catalog.site.classes.SiteStore.class));
+        assertThat(
+                Abstract.class.getDeclaredField("mTCMapper").getType(),
+                is(edu.isi.pegasus.planner.catalog.transformation.Mapper.class));
+        assertThat(
+                Abstract.class.getDeclaredField("mBag").getType(),
+                is(edu.isi.pegasus.planner.classes.PegasusBag.class));
+
+        assertThat(
+                Modifier.isProtected(Abstract.class.getDeclaredField("mProps").getModifiers()),
+                is(true));
+        assertThat(
+                Modifier.isProtected(Abstract.class.getDeclaredField("mLogger").getModifiers()),
+                is(true));
+    }
 }

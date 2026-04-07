@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.parser;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -32,9 +33,6 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,12 +46,6 @@ public class DAXParserFactoryTest {
     private TestSetup mTestSetup;
 
     public DAXParserFactoryTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -99,10 +91,10 @@ public class DAXParserFactoryTest {
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
         Map map = DAXParserFactory.getDAXMetadata(mBag, dax);
-        assertEquals("1", map.get("count"));
-        assertEquals("diamond", map.get("name"));
-        assertEquals("0", map.get("index"));
-        assertEquals("3.6", map.get("version"));
+        assertThat(map.get("count"), is("1"));
+        assertThat(map.get("name"), is("diamond"));
+        assertThat(map.get("index"), is("0"));
+        assertThat(map.get("version"), is("3.6"));
         mLogger.logEventCompletion();
     }
 
@@ -111,13 +103,10 @@ public class DAXParserFactoryTest {
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
         String dax = new File(mTestSetup.getInputDirectory(), "workflow.yml").getAbsolutePath();
         Map map = DAXParserFactory.getDAXMetadata(mBag, dax);
-        assertEquals("1", map.get("count"));
-        assertEquals("diamond", map.get("name"));
-        assertEquals("0", map.get("index"));
-        assertEquals("5.0", map.get("version"));
+        assertThat(map.get("count"), is("1"));
+        assertThat(map.get("name"), is("diamond"));
+        assertThat(map.get("index"), is("0"));
+        assertThat(map.get("version"), is("5.0"));
         mLogger.logEventCompletion();
     }
-
-    @AfterEach
-    public void tearDown() {}
 }

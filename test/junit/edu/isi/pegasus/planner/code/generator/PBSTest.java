@@ -13,33 +13,185 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.CodeGeneratorException;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.File;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.util.Map;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the PBS code generator class. */
 public class PBSTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpLogManager extends LogManager {
+        private int mLevel;
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void initialize(LogFormatter formatter, Properties properties) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void configure(boolean prefixTimestamp) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        protected void setLevel(int level, boolean info) {
+            mLevel = level;
+        }
+
+        @Override
+        public int getLevel() {
+            return mLevel;
+        }
+
+        @Override
+        public void setWriters(String out) {}
+
+        @Override
+        public void setWriter(STREAM_TYPE type, PrintStream ps) {}
+
+        @Override
+        public PrintStream getWriter(STREAM_TYPE type) {
+            return null;
+        }
+
+        @Override
+        public void log(String message, Exception e, int level) {}
+
+        @Override
+        public void log(String message, int level) {}
+
+        @Override
+        protected void logAlreadyFormattedMessage(String message, int level) {}
+
+        @Override
+        public void logEventCompletion(int level) {}
     }
-    */
+
+    private static final class TestPBS extends PBS {
+        boolean initializeGridStartFlag() {
+            return mInitializeGridStart;
+        }
+
+        String pbsBasenameFor(ADag dag) {
+            return pbsBasename(dag);
+        }
+
+        String pathToPBSFileFor(ADag dag) {
+            return getPathtoPBSFile(dag);
+        }
+    }
+
+    @Test
+    public void testPBSExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(PBS.class), is(true));
+    }
+
+    @Test
+    public void testPBSImplementsCodeGenerator() {
+        assertThat(
+                edu.isi.pegasus.planner.code.CodeGenerator.class.isAssignableFrom(PBS.class),
+                is(true));
+    }
+
+    @Test
+    public void testPBSInstantiation() {
+        PBS pbs = new PBS();
+        assertThat(pbs, notNullValue());
+    }
+
+    @Test
+    public void testConstructorInitializesGridStartFlag() {
+        TestPBS pbs = new TestPBS();
+
+        assertThat(pbs.initializeGridStartFlag(), is(true));
+    }
+
+    @Test
+    public void testPbsBasenameUsesLabelAndIndex() {
+        TestPBS pbs = new TestPBS();
+        ADag dag = new ADag();
+        dag.setLabel("workflow");
+        dag.setIndex("0005");
+
+        assertThat(pbs.pbsBasenameFor(dag), is("workflow-0005.pbs"));
+    }
+
+    @Test
+    public void testGetPathtoPBSFileUsesSubmitDirectory() throws Exception {
+        File submitDir = Files.createTempDirectory("pbs-generator-path").toFile();
+        TestPBS pbs = initializedGenerator(submitDir);
+        ADag dag = new ADag();
+        dag.setLabel("workflow");
+        dag.setIndex("0006");
+
+        assertThat(
+                pbs.pathToPBSFileFor(dag),
+                is(new File(submitDir, "workflow-0006.pbs").getAbsolutePath()));
+    }
+
+    @Test
+    public void testGetAdditionalBraindumpEntriesIncludesGeneratorTypeAndScriptPath()
+            throws Exception {
+        File submitDir = Files.createTempDirectory("pbs-braindump").toFile();
+        TestPBS pbs = initializedGenerator(submitDir);
+        ADag dag = new ADag();
+        dag.setLabel("workflow");
+        dag.setIndex("0007");
+
+        Map<String, String> entries = pbs.getAdditionalBraindumpEntries(dag);
+
+        assertThat(entries.get(Braindump.GENERATOR_TYPE_KEY), is("pbs"));
+        assertThat(
+                entries.get("script"),
+                is(new File(submitDir, "workflow-0007.pbs").getAbsolutePath()));
+    }
+
+    @Test
+    public void testGenerateCodeForSingleJobThrowsWorkflowLevelException() {
+        PBS pbs = new PBS();
+        CodeGeneratorException exception =
+                assertThrows(
+                        CodeGeneratorException.class,
+                        () -> pbs.generateCode(new ADag(), new Job()));
+
+        assertThat(exception.getMessage(), containsString("workflow level"));
+    }
+
+    @Test
+    public void testGenerateCodeThrowsWhenPegasusMpiClusterIsNotOnPath() throws Exception {
+        File submitDir = Files.createTempDirectory("pbs-generate").toFile();
+        TestPBS pbs = initializedGenerator(submitDir);
+        ADag dag = new ADag();
+        dag.setLabel("workflow");
+        dag.setIndex("0008");
+
+        CodeGeneratorException exception =
+                assertThrows(CodeGeneratorException.class, () -> pbs.generateCode(dag));
+
+        assertThat(exception.getMessage(), containsString("pegasus-mpi-cluster"));
+    }
+
+    private TestPBS initializedGenerator(File submitDir) throws Exception {
+        PegasusBag bag = new PegasusBag();
+        PlannerOptions options = new PlannerOptions();
+        options.setSubmitDirectory(submitDir);
+        bag.add(PegasusBag.PLANNER_OPTIONS, options);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, new NoOpLogManager());
+
+        TestPBS pbs = new TestPBS();
+        pbs.initialize(bag);
+        return pbs;
+    }
 }

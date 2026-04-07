@@ -13,33 +13,83 @@
  */
 package edu.isi.pegasus.planner.common;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.io.File;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for RunDirectoryFilenameFilter. */
 public class RunDirectoryFilenameFilterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private RunDirectoryFilenameFilter mFilter;
+    private File mDummyDir;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mFilter = new RunDirectoryFilenameFilter();
+        mDummyDir = new File("/tmp");
     }
-    */
+
+    @Test
+    public void testAcceptsValidRunDirectory() {
+        assertThat(mFilter.accept(mDummyDir, "run0001"), is(true));
+    }
+
+    @Test
+    public void testAcceptsRunWithMaxDigits() {
+        assertThat(mFilter.accept(mDummyDir, "run9999"), is(true));
+    }
+
+    @Test
+    public void testRejectsDirectoryWithoutPrefix() {
+        assertThat(mFilter.accept(mDummyDir, "0001"), is(false));
+    }
+
+    @Test
+    public void testRejectsDirectoryWithWrongPrefix() {
+        assertThat(mFilter.accept(mDummyDir, "dir0001"), is(false));
+    }
+
+    @Test
+    public void testRejectsRunWithTooFewDigits() {
+        assertThat(mFilter.accept(mDummyDir, "run001"), is(false));
+    }
+
+    @Test
+    public void testRejectsRunWithTooManyDigits() {
+        assertThat(mFilter.accept(mDummyDir, "run00001"), is(false));
+    }
+
+    @Test
+    public void testRejectsRunWithLetters() {
+        assertThat(mFilter.accept(mDummyDir, "run000a"), is(false));
+    }
+
+    @Test
+    public void testSubmitDirectoryPrefixConstant() {
+        assertThat(RunDirectoryFilenameFilter.SUBMIT_DIRECTORY_PREFIX, is("run"));
+    }
+
+    @Test
+    public void testAcceptIgnoresDirectoryArgument() {
+        assertThat(mFilter.accept(null, "run1234"), is(true));
+    }
+
+    @Test
+    public void testRejectsUppercasePrefix() {
+        assertThat(mFilter.accept(mDummyDir, "RUN1234"), is(false));
+    }
+
+    @Test
+    public void testRejectsFilenameWithTrailingCharacters() {
+        assertThat(mFilter.accept(mDummyDir, "run1234.tmp"), is(false));
+    }
+
+    @Test
+    public void testRejectsFilenameContainingPathSeparator() {
+        assertThat(mFilter.accept(mDummyDir, "run1234/subdir"), is(false));
+    }
 }

@@ -13,33 +13,98 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for File abstract invocation class structure. */
 public class FileTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class TestFile extends File {
+        TestFile() {
+            super();
+        }
 
-    @BeforeEach
-    public void setUp() {}
+        TestFile(String value) {
+            super(value);
+        }
 
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        public void toXML(Writer stream, String indent, String namespace) {}
     }
-    */
+
+    @Test
+    public void testFileIsAbstract() {
+        assertThat(Modifier.isAbstract(File.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(File.class), is(true));
+    }
+
+    @Test
+    public void testImplementsHasText() {
+        assertThat(HasText.class.isAssignableFrom(File.class), is(true));
+    }
+
+    @Test
+    public void testDescriptorIsConcreteSubclass() {
+        assertThat(File.class.isAssignableFrom(Descriptor.class), is(true));
+        assertThat(Modifier.isAbstract(Descriptor.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testTemporaryExtendsFile() {
+        assertThat(File.class.isAssignableFrom(Temporary.class), is(true));
+    }
+
+    @Test
+    public void testRegularExtendsFile() {
+        assertThat(File.class.isAssignableFrom(Regular.class), is(true));
+    }
+
+    @Test
+    public void testDescriptorAppendValueBuildsHexbyte() {
+        Descriptor d = new Descriptor();
+        d.appendValue("deadbeef");
+        assertThat(d.getValue(), is("deadbeef"));
+    }
+
+    @Test
+    public void testDescriptorAppendNullIsNoop() {
+        Descriptor d = new Descriptor();
+        d.appendValue(null);
+        assertThat(d.getValue(), nullValue());
+    }
+
+    @Test
+    public void testBaseConstructorWithValueStoresHexBytes() {
+        TestFile file = new TestFile("deadbeef");
+
+        assertThat(file.getValue(), is("deadbeef"));
+    }
+
+    @Test
+    public void testSetValueReplacesExistingHexBytes() {
+        TestFile file = new TestFile("dead");
+        file.setValue("beef");
+
+        assertThat(file.getValue(), is("beef"));
+    }
+
+    @Test
+    public void testBaseToStringWriterThrowsIOException() {
+        TestFile file = new TestFile("deadbeef");
+        StringWriter writer = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> file.toString(writer));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
 }

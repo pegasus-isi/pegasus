@@ -13,33 +13,54 @@
  */
 package edu.isi.pegasus.planner.transfer.implementation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class TPTGUCTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testTPTGUCExtendsGUC() {
+        assertThat(TPTGUC.class.getSuperclass(), is(GUC.class));
     }
-    */
+
+    @Test
+    public void testConstructorSignature() throws Exception {
+        Constructor<TPTGUC> constructor = TPTGUC.class.getDeclaredConstructor(PegasusBag.class);
+
+        assertThat(Modifier.isPublic(constructor.getModifiers()), is(true));
+        assertThat(constructor.getParameterCount(), is(1));
+        assertThat(TPTGUC.class.getDeclaredConstructors().length, is(1));
+    }
+
+    @Test
+    public void testSelectedMethodSignatures() throws Exception {
+        Method useThirdPartyTransferAlways =
+                TPTGUC.class.getDeclaredMethod("useThirdPartyTransferAlways");
+        assertThat(useThirdPartyTransferAlways.getReturnType(), is(boolean.class));
+        assertThat(Modifier.isPublic(useThirdPartyTransferAlways.getModifiers()), is(true));
+
+        Method generateArgumentString =
+                TPTGUC.class.getDeclaredMethod("generateArgumentString", TransferJob.class);
+        assertThat(generateArgumentString.getReturnType(), is(String.class));
+        assertThat(Modifier.isProtected(generateArgumentString.getModifiers()), is(true));
+
+        Method postProcess = TPTGUC.class.getDeclaredMethod("postProcess", TransferJob.class);
+        assertThat(postProcess.getReturnType(), is(void.class));
+        assertThat(Modifier.isPublic(postProcess.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testTPTGUCDeclaresExpectedMethods() {
+        Method[] methods = TPTGUC.class.getDeclaredMethods();
+        assertThat(methods.length, is(3));
+    }
 }

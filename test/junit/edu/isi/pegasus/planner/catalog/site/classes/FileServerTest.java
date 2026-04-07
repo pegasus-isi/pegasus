@@ -15,6 +15,9 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -23,28 +26,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.util.PegasusURL;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class FileServerTest {
 
     public FileServerTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testFileServerSerialization() throws IOException {
@@ -65,8 +52,7 @@ public class FileServerTest {
                         + "operation: \"get\"\n"
                         + "url: \"http://test.isi.edu/shared/data/scratch\"\n";
         String actual = mapper.writeValueAsString(fs);
-        System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -78,8 +64,8 @@ public class FileServerTest {
 
         FileServer fs = mapper.readValue(test, FileServer.class);
 
-        assertNotNull(fs);
-        assertEquals(FileServer.OPERATION.all, fs.getSupportedOperation());
-        assertEquals("file:///tmp/workflows/scratch", fs.getURL());
+        assertThat(fs, is(notNullValue()));
+        assertThat(fs.getSupportedOperation(), is(FileServer.OPERATION.all));
+        assertThat(fs.getURL(), is("file:///tmp/workflows/scratch"));
     }
 }

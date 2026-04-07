@@ -13,33 +13,112 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for the Clusterer interface: verifies constants and that known implementations conform to
+ * the interface.
+ */
 public class ClustererTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstantNotNull() {
+        assertThat(Clusterer.VERSION, notNullValue());
     }
-    */
+
+    @Test
+    public void testVersionConstantNotEmpty() {
+        assertThat(Clusterer.VERSION.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testHorizontalImplementsClusterer() {
+        Horizontal h = new Horizontal();
+        assertThat(h, instanceOf(Clusterer.class));
+    }
+
+    @Test
+    public void testVerticalImplementsClusterer() {
+        Vertical v = new Vertical();
+        assertThat(v, instanceOf(Clusterer.class));
+    }
+
+    @Test
+    public void testHorizontalCanBeInstantiated() {
+        assertDoesNotThrow(Horizontal::new);
+    }
+
+    @Test
+    public void testVerticalCanBeInstantiated() {
+        assertDoesNotThrow(Vertical::new);
+    }
+
+    @Test
+    public void testHorizontalDescriptionNotNull() {
+        Horizontal h = new Horizontal();
+        assertThat(h.description(), notNullValue());
+    }
+
+    @Test
+    public void testVerticalDescriptionNotNull() {
+        Vertical v = new Vertical();
+        assertThat(v.description(), notNullValue());
+    }
+
+    @Test
+    public void testClustererIsInterface() {
+        assertThat(Clusterer.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testVersionConstantMatchesExpectedValue() {
+        assertThat(Clusterer.VERSION, is("1.1"));
+    }
+
+    @Test
+    public void testClustererDeclaresExpectedMethodNames() {
+        List<String> methodNames =
+                Arrays.asList(
+                        "initialize",
+                        "determineClusters",
+                        "parents",
+                        "getClusteredDAG",
+                        "description");
+
+        for (String methodName : methodNames) {
+            assertThat(
+                    Arrays.stream(Clusterer.class.getDeclaredMethods())
+                            .map(Method::getName)
+                            .anyMatch(methodName::equals),
+                    is(true));
+        }
+    }
+
+    @Test
+    public void testClustererMutatingMethodsDeclareClustererException() throws Exception {
+        assertThrowsClustererException(
+                Clusterer.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.ADag.class,
+                        edu.isi.pegasus.planner.classes.PegasusBag.class));
+        assertThrowsClustererException(
+                Clusterer.class.getMethod(
+                        "determineClusters", edu.isi.pegasus.planner.partitioner.Partition.class));
+        assertThrowsClustererException(
+                Clusterer.class.getMethod("parents", String.class, List.class));
+        assertThrowsClustererException(Clusterer.class.getMethod("getClusteredDAG"));
+    }
+
+    private void assertThrowsClustererException(Method method) {
+        assertThat(
+                Arrays.asList(method.getExceptionTypes()).contains(ClustererException.class),
+                is(true));
+    }
 }

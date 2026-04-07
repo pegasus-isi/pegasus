@@ -13,33 +13,74 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for HasDescriptor interface structure. */
 public class HasDescriptorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHasDescriptorIsInterface() {
+        assertThat(HasDescriptor.class.isInterface(), is(true));
     }
-    */
+
+    @Test
+    public void testHasGetDescriptorMethod() throws Exception {
+        Method m = HasDescriptor.class.getMethod("getDescriptor");
+        assertThat(m, notNullValue());
+        assertThat(m.getReturnType(), is(int.class));
+    }
+
+    @Test
+    public void testHasSetDescriptorMethod() throws Exception {
+        Method m = HasDescriptor.class.getMethod("setDescriptor", int.class);
+        assertThat(m, notNullValue());
+        assertThat(m.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testDescriptorImplementsInterface() {
+        assertThat(HasDescriptor.class.isAssignableFrom(Descriptor.class), is(true));
+    }
+
+    @Test
+    public void testFifoImplementsInterface() {
+        assertThat(HasDescriptor.class.isAssignableFrom(Fifo.class), is(true));
+    }
+
+    @Test
+    public void testDescriptorGetDescriptorDefault() {
+        Descriptor d = new Descriptor();
+        assertThat(d.getDescriptor(), is(-1));
+    }
+
+    @Test
+    public void testDescriptorSetDescriptor() {
+        Descriptor d = new Descriptor();
+        d.setDescriptor(7);
+        assertThat(d.getDescriptor(), is(7));
+    }
+
+    @Test
+    public void testInterfaceMethodsArePublicAndAbstract() throws Exception {
+        Method getter = HasDescriptor.class.getMethod("getDescriptor");
+        Method setter = HasDescriptor.class.getMethod("setDescriptor", int.class);
+
+        assertThat(Modifier.isPublic(getter.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(getter.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(setter.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(setter.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testFifoSetDescriptorUpdatesDescriptorValue() {
+        Fifo fifo = new Fifo();
+        fifo.setDescriptor(11);
+
+        assertThat(fifo.getDescriptor(), is(11));
+    }
 }

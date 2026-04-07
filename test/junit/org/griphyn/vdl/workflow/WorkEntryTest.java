@@ -13,33 +13,67 @@
  */
 package org.griphyn.vdl.workflow;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.griphyn.vdl.dbschema.DatabaseSchema;
+import org.griphyn.vdl.dbschema.WF;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class WorkEntryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void workflowHarnessPrintsAllWorkflowEntries() throws Exception {
+        WorkEntry first = new WorkEntry(1L, "/tmp/run", "group", "wf-a", "0001");
+        WorkEntry second = new WorkEntry(2L, "/tmp/run", "group", "wf-b", "0002");
+        java.util.Date now = new java.util.Date();
+        first.setCreationTime(now);
+        first.setModificationTime(now);
+        second.setCreationTime(now);
+        second.setModificationTime(now);
+        FakeWorkflowSchema schema = new FakeWorkflowSchema(first, second);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintStream original = System.out;
+        try {
+            System.setOut(new PrintStream(out));
+            Map workflows = ((WF) schema).getWorkflows(null);
+            for (Object value : workflows.values()) {
+                System.out.println(value.toString());
+            }
+        } finally {
+            System.setOut(original);
+        }
+
+        String printed = out.toString();
+        assertThat(printed, containsString(first.toString()));
+        assertThat(printed, containsString(second.toString()));
     }
-    */
+
+    private static final class FakeWorkflowSchema extends DatabaseSchema implements WF {
+        private final Map<Long, WorkEntry> workflows = new LinkedHashMap<>();
+
+        private FakeWorkflowSchema(WorkEntry... entries) {
+            for (WorkEntry entry : entries) {
+                workflows.put(entry.getID(), entry);
+            }
+        }
+
+        @Override
+        public WorkEntry getWorkflow(String basedir, String vogroup, String label, String run)
+                throws SQLException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Map getWorkflows(java.util.Date mtime) throws SQLException {
+            return workflows;
+        }
+    }
 }

@@ -13,33 +13,88 @@
  */
 package edu.isi.pegasus.planner.code.gridstart.container;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ContainerShellWrapperFactoryException class. */
 public class ContainerShellWrapperFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(
+                        ContainerShellWrapperFactoryException.class),
+                is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(
+                ContainerShellWrapperFactoryException.DEFAULT_NAME, is("Container Shell Wrapper"));
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        ContainerShellWrapperFactoryException ex =
+                new ContainerShellWrapperFactoryException("test message");
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("test message"));
+    }
+
+    @Test
+    public void testExceptionIsThrowable() {
+        assertThat(
+                Throwable.class.isAssignableFrom(ContainerShellWrapperFactoryException.class),
+                is(true));
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                ContainerShellWrapperFactoryException.class,
+                () -> {
+                    throw new ContainerShellWrapperFactoryException("test");
+                });
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsDefaultClassname() {
+        ContainerShellWrapperFactoryException ex =
+                new ContainerShellWrapperFactoryException("test message");
+
+        assertThat(ex.getClassname(), is(ContainerShellWrapperFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassnamePreservesExplicitClassname() {
+        ContainerShellWrapperFactoryException ex =
+                new ContainerShellWrapperFactoryException("test message", "WrapperClass");
+
+        assertThat(ex.getClassname(), is("WrapperClass"));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCauseUsesDefaultClassname() {
+        ContainerShellWrapperFactoryException ex =
+                new ContainerShellWrapperFactoryException("test message", (Throwable) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is(ContainerShellWrapperFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndNullCausePreservesClassname() {
+        ContainerShellWrapperFactoryException ex =
+                new ContainerShellWrapperFactoryException("test message", "WrapperClass", null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is("WrapperClass"));
+    }
 }

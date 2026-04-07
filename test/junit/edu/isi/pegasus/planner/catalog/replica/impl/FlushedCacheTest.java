@@ -13,33 +13,79 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.util.Escape;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class FlushedCacheTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConnectAndCloseUpdateClosedState() throws IOException {
+        Path file = Files.createTempFile("flushed-cache", ".rc");
+        FlushedCache cache = new FlushedCache();
+
+        assertThat(cache.isClosed(), is(true));
+        assertThat(cache.connect(file.toString()), is(true));
+        assertThat(cache.isClosed(), is(false));
+
+        cache.close();
+
+        assertThat(cache.isClosed(), is(true));
     }
-    */
+
+    @Test
+    public void testConnectPropertiesRequiresFileProperty() {
+        FlushedCache cache = new FlushedCache();
+
+        assertThat(cache.connect(new Properties()), is(false));
+    }
+
+    @Test
+    public void testQuoteOnlyEscapesWhenNecessary() {
+        FlushedCache cache = new FlushedCache();
+        Escape escape = new Escape("\"\\", '\\');
+
+        assertThat(cache.quote(escape, "simple"), equalTo("simple"));
+        assertThat(cache.quote(escape, "needs space"), equalTo("\"needs space\""));
+        assertThat(cache.quote(escape, "a=b"), equalTo("\"a=b\""));
+    }
+
+    @Test
+    public void testInsertWritesSimpleFileStyleEntry() throws IOException {
+        Path file = Files.createTempFile("flushed-cache-insert", ".rc");
+        FlushedCache cache = new FlushedCache();
+        assertThat(cache.connect(file.toString()), is(true));
+
+        ReplicaCatalogEntry entry = new ReplicaCatalogEntry("file:///tmp/data.txt", "local");
+        entry.addAttribute("site", "local");
+
+        assertThat(cache.insert("lfn", entry), is(1));
+        cache.close();
+
+        String contents = Files.readString(file, StandardCharsets.UTF_8);
+        assertThat(contents, containsString("lfn file:///tmp/data.txt"));
+        assertThat(contents, containsString("site=\"local\""));
+    }
+
+    @Test
+    public void testLookupMethodsRemainUnsupported() {
+        FlushedCache cache = new FlushedCache();
+
+        UnsupportedOperationException exception =
+                assertThrows(UnsupportedOperationException.class, () -> cache.lookup("lfn"));
+
+        assertThat(exception.getMessage(), is("Method not implemented"));
+    }
 }

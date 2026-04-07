@@ -13,33 +13,83 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup.constraint;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.HashSet;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link FloatingFile}. */
 public class FloatingFileTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorSetsDependencies() {
+        Set<GraphNode> deps = new HashSet<>();
+        deps.add(new GraphNode("node-1"));
+        PegasusFile pf = new PegasusFile("output.txt");
+        FloatingFile ff = new FloatingFile(deps, pf);
+        assertThat(ff.dependencies, sameInstance(deps));
     }
-    */
+
+    @Test
+    public void testConstructorSetsFile() {
+        Set<GraphNode> deps = new HashSet<>();
+        PegasusFile pf = new PegasusFile("data.bin");
+        FloatingFile ff = new FloatingFile(deps, pf);
+        assertThat(ff.file, sameInstance(pf));
+    }
+
+    @Test
+    public void testFileReturnsCorrectLFN() {
+        Set<GraphNode> deps = new HashSet<>();
+        PegasusFile pf = new PegasusFile("result.txt");
+        FloatingFile ff = new FloatingFile(deps, pf);
+        assertThat(ff.file.getLFN(), is("result.txt"));
+    }
+
+    @Test
+    public void testEmptyDependenciesAllowed() {
+        Set<GraphNode> deps = new HashSet<>();
+        PegasusFile pf = new PegasusFile("root-output.txt");
+        FloatingFile ff = new FloatingFile(deps, pf);
+        assertThat(ff.dependencies.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testMultipleDependencies() {
+        Set<GraphNode> deps = new HashSet<>();
+        deps.add(new GraphNode("parent-1"));
+        deps.add(new GraphNode("parent-2"));
+        deps.add(new GraphNode("parent-3"));
+        PegasusFile pf = new PegasusFile("output.txt");
+        FloatingFile ff = new FloatingFile(deps, pf);
+        assertThat(ff.dependencies.size(), is(3));
+    }
+
+    @Test
+    public void testConstructorAllowsNullValues() {
+        FloatingFile ff = new FloatingFile(null, null);
+        assertThat(ff.dependencies, nullValue());
+        assertThat(ff.file, nullValue());
+    }
+
+    @Test
+    public void testFieldsArePublicAndFinal() throws Exception {
+        java.lang.reflect.Field dependencies = FloatingFile.class.getDeclaredField("dependencies");
+        java.lang.reflect.Field file = FloatingFile.class.getDeclaredField("file");
+
+        assertThat(java.lang.reflect.Modifier.isPublic(dependencies.getModifiers()), is(true));
+        assertThat(java.lang.reflect.Modifier.isFinal(dependencies.getModifiers()), is(true));
+        assertThat(java.lang.reflect.Modifier.isPublic(file.getModifiers()), is(true));
+        assertThat(java.lang.reflect.Modifier.isFinal(file.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testDeclaresOnlyExpectedFields() {
+        assertThat(FloatingFile.class.getDeclaredFields().length, is(2));
+    }
 }

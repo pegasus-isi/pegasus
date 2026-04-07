@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -31,9 +33,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,12 +65,6 @@ public class GridStartTest {
     private GridStartFactory mGSFactory;
 
     public GridStartTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -124,14 +117,15 @@ public class GridStartTest {
 
         GridStart ks = mGSFactory.loadGridStart(mTestJob, PROPERTIES_BASENAME);
 
-        assertTrue(ks.enable(j, true));
-        assertEquals(PEGASUS_KICKSTART_PATH, j.getRemoteExecutable());
-        assertEquals(
-                " -n test -N null -R condor_pool  -L  -T  "
-                        + USER_JOB_EXECUTABLE
-                        + " "
-                        + USER_JOB_ARGS,
-                j.getArguments());
+        assertThat(ks.enable(j, true), is(true));
+        assertThat(j.getRemoteExecutable(), is(PEGASUS_KICKSTART_PATH));
+        assertThat(
+                j.getArguments(),
+                is(
+                        " -n test -N null -R condor_pool  -L  -T  "
+                                + USER_JOB_EXECUTABLE
+                                + " "
+                                + USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
 
@@ -147,15 +141,16 @@ public class GridStartTest {
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_KEY, "jsrun"));
 
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
-        assertTrue(ks.enable(j, true));
-        assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(
-                PEGASUS_KICKSTART_PATH
-                        + " -n test -N null -R condor_pool  -L  -T  "
-                        + USER_JOB_EXECUTABLE
-                        + " "
-                        + USER_JOB_ARGS,
-                j.getArguments());
+        assertThat(ks.enable(j, true), is(true));
+        assertThat(j.getRemoteExecutable(), is("jsrun"));
+        assertThat(
+                j.getArguments(),
+                is(
+                        PEGASUS_KICKSTART_PATH
+                                + " -n test -N null -R condor_pool  -L  -T  "
+                                + USER_JOB_EXECUTABLE
+                                + " "
+                                + USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
 
@@ -172,17 +167,18 @@ public class GridStartTest {
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY, jsrunArgs));
 
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
-        assertTrue(ks.enable(j, true));
-        assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(
-                jsrunArgs
-                        + " "
-                        + PEGASUS_KICKSTART_PATH
-                        + " -n test -N null -R condor_pool  -L  -T  "
-                        + USER_JOB_EXECUTABLE
-                        + " "
-                        + USER_JOB_ARGS,
-                j.getArguments());
+        assertThat(ks.enable(j, true), is(true));
+        assertThat(j.getRemoteExecutable(), is("jsrun"));
+        assertThat(
+                j.getArguments(),
+                is(
+                        jsrunArgs
+                                + " "
+                                + PEGASUS_KICKSTART_PATH
+                                + " -n test -N null -R condor_pool  -L  -T  "
+                                + USER_JOB_EXECUTABLE
+                                + " "
+                                + USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
 
@@ -194,10 +190,10 @@ public class GridStartTest {
         Job j = (Job) mTestJob.clone();
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_KEY, "None"));
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
-        assertTrue(ks.enable(j, true));
+        assertThat(ks.enable(j, true), is(true));
 
-        assertEquals(USER_JOB_EXECUTABLE, j.getRemoteExecutable());
-        assertEquals(USER_JOB_ARGS, j.getArguments());
+        assertThat(j.getRemoteExecutable(), is(USER_JOB_EXECUTABLE));
+        assertThat(j.getArguments(), is(USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
 
@@ -214,9 +210,9 @@ public class GridStartTest {
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_KEY, "jsrun"));
 
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
-        assertTrue(ks.enable(j, true));
-        assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS, j.getArguments());
+        assertThat(ks.enable(j, true), is(true));
+        assertThat(j.getRemoteExecutable(), is("jsrun"));
+        assertThat(j.getArguments(), is(USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
 
@@ -235,12 +231,10 @@ public class GridStartTest {
         j.addProfile(new Profile("pegasus", Pegasus.GRIDSTART_LAUNCHER_ARGUMENTS_KEY, jsrunArgs));
 
         GridStart ks = mGSFactory.loadGridStart(j, PROPERTIES_BASENAME);
-        assertTrue(ks.enable(j, true));
-        assertEquals("jsrun", j.getRemoteExecutable());
-        assertEquals(jsrunArgs + " " + USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS, j.getArguments());
+        assertThat(ks.enable(j, true), is(true));
+        assertThat(j.getRemoteExecutable(), is("jsrun"));
+        assertThat(
+                j.getArguments(), is(jsrunArgs + " " + USER_JOB_EXECUTABLE + " " + USER_JOB_ARGS));
         mLogger.logEventCompletion();
     }
-
-    @AfterEach
-    public void tearDown() {}
 }

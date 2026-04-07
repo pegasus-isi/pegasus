@@ -17,6 +17,8 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.mapper;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -29,8 +31,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,12 +44,6 @@ public class StagedTest {
     private Staged mMapper;
 
     public StagedTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -78,7 +72,7 @@ public class StagedTest {
         s.setArchitecture(SysInfo.Architecture.x86_64);
         s.setOS(SysInfo.OS.macosx);
         t.setSysInfo(new SysInfo());
-        assertFalse(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(false));
     }
 
     @Test
@@ -89,7 +83,7 @@ public class StagedTest {
         s.setArchitecture(SysInfo.Architecture.x86_64);
         s.setOS(SysInfo.OS.macosx);
         t.setSysInfo(s);
-        assertFalse(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(false));
     }
 
     @Test
@@ -100,7 +94,7 @@ public class StagedTest {
         s.setArchitecture(SysInfo.Architecture.x86_64);
         s.setOS(SysInfo.OS.macosx);
         t.setSysInfo(s);
-        assertTrue(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(true));
     }
 
     @Test
@@ -112,7 +106,7 @@ public class StagedTest {
         s.setOS(SysInfo.OS.macosx);
         t.setSysInfo(s);
         Container c = new Container("montage");
-        assertFalse(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(false));
     }
 
     @Test
@@ -127,7 +121,7 @@ public class StagedTest {
         c.setImageURL("/scratch/montage.simg");
         t.setContainer(c);
         // should be true after PM-1997
-        assertTrue(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(true));
     }
 
     @Test
@@ -141,6 +135,6 @@ public class StagedTest {
         Container c = new Container("montage");
         c.setImageURL("library://rynge/default/montage:latest");
         t.setContainer(c);
-        assertTrue(this.mMapper.match(t, "isi", s));
+        assertThat(this.mMapper.match(t, "isi", s), is(true));
     }
 }

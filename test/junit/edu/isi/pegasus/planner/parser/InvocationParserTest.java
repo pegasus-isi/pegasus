@@ -13,33 +13,61 @@
  */
 package edu.isi.pegasus.planner.parser;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.invocation.Architecture;
+import edu.isi.pegasus.planner.invocation.InvocationRecord;
+import edu.isi.pegasus.planner.invocation.Usage;
+import edu.isi.pegasus.planner.invocation.WorkingDir;
+import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
+import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class InvocationParserTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void invocationParserRoundTripsXmlLikeTheHarness() throws Exception {
+        InvocationRecord record = new InvocationRecord();
+        record.setVersion("2.1");
+        record.setStart(new Date());
+        record.setTransformation("pegasus::findrange");
+        record.setUser("tester");
+        record.setUID(1001);
+        record.setGID(1001);
+        record.setGroup("tester");
+        record.setPID(4242);
+        record.setHostAddress(InetAddress.getByName("127.0.0.1"));
+        record.setHostname("localhost");
+        record.setInterface("lo0");
+        record.setWorkingDirectory(new WorkingDir("/tmp/work"));
+        record.setUsage(new Usage());
+
+        Architecture architecture = new Architecture();
+        architecture.setSystemName("linux");
+        architecture.setNodeName("worker.example.edu");
+        architecture.setRelease("6.0");
+        architecture.setMachine("x86_64");
+        architecture.setValue("x86_64");
+        record.setArchitecture(architecture);
+
+        StringWriter xml = new StringWriter();
+        record.toXML(xml, "", null);
+
+        InvocationParser parser = new InvocationParser(InvocationRecord.SCHEMA_LOCATION);
+        InvocationRecord parsed =
+                parser.parse(
+                        new ByteArrayInputStream(xml.toString().getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(parsed, notNullValue());
+        assertThat(parsed.getTransformation(), is("pegasus::findrange"));
+        assertThat(parsed.getUser(), is("tester"));
+        assertThat(parsed.getWorkingDirectory().getValue(), is("/tmp/work"));
     }
-    */
 }

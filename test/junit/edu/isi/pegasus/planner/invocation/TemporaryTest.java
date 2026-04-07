@@ -13,33 +13,113 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Temporary invocation class. */
 public class TemporaryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFile() {
+        assertThat(File.class.isAssignableFrom(Temporary.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasDescriptor() {
+        assertThat(HasDescriptor.class.isAssignableFrom(Temporary.class), is(true));
+    }
+
+    @Test
+    public void testImplementsHasFilename() {
+        assertThat(HasFilename.class.isAssignableFrom(Temporary.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorNullFilename() {
+        Temporary t = new Temporary();
+        assertThat(t.getFilename(), is(nullValue()));
+    }
+
+    @Test
+    public void testDefaultConstructorDescriptorMinusOne() {
+        Temporary t = new Temporary();
+        assertThat(t.getDescriptor(), is(-1));
+    }
+
+    @Test
+    public void testConstructorWithFilenameAndDescriptor() {
+        Temporary t = new Temporary("/tmp/work.tmp", 3);
+        assertThat(t.getFilename(), is("/tmp/work.tmp"));
+        assertThat(t.getDescriptor(), is(3));
+    }
+
+    @Test
+    public void testSetAndGetFilename() {
+        Temporary t = new Temporary();
+        t.setFilename("/var/tmp/data.tmp");
+        assertThat(t.getFilename(), is("/var/tmp/data.tmp"));
+    }
+
+    @Test
+    public void testSetAndGetDescriptor() {
+        Temporary t = new Temporary();
+        t.setDescriptor(5);
+        assertThat(t.getDescriptor(), is(5));
+    }
+
+    @Test
+    public void testToXMLContainsTemporaryTag() throws Exception {
+        Temporary t = new Temporary("/tmp/out.tmp", 2);
+        StringWriter sw = new StringWriter();
+        t.toXML(sw, "", null);
+        String xml = sw.toString();
+        assertThat(xml, containsString("<temporary"));
+        assertThat(xml, containsString("name=\"/tmp/out.tmp\""));
+        assertThat(xml, containsString("descriptor=\"2\""));
+    }
+
+    @Test
+    public void testSetValueReplacesHexContent() {
+        Temporary t = new Temporary("/tmp/out.tmp", 2);
+        t.appendValue("abcd");
+
+        t.setValue("deadbeef");
+
+        assertThat(t.getValue(), is("deadbeef"));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        Temporary t = new Temporary();
+
+        IOException exception =
+                assertThrows(IOException.class, () -> t.toString(new StringWriter()));
+
+        assertThat(
+                exception.getMessage(),
+                is("method not implemented, please contact vds-support@griphyn.org"));
+    }
+
+    @Test
+    public void testToXMLWithContentUsesNamespaceAndClosingTag() throws Exception {
+        Temporary t = new Temporary("/tmp/out.tmp", 2);
+        t.setValue("deadbeef");
+
+        StringWriter sw = new StringWriter();
+        t.toXML(sw, "  ", "inv");
+
+        String xml = sw.toString();
+        assertThat(xml.startsWith("  <inv:temporary"), is(true));
+        assertThat(xml, containsString("name=\"/tmp/out.tmp\""));
+        assertThat(xml, containsString("descriptor=\"2\""));
+        assertThat(xml, containsString(">deadbeef</inv:temporary>"));
+        assertThat(xml.endsWith(System.lineSeparator()), is(true));
+    }
 }

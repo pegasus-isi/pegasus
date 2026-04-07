@@ -13,33 +13,99 @@
  */
 package edu.isi.pegasus.planner.namespace.aggregator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests structural properties of the Abstract aggregator base class via reflection, since the class
+ * itself cannot be instantiated directly.
+ */
 public class AbstractTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAbstractClassIsActuallyAbstract() {
+        assertThat(Modifier.isAbstract(Abstract.class.getModifiers()), is(true));
     }
-    */
+
+    @Test
+    public void testAbstractImplementsAggregatorInterface() {
+        assertThat(Aggregator.class.isAssignableFrom(Abstract.class), is(true));
+    }
+
+    @Test
+    public void testConcreteSubclassMAXIsNotAbstract() {
+        assertThat(Modifier.isAbstract(MAX.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testConcreteSubclassMINIsNotAbstract() {
+        assertThat(Modifier.isAbstract(MIN.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testConcreteSubclassSumIsNotAbstract() {
+        assertThat(Modifier.isAbstract(Sum.class.getModifiers()), is(false));
+    }
+
+    @Test
+    public void testSumExtendsAbstract() {
+        assertThat(Sum.class.getSuperclass(), is(Abstract.class));
+    }
+
+    @Test
+    public void testMAXExtendsAbstract() {
+        assertThat(MAX.class.getSuperclass(), is(Abstract.class));
+    }
+
+    @Test
+    public void testParseIntViaConcreteSubclass() {
+        // Test parseInt behavior through a concrete subclass (Sum uses it)
+        Sum sum = new Sum();
+        // parseInt("5", "0") + parseInt("3", "0") = 8
+        String result = sum.compute("5", "3", "0");
+        assertThat(result, is("8"));
+    }
+
+    @Test
+    public void testParseIntReturnsDefaultForNullValue() {
+        TestAggregator aggregator = new TestAggregator();
+
+        assertThat(aggregator.parse("null", "7"), is(7));
+    }
+
+    @Test
+    public void testParseIntReturnsDefaultForNonNumericValue() {
+        TestAggregator aggregator = new TestAggregator();
+
+        assertThat(aggregator.parse("not-a-number", "9"), is(9));
+    }
+
+    @Test
+    public void testParseIntParsesNegativeValue() {
+        TestAggregator aggregator = new TestAggregator();
+
+        assertThat(aggregator.parse("-3", "0"), is(-3));
+    }
+
+    @Test
+    public void testParseIntThrowsWhenDefaultIsInvalid() {
+        TestAggregator aggregator = new TestAggregator();
+
+        assertThrows(NumberFormatException.class, () -> aggregator.parse("5", "bad-default"));
+    }
+
+    private static final class TestAggregator extends Abstract {
+        int parse(String value, String dflt) {
+            return this.parseInt("null".equals(value) ? null : value, dflt);
+        }
+
+        @Override
+        public String compute(String v1, String v2, String dflt) {
+            return Integer.toString(this.parse(v1, dflt) + this.parse(v2, dflt));
+        }
+    }
 }

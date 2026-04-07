@@ -13,33 +13,114 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class WriterCallbackTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class ExposedWriterCallback extends WriterCallback {
+        String relation(String child, String parent) {
+            return partitionRelation2XML(child, parent);
+        }
 
-    @BeforeEach
-    public void setUp() {}
+        String relation(String child, java.util.List parents) {
+            return partitionRelation2XML(child, parents);
+        }
 
-    @AfterEach
-    public void tearDown() {}
+        String relation(String child, java.util.Set parents) {
+            return partitionRelation2XML(child, parents);
+        }
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        PDAXWriter pdax(String daxFile, String name, String directory) {
+            return getHandletoPDAXWriter(daxFile, name, directory);
+        }
     }
-    */
+
+    private static final class StubDAXWriter extends DAXWriter {
+        boolean closed;
+
+        StubDAXWriter() {
+            super();
+        }
+
+        @Override
+        public boolean writePartitionDax(Partition partition, int index) {
+            return true;
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+            super.close();
+        }
+    }
+
+    @Test
+    public void testPartitionRelationSingleParentXML() {
+        ExposedWriterCallback callback = new ExposedWriterCallback();
+
+        String xml = callback.relation("ID2", "ID1");
+
+        assertThat(xml.contains("<child ref=\"ID2\">"), is(true));
+        assertThat(xml.contains("<parent ref=\"ID1\"/>"), is(true));
+        assertThat(xml.contains("</child>"), is(true));
+    }
+
+    @Test
+    public void testPartitionRelationListParentsXML() {
+        ExposedWriterCallback callback = new ExposedWriterCallback();
+
+        String xml = callback.relation("ID3", Arrays.asList("ID1", "ID2"));
+
+        assertThat(xml.contains("<parent ref=\"ID1\"/>"), is(true));
+        assertThat(xml.contains("<parent ref=\"ID2\"/>"), is(true));
+    }
+
+    @Test
+    public void testPartitionRelationSetParentsXML() {
+        ExposedWriterCallback callback = new ExposedWriterCallback();
+
+        String xml =
+                callback.relation("ID4", new LinkedHashSet<>(Arrays.asList("ID1", "ID2", "ID3")));
+
+        assertThat(xml.contains("<parent ref=\"ID1\"/>"), is(true));
+        assertThat(xml.contains("<parent ref=\"ID2\"/>"), is(true));
+        assertThat(xml.contains("<parent ref=\"ID3\"/>"), is(true));
+    }
+
+    @Test
+    public void testGetHandleToPDAXWriterSetsExpectedPdaxPath() throws Exception {
+        ExposedWriterCallback callback = new ExposedWriterCallback();
+        File directory = Files.createTempDirectory("writer-callback").toFile();
+
+        PDAXWriter writer =
+                callback.pdax("/tmp/workflow.dax", "workflow", directory.getAbsolutePath());
+
+        assertThat(writer, is(notNullValue()));
+        assertThat(callback.getPDAX(), is(new File(directory, "workflow.pdax").toString()));
+        writer.close();
+    }
+
+    @Test
+    public void testCbDoneResetsStateAndClosesWriters() throws Exception {
+        ExposedWriterCallback callback = new ExposedWriterCallback();
+        File pdaxFile = Files.createTempFile("writer-callback", ".pdax").toFile();
+        callback.mPDAXWriter = new PDAXWriter("workflow", pdaxFile.getAbsolutePath());
+        StubDAXWriter daxWriter = new StubDAXWriter();
+        callback.mDAXWriter = daxWriter;
+        callback.mPartitioningStarted = true;
+
+        callback.cbDone();
+
+        assertThat(callback.mPartitioningStarted, is(false));
+        assertThat(daxWriter.closed, is(true));
+    }
 }

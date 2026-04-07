@@ -13,33 +13,98 @@
  */
 package edu.isi.pegasus.planner.namespace.aggregator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the UniqueMerge aggregator. */
 public class UniqueMergeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private UniqueMerge mAggregator;
 
     @BeforeEach
-    public void setUp() {}
+    public void setUp() {
+        mAggregator = new UniqueMerge();
+    }
 
     @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void tearDown() {
+        mAggregator = null;
     }
-    */
+
+    @Test
+    public void testFirstMergeWithNullOldValue() {
+        // when oldValue is null the newValue becomes the first entry
+        String result = mAggregator.compute(null, "alpha", "");
+        assertThat(result, is("alpha"));
+    }
+
+    @Test
+    public void testSecondMergeAddsDelimiter() {
+        mAggregator.compute(null, "alpha", "");
+        String result = mAggregator.compute("alpha", "beta", "");
+        assertThat(result, is("alpha" + UniqueMerge.DEFAULT_DELIMITER + "beta"));
+    }
+
+    @Test
+    public void testDuplicateValueIsNotMergedAgain() {
+        mAggregator.compute(null, "alpha", "");
+        String result = mAggregator.compute("alpha", "alpha", "");
+        assertThat(result, is("alpha"));
+    }
+
+    @Test
+    public void testDefaultDelimiterIsAtSign() {
+        assertThat(UniqueMerge.DEFAULT_DELIMITER, is("@"));
+    }
+
+    @Test
+    public void testThreeUniqueValues() {
+        mAggregator.compute(null, "a", "");
+        mAggregator.compute("a", "b", "");
+        String result = mAggregator.compute("a" + UniqueMerge.DEFAULT_DELIMITER + "b", "c", "");
+        assertThat(result.contains("c"), is(true));
+    }
+
+    @Test
+    public void testFirstMergeWithNullNewValueUsesStringBuilderNullText() {
+        String result = mAggregator.compute(null, null, "");
+        assertThat(result, is("null"));
+    }
+
+    @Test
+    public void testDuplicateOfLaterValueIsCurrentlyMergedAgain() {
+        mAggregator.compute(null, "alpha", "");
+        String second = mAggregator.compute("alpha", "beta", "");
+        String result = mAggregator.compute(second, "beta", "");
+        assertThat(
+                result,
+                is(
+                        "alpha"
+                                + UniqueMerge.DEFAULT_DELIMITER
+                                + "beta"
+                                + UniqueMerge.DEFAULT_DELIMITER
+                                + "beta"));
+    }
+
+    @Test
+    public void testNullOldValueResetsTrackedKeys() {
+        mAggregator.compute(null, "alpha", "");
+        mAggregator.compute("alpha", "beta", "");
+        String result = mAggregator.compute(null, "beta", "");
+        assertThat(result, is("beta"));
+    }
+
+    @Test
+    public void testImplementsAggregatorInterface() {
+        assertThat(mAggregator instanceof Aggregator, is(true));
+    }
+
+    @Test
+    public void testExtendsAbstract() {
+        assertThat(mAggregator instanceof Abstract, is(true));
+    }
 }

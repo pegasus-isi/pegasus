@@ -13,33 +13,124 @@
  */
 package edu.isi.pegasus.common.credential;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the CredentialHandler interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class CredentialHandlerTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    // --- VERSION constant ---
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(CredentialHandler.VERSION, is("1.5"));
     }
-    */
+
+    // --- TYPE enum ---
+
+    @Test
+    public void testTypeEnumContainsAllValues() {
+        assertThat(
+                CredentialHandler.TYPE.values(),
+                arrayContainingInAnyOrder(
+                        CredentialHandler.TYPE.credentials,
+                        CredentialHandler.TYPE.http,
+                        CredentialHandler.TYPE.x509,
+                        CredentialHandler.TYPE.s3,
+                        CredentialHandler.TYPE.boto,
+                        CredentialHandler.TYPE.googlep12,
+                        CredentialHandler.TYPE.irods,
+                        CredentialHandler.TYPE.ssh));
+    }
+
+    // --- method declarations (NoSuchMethodException = test failure if missing) ---
+
+    @Test
+    public void testNoArgMethods() throws NoSuchMethodException {
+        CredentialHandler.class.getMethod("getPath");
+        CredentialHandler.class.getMethod("getProfileKey");
+        CredentialHandler.class.getMethod("getDescription");
+    }
+
+    @Test
+    public void testSiteArgMethods() throws NoSuchMethodException {
+        CredentialHandler.class.getMethod("getPath", String.class);
+        CredentialHandler.class.getMethod("getEnvironmentVariable", String.class);
+        CredentialHandler.class.getMethod("getBaseName", String.class);
+    }
+
+    @Test
+    public void testInitializeMethod() throws NoSuchMethodException {
+        CredentialHandler.class.getMethod("initialize", PegasusBag.class);
+    }
+
+    @Test
+    public void testVerifyMethod() throws NoSuchMethodException {
+        CredentialHandler.class.getMethod(
+                "verify", Job.class, CredentialHandler.TYPE.class, String.class);
+    }
+
+    @Test
+    public void testHasCredentialMethod() throws NoSuchMethodException {
+        CredentialHandler.class.getMethod(
+                "hasCredential", CredentialHandler.TYPE.class, String.class, String.class);
+    }
+
+    @Test
+    public void testCredentialHandlerIsInterface() {
+        assertThat(CredentialHandler.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws NoSuchMethodException {
+        assertThat(
+                CredentialHandler.class.getMethod("initialize", PegasusBag.class).getReturnType(),
+                is(Void.TYPE));
+        assertThat(CredentialHandler.class.getMethod("getPath").getReturnType(), is(String.class));
+        assertThat(
+                CredentialHandler.class.getMethod("getPath", String.class).getReturnType(),
+                is(String.class));
+        assertThat(
+                CredentialHandler.class.getMethod("getProfileKey").getReturnType(),
+                is(String.class));
+        assertThat(
+                CredentialHandler.class
+                        .getMethod("getEnvironmentVariable", String.class)
+                        .getReturnType(),
+                is(String.class));
+        assertThat(
+                CredentialHandler.class.getMethod("getDescription").getReturnType(),
+                is(String.class));
+        assertThat(
+                CredentialHandler.class.getMethod("getBaseName", String.class).getReturnType(),
+                is(String.class));
+        assertThat(
+                CredentialHandler.class
+                        .getMethod("verify", Job.class, CredentialHandler.TYPE.class, String.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                CredentialHandler.class
+                        .getMethod(
+                                "hasCredential",
+                                CredentialHandler.TYPE.class,
+                                String.class,
+                                String.class)
+                        .getReturnType(),
+                is(boolean.class));
+    }
+
+    @Test
+    public void testCredentialHandlerDeclaresExpectedNumberOfMethods() {
+        assertThat(CredentialHandler.class.getDeclaredMethods().length, is(9));
+    }
 }

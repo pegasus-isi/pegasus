@@ -13,33 +13,90 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class DirectoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructorDefaults() {
+        Directory directory = new Directory();
+
+        assertThat(directory.isClosed(), is(true));
+        assertThat(directory.mSiteHandle, is(Directory.DEFAULT_SITE_HANDLE));
+        assertThat(directory.mURLPrefix, is(Directory.DEFAULT_URL_PREFIX));
     }
-    */
+
+    @Test
+    public void testConnectStringBuildsDeepLfnsByDefault() throws IOException {
+        Path root = Files.createTempDirectory("directory-rc-deep");
+        Path nested = Files.createDirectories(root.resolve("input"));
+        Path file = Files.write(nested.resolve("f.a"), "data".getBytes());
+
+        Directory directory = new Directory();
+
+        assertThat(directory.connect(root.toString()), is(true));
+        assertThat(directory.isClosed(), is(false));
+        assertThat(
+                directory.lookup(
+                        "input" + java.io.File.separator + "f.a", Directory.DEFAULT_SITE_HANDLE),
+                is("file://" + file.toFile().getAbsolutePath()));
+    }
+
+    @Test
+    public void testConnectPropertiesSupportsFlatLfnsAndOverridesSiteAndUrlPrefix()
+            throws IOException {
+        Path root = Files.createTempDirectory("directory-rc-flat");
+        Path nested = Files.createDirectories(root.resolve("nested"));
+        Path file = Files.write(nested.resolve("flat.txt"), "data".getBytes());
+
+        Properties props = new Properties();
+        props.setProperty(Directory.DIRECTORY_PROPERTY_KEY, root.toString());
+        props.setProperty(Directory.FLAT_LFN_PROPERTY_KEY, "true");
+        props.setProperty(Directory.SITE_PROPERTY_KEY, "condorpool");
+        props.setProperty(Directory.URL_PRFIX_PROPERTY_KEY, "gsiftp://example");
+
+        Directory directory = new Directory();
+
+        assertThat(directory.connect(props), is(true));
+        assertThat(
+                directory.lookup("flat.txt", "condorpool"),
+                is("gsiftp://example" + file.toFile().getAbsolutePath()));
+
+        Collection entries = directory.lookup("flat.txt");
+        assertThat(entries.size(), is(1));
+        ReplicaCatalogEntry entry = (ReplicaCatalogEntry) entries.iterator().next();
+        assertThat(entry.getResourceHandle(), is("condorpool"));
+    }
+
+    @Test
+    public void testConnectReturnsFalseForMissingDirectoryProperty() {
+        Directory directory = new Directory();
+
+        assertThat(directory.connect(new Properties()), is(false));
+        assertThat(directory.isClosed(), is(true));
+    }
+
+    @Test
+    public void testCloseClearsCatalogAndMarksItClosed() throws IOException {
+        Path root = Files.createTempDirectory("directory-rc-close");
+        Files.write(root.resolve("a.txt"), "data".getBytes());
+
+        Directory directory = new Directory();
+        assertThat(directory.connect(root.toString()), is(true));
+
+        directory.close();
+
+        assertThat(directory.isClosed(), is(true));
+    }
 }

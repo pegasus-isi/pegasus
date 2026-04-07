@@ -13,33 +13,50 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class PartitionerFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultNameConstant() {
+        assertThat(PartitionerFactoryException.DEFAULT_NAME, is("Partitioner"));
     }
-    */
+
+    @Test
+    public void testMessageOnlyConstructorUsesDefaultClassname() throws Exception {
+        PartitionerFactoryException ex = new PartitionerFactoryException("msg");
+
+        assertThat(ex.getMessage(), is("msg"));
+        assertThat(
+                ReflectionTestUtils.getField(ex, "mClassname"),
+                is(PartitionerFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorUsesDefaultClassname() throws Exception {
+        RuntimeException cause = new RuntimeException("root");
+        PartitionerFactoryException ex = new PartitionerFactoryException("msg", cause);
+
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+        assertThat(
+                ReflectionTestUtils.getField(ex, "mClassname"),
+                is(PartitionerFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testExplicitClassnameAndCauseConstructorPreservesInputs() throws Exception {
+        RuntimeException cause = new RuntimeException("root");
+        PartitionerFactoryException ex =
+                new PartitionerFactoryException("msg", "CustomPartitioner", cause);
+
+        assertThat(ex.getMessage(), is("msg"));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+        assertThat(ReflectionTestUtils.getField(ex, "mClassname"), is("CustomPartitioner"));
+    }
 }

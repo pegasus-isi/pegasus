@@ -13,33 +13,90 @@
  */
 package edu.isi.pegasus.planner.estimate;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the EstimatorFactoryException. */
 public class EstimatorFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultName() {
+        assertThat(EstimatorFactoryException.DEFAULT_NAME, is("Estimator"));
     }
-    */
+
+    @Test
+    public void testConstructorWithMessage() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("test error");
+        assertThat(ex.getMessage(), is("test error"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("test error", "TestEstimator");
+        assertThat(ex.getMessage(), notNullValue());
+        assertThat(ex.getClassname(), is("TestEstimator"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        EstimatorFactoryException ex = new EstimatorFactoryException("test error", cause);
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(EstimatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithAllParams() {
+        Throwable cause = new RuntimeException("root cause");
+        EstimatorFactoryException ex =
+                new EstimatorFactoryException("test error", "TestClass", cause);
+        assertThat(ex.getClassname(), is("TestClass"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testIsFactoryException() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("test");
+        assertThat(ex, instanceOf(edu.isi.pegasus.common.util.FactoryException.class));
+    }
+
+    @Test
+    public void testDefaultClassnameSet() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("test");
+        assertThat(ex.getClassname(), is(EstimatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessagePreservesDefaultClassname() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("failure");
+
+        assertThat(ex.getClassname(), is(EstimatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCauseUsesDefaultClassname() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("failure", (Throwable) null);
+
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is(EstimatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithExplicitClassnameAndNullCausePreservesClassname() {
+        EstimatorFactoryException ex =
+                new EstimatorFactoryException("failure", "CustomEstimator", null);
+
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is("CustomEstimator"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullClassnamePreservesNull() {
+        EstimatorFactoryException ex = new EstimatorFactoryException("failure", (String) null);
+
+        assertThat(ex.getClassname(), nullValue());
+    }
 }

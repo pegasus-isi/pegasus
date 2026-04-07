@@ -13,33 +13,94 @@
  */
 package edu.isi.pegasus.planner.cluster.aggregator;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Decaf aggregator class. */
 public class DecafTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDecafExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(Decaf.class), is(true));
     }
-    */
+
+    @Test
+    public void testDecafImplementsJobAggregator() {
+        assertThat(JobAggregator.class.isAssignableFrom(Decaf.class), is(true));
+    }
+
+    @Test
+    public void testTransformationNamespaceConstant() {
+        assertThat(Decaf.TRANSFORMATION_NAMESPACE, is("dataflow"));
+    }
+
+    @Test
+    public void testTransformationNameConstant() {
+        assertThat(Decaf.TRANSFORMATION_NAME, is("decaf"));
+    }
+
+    @Test
+    public void testDecafExtraArgsSelectorProfileKeyConstant() {
+        assertThat(Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY, is("decaf.args"));
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Decaf decaf = new Decaf();
+        assertThat(decaf, notNullValue());
+    }
+
+    @Test
+    public void testTopologicalOrderingIsNotRequired() {
+        Decaf decaf = new Decaf();
+
+        assertThat(decaf.topologicalOrderingRequired(), is(false));
+    }
+
+    @Test
+    public void testEntryNotInTCAlwaysReturnsFalse() {
+        Decaf decaf = new Decaf();
+
+        assertThat(decaf.entryNotInTC("local"), is(false));
+    }
+
+    @Test
+    public void testGetClusterExecutableLFNReturnsDecaf() {
+        Decaf decaf = new Decaf();
+
+        assertThat(decaf.getClusterExecutableLFN(), is("decaf"));
+    }
+
+    @Test
+    public void testGetClusterExecutableBasenameThrows() {
+        Decaf decaf = new Decaf();
+        RuntimeException exception =
+                assertThrows(RuntimeException.class, decaf::getClusterExecutableBasename);
+
+        assertThat(
+                exception
+                        .getMessage()
+                        .contains("does not create default transformation catalog entries"),
+                is(true));
+        assertThat(exception.getMessage().contains("dataflow,decaf"), is(true));
+    }
+
+    @Test
+    public void testSetAbortOnFirstJobFailureIsUnsupported() {
+        Decaf decaf = new Decaf();
+
+        assertThrows(
+                UnsupportedOperationException.class, () -> decaf.setAbortOnFirstJobFailure(true));
+    }
+
+    @Test
+    public void testAbortOnFirstJobFailureAccessorIsUnsupported() {
+        Decaf decaf = new Decaf();
+
+        assertThrows(UnsupportedOperationException.class, decaf::abortOnFristJobFailure);
+    }
 }

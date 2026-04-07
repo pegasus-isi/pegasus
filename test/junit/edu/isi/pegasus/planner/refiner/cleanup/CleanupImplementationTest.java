@@ -13,33 +13,73 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for CleanupImplementation interface. */
 public class CleanupImplementationTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(CleanupImplementation.VERSION, is("1.1"));
     }
-    */
+
+    @Test
+    public void testDefaultCleanupCategoryKey() {
+        assertThat(CleanupImplementation.DEFAULT_CLEANUP_CATEGORY_KEY, is("cleanup"));
+    }
+
+    @Test
+    public void testRMImplementsCleanupImplementation() {
+        assertThat(CleanupImplementation.class.isAssignableFrom(RM.class), is(true));
+    }
+
+    @Test
+    public void testCleanupImplementsCleanupImplementation() {
+        assertThat(CleanupImplementation.class.isAssignableFrom(Cleanup.class), is(true));
+    }
+
+    @Test
+    public void testHasCreateCleanupJobMethod() throws Exception {
+        assertThat(
+                CleanupImplementation.class.getMethod(
+                        "createCleanupJob",
+                        String.class,
+                        java.util.List.class,
+                        edu.isi.pegasus.planner.classes.Job.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testCleanupImplementationIsInterface() {
+        assertThat(CleanupImplementation.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws Exception {
+        assertThat(
+                CleanupImplementation.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testHasStagingSiteCreateCleanupJobMethod() throws Exception {
+        assertThat(
+                CleanupImplementation.class.getMethod(
+                        "createCleanupJob",
+                        String.class,
+                        java.util.List.class,
+                        edu.isi.pegasus.planner.classes.Job.class,
+                        String.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testCleanupImplementationDeclaresExpectedMethods() {
+        assertThat(CleanupImplementation.class.getDeclaredMethods().length, is(3));
+    }
 }

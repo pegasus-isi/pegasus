@@ -13,33 +13,134 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SSH style class. */
 public class SSHTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class TestSSH extends SSH {
+        String gridResource(Job job) throws Exception {
+            return constructGridResource(job);
+        }
 
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        void setSiteStore(SiteStore store) {
+            mSiteStore = store;
+        }
     }
-    */
+
+    private TestSSH newStyleWithSite(
+            String siteHandle,
+            GridGateway.TYPE gatewayType,
+            String contact,
+            GridGateway.SCHEDULER_TYPE scheduler) {
+        GridGateway gateway = new GridGateway(gatewayType, contact, scheduler);
+        gateway.setJobType(GridGateway.JOB_TYPE.compute);
+
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle(siteHandle);
+        site.addGridGateway(gateway);
+
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestSSH style = new TestSSH();
+        style.setSiteStore(store);
+        return style;
+    }
+
+    @Test
+    public void testSSHExtendsGLite() {
+        assertThat(GLite.class.isAssignableFrom(SSH.class), is(true));
+    }
+
+    @Test
+    public void testSSHImplementsCondorStyle() {
+        assertThat(CondorStyle.class.isAssignableFrom(SSH.class), is(true));
+    }
+
+    @Test
+    public void testStyleNameConstant() {
+        assertThat(SSH.STYLE_NAME, is("SSH"));
+    }
+
+    @Test
+    public void testGridResourceKeyNotNull() {
+        assertThat(SSH.GRID_RESOURCE_KEY, notNullValue());
+    }
+
+    @Test
+    public void testInstantiation() {
+        SSH style = new SSH();
+        assertThat(style, notNullValue());
+    }
+
+    @Test
+    public void testConstructGridResourceUsesGatewayTypeSchedulerAndContact() throws Exception {
+        TestSSH style =
+                newStyleWithSite(
+                        "ssh",
+                        GridGateway.TYPE.batch,
+                        "user@submit.example",
+                        GridGateway.SCHEDULER_TYPE.slurm);
+        Job job = new Job();
+        job.setSiteHandle("ssh");
+
+        assertThat(style.gridResource(job), is("batch slurm user@submit.example "));
+    }
+
+    @Test
+    public void testConstructGridResourceThrowsWhenContactMissing() {
+        TestSSH style =
+                newStyleWithSite(
+                        "ssh", GridGateway.TYPE.batch, null, GridGateway.SCHEDULER_TYPE.slurm);
+        Job job = new Job();
+        job.setSiteHandle("ssh");
+
+        CondorStyleException e =
+                assertThrows(CondorStyleException.class, () -> style.gridResource(job));
+        assertThat(e.getMessage(), containsString("Grid Gateway not specified"));
+    }
+
+    @Test
+    public void testConstructGridResourceRejectsForkScheduler() {
+        TestSSH style =
+                newStyleWithSite(
+                        "ssh",
+                        GridGateway.TYPE.batch,
+                        "user@submit.example",
+                        GridGateway.SCHEDULER_TYPE.fork);
+        Job job = new Job();
+        job.setSiteHandle("ssh");
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> style.gridResource(job));
+        assertThat(e.getMessage(), containsString("Please specify a valid scheduler"));
+    }
+
+    @Test
+    public void testConstructGridResourceNullGatewayCurrentlyThrowsNullPointerException() {
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle("missing");
+        SiteStore store = new SiteStore();
+        store.addEntry(site);
+
+        TestSSH style = new TestSSH();
+        style.setSiteStore(store);
+
+        Job job = new Job();
+        job.setSiteHandle("missing");
+
+        assertThrows(NullPointerException.class, () -> style.gridResource(job));
+    }
 }

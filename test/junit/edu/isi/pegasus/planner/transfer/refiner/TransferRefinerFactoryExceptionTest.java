@@ -13,33 +13,52 @@
  */
 package edu.isi.pegasus.planner.transfer.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class TransferRefinerFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultNameConstant() {
+        assertThat(TransferRefinerFactoryException.DEFAULT_NAME, is("Transfer Refiner"));
     }
-    */
+
+    @Test
+    public void testMessageOnlyConstructorUsesDefaultClassname() throws Exception {
+        TransferRefinerFactoryException exception = new TransferRefinerFactoryException("message");
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(getClassname(exception), is(TransferRefinerFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorUsesDefaultClassname() throws Exception {
+        Throwable cause = new IllegalStateException("boom");
+        TransferRefinerFactoryException exception =
+                new TransferRefinerFactoryException("message", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(exception.getCause(), sameInstance(cause));
+        assertThat(getClassname(exception), is(TransferRefinerFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testExplicitClassnameAndCauseConstructorPreservesValues() throws Exception {
+        Throwable cause = new IllegalArgumentException("bad");
+        TransferRefinerFactoryException exception =
+                new TransferRefinerFactoryException("message", "custom-refiner", cause);
+
+        assertThat(exception.getMessage(), is("message"));
+        assertThat(exception.getCause(), sameInstance(cause));
+        assertThat(getClassname(exception), is("custom-refiner"));
+    }
+
+    private static String getClassname(TransferRefinerFactoryException exception) throws Exception {
+        return (String) ReflectionTestUtils.getField(exception, "mClassname");
+    }
 }

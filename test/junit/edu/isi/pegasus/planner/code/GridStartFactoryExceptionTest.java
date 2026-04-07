@@ -13,33 +13,104 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for GridStartFactoryException */
 public class GridStartFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultNameConstant() {
+        assertThat(GridStartFactoryException.DEFAULT_NAME, is("GridStart"));
     }
-    */
+
+    @Test
+    public void testSingleMessageConstructor() {
+        GridStartFactoryException e = new GridStartFactoryException("gridstart failed");
+        assertThat(e.getMessage(), is("gridstart failed"));
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructor() {
+        GridStartFactoryException e = new GridStartFactoryException("failed", "Kickstart");
+        assertThat(e.getMessage(), is("failed"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructor() {
+        Throwable cause = new RuntimeException("underlying cause");
+        GridStartFactoryException e = new GridStartFactoryException("wrapped", cause);
+        assertThat(e.getMessage(), is("wrapped"));
+        assertThat(e.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructor() {
+        Throwable cause = new RuntimeException("root");
+        GridStartFactoryException e = new GridStartFactoryException("msg", "NoGridStart", cause);
+        assertThat(e.getMessage(), is("msg"));
+        assertThat(e.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(GridStartFactoryException.class), is(true));
+    }
+
+    @Test
+    public void testIsCatchableAsFactoryException() {
+        FactoryException caught = null;
+        try {
+            throw new GridStartFactoryException("test gridstart");
+        } catch (FactoryException ex) {
+            caught = ex;
+        }
+        assertThat(caught, notNullValue());
+        assertThat(caught.getMessage(), is("test gridstart"));
+    }
+
+    @Test
+    public void testSingleMessageConstructorSetsDefaultClassname() {
+        GridStartFactoryException e = new GridStartFactoryException("gridstart failed");
+
+        assertThat(e.getClassname(), is(GridStartFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorSetsExplicitClassname() {
+        GridStartFactoryException e = new GridStartFactoryException("failed", "Kickstart");
+
+        assertThat(e.getClassname(), is("Kickstart"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorAllowsNullCause() {
+        GridStartFactoryException e = new GridStartFactoryException("wrapped", (Throwable) null);
+
+        assertThat(e.getMessage(), is("wrapped"));
+        assertThat(e.getCause(), nullValue());
+        assertThat(e.getClassname(), is(GridStartFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructorAllowsNullCause() {
+        GridStartFactoryException e = new GridStartFactoryException("msg", "NoGridStart", null);
+
+        assertThat(e.getMessage(), is("msg"));
+        assertThat(e.getClassname(), is("NoGridStart"));
+        assertThat(e.getCause(), nullValue());
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorAllowsNullClassname() {
+        GridStartFactoryException e = new GridStartFactoryException("failed", (String) null);
+
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getClassname(), nullValue());
+    }
 }

@@ -15,7 +15,7 @@
 package edu.isi.pegasus.planner.catalog.site;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -31,9 +31,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,12 +56,6 @@ public class SiteFactoryTest {
 
     public SiteFactoryTest() {}
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
     public void setUp() {
         mTestSetup = new DefaultTestSetup();
@@ -77,9 +68,6 @@ public class SiteFactoryTest {
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         mLogger.logEventCompletion();
     }
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testWithTypeMentionedXML() throws Exception {

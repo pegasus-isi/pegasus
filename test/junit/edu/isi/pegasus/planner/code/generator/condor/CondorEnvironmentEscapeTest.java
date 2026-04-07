@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -49,7 +51,7 @@ public class CondorEnvironmentEscapeTest {
 
         String expected = "\"one=1 two=2 three=3\"";
         String result = mEscape.escape(env);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -57,7 +59,7 @@ public class CondorEnvironmentEscapeTest {
         String value = "Escaped Value";
         String expected = "'Escaped Value'";
         String result = mEscape.escape(value);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -65,7 +67,7 @@ public class CondorEnvironmentEscapeTest {
         String value = "'SingleQuoted'";
         String expected = "''SingleQuoted''";
         String result = mEscape.escape(value);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -74,7 +76,7 @@ public class CondorEnvironmentEscapeTest {
         String expected = "\"\"DoubleQuoted\"\"";
         ;
         String result = mEscape.escape(value);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     @Test
@@ -83,7 +85,7 @@ public class CondorEnvironmentEscapeTest {
         String expected = "'\"\"Double Quoted\"\"'";
         ;
         String result = mEscape.escape(value);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 
     /**
@@ -102,6 +104,6 @@ public class CondorEnvironmentEscapeTest {
         // should print out "one=1 two=""2"" three='spacey ''quoted'' value'"
         String expected = "\"one=1 two=\"\"2\"\" three='spacey ''quoted'' value'\"";
         String result = mEscape.escape(env);
-        assertEquals(expected, result);
+        assertThat(result, is(expected));
     }
 }

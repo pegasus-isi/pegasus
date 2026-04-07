@@ -13,33 +13,82 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the ClustererException class. */
 public class ClustererExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testNoArgConstructor() {
+        ClustererException ex = new ClustererException();
+        assertThat(ex, notNullValue());
     }
-    */
+
+    @Test
+    public void testMessageConstructor() {
+        ClustererException ex = new ClustererException("test error");
+        assertThat(ex.getMessage(), is("test error"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructor() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererException ex = new ClustererException("test error", cause);
+        assertThat(ex.getMessage(), is("test error"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testCauseOnlyConstructor() {
+        Throwable cause = new RuntimeException("root cause");
+        ClustererException ex = new ClustererException(cause);
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testIsCheckedException() {
+        ClustererException ex = new ClustererException("test");
+        assertThat(ex, instanceOf(Exception.class));
+    }
+
+    @Test
+    public void testNullMessageAllowed() {
+        ClustererException ex = new ClustererException((String) null);
+        assertThat(ex.getMessage(), nullValue());
+    }
+
+    @Test
+    public void testNullCauseAllowed() {
+        ClustererException ex = new ClustererException("msg", (Throwable) null);
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testDefaultConstructorHasNullMessageAndCause() {
+        ClustererException ex = new ClustererException();
+
+        assertThat(ex.getMessage(), nullValue());
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testCauseOnlyConstructorUsesCauseToBuildMessage() {
+        Throwable cause = new IllegalStateException("broken");
+        ClustererException ex = new ClustererException(cause);
+
+        assertThat(ex.getMessage(), is(cause.toString()));
+        assertThat(ex.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testCauseOnlyConstructorAllowsNullCause() {
+        ClustererException ex = new ClustererException((Throwable) null);
+
+        assertThat(ex.getMessage(), nullValue());
+        assertThat(ex.getCause(), nullValue());
+    }
 }

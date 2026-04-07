@@ -13,33 +13,70 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for createdir Implementation interface. */
 public class ImplementationTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(Implementation.VERSION, is("1.1"));
     }
-    */
+
+    @Test
+    public void testDefaultImplementationImplementsInterface() {
+        assertThat(Implementation.class.isAssignableFrom(DefaultImplementation.class), is(true));
+    }
+
+    @Test
+    public void testHasMakeCreateDirJobMethod() throws Exception {
+        assertThat(
+                Implementation.class.getMethod(
+                        "makeCreateDirJob", String.class, String.class, String.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testHasInitializeMethod() throws Exception {
+        assertThat(
+                Implementation.class.getMethod(
+                        "initialize", edu.isi.pegasus.planner.classes.PegasusBag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testImplementationIsInterface() {
+        assertThat(Implementation.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        Implementation.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        Implementation.class
+                                .getMethod(
+                                        "makeCreateDirJob",
+                                        String.class,
+                                        String.class,
+                                        String.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testImplementationDeclaresExpectedMethods() {
+        assertThat(Implementation.class.getDeclaredMethods().length, is(2));
+    }
 }

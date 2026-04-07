@@ -16,7 +16,8 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -27,15 +28,15 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
-import edu.isi.pegasus.planner.test.EnvSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +56,7 @@ public class TextTest {
     private static final String EXPANDED_ARCH = "x86_64";
     private static final String EXPANDED_OS = "linux";
     private static final String EXPANDED_KEG_PATH = "file:///usr/bin/pegasus-keg";
+    private File mExpandedCatalogFile;
 
     private PegasusBag mBag;
 
@@ -67,33 +69,19 @@ public class TextTest {
     private static int mTestNumber = 1;
     private Text mCatalog;
 
-    @BeforeAll
-    public static void setUpClass() {
-        Map<String, String> testEnvVariables = new HashMap();
-        testEnvVariables.put("SITE", EXPANDED_SITE);
-        testEnvVariables.put("NAMESPACE", EXPANDED_NAMESPACE);
-        testEnvVariables.put("NAME", EXPANDED_NAME);
-        testEnvVariables.put("VERSION", EXPANDED_VERSION);
-        testEnvVariables.put("ARCH", EXPANDED_ARCH);
-        testEnvVariables.put("OS", EXPANDED_OS);
-        testEnvVariables.put("KEGPATH", EXPANDED_KEG_PATH);
-        EnvSetup.setEnvironmentVariables(testEnvVariables);
-    }
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     public TextTest() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
-    public final void setUp() {
+    public final void setUp() throws IOException {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         mTestSetup.setInputDirectory(this.getClass());
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
         mProps = mTestSetup.loadPropertiesFromFile(PROPERTIES_BASENAME, new LinkedList());
+        mExpandedCatalogFile =
+                expandCatalogFile(new File(mTestSetup.getInputDirectory(), "tc.text"), ".text");
 
         mLogger = mTestSetup.loadLogger(mProps);
         mLogger.setLevel(LogManager.INFO_MESSAGE_LEVEL);
@@ -105,12 +93,19 @@ public class TextTest {
         // load the transformation catalog backend
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory(), "tc.text").getAbsolutePath());
+                mExpandedCatalogFile.getAbsolutePath());
         mProps.setProperty(
                 PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
                 TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
         mCatalog = (Text) TransformationFactory.loadInstance(mBag);
         mLogger.logEventCompletion();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (mExpandedCatalogFile != null) {
+            mExpandedCatalogFile.delete();
+        }
     }
 
     @Test
@@ -120,10 +115,10 @@ public class TextTest {
                 "whole-count-test",
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> entries = mCatalog.getContents();
-        assertEquals(4, entries.size(), "Expected total number of entries");
+        assertThat(entries.size(), is(4));
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
+        assertThat(kegEntries.size(), is(2));
         mLogger.logEventCompletion();
     }
 
@@ -135,7 +130,7 @@ public class TextTest {
                 Integer.toString(mTestNumber++));
         List<TransformationCatalogEntry> kegEntries =
                 mCatalog.lookup("example", "keg", "1.0", (String) null, null);
-        assertEquals(2, kegEntries.size(), "Expected total number of keg entries");
+        assertThat(kegEntries.size(), is(2));
         mLogger.logEventCompletion();
     }
 
@@ -152,7 +147,7 @@ public class TextTest {
                         TextTest.EXPANDED_VERSION,
                         TextTest.EXPANDED_SITE,
                         null);
-        assertEquals(1, kegEntries.size(), "Expected total number of keg entries");
+        assertThat(kegEntries.size(), is(1));
         mLogger.logEventCompletion();
     }
 
@@ -171,14 +166,13 @@ public class TextTest {
                         null);
         TransformationCatalogEntry expanded = kegEntries.get(0);
         SysInfo info = expanded.getSysInfo();
-        assertEquals(EXPANDED_NAMESPACE, expanded.getLogicalNamespace(), "Expected attribute ");
-        assertEquals(EXPANDED_NAME, expanded.getLogicalName(), "Expected attribute ");
-        assertEquals(EXPANDED_VERSION, expanded.getLogicalVersion(), "Expected attribute ");
-        assertEquals(EXPANDED_SITE, expanded.getResourceId(), "Expected attribute ");
-        assertEquals(
-                EXPANDED_KEG_PATH, expanded.getPhysicalTransformation(), "Expected attribute ");
-        assertEquals(EXPANDED_ARCH, info.getArchitecture().name(), "Expected attribute ");
-        assertEquals(EXPANDED_OS, info.getOS().name(), "Expected attribute ");
+        assertThat(expanded.getLogicalNamespace(), is(EXPANDED_NAMESPACE));
+        assertThat(expanded.getLogicalName(), is(EXPANDED_NAME));
+        assertThat(expanded.getLogicalVersion(), is(EXPANDED_VERSION));
+        assertThat(expanded.getResourceId(), is(EXPANDED_SITE));
+        assertThat(expanded.getPhysicalTransformation(), is(EXPANDED_KEG_PATH));
+        assertThat(info.getArchitecture().name(), is(EXPANDED_ARCH));
+        assertThat(info.getOS().name(), is(EXPANDED_OS));
 
         mLogger.logEventCompletion();
     }
@@ -193,16 +187,13 @@ public class TextTest {
                 mCatalog.lookup(null, "myxform", null, "condorpool", null);
         TransformationCatalogEntry entry = entries.get(0);
         SysInfo info = entry.getSysInfo();
-        assertEquals(null, entry.getLogicalNamespace(), "Expected attribute ");
-        assertEquals("myxform", entry.getLogicalName(), "Expected attribute ");
-        assertEquals(null, entry.getLogicalVersion(), "Expected attribute ");
-        assertEquals("condorpool", entry.getResourceId(), "Expected attribute ");
-        assertEquals("/usr/bin/true", entry.getPhysicalTransformation(), "Expected attribute ");
-        assertEquals(
-                Architecture.x86_64.toString(),
-                info.getArchitecture().name(),
-                "Expected attribute ");
-        assertEquals(OS.linux.toString(), info.getOS().name(), "Expected attribute ");
+        assertThat(entry.getLogicalNamespace(), is((String) null));
+        assertThat(entry.getLogicalName(), is("myxform"));
+        assertThat(entry.getLogicalVersion(), is((String) null));
+        assertThat(entry.getResourceId(), is("condorpool"));
+        assertThat(entry.getPhysicalTransformation(), is("/usr/bin/true"));
+        assertThat(info.getArchitecture().name(), is(Architecture.x86_64.toString()));
+        assertThat(info.getOS().name(), is(OS.linux.toString()));
         testProfile(entry, Profile.METADATA, "key", "value");
         testProfile(entry, Profile.METADATA, "appmodel", "myxform.aspen");
         testProfile(entry, Profile.METADATA, "version", "3.0");
@@ -214,6 +205,22 @@ public class TextTest {
             TransformationCatalogEntry entry, String namespace, String key, String value) {
         Profile p = new Profile(namespace, key, value);
         List profiles = entry.getProfiles(namespace);
-        assertTrue(profiles.contains(p), "Entry " + entry);
+        assertThat(profiles.contains(p), is(true));
+    }
+
+    private File expandCatalogFile(File source, String suffix) throws IOException {
+        String content = new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8);
+        content =
+                content.replace("${SITE}", EXPANDED_SITE)
+                        .replace("${NAMESPACE}", EXPANDED_NAMESPACE)
+                        .replace("${NAME}", EXPANDED_NAME)
+                        .replace("${VERSION}", EXPANDED_VERSION)
+                        .replace("${ARCH}", EXPANDED_ARCH)
+                        .replace("${OS}", EXPANDED_OS)
+                        .replace("${KEGPATH}", EXPANDED_KEG_PATH);
+
+        File expanded = File.createTempFile("tcf", suffix);
+        Files.write(expanded.toPath(), Collections.singleton(content), StandardCharsets.UTF_8);
+        return expanded;
     }
 }

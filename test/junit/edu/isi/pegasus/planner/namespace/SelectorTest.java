@@ -13,33 +13,189 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.Map;
+import java.util.TreeMap;
 import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class SelectorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Selector selector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        selector = new Selector();
     }
-    */
+
+    @Test
+    public void testDefaultConstructorIsEmpty() {
+        assertThat(selector.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testNamespaceName() {
+        assertThat(selector.namespaceName(), is(Selector.NAMESPACE_NAME));
+    }
+
+    @Test
+    public void testConstructAndGet() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        assertThat((String) selector.get(Selector.EXECUTION_SITE_KEY), is("condorpool"));
+    }
+
+    @Test
+    public void testConstructInitializesMapLazily() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "local");
+        assertThat(selector.containsKey(Selector.EXECUTION_SITE_KEY), is(true));
+    }
+
+    @Test
+    public void testCheckKeyValidForAnyNonNullKeyAndValue() {
+        assertThat(
+                selector.checkKey(Selector.EXECUTION_SITE_KEY, "condorpool"),
+                is(Namespace.VALID_KEY));
+        assertThat(
+                selector.checkKey(Selector.GRID_JOB_TYPE_KEY, "compute"), is(Namespace.VALID_KEY));
+        assertThat(
+                selector.checkKey(Selector.PFN_HINT_KEY, "/path/to/exec"), is(Namespace.VALID_KEY));
+    }
+
+    @Test
+    public void testCheckKeyNotPermittedForNullKey() {
+        assertThat(selector.checkKey(null, "condorpool"), is(Namespace.NOT_PERMITTED_KEY));
+    }
+
+    @Test
+    public void testCheckKeyNotPermittedForNullValue() {
+        assertThat(
+                selector.checkKey(Selector.EXECUTION_SITE_KEY, null),
+                is(Namespace.NOT_PERMITTED_KEY));
+    }
+
+    @Test
+    public void testCheckKeyValidForArbitraryKey() {
+        assertThat(selector.checkKey("custom_key", "custom_value"), is(Namespace.VALID_KEY));
+    }
+
+    @Test
+    public void testToCondorReturnsEmptyString() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        assertThat(selector.toCondor(), is(""));
+    }
+
+    @Test
+    public void testToStringDelegatesToToCondor() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "local");
+        assertThat(selector.toString(), is(selector.toCondor()));
+    }
+
+    @Test
+    public void testCloneOnEmptyReturnsEmptySelector() {
+        Selector clone = (Selector) selector.clone();
+        assertThat(clone.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testClonePreservesValues() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        Selector clone = (Selector) selector.clone();
+        assertThat((String) clone.get(Selector.EXECUTION_SITE_KEY), is("condorpool"));
+    }
+
+    @Test
+    public void testCloneIsIndependent() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        Selector clone = (Selector) selector.clone();
+        clone.construct(Selector.PFN_HINT_KEY, "/new/path");
+        assertThat(selector.containsKey(Selector.PFN_HINT_KEY), is(false));
+    }
+
+    @Test
+    public void testMergeAddsKeysFromOtherNamespace() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        Selector other = new Selector();
+        other.construct(Selector.PFN_HINT_KEY, "/path/to/exec");
+        selector.merge(other);
+        assertThat(selector.containsKey(Selector.PFN_HINT_KEY), is(true));
+    }
+
+    @Test
+    public void testMergeOverridesExistingKey() {
+        selector.construct(Selector.EXECUTION_SITE_KEY, "condorpool");
+        Selector other = new Selector();
+        other.construct(Selector.EXECUTION_SITE_KEY, "local");
+        selector.merge(other);
+        assertThat((String) selector.get(Selector.EXECUTION_SITE_KEY), is("local"));
+    }
+
+    @Test
+    public void testMergeThrowsOnWrongType() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> selector.merge(new ENV()),
+                "Merging incompatible namespace types should throw");
+    }
+
+    @Test
+    public void testSizeAfterMultipleConstructs() {
+        selector.construct("key1", "val1");
+        selector.construct("key2", "val2");
+        selector.construct("key3", "val3");
+        assertThat(selector.size(), is(3));
+    }
+
+    @Test
+    public void testCheckKeyInNSFromSemicolonString() {
+        selector.checkKeyInNS(Selector.EXECUTION_SITE_KEY + "=condorpool");
+        assertThat(selector.containsKey(Selector.EXECUTION_SITE_KEY), is(true));
+    }
+
+    @Test
+    public void testMapConstructorPreservesInitialValues() {
+        Map<String, String> values = new TreeMap<String, String>();
+        values.put(Selector.EXECUTION_SITE_KEY, "local");
+        values.put(Selector.PFN_HINT_KEY, "/bin/task");
+
+        Selector constructed = new Selector(values);
+
+        assertThat((String) constructed.get(Selector.EXECUTION_SITE_KEY), is("local"));
+        assertThat((String) constructed.get(Selector.PFN_HINT_KEY), is("/bin/task"));
+    }
+
+    @Test
+    public void testGetReturnsNullWhenMapUninitialized() {
+        assertThat(selector.get(Selector.EXECUTION_SITE_KEY), nullValue());
+    }
+
+    @Test
+    public void testCheckKeyInNSWithNullStringIsNoop() {
+        selector.checkKeyInNS((String) null);
+
+        assertThat(selector.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testCheckKeyInNSWithLiteralNullStringStopsProcessing() {
+        selector.checkKeyInNS("null;" + Selector.EXECUTION_SITE_KEY + "=condorpool");
+
+        assertThat(selector.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testCheckKeyInNSParsesMultipleEntries() {
+        selector.checkKeyInNS(
+                Selector.EXECUTION_SITE_KEY
+                        + "=condorpool;"
+                        + Selector.GRID_JOB_TYPE_KEY
+                        + "=compute");
+
+        assertThat((String) selector.get(Selector.EXECUTION_SITE_KEY), is("condorpool"));
+        assertThat((String) selector.get(Selector.GRID_JOB_TYPE_KEY), is("compute"));
+    }
 }

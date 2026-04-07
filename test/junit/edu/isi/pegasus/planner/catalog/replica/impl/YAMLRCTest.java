@@ -16,6 +16,9 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -66,7 +69,7 @@ public class YAMLRCTest {
     public void simpleInsert() {
         mYAMLRC.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
     }
 
     @Test
@@ -80,7 +83,7 @@ public class YAMLRCTest {
         rc.addAttribute("size", "100GB");
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
         // System.err.println(c);
-        assertTrue(c.contains(rc));
+        assertThat(c.contains(rc), is(true));
     }
 
     @Test
@@ -93,18 +96,19 @@ public class YAMLRCTest {
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("TEST_fy_3810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("file://test.isi.edu/scratch/3810/TEST/TEST_fy_3810.sgt.md5", x.getPFN());
+            assertThat(
+                    x.getPFN(), is("file://test.isi.edu/scratch/3810/TEST/TEST_fy_3810.sgt.md5"));
         }
 
         c = mYAMLRC.lookup("TEST_fz_33810.sgt.md5");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals(
-                    "file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5", x.getPFN());
+            assertThat(
+                    x.getPFN(), is("file://test.isi.edu/scratch/33810/TEST/TEST_fz_33810.sgt.md5"));
         }
 
         c = mYAMLRC.lookup("TEST_fa_33810.sgt.md5");
-        assertEquals(0, c.size());
+        assertThat(c.size(), is(0));
     }
 
     @Test
@@ -120,9 +124,10 @@ public class YAMLRCTest {
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("USC_fx_7056.sgt");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals(
-                    "gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/USC/USC_fx_7056.sgt",
-                    x.getPFN());
+            assertThat(
+                    x.getPFN(),
+                    is(
+                            "gsiftp://gridftp.ccs.ornl.gov/gpfs/alpine/scratch/callag/geo112/SGT_Storage/USC/USC_fx_7056.sgt"));
         }
     }
 
@@ -134,10 +139,10 @@ public class YAMLRCTest {
         mYAMLRC.insert("a", new ReplicaCatalogEntry("c", "handle"));
 
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", "handle")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "handle")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", "handle")), is(true));
     }
 
     @Test
@@ -150,10 +155,10 @@ public class YAMLRCTest {
 
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
 
-        assertFalse(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(false));
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("b", x.getPFN());
-            assertEquals("true", ((String) x.getAttribute("regex")));
+            assertThat(x.getPFN(), is("b"));
+            assertThat(((String) x.getAttribute("regex")), is("true"));
         }
     }
 
@@ -168,11 +173,11 @@ public class YAMLRCTest {
         Collection<ReplicaCatalogEntry> c = mYAMLRC.lookup("a");
 
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("b", x.getPFN());
-            assertNull(x.getAttribute("regex"));
+            assertThat(x.getPFN(), is("b"));
+            assertThat(x.getAttribute("regex"), is(nullValue()));
         }
 
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
     }
 
     @Test
@@ -210,12 +215,14 @@ public class YAMLRCTest {
                         + "  checksum:\n"
                         + "    sha256: \"dsaadsadsa\"\n";
 
-        assertEquals(expected, mapper.writeValueAsString(mYAMLRC));
+        assertThat(mapper.writeValueAsString(mYAMLRC), is(expected));
         mYAMLRC.close();
     }
 
     @AfterEach
     public void tearDown() {
-        mRCFile.delete();
+        if (mRCFile != null) {
+            mRCFile.delete();
+        }
     }
 }

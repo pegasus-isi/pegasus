@@ -13,33 +13,128 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Vertical clusterer class. */
 public class VerticalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class TestVertical extends Vertical {
+        String clusteredJobIdFor(Partition partition) {
+            return constructClusteredJobID(partition);
+        }
+
+        String logicalNameFor(java.util.List<Job> jobs) {
+            return getLogicalNameForJobs(jobs);
+        }
+    }
+
+    private TestVertical mVertical;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mVertical = new TestVertical();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertThat(mVertical, notNullValue());
+    }
+
+    @Test
+    public void testImplementsClusterer() {
+        assertThat(mVertical, instanceOf(Clusterer.class));
+    }
+
+    @Test
+    public void testDescriptionNotNull() {
+        assertThat(mVertical.description(), notNullValue());
+    }
+
+    @Test
+    public void testDescriptionNotEmpty() {
+        assertThat(mVertical.description().isEmpty(), is(false));
+    }
+
+    @Test
+    public void testDefaultConstructorDoesNotThrow() {
+        assertDoesNotThrow(Vertical::new);
+    }
+
+    @Test
+    public void testDescriptionIsDifferentFromHorizontal() {
+        Horizontal h = new Horizontal();
+        assertThat(mVertical.description(), not(equalTo(h.description())));
+    }
+
+    @Test
+    public void testIsInstanceOfVertical() {
+        assertThat(mVertical, instanceOf(Vertical.class));
+    }
+
+    @Test
+    public void testDescriptionMatchesDeclaredConstant() {
+        assertThat(mVertical.description(), is(Vertical.DESCRIPTION));
+    }
+
+    @Test
+    public void testGetLogicalNameForJobsReturnsNull() {
+        assertThat(mVertical.logicalNameFor(Arrays.asList(new Job())), nullValue());
+    }
+
+    @Test
+    public void testConstructClusteredJobIdUsesLabelWhenPresent() {
+        Partition partition = new Partition();
+        partition.setID("partition-1");
+        GraphNode node = new GraphNode("n1");
+        LabelBag bag = new LabelBag();
+        bag.add(LabelBag.LABEL_KEY, "label-a");
+        node.setBag(bag);
+        partition.addNode(node);
+
+        assertThat(mVertical.clusteredJobIdFor(partition), is("label-a"));
+    }
+
+    @Test
+    public void testConstructClusteredJobIdFallsBackToPartitionIdWhenLabelMissing() {
+        Partition partition = new Partition();
+        partition.setID("partition-2");
+        GraphNode node = new GraphNode("n1");
+        node.setBag(new LabelBag());
+        partition.addNode(node);
+
+        assertThat(mVertical.clusteredJobIdFor(partition), is("partition-2"));
+    }
+
+    @Test
+    public void testDetermineInputOutputFilesUsesTopologicalMaterializationRules() {
+        AggregatedJob aggregatedJob = new AggregatedJob();
+        Job first = new Job();
+        Job second = new Job();
+
+        PegasusFile shared = new PegasusFile("shared");
+        PegasusFile finalOutput = new PegasusFile("final");
+
+        first.inputFiles.add(shared);
+        first.outputFiles.add(shared);
+        second.inputFiles.add(shared);
+        second.outputFiles.add(finalOutput);
+
+        mVertical.determineInputOutputFiles(aggregatedJob, Arrays.asList(first, second));
+
+        assertThat(aggregatedJob.getInputFiles().contains(shared), is(true));
+        assertThat(aggregatedJob.getOutputFiles().contains(shared), is(true));
+        assertThat(aggregatedJob.getOutputFiles().contains(finalOutput), is(true));
+    }
 }

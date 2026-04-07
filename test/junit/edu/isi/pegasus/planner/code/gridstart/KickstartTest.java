@@ -13,7 +13,9 @@
  */
 package edu.isi.pegasus.planner.code.gridstart;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
@@ -24,10 +26,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -46,12 +45,6 @@ public class KickstartTest {
     private LogManager mLogger;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -75,9 +68,6 @@ public class KickstartTest {
         mBag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
     }
 
-    @AfterEach
-    public void tearDown() {}
-
     @ParameterizedTest
     @CsvSource(
             value = {
@@ -99,10 +89,10 @@ public class KickstartTest {
         }
         Kickstart ks = new Kickstart();
         ks.initialize(mBag, new ADag());
-        assertEquals(
-                Long.parseLong(expectedCheckpointValue),
+        assertThat(
                 ks.getJobCheckpointTimeInSeconds(
-                        j, Long.parseLong(maxwalltimeInSeconds), Long.parseLong(minDiff)));
+                        j, Long.parseLong(maxwalltimeInSeconds), Long.parseLong(minDiff)),
+                is(Long.parseLong(expectedCheckpointValue)));
     }
 
     @ParameterizedTest
@@ -127,7 +117,7 @@ public class KickstartTest {
         }
         Kickstart ks = new Kickstart();
         ks.initialize(mBag, new ADag());
-        assertEquals(expectedOptions, ks.getKickstartTimeoutOptions(j).trim());
+        assertThat(ks.getKickstartTimeoutOptions(j).trim(), is(expectedOptions));
     }
 
     @ParameterizedTest
@@ -154,8 +144,6 @@ public class KickstartTest {
                         () -> {
                             ks.getKickstartTimeoutOptions(j);
                         });
-        assertTrue(
-                e.getMessage().contains("Insufficient difference between maxwalltime"),
-                "Exception thrown was " + e);
+        assertThat(e.getMessage(), containsString("Insufficient difference between maxwalltime"));
     }
 }

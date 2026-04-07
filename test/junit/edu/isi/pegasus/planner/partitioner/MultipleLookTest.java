@@ -13,33 +13,58 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import org.griphyn.vdl.euryale.Callback;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class MultipleLookTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMultipleLookExtendsDAXWriter() {
+        assertThat(DAXWriter.class.isAssignableFrom(MultipleLook.class), is(true));
     }
-    */
+
+    @Test
+    public void testConstructorInitializesFieldsAndDefaultIndex() throws Exception {
+        MultipleLook writer = new MultipleLook("workflow.dax", "/tmp/pdax");
+        assertThat(ReflectionTestUtils.getField(writer, "mDaxFile"), is("workflow.dax"));
+        assertThat(ReflectionTestUtils.getField(writer, "mPDAXDirectory"), is("/tmp/pdax"));
+        assertThat(ReflectionTestUtils.getField(writer, "mIndex"), is(-1));
+    }
+
+    @Test
+    public void testWritePartitionDaxMethodSignature() throws Exception {
+        Method method =
+                MultipleLook.class.getDeclaredMethod(
+                        "writePartitionDax", Partition.class, int.class);
+
+        assertThat(method.getReturnType(), is(boolean.class));
+        assertThat(method.getParameterCount(), is(2));
+    }
+
+    @Test
+    public void testPrivateCallbackHandlerExistsAndImplementsCallback() throws Exception {
+        Class<?> callbackHandler = null;
+        for (Class<?> inner : MultipleLook.class.getDeclaredClasses()) {
+            if (inner.getSimpleName().equals("MyCallBackHandler")) {
+                callbackHandler = inner;
+                break;
+            }
+        }
+
+        assertThat(callbackHandler, is(notNullValue()));
+        assertThat(Callback.class.isAssignableFrom(callbackHandler), is(true));
+
+        Constructor<?> constructor = callbackHandler.getDeclaredConstructors()[0];
+        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        assertThat(parameterTypes.length, is(1));
+        assertThat(parameterTypes[0], is(MultipleLook.class));
+    }
 }

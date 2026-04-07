@@ -13,33 +13,96 @@
  */
 package edu.isi.pegasus.planner.catalog.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the SiteFactoryException class. */
 public class SiteFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertThat(FactoryException.class.isAssignableFrom(SiteFactoryException.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(SiteFactoryException.DEFAULT_NAME, is("Site Catalog"));
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        SiteFactoryException ex = new SiteFactoryException("test message");
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is(SiteFactoryException.DEFAULT_NAME));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        SiteFactoryException ex = new SiteFactoryException("test message", "MyClass");
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCauseUsesDefaultClassname() {
+        Throwable cause = new IllegalStateException("root cause");
+
+        SiteFactoryException ex = new SiteFactoryException("test message", cause);
+
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(SiteFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndCause() {
+        Throwable cause = new IllegalArgumentException("root cause");
+
+        SiteFactoryException ex = new SiteFactoryException("test message", "MyClass", cause);
+
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is("MyClass"));
+    }
+
+    @Test
+    public void testConstructorWithNullCauseStillUsesDefaultClassname() {
+        SiteFactoryException ex = new SiteFactoryException("test message", (Throwable) null);
+
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(nullValue()));
+        assertThat(ex.getClassname(), is(SiteFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testExceptionIsRuntimeException() {
+        assertThat(RuntimeException.class.isAssignableFrom(SiteFactoryException.class), is(true));
+    }
+
+    @Test
+    public void testExceptionIsThrowable() {
+        assertThat(Throwable.class.isAssignableFrom(SiteFactoryException.class), is(true));
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                SiteFactoryException.class,
+                () -> {
+                    throw new SiteFactoryException("test");
+                });
+    }
 }

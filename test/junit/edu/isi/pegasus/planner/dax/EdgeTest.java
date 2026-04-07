@@ -13,33 +13,146 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.common.util.XMLWriter;
+import java.io.StringWriter;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Edge class. */
 public class EdgeTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Edge mEdge;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mEdge = new Edge("parent1", "child1");
     }
-    */
+
+    @Test
+    public void testConstructorSetsParent() {
+        assertThat(mEdge.getParent(), is("parent1"));
+    }
+
+    @Test
+    public void testConstructorSetsChild() {
+        assertThat(mEdge.getChild(), is("child1"));
+    }
+
+    @Test
+    public void testConstructorWithLabel() {
+        Edge edge = new Edge("parent1", "child1", "my-label");
+        assertThat(edge.getLabel(), is("my-label"));
+    }
+
+    @Test
+    public void testInitialLabelIsNull() {
+        assertThat(mEdge.getLabel(), nullValue());
+    }
+
+    @Test
+    public void testSetParent() {
+        mEdge.setParent("new-parent");
+        assertThat(mEdge.getParent(), is("new-parent"));
+    }
+
+    @Test
+    public void testSetChild() {
+        mEdge.setChild("new-child");
+        assertThat(mEdge.getChild(), is("new-child"));
+    }
+
+    @Test
+    public void testSetLabel() {
+        mEdge.setLabel("edge-label");
+        assertThat(mEdge.getLabel(), is("edge-label"));
+    }
+
+    @Test
+    public void testCopyConstructor() {
+        Edge withLabel = new Edge("p", "c", "lbl");
+        Edge copy = new Edge(withLabel);
+        assertThat(copy.getParent(), is("p"));
+        assertThat(copy.getChild(), is("c"));
+        assertThat(copy.getLabel(), is("lbl"));
+    }
+
+    @Test
+    public void testClone() {
+        Edge withLabel = new Edge("p", "c", "lbl");
+        Edge cloned = withLabel.clone();
+        assertThat(cloned.getParent(), is(withLabel.getParent()));
+        assertThat(cloned.getChild(), is(withLabel.getChild()));
+        assertThat(cloned.getLabel(), is(withLabel.getLabel()));
+        assertThat(cloned, not(sameInstance(withLabel)));
+    }
+
+    @Test
+    public void testHashCode() {
+        Edge e1 = new Edge("p", "c", "lbl");
+        Edge e2 = new Edge("p", "c", "lbl");
+        assertThat(e1.hashCode(), is(e2.hashCode()));
+    }
+
+    @Test
+    public void testEqualsWithSameValues() {
+        Edge e1 = new Edge("p", "c", "lbl");
+        Edge e2 = new Edge("p", "c", "lbl");
+        assertThat(e1.equals(e2), is(true));
+    }
+
+    @Test
+    public void testEqualsReturnsFalseForDifferentType() {
+        assertThat(mEdge.equals("not-an-edge"), is(false));
+    }
+
+    @Test
+    public void testEqualsWithNullLabelsCurrentlyThrowsNullPointerException() {
+        Edge first = new Edge("p", "c");
+        Edge second = new Edge("p", "c");
+
+        assertThrows(NullPointerException.class, () -> first.equals(second));
+    }
+
+    @Test
+    public void testToStringCurrentBehaviorWithoutLabel() {
+        assertThat(mEdge.toString(), is("(parent1->:null)"));
+    }
+
+    @Test
+    public void testToXMLWithoutLabelOmitsEdgeLabelAttribute() {
+        StringWriter sw = new StringWriter();
+        XMLWriter writer = new XMLWriter(sw);
+
+        mEdge.toXML(writer, 0);
+        String result = sw.toString();
+
+        assertThat(
+                result,
+                allOf(
+                        containsString("<child"),
+                        containsString("<parent"),
+                        containsString("ref=\"parent1\"")));
+        assertThat(result.contains("edge-label="), is(false));
+    }
+
+    @Test
+    public void testToXMLParentWithLabelIncludesEdgeLabelAttribute() {
+        Edge edge = new Edge("parent1", "child1", "edge-a");
+        StringWriter sw = new StringWriter();
+        XMLWriter writer = new XMLWriter(sw);
+
+        edge.toXMLParent(writer, 1);
+        String result = sw.toString();
+
+        assertThat(
+                result,
+                allOf(
+                        containsString("<parent"),
+                        containsString("ref=\"parent1\""),
+                        containsString("edge-label=\"edge-a\"")));
+    }
 }

@@ -13,33 +13,84 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for HasText interface structure. */
 public class HasTextTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHasTextIsInterface() {
+        assertThat(HasText.class.isInterface(), is(true));
     }
-    */
+
+    @Test
+    public void testHasAppendValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("appendValue", String.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testHasGetValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("getValue");
+        assertThat(m, is(notNullValue()));
+        assertThat(m.getReturnType(), is(String.class));
+    }
+
+    @Test
+    public void testHasSetValueMethod() throws Exception {
+        Method m = HasText.class.getMethod("setValue", String.class);
+        assertThat(m, is(notNullValue()));
+        assertThat(m.getReturnType(), is(void.class));
+    }
+
+    @Test
+    public void testDataImplementsInterface() {
+        assertThat(HasText.class.isAssignableFrom(Data.class), is(true));
+    }
+
+    @Test
+    public void testArgEntryImplementsInterface() {
+        assertThat(HasText.class.isAssignableFrom(ArgEntry.class), is(true));
+    }
+
+    @Test
+    public void testArchitectureImplementsInterface() {
+        assertThat(HasText.class.isAssignableFrom(Architecture.class), is(true));
+    }
+
+    @Test
+    public void testDataAppendAndGetValue() {
+        Data d = new Data();
+        d.appendValue("hello");
+        d.appendValue(" world");
+        assertThat(d.getValue(), is("hello world"));
+    }
+
+    @Test
+    public void testInterfaceMethodsArePublicAndAbstract() throws Exception {
+        Method append = HasText.class.getMethod("appendValue", String.class);
+        Method get = HasText.class.getMethod("getValue");
+        Method set = HasText.class.getMethod("setValue", String.class);
+
+        assertThat(Modifier.isPublic(append.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(append.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(get.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(get.getModifiers()), is(true));
+        assertThat(Modifier.isPublic(set.getModifiers()), is(true));
+        assertThat(Modifier.isAbstract(set.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testBootSetValueAndGetValueThroughInterfaceContract() {
+        Boot boot = new Boot();
+        boot.setValue("2024-01-01");
+
+        assertThat(boot.getValue(), is("2024-01-01"));
+    }
 }

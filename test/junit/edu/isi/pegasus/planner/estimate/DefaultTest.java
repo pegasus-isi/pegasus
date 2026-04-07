@@ -13,33 +13,108 @@
  */
 package edu.isi.pegasus.planner.estimate;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Default estimator. */
 public class DefaultTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Default mEstimator;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mEstimator = new Default();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertThat(mEstimator, notNullValue());
+    }
+
+    @Test
+    public void testImplementsEstimator() {
+        assertThat(mEstimator, instanceOf(Estimator.class));
+    }
+
+    @Test
+    public void testGetRuntimeReturnsNull() {
+        Job job = new Job();
+        job.setTXName("test");
+        assertThat(mEstimator.getRuntime(job), nullValue());
+    }
+
+    @Test
+    public void testGetMemoryReturnsNull() {
+        Job job = new Job();
+        job.setTXName("test");
+        assertThat(mEstimator.getMemory(job), nullValue());
+    }
+
+    @Test
+    public void testGetAllEstimatesReturnsEmptyMap() {
+        Job job = new Job();
+        job.setTXName("test");
+        Map<String, String> estimates = mEstimator.getAllEstimates(job);
+        assertThat(estimates, notNullValue());
+        assertThat(estimates.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testInitializeDoesNotThrow() {
+        assertDoesNotThrow(
+                () -> mEstimator.initialize(null, null),
+                "Default initialize should not throw when called with nulls");
+    }
+
+    @Test
+    public void testGetAllEstimatesMapNotNull() {
+        Job job = new Job();
+        Map<String, String> result = mEstimator.getAllEstimates(job);
+        assertThat(result, notNullValue());
+    }
+
+    @Test
+    public void testGetRuntimeWithNullJob() {
+        // Default returns null regardless of job
+        assertThat(mEstimator.getRuntime(null), nullValue());
+    }
+
+    @Test
+    public void testGetMemoryWithNullJob() {
+        assertThat(mEstimator.getMemory(null), nullValue());
+    }
+
+    @Test
+    public void testGetAllEstimatesWithNullJobReturnsEmptyMap() {
+        Map<String, String> estimates = mEstimator.getAllEstimates(null);
+
+        assertThat(estimates, notNullValue());
+        assertThat(estimates.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetAllEstimatesReturnsFreshMapEachTime() {
+        Map<String, String> first = mEstimator.getAllEstimates(new Job());
+        first.put("runtime", "12");
+
+        Map<String, String> second = mEstimator.getAllEstimates(new Job());
+
+        assertThat(first, not(sameInstance(second)));
+        assertThat(second.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testInitializeAcceptsRealDagAndBag() {
+        assertDoesNotThrow(
+                () -> mEstimator.initialize(new ADag(), new PegasusBag()),
+                "Default initialize should accept real workflow and bag objects");
+    }
 }

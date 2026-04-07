@@ -13,33 +13,89 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the StagingMapperFactoryException class. */
 public class StagingMapperFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertThat(
+                edu.isi.pegasus.common.util.FactoryException.class.isAssignableFrom(
+                        StagingMapperFactoryException.class),
+                is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(StagingMapperFactoryException.DEFAULT_NAME, is("Staging Site Mapper"));
+    }
+
+    @Test
+    public void testConstructWithMessageSetsDefaultClassname() {
+        StagingMapperFactoryException ex = new StagingMapperFactoryException("test message");
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is(StagingMapperFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructWithMessageAndClassname() {
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", "MyClass");
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        StagingMapperFactoryException ex = new StagingMapperFactoryException("test message", cause);
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+        assertThat(ex.getClassname(), is(StagingMapperFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructWithMessageClassnameAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", "MyClass", cause);
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+    }
+
+    @Test
+    public void testConstructWithMessageAndNullCauseKeepsDefaultClassname() {
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", (Throwable) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(nullValue()));
+        assertThat(ex.getClassname(), is(StagingMapperFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructWithMessageAndNullClassnamePreservesNull() {
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", (String) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructWithMessageNullClassnameAndNullCausePreservesNull() {
+        StagingMapperFactoryException ex =
+                new StagingMapperFactoryException("test message", null, null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is(nullValue()));
+        assertThat(ex.getCause(), is(nullValue()));
+    }
 }

@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -41,10 +42,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,12 +66,6 @@ public class CondorTest {
     private static int mTestNumber = 1;
 
     public CondorTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -181,7 +174,8 @@ public class CondorTest {
         RuntimeException thrown =
                 Assertions.assertThrows(
                         RuntimeException.class, () -> this.testStageIn("local", expectedOutputs));
-        assertTrue(thrown.getMessage().contains("Conflict for job preprocess_ID1 detected."));
+        assertThat(
+                thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
     }
 
     /** PM-1885 */
@@ -272,14 +266,14 @@ public class CondorTest {
             // execution
             cTX.modifyJobForWorkerNodeExecution(
                     job, stagingSiteServer.getURLPrefix(), stagingSiteDirectory, "$PWD");
-            assertEquals(
-                    expected.getSourceURL().getValue(),
-                    job.condorVariables.getIPFilesForTransfer());
+            assertThat(
+                    job.condorVariables.getIPFilesForTransfer(),
+                    is(expected.getSourceURL().getValue()));
             return;
         }
 
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertThat(result, notNullValue());
+        assertThat(result.size(), is(1));
         testFileTransfer(expected, (FileTransfer) result.toArray()[0]);
         mLogger.logEventCompletion();
     }
@@ -313,11 +307,11 @@ public class CondorTest {
          * result.isEmpty()) { // indicates we peek into transfer_input_files // that is constructed
          * when the job is modified for worker node // execution
          * cTX.modifyJobForWorkerNodeExecution( job, stagingSiteServer.getURLPrefix(),
-         * stagingSiteDirectory, "$PWD"); assertEquals( expected.getSourceURL().getValue(),
+         * stagingSiteDirectory, "$PWD"); assertThat( expected.getSourceURL().getValue(),
          * job.condorVariables.getIPFilesForTransfer()); return; }
          */
-        assertNotNull(result);
-        assertEquals(expectedFTs.size(), result.size());
+        assertThat(result, notNullValue());
+        assertThat(result.size(), is(expectedFTs.size()));
 
         Object[] resultArray = result.toArray();
         Object[] expectedArray = expectedFTs.toArray();
@@ -329,19 +323,19 @@ public class CondorTest {
     }
 
     private void testFileTransfer(FileTransfer expected, FileTransfer actual) {
-        assertNotNull(actual);
-        assertEquals(expected.getLFN(), actual.getLFN());
-        assertEquals(expected.getLinkage(), actual.getLinkage());
-        assertEquals(expected.getTransferFlag(), actual.getTransferFlag());
-        assertTrue(expected.getRegisterFlag() == actual.getRegisterFlag());
-        assertEquals(expected.getSourceURLCount(), actual.getSourceURLCount());
-        assertEquals(expected.getDestURLCount(), actual.getDestURLCount());
+        assertThat(actual, notNullValue());
+        assertThat(actual.getLFN(), is(expected.getLFN()));
+        assertThat(actual.getLinkage(), is(expected.getLinkage()));
+        assertThat(actual.getTransferFlag(), is(expected.getTransferFlag()));
+        assertThat(actual.getRegisterFlag(), is(expected.getRegisterFlag()));
+        assertThat(actual.getSourceURLCount(), is(expected.getSourceURLCount()));
+        assertThat(actual.getDestURLCount(), is(expected.getDestURLCount()));
 
         // we only expect 1 source and destination URL for these unit tests
-        assertEquals(actual.getSourceURLCount(), 1);
-        assertEquals(actual.getDestURLCount(), 1);
-        assertEquals(expected.getSourceURL(), actual.getSourceURL());
-        assertEquals(expected.getDestURL(), actual.getDestURL());
+        assertThat(actual.getSourceURLCount(), is(1));
+        assertThat(actual.getDestURLCount(), is(1));
+        assertThat(actual.getSourceURL(), is(expected.getSourceURL()));
+        assertThat(actual.getDestURL(), is(expected.getDestURL()));
     }
 
     private ADag constructTestWorkflow() {

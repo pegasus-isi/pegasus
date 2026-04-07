@@ -13,33 +13,105 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Proc invocation class. */
 public class ProcTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertThat(MachineInfo.class.isAssignableFrom(Proc.class), is(true));
     }
-    */
+
+    @Test
+    public void testElementName() {
+        assertThat(Proc.ELEMENT_NAME, is("proc"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Proc p = new Proc();
+        assertThat(p, is(org.hamcrest.Matchers.notNullValue()));
+    }
+
+    @Test
+    public void testGetElementName() {
+        Proc p = new Proc();
+        assertThat(p.getElementName(), is("proc"));
+    }
+
+    @Test
+    public void testAddAndGetAttribute() {
+        Proc p = new Proc();
+        p.addAttribute("count", "4");
+        assertThat(p.get("count"), is("4"));
+    }
+
+    @Test
+    public void testGetMissingAttributeReturnsNull() {
+        Proc p = new Proc();
+        assertThat(p.get("missing"), is(nullValue()));
+    }
+
+    @Test
+    public void testAddAttributesAddsMultipleEntries() {
+        Proc p = new Proc();
+
+        p.addAttributes(Arrays.asList("count", "model"), Arrays.asList("4", "x86_64"));
+
+        assertThat(p.get("count"), is("4"));
+        assertThat(p.get("model"), is("x86_64"));
+    }
+
+    @Test
+    public void testGetAttributeKeysIteratorIncludesAddedKeys() {
+        Proc p = new Proc();
+        p.addAttribute("count", "4");
+        p.addAttribute("model", "x86_64");
+
+        Set<String> keys = new HashSet<String>();
+        for (Iterator<String> it = p.getAttributeKeysIterator(); it.hasNext(); ) {
+            keys.add(it.next());
+        }
+
+        assertThat(keys, is(new HashSet<String>(Arrays.asList("count", "model"))));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        Proc p = new Proc();
+
+        IOException exception =
+                assertThrows(IOException.class, () -> p.toString(new StringWriter()));
+
+        assertThat(
+                exception.getMessage(),
+                is("method not implemented, please contact pegasus-support@isi.edu"));
+    }
+
+    @Test
+    public void testToXMLUsesNamespaceAndSelfClosingTag() throws IOException {
+        Proc p = new Proc();
+        p.addAttribute("count", "4");
+
+        StringWriter writer = new StringWriter();
+        p.toXML(writer, "  ", "inv");
+
+        String xml = writer.toString();
+        assertThat(xml.startsWith("  <inv:proc"), is(true));
+        assertThat(xml, containsString("count=\"4\""));
+        assertThat(xml.endsWith("/>" + System.lineSeparator()), is(true));
+    }
 }

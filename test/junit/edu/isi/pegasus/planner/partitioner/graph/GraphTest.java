@@ -13,33 +13,83 @@
  */
 package edu.isi.pegasus.planner.partitioner.graph;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Structural tests for the Graph interface via reflection.
+ *
+ * @author Rajiv Mayani
+ */
 public class GraphTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testGraphHasAddNodeMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("addNode", GraphNode.class);
+        assertThat(m, is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testGraphHasGetNodeMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("getNode", String.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testGraphHasAddEdgeMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("addEdge", String.class, String.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testGraphHasSizeMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("size");
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testGraphHasNodeIteratorMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("nodeIterator");
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testMapGraphImplementsGraph() {
+        assertThat(Graph.class.isAssignableFrom(MapGraph.class), is(true));
+    }
+
+    @Test
+    public void testGraphHasAddRootMethod() throws NoSuchMethodException {
+        Method m = Graph.class.getMethod("addRoot", GraphNode.class);
+        assertThat(m, is(notNullValue()));
+    }
+
+    @Test
+    public void testGraphIsInterface() {
+        assertThat(Graph.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testGraphExtendsGraphNodeContent() {
+        assertThat(GraphNodeContent.class.isAssignableFrom(Graph.class), is(true));
+    }
+
+    @Test
+    public void testVersionConstant() {
+        assertThat(Graph.VERSION, is("1.6"));
+    }
+
+    @Test
+    public void testSelectedMethodReturnTypes() throws NoSuchMethodException {
+        assertThat(
+                Graph.class.getMethod("getNode", String.class).getReturnType(),
+                is(GraphNode.class));
+        assertThat(Graph.class.getMethod("size").getReturnType(), is(int.class));
+        assertThat(Graph.class.getMethod("isEmpty").getReturnType(), is(boolean.class));
+        assertThat(Graph.class.getMethod("hasCycles").getReturnType(), is(boolean.class));
+    }
 }

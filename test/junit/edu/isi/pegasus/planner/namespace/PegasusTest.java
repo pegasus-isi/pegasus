@@ -13,15 +13,15 @@
  */
 package edu.isi.pegasus.planner.namespace;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,12 +38,6 @@ public class PegasusTest {
     private static int mTestNum = 1;
 
     public PegasusTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -381,7 +375,7 @@ public class PegasusTest {
         System.out.println("Testing Key " + key);
         Pegasus p = new Pegasus();
         int result = p.checkKey(key, value);
-        assertEquals(expected, result, key);
+        assertThat(key, result, is(expected));
     }
 
     /**
@@ -401,11 +395,12 @@ public class PegasusTest {
                         () -> {
                             p.checkKey(key, value);
                         });
-        assertTrue(
-                exception.getMessage().contains(expectedErrorMessage),
+        assertThat(
                 "EXCEPTION MESSAGE "
                         + exception.getMessage()
                         + " DOES NOT CONTAIN "
-                        + expectedErrorMessage);
+                        + expectedErrorMessage,
+                exception.getMessage().contains(expectedErrorMessage),
+                is(true));
     }
 }

@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyleFactoryException class. */
 public class CondorStyleFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(CondorStyleFactoryException.class),
+                is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(CondorStyleFactoryException.DEFAULT_NAME, is("Code Generator"));
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsDefaultName() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message");
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("test message"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassname() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message", "MyClass");
+        assertThat(ex, notNullValue());
+        assertThat(ex.getMessage(), is("test message"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message", cause);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        CondorStyleFactoryException ex =
+                new CondorStyleFactoryException("test message", "MyClass", cause);
+        assertThat(ex, notNullValue());
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithMessageSetsFactoryDefaultClassname() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message");
+
+        assertThat(ex.getClassname(), is(CondorStyleFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndClassnamePreservesExplicitClassname() {
+        CondorStyleFactoryException ex = new CondorStyleFactoryException("test message", "MyClass");
+
+        assertThat(ex.getClassname(), is("MyClass"));
+        assertThat(ex.getCause(), is((Throwable) null));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndNullCauseSetsDefaultClassname() {
+        CondorStyleFactoryException ex =
+                new CondorStyleFactoryException("test message", (Throwable) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is((Throwable) null));
+        assertThat(ex.getClassname(), is(CondorStyleFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructorWithMessageClassnameAndNullCausePreservesClassname() {
+        CondorStyleFactoryException ex =
+                new CondorStyleFactoryException("test message", "MyClass", null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is((Throwable) null));
+        assertThat(ex.getClassname(), is("MyClass"));
+    }
 }

@@ -13,33 +13,77 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for createdir Strategy interface. */
 public class StrategyTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testVersionConstant() {
+        assertThat(Strategy.VERSION, is("1.0"));
     }
-    */
+
+    @Test
+    public void testHourGlassImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(HourGlass.class), is(true));
+    }
+
+    @Test
+    public void testMinimalImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(Minimal.class), is(true));
+    }
+
+    @Test
+    public void testTentaclesImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(Tentacles.class), is(true));
+    }
+
+    @Test
+    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
+        assertThat(
+                Strategy.class.getMethod(
+                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testStrategyIsInterface() {
+        assertThat(Strategy.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testInitializeAndReturnTypes() throws Exception {
+        assertThat(
+                Strategy.class.getMethod(
+                        "initialize",
+                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                        Implementation.class),
+                notNullValue());
+        assertThat(
+                (Object)
+                        Strategy.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                                        Implementation.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        Strategy.class
+                                .getMethod(
+                                        "addCreateDirectoryNodes",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+    }
+
+    @Test
+    public void testStrategyDeclaresExpectedMethods() {
+        assertThat(Strategy.class.getDeclaredMethods().length, is(2));
+    }
 }

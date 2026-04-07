@@ -13,33 +13,148 @@
  */
 package edu.isi.pegasus.planner.selector.transformation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Staged transformation selector. */
 public class StagedTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Staged mSelector;
 
     @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void setUp() {
+        mSelector = new Staged();
     }
-    */
+
+    @Test
+    public void testInstantiation() {
+        assertThat(mSelector, notNullValue());
+    }
+
+    @Test
+    public void testExtendsTransformationSelector() {
+        assertThat(mSelector, instanceOf(TransformationSelector.class));
+    }
+
+    @Test
+    public void testSelectsStageableEntries() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry stageable = new TransformationCatalogEntry("ns", "exe", "1.0");
+        stageable.setType(TCType.STAGEABLE);
+        stageable.setResourceId("site1");
+        entries.add(stageable);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+    }
+
+    @Test
+    public void testFiltersOutInstalled() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry installed = new TransformationCatalogEntry("ns", "exe", "1.0");
+        installed.setType(TCType.INSTALLED);
+        installed.setResourceId("site1");
+        entries.add(installed);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void testMultipleStageableEntries() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+
+        TransformationCatalogEntry s1 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        s1.setType(TCType.STAGEABLE);
+        s1.setResourceId("site1");
+
+        TransformationCatalogEntry s2 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        s2.setType(TCType.STAGEABLE);
+        s2.setResourceId("site2");
+
+        TransformationCatalogEntry i1 = new TransformationCatalogEntry("ns", "exe", "1.0");
+        i1.setType(TCType.INSTALLED);
+        i1.setResourceId("site3");
+
+        entries.add(s1);
+        entries.add(s2);
+        entries.add(i1);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(2));
+    }
+
+    @Test
+    public void testEmptyList() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        List result = mSelector.getTCEntry(entries, "site1");
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void testReturnedEntriesAreStageable() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry stageable = new TransformationCatalogEntry("ns", "exe", "1.0");
+        stageable.setType(TCType.STAGEABLE);
+        stageable.setResourceId("site1");
+        entries.add(stageable);
+
+        List result = mSelector.getTCEntry(entries, "site1");
+        TransformationCatalogEntry selected = (TransformationCatalogEntry) result.get(0);
+        assertThat(selected.getType(), equalTo(TCType.STAGEABLE));
+    }
+
+    @Test
+    public void testPreferredSiteDoesNotFilterStageableEntries() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+        TransformationCatalogEntry stageable = new TransformationCatalogEntry("ns", "exe", "1.0");
+        stageable.setType(TCType.STAGEABLE);
+        stageable.setResourceId("other-site");
+        entries.add(stageable);
+
+        List result = mSelector.getTCEntry(entries, "preferred-site");
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+        assertThat(result.get(0), sameInstance(stageable));
+    }
+
+    @Test
+    public void testReturnedEntriesPreserveInputOrder() {
+        List<TransformationCatalogEntry> entries = new ArrayList<>();
+
+        TransformationCatalogEntry first = new TransformationCatalogEntry("ns", "exe", "1.0");
+        first.setType(TCType.STAGEABLE);
+        first.setResourceId("site1");
+
+        TransformationCatalogEntry second = new TransformationCatalogEntry("ns", "exe", "1.0");
+        second.setType(TCType.STAGEABLE);
+        second.setResourceId("site2");
+
+        entries.add(first);
+        entries.add(second);
+
+        List result = mSelector.getTCEntry(entries, "ignored-site");
+
+        assertThat(result.size(), equalTo(2));
+        assertThat(result.get(0), sameInstance(first));
+        assertThat(result.get(1), sameInstance(second));
+    }
+
+    @Test
+    public void testDeclaredGetTCEntryMethodReturnType() throws Exception {
+        assertThat(
+                Staged.class.getMethod("getTCEntry", List.class, String.class).getReturnType(),
+                equalTo(List.class));
+    }
 }

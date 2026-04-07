@@ -13,33 +13,127 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the CondorStyleFactory class. */
 public class CondorStyleFactoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static final class NoOpCondorStyle implements CondorStyle {
+        @Override
+        public void initialize(PegasusBag bag, CredentialHandlerFactory credentialFactory) {}
 
-    @BeforeEach
-    public void setUp() {}
+        @Override
+        public void apply(SiteCatalogEntry site) {}
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public void apply(Job job) {}
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        public void apply(AggregatedJob job) {}
     }
-    */
+
+    @Test
+    public void testDefaultPackageName() {
+        assertThat(
+                CondorStyleFactory.DEFAULT_PACKAGE_NAME,
+                is("edu.isi.pegasus.planner.code.generator.condor.style"));
+    }
+
+    @Test
+    public void testDefaultPackageNameNotNull() {
+        assertThat(CondorStyleFactory.DEFAULT_PACKAGE_NAME, notNullValue());
+    }
+
+    @Test
+    public void testDefaultPackageNameIsNotEmpty() {
+        assertThat(CondorStyleFactory.DEFAULT_PACKAGE_NAME.isEmpty(), is(false));
+    }
+
+    @Test
+    public void testFactoryClassExists() {
+        assertThat(CondorStyleFactory.class, notNullValue());
+    }
+
+    @Test
+    public void testLoadInstanceForJobWithoutInitializeThrows() {
+        CondorStyleFactory factory = new CondorStyleFactory();
+        Job job = new Job();
+        job.setSiteHandle("local");
+
+        CondorStyleFactoryException e =
+                assertThrows(CondorStyleFactoryException.class, () -> factory.loadInstance(job));
+
+        assertThat(e.getMessage(), containsString("initialized first"));
+    }
+
+    @Test
+    public void testLoadInstanceForSiteWithoutInitializeThrows() {
+        CondorStyleFactory factory = new CondorStyleFactory();
+        SiteCatalogEntry site = new SiteCatalogEntry();
+        site.setSiteHandle("local");
+
+        CondorStyleFactoryException e =
+                assertThrows(CondorStyleFactoryException.class, () -> factory.loadInstance(site));
+
+        assertThat(e.getMessage(), containsString("initialized first"));
+    }
+
+    @Test
+    public void testImplementingClassNameTableContainsExpectedMappings() throws Exception {
+        Method method = CondorStyleFactory.class.getDeclaredMethod("implementingClassNameTable");
+        method.setAccessible(true);
+
+        Map<String, String> table = (Map<String, String>) method.invoke(null);
+
+        assertThat(table.get(Pegasus.CONDOR_STYLE), is("Condor"));
+        assertThat(table.get(Pegasus.GLOBUS_STYLE), is("CondorG"));
+        assertThat(table.get(Pegasus.SSH_STYLE), is("SSH"));
+        assertThat(table.get(Pegasus.PANDA_STYLE), is("Panda"));
+    }
+
+    @Test
+    public void testPrivatePutAndGetRoundTripCachedImplementation() throws Exception {
+        CondorStyleFactory factory = new CondorStyleFactory();
+        NoOpCondorStyle style = new NoOpCondorStyle();
+
+        Method put =
+                CondorStyleFactory.class.getDeclaredMethod("put", String.class, CondorStyle.class);
+        Method get = CondorStyleFactory.class.getDeclaredMethod("get", String.class);
+        put.setAccessible(true);
+        get.setAccessible(true);
+
+        put.invoke(factory, Pegasus.CONDOR_STYLE, style);
+
+        assertThat(get.invoke(factory, Pegasus.CONDOR_STYLE), sameInstance(style));
+    }
+
+    @Test
+    public void testPrivateGetForUnknownStyleThrowsFactoryException() throws Exception {
+        CondorStyleFactory factory = new CondorStyleFactory();
+        Method get = CondorStyleFactory.class.getDeclaredMethod("get", String.class);
+        get.setAccessible(true);
+
+        InvocationTargetException e =
+                assertThrows(InvocationTargetException.class, () -> get.invoke(factory, "unknown"));
+
+        assertThat(e.getCause() instanceof CondorStyleFactoryException, is(true));
+        assertThat(
+                e.getCause().getMessage(), containsString("No class found corresponding to style"));
+    }
 }

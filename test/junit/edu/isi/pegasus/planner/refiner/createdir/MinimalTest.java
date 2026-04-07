@@ -13,33 +13,76 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Minimal createdir strategy. */
 public class MinimalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractStrategy() {
+        assertThat(AbstractStrategy.class.isAssignableFrom(Minimal.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(Minimal.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Minimal m = new Minimal();
+        assertThat(m, notNullValue());
+    }
+
+    @Test
+    public void testHasAddCreateDirectoryNodesMethod() throws Exception {
+        assertThat(
+                Minimal.class.getMethod(
+                        "addCreateDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testAddCreateDirectoryNodesReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        Minimal.class
+                                .getMethod(
+                                        "addCreateDirectoryNodes",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+        assertThat(
+                (Object)
+                        Minimal.class
+                                .getMethod(
+                                        "addCreateDirectoryNodes",
+                                        edu.isi.pegasus.planner.classes.ADag.class,
+                                        java.util.Set.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+    }
+
+    @Test
+    public void testHelperMethodsExist() throws Exception {
+        assertThat(
+                (Object)
+                        Minimal.class
+                                .getDeclaredMethod(
+                                        "getAssociatedCreateDirSite",
+                                        edu.isi.pegasus.planner.classes.Job.class)
+                                .getReturnType(),
+                is((Object) String.class));
+        assertThat(
+                (Object)
+                        Minimal.class
+                                .getMethod(
+                                        "addDependency", edu.isi.pegasus.planner.classes.Job.class)
+                                .getReturnType(),
+                is((Object) Boolean.TYPE));
+    }
 }

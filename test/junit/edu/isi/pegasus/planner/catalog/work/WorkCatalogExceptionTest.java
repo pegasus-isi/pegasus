@@ -13,33 +13,101 @@
  */
 package edu.isi.pegasus.planner.catalog.work;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.CatalogException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the WorkCatalogException class. */
 public class WorkCatalogExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExceptionExtendsCatalogException() {
+        assertThat(CatalogException.class.isAssignableFrom(WorkCatalogException.class), is(true));
     }
-    */
+
+    @Test
+    public void testDefaultConstructor() {
+        WorkCatalogException ex = new WorkCatalogException();
+        assertThat(ex, is(notNullValue()));
+    }
+
+    @Test
+    public void testConstructorWithMessage() {
+        WorkCatalogException ex = new WorkCatalogException("test message");
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), equalTo("test message"));
+    }
+
+    @Test
+    public void testConstructorWithMessageAndCause() {
+        Throwable cause = new RuntimeException("root cause");
+        WorkCatalogException ex = new WorkCatalogException("test message", cause);
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getMessage(), equalTo("test message"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testConstructorWithCauseOnly() {
+        Throwable cause = new RuntimeException("root cause");
+        WorkCatalogException ex = new WorkCatalogException(cause);
+        assertThat(ex, is(notNullValue()));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testDefaultConstructorHasNullMessageAndNextException() {
+        WorkCatalogException ex = new WorkCatalogException();
+
+        assertThat(ex.getMessage(), is(nullValue()));
+        assertThat(ex.getNextException(), is(nullValue()));
+    }
+
+    @Test
+    public void testConstructorWithCauseOnlyUsesCauseMessage() {
+        RuntimeException cause = new RuntimeException("root cause");
+        WorkCatalogException ex = new WorkCatalogException(cause);
+
+        assertThat(ex.getMessage(), containsString("root cause"));
+        assertThat(ex.getCause(), is(sameInstance(cause)));
+    }
+
+    @Test
+    public void testConstructorWithNullCausePreservesNullCause() {
+        WorkCatalogException ex = new WorkCatalogException((Throwable) null);
+
+        assertThat(ex.getCause(), is(nullValue()));
+        assertThat(ex.getMessage(), is(nullValue()));
+    }
+
+    @Test
+    public void testSetNextExceptionAppendsToTailOfChain() {
+        WorkCatalogException root = new WorkCatalogException("root");
+        WorkCatalogException second = new WorkCatalogException("second");
+        WorkCatalogException third = new WorkCatalogException("third");
+
+        root.setNextException(second);
+        root.setNextException(third);
+
+        assertThat(root.getNextException(), is(sameInstance(second)));
+        assertThat(root.getNextException().getNextException(), is(sameInstance(third)));
+        assertThat(third.getNextException(), is(nullValue()));
+    }
+
+    @Test
+    public void testExceptionCanBeThrown() {
+        assertThrows(
+                WorkCatalogException.class,
+                () -> {
+                    throw new WorkCatalogException("test");
+                });
+    }
 }

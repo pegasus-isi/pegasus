@@ -13,33 +13,74 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Engine abstract class. */
 public class EngineTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testRegistrationUniverseConstant() {
+        assertThat(Engine.REGISTRATION_UNIVERSE, is("registration"));
     }
-    */
+
+    @Test
+    public void testTransferUniverseConstant() {
+        assertThat(Engine.TRANSFER_UNIVERSE, is("transfer"));
+    }
+
+    @Test
+    public void testInterPoolEngineExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(InterPoolEngine.class), is(true));
+    }
+
+    @Test
+    public void testTransferEngineExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(TransferEngine.class), is(true));
+    }
+
+    @Test
+    public void testEngineIsAbstract() {
+        assertThat(Modifier.isAbstract(Engine.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testHasPegasusBagConstructor() throws Exception {
+        Constructor<Engine> constructor = Engine.class.getDeclaredConstructor(PegasusBag.class);
+        assertThat(Modifier.isPublic(constructor.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testLoadPropertiesReturnsVoid() throws Exception {
+        Method method = Engine.class.getDeclaredMethod("loadProperties");
+        assertThat((Object) method.getReturnType(), is((Object) void.class));
+    }
+
+    @Test
+    public void testProtectedComplainMethodsExist() throws Exception {
+        Method shortMethod =
+                Engine.class.getDeclaredMethod(
+                        "complainForHeadNodeURLPrefix",
+                        String.class,
+                        String.class,
+                        FileServer.OPERATION.class);
+        Method longMethod =
+                Engine.class.getDeclaredMethod(
+                        "complainForHeadNodeURLPrefix",
+                        String.class,
+                        String.class,
+                        FileServer.OPERATION.class,
+                        Job.class);
+        assertThat(Modifier.isProtected(shortMethod.getModifiers()), is(true));
+        assertThat(Modifier.isProtected(longMethod.getModifiers()), is(true));
+    }
 }

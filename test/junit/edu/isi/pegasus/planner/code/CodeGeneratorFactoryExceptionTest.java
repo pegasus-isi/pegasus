@@ -13,33 +13,113 @@
  */
 package edu.isi.pegasus.planner.code;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CodeGeneratorFactoryException */
 public class CodeGeneratorFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDefaultNameConstant() {
+        assertThat(CodeGeneratorFactoryException.DEFAULT_NAME, is("Code Generator"));
     }
-    */
+
+    @Test
+    public void testSingleMessageConstructorSetsDefaultClassname() {
+        CodeGeneratorFactoryException e = new CodeGeneratorFactoryException("failed");
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getClassname(), is(CodeGeneratorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructor() {
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", "MyGenerator");
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getClassname(), is("MyGenerator"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorSetsDefaultClassname() {
+        Throwable cause = new RuntimeException("root");
+        CodeGeneratorFactoryException e = new CodeGeneratorFactoryException("failed", cause);
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructor() {
+        Throwable cause = new RuntimeException("root");
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", "MyGen", cause);
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getCause(), sameInstance(cause));
+    }
+
+    @Test
+    public void testExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(CodeGeneratorFactoryException.class),
+                is(true));
+    }
+
+    @Test
+    public void testIsCatchableAsFactoryException() {
+        FactoryException caught = null;
+        try {
+            throw new CodeGeneratorFactoryException("test");
+        } catch (FactoryException ex) {
+            caught = ex;
+        }
+        assertThat(caught, notNullValue());
+        assertThat(caught.getMessage(), is("test"));
+    }
+
+    @Test
+    public void testSingleMessageConstructorStoresDefaultClassname() {
+        CodeGeneratorFactoryException e = new CodeGeneratorFactoryException("failed");
+
+        assertThat(e.getClassname(), is(CodeGeneratorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorStoresExplicitClassname() {
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", "MyGenerator");
+
+        assertThat(e.getClassname(), is("MyGenerator"));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorAllowsNullCause() {
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", (Throwable) null);
+
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getCause(), nullValue());
+        assertThat(e.getClassname(), is(CodeGeneratorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructorAllowsNullCause() {
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", "MyGen", null);
+
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getClassname(), is("MyGen"));
+        assertThat(e.getCause(), nullValue());
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorAllowsNullClassname() {
+        CodeGeneratorFactoryException e =
+                new CodeGeneratorFactoryException("failed", (String) null);
+
+        assertThat(e.getMessage(), is("failed"));
+        assertThat(e.getClassname(), nullValue());
+    }
 }

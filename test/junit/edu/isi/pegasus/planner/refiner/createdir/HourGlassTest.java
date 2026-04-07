@@ -13,33 +13,113 @@
  */
 package edu.isi.pegasus.planner.refiner.createdir;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for HourGlass createdir strategy. */
 public class HourGlassTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractStrategy() {
+        assertThat(AbstractStrategy.class.isAssignableFrom(HourGlass.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsStrategy() {
+        assertThat(Strategy.class.isAssignableFrom(HourGlass.class), is(true));
+    }
+
+    @Test
+    public void testDummyConcatJobConstant() {
+        assertThat(HourGlass.DUMMY_CONCAT_JOB, is("pegasus_concat"));
+    }
+
+    @Test
+    public void testDummyConcatJobPrefixConstant() {
+        assertThat(HourGlass.DUMMY_CONCAT_JOB_PREFIX, is("pegasus_concat_"));
+    }
+
+    @Test
+    public void testTransformationNamespace() {
+        assertThat(HourGlass.TRANSFORMATION_NAMESPACE, is("pegasus"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        HourGlass hg = new HourGlass();
+        assertThat(hg, notNullValue());
+    }
+
+    @Test
+    public void testAdditionalConstants() {
+        assertThat(HourGlass.TRANSFORMATION_NAME, is("dirmanager"));
+        assertThat(HourGlass.TRANSFORMATION_VERSION, nullValue());
+        assertThat(HourGlass.COMPLETE_TRANSFORMATION_NAME, is("pegasus::dirmanager"));
+        assertThat(HourGlass.DERIVATION_NAMESPACE, is("pegasus"));
+        assertThat(HourGlass.DERIVATION_NAME, is("dirmanager"));
+        assertThat(HourGlass.DERIVATION_VERSION, is("1.0"));
+    }
+
+    @Test
+    public void testPublicMethodReturnTypes() throws Exception {
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getMethod(
+                                        "initialize",
+                                        edu.isi.pegasus.planner.classes.PegasusBag.class,
+                                        Implementation.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getMethod(
+                                        "addCreateDirectoryNodes",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.ADag.class));
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getMethod(
+                                        "makeDummyConcatJob",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.classes.Job.class));
+    }
+
+    @Test
+    public void testHelperMethodsExist() throws Exception {
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getDeclaredMethod(
+                                        "getConcatJobname",
+                                        edu.isi.pegasus.planner.classes.ADag.class)
+                                .getReturnType(),
+                is((Object) String.class));
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getDeclaredMethod(
+                                        "introduceRootDependencies",
+                                        edu.isi.pegasus.planner.classes.ADag.class,
+                                        edu.isi.pegasus.planner.classes.Job.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+        assertThat(
+                (Object)
+                        HourGlass.class
+                                .getDeclaredMethod(
+                                        "construct",
+                                        edu.isi.pegasus.planner.classes.Job.class,
+                                        String.class,
+                                        String.class)
+                                .getReturnType(),
+                is((Object) Void.TYPE));
+    }
 }

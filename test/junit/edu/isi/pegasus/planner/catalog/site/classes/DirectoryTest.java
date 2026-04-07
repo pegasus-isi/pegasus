@@ -17,6 +17,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -27,28 +28,12 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class DirectoryTest {
 
     public DirectoryTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testDirectorySharedFileSystemSerialization() throws IOException {
@@ -63,8 +48,7 @@ public class DirectoryTest {
 
         String expected = "---\n" + "type: \"sharedScratch\"\n" + "sharedFileSystem: true\n";
         String actual = mapper.writeValueAsString(dir);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -98,8 +82,7 @@ public class DirectoryTest {
                         + "  operation: \"get\"\n"
                         + "  url: \"file:///tmp/workflows/scratch\"\n";
         String actual = mapper.writeValueAsString(dir);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -110,9 +93,9 @@ public class DirectoryTest {
         String test = "  type: sharedScratch\n" + "  sharedFileSystem: true\n";
 
         Directory dir = mapper.readValue(test, Directory.class);
-        assertNotNull(dir);
-        assertEquals(Directory.TYPE.shared_scratch, dir.getType());
-        assertEquals(true, dir.hasSharedFileSystemAccess());
+        assertThat(dir, is(notNullValue()));
+        assertThat(dir.getType(), is(Directory.TYPE.shared_scratch));
+        assertThat(dir.hasSharedFileSystemAccess(), is(true));
     }
 
     @Test
@@ -130,12 +113,12 @@ public class DirectoryTest {
                         + "      url: file:///tmp/workflows/scratch\n";
 
         Directory dir = mapper.readValue(test, Directory.class);
-        assertNotNull(dir);
-        assertEquals(Directory.TYPE.shared_scratch, dir.getType());
-        assertEquals(
-                new InternalMountPoint("/mount/workflows/scratch", "122GB", "1GB").toString(),
-                dir.getInternalMountPoint().toString());
-        assertEquals(false, dir.hasSharedFileSystemAccess());
+        assertThat(dir, is(notNullValue()));
+        assertThat(dir.getType(), is(Directory.TYPE.shared_scratch));
+        assertThat(
+                dir.getInternalMountPoint().toString(),
+                is(new InternalMountPoint("/mount/workflows/scratch", "122GB", "1GB").toString()));
+        assertThat(dir.hasSharedFileSystemAccess(), is(false));
 
         List<FileServer> expectedFS = new LinkedList();
         FileServer fs = new FileServer();

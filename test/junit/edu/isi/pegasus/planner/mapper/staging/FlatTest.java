@@ -15,31 +15,94 @@ package edu.isi.pegasus.planner.mapper.staging;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.mapper.StagingMapper;
+import java.io.File;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Flat staging mapper class structure. */
 public class FlatTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testFlatImplementsStagingMapper() {
+        org.hamcrest.MatcherAssert.assertThat(
+                StagingMapper.class.isAssignableFrom(Flat.class), org.hamcrest.Matchers.is(true));
     }
-    */
+
+    @Test
+    public void testFlatExtendsAbstract() {
+        org.hamcrest.MatcherAssert.assertThat(
+                Abstract.class.isAssignableFrom(Flat.class), org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testShortNameConstant() {
+        org.hamcrest.MatcherAssert.assertThat(Flat.SHORT_NAME, org.hamcrest.Matchers.is("Flat"));
+    }
+
+    @Test
+    public void testDefaultInstantiation() {
+        Flat flat = new Flat();
+        org.hamcrest.MatcherAssert.assertThat(flat, org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testFlatIsPublicClass() {
+        int modifiers = Flat.class.getModifiers();
+        org.hamcrest.MatcherAssert.assertThat(
+                java.lang.reflect.Modifier.isPublic(modifiers), org.hamcrest.Matchers.is(true));
+    }
+
+    @Test
+    public void testDescriptionReturnsExpectedText() {
+        org.hamcrest.MatcherAssert.assertThat(
+                new Flat().description(),
+                org.hamcrest.Matchers.is("Flat Directory Staging Mapper"));
+    }
+
+    @Test
+    public void testInitializeSetsVirtualFlatFileFactory() throws Exception {
+        Flat flat = new Flat();
+
+        flat.initialize(new PegasusBag(), new Properties());
+
+        org.hamcrest.MatcherAssert.assertThat(
+                ReflectionTestUtils.getField(flat, "mFactory"),
+                org.hamcrest.Matchers.notNullValue());
+    }
+
+    @Test
+    public void testMapToRelativeDirectoryForFlatLfnReturnsCurrentDirectory() {
+        Flat flat = new Flat();
+        flat.initialize(new PegasusBag(), new Properties());
+
+        File result =
+                flat.mapToRelativeDirectory(new Job(), new SiteCatalogEntry("local"), "f.txt");
+
+        org.hamcrest.MatcherAssert.assertThat(result, org.hamcrest.Matchers.is(new File(".")));
+    }
+
+    @Test
+    public void testMapToRelativeDirectoryForDeepLfnStillReturnsCurrentDirectory() {
+        Flat flat = new Flat();
+        flat.initialize(new PegasusBag(), new Properties());
+
+        File result =
+                flat.mapToRelativeDirectory(
+                        new Job(), new SiteCatalogEntry("local"), "a/b/c/output.dat");
+
+        org.hamcrest.MatcherAssert.assertThat(result, org.hamcrest.Matchers.is(new File(".")));
+    }
+
+    @Test
+    public void testGetRelativeDirectoryAlwaysReturnsCurrentDirectory() {
+        Flat flat = new Flat();
+
+        org.hamcrest.MatcherAssert.assertThat(
+                flat.getRelativeDirectory("local", "lfn"), org.hamcrest.Matchers.is(new File(".")));
+    }
 }

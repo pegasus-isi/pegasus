@@ -13,33 +13,52 @@
  */
 package edu.isi.pegasus.planner.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Mapper interface structure. */
 public class MapperTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testMapperDescriptionMethodExists() throws NoSuchMethodException {
+        assertThat(Mapper.class.getMethod("description"), is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testOutputMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(OutputMapper.class), is(true));
+    }
+
+    @Test
+    public void testStagingMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(StagingMapper.class), is(true));
+    }
+
+    @Test
+    public void testSubmitMapperExtendsMapper() {
+        assertThat(Mapper.class.isAssignableFrom(SubmitMapper.class), is(true));
+    }
+
+    @Test
+    public void testMapperIsInterface() {
+        assertThat(Mapper.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testDescriptionMethodReturnsStringAndIsAbstract() throws NoSuchMethodException {
+        java.lang.reflect.Method method = Mapper.class.getMethod("description");
+
+        assertThat(method.getReturnType(), is(String.class));
+        assertThat(method.getParameterCount(), is(0));
+        assertThat(java.lang.reflect.Modifier.isPublic(method.getModifiers()), is(true));
+        assertThat(java.lang.reflect.Modifier.isAbstract(method.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testMapperDeclaresOnlyDescriptionMethod() {
+        assertThat(Mapper.class.getDeclaredMethods().length, is(1));
+    }
 }

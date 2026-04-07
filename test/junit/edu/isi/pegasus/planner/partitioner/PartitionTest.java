@@ -13,33 +13,95 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class PartitionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testConstructPartitionKeepsOnlyInternalParents() {
+        GraphNode external = new GraphNode("external");
+        GraphNode alpha = new GraphNode("alpha");
+        GraphNode beta = new GraphNode("beta");
+
+        beta.addParent(alpha);
+        beta.addParent(external);
+
+        Partition partition = new Partition(Arrays.asList(alpha, beta), "p1");
+
+        partition.constructPartition();
+
+        assertThat(partition.getParents("beta"), is(Arrays.asList("alpha")));
+        assertThat(partition.getParents("alpha").isEmpty(), is(true));
     }
-    */
+
+    @Test
+    public void testGetRootNodesReturnsNodesWithoutInternalParents() {
+        GraphNode alpha = new GraphNode("alpha");
+        GraphNode beta = new GraphNode("beta");
+        GraphNode gamma = new GraphNode("gamma");
+
+        beta.addParent(alpha);
+        gamma.addParent(beta);
+
+        Partition partition = new Partition(Arrays.asList(alpha, beta, gamma), "p1");
+
+        partition.constructPartition();
+
+        List roots = partition.getRootNodes();
+        assertThat(roots.size(), is(1));
+        assertThat(roots.get(0), is(notNullValue()));
+    }
+
+    @Test
+    public void testAddParentsOnlyUpdatesNodesAlreadyInPartition() {
+        GraphNode alpha = new GraphNode("alpha");
+        Partition partition = new Partition(Arrays.asList(alpha), "p1");
+
+        partition.addParents("alpha", Arrays.asList("parent-1", "parent-2"));
+        partition.addParents("missing", Collections.singletonList("ignored"));
+
+        assertThat(partition.getParents("alpha"), is(Arrays.asList("parent-1", "parent-2")));
+        assertThat(partition.getParents("missing").isEmpty(), is(true));
+        assertThat(partition.getRelations().containsKey("missing"), is(false));
+    }
+
+    @Test
+    public void testToXMLRendersJobsAndDependencies() throws IOException {
+        GraphNode alpha = new GraphNode("alpha");
+        GraphNode beta = new GraphNode("beta");
+        beta.addParent(alpha);
+
+        Partition partition = new Partition(Arrays.asList(alpha, beta), "p1");
+        partition.setName("wf");
+        partition.setIndex(7);
+        partition.constructPartition();
+
+        String xml = partition.toXML();
+
+        assertThat(xml.contains("<partition name=\"wf\" index=\"7\" id=\"p1\">"), is(true));
+        assertThat(xml.contains("<job name=\"\" id=\"alpha\"/>"), is(true));
+        assertThat(xml.contains("<job name=\"\" id=\"beta\"/>"), is(true));
+        assertThat(xml.contains("<child ref=\"beta\">"), is(true));
+        assertThat(xml.contains("<parent ref=\"alpha\"/>"), is(true));
+    }
+
+    @Test
+    public void testCloneThrowsCloneNotSupportedException() {
+        Partition partition = new Partition();
+
+        CloneNotSupportedException exception =
+                assertThrows(CloneNotSupportedException.class, () -> partition.clone());
+
+        assertThat(exception.getMessage(), is("Clone method not implemented in Partition"));
+    }
 }

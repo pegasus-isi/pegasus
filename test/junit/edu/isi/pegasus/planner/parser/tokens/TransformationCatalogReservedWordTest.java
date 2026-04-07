@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link TransformationCatalogReservedWord}. */
 public class TransformationCatalogReservedWordTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testSymbolTableContainsTr() {
+        Map<String, TransformationCatalogReservedWord> table =
+                TransformationCatalogReservedWord.symbolTable();
+        assertThat(table.containsKey("tr"), is(true));
     }
-    */
+
+    @Test
+    public void testSymbolTableContainsSite() {
+        assertThat(TransformationCatalogReservedWord.symbolTable().containsKey("site"), is(true));
+    }
+
+    @Test
+    public void testTrTokenValue() {
+        TransformationCatalogReservedWord w =
+                TransformationCatalogReservedWord.symbolTable().get("tr");
+        assertThat(w.getValue(), is(TransformationCatalogReservedWord.TRANSFORMATION));
+    }
+
+    @Test
+    public void testSiteTokenValue() {
+        TransformationCatalogReservedWord w =
+                TransformationCatalogReservedWord.symbolTable().get("site");
+        assertThat(w.getValue(), is(TransformationCatalogReservedWord.SITE));
+    }
+
+    @Test
+    public void testContainerTokenValue() {
+        TransformationCatalogReservedWord w =
+                TransformationCatalogReservedWord.symbolTable().get("container");
+        assertThat(w.getValue(), is(TransformationCatalogReservedWord.CONTAINER));
+    }
+
+    @Test
+    public void testSymbolTableContainsMountKeyword() {
+        assertThat(TransformationCatalogReservedWord.symbolTable().containsKey("mount"), is(true));
+    }
+
+    @Test
+    public void testConstantValues() {
+        assertThat(TransformationCatalogReservedWord.TRANSFORMATION, is(0));
+        assertThat(TransformationCatalogReservedWord.SITE, is(1));
+        assertThat(TransformationCatalogReservedWord.PROFILE, is(2));
+        assertThat(TransformationCatalogReservedWord.PFN, is(3));
+    }
+
+    @Test
+    public void testIsToken() {
+        TransformationCatalogReservedWord w =
+                TransformationCatalogReservedWord.symbolTable().get("pfn");
+        assertThat(w, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testSymbolTableReturnsSingletonMapInstance() {
+        assertThat(
+                TransformationCatalogReservedWord.symbolTable(),
+                is(sameInstance(TransformationCatalogReservedWord.symbolTable())));
+    }
+
+    @Test
+    public void testToStringReturnsKeywordForKnownReservedWord() {
+        TransformationCatalogReservedWord w =
+                TransformationCatalogReservedWord.symbolTable().get("dockerfile");
+        assertThat(w.toString(), is("dockerfile"));
+    }
+
+    @Test
+    public void testToStringReturnsNullForUnknownReservedWordInstance() throws Exception {
+        Constructor<TransformationCatalogReservedWord> constructor =
+                TransformationCatalogReservedWord.class.getDeclaredConstructor(int.class);
+        constructor.setAccessible(true);
+        TransformationCatalogReservedWord w = constructor.newInstance(999);
+        assertThat(w.toString(), is(nullValue()));
+        assertThat(w.getValue(), is(999));
+    }
 }

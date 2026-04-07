@@ -26,11 +26,10 @@ import edu.isi.pegasus.planner.mapper.OutputMapper;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,12 +58,6 @@ public class ReplicaOutputMapperTest {
 
     private TestSetup mTestSetup;
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
     public final void setUp() {
@@ -77,6 +70,9 @@ public class ReplicaOutputMapperTest {
         mProps =
                 mTestSetup.loadPropertiesFromFile(
                         PROPERTIES_BASENAME, this.getPropertyKeysForSanitization());
+        mProps.setProperty(
+                "pegasus.home.schemadir",
+                Paths.get("share", "pegasus", "schema").toAbsolutePath().toString());
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
 
         mLogger = mTestSetup.loadLogger(mProps);
@@ -110,7 +106,10 @@ public class ReplicaOutputMapperTest {
             String expected1 = "gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/" + lfn;
             String expected2 = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
             String pfn = mapper.map(lfn, "local", operation).getValue();
-            assertEquals(expected1, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected1));
             NameValue[] expectedPFNS = new NameValue[2];
             expectedPFNS[0] = new NameValue("local", expected1);
             expectedPFNS[1] = new NameValue("local", expected2);
@@ -127,7 +126,10 @@ public class ReplicaOutputMapperTest {
                 // replica mapper maps all operations to the same pfn
                 String expected = "gsiftp://corbusier.isi.edu/Volumes/data/output/" + lfn;
                 String pfn = mapper.map(lfn, "local", operation).getValue();
-                assertEquals(expected, pfn, lfn + " not mapped to right location ");
+                org.hamcrest.MatcherAssert.assertThat(
+                        lfn + " not mapped to right location ",
+                        pfn,
+                        org.hamcrest.Matchers.is(expected));
                 NameValue[] expectedPFNS = new NameValue[1];
                 expectedPFNS[0] = new NameValue("local", expected);
                 List<NameValue<String, String>> pfns = mapper.mapAll(lfn, "local", operation);
@@ -156,7 +158,10 @@ public class ReplicaOutputMapperTest {
             String lfn = "f0";
             String expected1 = "/Users/vahi/Pegasus/PM-1675-output-mapper/" + lfn;
             String pfn = mapper.map(lfn, "local", operation).getValue();
-            assertEquals(expected1, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected1));
         }
         mLogger.logEventCompletion();
     }

@@ -13,33 +13,87 @@
  */
 package edu.isi.pegasus.planner.parser.dax;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class ExampleDAXCallbackTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testInitializeIsNoOpAndDoneStartsFalse() throws Exception {
+        ExampleDAXCallback callback = new ExampleDAXCallback();
+
+        callback.initialize(new PegasusBag(), "workflow.dax");
+
+        assertThat(getDoneField(callback), is(false));
     }
-    */
+
+    @Test
+    public void testCbDoneSetsDoneFlag() throws Exception {
+        ExampleDAXCallback callback = new ExampleDAXCallback();
+
+        callback.cbDone();
+
+        assertThat(getDoneField(callback), is(true));
+    }
+
+    @Test
+    public void testGetConstructedObjectReturnsCurrentPlaceholderString() {
+        ExampleDAXCallback callback = new ExampleDAXCallback();
+
+        Object constructed = callback.getConstructedObject();
+
+        assertThat(constructed instanceof String, is(true));
+        assertThat(constructed, is("Shallow Object"));
+    }
+
+    @Test
+    public void testDocumentJobAndChildrenCallbacksPrintExpectedMarkers() {
+        ExampleDAXCallback callback = new ExampleDAXCallback();
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put("name", "wf");
+
+        Job job = new Job();
+        job.setLogicalID("ID0001");
+        job.logicalName = "preprocess";
+
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        try {
+            System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+            callback.cbDocument(attributes);
+            callback.cbJob(job);
+            callback.cbChildren("parent", Arrays.asList("childA", "childB"));
+        } catch (Exception e) {
+            fail("printing callbacks should not throw: " + e.getMessage());
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String output = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+        assertThat(output.contains("The attributes in DAX header retrieved"), is(true));
+        assertThat(output.contains("{name=wf}"), is(true));
+        assertThat(output.contains("Job parsed"), is(true));
+        assertThat(output.contains("Edges in the DAX"), is(true));
+        assertThat(output.contains("Parent -> parent"), is(true));
+        assertThat(output.contains("\t -> childA"), is(true));
+        assertThat(output.contains("\t -> childB"), is(true));
+    }
+
+    private boolean getDoneField(ExampleDAXCallback callback) throws Exception {
+        return ((Boolean) ReflectionTestUtils.getField(callback, "mDone")).booleanValue();
+    }
 }

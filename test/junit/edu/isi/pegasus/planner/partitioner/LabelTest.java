@@ -13,33 +13,82 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class LabelTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDescriptionReturnsConstantDescription() {
+        Label label =
+                new Label(
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        PegasusProperties.nonSingletonInstance());
+
+        assertThat(label.description(), is(Label.DESCRIPTION));
     }
-    */
+
+    @Test
+    public void testConstructorInitializesPartitionMapAndQueue() throws Exception {
+        Label label =
+                new Label(
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        PegasusProperties.nonSingletonInstance());
+
+        Object partitionMap = ReflectionTestUtils.getField(label, "mPartitionMap");
+        Object queue = ReflectionTestUtils.getField(label, "mQueue");
+
+        assertThat(partitionMap, is(notNullValue()));
+        assertThat(partitionMap instanceof Map, is(true));
+        assertThat(queue, is(notNullValue()));
+        assertThat(queue instanceof LinkedList, is(true));
+    }
+
+    @Test
+    public void testPrivateGetPartitionIDFormatsIdentifier() throws Exception {
+        Label label =
+                new Label(
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        PegasusProperties.nonSingletonInstance());
+        Method method = Label.class.getDeclaredMethod("getPartitionID", int.class);
+        method.setAccessible(true);
+
+        assertThat(method.invoke(label, 7), is("ID7"));
+    }
+
+    @Test
+    public void testPrivateGetLabelUsesBagValueOrFallsBackToNodeId() throws Exception {
+        Label label =
+                new Label(
+                        new GraphNode("root"),
+                        new HashMap<>(),
+                        PegasusProperties.nonSingletonInstance());
+        Method method = Label.class.getDeclaredMethod("getLabel", GraphNode.class);
+        method.setAccessible(true);
+
+        GraphNode unlabeled = new GraphNode("jobA");
+        unlabeled.setBag(new LabelBag());
+        assertThat(method.invoke(label, unlabeled), is("jobA"));
+
+        GraphNode labeled = new GraphNode("jobB");
+        LabelBag bag = new LabelBag();
+        bag.add(LabelBag.LABEL_KEY, "shared-label");
+        labeled.setBag(bag);
+        assertThat(method.invoke(label, labeled), is("shared-label"));
+    }
 }

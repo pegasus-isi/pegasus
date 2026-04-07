@@ -31,9 +31,6 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,12 +50,6 @@ public class DockerTest {
     private ADag mDAG;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     private ContainerShellWrapperFactory mFactory;
 
@@ -98,18 +89,13 @@ public class DockerTest {
         mLogger.logEventCompletion();
     }
 
-    @AfterEach
-    public void tearDown() {}
-
     @Test
     public void testDockerInit() {
         mLogger.logEventStart(
                 "test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        assertEquals(
-                "docker_init centos-osgvo-el8",
-                dockerInstance(j).containerInit(j).toString(),
-                "docker initiation");
+        assertThat(
+                dockerInstance(j).containerInit(j).toString(), is("docker_init centos-osgvo-el8"));
         mLogger.logEventCompletion();
     }
 
@@ -122,7 +108,7 @@ public class DockerTest {
                 "docker run --user root -v $PWD:/scratch -v $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR -w=/scratch --entrypoint /bin/sh --name $cont_name  $cont_image -c \"set -e ;export root_path=\\$PATH ;if ! grep -q -E  \"^$cont_group:\" /etc/group ; then groupadd -f --gid $c"
                         + "ont_groupid $cont_group ;fi; if ! id $cont_user 2>/dev/null >/dev/null; then    if id $cont_userid 2>/dev/null >/dev/null; then        useradd -o --uid $cont_userid --gid $cont_groupid $cont_user;    else        "
                         + "useradd --uid $cont_userid --gid $cont_groupid $cont_user;    fi; fi; su $cont_user -c \\\"./preprocess_ID1-cont.sh \\\"\"";
-        assertEquals(expected, dockerInstance(j).containerRun(j).toString(), "docker run command");
+        assertThat(dockerInstance(j).containerRun(j).toString(), is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -148,8 +134,9 @@ public class DockerTest {
         j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_KEY, "srun");
         j.vdsNS.construct(Pegasus.CONTAINER_LAUNCHER_ARGUMENTS_KEY, "--kill-on-bad-exit");
         // get the part of docker run with the options
-        assertTrue(
-                dockerInstance(j).containerRun(j).toString().startsWith("srun --kill-on-bad-exit"));
+        assertThat(
+                dockerInstance(j).containerRun(j).toString(),
+                startsWith("srun --kill-on-bad-exit"));
         mLogger.logEventCompletion();
     }
 
@@ -184,10 +171,9 @@ public class DockerTest {
         mLogger.logEventStart(
                 "test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        assertEquals(
-                "docker rm --force $cont_name  1>&2",
+        assertThat(
                 dockerInstance(j).containerRemove(j).toString(),
-                "docker rm command");
+                is("docker rm --force $cont_name  1>&2"));
         mLogger.logEventCompletion();
     }
 
@@ -196,10 +182,7 @@ public class DockerTest {
         mLogger.logEventStart(
                 "test.code.generator.container.Docker", "set", Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
-        assertEquals(
-                "/scratch",
-                dockerInstance(j).getContainerWorkingDirectory(),
-                "container working dir");
+        assertThat(dockerInstance(j).getContainerWorkingDirectory(), is("/scratch"));
         mLogger.logEventCompletion();
     }
 

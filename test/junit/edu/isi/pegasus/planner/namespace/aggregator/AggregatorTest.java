@@ -13,33 +13,76 @@
  */
 package edu.isi.pegasus.planner.namespace.aggregator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests structural properties of the Aggregator interface via reflection. */
 public class AggregatorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testAggregatorVersionConstant() {
+        assertThat(Aggregator.VERSION, is("1.0"));
     }
-    */
+
+    @Test
+    public void testAggregatorHasComputeMethod() throws NoSuchMethodException {
+        Method compute =
+                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
+        assertThat(compute, is(org.hamcrest.Matchers.notNullValue()));
+    }
+
+    @Test
+    public void testComputeMethodIsPublic() throws NoSuchMethodException {
+        Method compute =
+                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
+        assertThat(Modifier.isPublic(compute.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testComputeMethodReturnsString() throws NoSuchMethodException {
+        Method compute =
+                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
+        assertThat(compute.getReturnType(), is(String.class));
+    }
+
+    @Test
+    public void testMaxImplementsAggregator() {
+        assertThat(Aggregator.class.isAssignableFrom(MAX.class), is(true));
+    }
+
+    @Test
+    public void testMINImplementsAggregator() {
+        assertThat(Aggregator.class.isAssignableFrom(MIN.class), is(true));
+    }
+
+    @Test
+    public void testSumImplementsAggregator() {
+        assertThat(Aggregator.class.isAssignableFrom(Sum.class), is(true));
+    }
+
+    @Test
+    public void testAggregatorIsInterface() {
+        assertThat(Aggregator.class.isInterface(), is(true));
+    }
+
+    @Test
+    public void testComputeMethodIsAbstract() throws NoSuchMethodException {
+        Method compute =
+                Aggregator.class.getMethod("compute", String.class, String.class, String.class);
+        assertThat(Modifier.isAbstract(compute.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testAggregatorDeclaresOnlyComputeMethod() {
+        assertThat(Aggregator.class.getDeclaredMethods().length, is(1));
+    }
+
+    @Test
+    public void testUpdateImplementsAggregator() {
+        assertThat(Aggregator.class.isAssignableFrom(Update.class), is(true));
+    }
 }

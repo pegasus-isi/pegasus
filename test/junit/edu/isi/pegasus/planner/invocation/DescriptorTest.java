@@ -13,33 +13,101 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Descriptor invocation class. */
 public class DescriptorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFile() {
+        assertThat(File.class.isAssignableFrom(Descriptor.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasDescriptor() {
+        assertThat(HasDescriptor.class.isAssignableFrom(Descriptor.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorDescriptorIsMinusOne() {
+        Descriptor d = new Descriptor();
+        assertThat(d.getDescriptor(), is(-1));
+    }
+
+    @Test
+    public void testConstructorWithDescriptor() {
+        Descriptor d = new Descriptor(2);
+        assertThat(d.getDescriptor(), is(2));
+    }
+
+    @Test
+    public void testSetAndGetDescriptor() {
+        Descriptor d = new Descriptor();
+        d.setDescriptor(3);
+        assertThat(d.getDescriptor(), is(3));
+    }
+
+    @Test
+    public void testAppendValue() {
+        Descriptor d = new Descriptor();
+        d.appendValue("hexdata");
+        assertThat(d.getValue(), is("hexdata"));
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        Descriptor d = new Descriptor();
+        d.appendValue(null);
+        assertThat(d.getValue(), nullValue());
+    }
+
+    @Test
+    public void testSetValueReplacesPreviouslyAppendedContent() {
+        Descriptor d = new Descriptor();
+        d.appendValue("dead");
+        d.setValue("beef");
+
+        assertThat(d.getValue(), is("beef"));
+    }
+
+    @Test
+    public void testSetValueNullClearsValue() {
+        Descriptor d = new Descriptor();
+        d.setValue("hexdata");
+        d.setValue(null);
+
+        assertThat(d.getValue(), nullValue());
+    }
+
+    @Test
+    public void testToXMLWithoutValueUsesSelfClosingTag() throws Exception {
+        Descriptor d = new Descriptor(5);
+        StringWriter sw = new StringWriter();
+
+        d.toXML(sw, null, "inv");
+
+        String xml = sw.toString();
+        assertThat(xml, containsString("<inv:descriptor"));
+        assertThat(xml, containsString("number=\"5\""));
+        assertThat(xml, containsString("/>"));
+    }
+
+    @Test
+    public void testToXMLWithValueIncludesContentAndClosingTag() throws Exception {
+        Descriptor d = new Descriptor(2);
+        d.setValue("deadbeef");
+        StringWriter sw = new StringWriter();
+
+        d.toXML(sw, "", null);
+
+        String xml = sw.toString();
+        assertThat(xml, containsString("<descriptor"));
+        assertThat(xml, containsString("number=\"2\""));
+        assertThat(xml, containsString(">deadbeef</descriptor>"));
+    }
 }

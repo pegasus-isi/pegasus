@@ -16,6 +16,8 @@
 
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
@@ -23,11 +25,12 @@ import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
 /**
  * Test class to test File based replica catalog.
@@ -37,7 +40,6 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
  * @author Karan Vahi
  */
 @TestMethodOrder(MethodOrderer.Alphanumeric.class)
-@SetEnvironmentVariable(key = "USER", value = SimpleFileTest.EXPANDED_USER)
 public class SimpleFileTest {
 
     /** * track across insert and delete methods */
@@ -46,6 +48,8 @@ public class SimpleFileTest {
     private SimpleFile mCatalog = null;
 
     private TestSetup mTestSetup;
+
+    private File mExpandedSubstitutionInput;
 
     protected static final String EXPANDED_USER = "bamboo";
 
@@ -62,6 +66,16 @@ public class SimpleFileTest {
     public void setUp() throws IOException {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
+        mExpandedSubstitutionInput = File.createTempFile("simple-file-substitute", ".in");
+        String raw =
+                Files.readString(
+                        new File(mTestSetup.getInputDirectory(), "simple-file-substitute.in")
+                                .toPath(),
+                        StandardCharsets.UTF_8);
+        Files.writeString(
+                mExpandedSubstitutionInput.toPath(),
+                raw.replace("${USER}", EXPANDED_USER),
+                StandardCharsets.UTF_8);
     }
 
     @Test
@@ -70,7 +84,7 @@ public class SimpleFileTest {
         setupCatalog(mTempRC.getAbsolutePath(), false);
         mCatalog.insert("a", new ReplicaCatalogEntry("b"));
         Collection<ReplicaCatalogEntry> c = mCatalog.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
     }
 
     @Test
@@ -83,24 +97,23 @@ public class SimpleFileTest {
         mCatalog.insert("a", new ReplicaCatalogEntry("c", "handle"));
 
         Collection<ReplicaCatalogEntry> c = mCatalog.lookup("a");
-        assertTrue(c.contains(new ReplicaCatalogEntry("b")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("b", "handle")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c")));
-        assertTrue(c.contains(new ReplicaCatalogEntry("c", "handle")));
+        assertThat(c.contains(new ReplicaCatalogEntry("b")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("b", "handle")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c")), is(true));
+        assertThat(c.contains(new ReplicaCatalogEntry("c", "handle")), is(true));
     }
 
     @Test
     public void lookupWithSubstitutionsTest() {
         System.out.println("lookupWithSubstitutionsTest");
-        File f = new File(mTestSetup.getInputDirectory(), "simple-file-substitute.in");
-        setupCatalog(f.getAbsolutePath(), true);
+        setupCatalog(mExpandedSubstitutionInput.getAbsolutePath(), true);
 
         Collection<ReplicaCatalogEntry> c = mCatalog.lookup("f.b");
 
-        assertEquals(1, c.size());
+        assertThat(c.size(), is(1));
         for (ReplicaCatalogEntry x : c) {
-            assertEquals("file:///tmp/" + EXPANDED_USER + "/f.b", x.getPFN());
-            assertEquals("isi", x.getResourceHandle());
+            assertThat(x.getPFN(), is("file:///tmp/" + EXPANDED_USER + "/f.b"));
+            assertThat(x.getResourceHandle(), is("isi"));
         }
     }
 
@@ -109,12 +122,17 @@ public class SimpleFileTest {
         System.out.println("removeSingle");
         setupCatalog(mTempRC.getAbsolutePath(), false);
         int count = mCatalog.remove("a");
-        assertEquals(4, count);
+        assertThat(count, is(4));
     }
 
     @AfterEach
     public void tearDown() {
-        mCatalog.close();
+        if (mCatalog != null) {
+            mCatalog.close();
+        }
+        if (mExpandedSubstitutionInput != null) {
+            mExpandedSubstitutionInput.delete();
+        }
     }
 
     @AfterAll

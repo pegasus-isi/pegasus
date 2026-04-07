@@ -13,33 +13,97 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.common.logging.LogManager;
+import java.io.File;
+import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class DAXWriterTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testDAXWriterIsAbstract() {
+        assertThat(Modifier.isAbstract(DAXWriter.class.getModifiers()), is(true));
     }
-    */
+
+    private static final class StubDAXWriter extends DAXWriter {
+
+        StubDAXWriter() {
+            super();
+        }
+
+        StubDAXWriter(String daxFile, String directory) {
+            super(daxFile, directory);
+        }
+
+        @Override
+        public boolean writePartitionDax(Partition partition, int index) {
+            return true;
+        }
+    }
+
+    @Test
+    public void testConstants() {
+        assertThat(DAXWriter.PARTITION_PREFIX, is("partition_"));
+        assertThat(DAXWriter.PACKAGE_NAME, is("edu.isi.pegasus.planner.partitioner"));
+    }
+
+    @Test
+    public void testGetPDAXFilenameVariants() {
+        assertThat(DAXWriter.getPDAXFilename("workflow", 3), is("workflow_3.dax"));
+        assertThat(DAXWriter.getPDAXFilename("workflow", 3, true), is("partition_workflow_3.dax"));
+        assertThat(DAXWriter.getPDAXFilename(null, 2, true), is("partition_test_2.dax"));
+    }
+
+    @Test
+    public void testSetPartitionNameAddsPrefixAndDefaultsNullName() {
+        StubDAXWriter writer = new StubDAXWriter();
+        writer.setPartitionName("mydax");
+        assertThat(writer.getPartitionName(), is("partition_mydax"));
+
+        writer.setPartitionName(null);
+        assertThat(writer.getPartitionName(), is("partition_test"));
+    }
+
+    @Test
+    public void testConstructorsInitializeExpectedFields() throws Exception {
+        StubDAXWriter defaultWriter = new StubDAXWriter();
+        StubDAXWriter configuredWriter = new StubDAXWriter("workflow.dax", "/tmp/out");
+
+        Object defaultDaxFile = ReflectionTestUtils.getField(defaultWriter, "mDaxFile");
+        Object defaultDirectory = ReflectionTestUtils.getField(defaultWriter, "mPDAXDirectory");
+        Object defaultLogger = ReflectionTestUtils.getField(defaultWriter, "mLogger");
+
+        assertThat(defaultDaxFile, is(nullValue()));
+        assertThat(defaultDirectory, is(nullValue()));
+        assertThat(defaultLogger, is(notNullValue()));
+        assertThat(defaultLogger instanceof LogManager, is(true));
+
+        assertThat(ReflectionTestUtils.getField(configuredWriter, "mDaxFile"), is("workflow.dax"));
+        assertThat(
+                ReflectionTestUtils.getField(configuredWriter, "mPDAXDirectory"), is("/tmp/out"));
+        assertThat(ReflectionTestUtils.getField(configuredWriter, "mLogger"), is(notNullValue()));
+    }
+
+    @Test
+    public void testInitializeWriteHandleWritesFileAndCloseClearsHandle() throws Exception {
+        File tempDir = Files.createTempDirectory("daxwriter-test").toFile();
+        StubDAXWriter writer = new StubDAXWriter("workflow.dax", tempDir.getAbsolutePath());
+        writer.setPartitionName("workflow");
+        writer.initializeWriteHandle(5);
+        writer.writeln("hello");
+        writer.close();
+
+        File expected = new File(tempDir, "partition_workflow_5.dax");
+        assertThat(expected.isFile(), is(true));
+        assertThat(Files.readString(expected.toPath()).contains("hello"), is(true));
+
+        assertThat(ReflectionTestUtils.getField(writer, "mWriteHandle"), is(nullValue()));
+    }
 }

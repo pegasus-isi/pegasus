@@ -13,33 +13,153 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.HashSet;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the TransformationCatalogKeywords enum. */
 public class TransformationCatalogKeywordsTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testGetReservedNameForPegasus() {
+        assertThat(TransformationCatalogKeywords.PEGASUS.getReservedName(), is("pegasus"));
     }
-    */
+
+    @Test
+    public void testGetReservedNameForNamespace() {
+        assertThat(TransformationCatalogKeywords.NAMESPACE.getReservedName(), is("namespace"));
+    }
+
+    @Test
+    public void testGetReservedNameForName() {
+        assertThat(TransformationCatalogKeywords.NAME.getReservedName(), is("name"));
+    }
+
+    @Test
+    public void testGetReservedNameForTransformations() {
+        assertThat(
+                TransformationCatalogKeywords.TRANSFORMATIONS.getReservedName(),
+                is("transformations"));
+    }
+
+    @Test
+    public void testGetReservedNameForContainers() {
+        assertThat(TransformationCatalogKeywords.CONTAINERS.getReservedName(), is("containers"));
+    }
+
+    @Test
+    public void testGetReservedNameForSites() {
+        assertThat(TransformationCatalogKeywords.SITES.getReservedName(), is("sites"));
+    }
+
+    @Test
+    public void testGetReservedNameForType() {
+        assertThat(TransformationCatalogKeywords.TYPE.getReservedName(), is("type"));
+    }
+
+    @Test
+    public void testGetReservedNameForPfn() {
+        assertThat(TransformationCatalogKeywords.SITE_PFN.getReservedName(), is("pfn"));
+    }
+
+    @Test
+    public void testGetReservedNameForContainerImage() {
+        assertThat(TransformationCatalogKeywords.CONTAINER_IMAGE.getReservedName(), is("image"));
+    }
+
+    @Test
+    public void testGetReservedKeyLookupByName() {
+        assertThat(
+                TransformationCatalogKeywords.getReservedKey("name"),
+                is(sameInstance(TransformationCatalogKeywords.NAME)));
+    }
+
+    @Test
+    public void testGetReservedKeyLookupForPegasus() {
+        assertThat(
+                TransformationCatalogKeywords.getReservedKey("pegasus"),
+                is(sameInstance(TransformationCatalogKeywords.PEGASUS)));
+    }
+
+    @Test
+    public void testGetReservedKeyLookupForTransformations() {
+        assertThat(
+                TransformationCatalogKeywords.getReservedKey("transformations"),
+                is(sameInstance(TransformationCatalogKeywords.TRANSFORMATIONS)));
+    }
+
+    @Test
+    public void testGetReservedKeyReturnsNullForUnknownKey() {
+        assertThat(
+                TransformationCatalogKeywords.getReservedKey("unknown-key-xyz"), is(nullValue()));
+    }
+
+    @Test
+    public void testAllEnumValuesHaveNonEmptyReservedNames() {
+        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
+            assertThat(
+                    "Reserved name should not be null for " + keyword,
+                    keyword.getReservedName(),
+                    is(notNullValue()));
+            assertThat(
+                    "Reserved name should not be empty for " + keyword,
+                    keyword.getReservedName().isEmpty(),
+                    is(false));
+        }
+    }
+
+    @Test
+    public void testGetReservedKeyForAllValues() {
+        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
+            assertThat(
+                    TransformationCatalogKeywords.getReservedKey(keyword.getReservedName()),
+                    is(sameInstance(keyword)));
+        }
+    }
+
+    @Test
+    public void testContainerMountKeyword() {
+        assertThat(TransformationCatalogKeywords.CONTAINER_MOUNT.getReservedName(), is("mounts"));
+    }
+
+    @Test
+    public void testChecksumKeyword() {
+        assertThat(TransformationCatalogKeywords.CHECKSUM.getReservedName(), is("checksum"));
+    }
+
+    @Test
+    public void testBypassKeyword() {
+        assertThat(TransformationCatalogKeywords.BYPASS.getReservedName(), is("bypass"));
+    }
+
+    @Test
+    public void testGetReservedKeyIsCaseSensitive() {
+        assertThat(TransformationCatalogKeywords.getReservedKey("PEGASUS"), is(nullValue()));
+        assertThat(TransformationCatalogKeywords.getReservedKey("Name"), is(nullValue()));
+    }
+
+    @Test
+    public void testAllReservedNamesAreUnique() {
+        Set<String> reservedNames = new HashSet<>();
+
+        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
+            assertThat(reservedNames.add(keyword.getReservedName()), is(true));
+        }
+    }
+
+    @Test
+    public void testValueOfMatchesDeclaredEnumNames() {
+        for (TransformationCatalogKeywords keyword : TransformationCatalogKeywords.values()) {
+            assertThat(
+                    TransformationCatalogKeywords.valueOf(keyword.name()),
+                    is(sameInstance(keyword)));
+        }
+    }
 }

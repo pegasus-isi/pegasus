@@ -13,33 +13,68 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.selector.SiteSelector;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the Heft site selector class. */
 public class HeftTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testHeftExtendsAbstract() {
+        assertThat(Abstract.class.isAssignableFrom(Heft.class), is(true));
     }
-    */
+
+    @Test
+    public void testHeftImplementsSiteSelector() {
+        assertThat(SiteSelector.class.isAssignableFrom(Heft.class), is(true));
+    }
+
+    @Test
+    public void testHeftInstantiation() {
+        Heft heft = new Heft();
+        assertThat(heft, notNullValue());
+    }
+
+    @Test
+    public void testDescriptionExactValue() {
+        assertThat(new Heft().description(), is("Heft based Site Selector"));
+    }
+
+    @Test
+    public void testMethodReturnTypes() throws Exception {
+        assertThat(
+                Heft.class
+                        .getMethod("initialize", edu.isi.pegasus.planner.classes.PegasusBag.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                Heft.class
+                        .getMethod(
+                                "mapWorkflow",
+                                edu.isi.pegasus.planner.classes.ADag.class,
+                                java.util.List.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(
+                Heft.class
+                        .getMethod(
+                                "mapWorkflow",
+                                edu.isi.pegasus.planner.classes.ADag.class,
+                                java.util.List.class,
+                                String.class)
+                        .getReturnType(),
+                is(Void.TYPE));
+        assertThat(Heft.class.getMethod("description").getReturnType(), is(String.class));
+    }
+
+    @Test
+    public void testPrivateHeftImplementationFieldExists() throws Exception {
+        assertThat(
+                Heft.class.getDeclaredField("mHeftImpl").getType(),
+                is(edu.isi.pegasus.planner.selector.site.heft.Algorithm.class));
+    }
 }

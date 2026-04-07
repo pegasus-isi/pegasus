@@ -13,15 +13,14 @@
  */
 package edu.isi.pegasus.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
@@ -37,12 +36,6 @@ public class VariableExpanderTest {
     private TestSetup mTestSetup;
 
     public VariableExpanderTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     @BeforeEach
     public void setUp() {
@@ -66,7 +59,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals(expected, exp.expand(input), "Invalid Expansion");
+        assertThat(exp.expand(input), is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -111,7 +104,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals(expected, exp.expand(input), "Invalid Expansion");
+        assertThat(exp.expand(input), is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -126,7 +119,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? " + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + value;
 
-        assertEquals(expected, exp.expand(input), "Invalid Expansion");
+        assertThat(exp.expand(input), is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -156,7 +149,7 @@ public class VariableExpanderTest {
         String input = "Pegasus " + variable + " rocks . Says who? \\" + variable;
         String expected = "Pegasus " + value + " rocks . Says who? " + variable;
 
-        assertEquals(expected, exp.expand(input), "Invalid Expansion");
+        assertThat(exp.expand(input), is(expected));
         mLogger.logEventCompletion();
     }
 }

@@ -13,33 +13,136 @@
  */
 package edu.isi.pegasus.planner.common;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Random;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Unit tests for the PegRandom utility class. */
 public class PegRandomTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private static class FixedRandom extends Random {
+        private final double mDouble;
+        private final double mGaussian;
 
-    @BeforeEach
-    public void setUp() {}
+        FixedRandom(double value, double gaussian) {
+            mDouble = value;
+            mGaussian = gaussian;
+        }
 
-    @AfterEach
-    public void tearDown() {}
+        @Override
+        public double nextDouble() {
+            return mDouble;
+        }
 
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        @Override
+        public double nextGaussian() {
+            return mGaussian;
+        }
     }
-    */
+
+    private Random swapRandom(Random random) throws Exception {
+        Random original = (Random) ReflectionTestUtils.getField(PegRandom.class, "mRandom");
+        ReflectionTestUtils.setField(PegRandom.class, "mRandom", random);
+        return original;
+    }
+
+    @Test
+    public void testNextDoubleIsBetweenZeroAndOne() {
+        double value = PegRandom.nextDouble();
+        assertThat(value >= 0.0 && value < 1.0, is(true));
+    }
+
+    @Test
+    public void testGetIntegerWithUpperBoundReturnsValueInRange() {
+        int upperIndex = 9;
+        int value = PegRandom.getInteger(upperIndex);
+        assertThat(value >= 0 && value <= upperIndex, is(true));
+    }
+
+    @Test
+    public void testGetIntegerWithBothBoundsReturnsValueInRange() {
+        int lower = 5;
+        int upper = 10;
+        int value = PegRandom.getInteger(lower, upper);
+        assertThat(value >= lower && value <= upper, is(true));
+    }
+
+    @Test
+    public void testGetIntegerWithSameLowerAndUpperBound() {
+        int value = PegRandom.getInteger(3, 3);
+        assertThat(value, is(3));
+    }
+
+    @RepeatedTest(20)
+    public void testGetIntegerNeverExceedsUpperBound() {
+        int upperIndex = 5;
+        int value = PegRandom.getInteger(upperIndex);
+        assertThat(value <= upperIndex, is(true));
+    }
+
+    @RepeatedTest(20)
+    public void testGetIntegerNeverFallsBelowLowerBound() {
+        int lower = 3;
+        int upper = 7;
+        int value = PegRandom.getInteger(lower, upper);
+        assertThat(value >= lower, is(true));
+    }
+
+    @Test
+    public void testGetIntegerWithUpperBoundZero() {
+        int value = PegRandom.getInteger(0);
+        assertThat(value, is(0));
+    }
+
+    @Test
+    public void testNextGaussianReturnsDouble() {
+        // Just assert it doesn't throw and returns a double
+        double value = PegRandom.nextGaussian();
+        assertThat(value, notNullValue());
+    }
+
+    @Test
+    public void testGetIntegerClampsValueAtUpperBoundWhenRandomIsNearOne() throws Exception {
+        Random original = swapRandom(new FixedRandom(0.999999999999d, 0.0));
+        try {
+            assertThat(PegRandom.getInteger(0, 9), is(9));
+        } finally {
+            swapRandom(original);
+        }
+    }
+
+    @Test
+    public void testGetIntegerReturnsLowerBoundWhenRandomIsZero() throws Exception {
+        Random original = swapRandom(new FixedRandom(0.0, 0.0));
+        try {
+            assertThat(PegRandom.getInteger(4, 9), is(4));
+        } finally {
+            swapRandom(original);
+        }
+    }
+
+    @Test
+    public void testGetIntegerSupportsNegativeBounds() throws Exception {
+        Random original = swapRandom(new FixedRandom(0.50, 0.0));
+        try {
+            assertThat(PegRandom.getInteger(-2, 2), is(0));
+        } finally {
+            swapRandom(original);
+        }
+    }
+
+    @Test
+    public void testNextGaussianUsesSingletonRandomInstance() throws Exception {
+        Random original = swapRandom(new FixedRandom(0.0, -3.5));
+        try {
+            assertThat(PegRandom.nextGaussian(), is(-3.5));
+        } finally {
+            swapRandom(original);
+        }
+    }
 }

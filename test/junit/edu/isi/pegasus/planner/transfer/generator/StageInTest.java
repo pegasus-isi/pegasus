@@ -55,9 +55,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,12 +73,6 @@ public class StageInTest {
     private ADag mDAG;
 
     private static int mTestNumber = 1;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     public StageInTest() {}
 
@@ -459,8 +451,10 @@ public class StageInTest {
         if (noSymlinkProfileValue != null) {
             j.vdsNS.construct(Pegasus.NO_SYMLINK_KEY, noSymlinkProfileValue.toString());
         }
-        assertEquals(
-                expected, si.symlinkingEnabled(j, workflowSymlinking), "Symlinking for job was ");
+        assertThat(
+                "Symlinking for job was ",
+                si.symlinkingEnabled(j, workflowSymlinking),
+                org.hamcrest.CoreMatchers.is(expected));
         mLogger.logEventCompletion();
     }
 
@@ -616,7 +610,9 @@ public class StageInTest {
         // so set profile instead of properties
         job.setDataConfiguration(dataConfig);
 
-        assertEquals(expected, si.bypassStaging(rce, inputFile, job, s.lookup(computeSite)));
+        assertThat(
+                si.bypassStaging(rce, inputFile, job, s.lookup(computeSite)),
+                org.hamcrest.CoreMatchers.is(expected));
         mLogger.logEventCompletion();
     }
 

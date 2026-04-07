@@ -13,33 +13,54 @@
  */
 package edu.isi.pegasus.planner.parser.tokens;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for {@link CloseBrace} token. */
 public class CloseBraceTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testCanBeInstantiated() {
+        CloseBrace cb = new CloseBrace();
+        assertThat(cb, is(notNullValue()));
     }
-    */
+
+    @Test
+    public void testImplementsToken() {
+        CloseBrace cb = new CloseBrace();
+        assertThat(cb, instanceOf(Token.class));
+    }
+
+    @Test
+    public void testIsDistinctFromOpenBrace() {
+        CloseBrace cb = new CloseBrace();
+        OpenBrace ob = new OpenBrace();
+        assertNotEquals(cb.getClass(), ob.getClass());
+    }
+
+    @Test
+    public void testMultipleInstancesCanBeCreated() {
+        CloseBrace cb1 = new CloseBrace();
+        CloseBrace cb2 = new CloseBrace();
+        assertNotSame(cb1, cb2);
+    }
+
+    @Test
+    public void testDeclaresNoFields() {
+        assertThat(CloseBrace.class.getDeclaredFields().length, is(0));
+    }
+
+    @Test
+    public void testDeclaresOnlyDefaultConstructor() {
+        assertThat(CloseBrace.class.getDeclaredConstructors().length, is(1));
+        assertThat(CloseBrace.class.getDeclaredConstructors()[0].getParameterCount(), is(0));
+    }
+
+    @Test
+    public void testDeclaresNoAdditionalMethods() {
+        assertThat(CloseBrace.class.getDeclaredMethods().length, is(0));
+    }
 }

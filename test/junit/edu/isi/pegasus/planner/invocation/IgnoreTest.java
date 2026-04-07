@@ -13,33 +13,86 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for Ignore invocation class. */
 public class IgnoreTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsInvocation() {
+        assertThat(Invocation.class.isAssignableFrom(Ignore.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertThat(HasText.class.isAssignableFrom(Ignore.class), is(true));
+    }
+
+    @Test
+    public void testDefaultConstructorCreates() {
+        Ignore ig = new Ignore();
+        assertThat(ig, is(notNullValue()));
+    }
+
+    @Test
+    public void testGetValueReturnsNull() {
+        // Ignore.getValue() returns "" (empty string), not null — it is a no-op store
+        Ignore ig = new Ignore();
+        assertThat(ig.getValue(), is(""));
+    }
+
+    @Test
+    public void testAppendValueIsNoop() {
+        Ignore ig = new Ignore();
+        ig.appendValue("anything");
+        // getValue() still returns "" because Ignore discards all data
+        assertThat(ig.getValue(), is(""));
+    }
+
+    @Test
+    public void testSetValueIsNoop() {
+        Ignore ig = new Ignore();
+        ig.setValue("something");
+        assertThat(ig.getValue(), is(""));
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        Ignore ig = new Ignore();
+        ig.appendValue(null);
+        assertThat(ig.getValue(), is(""));
+    }
+
+    @Test
+    public void testConstructorWithValueStillDiscardsContent() {
+        Ignore ig = new Ignore("ignored");
+
+        assertThat(ig.getValue(), is(""));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        Ignore ig = new Ignore();
+        StringWriter sw = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> ig.toString(sw));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
+
+    @Test
+    public void testToXMLWriterThrowsIOException() {
+        Ignore ig = new Ignore();
+        StringWriter sw = new StringWriter();
+
+        IOException exception = assertThrows(IOException.class, () -> ig.toXML(sw, null, "inv"));
+        assertThat(exception.getMessage(), containsString("method not implemented"));
+    }
 }

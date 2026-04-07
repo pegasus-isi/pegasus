@@ -13,33 +13,52 @@
  */
 package org.griphyn.vdl.router;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StringWriter;
+import org.griphyn.vdl.classes.Definitions;
+import org.griphyn.vdl.dax.ADAG;
+import org.griphyn.vdl.dbschema.InMemorySchema;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** @author Rajiv Mayani */
 public class ShowDiamondTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void diamondHarnessRoundTripsThroughSerializationAndRouting(
+            @TempDir java.nio.file.Path tempDir) throws Exception {
+        Definitions original = CreateDiamond.create();
+        java.nio.file.Path file = tempDir.resolve("data.out");
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file.toFile()))) {
+            oos.writeObject(original);
+        }
+
+        Definitions diamond;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file.toFile()))) {
+            diamond = (Definitions) ois.readObject();
+        }
+
+        assertThat(diamond.getDefinitionCount(), is(original.getDefinitionCount()));
+
+        Route route = new Route(new InMemorySchema(diamond));
+        BookKeeper bookKeeper = route.requestLfn("f.d");
+        ADAG dax = bookKeeper.getDAX("testing");
+
+        assertThat(bookKeeper, notNullValue());
+        assertThat(dax, notNullValue());
+        assertThat(bookKeeper.toString(), containsString("f.d"));
+
+        StringWriter xml = new StringWriter();
+        dax.toXML(xml, "", null);
+        assertThat(xml.toString(), containsString("<adag"));
+        assertThat(xml.toString(), containsString("bottom"));
     }
-    */
 }

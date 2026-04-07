@@ -15,6 +15,10 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -28,28 +32,12 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class TransformationCatalogEntryTest {
 
     public TransformationCatalogEntryTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void serializeTransformationCatalogEntry() throws IOException {
@@ -90,8 +78,7 @@ public class TransformationCatalogEntryTest {
                         + "      JAVA_HOME: \"/opt/java/1.6\"\n"
                         + "";
         String actual = mapper.writeValueAsString(entry);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -122,8 +109,7 @@ public class TransformationCatalogEntryTest {
                         + "    JAVA_HOME: \"/opt/java/1.6\"\n"
                         + "";
         String actual = mapper.writeValueAsString(entry);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -156,8 +142,7 @@ public class TransformationCatalogEntryTest {
                         + "metadata:\n"
                         + "  user: \"vahi\"\n";
         String actual = mapper.writeValueAsString(entry);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -187,8 +172,7 @@ public class TransformationCatalogEntryTest {
                         + "  os.type: \"linux\"\n"
                         + "  container: \"centos-pegasus\"\n";
         String actual = mapper.writeValueAsString(entry);
-        // System.err.println(actual);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -200,9 +184,9 @@ public class TransformationCatalogEntryTest {
         c.addProfile(new Profile("env", key, containerValue));
         e.incorporateContainerProfiles(c);
         // nothing should be in the tc
-        assertNull(e.getAllProfiles());
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key));
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key).equals(containerValue));
+        assertThat(e.getAllProfiles(), is(nullValue()));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key), is(true));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key), is(containerValue));
     }
 
     @Test
@@ -216,10 +200,10 @@ public class TransformationCatalogEntryTest {
         Container c = new Container();
         c.addProfile(new Profile("env", key, containerValue));
         e.incorporateContainerProfiles(c);
-        assertNotNull(e.getAllProfiles());
-        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.env).isEmpty());
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key));
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key).equals(tcValue));
+        assertThat(e.getAllProfiles(), is(notNullValue()));
+        assertThat(e.getAllProfiles().get(Profiles.NAMESPACES.env).isEmpty(), is(true));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.env).containsKey(key), is(true));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.env).get(key), is(tcValue));
     }
 
     @Test
@@ -231,20 +215,14 @@ public class TransformationCatalogEntryTest {
         c.addProfile(new Profile("pegasus", key, containerValue));
         e.incorporateContainerProfiles(c);
 
-        assertNotNull(e.getAllProfiles());
-        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
-        assertTrue(
-                e.getAllProfiles()
-                        .get(Profiles.NAMESPACES.pegasus)
-                        .get(key)
-                        .equals(containerValue));
+        assertThat(e.getAllProfiles(), is(notNullValue()));
+        assertThat(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key), is(true));
+        assertThat(
+                e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key), is(containerValue));
 
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
-        assertTrue(
-                c.getAllProfiles()
-                        .get(Profiles.NAMESPACES.pegasus)
-                        .get(key)
-                        .equals(containerValue));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key), is(true));
+        assertThat(
+                c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key), is(containerValue));
     }
 
     @Test
@@ -259,15 +237,12 @@ public class TransformationCatalogEntryTest {
         c.addProfile(new Profile("pegasus", key, containerValue));
         e.incorporateContainerProfiles(c);
 
-        assertNotNull(e.getAllProfiles());
-        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
-        assertTrue(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key).equals(tcValue));
+        assertThat(e.getAllProfiles(), is(notNullValue()));
+        assertThat(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key), is(true));
+        assertThat(e.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key), is(tcValue));
 
-        assertTrue(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key));
-        assertTrue(
-                c.getAllProfiles()
-                        .get(Profiles.NAMESPACES.pegasus)
-                        .get(key)
-                        .equals(containerValue));
+        assertThat(c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).containsKey(key), is(true));
+        assertThat(
+                c.getAllProfiles().get(Profiles.NAMESPACES.pegasus).get(key), is(containerValue));
     }
 }

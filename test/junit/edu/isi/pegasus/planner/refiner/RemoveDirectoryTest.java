@@ -13,33 +13,59 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for RemoveDirectory refiner. */
 public class RemoveDirectoryTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsEngine() {
+        assertThat(Engine.class.isAssignableFrom(RemoveDirectory.class), is(true));
     }
-    */
+
+    @Test
+    public void testHasAddRemoveDirectoryNodesMethod() throws Exception {
+        assertThat(
+                RemoveDirectory.class.getMethod(
+                        "addRemoveDirectoryNodes", edu.isi.pegasus.planner.classes.ADag.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testConstants() {
+        assertThat(RemoveDirectory.TRANSFORMATION_NAME, is("cleanup"));
+        assertThat(RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME, is("pegasus-transfer"));
+        assertThat(RemoveDirectory.CLEANUP_PREFIX, is("cleanup_"));
+        assertThat(RemoveDirectory.DERIVATION_VERSION, is("1.0"));
+    }
+
+    @Test
+    public void testHasConstructorWithDagBagAndSubmitDirectory() throws Exception {
+        Constructor<RemoveDirectory> constructor =
+                RemoveDirectory.class.getDeclaredConstructor(
+                        ADag.class, PegasusBag.class, String.class);
+        assertThat(constructor, notNullValue());
+    }
+
+    @Test
+    public void testOverloadedAddRemoveDirectoryNodesMethodSignature() throws Exception {
+        Method method =
+                RemoveDirectory.class.getMethod(
+                        "addRemoveDirectoryNodes", ADag.class, java.util.Set.class);
+        assertThat((Object) method.getReturnType(), is((Object) ADag.class));
+    }
+
+    @Test
+    public void testGetCompleteTransformationNameReturnsString() throws Exception {
+        Method method = RemoveDirectory.class.getMethod("getCompleteTranformationName");
+        assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
 }

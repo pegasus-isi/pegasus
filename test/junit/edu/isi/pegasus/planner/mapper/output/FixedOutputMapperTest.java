@@ -26,9 +26,7 @@ import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,12 +47,6 @@ public class FixedOutputMapperTest {
     private LogManager mLogger;
 
     private TestSetup mTestSetup;
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -91,16 +83,16 @@ public class FixedOutputMapperTest {
 
         String lfn = "f.a";
         String pfn = mapper.map(lfn, "local", FileServerType.OPERATION.put).getValue();
-        assertEquals(
-                "gsiftp://outputs.isi.edu/shared/outputs/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 pfn,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is("gsiftp://outputs.isi.edu/shared/outputs/f.a"));
 
         pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get).getValue();
-        assertEquals(
-                "gsiftp://outputs.isi.edu/shared/outputs/f.a",
+        org.hamcrest.MatcherAssert.assertThat(
+                lfn + " not mapped to right location ",
                 pfn,
-                lfn + " not mapped to right location ");
+                org.hamcrest.Matchers.is("gsiftp://outputs.isi.edu/shared/outputs/f.a"));
 
         List<NameValue<String, String>> pfns =
                 mapper.mapAll(lfn, "local", FileServerType.OPERATION.get);

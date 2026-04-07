@@ -15,7 +15,8 @@
  */
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
@@ -388,16 +389,9 @@ public class CondorTest {
         String classAdKey =
                 ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(pegasusProfileKey);
 
-        assertTrue(
-                j.condorVariables.containsKey(condorProfileKey),
-                "Classad profile key not present " + condorProfileKey);
-        assertTrue(
-                j.vdsNS.containsKey(pegasusProfileKey),
-                "Pegasus profile key not present " + pegasusProfileKey);
-        assertEquals(
-                expectedValue,
-                j.vdsNS.get(pegasusProfileKey),
-                "Pegasus profile value for key " + pegasusProfileKey + " does not match ");
+        assertThat(j.condorVariables.containsKey(condorProfileKey), is(true));
+        assertThat(j.vdsNS.containsKey(pegasusProfileKey), is(true));
+        assertThat(j.vdsNS.get(pegasusProfileKey), is(expectedValue));
     }
 
     private void testForCredentialForRemoteExec(
@@ -479,26 +473,13 @@ public class CondorTest {
 
         // System.err.println(j);
 
-        assertEquals(
-                expectedEnv.size(),
-                j.envVariables.size(),
-                "Num of Environment Variables in " + j.envVariables);
+        assertThat(j.envVariables.size(), is(expectedEnv.size()));
         for (Object key : expectedEnv.keySet()) {
-            assertEquals(
-                    expectedEnv.get(key),
-                    j.envVariables.get(key),
-                    "Value for key " + key + " in " + j.envVariables);
+            assertThat(j.envVariables.get(key), is(expectedEnv.get(key)));
         }
-        // System.err.println(j.condorVariables);
-        assertEquals(
-                expectedCondorVariables.size(),
-                j.condorVariables.size(),
-                "Num of Condor Variables in " + j.condorVariables);
+        assertThat(j.condorVariables.size(), is(expectedCondorVariables.size()));
         for (Object key : expectedCondorVariables.keySet()) {
-            assertEquals(
-                    expectedCondorVariables.get(key),
-                    j.condorVariables.get(key),
-                    "Value for key " + key + " in " + j.condorVariables);
+            assertThat(j.condorVariables.get(key), is(expectedCondorVariables.get(key)));
         }
 
         mLogger.logEventCompletion(0);

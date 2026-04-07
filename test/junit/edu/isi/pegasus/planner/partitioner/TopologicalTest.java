@@ -13,33 +13,75 @@
  */
 package edu.isi.pegasus.planner.partitioner;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** @author Rajiv Mayani */
 public class TopologicalTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
+    private Partition simpleChainPartition() {
+        GraphNode a = new GraphNode("A");
+        GraphNode b = new GraphNode("B");
+        GraphNode c = new GraphNode("C");
 
-    @BeforeEach
-    public void setUp() {}
+        b.addParent(a);
+        a.addChild(b);
+        c.addParent(b);
+        b.addChild(c);
 
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+        Partition partition = new Partition(Arrays.asList(a, b, c), "ID1");
+        partition.constructPartition();
+        return partition;
     }
-    */
+
+    @Test
+    public void testInitializeBuildsExpectedIndegreeArray() throws Exception {
+        Topological topological = new Topological(simpleChainPartition());
+
+        assertArrayEquals(
+                new int[] {0, 1, 1},
+                (int[]) ReflectionTestUtils.getField(topological, "mInDegree"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testChildrenRepresentationBuildsAdjacencyLists() {
+        Topological topological = new Topological(simpleChainPartition());
+
+        Map<String, List<String>> children = topological.childrenRepresentation();
+
+        assertThat(children.get("A"), is(Arrays.asList("B")));
+        assertThat(children.get("B"), is(Arrays.asList("C")));
+        assertThat(children.containsKey("C"), is(false));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSortReturnsTopologicalOrderForSimpleChain() {
+        Topological topological = new Topological(simpleChainPartition());
+
+        List<String> order = topological.sort();
+
+        assertThat(order, is(Arrays.asList("A", "B", "C")));
+    }
+
+    @Test
+    public void testPrivateIndexReturnsMappedArrayPosition() throws Exception {
+        Topological topological = new Topological(simpleChainPartition());
+        Method method = Topological.class.getDeclaredMethod("index", String.class);
+        method.setAccessible(true);
+
+        assertThat(method.invoke(topological, "A"), is(0));
+        assertThat(method.invoke(topological, "B"), is(1));
+        assertThat(method.invoke(topological, "C"), is(2));
+    }
 }

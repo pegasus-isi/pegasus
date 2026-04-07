@@ -13,33 +13,77 @@
  */
 package edu.isi.pegasus.planner.refiner.cleanup;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Structural tests for Constraint cleanup strategy. */
 public class ConstraintTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsAbstractCleanupStrategy() {
+        assertThat(AbstractCleanupStrategy.class.isAssignableFrom(Constraint.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsCleanupStrategy() {
+        assertThat(CleanupStrategy.class.isAssignableFrom(Constraint.class), is(true));
+    }
+
+    @Test
+    public void testHasAddCleanupJobsMethod() throws Exception {
+        assertThat(
+                Constraint.class.getMethod(
+                        "addCleanupJobs", edu.isi.pegasus.planner.partitioner.graph.Graph.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        Constraint c = new Constraint();
+        assertThat(c, notNullValue());
+    }
+
+    @Test
+    public void testPrivateConstants() throws Exception {
+        assertThat(
+                ReflectionTestUtils.getField(Constraint.class, "PROPERTY_PREFIX"),
+                is("pegasus.file.cleanup.constraint"));
+        assertThat(
+                ReflectionTestUtils.getField(Constraint.class, "PROPERTY_MAXSPACE_SUFFIX"),
+                is("maxspace"));
+        assertThat(
+                ReflectionTestUtils.getField(Constraint.class, "DEFAULT_MAX_SPACE"),
+                is("10737418240"));
+    }
+
+    @Test
+    public void testHasExpectedPrivateHelperMethods() throws Exception {
+        assertThat(
+                Constraint.class.getDeclaredMethod(
+                        "addCleanUpJobs",
+                        String.class,
+                        java.util.Set.class,
+                        edu.isi.pegasus.planner.partitioner.graph.Graph.class),
+                notNullValue());
+        assertThat(Constraint.class.getDeclaredMethod("choose", Iterable.class), notNullValue());
+        assertThat(
+                Constraint.class.getDeclaredMethod("getPropertyName", String.class, String.class),
+                notNullValue());
+    }
+
+    @Test
+    public void testAddCleanupJobsReturnsGraph() throws Exception {
+        assertThat(
+                (Object)
+                        Constraint.class
+                                .getMethod(
+                                        "addCleanupJobs",
+                                        edu.isi.pegasus.planner.partitioner.graph.Graph.class)
+                                .getReturnType(),
+                is((Object) edu.isi.pegasus.planner.partitioner.graph.Graph.class));
+    }
 }

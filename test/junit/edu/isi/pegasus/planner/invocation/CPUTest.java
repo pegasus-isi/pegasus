@@ -13,33 +13,105 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for CPU invocation class. */
 public class CPUTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertThat(MachineInfo.class.isAssignableFrom(CPU.class), is(true));
     }
-    */
+
+    @Test
+    public void testImplementsHasText() {
+        assertThat(HasText.class.isAssignableFrom(CPU.class), is(true));
+    }
+
+    @Test
+    public void testElementName() {
+        assertThat(CPU.ELEMENT_NAME, is("cpu"));
+    }
+
+    @Test
+    public void testDefaultConstructorNullValue() {
+        CPU cpu = new CPU();
+        assertThat(cpu.getValue(), nullValue());
+    }
+
+    @Test
+    public void testConstructorWithValue() {
+        CPU cpu = new CPU("GenuineIntel");
+        assertThat(cpu.getValue(), is("GenuineIntel"));
+    }
+
+    @Test
+    public void testConstructorNullThrows() {
+        assertThrows(NullPointerException.class, () -> new CPU(null));
+    }
+
+    @Test
+    public void testAppendValue() {
+        CPU cpu = new CPU();
+        cpu.appendValue("Intel");
+        cpu.appendValue(" Core i7");
+        assertThat(cpu.getValue(), is("Intel Core i7"));
+    }
+
+    @Test
+    public void testGetElementName() {
+        CPU cpu = new CPU();
+        assertThat(cpu.getElementName(), is("cpu"));
+    }
+
+    @Test
+    public void testSetValue() {
+        CPU cpu = new CPU();
+        cpu.setValue("AuthenticAMD");
+        assertThat(cpu.getValue(), is("AuthenticAMD"));
+    }
+
+    @Test
+    public void testAppendNullIsNoop() {
+        CPU cpu = new CPU("GenuineIntel");
+        cpu.appendValue(null);
+
+        assertThat(cpu.getValue(), is("GenuineIntel"));
+    }
+
+    @Test
+    public void testSetValueReplacesPreviouslyAppendedContent() {
+        CPU cpu = new CPU();
+        cpu.appendValue("Intel");
+        cpu.setValue("AMD");
+
+        assertThat(cpu.getValue(), is("AMD"));
+    }
+
+    @Test
+    public void testSetValueNullClearsValue() {
+        CPU cpu = new CPU("GenuineIntel");
+        cpu.setValue(null);
+
+        assertThat(cpu.getValue(), nullValue());
+    }
+
+    @Test
+    public void testInheritedToXMLIncludesAttributesAndEscapedValue() throws Exception {
+        CPU cpu = new CPU("Intel & AMD");
+        cpu.addAttribute("vendor", "x86&x64");
+        StringWriter sw = new StringWriter();
+
+        cpu.toXML(sw, null, "inv");
+
+        String xml = sw.toString();
+        assertThat(xml, containsString("<inv:cpu"));
+        assertThat(xml, containsString("vendor=\"x86&amp;amp;x64\""));
+        assertThat(xml, containsString(">Intel &amp; AMD</inv:cpu>"));
+    }
 }

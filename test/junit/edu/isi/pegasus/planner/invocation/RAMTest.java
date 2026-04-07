@@ -13,33 +13,105 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for RAM invocation class. */
 public class RAMTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsMachineInfo() {
+        assertThat(MachineInfo.class.isAssignableFrom(RAM.class), is(true));
     }
-    */
+
+    @Test
+    public void testElementName() {
+        assertThat(RAM.ELEMENT_NAME, is("ram"));
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        RAM r = new RAM();
+        assertThat(r, is(org.hamcrest.Matchers.notNullValue()));
+    }
+
+    @Test
+    public void testGetElementName() {
+        RAM r = new RAM();
+        assertThat(r.getElementName(), is("ram"));
+    }
+
+    @Test
+    public void testAddAndGetAttribute() {
+        RAM r = new RAM();
+        r.addAttribute("total", "16384");
+        assertThat(r.get("total"), is("16384"));
+    }
+
+    @Test
+    public void testGetMissingAttributeReturnsNull() {
+        RAM r = new RAM();
+        assertThat(r.get("nonexistent"), is(nullValue()));
+    }
+
+    @Test
+    public void testAddAttributesAddsMultipleEntries() {
+        RAM r = new RAM();
+
+        r.addAttributes(Arrays.asList("total", "free"), Arrays.asList("16384", "8192"));
+
+        assertThat(r.get("total"), is("16384"));
+        assertThat(r.get("free"), is("8192"));
+    }
+
+    @Test
+    public void testGetAttributeKeysIteratorIncludesAddedKeys() {
+        RAM r = new RAM();
+        r.addAttribute("total", "16384");
+        r.addAttribute("free", "8192");
+
+        Set<String> keys = new HashSet<String>();
+        for (Iterator<String> it = r.getAttributeKeysIterator(); it.hasNext(); ) {
+            keys.add(it.next());
+        }
+
+        assertThat(keys, is(new HashSet<String>(Arrays.asList("total", "free"))));
+    }
+
+    @Test
+    public void testToStringWriterThrowsIOException() {
+        RAM r = new RAM();
+
+        IOException exception =
+                assertThrows(IOException.class, () -> r.toString(new StringWriter()));
+
+        assertThat(
+                exception.getMessage(),
+                is("method not implemented, please contact pegasus-support@isi.edu"));
+    }
+
+    @Test
+    public void testToXMLUsesNamespaceAndSelfClosingTag() throws IOException {
+        RAM r = new RAM();
+        r.addAttribute("total", "16384");
+
+        StringWriter writer = new StringWriter();
+        r.toXML(writer, "  ", "inv");
+
+        String xml = writer.toString();
+        assertThat(xml.startsWith("  <inv:ram"), is(true));
+        assertThat(xml, containsString("total=\"16384\""));
+        assertThat(xml.endsWith("/>" + System.lineSeparator()), is(true));
+    }
 }

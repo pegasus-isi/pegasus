@@ -13,33 +13,64 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.lang.reflect.Modifier;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/**
+ * Tests for SiteData. Since SiteData is abstract, tested via Connection (concrete subclass).
+ *
+ * @author Rajiv Mayani
+ */
 public class SiteDataTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
-    @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    private static class ConcreteSiteData extends SiteData {
+        @Override
+        public ConcreteSiteData clone() throws CloneNotSupportedException {
+            return (ConcreteSiteData) super.clone();
+        }
     }
-    */
+
+    @Test
+    public void testSiteDataImplementsCloneable() {
+        assertThat(Cloneable.class.isAssignableFrom(SiteData.class), is(true));
+    }
+
+    @Test
+    public void testSiteDataIsAbstract() {
+        assertThat(Modifier.isAbstract(SiteData.class.getModifiers()), is(true));
+    }
+
+    @Test
+    public void testConnectionExtendsAbstractSiteData() {
+        Connection c = new Connection("k", "v");
+        assertThat(c, instanceOf(SiteData.class));
+    }
+
+    @Test
+    public void testSiteStoreExtendsSiteData() {
+        SiteStore store = new SiteStore();
+        assertThat(store, instanceOf(SiteData.class));
+    }
+
+    @Test
+    public void testInternalMountPointExtendsSiteData() {
+        InternalMountPoint imp = new InternalMountPoint("/tmp");
+        assertThat(imp, instanceOf(SiteData.class));
+    }
+
+    @Test
+    public void testSubclassCanCloneViaSiteDataCloneableContract()
+            throws CloneNotSupportedException {
+        ConcreteSiteData original = new ConcreteSiteData();
+
+        ConcreteSiteData cloned = original.clone();
+
+        assertNotSame(original, cloned);
+        assertThat(cloned, instanceOf(SiteData.class));
+    }
 }

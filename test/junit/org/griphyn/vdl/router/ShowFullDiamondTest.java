@@ -13,33 +13,36 @@
  */
 package org.griphyn.vdl.router;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.StringWriter;
+import org.griphyn.vdl.classes.Definitions;
+import org.griphyn.vdl.dax.ADAG;
+import org.griphyn.vdl.dbschema.InMemorySchema;
+import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class ShowFullDiamondTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void fullDiamondHarnessProducesDaxRenderableAsTextAndXml() throws Exception {
+        Definitions diamond = CreateFullDiamond.create();
+        Route route = new Route(new InMemorySchema(diamond));
+        BookKeeper bookKeeper = route.requestLfn("f.d");
+        ADAG dax = bookKeeper.getDAX("testing");
+
+        StringWriter text = new StringWriter();
+        dax.toString(text);
+
+        StringWriter xml = new StringWriter();
+        dax.toXML(xml, "");
+
+        assertThat(diamond.getDefinitionCount(), is(8));
+        assertThat(text.toString(), containsString("A"));
+        assertThat(text.toString(), containsString("D"));
+        assertThat(xml.toString(), containsString("<adag"));
+        assertThat(xml.toString(), containsString("testing"));
     }
-    */
 }

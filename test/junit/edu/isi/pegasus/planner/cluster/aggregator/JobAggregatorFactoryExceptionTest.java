@@ -13,33 +13,95 @@
  */
 package edu.isi.pegasus.planner.cluster.aggregator;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import edu.isi.pegasus.common.util.FactoryException;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the JobAggregatorFactoryException class. */
 public class JobAggregatorFactoryExceptionTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testExtendsFactoryException() {
+        assertThat(
+                FactoryException.class.isAssignableFrom(JobAggregatorFactoryException.class),
+                is(true));
     }
-    */
+
+    @Test
+    public void testDefaultNameConstant() {
+        assertThat(JobAggregatorFactoryException.DEFAULT_NAME, is("Job Aggregator"));
+    }
+
+    @Test
+    public void testConstructWithMessageSetsDefaultClassname() {
+        JobAggregatorFactoryException ex = new JobAggregatorFactoryException("test message");
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is(JobAggregatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructWithMessageAndClassname() {
+        JobAggregatorFactoryException ex =
+                new JobAggregatorFactoryException("test message", "MyClass");
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+    }
+
+    @Test
+    public void testConstructWithMessageAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        JobAggregatorFactoryException ex = new JobAggregatorFactoryException("test message", cause);
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), is(cause));
+        assertThat(ex.getClassname(), is(JobAggregatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testConstructWithMessageClassnameAndCause() {
+        RuntimeException cause = new RuntimeException("cause");
+        JobAggregatorFactoryException ex =
+                new JobAggregatorFactoryException("test message", "MyClass", cause);
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+        assertThat(ex.getCause(), is(cause));
+    }
+
+    @Test
+    public void testIsRuntimeException() {
+        assertThat(
+                RuntimeException.class.isAssignableFrom(JobAggregatorFactoryException.class),
+                is(true));
+    }
+
+    @Test
+    public void testMessageAndCauseConstructorAllowsNullCause() {
+        JobAggregatorFactoryException ex =
+                new JobAggregatorFactoryException("test message", (Throwable) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getCause(), nullValue());
+        assertThat(ex.getClassname(), is(JobAggregatorFactoryException.DEFAULT_NAME));
+    }
+
+    @Test
+    public void testMessageClassnameAndCauseConstructorAllowsNullCause() {
+        JobAggregatorFactoryException ex =
+                new JobAggregatorFactoryException("test message", "MyClass", null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), is("MyClass"));
+        assertThat(ex.getCause(), nullValue());
+    }
+
+    @Test
+    public void testMessageAndClassnameConstructorAllowsNullClassname() {
+        JobAggregatorFactoryException ex =
+                new JobAggregatorFactoryException("test message", (String) null);
+
+        assertThat(ex.getMessage(), is("test message"));
+        assertThat(ex.getClassname(), nullValue());
+    }
 }

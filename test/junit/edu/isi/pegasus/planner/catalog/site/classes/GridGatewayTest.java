@@ -15,6 +15,9 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -24,28 +27,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.TYPE;
 import java.io.IOException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** @author Karan Vahi */
 public class GridGatewayTest {
 
     public GridGatewayTest() {}
-
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
 
     @Test
     public void testGridGatewaySerialization() throws IOException {
@@ -69,7 +56,7 @@ public class GridGatewayTest {
                         + "idleNodes: 3\n"
                         + "totalNodes: 40\n";
         String actual = mapper.writeValueAsString(gw);
-        assertEquals(expected, actual);
+        assertThat(actual, is(expected));
     }
 
     @Test
@@ -84,10 +71,10 @@ public class GridGatewayTest {
                         + "jobtype: auxillary";
 
         GridGateway gw = mapper.readValue(test, GridGateway.class);
-        assertNotNull(gw);
-        assertEquals(TYPE.gt5, gw.getType());
-        assertEquals("smarty.isi.edu/jobmanager-pbs", gw.getContact());
-        assertEquals(GridGateway.SCHEDULER_TYPE.pbs, gw.getScheduler());
-        assertEquals(GridGateway.JOB_TYPE.auxillary, gw.getJobType());
+        assertThat(gw, is(notNullValue()));
+        assertThat(gw.getType(), is(TYPE.gt5));
+        assertThat(gw.getContact(), is("smarty.isi.edu/jobmanager-pbs"));
+        assertThat(gw.getScheduler(), is(GridGateway.SCHEDULER_TYPE.pbs));
+        assertThat(gw.getJobType(), is(GridGateway.JOB_TYPE.auxillary));
     }
 }

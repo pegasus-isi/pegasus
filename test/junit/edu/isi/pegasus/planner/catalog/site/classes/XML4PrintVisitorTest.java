@@ -13,33 +13,102 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.io.StringWriter;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
-
-/** @author Rajiv Mayani */
+/** Tests for the XML4PrintVisitor class. */
 public class XML4PrintVisitorTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testXML4PrintVisitorExtendsAbstractXMLPrintVisitor() {
+        assertThat(
+                AbstractXMLPrintVisitor.class.isAssignableFrom(XML4PrintVisitor.class), is(true));
     }
-    */
+
+    @Test
+    public void testSchemaNamespaceConstant() {
+        assertThat(XML4PrintVisitor.SCHEMA_NAMESPACE, is(notNullValue()));
+        assertThat(XML4PrintVisitor.SCHEMA_NAMESPACE.contains("pegasus.isi.edu"), is(true));
+    }
+
+    @Test
+    public void testSchemaLocationConstant() {
+        assertThat(XML4PrintVisitor.SCHEMA_LOCATION, is(notNullValue()));
+        assertThat(XML4PrintVisitor.SCHEMA_LOCATION.endsWith(".xsd"), is(true));
+    }
+
+    @Test
+    public void testSchemaVersionConstant() {
+        assertThat(XML4PrintVisitor.SCHEMA_VERSION, is("4.0"));
+    }
+
+    @Test
+    public void testEmptySiteStoreSerializationWritesSchemaFourHeaderAndFooter()
+            throws IOException {
+        XML4PrintVisitor visitor = new XML4PrintVisitor();
+        StringWriter writer = new StringWriter();
+        SiteStore store = new SiteStore();
+
+        visitor.initialize(writer);
+        store.accept(visitor);
+
+        assertThat(writer.toString(), containsString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
+        assertThat(writer.toString(), containsString("<sitecatalog xmlns=\""));
+        assertThat(writer.toString(), containsString("version=\"4.0\""));
+        assertThat(writer.toString(), containsString("</sitecatalog>"));
+    }
+
+    @Test
+    public void testSiteSerializationRendersSchemaFourDirectoriesAndReplicaCatalog()
+            throws IOException {
+        XML4PrintVisitor visitor = new XML4PrintVisitor();
+        StringWriter writer = new StringWriter();
+        SiteStore store = new SiteStore();
+        SiteCatalogEntry site = new SiteCatalogEntry("condorpool");
+        site.addDirectory(createDirectory(Directory.TYPE.shared_scratch, "/shared/scratch"));
+        site.addDirectory(createDirectory(Directory.TYPE.local_storage, "/local/storage"));
+        ReplicaCatalog catalog = new ReplicaCatalog("file:///tmp/rc.txt", "SimpleFile");
+        catalog.addAlias("local");
+        site.addReplicaCatalog(catalog);
+        store.addEntry(site);
+
+        visitor.initialize(writer);
+        store.accept(visitor);
+
+        String xml = writer.toString();
+        assertThat(xml, containsString("<site  handle=\"condorpool\""));
+        assertThat(
+                xml,
+                containsString("<directory  path=\"/shared/scratch\" type=\"shared-scratch\""));
+        assertThat(
+                xml, containsString("<directory  path=\"/local/storage\" type=\"local-storage\""));
+        assertThat(
+                xml,
+                containsString("<file-server  operation=\"all\" url=\"file:///shared/scratch\">"));
+        assertThat(
+                xml,
+                containsString("<file-server  operation=\"all\" url=\"file:///local/storage\">"));
+        assertThat(
+                xml,
+                containsString(
+                        "<replica-catalog  type=\"SimpleFile\" url=\"file:///tmp/rc.txt\">"));
+        assertThat(xml, containsString("<alias  name=\"local\"/>"));
+    }
+
+    private static Directory createDirectory(Directory.TYPE type, String mountPoint) {
+        Directory directory = new Directory();
+        directory.setType(type);
+        directory.setInternalMountPoint(new InternalMountPoint(mountPoint));
+        FileServer server = new FileServer("file", "file://", mountPoint);
+        server.setSupportedOperation(FileServer.OPERATION.put);
+        directory.addFileServer(server);
+        return directory;
+    }
 }

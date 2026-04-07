@@ -30,7 +30,6 @@ import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,9 +63,6 @@ public class HashedOutputMapperTest {
     public static void setUpClass() {
         mTestNum = 1;
     }
-
-    @AfterAll
-    public static void tearDownClass() {}
 
     /** Setup the logger and properties that all test functions require */
     @BeforeEach
@@ -113,7 +109,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
 
             pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
@@ -121,7 +120,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
         }
 
         mLogger.logEventCompletion();
@@ -155,7 +157,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
 
             pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
@@ -165,7 +170,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
         }
         mLogger.logEventCompletion();
     }
@@ -198,7 +206,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
 
             pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
@@ -208,7 +219,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
         }
         mLogger.logEventCompletion();
     }
@@ -241,7 +255,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
 
             pfn = mapper.map(lfn, "local", FileServerType.OPERATION.get, true).getValue();
             expected =
@@ -251,7 +268,10 @@ public class HashedOutputMapperTest {
                             + dir
                             + File.separator
                             + lfn;
-            assertEquals(expected, pfn, lfn + " not mapped to right location ");
+            org.hamcrest.MatcherAssert.assertThat(
+                    lfn + " not mapped to right location ",
+                    pfn,
+                    org.hamcrest.Matchers.is(expected));
         }
         mLogger.logEventCompletion();
     }

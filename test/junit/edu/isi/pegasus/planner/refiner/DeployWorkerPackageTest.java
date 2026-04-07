@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -23,14 +25,10 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import java.io.File;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
-
-// import org.junit.jupiter.api.Test;
 
 /** @author Rajiv Mayani */
 public class DeployWorkerPackageTest {
@@ -45,14 +43,8 @@ public class DeployWorkerPackageTest {
 
     private static int mTestNumber = 1;
 
-    @BeforeAll
-    public static void setUpClass() {}
-
-    @AfterAll
-    public static void tearDownClass() {}
-
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         mTestSetup = new DefaultTestSetup();
         mTestSetup.setInputDirectory(this.getClass());
         mBag = new PegasusBag();
@@ -60,6 +52,7 @@ public class DeployWorkerPackageTest {
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
 
         mProps = PegasusProperties.nonSingletonInstance();
+
         mBag.add(PegasusBag.PEGASUS_PROPERTIES, mProps);
 
         PlannerOptions options = new PlannerOptions();
@@ -79,7 +72,6 @@ public class DeployWorkerPackageTest {
     @Test
     @SetEnvironmentVariable(key = "PATH", value = "/bin/:/usr/bin")
     public void testDefaultUntarPathWithPATH() {
-
         File expectedPath = FindExecutable.findExec("tar");
         if (expectedPath == null) {
             fail(
@@ -89,7 +81,7 @@ public class DeployWorkerPackageTest {
         DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
 
         String actual = dwp.defaultUntarPath("local");
-        assertEquals(expectedPath.getAbsolutePath(), actual);
+        assertThat(actual, is(expectedPath.getAbsolutePath()));
     }
 
     @Test
@@ -98,6 +90,6 @@ public class DeployWorkerPackageTest {
         DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
         // any site other than local disables reliance on PATH
         String actual = dwp.defaultUntarPath("remote");
-        assertEquals("/bin/tar", actual);
+        assertThat(actual, is("/bin/tar"));
     }
 }

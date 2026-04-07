@@ -13,33 +13,91 @@
  */
 package edu.isi.pegasus.common.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
-// import org.junit.jupiter.api.Test;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.RestoreSystemProperties;
 
 /** @author Rajiv Mayani */
 public class FindExecutableTest {
-    @BeforeAll
-    public static void setUpClass() {}
 
-    @AfterAll
-    public static void tearDownClass() {}
-
-    @BeforeEach
-    public void setUp() {}
-
-    @AfterEach
-    public void tearDown() {}
-
-    /*
     @Test
-    public void testSomeMethod() {
-        assertEquals(1, 1);
+    public void testFindExecReturnsNullForNullName() {
+        assertThat(FindExecutable.findExec((String) null), is(nullValue()));
+        assertThat(FindExecutable.findExec("/tmp", null), is(nullValue()));
     }
-    */
+
+    @Test
+    public void testFindExecFindsExecutableInPreferredDirectory() throws Exception {
+        Path directory = Files.createTempDirectory("findexec");
+        Path executable = directory.resolve("tool.sh");
+        Files.write(executable, "#!/bin/sh\nexit 0\n".getBytes());
+        executable.toFile().setExecutable(true);
+
+        File found = FindExecutable.findExec(directory.toString(), "tool.sh");
+
+        assertThat(found, is(notNullValue()));
+        assertThat(found.getAbsolutePath(), is(executable.toFile().getAbsolutePath()));
+    }
+
+    @Test
+    public void testFindExecSkipsNonExecutableFiles() throws Exception {
+        Path directory = Files.createTempDirectory("findexec");
+        Path file = directory.resolve("not-executable.sh");
+        Files.write(file, "echo hi\n".getBytes());
+        file.toFile().setExecutable(false);
+
+        assertThat(
+                FindExecutable.findExec(directory.toString(), "not-executable.sh"),
+                is(nullValue()));
+    }
+
+    @Test
+    @RestoreSystemProperties
+    public void testFindExecUsesPegasusHomeBindirProperty() throws Exception {
+        Path directory = Files.createTempDirectory("findexec");
+        Path executable = directory.resolve("pegasus-tool");
+        Files.write(executable, "#!/bin/sh\nexit 0\n".getBytes());
+        executable.toFile().setExecutable(true);
+
+        System.setProperty("pegasus.home.bindir", directory.toString());
+        File found = FindExecutable.findExec("pegasus-tool");
+
+        assertThat(found, is(notNullValue()));
+        assertThat(found.getAbsolutePath(), is(executable.toFile().getAbsolutePath()));
+    }
+
+    @Test
+    @RestoreSystemProperties
+    public void testMainPrintsFoundAndNotFoundResults() throws Exception {
+        Path directory = Files.createTempDirectory("findexec");
+        Path executable = directory.resolve("main-tool");
+        Files.write(executable, "#!/bin/sh\nexit 0\n".getBytes());
+        executable.toFile().setExecutable(true);
+        String missing = "missing-tool-" + System.nanoTime();
+
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            System.setProperty("pegasus.home.bindir", directory.toString());
+            System.setOut(new PrintStream(output));
+
+            FindExecutable.main(new String[] {"main-tool", missing});
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String text = output.toString();
+        assertThat(text.contains("main-tool -> "), is(true));
+        assertThat(text.contains(missing + " not found"), is(true));
+    }
 }
