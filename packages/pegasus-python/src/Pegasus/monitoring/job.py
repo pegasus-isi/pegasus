@@ -492,6 +492,7 @@ class Job:
 
         # set values from pegasus classads that we need
         self._extract_job_info_from_pegasus_classads(submit_file)
+        my_site = self._site_name
 
         # All done!
         return my_result, my_site
