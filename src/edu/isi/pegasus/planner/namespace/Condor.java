@@ -905,6 +905,13 @@ public class Condor extends Namespace {
                     }
                 } else if (key.equalsIgnoreCase(Condor.REQUEST_DISK_KEY)) {
                     // GH-2178 convert to KB if possible taking into account the units passed
+                    char lastChar = value.charAt(value.length() - 1);
+                    if (Character.isDigit(lastChar)) {
+                        // explicitly add the unit to KB as
+                        // UnitConverter conversion base is MB
+                        value += " KB";
+                    }
+
                     long converted = UnitConverter.toKB(value);
                     if (converted >= 0) {
                         value = Long.toString(converted);
