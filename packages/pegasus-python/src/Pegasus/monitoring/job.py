@@ -1074,6 +1074,13 @@ class Job:
 
         return kwargs
 
+    def get_pegasus_classads(self):
+        """
+        Returns pegasus classads retrieved by parsing the submit file.
+        :return:
+        """
+        return self._pegasus_classads
+
     def _add_cpu_attributes(self, invocation_record):
 
         # PM-1398 pass cpu info
