@@ -7,7 +7,11 @@ import sys
 import uuid
 from optparse import OptionParser
 
+from PythonSed import Sed
+
+from Pegasus import expressions
 from Pegasus.cluster import RecordParser
+from Pegasus.monitoring.job import Job
 from Pegasus.monitoring.metadata import Metadata
 from Pegasus.tools import kickstart_parser
 
@@ -20,6 +24,13 @@ log = {
     "retry": None,
 }
 tmp_log_files = []
+
+DEFAULT_EXPRESSIONS = {
+    "pegasus_cores": "1 if job_retry == 0 else job_retry + pegasus_cores"
+}
+
+# on usage format the string to add the pegasus classad key and the value
+sed_pattern_update_pegasus_classads = "s/^\\s*\\+({})\\s*=\\s*(\\S+)/\\+\\1 = {}/g"
 
 
 class JobFailed(Exception):
@@ -259,6 +270,19 @@ def get_errfile(outfile):
     return errfile
 
 
+def get_sub_file(outfile):
+    """
+    Get the job name and the submit  file name given the stdout file name
+    :param outfile:
+    :return: the job name, and the name of the submit file
+    """
+    i = outfile.rfind(".out")
+    name = outfile[0:i]
+
+    subfile = name + ".sub"
+    return name, subfile
+
+
 def append_to_wf_metadata_log(files_metadata, logfile):
     """
     Writes out file metadata to a logfile in the File RC format
@@ -404,6 +428,65 @@ def _write_logs(log_filename):
         print(json.dumps(log))
 
 
+def update_job_submit_file(retry, outfile):
+    # figure out the job submit file from the .out file
+    jobname, sub_file = get_sub_file(outfile)
+    if not os.path.exists(sub_file):
+        raise JobFailed("Could not find  job submit file %s" % sub_file)
+
+    j = Job(
+        name=jobname,
+        job_submit_dir=os.path.dirname(sub_file),
+        wf_uuid=None,
+        job_submit_seq=None,
+    )
+
+    epoch = datetime.datetime.now().timestamp()
+    result, site = j.parse_sub_file(int(epoch), submit_file=sub_file)
+
+    # build the symbol table once and converting
+    # integer values to be actual int
+    symbols = {}
+    for key in j.get_pegasus_classads():
+        value = j.get_pegasus_classads().get(key)
+        try:
+            value = int(value)
+        except:
+            pass
+        symbols[key] = value
+    symbols["job_retry"] = value
+
+    for key in j.get_pegasus_classads():
+        value = j.get_pegasus_classads().get(key)
+        # print("key {} -> {}".format(key,value))
+
+        try:
+            value = int(value)
+        except:
+            pass
+
+        if isinstance(value, int):
+            expression = DEFAULT_EXPRESSIONS.get(key)
+            if expression:
+                # only apply expression for numeric keys
+                print(f"For key {key} apply expression {expression} ")
+                # newvalue = expressions.mandatory_parse(DEFAULT_EXPRESSIONS["pegasus_cpus"], symbols={"job_retry": retry,
+                #                                                                                     "pegasus_cpus": value})
+                newvalue = expressions.mandatory_parse(expression, symbols=symbols)
+                print(f"New value for key {key} is {newvalue}")
+
+                # actually update the submit file with the new value
+                # pattern = 's/^\s*\+({})\s*=\s*(\S+)/\+\\1 = {}/g'.format(key, newvalue)
+                pattern = sed_pattern_update_pegasus_classads.format(key, newvalue)
+                print(pattern)
+
+                sed = Sed(in_place=".bak", regexp_extended=True)
+                # sed.load_string('s/pegasus_cores/pegasus_CORES/g')
+                sed.load_string(pattern)
+
+                sed.apply(sub_file)
+
+
 def main(args):
     usage = "Usage: %prog [options] job.out"
     parser = OptionParser(usage)
@@ -520,6 +603,11 @@ def main(args):
         _log_error(str(jf))
         log["exitcode"] = 1
         _write_logs(options.log_filename)
+
+        # job failed lets see if we need to change any
+        # pegasus resoruce requirement classads
+        update_job_submit_file(retry=1, outfile=outfile)
+
         sys.exit(1)
 
 
