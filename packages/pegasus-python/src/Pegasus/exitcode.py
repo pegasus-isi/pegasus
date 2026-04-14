@@ -415,7 +415,7 @@ def update_job_submit_file(retry, outfile):
 
     # build the symbol table once and converting
     # integer values to be actual int
-    symbols = _get_symbol_table(j, outfile)
+    symbols = _get_symbol_table(j, retry, outfile)
 
     # update pegasus classads
     for key in j.get_pegasus_classads():
@@ -470,11 +470,12 @@ def _apply_expression(sub_file, expression, symbols, key, value):
     sed.apply(sub_file)
 
 
-def _get_symbol_table(j, outfile):
+def _get_symbol_table(j, retry, outfile):
     """
     Builds the symbol table that we need to evaluate the expression
     against for the job
     :param j: the Job object created after parsing the submit file.
+    :param retry: the retry value of the job
     :param outfile: the job output file.
     :return: a dict containing the symbols.
     """
@@ -486,7 +487,7 @@ def _get_symbol_table(j, outfile):
         except:
             pass
         symbols[key] = value
-    symbols["job_retry"] = value
+    symbols["job_retry"] = retry
 
     # now try and get information from the job invocation
     # record and make it available
