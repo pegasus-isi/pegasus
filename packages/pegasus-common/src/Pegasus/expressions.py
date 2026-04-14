@@ -85,7 +85,6 @@ def mandatory_parse(clause, symbols=None):
         raise InvalidMandatoryClauseError("Invalid mandatory clause: %s" % e)
 
 
-
 """
 # "karan" if queue == "test" else "vahi"
 queue = "test"

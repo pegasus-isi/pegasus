@@ -391,6 +391,7 @@ def parse_metadata_from_kickstart(outfile):
 
     return files
 
+
 def update_job_submit_file(retry, outfile):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
@@ -409,15 +410,7 @@ def update_job_submit_file(retry, outfile):
 
     # build the symbol table once and converting
     # integer values to be actual int
-    symbols = {}
-    for key in j.get_pegasus_classads():
-        value = j.get_pegasus_classads().get(key)
-        try:
-            value = int(value)
-        except:
-            pass
-        symbols[key] = value
-    symbols["job_retry"] = value
+    symbols = _get_symbol_table(j, outfile)
 
     for key in j.get_pegasus_classads():
         value = j.get_pegasus_classads().get(key)
@@ -448,6 +441,47 @@ def update_job_submit_file(retry, outfile):
                 sed.load_string(pattern)
 
                 sed.apply(sub_file)
+
+
+def _get_symbol_table(j, outfile):
+    """
+    Builds the symbol table that we need to evaluate the expression
+    against for the job
+    :param j: the Job object created after parsing the submit file.
+    :param outfile: the job output file.
+    :return: a dict containing the symbols.
+    """
+    symbols = {}
+    for key in j.get_pegasus_classads():
+        value = j.get_pegasus_classads().get(key)
+        try:
+            value = int(value)
+        except:
+            pass
+        symbols[key] = value
+    symbols["job_retry"] = value
+
+    # now try and get information from the job invocation
+    # record and make it available
+    try:
+        parser = kickstart_parser.Parser(outfile)
+        kickstart_output = parser.parse_stampede()
+
+        # the invocation event that we send as part
+        # of the composite event is what we make
+        # available as additional attributes in symbold table
+        j.extract_job_info(kickstart_output)
+
+        for invocation in j._invocation_events:
+            # To DO: in case of clustered jobs there are multiple
+            # invocations. we need to take max values or something??
+            for key in invocation:
+                symbols[key] = invocation[key]
+    except:
+        pass
+
+    print(symbols)
+    return symbols
 
 
 def _log_info(info_msg):
@@ -484,8 +518,6 @@ def _write_logs(log_filename):
 
     else:
         print(json.dumps(log))
-
-
 
 
 def main(args):
