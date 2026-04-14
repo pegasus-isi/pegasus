@@ -26,11 +26,16 @@ log = {
 tmp_log_files = []
 
 DEFAULT_EXPRESSIONS = {
-    "pegasus_cores": "1 if job_retry == 0 else job_retry + pegasus_cores"
+    "pegasus_cores": "1 if job_retry == 0 else job_retry + pegasus_cores",
+    "batch_queue": '"long" if duration > 0 else "debug"',
 }
 
-# on usage format the string to add the pegasus classad key and the value
-sed_pattern_update_pegasus_classads = "s/^\\s*\\+({})\\s*=\\s*(\\S+)/\\+\\1 = {}/g"
+# on usage: format the string to add the pegasus classad key and the value
+# pattern also takes care of batch_ keys (without a +) that are
+# generated when using BLAHP
+# e.g. s/^\s*(\+?)(pegasus_cores)\s*=\s*(\S+)/\1\2 = 3/g
+# \1 matches to + ; \2 to the key ; \3 the new value to set to
+sed_pattern_update_pegasus_classads = "s/^\\s*(\\+?)({})\\s*=\\s*(\\S+)/\\1\\2 = {}/g"
 
 
 class JobFailed(Exception):
@@ -412,10 +417,10 @@ def update_job_submit_file(retry, outfile):
     # integer values to be actual int
     symbols = _get_symbol_table(j, outfile)
 
+    # update pegasus classads
     for key in j.get_pegasus_classads():
         value = j.get_pegasus_classads().get(key)
         # print("key {} -> {}".format(key,value))
-
         try:
             value = int(value)
         except:
@@ -425,21 +430,44 @@ def update_job_submit_file(retry, outfile):
             # only apply expression for numeric keys
             expression = DEFAULT_EXPRESSIONS.get(key)
             if expression:
-                print(f"For key {key} apply expression {expression} ")
-                newvalue = expressions.mandatory_parse(expression, symbols=symbols)
-                print(f"New value for key {key} is {newvalue}")
+                _apply_expression(sub_file, expression, symbols, key, value)
 
-                # actually update the submit file with the new value
-                # pattern = 's/^\s*\+({})\s*=\s*(\S+)/\+\\1 = {}/g'.format(key, newvalue)
-                pattern = sed_pattern_update_pegasus_classads.format(key, newvalue)
-                print(pattern)
+    # update batch keys
+    for key in j.get_batch_classads():
+        value = j.get_batch_classads().get(key)
+        expression = DEFAULT_EXPRESSIONS.get(key)
+        if expression:
+            _apply_expression(sub_file, expression, symbols, key, value)
 
-                sed = Sed(in_place=".bak", regexp_extended=True)
-                # sed.load_string('s/pegasus_cores/pegasus_CORES/g')
-                sed.load_string(pattern)
 
-                _log_info(f"Updating submit file {key} -> {newvalue}")
-                sed.apply(sub_file)
+def _apply_expression(sub_file, expression, symbols, key, value):
+    """
+    Applies an expression to the key and values, and applies the result
+    to the submit file by updating the value of the key to the new value
+    in the submit file
+
+    :param sub_file: the submit file
+    :param expression: the expression to apply
+    :param symbols: the variables made available for expression evaulation
+    :param key: the key that is being updated
+    :param value: current value of the key from the submit file.
+    :return:
+    """
+    print(f"For key {key} apply expression {expression} ")
+    newvalue = expressions.mandatory_parse(expression, symbols=symbols)
+    print(f"New value for key {key} is {newvalue}")
+
+    # actually update the submit file with the new value
+    # pattern = 's/^\s*\+({})\s*=\s*(\S+)/\+\\1 = {}/g'.format(key, newvalue)
+    pattern = sed_pattern_update_pegasus_classads.format(key, newvalue)
+    print(pattern)
+
+    sed = Sed(in_place=".bak", regexp_extended=True)
+    # sed.load_string('s/pegasus_cores/pegasus_CORES/g')
+    sed.load_string(pattern)
+
+    _log_info(f"Updating submit file {key},{value} -> {newvalue}")
+    sed.apply(sub_file)
 
 
 def _get_symbol_table(j, outfile):
@@ -479,7 +507,7 @@ def _get_symbol_table(j, outfile):
     except:
         pass
 
-    # print(symbols)
+    print(symbols)
     return symbols
 
 
