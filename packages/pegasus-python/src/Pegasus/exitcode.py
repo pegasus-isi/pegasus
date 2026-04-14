@@ -22,6 +22,7 @@ log = {
     "exitcode": None,
     "app_exitcode": None,
     "retry": None,
+    "job_retry": None,  # passed by dagman
 }
 tmp_log_files = []
 
@@ -397,11 +398,11 @@ def parse_metadata_from_kickstart(outfile):
     return files
 
 
-def update_job_submit_file(retry, outfile):
+def update_job_submit_file(outfile, retry):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
     if not os.path.exists(sub_file):
-        raise JobFailed("Could not find  job submit file %s" % sub_file)
+        raise JobFailed("Could not find job submit file %s" % sub_file)
 
     j = Job(
         name=jobname,
@@ -563,6 +564,25 @@ def main(args):
         "DAG using the $RETURN variable.",
     )
     parser.add_option(
+        "-R",
+        "--retry",
+        action="store",
+        type="int",
+        default=0,
+        dest="job_retry",
+        help="The job retry number reported by DAGMan. This can be "
+        "specified in a DAG using the $RETRY variable.",
+    )
+    parser.add_option(
+        "-U",
+        "--update-submit-file",
+        action="store_true",
+        default=False,
+        dest="update_submit_file",
+        help="In case of job failure, attempt to update resource requirement "
+        "profiles in the submit file by applying expressions provided.",
+    )
+    parser.add_option(
         "-n",
         "--no-rename",
         action="store_false",
@@ -647,6 +667,7 @@ def main(args):
     try:
         log["name"] = outfile
         log["timestamp"] = datetime.datetime.now().isoformat()
+        log["job_retry"] = options.job_retry
         exitcode(
             outfile,
             check_invocations=options.check_invocations,
@@ -667,7 +688,8 @@ def main(args):
         try:
             # job failed lets see if we need to change any
             # pegasus resoruce requirement classads
-            update_job_submit_file(retry=1, outfile=outfile)
+            if options.update_submit_file:
+                update_job_submit_file(outfile, retry=options.job_retry)
         except:
             _log_error(f"Unable to modify job submit file corresponding to {outfile}")
 
