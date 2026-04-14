@@ -391,43 +391,6 @@ def parse_metadata_from_kickstart(outfile):
 
     return files
 
-
-def _log_info(info_msg):
-    if len(tmp_log_files) > 0:
-        tmp_log_files[0].write(info_msg + "\n")
-    else:
-        print(info_msg)
-
-
-def _log_error(err_msg):
-    if len(tmp_log_files) > 0:
-        tmp_log_files[1].write(err_msg + "\n")
-    else:
-        print(err_msg)
-
-
-def _write_logs(log_filename):
-    if log_filename:
-        # reading std_out and std_err files
-        std_out = tmp_log_files[0]
-        std_err = tmp_log_files[1]
-        std_out.close()
-        std_err.close()
-
-        with open(std_out.name) as sout:
-            log["std_out"] = sout.read()
-        with open(std_err.name) as serr:
-            log["std_err"] = serr.read()
-
-        # writing to log file (concurrency safe)
-        with open(log_filename, "a", encoding="utf8") as outfile:
-            res = json.dumps(log, ensure_ascii=False)
-            outfile.write(res + "\n")
-
-    else:
-        print(json.dumps(log))
-
-
 def update_job_submit_file(retry, outfile):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
@@ -485,6 +448,44 @@ def update_job_submit_file(retry, outfile):
                 sed.load_string(pattern)
 
                 sed.apply(sub_file)
+
+
+def _log_info(info_msg):
+    if len(tmp_log_files) > 0:
+        tmp_log_files[0].write(info_msg + "\n")
+    else:
+        print(info_msg)
+
+
+def _log_error(err_msg):
+    if len(tmp_log_files) > 0:
+        tmp_log_files[1].write(err_msg + "\n")
+    else:
+        print(err_msg)
+
+
+def _write_logs(log_filename):
+    if log_filename:
+        # reading std_out and std_err files
+        std_out = tmp_log_files[0]
+        std_err = tmp_log_files[1]
+        std_out.close()
+        std_err.close()
+
+        with open(std_out.name) as sout:
+            log["std_out"] = sout.read()
+        with open(std_err.name) as serr:
+            log["std_err"] = serr.read()
+
+        # writing to log file (concurrency safe)
+        with open(log_filename, "a", encoding="utf8") as outfile:
+            res = json.dumps(log, ensure_ascii=False)
+            outfile.write(res + "\n")
+
+    else:
+        print(json.dumps(log))
+
+
 
 
 def main(args):
