@@ -422,12 +422,10 @@ def update_job_submit_file(retry, outfile):
             pass
 
         if isinstance(value, int):
+            # only apply expression for numeric keys
             expression = DEFAULT_EXPRESSIONS.get(key)
             if expression:
-                # only apply expression for numeric keys
                 print(f"For key {key} apply expression {expression} ")
-                # newvalue = expressions.mandatory_parse(DEFAULT_EXPRESSIONS["pegasus_cpus"], symbols={"job_retry": retry,
-                #                                                                                     "pegasus_cpus": value})
                 newvalue = expressions.mandatory_parse(expression, symbols=symbols)
                 print(f"New value for key {key} is {newvalue}")
 
@@ -440,6 +438,7 @@ def update_job_submit_file(retry, outfile):
                 # sed.load_string('s/pegasus_cores/pegasus_CORES/g')
                 sed.load_string(pattern)
 
+                _log_info(f"Updating submit file {key} -> {newvalue}")
                 sed.apply(sub_file)
 
 
@@ -480,7 +479,7 @@ def _get_symbol_table(j, outfile):
     except:
         pass
 
-    print(symbols)
+    # print(symbols)
     return symbols
 
 
@@ -635,12 +634,15 @@ def main(args):
     except JobFailed as jf:
         _log_error(str(jf))
         log["exitcode"] = 1
+
+        try:
+            # job failed lets see if we need to change any
+            # pegasus resoruce requirement classads
+            update_job_submit_file(retry=1, outfile=outfile)
+        except:
+            _log_error(f"Unable to modify job submit file corresponding to {outfile}")
+
         _write_logs(options.log_filename)
-
-        # job failed lets see if we need to change any
-        # pegasus resoruce requirement classads
-        update_job_submit_file(retry=1, outfile=outfile)
-
         sys.exit(1)
 
 
