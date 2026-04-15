@@ -470,7 +470,7 @@ def _get_sed_pattern(expression, symbols, key, value):
     :param value: current value of the key from the submit file.
     :return:
     """
-    #_log_info(f"For key {key} apply expression {expression} ")
+    _log_info(f"Apply {key} = ({expression}) ")
     newvalue = expressions.mandatory_parse(expression, symbols=symbols)
     _log_info(f"Creating sed pattern {key},{value} -> {newvalue}")
 
