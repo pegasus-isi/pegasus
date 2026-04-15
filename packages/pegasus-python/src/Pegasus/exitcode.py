@@ -450,7 +450,7 @@ def update_job_submit_file(outfile, retry):
     # apply the sed patterns in one go
     if sed_patterns:
         # print (sed_patterns)
-        _log_info(f"Updating submit file with patterns {sed_patterns}")
+        _log_info(f'Updating submit file with patterns {sed_patterns}')
         try:
             sed.apply(sub_file)
         except SedException as e:
@@ -470,7 +470,7 @@ def _get_sed_pattern(expression, symbols, key, value):
     :param value: current value of the key from the submit file.
     :return:
     """
-    _log_info(f"For key {key} apply expression {expression} ")
+    #_log_info(f"For key {key} apply expression {expression} ")
     newvalue = expressions.mandatory_parse(expression, symbols=symbols)
     _log_info(f"Creating sed pattern {key},{value} -> {newvalue}")
 
@@ -524,14 +524,14 @@ def _get_symbol_table(j, retry, outfile):
 
 def _log_info(info_msg):
     if len(tmp_log_files) > 0:
-        tmp_log_files[0].write(info_msg + "\n")
+        tmp_log_files[0].write(info_msg + "\n ")
     else:
         print(info_msg)
 
 
 def _log_error(err_msg):
     if len(tmp_log_files) > 0:
-        tmp_log_files[1].write(err_msg + "\n")
+        tmp_log_files[1].write(err_msg + "\n ")
     else:
         print(err_msg)
 
