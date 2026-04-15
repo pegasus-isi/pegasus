@@ -696,8 +696,8 @@ pegasus_lite_unexpected_exit()
 
     
     pegasus_lite_end_time=$(date +%s)
-    duration=$((pegasus_lite_end_time - pegasus_lite_start_time))
-    echo "PegasusLite: duration $duration" 1>&2
+    runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
+    echo "PegasusLite: runtime $runtime" 1>&2
 
     echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
@@ -733,8 +733,8 @@ pegasus_lite_final_exit()
     fi
 
     pegasus_lite_end_time=$(date +%s)
-    duration=$((pegasus_lite_end_time - pegasus_lite_start_time))
-    echo "PegasusLite: duration $duration" 1>&2
+    runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
+    echo "PegasusLite: runtime $runtime" 1>&2
 
     echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
