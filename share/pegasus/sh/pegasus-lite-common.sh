@@ -695,10 +695,11 @@ pegasus_lite_unexpected_exit()
     fi
 
     
-    echo "PegasusLite: exitcode $rc" 1>&2
     pegasus_lite_end_time=$(date +%s)
     duration=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: duration $duration" 1>&2
+
+    echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
 }
 
@@ -731,10 +732,11 @@ pegasus_lite_final_exit()
         pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
     fi
 
-    echo "PegasusLite: exitcode $rc" 1>&2
     pegasus_lite_end_time=$(date +%s)
     duration=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: duration $duration" 1>&2
+
+    echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
 }
 
