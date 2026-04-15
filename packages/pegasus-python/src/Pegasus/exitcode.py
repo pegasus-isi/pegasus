@@ -7,7 +7,11 @@ import sys
 import uuid
 from optparse import OptionParser
 
-from PythonSed import Sed, SedException
+SUBMIT_FILE_UPDATE_ENABLED = True
+try:
+    from PythonSed import Sed, SedException
+except ImportError:
+    SUBMIT_FILE_UPDATE_ENABLED = False
 
 from Pegasus import expressions
 from Pegasus.cluster import RecordParser
@@ -713,9 +717,16 @@ def main(args):
             # job failed lets see if we need to change any
             # pegasus resoruce requirement classads
             if options.update_submit_file:
-                update_job_submit_file(outfile, retry=options.job_retry)
-        except:
-            _log_error(f"Unable to modify job submit file corresponding to {outfile}")
+                if SUBMIT_FILE_UPDATE_ENABLED:
+                    update_job_submit_file(outfile, retry=options.job_retry)
+                else:
+                    _log_error(
+                        "submit file was not updated as pythonsed package is not installed"
+                    )
+        except Exception as e:
+            _log_error(
+                f"Unable to modify job submit file corresponding to {outfile} because of exception {e}"
+            )
 
         _write_logs(options.log_filename)
         sys.exit(1)
