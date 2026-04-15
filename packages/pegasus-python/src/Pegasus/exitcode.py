@@ -7,7 +7,7 @@ import sys
 import uuid
 from optparse import OptionParser
 
-from PythonSed import Sed
+from PythonSed import Sed, SedException
 
 from Pegasus import expressions
 from Pegasus.cluster import RecordParser
@@ -418,7 +418,9 @@ def update_job_submit_file(outfile, retry):
     # integer values to be actual int
     symbols = _get_symbol_table(j, retry, outfile)
 
-    # update pegasus classads
+    sed = Sed(in_place=".bak", regexp_extended=True)
+    sed_patterns = []
+    # create expressions for pegasus classads
     for key in j.get_pegasus_classads():
         value = j.get_pegasus_classads().get(key)
         # print("key {} -> {}".format(key,value))
@@ -431,44 +433,51 @@ def update_job_submit_file(outfile, retry):
             # only apply expression for numeric keys
             expression = DEFAULT_EXPRESSIONS.get(key)
             if expression:
-                _apply_expression(sub_file, expression, symbols, key, value)
+                sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
+                # load what we inserted
+                sed.load_string(sed_patterns[-1])
 
-    # update batch keys
+    # create expressions for batch keys
     for key in j.get_batch_classads():
         value = j.get_batch_classads().get(key)
         expression = DEFAULT_EXPRESSIONS.get(key)
         if expression:
-            _apply_expression(sub_file, expression, symbols, key, value)
+            sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
+            # load what we inserted
+            sed.load_string(sed_patterns[-1])
+            # _apply_expression(sub_file, expression, symbols, key, value)
+
+    # apply the sed patterns in one go
+    if sed_patterns:
+        # print (sed_patterns)
+        _log_info(f"Updating submit file with patterns {sed_patterns}")
+        try:
+            sed.apply(sub_file)
+        except SedException as e:
+            _log_error(e.message)
+        except:
+            raise
 
 
-def _apply_expression(sub_file, expression, symbols, key, value):
+def _get_sed_pattern(expression, symbols, key, value):
     """
-    Applies an expression to the key and values, and applies the result
-    to the submit file by updating the value of the key to the new value
-    in the submit file
+    Returns the sed pattern corresponding to evaluating the
+    expression.
 
-    :param sub_file: the submit file
     :param expression: the expression to apply
     :param symbols: the variables made available for expression evaulation
     :param key: the key that is being updated
     :param value: current value of the key from the submit file.
     :return:
     """
-    print(f"For key {key} apply expression {expression} ")
+    _log_info(f"For key {key} apply expression {expression} ")
     newvalue = expressions.mandatory_parse(expression, symbols=symbols)
-    print(f"New value for key {key} is {newvalue}")
+    _log_info(f"Creating sed pattern {key},{value} -> {newvalue}")
 
     # actually update the submit file with the new value
     # pattern = 's/^\s*\+({})\s*=\s*(\S+)/\+\\1 = {}/g'.format(key, newvalue)
     pattern = sed_pattern_update_pegasus_classads.format(key, newvalue)
-    print(pattern)
-
-    sed = Sed(in_place=".bak", regexp_extended=True)
-    # sed.load_string('s/pegasus_cores/pegasus_CORES/g')
-    sed.load_string(pattern)
-
-    _log_info(f"Updating submit file {key},{value} -> {newvalue}")
-    sed.apply(sub_file)
+    return pattern
 
 
 def _get_symbol_table(j, retry, outfile):
