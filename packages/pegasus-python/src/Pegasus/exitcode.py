@@ -35,6 +35,8 @@ DEFAULT_EXPRESSIONS = {
     "batch_queue": '"long" if duration > 0 else "debug"',
 }
 
+re_parse_pegasuslite_runtime = re.compile(r"^PegasusLite: runtime (\d+)$", re.MULTILINE)
+
 # on usage: format the string to add the pegasus classad key and the value
 # pattern also takes care of batch_ keys (without a +) that are
 # generated when using BLAHP
@@ -402,18 +404,6 @@ def parse_metadata_from_kickstart(outfile):
     return files
 
 
-def _get_submit_file_backup_suffix():
-    """
-    Return the suffix to use for backing up the submit file
-    :return:
-    """
-
-    # log["retry"] is populated if rotation of stdout/stderr is enabled
-    global_retry = log["retry"] if log["retry"] else 0
-    suffix = ".%03d" % global_retry
-    return suffix
-
-
 def update_job_submit_file(outfile, retry):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
@@ -537,8 +527,61 @@ def _get_symbol_table(j, retry, outfile):
     except:
         pass
 
+    # determine the duration of the whole job. we get this
+    # in the .err file if PegasusLite is used
+    error_file = get_errfile(outfile)
+    job_runtime = _get_job_runtime(error_file)
+    if job_runtime is None:
+        # check we have something populated from the invocation record
+        if "duration" in symbols:
+            job_runtime = symbols["duration"]
+
+    if job_runtime:
+        symbols["job_runtime"] = job_runtime
+
     print(symbols)
     return symbols
+
+
+def _get_submit_file_backup_suffix():
+    """
+    Return the suffix to use for backing up the submit file
+    :return:
+    """
+
+    # log["retry"] is populated if rotation of stdout/stderr is enabled
+    global_retry = log["retry"] if log["retry"] else 0
+    suffix = ".%03d" % global_retry
+    return suffix
+
+
+def _get_job_runtime(error_file):
+    """
+    Retrieve the runtime logged for the job in the .err
+    file by PegasusLite
+    :param error_file:
+    :return: the duration logged if a PegasusLite job, else None
+    """
+    runtime = None
+    if not os.path.isfile(error_file):
+        return runtime
+
+    # Read the file first
+    f = open(error_file)
+    txt = f.read()
+    f.close()
+
+    # try and determine the exitcode from .err file
+    runtime_match = re_parse_pegasuslite_runtime.search(txt)
+    if runtime_match:
+        # a match yes it is a PegasusLite job . gleam the exitcode
+        runtime = runtime_match.group(1)
+        try:
+            runtime = int(runtime)
+        except:
+            _log_error(f"Unable to convert {runtime} to int")
+
+    return runtime
 
 
 def _log_info(info_msg):
