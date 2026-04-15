@@ -398,6 +398,18 @@ def parse_metadata_from_kickstart(outfile):
     return files
 
 
+def _get_submit_file_backup_suffix():
+    """
+    Return the suffix to use for backing up the submit file
+    :return:
+    """
+
+    # log["retry"] is populated if rotation of stdout/stderr is enabled
+    global_retry = log["retry"] if log["retry"] else 0
+    suffix = ".%03d" % global_retry
+    return suffix
+
+
 def update_job_submit_file(outfile, retry):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
@@ -418,7 +430,10 @@ def update_job_submit_file(outfile, retry):
     # integer values to be actual int
     symbols = _get_symbol_table(j, retry, outfile)
 
-    sed = Sed(in_place=".bak", regexp_extended=True)
+    # keep suffix same
+    suffix = _get_submit_file_backup_suffix()
+
+    sed = Sed(in_place=suffix, regexp_extended=True)
     sed_patterns = []
     # create expressions for pegasus classads
     for key in j.get_pegasus_classads():
@@ -450,7 +465,7 @@ def update_job_submit_file(outfile, retry):
     # apply the sed patterns in one go
     if sed_patterns:
         # print (sed_patterns)
-        _log_info(f'Updating submit file with patterns {sed_patterns}')
+        _log_info(f"Updating submit file with patterns {sed_patterns}")
         try:
             sed.apply(sub_file)
         except SedException as e:
