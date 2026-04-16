@@ -416,6 +416,9 @@ public class Pegasus extends Namespace {
     /** profile key to identify the relative submit directory where submit files are written to. */
     public static final String RELATIVE_SUBMIT_DIR_KEY = "relative.submit.dir";
 
+    /** The suffix for the expression profile keys */
+    public static final String EXPRESSION_PROFILE_KEYS_SUFFIX = ".expr";
+
     // credential related constant keys
     private static final String S3CFG_FILE_VARIABLE = S3CFG.S3CFG_FILE_VARIABLE.toLowerCase();
     private static final String PEGASUS_CREDENTIAL_FILE =
@@ -527,6 +530,12 @@ public class Pegasus extends Namespace {
 
         if (value == null || value.length() < 1) {
             res = EMPTY_KEY;
+            return res;
+        }
+
+        // GH-2183 a short cut for the expression keys we added
+        if (key.endsWith(Pegasus.EXPRESSION_PROFILE_KEYS_SUFFIX)) {
+            res = VALID_KEY;
             return res;
         }
 

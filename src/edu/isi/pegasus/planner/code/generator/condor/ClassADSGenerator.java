@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -227,6 +228,21 @@ public class ClassADSGenerator {
      */
     public static void generate(PrintWriter writer, ADag dag, Job job, String appName) {
 
+        // GH-2183 lets generate the expr profiles as variables first
+        Pegasus pegasusProfiles = job.vdsNS;
+        for (Iterator it = pegasusProfiles.getProfileKeyIterator(); it.hasNext(); ) {
+            String key = (String) it.next();
+            if (key.endsWith(Pegasus.EXPRESSION_PROFILE_KEYS_SUFFIX)) {
+                // replace . in the keys with _ and pegasus_ prefix
+                // so cores_expr becomes pegasus_cores_expr
+                StringBuilder newKey = new StringBuilder();
+                newKey.append("pegasus_").append(key.replace(".", "_"));
+                writer.println(
+                        generateSubmitFileVariable(
+                                newKey.toString(), pegasusProfiles.getStringValue(key)));
+            }
+        }
+
         // get all the workflow classads
         generate(writer, dag, appName);
 
@@ -335,6 +351,22 @@ public class ClassADSGenerator {
     }
 
     /**
+     * Generates a submit file variable given the name and the value.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the classad variable.
+     * @return the classad attriubute.
+     */
+    private static String generateSubmitFileVariable(String name, String value) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(" = ");
+        sb.append("\"").append(value).append("\"");
+
+        return sb.toString();
+    }
+
+    /**
      * Generates a classad attribute given the name and the value.
      *
      * @param name the attribute name.
@@ -354,7 +386,7 @@ public class ClassADSGenerator {
      * @return the classad attriubute.
      */
     private static String generateClassAdAttribute(String name, int value) {
-        StringBuffer sb = new StringBuffer(10);
+        StringBuilder sb = new StringBuilder(10);
 
         sb.append("+");
         sb.append(name).append(" = ");
