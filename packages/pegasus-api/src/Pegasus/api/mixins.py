@@ -474,19 +474,27 @@ class ProfileMixin:
         checkpoint_time="checkpoint.time",
         max_walltime="maxwalltime",
         glite_arguments="glite.arguments",
+        glite_arguments_expr="glite.arguments.expr",
         auxillary_local="auxillary.local",
         condor_arguments_quote="condor.arguments.quote",
         runtime="runtime",
+        runtime_expr="runtime.expr",
         clusters_max_runtime="clusters.maxruntime",
         cores="cores",
+        cores_expr="cores.expr",
         gpus="gpus",
+        gpus_expr="gpus.expr",
         nodes="nodes",
         ppn="ppn",
         memory=("memory", to_mb),
+        memory_expr="memory.expr",
         diskspace=("diskspace", to_mb),
+        diskspace_expr="diskspace.expr",
         data_configuration="data.configuration",
         queue="queue",
+        queue_expr="queue.expr",
         project="project",
+        project_expr="project.expr",
         boto_config="BOTO_CONFIG",
         container_arguments="container.arguments",
         container_launcher="container.launcher",
@@ -528,19 +536,27 @@ class ProfileMixin:
         checkpoint_time: int = None,
         max_walltime: int = None,
         glite_arguments: str = None,
+        glite_arguments_expr: str = None,
         auxillary_local: bool = None,
         condor_arguments_quote: bool = None,
         runtime: str = None,
+        runtime_expr: str = None,
         clusters_max_runtime: int = None,
         cores: int = None,
+        cores_expr: str = None,
         gpus: int = None,
+        gpus_expr: str = None,
         nodes: int = None,
         ppn: int = None,
         memory: str = None,
+        memory_expr: str = None,
         diskspace: str = None,
+        diskspace_expr: str = None,
         data_configuration=None,
         queue: str = None,
+        queue_expr: str = None,
         project: str = None,
+        project_expr: str = None,
         boto_config: str = None,
         container_arguments: str = None,
         container_launcher: str = None,
@@ -610,32 +626,48 @@ class ProfileMixin:
         :type max_walltime: int, optional
         :param glite_arguments: specifies the extra arguments that must appear in the local PBS generated script for a job, when running workflows on a local cluster with submissions through Glite. This is useful when you want to pass through special options to underlying LRMS such as PBS e.g. you can set value -l walltime=01:23:45 -l nodes=2 to specify your job's resource requirements, defaults to None
         :type glite_arguments: str, optional
+        :param glite_arguments_expr: the python expression to apply to compute the new value of glite_arguments when a job fails, defaults to None
+        :type glite_arguments_expr: str, optional
         :param auxillary_local: indicates whether auxillary jobs associated with a compute site X, can be run on local site. This CAN ONLY be specified as a profile in the site catalog and should be set when the compute site filesystem is accessible locally on the submit host, defaults to None
         :type auxillary_local: bool, optional
         :param condor_arguments_quote: indicates whether condor quoting rules should be applied for writing out the arguments key in the condor submit file. By default it is true unless the job is schedule to a glite style site. The value is automatically set to false for glite style sites, as condor quoting is broken in batch_gahp, defaults to None
         :type condor_arguments_quote: bool, optional
         :param runtime: Specifies the expected runtime of a job in seconds, defaults to None
         :type runtime: str, optional
+        :param runtime_expr: the python expression to apply to compute the new value of runtime when a job fails, defaults to None
+        :type runtime_expr: str, optional
         :param clusters_max_runtime: Specifies the maximum runtime of a job, defaults to None
         :type clusters_max_runtime: int, optional
         :param cores: The total number of cores required for a job. This is also used for accounting purposes in the database while generating statistics. It corresponds to the multiplier_factor in the job_instance table, defaults to None
         :type cores: int, optional
+        :param cores_expr: the python expression to apply to compute the new value of cores when a job fails, defaults to None
+        :type cores_expr: str, optional
         :param gpus: The total number of gpus required for a job, defaults to None
         :type gpus: int, optional
+        :param gpus_expr: the python expression to apply to compute the new value of gpus when a job fails, defaults to None
+        :type gpus_expr: str, optional
         :param nodes: Indicates the number of nodes a job requires, defaults to None
         :type nodes: int, optional
         :param ppn: Indicates the number of processors per node. This profile is best set in the Site Catalog and usually set when running workflows with MPI jobs, defaults to None
         :type ppn: int, optional
         :param memory: Indicates the maximum memory a job requires. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type memory: str, optional
+        :param memory_expr: the python expression to apply to compute the new value of memory when a job fails, defaults to None
+        :type memory_expr: str, optional
         :param diskspace: Indicates the maximum diskspace a job requires in MB. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type diskspace: int, optional
+        :param diskspace_expr: the python expression to apply to compute the new value of diskspace when a job fails, defaults to None
+        :type diskspace_expr: str, optional
         :param data_configuration: Indicates the data configuration setup. Can be one of "sharedfs", "condorio", or "nonsharedfs", defaults to None
         :type data_configuration: str, optional
         :param queue: This specifies the queue for the job. (e.g. :code:`"normal"`)
         :type queue: str, optional
+        :param queue_expr: the python expression to apply to compute the new value of queue when a job fails, defaults to None
+        :type queue_expr: str, optional
         :param project: Causes the job time to be charged to or associated with a particular project/account. This is not used for SGE.
         :type project: str, optional
+        :param project_expr: the python expression to apply to compute the new value of project when a job fails, defaults to None
+        :type project_expr: str, optional
         :param boto_config: Specified which :code:`.boto` file to use (e.g. :code:`"/home/myuser/.boto"`)
         :type boto_config: str, optional
         :param container_arguments: additional cli arguments that will be added to the :code:`docker container run` or :code:`singularity exec` command
