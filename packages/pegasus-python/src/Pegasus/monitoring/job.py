@@ -48,7 +48,10 @@ re_site_parse_gvds = re.compile(
     r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3"
 )
 
-re_parse_pegasus_classads = re.compile(r"^\s*\+(pegasus_\S+)\s*=\s*(\S+)")
+# GH-2180 optional + as expressions are specified as condor submit file
+# variables. e.g. pegasus_queue_expr = '"long" if duration > 0 else "debug"'
+re_parse_pegasus_classads = re.compile(r"^\s*\+?(pegasus_\S+)\s*=\s*(.*)")
+
 re_parse_batch_classads = re.compile(r"^\s*(batch_\S+)\s*=\s*(\S+)")
 
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
