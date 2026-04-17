@@ -152,8 +152,8 @@ public class ClassADSGenerator {
         StringBuffer variable = new StringBuffer();
         String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
         if (varKey != null) {
-            // $(my.pegasus_memory_mb)
-            variable.append("$(my.").append(varKey).append(")");
+            // $(MY.pegasus_memory_mb)
+            variable.append("$(MY.").append(varKey).append(")");
         } else {
             throw new RuntimeException(
                     "Unable to map pegasus profile key to pegasus classad - " + profileKey);

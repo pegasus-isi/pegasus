@@ -355,7 +355,7 @@ public class GLiteTest {
                 expectedClassAdKey,
                 "Unable to map pegasus key " + pegasusProfileKey + " to classad key");
 
-        // CORES=="$(my.pegasus_cores)"
+        // CORES=="$(MY.pegasus_cores)"
         // .*CORES=="\$\(my\.(.*)\)".*
         String regex = ".*" + expectedCERequirementKey + "==\"\\$\\(my\\.(.*)\\)\".*";
 
