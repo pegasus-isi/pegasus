@@ -106,6 +106,10 @@ public class ClassADSGenerator {
                     ClassADSGenerator.DISKSPACE_KEY, Pegasus.DISKSPACE_KEY);
             mPegasusClassAdsToPegasusProfiles.put(
                     ClassADSGenerator.JOB_RUNTIME_AD_KEY, Pegasus.RUNTIME_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    ClassADSGenerator.PROJECT_KEY, Pegasus.PROJECT_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    ClassADSGenerator.QUEUE_KEY, Pegasus.QUEUE_KEY);
         }
         return mPegasusClassAdsToPegasusProfiles;
     }
@@ -129,6 +133,10 @@ public class ClassADSGenerator {
                     Pegasus.DISKSPACE_KEY, ClassADSGenerator.DISKSPACE_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     Pegasus.RUNTIME_KEY, ClassADSGenerator.JOB_RUNTIME_AD_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.PROJECT_KEY, ClassADSGenerator.PROJECT_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.QUEUE_KEY, ClassADSGenerator.QUEUE_KEY);
         }
         return mPegasusProfilesToPegasusClassAdKeys;
     }
@@ -162,6 +170,12 @@ public class ClassADSGenerator {
 
     /** The key for the number of gpus associated with the job */
     public static final String GPUS_KEY = "pegasus_gpus";
+
+    /** The key for the queue if specified */
+    public static final String QUEUE_KEY = "pegasus_queue";
+
+    /** The key for the project if specified */
+    public static final String PROJECT_KEY = "pegasus_project";
 
     /** The key for memory request for the job in MB */
     public static final String MEMORY_KEY = "pegasus_memory_mb";
@@ -315,7 +329,6 @@ public class ClassADSGenerator {
         }
 
         // GH-2170 generate diskspace and memory
-
         String memoryValue = job.vdsNS.getStringValue(Pegasus.MEMORY_KEY);
         int memory = -1;
         try {
@@ -340,6 +353,22 @@ public class ClassADSGenerator {
             // GH-2174 they can also be expressions in case a user
             // explicitly specified condor profile key request_disk
             writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
+        }
+
+        // GH-2175 specify project and queue if present in pegasus profiles
+        if (job.vdsNS.containsKey(Pegasus.QUEUE_KEY)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttribute(
+                            ClassADSGenerator.QUEUE_KEY,
+                            job.vdsNS.getStringValue(Pegasus.QUEUE_KEY)));
+        }
+        if (job.vdsNS.containsKey(Pegasus.PROJECT_KEY)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttribute(
+                            ClassADSGenerator.PROJECT_KEY,
+                            job.vdsNS.getStringValue(Pegasus.PROJECT_KEY)));
         }
 
         // determine the cluster size
