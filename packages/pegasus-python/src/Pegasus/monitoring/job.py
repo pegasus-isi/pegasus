@@ -52,8 +52,6 @@ re_site_parse_gvds = re.compile(
 # variables. e.g. pegasus_queue_expr = '"long" if duration > 0 else "debug"'
 re_parse_pegasus_classads = re.compile(r"^\s*\+?(pegasus_\S+)\s*=\s*(.*)")
 
-re_parse_batch_classads = re.compile(r"^\s*(batch_\S+)\s*=\s*(\S+)")
-
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
@@ -204,9 +202,6 @@ class Job:
         self._deferred_job_end_kwargs = None
         self._integrity_metrics = set()
         self._pegasus_classads = {}
-        # GH-2180 for tracking batch_project, batch_queue etc
-        # when submitting to HPC schedulers like SLURM
-        self._batch_classads = {}
 
     def _get_jobtype_desc(self):
         """
@@ -443,14 +438,6 @@ class Job:
                 key = match.group(1)
                 value = match.group(2)
                 self._pegasus_classads[key] = value
-                continue
-
-            # GH-2180 parse batch classads if any
-            match = re_parse_batch_classads.search(my_line)
-            if match:
-                key = match.group(1)
-                value = match.group(2)
-                self._batch_classads[key] = value
                 continue
 
             if re_rsl_string.search(my_line):
@@ -1095,13 +1082,6 @@ class Job:
         :return:
         """
         return self._pegasus_classads
-
-    def get_batch_classads(self):
-        """
-        Returns the batch classads (batch_queue, batch_runtime etc) retrieved by parsing the submit file.
-        :return:
-        """
-        return self._batch_classads
 
     def _add_cpu_attributes(self, invocation_record):
 

@@ -32,7 +32,7 @@ tmp_log_files = []
 
 DEFAULT_EXPRESSIONS = {
     "pegasus_cores": "1 if job_retry == 0 else job_retry + pegasus_cores",
-    "batch_queue": '"long" if duration > 0 else "debug"',
+    "pegasus_queue": '"long" if duration > 0 else "debug"',
 }
 
 re_parse_pegasuslite_runtime = re.compile(r"^PegasusLite: runtime (\d+)$", re.MULTILINE)
@@ -445,23 +445,11 @@ def update_job_submit_file(outfile, retry):
         except:
             pass
 
-        if isinstance(value, int):
-            # only apply expression for numeric keys
-            expression = expressions.get(key)
-            if expression:
-                sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
-                # load what we inserted
-                sed.load_string(sed_patterns[-1])
-
-    # create expressions for batch keys
-    for key in j.get_batch_classads():
-        value = j.get_batch_classads().get(key)
         expression = expressions.get(key)
         if expression:
             sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
             # load what we inserted
             sed.load_string(sed_patterns[-1])
-            # _apply_expression(sub_file, expression, symbols, key, value)
 
     # apply the sed patterns in one go
     if sed_patterns:
