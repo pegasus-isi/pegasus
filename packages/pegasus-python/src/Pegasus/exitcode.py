@@ -429,10 +429,17 @@ def update_job_submit_file(outfile, retry):
 
     sed = Sed(in_place=suffix, regexp_extended=True)
     sed_patterns = []
-    # create expressions for pegasus classads
+
+    # first identify any expressions that are present
+    # in the submit file as condor submit file variables
+    # starting with pegasus_*_expr
+    expressions = _get_expressions_list(j)
+    print(expressions)
+
+    # create python expressions for pegasus classads
     for key in j.get_pegasus_classads():
         value = j.get_pegasus_classads().get(key)
-        print(f"key {key} -> {value}")
+        # print(f"key {key} -> {value}")
         try:
             value = int(value)
         except:
@@ -440,7 +447,7 @@ def update_job_submit_file(outfile, retry):
 
         if isinstance(value, int):
             # only apply expression for numeric keys
-            expression = DEFAULT_EXPRESSIONS.get(key)
+            expression = expressions.get(key)
             if expression:
                 sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
                 # load what we inserted
@@ -449,7 +456,7 @@ def update_job_submit_file(outfile, retry):
     # create expressions for batch keys
     for key in j.get_batch_classads():
         value = j.get_batch_classads().get(key)
-        expression = DEFAULT_EXPRESSIONS.get(key)
+        expression = expressions.get(key)
         if expression:
             sed_patterns.append(_get_sed_pattern(expression, symbols, key, value))
             # load what we inserted
@@ -466,6 +473,26 @@ def update_job_submit_file(outfile, retry):
             _log_error(e.message)
         except:
             raise
+
+
+def _get_expressions_list(j):
+    """
+    Returns a dictionary listing expressions to apply indexed by
+    pegasus classads (without the +)
+    :param j:
+    :return:
+    """
+    expressions = {}
+    pegasus_classad_submit_vars = j.get_pegasus_classads()
+    # variable is like pegasus_queue_expr = '"long" if duration > 0 else "debug"'
+    for key in pegasus_classad_submit_vars:
+        if key.endswith("_expr"):
+            value = pegasus_classad_submit_vars.get(key)
+            key = key[:-5]
+            if value:
+                value = value.strip("'")
+                expressions[key] = value
+    return expressions
 
 
 def _get_sed_pattern(expression, symbols, key, value):
