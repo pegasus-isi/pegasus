@@ -432,7 +432,7 @@ def update_job_submit_file(outfile, retry):
     # create expressions for pegasus classads
     for key in j.get_pegasus_classads():
         value = j.get_pegasus_classads().get(key)
-        # print("key {} -> {}".format(key,value))
+        print(f"key {key} -> {value}")
         try:
             value = int(value)
         except:
