@@ -140,6 +140,62 @@ class Namespace(Enum):
     STAT = "stat"
 
 
+class ExprVar:
+    """Convenience class listing the supported variables that you can use in expressions"""
+
+    def __new__(cls):
+        raise TypeError("This class cannot be instantiated")
+
+    #: value is a string indicating the generator used - defaults to Pegasus
+    pegasus_generator = "pegasus_generator"
+    #: value is a string indicating root workflow uuid
+    pegasus_root_wf_uuid = "pegasus_root_wf_uuid"  # root workflow uuid
+    #: value is a string indicating the workflow uuid
+    pegasus_wf_uuid = "pegasus_wf_uuid"
+    #: value is a string indicating pegasus version
+    pegasus_version = "pegasus_version"
+    #: value is a string indicating the workflow name
+    pegasus_wf_name = "pegasus_wf_name"  # the workflow name
+    #: value is a string indicating the transformation in format namespace::name:version
+    pegasus_wf_xformation = "pegasus_wf_xformation"
+    #: value is a string indicating the id of associated compute job in the input wf
+    pegasus_wf_dax_job_id = "pegasus_wf_dax_job_id"
+    #: value is a int indicating the job class
+    pegasus_job_class = "pegasus_job_class"
+    #: value is a string indicating the site job ran on
+    pegasus_site = "pegasus_site"
+    #: value is an int indicating the runtime for the job
+    pegasus_job_runtime = "pegasus_job_runtime"
+    #: the number of cores requested
+    pegasus_cores = "pegasus_cores"
+    #: the number of gpus requested
+    pegasus_gpus = "pegasus_gpus"
+    #: the memory requested for the job
+    pegasus_memory_mb = "pegasus_memory_mb"
+    #: the diskspace requested for the job
+    pegasus_diskspace_mb = "pegasus_diskspace_mb"
+    #: optional variable set if a job was clustered with value as number of jobs in the cluster
+    pegasus_cluster_size = "pegasus_cluster_size"
+    #: the runtime of the job (as logged by PegasusLite) in seconds. If not PegasusLite job then falls back to kickstart value
+    job_runtime = "job_runtime"
+    #: int indicating the job retry we are on
+    job_retry = "job_retry"
+    #: int indicating the exitcode with which the job exited as recorded in kickstart record
+    exitcode = "exitcode"
+    #: int indicating the duration of job in seconds from the kickstart record
+    duration = "duration"
+    #: string indicating the user under which the job ran , as captured in kickstart record
+    user = "user"
+    #: string indicating the hostaddress of the node where the job ran , as captured in kickstart record
+    hostaddr = "hostaddr"
+    #: int indicating the maximum memory used
+    maxrss = "max rss used"
+    #: int indicating total size of the input files declared for the job in MB
+    total_ip_size_mb = "total_ip_size_mb"
+    #: int indicating total size of the output files declared for the job in MB
+    total_op_size_mb = "total_op_size_mb"
+
+
 def _profiles(ns, **map_p):
     """Internal decorator that enables the use of kw args in functions like
     ProfileMixin.add_condor_profile() and ProfileMixin.add_dagman_profile().
