@@ -351,7 +351,8 @@ public class ClassADSGenerator {
     }
 
     /**
-     * Generates a submit file variable given the name and the value.
+     * Generates a submit file variable given the name and the value. The value gets quoted in
+     * single quotes.
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad variable.
@@ -361,7 +362,7 @@ public class ClassADSGenerator {
         StringBuilder sb = new StringBuilder();
 
         sb.append(name).append(" = ");
-        sb.append("\"").append(value).append("\"");
+        sb.append("'").append(value).append("'");
 
         return sb.toString();
     }
