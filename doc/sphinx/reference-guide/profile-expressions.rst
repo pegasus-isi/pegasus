@@ -37,6 +37,19 @@ The workflow for expression-based retry looks like this:
 5. Matching entries in the HTCondor submit file are updated in-place.
 6. DAGMan retries the job using the updated submit file.
 
+Enabling the Expressions Evaluation
+-----------------------------------
+
+In order to enable this feature for your workflow you need to ensure
+you have the `pythonsed` package installed in your workflow environment.
+
+Also, in your properties need to set the following arguments to
+trigger the updating of submit file on job retry.
+
+To do is you need to set the following in your properties file:
+
+1) Set **dagman.post.arguments** to **-U** .
+
 Specifying Profile Expressions
 ===============================
 
@@ -172,7 +185,7 @@ Common patterns include:
    # Use "debug" queue if the job ran at all, otherwise "long"
    '"long" if duration > 0 else "debug"'
 
- 
+
 
 .. _expression-variables:
 
@@ -413,16 +426,37 @@ avoid spelling mistakes and enable IDE autocompletion:
 
    # Build expressions using ExprVar constants as variable name strings
    mem_expr = (
-       f"str({ExprVar.pegasus_memory_mb} * 2) + ' MB' "
+       f"{ExprVar.pegasus_memory_mb} * 2 "
        f"if {ExprVar.job_retry} > 0 "
-       f"else str({ExprVar.pegasus_memory_mb}) + ' MB'"
+       f"else {ExprVar.pegasus_memory_mb}'"
    )
-   # mem_expr == "str(pegasus_memory_mb * 2) + ' MB' if job_retry > 0 else str(pegasus_memory_mb) + ' MB'"
 
    j.add_pegasus_profile(
-       memory="2 GiB",
+       memory="2 GB",
        memory_expr=mem_expr,
    )
+
+
+Debugging Expressions Evaluation
+================================
+
+The log of the expressions evaluations for the job is recorded in
+workflow log file (ending in suffix `*.exitcode.log`) in the
+worklfow submit directory (the same directory where the .dag file for the
+workflow resides).
+
+.. code-block:: console
+
+    $ cat blackdiamond-0.exitcode.log`
+    {"name": ".//00/00/create_dir_blackdiamond_0_local.out", "timestamp": "2026-04-17T16:02:03.506156", "exitcode": 0,\
+            "app_exitcode": 0, "retry": 0, "job_retry": 0, "std_out": "", "std_err": ""}
+    ..
+    {"name": ".//00/00/preprocess_ID0000001.out", "timestamp": "2026-04-17T16:04:23.720695", "exitcode": 1, \
+           "app_exitcode": -1002, "retry": 0, "job_retry": 0, \
+            "std_out": "Apply pegasus_cores = (1 if job_retry == 0 else job_retry + pegasus_cores) \
+            \n Creating sed pattern pegasus_cores,1 -> 1\n Updating submit file with patterns \
+             ['s/^\\\\s*(\\\\+?)(pegasus_cores)\\\\s*=\\\\s*(\"?)([^\"]*)(\"?)/\\\\1\\\\2 = \\\\31\\\\5/g']\n ", \
+              "std_err": "dagman reported non-zero exitcode: -1002\n "}\
 
 Relationship to HTCondor ClassAd Expressions
 =============================================
