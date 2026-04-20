@@ -234,6 +234,104 @@ rescue DAG just rerun the pegasus-run command
 
    $ pegasus-run /Path/To/Workflow/Directory
 
+.. _debugging-update-submit-file-failure:
+
+Updating Job Resource Requirements on Retry
+===========================================
+
+Pegasus supports **profile expressions** — Python expressions that are
+evaluated when a job fails and is about to be retried. These expressions
+allow you to dynamically change resource requirements (memory, cores, GPUs,
+runtime, queue, project, etc.) based on the actual execution metrics
+collected from the previous attempt, enabling smarter retry strategies
+without manual intervention.
+
+.. note::
+
+   Profile expressions are evaluated only on job failure, before the job
+   is resubmitted by DAGMan. They have no effect on the first attempt.
+
+Overview
+--------
+
+When a job fails, Pegasus runs ``pegasus-exitcode`` to determine whether
+the job should be retried. If profile expressions have been declared for
+the job, ``pegasus-exitcode`` evaluates them against runtime metrics
+collected from the failed attempt (via kickstart records and PegasusLite
+output) and rewrites the relevant entries in the HTCondor submit file
+before the job is resubmitted.
+
+The workflow for expression-based retry looks like this:
+
+1. A job fails.
+2. ``pegasus-exitcode`` is invoked by the post-script.
+3. Kickstart and PegasusLite output from the failed run is parsed into a
+   *symbol table* of runtime variables.
+4. Each profile expression is evaluated using the symbol table.
+5. Matching entries in the HTCondor submit file are updated in-place.
+6. DAGMan retries the job using the updated submit file.
+
+Enabling the Expressions Evaluation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to enable this feature for your workflow you need to ensure
+you have the `pythonsed` package installed in your workflow environment.
+
+Also, in your properties need to set the following arguments to
+trigger the updating of submit file on job retry.
+
+To do is you need to set the following in your properties file:
+
+1) Set **dagman.post.arguments** to **-U** .
+
+Specifying Profile Expressions
+------------------------------
+
+Expression-based profiles are declared alongside their corresponding
+plain profiles. For each supported resource profile key, a corresponding
+``*_expr`` variant exists. You set the expression as a Python string on
+the job or transformation.
+
+Python API
+^^^^^^^^^^
+
+Use ``add_pegasus_profile()`` with the ``*_expr`` keyword arguments:
+
+.. code-block:: python
+
+   from Pegasus.api import *
+
+   j = Job("myapp")
+   j.add_pegasus_profile(
+       memory="1 GB",
+       memory_expr="pegasus_memory_mb * 2 if job_retry > 0 else pegasus_memory_mb",
+       runtime="3600",
+       runtime_expr="pegasus_job_runtime * 2 if job_retry > 0 else pegasus_job_runtime",
+   )
+
+YAML Workflow
+^^^^^^^^^^^^^
+
+In a YAML workflow file the ``*.expr`` suffix is appended to the profile
+key name:
+
+.. code-block:: yaml
+
+   jobs:
+     - type: job
+       name: myapp
+       id: ID0000001
+       arguments: []
+       profiles:
+         pegasus:
+           memory: "1024"
+           memory.expr: "pegasus_memory_mb * 2 if job_retry > 0 else pegasus_memory_mb"
+           runtime: "3600"
+           runtime.expr: "pegasus_job_runtime * 2 if job_retry > 0 else pegasus_job_runtime"
+
+Full details about how expressions are evaluated and supported can be found in
+the :ref:`reference guide <profile-expressions>`.
+
 .. _plotting-statistics:
 
 Plotting and Statistics
