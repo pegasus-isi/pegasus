@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -105,6 +106,10 @@ public class ClassADSGenerator {
                     ClassADSGenerator.DISKSPACE_KEY, Pegasus.DISKSPACE_KEY);
             mPegasusClassAdsToPegasusProfiles.put(
                     ClassADSGenerator.JOB_RUNTIME_AD_KEY, Pegasus.RUNTIME_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    ClassADSGenerator.PROJECT_KEY, Pegasus.PROJECT_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    ClassADSGenerator.QUEUE_KEY, Pegasus.QUEUE_KEY);
         }
         return mPegasusClassAdsToPegasusProfiles;
     }
@@ -128,6 +133,10 @@ public class ClassADSGenerator {
                     Pegasus.DISKSPACE_KEY, ClassADSGenerator.DISKSPACE_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     Pegasus.RUNTIME_KEY, ClassADSGenerator.JOB_RUNTIME_AD_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.PROJECT_KEY, ClassADSGenerator.PROJECT_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.QUEUE_KEY, ClassADSGenerator.QUEUE_KEY);
         }
         return mPegasusProfilesToPegasusClassAdKeys;
     }
@@ -143,8 +152,8 @@ public class ClassADSGenerator {
         StringBuffer variable = new StringBuffer();
         String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
         if (varKey != null) {
-            // $(my.pegasus_memory_mb)
-            variable.append("$(my.").append(varKey).append(")");
+            // $(MY.pegasus_memory_mb)
+            variable.append("$(MY.").append(varKey).append(")");
         } else {
             throw new RuntimeException(
                     "Unable to map pegasus profile key to pegasus classad - " + profileKey);
@@ -161,6 +170,12 @@ public class ClassADSGenerator {
 
     /** The key for the number of gpus associated with the job */
     public static final String GPUS_KEY = "pegasus_gpus";
+
+    /** The key for the queue if specified */
+    public static final String QUEUE_KEY = "pegasus_queue";
+
+    /** The key for the project if specified */
+    public static final String PROJECT_KEY = "pegasus_project";
 
     /** The key for memory request for the job in MB */
     public static final String MEMORY_KEY = "pegasus_memory_mb";
@@ -226,6 +241,21 @@ public class ClassADSGenerator {
      * @paran appName the app name
      */
     public static void generate(PrintWriter writer, ADag dag, Job job, String appName) {
+
+        // GH-2183 lets generate the expr profiles as variables first
+        Pegasus pegasusProfiles = job.vdsNS;
+        for (Iterator it = pegasusProfiles.getProfileKeyIterator(); it.hasNext(); ) {
+            String key = (String) it.next();
+            if (key.endsWith(Pegasus.EXPRESSION_PROFILE_KEYS_SUFFIX)) {
+                // replace . in the keys with _ and pegasus_ prefix
+                // so cores_expr becomes pegasus_cores_expr
+                StringBuilder newKey = new StringBuilder();
+                newKey.append("pegasus_").append(key.replace(".", "_"));
+                writer.println(
+                        generateSubmitFileVariable(
+                                newKey.toString(), pegasusProfiles.getStringValue(key)));
+            }
+        }
 
         // get all the workflow classads
         generate(writer, dag, appName);
@@ -299,7 +329,6 @@ public class ClassADSGenerator {
         }
 
         // GH-2170 generate diskspace and memory
-
         String memoryValue = job.vdsNS.getStringValue(Pegasus.MEMORY_KEY);
         int memory = -1;
         try {
@@ -326,12 +355,45 @@ public class ClassADSGenerator {
             writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
         }
 
+        // GH-2175 specify project and queue if present in pegasus profiles
+        if (job.vdsNS.containsKey(Pegasus.QUEUE_KEY)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttribute(
+                            ClassADSGenerator.QUEUE_KEY,
+                            job.vdsNS.getStringValue(Pegasus.QUEUE_KEY)));
+        }
+        if (job.vdsNS.containsKey(Pegasus.PROJECT_KEY)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttribute(
+                            ClassADSGenerator.PROJECT_KEY,
+                            job.vdsNS.getStringValue(Pegasus.PROJECT_KEY)));
+        }
+
         // determine the cluster size
         int csize =
                 (job instanceof AggregatedJob)
                         ? ((AggregatedJob) job).numberOfConsitutentJobs()
                         : 1;
         writer.println(generateClassAdAttribute(ClassADSGenerator.JOB_CLUSTER_SIZE_AD_KEY, csize));
+    }
+
+    /**
+     * Generates a submit file variable given the name and the value. The value gets quoted in
+     * single quotes.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the classad variable.
+     * @return the classad attriubute.
+     */
+    private static String generateSubmitFileVariable(String name, String value) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(" = ");
+        sb.append("'").append(value).append("'");
+
+        return sb.toString();
     }
 
     /**
@@ -354,7 +416,7 @@ public class ClassADSGenerator {
      * @return the classad attriubute.
      */
     private static String generateClassAdAttribute(String name, int value) {
-        StringBuffer sb = new StringBuffer(10);
+        StringBuilder sb = new StringBuilder(10);
 
         sb.append("+");
         sb.append(name).append(" = ");

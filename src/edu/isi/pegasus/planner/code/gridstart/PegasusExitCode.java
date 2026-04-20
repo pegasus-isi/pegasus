@@ -38,6 +38,9 @@ public class PegasusExitCode implements POSTScript {
      */
     public static final String POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE = "-r $RETURN";
 
+    /** The argument for pegasus-exitcode to pass the dagnode retry. */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY = "-R $RETRY";
+
     /**
      * The arguments that indicate that invocation records should not be parsed as job is not
      * launched via kickstart
@@ -154,7 +157,9 @@ public class PegasusExitCode implements POSTScript {
         if (mUsingCondorCodeGenerator) {
             defaultOptions
                     .append(" ")
-                    .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+                    .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE)
+                    .append(" ")
+                    .append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
         }
 
         // check for existence of Pegasus profile key for exitcode.failuremsg and

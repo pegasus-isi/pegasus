@@ -48,7 +48,9 @@ re_site_parse_gvds = re.compile(
     r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3"
 )
 
-re_parse_pegasus_classads = re.compile(r"^\s*\+(pegasus_\S+)\s*=\s*(\S+)")
+# GH-2180 optional + as expressions are specified as condor submit file
+# variables. e.g. pegasus_queue_expr = '"long" if duration > 0 else "debug"'
+re_parse_pegasus_classads = re.compile(r"^\s*\+?(pegasus_\S+)\s*=\s*(.*)")
 
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
@@ -492,6 +494,7 @@ class Job:
 
         # set values from pegasus classads that we need
         self._extract_job_info_from_pegasus_classads(submit_file)
+        my_site = self._site_name
 
         # All done!
         return my_result, my_site
@@ -1072,6 +1075,13 @@ class Job:
             kwargs["invocations"].append(invocation)
 
         return kwargs
+
+    def get_pegasus_classads(self):
+        """
+        Returns pegasus classads retrieved by parsing the submit file.
+        :return:
+        """
+        return self._pegasus_classads
 
     def _add_cpu_attributes(self, invocation_record):
 

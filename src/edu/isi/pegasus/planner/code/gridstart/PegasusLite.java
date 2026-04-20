@@ -575,6 +575,8 @@ public class PegasusLite implements GridStart {
 
             StringBuilder args = new StringBuilder();
             args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+            args.append(" ");
+            args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
             // PM-1821 explicity indicate no kickstart records to parse
             args.append(" ")
                     .append(

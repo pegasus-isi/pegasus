@@ -805,6 +805,9 @@ public class DeployWorkerPackage extends Engine {
             StringBuilder exitcodeArgs = new StringBuilder();
             exitcodeArgs.append(
                     PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
+
+            exitcodeArgs.append(" ");
+            exitcodeArgs.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
             // PM-1821 explicity indicate no kickstart records to parse
             exitcodeArgs
                     .append(" ")

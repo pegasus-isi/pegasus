@@ -973,11 +973,16 @@ public class GLite extends Abstract {
 
             /* retrieve some keys from globus rsl and convert to condor keys */
             if (job.globusRSL.containsKey("queue")) {
-                job.condorVariables.construct("batch_queue", (String) job.globusRSL.get("queue"));
+                job.condorVariables.construct(
+                        "batch_queue",
+                        ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                                Pegasus.QUEUE_KEY));
             }
             if (job.globusRSL.containsKey(Globus.PROJECT_KEY)) {
                 job.condorVariables.construct(
-                        "batch_project", (String) job.globusRSL.get(Globus.PROJECT_KEY));
+                        "batch_project",
+                        ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                                Pegasus.PROJECT_KEY));
             }
             if (job.globusRSL.containsKey(Globus.MAX_WALLTIME_KEY)) {
                 // globus maxwalltime is in minutes; condor expects in seconds

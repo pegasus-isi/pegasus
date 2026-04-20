@@ -109,6 +109,8 @@ public class Globus extends Namespace {
             mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.COUNT_KEY);
             mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_MEMORY_KEY);
             mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.MAX_WALLTIME_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.PROJECT_KEY);
+            mRSLKeysSubstitutedWithPegasusClassAds.add(Globus.QUEUE_KEY);
         }
         return mRSLKeysSubstitutedWithPegasusClassAds;
     }

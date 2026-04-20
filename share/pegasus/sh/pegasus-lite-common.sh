@@ -29,6 +29,9 @@ if [ "X$PATH" = "X" ]; then
     export PATH
 fi
 
+# GH-2181 capture when we start
+pegasus_lite_start_time=$(date +%s)
+
 # a default used if no other worker packages can be found
 pegasus_lite_default_system="x86_64_rhel_8"
 
@@ -691,8 +694,12 @@ pegasus_lite_unexpected_exit()
         pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
     fi
 
-    echo "PegasusLite: exitcode $rc" 1>&2
+    
+    pegasus_lite_end_time=$(date +%s)
+    runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
+    echo "PegasusLite: runtime $runtime" 1>&2
 
+    echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
 }
 
@@ -725,8 +732,11 @@ pegasus_lite_final_exit()
         pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
     fi
 
-    echo "PegasusLite: exitcode $rc" 1>&2
+    pegasus_lite_end_time=$(date +%s)
+    runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
+    echo "PegasusLite: runtime $runtime" 1>&2
 
+    echo "PegasusLite: exitcode $rc" 1>&2
     exit $rc
 }
 
