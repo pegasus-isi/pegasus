@@ -94,30 +94,39 @@ The following ``pegasus`` namespace profile keys have a corresponding
 
    * - Profile Key
      - Expression Key
+     - Expression Evaluation Type
      - Description
    * - ``runtime``
      - ``runtime.expr``
+     - Integer
      - Expected runtime in seconds
    * - ``memory``
      - ``memory.expr``
+     - String
      - Memory requested (e.g. ``"2 GB"``)
    * - ``diskspace``
      - ``diskspace.expr``
+     - String
      - Disk space requested (e.g. ``"10 GB"``)
    * - ``cores``
      - ``cores.expr``
+     - Integer
      - Number of CPU cores
    * - ``gpus``
      - ``gpus.expr``
+     - Integer
      - Number of GPUs
    * - ``queue``
      - ``queue.expr``
+     - String
      - Batch queue name
    * - ``project``
      - ``project.expr``
+     - String
      - Allocation/project name for the batch system
    * - ``glite.arguments``
      - ``glite.arguments.expr``
+     - String
      - Extra arguments passed to BLAHP/glite
 
 Expression Syntax
@@ -163,13 +172,7 @@ Common patterns include:
    # Use "debug" queue if the job ran at all, otherwise "long"
    '"long" if duration > 0 else "debug"'
 
-.. note::
-
-   Expressions that produce string values for resource profiles (e.g.
-   ``memory``) should include the unit suffix, e.g. ``"2048 MB"`` or
-   ``"2 GB"``, matching the format accepted by the corresponding plain
-   profile key. For numeric profiles like ``cores`` and ``gpus``, return
-   a plain integer.
+ 
 
 .. _expression-variables:
 
