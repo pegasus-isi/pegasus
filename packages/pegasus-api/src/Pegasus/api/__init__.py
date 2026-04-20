@@ -1,4 +1,4 @@
-from .mixins import EventType, Namespace
+from .mixins import EventType, Namespace, ExprVar
 from .properties import Properties
 from .replica_catalog import File, ReplicaCatalog
 from .site_catalog import (
