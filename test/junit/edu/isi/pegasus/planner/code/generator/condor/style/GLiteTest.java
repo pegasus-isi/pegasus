@@ -357,7 +357,7 @@ public class GLiteTest {
 
         // CORES=="$(MY.pegasus_cores)"
         // .*CORES=="\$\(my\.(.*)\)".*
-        String regex = ".*" + expectedCERequirementKey + "==\"\\$\\(my\\.(.*)\\)\".*";
+        String regex = ".*" + expectedCERequirementKey + "==\"\\$\\(MY\\.(.*)\\)\".*";
 
         // System.err.println("***** DEBUG *****");
         // System.err.println( regex );
