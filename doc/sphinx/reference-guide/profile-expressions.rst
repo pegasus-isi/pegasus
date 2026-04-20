@@ -281,6 +281,15 @@ baseline for scaling expressions.
    * - ``pegasus_cluster_size``
      - ``int``
      - Number of jobs in the cluster (set only for clustered jobs)
+   * - ``pegasus_project``
+     - ``str``
+     - The project to which the job should be charged.
+   * - ``pegasus_queue``
+     - ``str``
+     - the queue to which the job is submitted
+   * - ``pegasus_glite_arguments``
+     - ``str``
+     - The pass through arguments to the hpc scheduler
 
 Runtime Execution Variables
 -----------------------------
