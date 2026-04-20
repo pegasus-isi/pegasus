@@ -56,8 +56,8 @@ Use ``add_pegasus_profile()`` with the ``*_expr`` keyword arguments:
 
    j = Job("myapp")
    j.add_pegasus_profile(
-       memory="1 GiB",
-       memory_expr="str(pegasus_memory_mb * 2) + ' MB' if job_retry > 0 else str(pegasus_memory_mb) + ' MB'",
+       memory="1 GB",
+       memory_expr="pegasus_memory_mb * 2 if job_retry > 0 else pegasus_memory_mb",
        runtime="3600",
        runtime_expr="pegasus_job_runtime * 2 if job_retry > 0 else pegasus_job_runtime",
    )
@@ -77,8 +77,8 @@ key name:
        arguments: []
        profiles:
          pegasus:
-           memory: "1 GiB"
-           memory.expr: "str(pegasus_memory_mb * 2) + ' MB' if job_retry > 0 else str(pegasus_memory_mb) + ' MB'"
+           memory: "1024"
+           memory.expr: "pegasus_memory_mb * 2 if job_retry > 0 else pegasus_memory_mb"
            runtime: "3600"
            runtime.expr: "pegasus_job_runtime * 2 if job_retry > 0 else pegasus_job_runtime"
 
@@ -135,10 +135,10 @@ Common patterns include:
 .. code-block:: python
 
    # Double memory on every retry
-   "str(pegasus_memory_mb * 2) + ' MB' if job_retry > 0 else str(pegasus_memory_mb) + ' MB'"
+   "pegasus_memory_mb * 2 if job_retry > 0 else pegasus_memory_mb"
 
    # Triple memory after the second retry
-   "str(pegasus_memory_mb * 3) + ' MB' if job_retry >= 2 else str(pegasus_memory_mb * 2) + ' MB'"
+   "pegasus_memory_mb * 3 if job_retry >= 2 else pegasus_memory_mb * 2"
 
    # Switch to a longer queue once the job has run for more than an hour
    '"long" if duration > 3600 else "short"'
@@ -177,9 +177,10 @@ Available Variables
 ===================
 
 The symbol table available to expressions contains variables derived
-from three sources: Pegasus ClassAd values written to the submit file,
-runtime data recorded by kickstart, and execution information captured by
-PegasusLite.
+from three sources:
+* Pegasus ClassAd values written to the submit file
+* runtime data recorded by kickstart, and
+* execution information captured by PegasusLite.
 
 The convenience class ``ExprVar`` in ``Pegasus.api.mixins`` lists all
 available variable names with their descriptions:
@@ -335,9 +336,9 @@ reasonable cap:
 
    j = Job("simulate")
    j.add_pegasus_profile(
-       memory="2 GiB",
+       memory="2 GB",
        # Double memory each retry; cap at 8 GiB (8192 MB)
-       memory_expr="str(min(pegasus_memory_mb * 2, 8192)) + ' MB'",
+       memory_expr="min(pegasus_memory_mb * 2, 8192)",
    )
 
 Switch Queue Based on Runtime
@@ -373,9 +374,9 @@ scale memory based on observed input:
 
    j = Job("process_data")
    j.add_pegasus_profile(
-       memory="4 GiB",
+       memory="4 GB",
        # Request 2x the total input size in MB, with a 1 GB floor
-       memory_expr="str(max(int(total_ip_size_mb * 2), 1024)) + ' MB'",
+       memory_expr="max(int(total_ip_size_mb * 2), 1024)",
    )
 
 Increase Cores Per Retry
