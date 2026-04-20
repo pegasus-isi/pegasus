@@ -110,6 +110,8 @@ public class ClassADSGenerator {
                     ClassADSGenerator.PROJECT_KEY, Pegasus.PROJECT_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     ClassADSGenerator.QUEUE_KEY, Pegasus.QUEUE_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    ClassADSGenerator.GLITE_ARGUMENTS_KEY, Pegasus.GLITE_ARGUMENTS_KEY);
         }
         return mPegasusClassAdsToPegasusProfiles;
     }
@@ -137,6 +139,8 @@ public class ClassADSGenerator {
                     Pegasus.PROJECT_KEY, ClassADSGenerator.PROJECT_KEY);
             mPegasusProfilesToPegasusClassAdKeys.put(
                     Pegasus.QUEUE_KEY, ClassADSGenerator.QUEUE_KEY);
+            mPegasusProfilesToPegasusClassAdKeys.put(
+                    Pegasus.GLITE_ARGUMENTS_KEY, ClassADSGenerator.GLITE_ARGUMENTS_KEY);
         }
         return mPegasusProfilesToPegasusClassAdKeys;
     }
@@ -176,6 +180,9 @@ public class ClassADSGenerator {
 
     /** The key for the project if specified */
     public static final String PROJECT_KEY = "pegasus_project";
+
+    /** The key to specify the extra arguments to be passed to the HPC scheduler */
+    public static final String GLITE_ARGUMENTS_KEY = "pegasus_glite_arguments";
 
     /** The key for memory request for the job in MB */
     public static final String MEMORY_KEY = "pegasus_memory_mb";
@@ -369,6 +376,13 @@ public class ClassADSGenerator {
                     generateClassAdAttribute(
                             ClassADSGenerator.PROJECT_KEY,
                             job.vdsNS.getStringValue(Pegasus.PROJECT_KEY)));
+        }
+        if (job.vdsNS.containsKey(Pegasus.GLITE_ARGUMENTS_KEY)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttribute(
+                            ClassADSGenerator.GLITE_ARGUMENTS_KEY,
+                            job.vdsNS.getStringValue(Pegasus.GLITE_ARGUMENTS_KEY)));
         }
 
         // determine the cluster size

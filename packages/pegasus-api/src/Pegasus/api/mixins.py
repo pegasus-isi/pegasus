@@ -174,6 +174,12 @@ class ExprVar:
     pegasus_memory_mb = "pegasus_memory_mb"
     #: the diskspace requested for the job
     pegasus_diskspace_mb = "pegasus_diskspace_mb"
+    #: the queue for the job
+    pegasus_queue = "pegasus_queue"
+    #: the project requested for the job
+    pegasus_project = "pegasus_project"
+    #: the glite arguments for the job
+    pegasus_glite_arguments = "pegasus_glite_arguments"
     #: optional variable set if a job was clustered with value as number of jobs in the cluster
     pegasus_cluster_size = "pegasus_cluster_size"
     #: the runtime of the job (as logged by PegasusLite) in seconds. If not PegasusLite job then falls back to kickstart value
