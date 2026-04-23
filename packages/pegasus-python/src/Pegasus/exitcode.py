@@ -40,16 +40,16 @@ re_parse_pegasuslite_runtime = re.compile(r"^PegasusLite: runtime (\d+)$", re.MU
 # on usage: format the string to add the pegasus classad key and the value
 # pattern also takes care of batch_ keys (without a +) that are
 # generated when using BLAHP
-# e.g. s/^\s*(\+?)(pegasus_queue)\s*=\s*("?)([^"]*)("?)/\1\2 = \3long\5/g
+# e.g. s/^\s*(\+?)(pegasus_queue)\s*=\s*(\'?)([^\']*)(\'?)/\1\2 = \3long\5/g
 # \1 matches to + ; \2  to the key ; \3 to optional " \4 the existing value  \5 to optional ending "
 # Since we are putting in a new value that we rely on python format option to provide it via {}
 
-# Note: the 4th capturing group is ([^\"]*) to match the value enclosed in quotes. If we did (\S+) then
+# Note: the 4th capturing group is ([^\']*) to match the value enclosed in quotes. If we did (\S+) then
 # trailing " in qouted input value disappears in the generated substituted value. With (\S+)
 # pegasus_queue = "debug" would translate to pegasus_queue = "long as \4 would have matched to debug" and
 # \5 would be empty.
 sed_pattern_update_pegasus_classads = (
-    's/^\\s*(\\+?)({})\\s*=\\s*("?)([^"]*)("?)/\\1\\2 = \\3{}\\5/g'
+    "s/^\\s*(\\+?)({})\\s*=\\s*('?)([^']*)('?)/\\1\\2 = \\3{}\\5/g"
 )
 
 
@@ -461,7 +461,7 @@ def update_job_submit_file(outfile, retry):
 
     # apply the sed patterns in one go
     if sed_patterns:
-        # print (sed_patterns)
+        print(sed_patterns)
         _log_info(f"Updating submit file with patterns {sed_patterns}")
         try:
             sed.apply(sub_file)

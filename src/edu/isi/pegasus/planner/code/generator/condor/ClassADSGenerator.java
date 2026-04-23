@@ -454,9 +454,9 @@ public class ClassADSGenerator {
 
         sb.append("+");
         sb.append(name).append(" = ");
-        sb.append("\"");
+        sb.append("'");
         sb.append(value);
-        sb.append("\"");
+        sb.append("'");
 
         return sb.toString();
     }
