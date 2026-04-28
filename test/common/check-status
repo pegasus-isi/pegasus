@@ -56,9 +56,10 @@ while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     show_state
 done
 
+# give monitord some time to finish
+sleep 1m
+
 if [ "$STATUS" = "Success" ]; then
-    # give monitord some time to finish
-    sleep 1m
     echo "*** Workflow finished succesfully ***"
     exit 0
 else
