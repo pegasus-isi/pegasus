@@ -729,50 +729,50 @@ install.
 HPC Clusters - User Install
 ===========================
 
-In this deployment,
+In this deployment model, HTCondor and Pegasus are installed on the login node as
+a binary installation within user space (typically the `$HOME` directory). 
 
-* you install HTCondor and Pegasus on the **login node** as a binary install in
-  user space (usually the $HOME directory)
-* HTCondor daeamons run per user, and need to be launched once per user submitting the
-  workflows.
+* HTCondor daemons run on a per-user basis and must be launched by each user before submitting workflows.
+* This approach is ideal for environments where you do not have root/sudo access but need a functional workflow submission environment.
 
-First, install a "personal" HTCondor in your $HOME directory. Instructions can 
-be found `HTCondor user install documentation <https://htcondor.readthedocs.io/en/latest/getting-htcondor/install-linux-as-user.html>`_.
-Verify the install by running ``condor_q``:
+To simplify the deployment, use the `get-pegasus <https://github.com/pegasus-isi/get-pegasus>`_ helper tool.
+This script automatically detects your Linux distribution and version, then
+downloads and deploys the appropriate HTCondor and Pegasus binaries.
+
+Run the following command to begin:
 
 ::
 
+    $ curl -s https://raw.githubusercontent.com/pegasus-isi/get-pegasus/refs/heads/main/get_pegasus | python3
+
+..
+
+After the installation is complete, you will need to source the environment file to configure your shell:
+
+::
+
+    $ . <installation-directory>/env.sh
+
+..
+
+Once the environment is configured, start the HTCondor master daemon:
+
+::
+
+    $ condor_master
+
+..
+
+You can verify that the daemons are running and check the state of your queue with:
+
+::
+
+    $ condor_status
     $ condor_q
-    -- Schedd: azaphrael.org : <184.60.25.78:34585?... @ 11/11/20 14:44:06
-    OWNER BATCH_NAME      SUBMITTED   DONE   RUN    IDLE   HOLD  TOTAL JOB_IDS
-
-    Total for query: 0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
-    Total for all users: 0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
 
 ..
 
-Install Pegasus using the :ref:`tarballs`. Add the ``bin/`` directory to the ``$PATH``, and
-verify the install by running ``pegasus-version``. Example:
-
-::
-
-    $ export PATH=$HOME/pegasus/bin:$PATH
-    $ pegasus-version
-    5.1.0
-
-..
-
-Lastly, run the ``pegasus-configure-glite`` as described in the :ref:`glite` section above.
-
-To ensure that your environment is always consistent, it is recommended to add the following
-to your ``~/.bashrc``:
-
-::
-
-    . ~/condor/condor.sh
-    export PATH=$HOME/pegasus/bin:$PATH
-
-..
+If the HTCondor services stop or the node is rebooted, simply run `condor_master` again to resume operations.
 
 .. note::
 
