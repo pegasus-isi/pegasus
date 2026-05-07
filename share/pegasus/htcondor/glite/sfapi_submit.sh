@@ -38,6 +38,31 @@
 
 bls_submit_args_prefix="#SBATCH"
 
+function bls_set_job_env ()
+{
+    # Karan: Copied from bls_start_job_wrapper() function in blah_common_submit_functions
+    # To Do: Should be a separate function in common functions. Ask Jaime
+    #
+    # Set the required environment variables (escape values with double quotes)
+    # We don't merge the existing PATH with the job-defined one if so configured
+    if [ "x$bls_opt_environment" != "x" ] ; then
+            echo ""
+            echo "# Setting the environment:"
+      eval "env_array=($bls_opt_environment)"
+            for  env_var in "${env_array[@]}"; do
+                     echo export \"$env_var\"
+            done
+    else
+            if [ "x$bls_opt_envir" != "x" ] ; then
+                    echo ""
+                    echo "# Setting the environment:"
+                    echo "`echo ';'$bls_opt_envir | sed -e 's/;[^=]*;/;/g' -e 's/;[^=]*$//g' | sed -e 's/;\([^=]*\)=\([^;]*\)/;export \1=\"\2\"/g' | awk 'BEGIN { RS = ";" } ; { print $0 }'`"
+            fi
+    fi
+
+    print_blahp_job_env
+}
+
 bls_parse_submit_options "$@"
 
 # karan: we are submitting job remotely. so this should be set to no to get
@@ -151,6 +176,9 @@ fi
 # MIC support
 [ -z "$bls_opt_micnumber" ] || echo "#SBATCH --gres=mic:${bls_opt_micnumber}" >> $bls_tmp_file
 
+# set the job environment
+bls_set_job_env >> $bls_tmp_file
+
 # Append local submit attributes and any extra #SBATCH args.
 # Must come after all other #SBATCH directives or Slurm ignores them.
 bls_set_up_local_and_extra_args
@@ -188,7 +216,7 @@ bls_command_basename="`basename $bls_opt_the_command`"
 
 bls_save_submit
 
-cp $bls_tmp_file /tmp/
+#cp $bls_tmp_file /tmp/
 
 ###############################################################
 # Collect input files to upload to Perlmutter
