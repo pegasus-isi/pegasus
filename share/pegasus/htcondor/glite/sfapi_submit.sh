@@ -108,7 +108,7 @@ cat > $bls_tmp_file << end_of_preamble
 ##SBATCH -e ${bls_opt_workdir}/$bls_opt_stderr
 #
 # to be figured out how to expose via HTCondor / Pegasus
-#SBATCH -C cpu
+##SBATCH -C cpu
 #SBATCH -N 1
 #SBATCH -n 1
 end_of_preamble
@@ -176,12 +176,12 @@ fi
 # MIC support
 [ -z "$bls_opt_micnumber" ] || echo "#SBATCH --gres=mic:${bls_opt_micnumber}" >> $bls_tmp_file
 
-# set the job environment
-bls_set_job_env >> $bls_tmp_file
-
 # Append local submit attributes and any extra #SBATCH args.
 # Must come after all other #SBATCH directives or Slurm ignores them.
 bls_set_up_local_and_extra_args
+
+# set the job environment
+bls_set_job_env >> $bls_tmp_file
 
 ###############################################################
 # Job body: run the uploaded executable in the remote directory.
@@ -216,7 +216,7 @@ bls_command_basename="`basename $bls_opt_the_command`"
 
 bls_save_submit
 
-#cp $bls_tmp_file /tmp/
+cp $bls_tmp_file /tmp/
 
 ###############################################################
 # Collect input files to upload to Perlmutter
