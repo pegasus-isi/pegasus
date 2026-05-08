@@ -17,6 +17,11 @@ import os
 client_id = None
 client_secret = None
 
+
+class SfApiHelperError(Exception):
+    """Raised for errors encountered in sfapi_helpers operations."""
+    pass
+
 def submit_remote_slurm_job(job_name, job_script, input_files):
     with (Client(client_id, client_secret) as client):
 
@@ -65,20 +70,21 @@ def retrieve_remote_stdout_stderr( job_id, remote_stdout, remote_stderr):
 
 def download_file(source, destination):
     """
-    Use this to download remote stdout and stderr for the job
-    back down to the submit host.
-    :param source:
-    :param destination:
-    :return:
+    Download a remote file from Perlmutter to a local destination path.
+    Raises SfApiHelperError if the remote path does not exist or is not a file.
     """
     with Client(client_id, client_secret) as client:
         perlmutter = client.compute(Machine.perlmutter)
-        [remote_file] = perlmutter.ls(source)
-        if remote_file.is_file():
-            buffer = remote_file.download()
-            with open(destination, 'w') as f:
-                shutil.copyfileobj(buffer, f)
-                print(f"Downloaded {os.path.abspath(destination)}")
+        listing = perlmutter.ls(source)
+        if not listing:
+            raise SfApiHelperError(f"File not found on remote: {source}")
+        [remote_file] = listing
+        if not remote_file.is_file():
+            raise SfApiHelperError(f"File not found on remote: {source}")
+        buffer = remote_file.download()
+        with open(destination, 'w') as f:
+            shutil.copyfileobj(buffer, f)
+            print(f"Downloaded {os.path.abspath(destination)}")
 
 def download_job_outputs(blahp_job_id):
     """
@@ -92,9 +98,9 @@ def download_job_outputs(blahp_job_id):
         <type>::<local_path>:<remote_path>
     e.g.:
         # type::<local file on submit host>:<remote file to retrieve via sfapi>
-        stdout::/scratch/user/job.out:/pscratch/sd/u/user/.blah/bl_X/bl_X.out
-        stderr::/scratch/user/job.err:/pscratch/sd/u/user/.blah/bl_X/bl_X.err
-        output::/pscratch/sd/v/vahi/.blah/bl_Vm1MXw/out1.out:/tmp/out2.out
+        stdout::/tmp/test.out:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/bl_DqxqWY.out
+        stderr::/tmp/test.err:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/bl_DqxqWY.err
+        output::/tmp/out1.out:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/out1.out
     """
     parts = blahp_job_id.strip().split('/')
     if len(parts) != 3 or parts[0] != 'sfapi':
@@ -132,7 +138,7 @@ def upload_file(directory, file):
                 buf.filename = os.path.basename(file)
                 uploaded_file = remote_dir.upload(buf)
                 print(f"Uploaded file to {uploaded_file}")
-                print(f"Now there's {len(dtns.ls(remote_dir))} files in the directory")
+                #print(f"Now there's {len(dtns.ls(remote_dir))} files in the directory")
 
     return uploaded_file
 

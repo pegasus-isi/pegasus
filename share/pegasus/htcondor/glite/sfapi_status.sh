@@ -110,8 +110,9 @@ for reqfull in $pars ; do
     if [ "$blahp_status" == "4" ] ; then
         dl_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" download "$reqfull" 2>&1)
         if [ "$?" != "0" ] ; then
-            echo "1Error: job $reqjob is done but output download failed: $dl_out" >&2
+            echo "1Error: job $reqjob is done but output download mentioned in {$reqfull} failed: $dl_out" >&2
         fi
+        # To Do: Ask Jaime how to trigger failure / job hold here
     fi
 
     result="[BatchJobId=\"$reqjob\";JobStatus=${blahp_status};"
