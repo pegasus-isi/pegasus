@@ -1100,7 +1100,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         random_dir: Union[bool, str, Path] = False,
         relative_submit_dir: Optional[Union[str, Path]] = None,
         inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-        cleanup: str = "inplace",
+        cleanup: Optional[str] = None,
         reuse: Optional[List[Union[str, Path]]] = None,
         verbose: int = 0,
         quiet: int = 0,
@@ -1157,8 +1157,8 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type relative_submit_dir: Optional[Union[str, Path]]
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
-        :param cleanup: the cleanup strategy to use. Can be :code:`none|inplace|leaf|constraint`, defaults to :code:`inplace`
-        :type cleanup: str, optional
+        :param cleanup: the cleanup strategy to use. Can be a :code:`str` :code:`none|inplace|leaf|constraint`, defaults to None (internally, pegasus-plan will use the default :code:`inplace` if :code:`None` is given)
+        :type cleanup: Optional[str]
         :param reuse: list of submit directories of previous runs from which to pick up for reuse (e.g. :code:`["/workflows/submit_dir1", "/workflows/submit_dir2"]`), defaults to None
         :type reuse: Optional[List[Union[str,Path]]]
         :param verbose: verbosity, defaults to 0
