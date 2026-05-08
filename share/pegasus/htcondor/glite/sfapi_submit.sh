@@ -257,6 +257,8 @@ sfapi_input_files=()
 # e.g. /tmp/condor_g_scratch.0x55d2fcb281c0.542/InputFileList_3_17781864805412
 if [ ! -z "$bls_opt_inputflstring" ] ; then
     for file in `cat $bls_opt_inputflstring`; do
+        bls_get_file_path $file
+        file=$bls_get_file_path_result
         sfapi_input_files+=("$file")
     done
 fi
