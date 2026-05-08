@@ -363,7 +363,7 @@ echo "${fragment}" > "${jobstate_file}"
 remote_dir=`dirname ${remote_stdout}`
 for outfile in "${sfapi_output_files[@]}"
 do
-    echo "output::${remote_dir}/`basename ${outfile}`:${outfile}" >> "${jobstate_file}"
+    echo "output::${outfile}":${remote_dir}/`basename ${outfile}` >> "${jobstate_file}"
 done
 
 echo "BLAHP_JOBID_PREFIX$blahp_jobID"
