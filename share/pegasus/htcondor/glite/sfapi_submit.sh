@@ -68,7 +68,7 @@ function bls_get_file_path ()
 #
 # Usage: bls_get_file_path file path
 # updates the file path against the ${bls_opt_workdir} if file path is not
-# an aboslute path
+# an absolute path
 # ${bls_opt_workdir} is the intialdir for the job or the submit directory
 #
 # Result is returned in $bls_get_file_path_result.
@@ -263,7 +263,9 @@ fi
 
 
 # Upload stdin file if specified
-if [ -n "$bls_opt_stdin" ] && [ -f "$bls_opt_stdin" ] ; then
+if [ -n "$bls_opt_stdin" ] && [ -f "$bls_opt_stdin" ] && [ x"$bls_opt_stdin" != "x/dev/null" ] ; then
+    bls_get_file_path $bls_opt_stdin
+    bls_opt_stdin=$bls_get_file_path_result
     sfapi_input_files+=("$bls_opt_stdin")
 fi
 
