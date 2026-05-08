@@ -63,6 +63,23 @@ function bls_set_job_env ()
     print_blahp_job_env
 }
 
+function bls_get_file_path ()
+{
+#
+# Usage: bls_get_file_path file path
+# updates the file path against the ${bls_opt_workdir} if file path is not
+# an aboslute path
+# ${bls_opt_workdir} is the intialdir for the job or the submit directory
+#
+# Result is returned in $bls_get_file_path_result.
+#
+    local file_path=$1
+    if [ "${file_path:0:1}" != "/" ] ;
+        then file_path=${bls_opt_workdir}/${file_path} ;
+    fi
+    bls_get_file_path_result=${file_path}
+}
+
 bls_parse_submit_options "$@"
 
 # karan: we are submitting job remotely. so this should be set to no to get
@@ -304,12 +321,18 @@ blahp_jobID="sfapi/`basename $datenow`/$jobID"
 # Persist the remote output paths so sfapi_status.sh can retrieve them later
 sfapi_state_dir="${HOME}/.blah/sfapi_jobs"
 mkdir -p "$sfapi_state_dir"
-#echo "${remote_stdout}:${remote_stderr}" > "${sfapi_state_dir}/${jobID}"
-# map local stdout and stderr to their remote counterparts on perlmutter
 
+# resolve stdout and stderr path against bls_opt_workdir
+bls_get_file_path $bls_opt_stdout
+bls_opt_stdout=$bls_get_file_path_result
+
+bls_get_file_path $bls_opt_stderr
+bls_opt_stderr=$bls_get_file_path_result
+
+# map local stdout and stderr to their remote counterparts on perlmutter
 read -r -d '' fragment << EOM
-stdout::${bls_opt_workdir}/${bls_opt_stdout}:${remote_stdout}
-stderr::${bls_opt_workdir}/${bls_opt_stderr}:${remote_stderr}
+stdout::${bls_opt_stdout}:${remote_stdout}
+stderr::${bls_opt_stderr}:${remote_stderr}
 EOM
 
 jobstate_file=${sfapi_state_dir}/`basename $datenow`_$jobID
