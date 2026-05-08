@@ -91,8 +91,10 @@ def download_job_outputs(blahp_job_id):
     per line in the format:
         <type>::<local_path>:<remote_path>
     e.g.:
+        # type::<local file on submit host>:<remote file to retrieve via sfapi>
         stdout::/scratch/user/job.out:/pscratch/sd/u/user/.blah/bl_X/bl_X.out
         stderr::/scratch/user/job.err:/pscratch/sd/u/user/.blah/bl_X/bl_X.err
+        output::/pscratch/sd/v/vahi/.blah/bl_Vm1MXw/out1.out:/tmp/out2.out
     """
     parts = blahp_job_id.strip().split('/')
     if len(parts) != 3 or parts[0] != 'sfapi':
@@ -107,7 +109,7 @@ def download_job_outputs(blahp_job_id):
 
     for line in jobstate_file.read_text().splitlines():
         line = line.strip()
-        if not line or '::' not in line:
+        if not line or line.startswith("#") or '::' not in line:
             continue
         # Split into type tag and the path pair
         _, paths = line.split('::', 1)

@@ -349,6 +349,7 @@ bls_opt_stderr=$bls_get_file_path_result
 
 # map local stdout and stderr to their remote counterparts on perlmutter
 read -r -d '' fragment << EOM
+# type::<local file on submit host>:<remote file to retrieve via sfapi>
 stdout::${bls_opt_stdout}:${remote_stdout}
 stderr::${bls_opt_stderr}:${remote_stderr}
 EOM
@@ -358,9 +359,11 @@ echo "${fragment}" > "${jobstate_file}"
 
 # add output files that we need to download after job
 # finishes into the jobstate file
+# guess the directory on the remote end via dir for remote_stdout
+remote_dir=`dirname ${remote_stdout}`
 for outfile in "${sfapi_output_files[@]}"
 do
-    echo "output::`basename $outfile`:$outfile" >> "${jobstate_file}"
+    echo "output::${remote_dir}/`basename ${outfile}`:${outfile}" >> "${jobstate_file}"
 done
 
 echo "BLAHP_JOBID_PREFIX$blahp_jobID"
