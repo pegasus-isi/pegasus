@@ -239,7 +239,6 @@ cp $bls_tmp_file /tmp/
 # Collect input files to upload to Perlmutter
 ###############################################################
 
-# Always upload the executable for remote submission (no shared filesystem).
 
 sfapi_input_files=()
 
@@ -260,6 +259,21 @@ if [ ! -z "$bls_opt_inputflstring" ] ; then
         bls_get_file_path $file
         file=$bls_get_file_path_result
         sfapi_input_files+=("$file")
+    done
+fi
+
+###############################################################
+# Collect output files to download from Perlmutter
+###############################################################
+sfapi_output_files=()
+
+# pick up transfer_input_files specified by the user
+# the filenames are in a file identified by $bls_opt_outputflstring
+if [ ! -z "$bls_opt_outputflstring" ] ; then
+    for file in `cat $bls_opt_outputflstring`; do
+        bls_get_file_path $file
+        file=$bls_get_file_path_result
+        sfapi_output_files+=("$file")
     done
 fi
 
@@ -341,6 +355,13 @@ EOM
 
 jobstate_file=${sfapi_state_dir}/`basename $datenow`_$jobID
 echo "${fragment}" > "${jobstate_file}"
+
+# add output files that we need to download after job
+# finishes into the jobstate file
+for outfile in "${sfapi_output_files[@]}"
+do
+    echo "output::`basename $outfile`:$outfile" >> "${jobstate_file}"
+done
 
 echo "BLAHP_JOBID_PREFIX$blahp_jobID"
 
