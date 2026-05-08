@@ -882,7 +882,9 @@ public class GLite extends Abstract {
                 // default case nothing specified
             }
 
-        } else if (batchSystem.equals("slurm") || batchSystem.equals("flux")) {
+        } else if (batchSystem.equals("slurm")
+                || batchSystem.equals("sfapi")
+                || batchSystem.equals("flux")) {
             // for SLURM case
             boolean coresSet = job.globusRSL.containsKey(Globus.COUNT_KEY);
             boolean nodesSet = job.globusRSL.containsKey(Globus.HOST_COUNT_KEY);
@@ -949,6 +951,7 @@ public class GLite extends Abstract {
                 : batchSystem.equals("pbs")
                         || batchSystem.equals("sge")
                         || batchSystem.equals("slurm")
+                        || batchSystem.equals("sfapi")
                         || batchSystem.equals("flux")
                         || batchSystem.equals("moab")
                         || batchSystem.equals("lsf")
