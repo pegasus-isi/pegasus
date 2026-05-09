@@ -38,24 +38,33 @@
 
 bls_submit_args_prefix="#SBATCH"
 
+# transfer_executable value is not supported in blahp
+# similar functionality by setting the variable
+# _CONDOR_TRANSFER_EXECUTABLE=false in the
+# environment variable in the condor submit file
+bls_transfer_executable_env_regex="^_CONDOR_TRANSFER_EXECUTABLE=false$"
+
 function bls_set_job_env ()
 {
     # Karan: Copied from bls_start_job_wrapper() function in blah_common_submit_functions
-    # To Do: Should be a separate function in common functions. Ask Jaime
+    # TODO: Should be a separate function in common functions. Ask Jaime
     #
     # Set the required environment variables (escape values with double quotes)
     # We don't merge the existing PATH with the job-defined one if so configured
     if [ "x$bls_opt_environment" != "x" ] ; then
             echo ""
-            echo "# Setting the environment:"
+            echo "#1 Setting the environment:"
       eval "env_array=($bls_opt_environment)"
             for  env_var in "${env_array[@]}"; do
                      echo export \"$env_var\"
+                     if [[ $env_var =~ $bls_transfer_executable_env_regex ]] ; then
+                         bls_opt_stgcmd="no"
+                     fi
             done
     else
             if [ "x$bls_opt_envir" != "x" ] ; then
                     echo ""
-                    echo "# Setting the environment:"
+                    echo "#2 Setting the environment:"
                     echo "`echo ';'$bls_opt_envir | sed -e 's/;[^=]*;/;/g' -e 's/;[^=]*$//g' | sed -e 's/;\([^=]*\)=\([^;]*\)/;export \1=\"\2\"/g' | awk 'BEGIN { RS = ";" } ; { print $0 }'`"
             fi
     fi
@@ -126,8 +135,8 @@ cat > $bls_tmp_file << end_of_preamble
 #
 # to be figured out how to expose via HTCondor / Pegasus
 ##SBATCH -C cpu
-#SBATCH -N 1
-#SBATCH -n 1
+##SBATCH -N 1
+##SBATCH -n 1
 end_of_preamble
 
 if [ "x$bls_opt_project" != "x" ] ; then
@@ -206,18 +215,32 @@ bls_set_job_env >> $bls_tmp_file
 # uploaded files are accessible by their basename.
 ###############################################################
 
+sfapi_input_files=()
+
 bls_command_basename="`basename $bls_opt_the_command`"
 
 {
     echo ""
-    echo "# Execute the uploaded job command"
-    # Karan to do: Only if transfer_executable is set
+    echo "# Execute the  job command"
+    # Karan TODO: Only if transfer_executable is set
     # we use the basename
-    #
-    #echo "chmod u+x \"./$bls_command_basename\""
-    #
-    #run_cmd="./$bls_command_basename"
-    run_cmd=$bls_opt_the_command
+    run_cmd=${bls_opt_the_command}
+    if [ "x${bls_opt_stgcmd}" == "xyes" ] ; then
+        run_cmd="${bls_command_basename}"
+        echo "chmod u+x \"./$run_cmd\""
+
+        # figure out the executable path to use for transfer
+        bls_get_file_path ${bls_opt_the_command}
+        bls_opt_the_command=$bls_get_file_path_result
+        if [ -f "$bls_opt_the_command" ] ; then
+            sfapi_input_files+=("${bls_opt_the_command}")
+        else
+            echo "Error: command not found locally: $bls_opt_the_command" >&2
+            #rm -f $bls_tmp_file
+           exit 1
+        fi
+    fi
+
 
     # If stdin was specified and is not /dev/null,
     # it will be uploaded; reference it by basename.
@@ -225,7 +248,7 @@ bls_command_basename="`basename $bls_opt_the_command`"
         run_cmd="${run_cmd} < \"./$( basename "$bls_opt_stdin" )\""
     fi
 
-    # stdout/stderr flow to #SBATCH --output/--error set by sfapi_helpers.
+    # stdout/stderr flow to #SBATCH --output/--error set by sfapi_helpers.py.
     # bls_arguments holds only the raw positional args after '--'.
     echo "${run_cmd} ${bls_arguments}"
     echo "exit \$?"
@@ -238,9 +261,6 @@ cp $bls_tmp_file /tmp/
 ###############################################################
 # Collect input files to upload to Perlmutter
 ###############################################################
-
-
-sfapi_input_files=()
 
 #Karan To do: Need to do this only if transfer_executable is set
 #if [ -f "$bls_opt_the_command" ] ; then
