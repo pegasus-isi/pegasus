@@ -91,12 +91,6 @@ public class CondorGenerator extends Abstract {
     /** The default category for the sub dax jobs. */
     public static final String SUBMIT_FILE_SUFFIX = ".sub";
 
-    /**
-     * set in the job environment explicitly _CONDOR_TRANSFER_EXECUTABLE env variable if a non
-     * default value is used.
-     */
-    public static final String CONDOR_TRANSFER_EXECUTABLE_ENV_KEY = "_CONDOR_TRANSFER_EXECUTABLE";
-
     /** The nice separator, define once, use often. */
     public static final String mSeparator =
             "######################################################################";
@@ -1583,16 +1577,6 @@ public class CondorGenerator extends Abstract {
         } else {
             // we assume pre-staged executables through the GVDS
             cvar.construct(key, transfer_exec_value);
-        }
-
-        if (job.vdsNS.containsKey(Pegasus.STYLE_KEY)
-                && job.vdsNS.getStringValue(Pegasus.STYLE_KEY).equals(Pegasus.GLITE_STYLE)) {
-            // GH-2186 we need to set env variable
-            // _CONDOR_TRANSFER_EXECUTABLE to the value in condor variable
-            // transfer_executable
-            // for blah to work correctly for sfapi
-            job.envVariables.construct(
-                    CondorGenerator.CONDOR_TRANSFER_EXECUTABLE_ENV_KEY, transfer_exec_value);
         }
 
         key = "copy_to_spool";

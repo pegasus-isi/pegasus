@@ -122,6 +122,12 @@ public class GLite extends Abstract {
     /** the panda grid resource */
     public static String BATCH_GRID_RESOURCE_PREFIX = "batch";
 
+    /**
+     * set in the job environment explicitly _CONDOR_TRANSFER_EXECUTABLE env variable if a non
+     * default value is used.
+     */
+    public static final String CONDOR_TRANSFER_EXECUTABLE_ENV_KEY = "_CONDOR_TRANSFER_EXECUTABLE";
+
     /** A boolean to track whether to encode all resource profiles into remote_ce_requirements */
     protected boolean mEncodeAllResourceProfilesIntoCEReqs;
 
@@ -404,6 +410,13 @@ public class GLite extends Abstract {
             applyCredentialsForRemoteExec(job);
         }
 
+        // GH-2186 we need to set env variable
+        // _CONDOR_TRANSFER_EXECUTABLE to the value in condor variable
+        // transfer_executable
+        // for blah to work correctly for sfapi
+        job.envVariables.construct(
+                GLite.CONDOR_TRANSFER_EXECUTABLE_ENV_KEY,
+                getTransferExecutableCondorVarForJob(job));
         /*
          PM-934 construct environment accordingly
          PM-1084 +remote_environment should be created only after credentials
@@ -1046,5 +1059,21 @@ public class GLite extends Abstract {
         Job j = new Job();
         String ce = gl.getCERequirementsForJob(j, GLite.PBS_GRID_RESOURCE);
         System.err.println(ce);
+    }
+
+    /**
+     * Returns the transfer_executable condor profile for the job
+     *
+     * @param job
+     * @return
+     */
+    private String getTransferExecutableCondorVarForJob(Job job) {
+        String key = "transfer_executable";
+        String transfer_exec_value = "false";
+        if (job.condorVariables.containsKey(key)) {
+            // we do not put in the default value
+            transfer_exec_value = (String) job.condorVariables.get(key);
+        }
+        return transfer_exec_value;
     }
 }
