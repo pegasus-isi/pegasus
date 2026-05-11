@@ -100,19 +100,17 @@ bls_parse_submit_options "$@"
 bls_setup_temp_files
 
 
-#bls_setup_all_files
-
 # Mirror the debug-dir setup from bls_setup_all_files so bls_save_submit works.
 #bls_wrapper_stdout="/dev/null"
 #bls_wrapper_stderr="/dev/null"
-#if [ -d "$blah_debug_save_submit_info" ] && [ -n "$bls_tmp_name" ]; then
-#    bls_info_dir="$blah_debug_save_submit_info/$bls_tmp_name.debug"
-#    mkdir "$bls_info_dir"
+if [ -d "$blah_debug_save_submit_info" ] && [ -n "$bls_tmp_name" ]; then
+    bls_info_dir="$blah_debug_save_submit_info/$bls_tmp_name.debug"
+    mkdir "$bls_info_dir"
 #    if [ -d "$bls_info_dir" ]; then
 #        bls_wrapper_stdout="$bls_info_dir/wrapper.stdout"
 #        bls_wrapper_stderr="$bls_info_dir/wrapper.stderr"
 #    fi
-#fi
+fi
 
 ###############################################################
 # Build the SBATCH job script
@@ -129,14 +127,16 @@ cat > $bls_tmp_file << end_of_preamble
 # stgcmd = $bls_opt_stgcmd
 # proxy_string = $bls_opt_proxy_string
 #
-# SLURM directives:
-##SBATCH -o ${bls_opt_workdir}/$bls_opt_stdout
-##SBATCH -e ${bls_opt_workdir}/$bls_opt_stderr
+# the paths below are the local paths where
+# sfapi_status.sh will download the stdout and stderr
+# the submit command of sfapi_helpers.py sets the
+# remote stdout and stderr
+# local_stdout = ${bls_opt_workdir}/$bls_opt_stdout
+# local_stderr = ${bls_opt_workdir}/$bls_opt_stderr
 #
-# to be figured out how to expose via HTCondor / Pegasus
-##SBATCH -C cpu
-##SBATCH -N 1
-##SBATCH -n 1
+# SLURM directives:
+#
+#
 end_of_preamble
 
 if [ "x$bls_opt_project" != "x" ] ; then
@@ -236,8 +236,8 @@ bls_command_basename="`basename $bls_opt_the_command`"
             sfapi_input_files+=("${bls_opt_the_command}")
         else
             echo "Error: command not found locally: $bls_opt_the_command" >&2
-            #rm -f $bls_tmp_file
-           exit 1
+            rm -f $bls_tmp_file
+            exit 1
         fi
     fi
 
@@ -256,20 +256,11 @@ bls_command_basename="`basename $bls_opt_the_command`"
 
 bls_save_submit
 
-cp $bls_tmp_file /tmp/
 
 ###############################################################
 # Collect input files to upload to Perlmutter
 ###############################################################
 
-#Karan To do: Need to do this only if transfer_executable is set
-#if [ -f "$bls_opt_the_command" ] ; then
-#    sfapi_input_files+=("$bls_opt_the_command")
-#else
-#    echo "Error: command not found locally: $bls_opt_the_command" >&2
-#    rm -f $bls_tmp_file
-#    exit 1
-#fi
 
 # pick up transfer_input_files specified by the user
 # the filenames are in a file identified by $bls_opt_inputflstring
@@ -386,6 +377,13 @@ do
     echo "output::${outfile}":${remote_dir}/`basename ${outfile}` >> "${jobstate_file}"
 done
 
+# if we are saving the slurm submit file also copy the jobstate
+# file that has the paths for remote stdout and stderr
+if [ -d "${bls_info_dir}" ] && [ -n "${jobstate_file}" ]; then
+    cp ${jobstate_file} ${bls_info_dir}
+fi
+
+# echo out the job id for BLAHP to pick up
 echo "BLAHP_JOBID_PREFIX$blahp_jobID"
 
 bls_wrap_up_submit
