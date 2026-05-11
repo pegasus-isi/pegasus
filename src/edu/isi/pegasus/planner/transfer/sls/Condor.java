@@ -369,6 +369,7 @@ public class Condor implements SLS {
                         || style.equals(Pegasus.CONDORC_STYLE)
                         || style.equals(Pegasus.CREAMCE_STYLE)
                         || style.equals(Pegasus.PANDA_STYLE)
+                        || style.equals(Pegasus.GLITE_STYLE)
                         || style.equals(Pegasus.SSH_STYLE))) {
 
             mLogger.log(

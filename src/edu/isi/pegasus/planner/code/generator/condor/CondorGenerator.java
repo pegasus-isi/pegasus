@@ -1568,12 +1568,15 @@ public class CondorGenerator extends Abstract {
             // check if transfer_executable was set to
             // true by the user at runtime
         }
+
         key = "transfer_executable";
+        String transfer_exec_value = "false";
         if (cvar.containsKey(key)) {
             // we do not put in the default value
+            transfer_exec_value = (String) cvar.get(key);
         } else {
             // we assume pre-staged executables through the GVDS
-            cvar.construct(key, "false");
+            cvar.construct(key, transfer_exec_value);
         }
 
         key = "copy_to_spool";

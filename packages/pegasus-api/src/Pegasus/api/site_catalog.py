@@ -100,6 +100,7 @@ class Scheduler(Enum):
     SGE = "sge"
     SLURM = "slurm"
     FLUX = "flux"
+    SFAPI = "sfapi"
     UNKNOWN = "unknown"
 
 
