@@ -81,7 +81,7 @@ map_sfapi_state_to_blahp() {
 ###############################################################
 # Query each requested job ID
 ###############################################################
-
+sfapi_state_dir="${HOME}/.blah/sfapi_jobs"
 for reqfull in $pars ; do
     # Strip path prefix: sfapi/YYYYMMDD/JOBID -> JOBID
     reqjob=`echo $reqfull | sed -e 's/^.*\///'`
@@ -106,12 +106,24 @@ for reqfull in $pars ; do
 
     blahp_status=$(map_sfapi_state_to_blahp "$sfapi_state")
 
+    # this is the path that sfapi_submit.sh and sfapi_helpers.py refer
+    # as the jobstate file. We map the blahp job id to the file
+    # sfapi/20260511/52833290 -> 20260511_52833290
+    jobstate_base=`echo ${reqfull} | sed 's/^sfapi\///' | sed 's/\//_/g'`
+    jobstate_file="${sfapi_state_dir}/${jobstate_base}"
+
     # Download remote output files when the job is done (status 4)
     if [ "$blahp_status" == "4" ] ; then
         dl_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" download "$reqfull" 2>&1)
         if [ "$?" != "0" ] ; then
             echo "1Error: job $reqjob is done but output download mentioned in {$reqfull} failed: $dl_out" >&2
         fi
+
+        # cleanup the job state file ~/.blah/sfapi_jobs
+        if [ -f "${jobstate_file}" ] ; then
+            rm -f ${jobstate_file}
+        fi
+
         # TODO: Ask Jaime how to trigger failure / job hold here
     fi
 
