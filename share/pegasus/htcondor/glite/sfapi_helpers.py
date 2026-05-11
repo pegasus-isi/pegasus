@@ -47,7 +47,7 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
 #SBATCH --chdir={remote_dir}
 """     + job_script
 
-        print("Submitting job \n" + job_script)
+        print("Submitting job \n" + job_name)
 
         perlmutter = client.compute(Machine.perlmutter)
         # Jobs can be submitted from
@@ -207,7 +207,6 @@ def load_sflapi_client_secret():
     for sf_file in sf_key_dir.iterdir():
         if sf_file.is_file():
             sf_file.chmod(0o600)
-            print(sf_file.name)
 
     client_id = (sf_key_dir / "clientid.txt").read_text().strip()
     print(f"User client id for superfacility is {client_id}")

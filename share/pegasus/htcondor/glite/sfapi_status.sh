@@ -112,7 +112,7 @@ for reqfull in $pars ; do
         if [ "$?" != "0" ] ; then
             echo "1Error: job $reqjob is done but output download mentioned in {$reqfull} failed: $dl_out" >&2
         fi
-        # To Do: Ask Jaime how to trigger failure / job hold here
+        # TODO: Ask Jaime how to trigger failure / job hold here
     fi
 
     result="[BatchJobId=\"$reqjob\";JobStatus=${blahp_status};"
