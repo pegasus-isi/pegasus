@@ -226,8 +226,8 @@ bls_command_basename="`basename $bls_opt_the_command`"
     # we use the basename
     run_cmd=${bls_opt_the_command}
     if [ "x${bls_opt_stgcmd}" == "xyes" ] ; then
-        run_cmd="${bls_command_basename}"
-        echo "chmod u+x \"./$run_cmd\""
+        run_cmd="./${bls_command_basename}"
+        echo "chmod u+x \"${run_cmd}\""
 
         # figure out the executable path to use for transfer
         bls_get_file_path ${bls_opt_the_command}
