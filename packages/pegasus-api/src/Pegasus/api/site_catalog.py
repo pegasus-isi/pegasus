@@ -88,6 +88,7 @@ class _GridType(Enum):
     UNICORE = "unicore"
     EC2 = "ec2"
     DELTACLOUD = "deltacloud"
+    SFAPI = "sfapi"
 
 
 class Scheduler(Enum):
@@ -100,7 +101,6 @@ class Scheduler(Enum):
     SGE = "sge"
     SLURM = "slurm"
     FLUX = "flux"
-    SFAPI = "sfapi"
     UNKNOWN = "unknown"
 
 
