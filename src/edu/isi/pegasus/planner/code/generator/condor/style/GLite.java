@@ -484,6 +484,11 @@ public class GLite extends Abstract {
         job.condorVariables.construct(
                 GLite.CONDOR_REMOTE_ENVIRONMENT_KEY, mEnvEscape.escape(job.envVariables));
         job.envVariables.reset();
+
+        // GH-2187 update the grid resource if required for sfapi case
+        // we do it in the end after the whole style has been applied for
+        // the job.
+        updateCondorGridResourceForJob(job);
     }
 
     /**
@@ -1132,5 +1137,21 @@ public class GLite extends Abstract {
             transfer_exec_value = (String) job.condorVariables.get(key);
         }
         return transfer_exec_value;
+    }
+
+    /**
+     * Updates the grid_resource condor profile for the SFAPI case.
+     *
+     * @param job
+     */
+    private void updateCondorGridResourceForJob(Job job) {
+        String gridResource = getGridResourceFromCondorGridResource(job);
+        if (gridResource.startsWith("sfapi")) {
+            // GH-2187 only for sfapi case for time being it should be
+            // grid_resource = batch sfapi , instead of grid_resource = sfapi slurm perlmutter
+            // this is until our changes are pulled up into HTCondor upstream
+            gridResource = "batch sfapi";
+            job.condorVariables.construct(Condor.GRID_RESOURCE_KEY, gridResource);
+        }
     }
 }
