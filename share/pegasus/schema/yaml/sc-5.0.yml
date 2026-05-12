@@ -93,6 +93,7 @@ $defs:
           - unicore
           - ec2
           - deltacloud
+          - sfapi
       contact:
         type: string
       scheduler:
