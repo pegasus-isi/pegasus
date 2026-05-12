@@ -23,6 +23,20 @@ class SfApiHelperError(Exception):
     pass
 
 def submit_remote_slurm_job(job_name, job_script, input_files):
+    """
+    Submit a Slurm batch job to Perlmutter at NERSC via the SFAPI.
+
+    Creates a remote working directory under the user's scratch filesystem,
+    uploads all specified input files, prepends #SBATCH --output, --error,
+    and --chdir directives to the job script, then submits it.
+
+    :param job_name:    Name for the job and remote working directory.
+                        Defaults to 'bl_sfapi' if None.
+    :param job_script:  Content of the SBATCH batch script to submit.
+    :param input_files: List of local file paths to upload to the remote
+                        working directory before submission.
+    :return: Tuple of (job_id, remote_stdout_path, remote_stderr_path).
+    """
     with (Client(client_id, client_secret) as client):
 
         # first figure out a job directory on the remote side
@@ -57,7 +71,17 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
         print(f"Started {job_id} with stdout: {remote_stdout} stderr: {remote_stderr}")
         return job_id, remote_stdout, remote_stderr
 
-def retrieve_remote_stdout_stderr( job_id, remote_stdout, remote_stderr):
+def retrieve_remote_stdout_stderr(job_id, remote_stdout, remote_stderr):
+    """
+    Wait for a job to complete then download its stdout and stderr files.
+
+    Blocks until the job reaches a terminal state, then downloads the remote
+    output files to <job_id>.out and <job_id>.err in the current directory.
+
+    :param job_id:        Numeric Slurm job ID.
+    :param remote_stdout: Absolute path to the job's stdout file on Perlmutter.
+    :param remote_stderr: Absolute path to the job's stderr file on Perlmutter.
+    """
     with Client(client_id, client_secret) as client:
         perlmutter = client.compute(Machine.perlmutter)
         job = perlmutter.job(jobid=job_id)
@@ -126,6 +150,13 @@ def download_job_outputs(blahp_job_id):
 
 
 def upload_file(directory, file):
+    """
+    Upload a local file to a remote directory on Perlmutter via the NERSC DTNs.
+
+    :param directory: Absolute remote path of the target directory on Perlmutter.
+    :param file:      Local path of the file to upload.
+    :return:          The remote path of the uploaded file as returned by the SFAPI.
+    """
     with Client(client_id, client_secret) as client:
         dtns = client.compute(Machine.dtns)
 
@@ -145,6 +176,14 @@ def upload_file(directory, file):
 
 
 def create_remote_blahp_directory(name):
+    """
+    Create a job working directory under the user's Perlmutter scratch filesystem.
+
+    The directory is created at $PSCRATCH/.blah/<name> using the NERSC DTNs.
+
+    :param name: Directory name (typically the blahp job name / temp file basename).
+    :return:     Absolute remote path of the created directory.
+    """
     with Client(client_id, client_secret) as client:
         # retrieve the remote user at perlmutter to which
         # the key maps to
@@ -163,6 +202,15 @@ def create_remote_blahp_directory(name):
 
 
 def check_nersc_status(resource_name):
+    """
+    Check whether a NERSC resource is active via the SFAPI.
+
+    Prints a confirmation message if the resource is active.
+    Raises RuntimeError if the resource is in any non-active state.
+
+    :param resource_name: NERSC resource name to query (e.g. 'perlmutter').
+    :raises RuntimeError: If the resource is not active.
+    """
     with Client() as client:
         resource_status = client.resources.status(resource_name)
     if resource_status.status == StatusValue.active:
@@ -173,6 +221,14 @@ def check_nersc_status(resource_name):
         )
 
 def check_job_status(jobid):
+    """
+    Query and print the current Slurm state of a job on Perlmutter.
+
+    Loads SFAPI credentials, queries Perlmutter for the job, and prints
+    a line of the form "Job <jobid> state: <state>".
+
+    :param jobid: Numeric Slurm job ID to query.
+    """
     load_sflapi_client_secret()
     with Client(client_id, client_secret) as client:
         perlmutter = client.compute(Machine.perlmutter)
@@ -180,6 +236,12 @@ def check_job_status(jobid):
     print(f"Job {args.value} state: {job.state}")
 
 def print_nersc_status():
+    """
+    Print the current status of all NERSC resources to stdout.
+
+    Uses public SFAPI access (no credentials required) and prints one line
+    per resource in the format: name | description | status.
+    """
     with Client() as client:
         perlmutter_status = client.resources.status(Machine.perlmutter)
 
@@ -216,91 +278,17 @@ def load_sflapi_client_secret():
 
     print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
-
-"""
-with Client(client_id, client_secret) as client:
-    # Get the user info, "Who does the api think I am?"
-    user = client.user()
-    print(user)
-    projects = user.projects()
-
-
-print("Project name |        Hours Given | Hours Remaining")
-for project in projects:
-    print("=" * 51)
-    print(
-         f"{project.repo_name: <13}| {project.hours_given:>12.2f} Hours | {project.hours_given - project.hours_used:>8.2f} Hours"
-    )
-
-
-home = f"/global/homes/{user.name[0]}/{user.name}"
-scratch = f"/pscratch/sd/{user.name[0]}/{user.name}"
-
-
-with Client(client_id, client_secret) as client:
-    dtns = client.compute(Machine.dtns)
-    # This will run a command on dtns, here we use `mkdir` to make our output directory
-    dtns.run(f"mkdir -p {scratch}/sfapi-demo")
-    # We can run ls on the directory to see that it was created
-    [output_dir] = dtns.ls(f"{scratch}/sfapi-demo", directory=True)
-
-# Check that the directory is there
-output_dir.is_dir()
-
-
-# What we want in our file
-file_contents = "hello world!"
-
-my_input_file = BytesIO(file_contents.encode())
-# Give our BytesIO file a filename to upload to
-my_input_file.filename = "hello.txt"
-
-with Client(client_id, client_secret) as client:
-    dtns = client.compute(Machine.dtns)
-    print(f"There are {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-    [input_file_dir] = dtns.ls(f"{scratch}/sfapi-demo", directory=True)
-    # Upload the input file to the directoy object
-    input_file_dir.upload(my_input_file)
-    print(f"Now there's {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-
-
-# What we want in our file
-file_contents = "hello world!"
-
-my_input_file = BytesIO(file_contents.encode())
-# Give our BytesIO file a filename to upload to
-my_input_file.filename = "hello.txt"
-
-with Client(client_id, client_secret) as client:
-    dtns = client.compute(Machine.dtns)
-    print(f"There are {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-    [input_file_dir] = dtns.ls(f"{scratch}/sfapi-demo", directory=True)
-    # Upload the input file to the directoy object
-    input_file_dir.upload(my_input_file)
-    print(f"Now there's {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-
-
-# What we want in our file
-file_contents = "hello world!"
-
-my_input_file = BytesIO(file_contents.encode())
-# Give our BytesIO file a filename to upload to
-my_input_file.filename = "hello.txt"
-
-with Client(client_id, client_secret) as client:
-    dtns = client.compute(Machine.dtns)
-    print(f"There are {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-    [input_file_dir] = dtns.ls(f"{scratch}/sfapi-demo", directory=True)
-    # Upload the input file to the directory object
-    input_file_dir.upload(my_input_file)
-    print(f"Now there's {len(dtns.ls(f'{scratch}/sfapi-demo'))} files in the directory")
-"""
+ 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main():
+    """
+    Demo entry point: print NERSC status, list project allocations, and
+    submit a small test job that generates random numbers on Perlmutter.
+    """
     print_nersc_status()
     client_id, client_secret = load_sflapi_client_secret()
 

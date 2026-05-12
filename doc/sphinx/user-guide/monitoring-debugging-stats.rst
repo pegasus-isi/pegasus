@@ -272,7 +272,7 @@ The workflow for expression-based retry looks like this:
 6. DAGMan retries the job using the updated submit file.
 
 Enabling the Expressions Evaluation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to enable this feature for your workflow you need to ensure
 you have the `pythonsed` package installed in your workflow environment.
@@ -293,7 +293,7 @@ plain profiles. For each supported resource profile key, a corresponding
 the job or transformation.
 
 Python API
-^^^^^^^^^^
+~~~~~~~~~~
 
 Use ``add_pegasus_profile()`` with the ``*_expr`` keyword arguments:
 
@@ -310,7 +310,7 @@ Use ``add_pegasus_profile()`` with the ``*_expr`` keyword arguments:
    )
 
 YAML Workflow
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 In a YAML workflow file the ``*.expr`` suffix is appended to the profile
 key name:
