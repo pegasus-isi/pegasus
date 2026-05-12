@@ -266,6 +266,7 @@ class Grid:
     UNICORE = _GridType.UNICORE
     EC2 = _GridType.EC2
     DELTACLOUD = _GridType.DELTACLOUD
+    SFAPI = _GridType.SFAPI
 
     def __init__(
         self,
