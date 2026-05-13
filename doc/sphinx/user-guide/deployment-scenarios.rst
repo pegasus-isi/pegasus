@@ -1100,8 +1100,6 @@ Red security level that allows you to submit jobs for 2 days, then store the all
     ~/.superfacility/clientid.txt      # SFAPI client ID (plain text)
     ~/.superfacility/priv_key.jwk      # RSA private key in JWK JSON format
     ~/.superfacility/pub_key.jwk      # RSA public key in JWK JSON format
-    ~/.superfacility/priv_key.pem      # RSA private key in pem format
-    ~/.superfacility/pub_key.pem      # RSA public key in pem format
 
 When creating the client, ensure that one of the two IP's you mention is the workflow
 submit host, from where you are running the workflows. There is a convenient drop
