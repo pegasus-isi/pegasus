@@ -1066,6 +1066,145 @@ An example site catalog entry for a BOSCO site looks like this:
 ..
 
 
+.. _nersc-perlmutter-sfapi:
+
+NERSC Perlmutter via SFAPI
+--------------------------
+
+The NERSC Superfacility API (SFAPI) integration allows you to submit Pegasus workflows
+directly to the `Perlmutter <https://docs.nersc.gov/systems/perlmutter/>`_ supercomputer at
+NERSC without an SSH tunnel or a shared filesystem between your submit host and Perlmutter.
+HTCondor communicates with Perlmutter through a BLAHP plugin that uses the SFAPI Python
+client to upload input files, submit Slurm jobs, poll status, download outputs, and cancel
+jobs — all over HTTPS.
+
+.. note::
+
+    For a full description of the BLAHP plugin internals, credential format, jobstate file
+    layout, and the ``sfapi_helpers.py`` CLI, see
+    :ref:`nersc-sfapi-submission` in the Reference Guide.
+
+Prerequisites
+~~~~~~~~~~~~~
+
+The following must be in place on your Pegasus submit host before planning a workflow
+to run on Perlmutter.
+
+**1. SFAPI credentials**
+
+Register an SFAPI client at `https://iris.nersc.gov <https://iris.nersc.gov>`_ with the
+Red security level that allows you to submit jobs for 2 days, then store the all credentials in:
+
+.. code-block:: text
+
+    ~/.superfacility/clientid.txt      # SFAPI client ID (plain text)
+    ~/.superfacility/priv_key.jwk      # RSA private key in JWK JSON format
+    ~/.superfacility/pub_key.jwk      # RSA public key in JWK JSON format
+    ~/.superfacility/priv_key.pem      # RSA private key in pem format
+    ~/.superfacility/pub_key.pem      # RSA public key in pem format
+
+When creating the client, ensure that one of the two IP's you mention is the workflow
+submit host, from where you are running the workflows. There is a convenient drop
+down option in the IP presets that allows you to select your IP.
+
+
+.. figure:: ../images/sfapi-token-iris.png
+   :alt: The distributed resources appear to be part of a HTCondor pool.
+   :width: 100.0%
+
+   The distributed resources appear to be part of a HTCondor pool.
+
+
+**2. Python virtual environment with** ``sfapi_client``
+
+.. code-block:: console
+
+    $ python3 -m venv ~/superfacility-env
+    $ source ~/superfacility-env/bin/activate
+    (superfacility-env) $ pip install sfapi_client
+
+The virtual environment must be at ``~/superfacility-env``. The HTCondor blahp bindings
+activate this enviornment when interacting with sfapi
+
+**3. Pegasus SFAPI BLAHP scripts**
+
+The scripts (``sfapi_submit.sh``, ``sfapi_status.sh``, ``sfapi_cancel.sh``,
+``sfapi_ping.sh``, ``sfapi_helpers.py``, ``sfapi_setup.sh``,
+``sfapi_local_submit_attributes.sh``) ship with Pegasus under
+``$PEGASUS_SHARE_DIR/htcondor/glite/`` need to be installed in the HTCondor
+blahp directory.
+
+Site Catalog
+~~~~~~~~~~~~
+
+Below is an annotated site catalog entry for Perlmutter. The key differences from a
+standard glite/BOSCO site are:
+
+- ``grids`` uses ``type: sfapi`` with ``contact: perlmutter`` (the NERSC resource name).
+- ``condor: grid_resource: batch sfapi`` routes HTCondor submissions through the SFAPI BLAHP
+  plugin.
+- ``pegasus: style: glite`` enables the glite job-wrapping mechanism.
+- Scratch and output directories live on the CFS community filesystem visible from
+  Perlmutter compute nodes.
+
+.. code-block:: yaml
+
+    pegasus: '5.0'
+    sites:
+    - name: perlmutter
+      directories:
+      - type: sharedScratch
+        path: /global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-scratch
+        sharedFileSystem: false
+        fileServers:
+        - url: file:///global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-scratch
+          operation: all
+      - type: localStorage
+        path: /global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-outputs
+        sharedFileSystem: false
+        fileServers:
+        - url: file:///global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-outputs
+          operation: all
+      grids:
+      - type: sfapi
+        contact: perlmutter
+        scheduler: slurm
+        jobtype: compute
+      profiles:
+        condor:
+          grid_resource: batch sfapi
+        env:
+          PEGASUS_HOME: /global/cfs/cdirs/<NERSC_PROJECT>/software/install/pegasus/default
+        pegasus:
+          style: glite
+          queue: debug           # Slurm partition (debug, regular, …)
+          project: <NERSC_PROJECT>
+          data.configuration: sharedfs
+          nodes: 1
+          cores: 1
+          runtime: 1800          # seconds
+          clusters.num: 2        # cluster jobs together to reduce queue overhead
+
+Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID and
+username respectively.
+
+The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
+:ref:`glite-mappings`.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+**SFAPI credential errors**
+    Verify that ``~/.superfacility/clientid.txt`` and ``~/.superfacility/priv_key.jwk``
+    exist, are readable only by the owner (``chmod 600``), and that the registered client
+    at `https://iris.nersc.gov <https://iris.nersc.gov>`_ has the ``compute:perlmutter``
+    and ``compute:dtns`` scopes.
+
+**Virtual environment not found**
+    ``sfapi_setup.sh`` will print an error message with installation instructions if
+    ``~/superfacility-env`` does not exist or does not contain ``sfapi_client``.
+
+
 .. _pyglidein:
 
 PyGlidein
