@@ -343,10 +343,16 @@ public class ClassADSGenerator {
         } catch (Exception e) {
             // GH-2174 they can also be expressions in case a user
             // explicitly specified condor profile key request_memory
-            writer.println(generateClassAdAttribute(ClassADSGenerator.MEMORY_KEY, memoryValue));
+            // no quoting of the value whatsoever. trust what user
+            // specified.
+            writer.println(
+                    ClassADSGenerator.generateClassAdAttributeWithNoQuotes(
+                            ClassADSGenerator.MEMORY_KEY, memoryValue));
         }
         if (memory >= 0) {
-            writer.println(generateClassAdAttribute(ClassADSGenerator.MEMORY_KEY, memory));
+            writer.println(
+                    ClassADSGenerator.generateClassAdAttribute(
+                            ClassADSGenerator.MEMORY_KEY, memory));
         }
 
         String diskValue = job.vdsNS.getStringValue(Pegasus.DISKSPACE_KEY);
@@ -354,12 +360,18 @@ public class ClassADSGenerator {
         try {
             disk = (diskValue == null) ? -1 : Integer.parseInt(diskValue);
         } catch (Exception e) {
-            writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
-        }
-        if (disk >= 0) {
             // GH-2174 they can also be expressions in case a user
             // explicitly specified condor profile key request_disk
-            writer.println(generateClassAdAttribute(ClassADSGenerator.DISKSPACE_KEY, disk));
+            // no quoting of the value whatsoever. trust what user
+            // specified.
+            writer.println(
+                    ClassADSGenerator.generateClassAdAttributeWithNoQuotes(
+                            ClassADSGenerator.DISKSPACE_KEY, diskValue));
+        }
+        if (disk >= 0) {
+            writer.println(
+                    ClassADSGenerator.generateClassAdAttribute(
+                            ClassADSGenerator.DISKSPACE_KEY, disk));
         }
 
         // GH-2175 specify project and queue if present in pegasus profiles
@@ -444,12 +456,28 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
+     * @return the classad attriubute.
+     */
+    private static String generateClassAdAttributeWithNoQuotes(String name, String value) {
+        StringBuilder sb = new StringBuilder(10);
+
+        sb.append("+");
+        sb.append(name).append(" = ");
+        sb.append(value);
+        return sb.toString();
+    }
+
+    /**
+     * Generates a classad attribute given the name and the value.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the classad attribute.
      * @param newLine boolean denoting whether to add a new line character at start or not.
      * @return the classad attriubute.
      */
     private static String generateClassAdAttribute(String name, String value, boolean newLine) {
 
-        StringBuffer sb = new StringBuffer(10);
+        StringBuilder sb = new StringBuilder(10);
         if (newLine) sb.append("\n");
 
         sb.append("+");
