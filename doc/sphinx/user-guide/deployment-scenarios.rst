@@ -434,7 +434,7 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | format required by the batch system. The value is rounded up                  |
     |                         |                          | | to the next whole minute.                                                     |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
-    | pegasus.memory          | PER_PROCESS_MEMORY       | | This specifies the maximum amount of physical memory used by                  |
+    |                         | PER_PROCESS_MEMORY       | | This specifies the maximum amount of physical memory used by                  |
     |                         |                          | | any process in the job. For example, if the job runs four processes           |
     |                         |                          | | and each requires up to 2 GB (gigabytes) of memory, then this value           |
     |                         |                          | | should be set to “2gb” for PBS and Moab, and “2G” for SGE.                    |
@@ -448,9 +448,9 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | the batch_queue key in the Condor submit file, which gLite/blahp translates   |
     |                         |                          | | into the appropriate batch system requirement.                                |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
-    | globus.totalmemory      | TOTAL_MEMORY             | | The total memory that your job requires. It is usually better to              |
+    | pegasus.memory          | TOTAL_MEMORY             | | The total memory that your job requires. It is usually better to              |
     |                         |                          | | just specify the pegasus.memory profile. This is not mapped for               |
-    |                         |                          | | SGE.                                                                          |
+    |                         |                          | | SGE. Before 5.1.3/5.2.0 release this was mapped to PER_PROCESS_MEMORY         |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
     | pegasus.glite.arguments | EXTRA_ARGUMENTS          | | This specifies the extra arguments that must appear in the generated          |
     |                         |                          | | submit script for a job. The value of this profile is added to the            |
@@ -463,6 +463,11 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | For infiniband, you would use something like “-l nodes=8:ppn=2:IB”.           |
     |                         |                          | | In that case, both the nodes and ppn profiles would be effectively ignored.   |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
+
+.. note::
+
+   Starting 5.1.3/5.2.0 release, pegasus.memory maps to TOTAL_MEMORY in remote_ce_requirements. Before then,
+   it used to map to PER_PROCESS_MEMORY.
 
 
 The tables below indicate the mapping of Pegasus profile keys to various scheduler specific directives.
@@ -485,13 +490,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+-----------------------+
             | pegasus.runtime         | WALLTIME               | –time walltime        |
             +-------------------------+------------------------+-----------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | –mem memory           |
+            | pegasus.memory          | TOTAL_MEMORY           | –mem memory           |
             +-------------------------+------------------------+-----------------------+
             | pegasus.project         | PROJECT                | –account prjectname   |
             +-------------------------+------------------------+-----------------------+
             | pegasus.queue           | QUEUE                  | –partition            |
-            +-------------------------+------------------------+-----------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | –mem memory           |
             +-------------------------+------------------------+-----------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#SBATCH” |
             +-------------------------+------------------------+-----------------------+
@@ -512,13 +515,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+--------------------+
             | pegasus.runtime         | WALLTIME               | -l walltime        |
             +-------------------------+------------------------+--------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | -l pmem            |
+            | pegasus.memory          | TOTAL_MEMORY           | -l pmem            |
             +-------------------------+------------------------+--------------------+
             | pegasus.project         | PROJECT                | -A project_name    |
             +-------------------------+------------------------+--------------------+
             | pegasus.queue           | QUEUE                  | -q                 |
-            +-------------------------+------------------------+--------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | -l mem             |
             +-------------------------+------------------------+--------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#PBS” |
             +-------------------------+------------------------+--------------------+
@@ -539,13 +540,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+------------------+
             | pegasus.runtime         | WALLTIME               | -l h_rt          |
             +-------------------------+------------------------+------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | -l h_vmem        |
+            | pegasus.memory          | TOTAL_MEMORY           | -l h_vmem        |
             +-------------------------+------------------------+------------------+
             | pegasus.project         | PROJECT                | n/a              |
             +-------------------------+------------------------+------------------+
             | pegasus.queue           | QUEUE                  | -q               |
-            +-------------------------+------------------------+------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | n/a              |
             +-------------------------+------------------------+------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#?” |
             +-------------------------+------------------------+------------------+
@@ -566,13 +565,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+---------------------+
             | pegasus.runtime         | WALLTIME               | -l walltime         |
             +-------------------------+------------------------+---------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | –mem-per-cpu pmem   |
+            | pegasus.memory          | TOTAL_MEMORY           |  -l mem             |
             +-------------------------+------------------------+---------------------+
             | pegasus.project         | PROJECT                | -A project_name     |
             +-------------------------+------------------------+---------------------+
             | pegasus.queue           | QUEUE                  | -q                  |
-            +-------------------------+------------------------+---------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | -l mem              |
             +-------------------------+------------------------+---------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#MSUB” |
             +-------------------------+------------------------+---------------------+

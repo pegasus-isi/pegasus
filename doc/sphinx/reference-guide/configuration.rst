@@ -1143,7 +1143,7 @@ by the local attributes.sh. The profiles are described below.
     | | Since : 4.6                               |                                                                  |
     | | Type : Integer                            |                                                                  |
     +---------------------------------------------+------------------------------------------------------------------+
-    | | Property Key: pegasus.memory              | Indicates the maximum memory a job requires in MB.               |
+    | | Property Key: pegasus.memory              | Indicates the total memory a job requires in MB.                 |
     | | Profile Key: memory                       |                                                                  |
     | | Scope : TC, SC, Abstract WF, Properties   |                                                                  |
     | | Since : 4.6                               |                                                                  |
