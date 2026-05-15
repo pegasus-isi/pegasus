@@ -412,7 +412,7 @@ public class GLite extends Abstract {
 
                 if (Globus.rslKeysSubstitutedWithPegasusClassAds().contains(rslKey)) {
                     // GH-2176 convoluted 2-stage process for a subset of key
-                    // map rls -> pegasus profile -> pegasus classad key
+                    // map rsl -> pegasus profile -> pegasus classad key
                     String pegasusProfileKey = Globus.rslToPegasusProfiles().get(rslKey);
                     if (pegasusProfileKey == null) {
                         throw new CondorStyleException(

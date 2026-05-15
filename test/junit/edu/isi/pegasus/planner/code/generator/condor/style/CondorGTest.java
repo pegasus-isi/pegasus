@@ -89,7 +89,7 @@ public class CondorGTest {
     public void testPegasusProfileMemory() throws CondorStyleException {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
-        testForKey(j, Globus.MAX_MEMORY_KEY, "5");
+        testForKey(j, Globus.TOTAL_MEMORY_KEY, "5");
     }
 
     @Test
@@ -97,7 +97,7 @@ public class CondorGTest {
         Job j = new Job();
         j.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, "5");
         j.globusRSL.checkKeyInNS(Globus.MAX_MEMORY_KEY, "6");
-        testForKey(j, Globus.MAX_MEMORY_KEY, "6");
+        testForKey(j, Globus.TOTAL_MEMORY_KEY, "6");
     }
 
     private void testForKey(Job j, String key, String expectedValue) throws CondorStyleException {

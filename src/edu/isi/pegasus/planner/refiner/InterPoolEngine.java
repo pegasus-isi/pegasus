@@ -761,7 +761,8 @@ public class InterPoolEngine extends Engine implements Refiner {
         if (memory != null) {
             // add to both Pegasus and metadata profiles in addition to globus
             job.vdsNS.checkKeyInNS(Pegasus.MEMORY_KEY, memory);
-            job.addMetadata(Globus.MAX_MEMORY_KEY, memory);
+            job.addMetadata(
+                    (String) Globus.pegasusProfilesToRSLKey().get(Pegasus.MEMORY_KEY), memory);
         }
     }
 
