@@ -417,7 +417,7 @@ PegasusLite jobs on a HPC cluster
             style="glite")
         compute_site.add_directories(
             Directory(
-                Directory.SHARED_SCRATCH, "/cluster/shared/wf-runs", shared_file_system=SHARED
+                Directory.SHARED_SCRATCH, "/cluster/shared/wf-runs", shared_file_system=True
             ).add_file_servers(
                 FileServer(
                     "file:///" + "/cluster/shared/wf-runs", Operation.ALL
