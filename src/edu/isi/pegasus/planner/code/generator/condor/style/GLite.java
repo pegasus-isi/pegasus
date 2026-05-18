@@ -614,9 +614,10 @@ public class GLite extends Abstract {
         }
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
-        if (job.globusRSL.containsKey("maxmemory")) {            
+        if (job.globusRSL.containsKey("maxmemory")) {
             value.append(" && ");
-            addSubExpression(value, "PER_PROCESS_MEMORY", (String) job.globusRSL.get("totalmemory"));
+            addSubExpression(
+                    value, "PER_PROCESS_MEMORY", (String) job.globusRSL.get("totalmemory"));
         }
 
         /* the globus key totalmemory is TOTAL_MEMORY */
@@ -626,7 +627,6 @@ public class GLite extends Abstract {
                             Pegasus.MEMORY_KEY);
             value.append(" && ");
             addSubExpression(value, "TOTAL_MEMORY", pegasusClassAdKey);
-            
         }
 
         /* the globus key project is PROJECT */

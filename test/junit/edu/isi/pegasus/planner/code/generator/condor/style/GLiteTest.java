@@ -369,7 +369,12 @@ public class GLiteTest {
         while (m.find()) {
             value = m.group(1);
         }
-        assertEquals(expectedClassAdKey, value, "For pegasus profile " + pegasusProfileKey + " corressponding pegasus classad set in correctly");
+        assertEquals(
+                expectedClassAdKey,
+                value,
+                "For pegasus profile "
+                        + pegasusProfileKey
+                        + " corressponding pegasus classad set in correctly");
     }
 
     private void testWithRegex(Job j, String gridResource, String regex, String expected)
