@@ -614,20 +614,19 @@ public class GLite extends Abstract {
         }
 
         /* the globus key maxmemory is PER_PROCESS_MEMORY */
-        if (job.globusRSL.containsKey("maxmemory")) {
-            String pegasusClassAdKey =
-                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
-                            Pegasus.MEMORY_KEY);
+        if (job.globusRSL.containsKey("maxmemory")) {            
             value.append(" && ");
-            addSubExpression(value, "PER_PROCESS_MEMORY", pegasusClassAdKey);
-            // addSubExpression(value, "PER_PROCESS_MEMORY", (String)
-            // job.globusRSL.get("maxmemory"));
+            addSubExpression(value, "PER_PROCESS_MEMORY", (String) job.globusRSL.get("totalmemory"));
         }
 
         /* the globus key totalmemory is TOTAL_MEMORY */
         if (job.globusRSL.containsKey("totalmemory")) {
+            String pegasusClassAdKey =
+                    ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
+                            Pegasus.MEMORY_KEY);
             value.append(" && ");
-            addSubExpression(value, "TOTAL_MEMORY", (String) job.globusRSL.get("totalmemory"));
+            addSubExpression(value, "TOTAL_MEMORY", pegasusClassAdKey);
+            
         }
 
         /* the globus key project is PROJECT */
