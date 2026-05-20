@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""
+pegasus-runtime-predictor — Pegasus infrastructure job.
+
+Runs before user jobs at each DAG level (like stage-in/stage-out).
+Reads the workflow YAML, writes runtime_predictions.json and
+runtime_predictions.csv to the output directory.
+
+Usage (called automatically by the pegasus-plan wrapper):
+    pegasus-runtime-predictor <workflow.yml> <output_dir> [--level=N]
+"""
+
+import os
+import sys
+import yaml
+from pathlib import Path
+
+# ── Path setup ────────────────────────────────────────────────────────────────
+_BIN_DIR = Path(__file__).resolve().parent
+_SRC_DIR = _BIN_DIR.parent   # pegasus-wms-runtime-src/
+for _pkg in ("pegasus-api", "pegasus-common", "pegasus-python", "pegasus-worker"):
+    _p = _SRC_DIR / "packages" / _pkg / "src"
+    if _p.exists():
+        sys.path.insert(0, str(_p))
+
+from Pegasus.api import File, Job, Namespace, Workflow
+from Pegasus.runtime_predictor import RuntimePredictionConfig, WorkflowRuntimePredictor
+
+
+def _load_workflow_from_yaml(path: str) -> Workflow:
+    with open(path) as f:
+        data = yaml.safe_load(f)
+
+    wf_name = data.get("name", "workflow")
+    wf = Workflow(wf_name, infer_dependencies=False)
+
+    for jdata in data.get("jobs", []):
+        jid   = jdata.get("id", "")
+        trans = jdata.get("name", jdata.get("transformation", ""))
+        job   = Job(trans, _id=jid)
+
+        for u in jdata.get("uses", []):
+            f = File(u["lfn"])
+            if u.get("type") == "input":
+                if u.get("size"):
+                    f.size = int(u["size"])
+                job.add_inputs(f)
+            elif u.get("type") == "output":
+                job.add_outputs(f)
+
+        for key, val in jdata.get("profiles", {}).get("condor", {}).items():
+            job.add_profiles(Namespace.CONDOR, **{key: str(val)})
+
+        wf.add_jobs(job)
+
+    for dep in data.get("dependencies", []):
+        parent_id = dep.get("id")
+        for child_id in dep.get("children", []):
+            wf.add_dependency(parent_id, children=[child_id])
+
+    return wf
+
+
+def main():
+    if len(sys.argv) < 3:
+        print(f"Usage: {sys.argv[0]} <workflow.yml> <output_dir> [--level=N]", file=sys.stderr)
+        sys.exit(1)
+
+    workflow_yml = sys.argv[1]
+    output_dir   = sys.argv[2]
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
+    wf = _load_workflow_from_yaml(workflow_yml)
+
+    print(f"[pegasus-runtime-predictor] Running prediction -> {output_dir}/")
+    cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
+    WorkflowRuntimePredictor(cfg).predict(wf)
+
+    print(f"[pegasus-runtime-predictor] Done. Predictions written to {output_dir}/")
+
+
+if __name__ == "__main__":
+    main()
