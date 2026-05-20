@@ -3,13 +3,14 @@
 pegasus-runtime-predictor — Pegasus infrastructure job.
 
 Runs before user jobs at each DAG level (like stage-in/stage-out).
-Reads the workflow YAML, writes runtime_predictions.json and
-runtime_predictions.csv to the output directory.
+At level N, predicts ONLY the jobs at that level, using actual file
+sizes on disk for inputs produced by already-completed levels.
 
 Usage (called automatically by the pegasus-plan wrapper):
     pegasus-runtime-predictor <workflow.yml> <output_dir> [--level=N]
 """
 
+import json
 import os
 import sys
 import yaml
@@ -24,7 +25,10 @@ for _pkg in ("pegasus-api", "pegasus-common", "pegasus-python", "pegasus-worker"
         sys.path.insert(0, str(_p))
 
 from Pegasus.api import File, Job, Namespace, Workflow
-from Pegasus.runtime_predictor import RuntimePredictionConfig, WorkflowRuntimePredictor
+from Pegasus.runtime_predictor import (
+    RuntimePredictionConfig, WorkflowRuntimePredictor,
+    _build_dag_levels, _extract_features, _get_condor_slot,
+)
 
 
 def _load_workflow_from_yaml(path: str) -> Workflow:
@@ -61,6 +65,41 @@ def _load_workflow_from_yaml(path: str) -> Workflow:
     return wf
 
 
+def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
+    """
+    Scan output_dir (and its parent scratch dirs) for actual files on disk.
+    Returns {lfn: bytes} for any file found. Used to override static sizes
+    with real sizes from already-completed levels.
+    """
+    # Collect all known lfns
+    all_lfns = set()
+    for job in wf.jobs.values():
+        for f in (job.get_inputs() if hasattr(job, "get_inputs") else []):
+            all_lfns.add(f.lfn)
+        for f in (job.get_outputs() if hasattr(job, "get_outputs") else []):
+            all_lfns.add(f.lfn)
+
+    size_map = {}
+    # Search output_dir and parent scratch directories
+    search_roots = [Path(output_dir)]
+    p = Path(output_dir).parent
+    for _ in range(4):  # walk up to 4 levels up looking for scratch dirs
+        for candidate in (p / "scratch", p / "data", p):
+            if candidate.is_dir() and candidate != Path(output_dir):
+                search_roots.append(candidate)
+        p = p.parent
+
+    for root in search_roots:
+        try:
+            for path in root.rglob("*"):
+                if path.is_file() and path.name in all_lfns:
+                    size_map[path.name] = path.stat().st_size
+        except (PermissionError, OSError):
+            continue
+
+    return size_map
+
+
 def main():
     if len(sys.argv) < 3:
         print(f"Usage: {sys.argv[0]} <workflow.yml> <output_dir> [--level=N]", file=sys.stderr)
@@ -69,16 +108,64 @@ def main():
     workflow_yml = sys.argv[1]
     output_dir   = sys.argv[2]
 
+    # Parse --level=N
+    target_level = None
+    for arg in sys.argv[3:]:
+        if arg.startswith("--level="):
+            try:
+                target_level = int(arg.split("=", 1)[1])
+            except ValueError:
+                pass
+
     os.makedirs(output_dir, exist_ok=True)
 
     print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
     wf = _load_workflow_from_yaml(workflow_yml)
 
-    print(f"[pegasus-runtime-predictor] Running prediction -> {output_dir}/")
-    cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
-    WorkflowRuntimePredictor(cfg).predict(wf)
+    # Patch in actual file sizes from disk (overrides static YAML sizes)
+    actual_sizes = _scan_actual_file_sizes(output_dir, wf)
+    if actual_sizes:
+        print(f"[pegasus-runtime-predictor] Found {len(actual_sizes)} actual file size(s) on disk")
+        for job in wf.jobs.values():
+            for f in (job.get_inputs() if hasattr(job, "get_inputs") else []):
+                if f.lfn in actual_sizes:
+                    f.size = actual_sizes[f.lfn]
+            for f in (job.get_outputs() if hasattr(job, "get_outputs") else []):
+                if f.lfn in actual_sizes:
+                    f.size = actual_sizes[f.lfn]
 
-    print(f"[pegasus-runtime-predictor] Done. Predictions written to {output_dir}/")
+    cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
+    predictor = WorkflowRuntimePredictor(cfg)
+
+    # Run full prediction (needed so size propagation is correct across levels)
+    results = predictor.predict(wf)
+
+    if target_level is not None and results:
+        # Filter to only jobs at this level
+        level_results = [r for r in results if r.get("dag_level") == target_level]
+        suffix = f"_L{target_level}"
+        level_jobs = len(level_results)
+        print(f"[pegasus-runtime-predictor] Level {target_level}: {level_jobs} job(s) predicted")
+    else:
+        level_results = results
+        suffix = ""
+        print(f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted")
+
+    # Write level-specific output files
+    import pandas as pd, math
+    csv_path  = os.path.join(output_dir, f"runtime_predictions{suffix}.csv")
+    json_path = os.path.join(output_dir, f"runtime_predictions{suffix}.json")
+
+    pd.DataFrame(level_results).to_csv(csv_path, index=False)
+
+    with open(json_path, "w") as f:
+        json.dump({
+            "level":       target_level,
+            "total_jobs":  len(level_results),
+            "predictions": level_results,
+        }, f, indent=2)
+
+    print(f"[pegasus-runtime-predictor] Done -> {json_path}")
 
 
 if __name__ == "__main__":
