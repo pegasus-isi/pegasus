@@ -167,62 +167,6 @@ def main():
 
     print(f"[pegasus-runtime-predictor] Done -> {json_path}")
 
-    # Self-register in workflow DB so pegasus-status can track this job
-    job_name = f"pegasus_runtime_pred_L{target_level}" if target_level is not None else "pegasus_runtime_pred"
-    _self_register_in_db(output_dir, job_name, sys.argv[0])
-
 
 if __name__ == "__main__":
     main()
-
-
-def _self_register_in_db(output_dir: str, job_name: str, sub_file: str):
-    """
-    Insert this prediction job into the workflow DB when it actually runs.
-    By the time a prediction job executes, monitord has already populated
-    the workflow table — so the FK constraint is satisfied.
-    """
-    import sqlite3, re as _re
-    db_path = str(Path.home() / ".pegasus" / "workflow.db")
-    if not Path(db_path).exists():
-        return
-    try:
-        con = sqlite3.connect(db_path)
-        cur = con.cursor()
-        # Find the wf_id whose submit_dir matches our run directory
-        run_dir = str(Path(output_dir))
-        row = cur.execute(
-            "SELECT wf_id FROM workflow WHERE submit_dir = ? ORDER BY wf_id DESC LIMIT 1",
-            (run_dir,)
-        ).fetchone()
-        if not row:
-            row = cur.execute(
-                "SELECT wf_id FROM workflow ORDER BY wf_id DESC LIMIT 1"
-            ).fetchone()
-        if not row:
-            con.close()
-            return
-        wf_id = row[0]
-        cols = [r[1] for r in cur.execute("PRAGMA table_info(job)").fetchall()]
-        values = {
-            "wf_id": wf_id,
-            "type_desc": "auxillary",
-            "clustered": 0,
-            "max_retries": 0,
-            "task_count": 1,
-            "executable": sys.executable,
-            "argv": " ".join(sys.argv[1:]),
-            "submit_file": sub_file,
-            "job_name": job_name,
-        }
-        row_cols = [c for c in cols if c in values]
-        placeholders = ",".join("?" * len(row_cols))
-        cur.execute(
-            f"INSERT OR IGNORE INTO job ({','.join(row_cols)}) VALUES ({placeholders})",
-            [values[c] for c in row_cols],
-        )
-        con.commit()
-        con.close()
-        print(f"[pegasus-runtime-predictor] Registered in workflow DB (wf_id={wf_id})")
-    except Exception as e:
-        print(f"[pegasus-runtime-predictor] DB self-registration skipped: {e}")
