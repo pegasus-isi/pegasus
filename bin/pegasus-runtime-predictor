@@ -28,6 +28,7 @@ from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.runtime_predictor import (
     RuntimePredictionConfig, WorkflowRuntimePredictor,
     _build_dag_levels, _extract_features, _get_condor_slot,
+    find_submit_dir, parse_sub_resources,
 )
 
 
@@ -137,8 +138,25 @@ def main():
     cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
     predictor = WorkflowRuntimePredictor(cfg)
 
+    # ── Discover .sub files to get actual request_cpus / request_memory ───
+    # This closes the gap between training features (read from .sub files)
+    # and YAML profile values (which may differ or be absent).
+    submit_dir  = find_submit_dir(workflow_yml)
+    sub_resources = {}
+    if submit_dir:
+        sub_resources = parse_sub_resources(submit_dir)
+        n_sub = len(sub_resources)
+        if n_sub:
+            print(f"[pegasus-runtime-predictor] Loaded resources for {n_sub} job(s) "
+                  f"from .sub files in {submit_dir}")
+        else:
+            print(f"[pegasus-runtime-predictor] No .sub resources found in {submit_dir} "
+                  f"— using YAML profile values")
+    else:
+        print("[pegasus-runtime-predictor] Submit dir not found — using YAML profile values")
+
     # Run full prediction (needed so size propagation is correct across levels)
-    results = predictor.predict(wf)
+    results = predictor.predict(wf, sub_resources=sub_resources)
 
     if target_level is not None and results:
         # Filter to only jobs at this level
