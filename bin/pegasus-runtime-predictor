@@ -169,4 +169,45 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        import traceback
+        print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+
+        # Write a fallback JSON so downstream jobs / monitoring don't break.
+        # Determine output_dir and level from argv if possible.
+        _output_dir = sys.argv[2] if len(sys.argv) >= 3 else "."
+        _level = None
+        for _a in sys.argv[3:]:
+            if _a.startswith("--level="):
+                try:
+                    _level = int(_a.split("=", 1)[1])
+                except ValueError:
+                    pass
+        _suffix = f"_L{_level}" if _level is not None else ""
+        try:
+            import os as _os
+            _os.makedirs(_output_dir, exist_ok=True)
+            _fallback = {
+                "level": _level,
+                "total_jobs": 0,
+                "predictions": [],
+                "error": str(exc),
+            }
+            _json_path = _os.path.join(_output_dir, f"runtime_predictions{_suffix}.json")
+            _csv_path  = _os.path.join(_output_dir, f"runtime_predictions{_suffix}.csv")
+            import json as _json
+            with open(_json_path, "w") as _f:
+                _json.dump(_fallback, _f, indent=2)
+            # empty CSV with correct headers
+            with open(_csv_path, "w") as _f:
+                _f.write("job_id,transformation,dag_level,status,"
+                         "predicted_runtime_s,lower_bound_s,upper_bound_s\n")
+            print(f"[pegasus-runtime-predictor] Wrote fallback outputs to {_output_dir}",
+                  file=sys.stderr)
+        except Exception:
+            pass  # best-effort only
+
+        sys.exit(0)  # exit 0 so the workflow continues
