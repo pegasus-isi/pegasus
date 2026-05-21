@@ -35,7 +35,7 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
     :param job_script:  Content of the SBATCH batch script to submit.
     :param input_files: List of local file paths to upload to the remote
                         working directory before submission.
-    :return: Tuple of (job_id, remote_stdout_path, remote_stderr_path).
+    :return: Tuple of (job_id, remote_dir, remote_stdout_path, remote_stderr_path).
     """
     with (Client(client_id, client_secret) as client):
 
@@ -69,7 +69,7 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
         # Let's save the job id to use later
         job_id = job.jobid
         print(f"Started {job_id} with stdout: {remote_stdout} stderr: {remote_stderr}")
-        return job_id, remote_stdout, remote_stderr
+        return job_id, remote_dir, remote_stdout, remote_stderr
 
 def retrieve_remote_stdout_stderr(job_id, remote_stdout, remote_stderr):
     """
@@ -357,12 +357,12 @@ def _cmd_submit(args):
     if args.input_files:
         input_files = [f.strip() for f in args.input_files.split(",") if f.strip()]
 
-    job_id, remote_stdout, remote_stderr = submit_remote_slurm_job(
+    job_id, remote_dir, remote_stdout, remote_stderr = submit_remote_slurm_job(
         args.job_name, job_script, input_files
     )
 
     # Print in the format expected by sfapi_submit.sh
-    print(f"SFAPI_RESULT:{job_id}:{remote_stdout}:{remote_stderr}")
+    print(f"SFAPI_RESULT:{job_id}:{remote_dir}:{remote_stdout}:{remote_stderr}")
 
 
 def cancel_job(job_id):

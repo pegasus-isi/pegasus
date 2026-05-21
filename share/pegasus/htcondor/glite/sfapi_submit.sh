@@ -323,7 +323,7 @@ if [ "$retcode" != "0" ] ; then
     exit 1
 fi
 
-# Parse "SFAPI_RESULT:<jobid>:<remote_stdout>:<remote_stderr>"
+# Parse "SFAPI_RESULT:<jobid>:<remote_dir>:<remote_stdout>:<remote_stderr>"
 sfapi_line=$(echo "$sfapi_result" | grep "^SFAPI_RESULT:")
 if [ -z "$sfapi_line" ] ; then
     rm -f $bls_tmp_file
@@ -333,9 +333,10 @@ if [ -z "$sfapi_line" ] ; then
     exit 1
 fi
 
-jobID=$(echo "$sfapi_line"      | cut -d: -f2)
-remote_stdout=$(echo "$sfapi_line" | cut -d: -f3)
-remote_stderr=$(echo "$sfapi_line" | cut -d: -f4)
+jobID=$(echo "$sfapi_line"        | cut -d: -f2)
+remote_dir=$(echo "$sfapi_line"    | cut -d: -f3)
+remote_stdout=$(echo "$sfapi_line" | cut -d: -f4)
+remote_stderr=$(echo "$sfapi_line" | cut -d: -f5)
 
 if [ "X$jobID" == "X" ] ; then
     rm -f $bls_tmp_file
@@ -361,6 +362,7 @@ bls_opt_stderr=$bls_get_file_path_result
 # map local stdout and stderr to their remote counterparts on perlmutter
 read -r -d '' fragment << EOM
 # type::<local file on submit host>:<remote file to retrieve via sfapi>
+remote_dir::${remote_dir}
 stdout::${bls_opt_stdout}:${remote_stdout}
 stderr::${bls_opt_stderr}:${remote_stderr}
 EOM
@@ -370,8 +372,6 @@ echo "${fragment}" > "${jobstate_file}"
 
 # add output files that we need to download after job
 # finishes into the jobstate file
-# guess the directory on the remote end via dir for remote_stdout
-remote_dir=`dirname ${remote_stdout}`
 for outfile in "${sfapi_output_files[@]}"
 do
     echo "output::${outfile}":${remote_dir}/`basename ${outfile}` >> "${jobstate_file}"
