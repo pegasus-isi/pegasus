@@ -28,7 +28,7 @@ from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.runtime_predictor import (
     RuntimePredictionConfig, WorkflowRuntimePredictor,
     _build_dag_levels, _extract_features, _get_condor_slot,
-    find_submit_dir, parse_sub_resources,
+    find_submit_dir, scan_sub_files, patch_sub_file,
 )
 
 
@@ -138,23 +138,26 @@ def main():
     cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
     predictor = WorkflowRuntimePredictor(cfg)
 
-    # ── Discover .sub files to get actual request_cpus / request_memory ───
-    # This closes the gap between training features (read from .sub files)
-    # and YAML profile values (which may differ or be absent).
-    submit_dir  = find_submit_dir(workflow_yml)
-    sub_resources = {}
+    # ── Step 1: scan .sub files ────────────────────────────────────────────
+    # Single pass: collect request_cpus/request_memory for feature parity
+    # with training data AND build dax_job_id → sub_path map for patching.
+    submit_dir = find_submit_dir(workflow_yml)
+    sub_scan   = {}
     if submit_dir:
-        sub_resources = parse_sub_resources(submit_dir)
-        n_sub = len(sub_resources)
-        if n_sub:
-            print(f"[pegasus-runtime-predictor] Loaded resources for {n_sub} job(s) "
-                  f"from .sub files in {submit_dir}")
-        else:
-            print(f"[pegasus-runtime-predictor] No .sub resources found in {submit_dir} "
-                  f"— using YAML profile values")
+        sub_scan = scan_sub_files(submit_dir)
+        print(f"[pegasus-runtime-predictor] Scanned {len(sub_scan)} job .sub file(s) "
+              f"in {submit_dir}")
     else:
-        print("[pegasus-runtime-predictor] Submit dir not found — using YAML profile values")
+        print("[pegasus-runtime-predictor] Submit dir not found — "
+              "using YAML profile values for features")
 
+    # Extract resource dict for _extract_features (strip sub_path key)
+    sub_resources = {
+        jid: {k: v for k, v in info.items() if k != "sub_path"}
+        for jid, info in sub_scan.items()
+    }
+
+    # ── Step 2: predict ────────────────────────────────────────────────────
     # Run full prediction (needed so size propagation is correct across levels)
     results = predictor.predict(wf, sub_resources=sub_resources)
 
@@ -184,6 +187,26 @@ def main():
         }, f, indent=2)
 
     print(f"[pegasus-runtime-predictor] Done -> {json_path}")
+
+    # ── Step 3: patch .sub files with predictions ──────────────────────────
+    # Write predicted runtime ClassAds back into each job's .sub file.
+    # DAGMan has not yet submitted these jobs (we are their parent), so
+    # the patched .sub files will be used when DAGMan submits them next.
+    if sub_scan and level_results:
+        patched = 0
+        skipped = 0
+        for pred in level_results:
+            jid      = pred.get("job_id")
+            sub_info = sub_scan.get(jid)
+            if not sub_info or not sub_info.get("sub_path"):
+                skipped += 1
+                continue
+            if patch_sub_file(sub_info["sub_path"], pred):
+                patched += 1
+            else:
+                skipped += 1
+        print(f"[pegasus-runtime-predictor] Patched {patched} .sub file(s) "
+              f"({skipped} skipped — no .sub match or write error)")
 
 
 if __name__ == "__main__":
