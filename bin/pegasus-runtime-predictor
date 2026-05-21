@@ -139,14 +139,21 @@ def main():
     predictor = WorkflowRuntimePredictor(cfg)
 
     # ── Step 1: scan .sub files ────────────────────────────────────────────
-    # Single pass: collect request_cpus/request_memory for feature parity
-    # with training data AND build dax_job_id → sub_path map for patching.
+    print(f"[pegasus-runtime-predictor] CWD           : {os.getcwd()}")
+    print(f"[pegasus-runtime-predictor] workflow_yml  : {workflow_yml}")
+    print(f"[pegasus-runtime-predictor] PEGASUS_SUBMIT_DIR env : "
+          f"{os.environ.get('PEGASUS_SUBMIT_DIR', 'NOT SET')}")
+    print(f"[pegasus-runtime-predictor] _PEGASUS_SUBMIT_DIR env: "
+          f"{os.environ.get('_PEGASUS_SUBMIT_DIR', 'NOT SET')}")
+
     submit_dir = find_submit_dir(workflow_yml)
-    sub_scan   = {}
+    print(f"[pegasus-runtime-predictor] submit_dir    : {submit_dir or 'NOT FOUND'}")
+
+    sub_scan = {}
     if submit_dir:
         sub_scan = scan_sub_files(submit_dir)
-        print(f"[pegasus-runtime-predictor] Scanned {len(sub_scan)} job .sub file(s) "
-              f"in {submit_dir}")
+        print(f"[pegasus-runtime-predictor] .sub scan found {len(sub_scan)} user job(s): "
+              f"{list(sub_scan.keys())}")
     else:
         print("[pegasus-runtime-predictor] Submit dir not found — "
               "using YAML profile values for features")
