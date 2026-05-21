@@ -117,6 +117,11 @@ for reqfull in $pars ; do
         dl_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" download "$reqfull" 2>&1)
         if [ "$?" != "0" ] ; then
             echo "1Error: job $reqjob is done but output download mentioned in {$reqfull} failed: $dl_out" >&2
+        else
+            del_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" delete "$reqfull" 2>&1)
+            if [ "$?" != "0" ] ; then
+                echo "Warning: job $reqjob output downloaded but remote directory deletion failed: $del_out" >&2
+            fi
         fi
 
         # cleanup the job state file ~/.blah/sfapi_jobs

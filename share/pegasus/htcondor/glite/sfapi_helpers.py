@@ -122,9 +122,11 @@ def download_job_outputs(blahp_job_id):
         <type>::<local_path>:<remote_path>
     e.g.:
         # type::<local file on submit host>:<remote file to retrieve via sfapi>
-        stdout::/tmp/test.out:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/bl_DqxqWY.out
-        stderr::/tmp/test.err:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/bl_DqxqWY.err
-        output::/tmp/out1.out:/pscratch/sd/v/vahi/.blah/bl_DqxqWY/out1.out
+        remote_dir::/pscratch/sd/v/vahi/.blah/bl_dGdwlN
+        stdout::/pegasus/hello-world/run0032//00/00/hello_ID0000001.out:/pscratch/sd/v/vahi/.blah/bl_dGdwlN/bl_dGdwlN.out
+        stderr::/pegasus/hello-world/run0032//00/00/hello_ID0000001.err:/pscratch/sd/v/vahi/.blah/bl_dGdwlN/bl_dGdwlN.err
+        output::/pegasus/wf-scratch/LOCAL/scitech/pegasus/hello-world/run0032/f.inter:/pscratch/sd/v/vahi/.blah/bl_dGdwlN/f.inter
+
     """
     parts = blahp_job_id.strip().split('/')
     if len(parts) != 3 or parts[0] != 'sfapi':
@@ -142,11 +144,62 @@ def download_job_outputs(blahp_job_id):
         if not line or line.startswith("#") or '::' not in line:
             continue
         # Split into type tag and the path pair
-        _, paths = line.split('::', 1)
+        type, paths = line.split('::', 1)
+        if type == "remote_dir":
+            continue
+            
         # Both paths are absolute so splitting on the first ':' is unambiguous
         local_path, remote_path = paths.split(':', 1)
         print(f"Downloading {remote_path} -> {local_path}")
         download_file(remote_path, local_path)
+
+
+def delete_remote_job_directory(blahp_job_id):
+    """
+    Given a blahp job ID of the form sfapi/<date>/<jobid>, locate the
+    corresponding jobstate file at ~/.blah/sfapi_jobs/<date>_<jobid>,
+    read the remote_dir entry, and delete that directory on Perlmutter
+    via the NERSC DTNs.
+
+    :param blahp_job_id: Blahp job ID in the form sfapi/<date>/<jobid>.
+    :raises ValueError:       If the blahp job ID format is invalid.
+    :raises FileNotFoundError: If the jobstate file does not exist.
+    :raises SfApiHelperError: If no remote_dir entry is found in the jobstate file.
+    """
+    parts = blahp_job_id.strip().split('/')
+    if len(parts) != 3 or parts[0] != 'sfapi':
+        raise ValueError(
+            f"Invalid blahp job ID {blahp_job_id!r}. Expected sfapi/<date>/<jobid>"
+        )
+    date_str, job_id = parts[1], parts[2]
+
+    jobstate_file = Path.home() / ".blah" / "sfapi_jobs" / f"{date_str}_{job_id}"
+    if not jobstate_file.exists():
+        raise FileNotFoundError(f"Job state file not found: {jobstate_file}")
+
+    remote_dir = None
+    for line in jobstate_file.read_text().splitlines():
+        line = line.strip()
+        if line.startswith("remote_dir::"):
+            _, remote_dir = line.split('::', 1)
+            remote_dir = remote_dir.strip()
+            break
+
+    if not remote_dir:
+        raise SfApiHelperError(
+            f"No remote_dir entry found in jobstate file: {jobstate_file}"
+        )
+
+    with Client(client_id, client_secret) as client:
+        dtns = client.compute(Machine.dtns)
+        dtns.run(f"rm -rf {remote_dir}")
+    print(f"Deleted remote directory {remote_dir}")
+
+
+def _cmd_delete(args):
+    """Handler for the 'delete' subcommand."""
+    load_sflapi_client_secret()
+    delete_remote_job_directory(args.blahp_job_id)
 
 
 def upload_file(directory, file):
@@ -495,6 +548,22 @@ if __name__ == '__main__':
         help="Blahp job ID (sfapi/<date>/<jobid>) or bare numeric Slurm job ID",
     )
 
+    # --- delete subcommand ---
+    de = subparsers.add_parser(
+        "delete",
+        help="Delete the remote working directory for a completed job",
+        description=(
+            "Read the jobstate file for the given blahp job ID, extract the "
+            "remote_dir entry written at submit time, and remove that directory "
+            "from Perlmutter scratch via the NERSC DTNs."
+        ),
+    )
+    de.add_argument(
+        "blahp_job_id",
+        metavar="BLAHP_JOB_ID",
+        help="Blahp job ID in the form sfapi/<date>/<jobid>",
+    )
+
     args = parser.parse_args()
     if args.command == "submit":
         _cmd_submit(args)
@@ -505,3 +574,5 @@ if __name__ == '__main__':
         download_job_outputs(args.blahp_job_id)
     elif args.command == "cancel":
         _cmd_cancel(args)
+    elif args.command == "delete":
+        _cmd_delete(args)
