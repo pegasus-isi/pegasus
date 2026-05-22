@@ -147,7 +147,7 @@ def download_job_outputs(blahp_job_id):
         type, paths = line.split('::', 1)
         if type == "remote_dir":
             continue
-            
+
         # Both paths are absolute so splitting on the first ':' is unambiguous
         local_path, remote_path = paths.split(':', 1)
         print(f"Downloading {remote_path} -> {local_path}")
