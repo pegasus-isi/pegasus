@@ -63,7 +63,7 @@ if [ "X${WALLTIME}" != "X" ]; then
     echo "#$ -l h_rt=${walltime}"
 fi
 
-if [ "X${PER_PROCESS_MEMORY}" != "X" ]; then
+if [ "X${TOTAL_MEMORY}" != "X" ]; then
     # strip any quotes . e.g 1gb condor expects it to be quoted
     # however SGE does not like it
     # l h_vmem=size --- specify the amount of memory required (e.g. 3G or 3500M) 

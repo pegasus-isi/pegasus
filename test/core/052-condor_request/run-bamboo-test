@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -e
+set -o  pipefail
+
+TOPDIR=`pwd`
+#TESTNAME=`basename $1
+TESTNAME="$1"
+
+echo "Running test $TOPDIR -> $TESTNAME"
+
+# generate the dax
+PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
+
+
+WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
+echo "work directory is $WORK_DIR"
+cd $WORK_DIR
+
+# make sure certain bash variables have the right values
+variable="pegasus_memory"
+expected_value="ifthenelse( (LastHoldReasonCode=!=34 && LastHoldReasonCode=!=26), InitialRequestMemory, int(1.75 * NumJobStarts * MemoryUsage) )"
+echo "Searching for $variable"
+
+for submit_file in `find $WORK_DIR -name \*.sub`; do
+    basename=`basename $submit_file`
+    if [[ ! $basename =~ clean_* ]] && [[  ! $basename =~ stage_* ]] && [[  ! $basename =~ create_* ]] && [[  ! $basename =~ register_* ]] && [[  ! $basename =~ .*dag.condor.sub ]] ; then
+        pegasus_memory_mb=`grep -E "^\+$variable"  $submit_file | sed -E 's/^\+pegasus_memory_mb\s+=\s+//'` 2>/dev/null
+        #echo "pegasus memory is $pegasus_memory_mb"
+
+        if [ "x$pegasus_memory_mb" != "x$expected_value" ]; then
+            echo "ERROR: +$variable is not set to value $expected_value in the submit file $submit_file"
+            echo "Instead it is set to $pegasus_memory_mb"
+            exit 1
+        fi
+    fi
+done
+
+
+# now we are good to submit
+echo "Submitting the workflow for execution"
+pegasus-run $WORK_DIR
+

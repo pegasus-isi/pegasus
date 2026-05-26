@@ -52,7 +52,7 @@ public class Globus extends Namespace {
     public static Map<String, String> rslToPegasusProfiles() {
         if (mRSLToPegasus == null) {
             mRSLToPegasus = new HashMap();
-            mRSLToPegasus.put(Globus.MAX_MEMORY_KEY, Pegasus.MEMORY_KEY);
+            mRSLToPegasus.put(Globus.TOTAL_MEMORY_KEY, Pegasus.MEMORY_KEY);
             mRSLToPegasus.put(Globus.MAX_WALLTIME_KEY, Pegasus.RUNTIME_KEY);
             mRSLToPegasus.put(Globus.COUNT_KEY, Pegasus.CORES_KEY);
             mRSLToPegasus.put(Globus.HOST_COUNT_KEY, Pegasus.NODES_KEY);
@@ -71,7 +71,7 @@ public class Globus extends Namespace {
     public static Map<String, String> pegasusProfilesToRSLKey() {
         if (mPegasusToRSL == null) {
             mPegasusToRSL = new HashMap();
-            mPegasusToRSL.put(Pegasus.MEMORY_KEY, Globus.MAX_MEMORY_KEY);
+            mPegasusToRSL.put(Pegasus.MEMORY_KEY, Globus.TOTAL_MEMORY_KEY);
             mPegasusToRSL.put(Pegasus.RUNTIME_KEY, Globus.MAX_WALLTIME_KEY);
             mPegasusToRSL.put(Pegasus.CORES_KEY, Globus.COUNT_KEY);
             mPegasusToRSL.put(Pegasus.NODES_KEY, Globus.HOST_COUNT_KEY);
@@ -130,8 +130,11 @@ public class Globus extends Namespace {
      */
     public static final String MAX_WALLTIME_KEY = "maxwalltime";
 
-    /** Key indicating the maximum memory used. */
+    /** Key maximum amount of memory for a single execution of the executable. */
     public static final String MAX_MEMORY_KEY = "maxmemory";
+
+    /** Key indicating the total memory used. */
+    public static final String TOTAL_MEMORY_KEY = "totalmemory";
 
     /** Key indicating the queue to be used. */
     public static final String QUEUE_KEY = "queue";
@@ -371,7 +374,7 @@ public class Globus extends Namespace {
                 break;
 
             case 't':
-                if (key.compareTo("totalmemory") == 0) {
+                if (key.compareTo(Globus.TOTAL_MEMORY_KEY) == 0) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;

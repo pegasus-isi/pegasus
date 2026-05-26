@@ -71,10 +71,29 @@ map_sfapi_state_to_blahp() {
             echo 2 ;;
         CANCELLED)
             echo 3 ;;
-        COMPLETED|FAILED|BOOT_FAIL|NODE_FAIL|PREEMPTED|SPECIAL_EXIT|TIMEOUT)
+        COMPLETED|FAILED|BOOT_FAIL|NODE_FAIL|PREEMPTED|SPECIAL_EXIT|TIMEOUT|NOT_FOUND|OUT_OF_MEMORY)
             echo 4 ;;
         *)
             echo 1 ;;  # unknown state treated as queued
+    esac
+}
+
+###############################################################
+# Map a Slurm/SFAPI job state string to a exitcode to return
+# in BLAHP. Exitcode is only determined if blahp_status is
+# either 3 or 4
+###############################################################
+
+map_sfapi_state_to_exitcode() {
+    # Strip optional "EnumClass." prefix, uppercase for safe comparison
+    local state
+    state=$(echo "$1" | sed 's/.*\.//' | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')
+
+    case "$state" in
+        COMPLETED)
+            echo 0 ;;
+        CANCELLED|FAILED|BOOT_FAIL|NODE_FAIL|PREEMPTED|SPECIAL_EXIT|TIMEOUT|NOT_FOUND|OUT_OF_MEMORY)
+            echo 1 ;;
     esac
 }
 
@@ -92,12 +111,21 @@ for reqfull in $pars ; do
     retcode=$?
 
     if [ "$retcode" != "0" ] ; then
-        echo "1Error: $out"
-        continue
+        # check for unknown job error
+        job_not_found=$(echo "$out" | grep "SfApiError: Job not found:")
+        if [ -n "$job_not_found" ] ; then
+            # we are adding our own state
+            sfapi_state="NOT_FOUND"
+        else
+          echo "1Error: $out"
+          continue
+        fi
     fi
 
-    # Expected output line: "Job <jobid> state: <state>"
-    sfapi_state=$(echo "$out" | grep -i "^Job.*state:" | awk -F'state: ' '{print $2}')
+    if [ "x$sfapi_state" == "x" ] ; then
+      # Expected output line: "Job <jobid> state: <state>"
+      sfapi_state=$(echo "$out" | grep -i "^Job.*state:" | awk -F'state: ' '{print $2}')
+    fi
 
     if [ -z "$sfapi_state" ] ; then
         echo "1Error: could not parse job state from: $out"
@@ -117,6 +145,11 @@ for reqfull in $pars ; do
         dl_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" download "$reqfull" 2>&1)
         if [ "$?" != "0" ] ; then
             echo "1Error: job $reqjob is done but output download mentioned in {$reqfull} failed: $dl_out" >&2
+        else
+            del_out=$(python3 "$sfapi_helpers_dir/sfapi_helpers.py" delete "$reqfull" 2>&1)
+            if [ "$?" != "0" ] ; then
+                echo "Warning: job $reqjob output downloaded but remote directory deletion failed: $del_out" >&2
+            fi
         fi
 
         # cleanup the job state file ~/.blah/sfapi_jobs
@@ -129,7 +162,8 @@ for reqfull in $pars ; do
 
     result="[BatchJobId=\"$reqjob\";JobStatus=${blahp_status};"
     if [ "$blahp_status" == "4" ] || [ "$blahp_status" == "3" ] ; then
-        result="${result}ExitCode=0;"
+        exit_code=$(map_sfapi_state_to_exitcode "$sfapi_state")
+        result="${result}ExitCode=${exit_code};"
     fi
     result="${result}]"
 

@@ -569,6 +569,7 @@ Workflow Tests:
       - 050-singularity-container-universe condorio
       - 051-osdf nonsharedfs/bypass
       - 051-osdf condorio/bypass
+      - 052-request memory	
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt

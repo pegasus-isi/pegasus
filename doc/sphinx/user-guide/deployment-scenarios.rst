@@ -434,7 +434,7 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | format required by the batch system. The value is rounded up                  |
     |                         |                          | | to the next whole minute.                                                     |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
-    | pegasus.memory          | PER_PROCESS_MEMORY       | | This specifies the maximum amount of physical memory used by                  |
+    |                         | PER_PROCESS_MEMORY       | | This specifies the maximum amount of physical memory used by                  |
     |                         |                          | | any process in the job. For example, if the job runs four processes           |
     |                         |                          | | and each requires up to 2 GB (gigabytes) of memory, then this value           |
     |                         |                          | | should be set to “2gb” for PBS and Moab, and “2G” for SGE.                    |
@@ -448,9 +448,9 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | the batch_queue key in the Condor submit file, which gLite/blahp translates   |
     |                         |                          | | into the appropriate batch system requirement.                                |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
-    | globus.totalmemory      | TOTAL_MEMORY             | | The total memory that your job requires. It is usually better to              |
+    | pegasus.memory          | TOTAL_MEMORY             | | The total memory that your job requires. It is usually better to              |
     |                         |                          | | just specify the pegasus.memory profile. This is not mapped for               |
-    |                         |                          | | SGE.                                                                          |
+    |                         |                          | | SGE. Before 5.1.3/5.2.0 release this was mapped to PER_PROCESS_MEMORY         |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
     | pegasus.glite.arguments | EXTRA_ARGUMENTS          | | This specifies the extra arguments that must appear in the generated          |
     |                         |                          | | submit script for a job. The value of this profile is added to the            |
@@ -463,6 +463,11 @@ The job requirements are constructed based on the following profiles:
     |                         |                          | | For infiniband, you would use something like “-l nodes=8:ppn=2:IB”.           |
     |                         |                          | | In that case, both the nodes and ppn profiles would be effectively ignored.   |
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
+
+.. note::
+
+   Starting 5.1.3/5.2.0 release, pegasus.memory maps to TOTAL_MEMORY in remote_ce_requirements. Before then,
+   it used to map to PER_PROCESS_MEMORY.
 
 
 The tables below indicate the mapping of Pegasus profile keys to various scheduler specific directives.
@@ -485,13 +490,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+-----------------------+
             | pegasus.runtime         | WALLTIME               | –time walltime        |
             +-------------------------+------------------------+-----------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | –mem memory           |
+            | pegasus.memory          | TOTAL_MEMORY           | –mem memory           |
             +-------------------------+------------------------+-----------------------+
             | pegasus.project         | PROJECT                | –account prjectname   |
             +-------------------------+------------------------+-----------------------+
             | pegasus.queue           | QUEUE                  | –partition            |
-            +-------------------------+------------------------+-----------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | –mem memory           |
             +-------------------------+------------------------+-----------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#SBATCH” |
             +-------------------------+------------------------+-----------------------+
@@ -512,13 +515,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+--------------------+
             | pegasus.runtime         | WALLTIME               | -l walltime        |
             +-------------------------+------------------------+--------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | -l pmem            |
+            | pegasus.memory          | TOTAL_MEMORY           | -l pmem            |
             +-------------------------+------------------------+--------------------+
             | pegasus.project         | PROJECT                | -A project_name    |
             +-------------------------+------------------------+--------------------+
             | pegasus.queue           | QUEUE                  | -q                 |
-            +-------------------------+------------------------+--------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | -l mem             |
             +-------------------------+------------------------+--------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#PBS” |
             +-------------------------+------------------------+--------------------+
@@ -539,13 +540,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+------------------+
             | pegasus.runtime         | WALLTIME               | -l h_rt          |
             +-------------------------+------------------------+------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | -l h_vmem        |
+            | pegasus.memory          | TOTAL_MEMORY           | -l h_vmem        |
             +-------------------------+------------------------+------------------+
             | pegasus.project         | PROJECT                | n/a              |
             +-------------------------+------------------------+------------------+
             | pegasus.queue           | QUEUE                  | -q               |
-            +-------------------------+------------------------+------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | n/a              |
             +-------------------------+------------------------+------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#?” |
             +-------------------------+------------------------+------------------+
@@ -566,13 +565,11 @@ The tables below indicate the mapping of Pegasus profile keys to various schedul
             +-------------------------+------------------------+---------------------+
             | pegasus.runtime         | WALLTIME               | -l walltime         |
             +-------------------------+------------------------+---------------------+
-            | pegasus.memory          | PER_PROCESS_MEMORY     | –mem-per-cpu pmem   |
+            | pegasus.memory          | TOTAL_MEMORY           |  -l mem             |
             +-------------------------+------------------------+---------------------+
             | pegasus.project         | PROJECT                | -A project_name     |
             +-------------------------+------------------------+---------------------+
             | pegasus.queue           | QUEUE                  | -q                  |
-            +-------------------------+------------------------+---------------------+
-            | globus.totalmemory      | TOTAL_MEMORY           | -l mem              |
             +-------------------------+------------------------+---------------------+
             | pegasus.glite.arguments | EXTRA_ARGUMENTS        | prefixed by “#MSUB” |
             +-------------------------+------------------------+---------------------+
@@ -1064,6 +1061,143 @@ An example site catalog entry for a BOSCO site looks like this:
         runtime: '300'
 
 ..
+
+
+.. _nersc-perlmutter-sfapi:
+
+NERSC Perlmutter via SFAPI
+--------------------------
+
+The NERSC Superfacility API (SFAPI) integration allows you to submit Pegasus workflows
+directly to the `Perlmutter <https://docs.nersc.gov/systems/perlmutter/>`_ supercomputer at
+NERSC without an SSH tunnel or a shared filesystem between your submit host and Perlmutter.
+HTCondor communicates with Perlmutter through a BLAHP plugin that uses the SFAPI Python
+client to upload input files, submit Slurm jobs, poll status, download outputs, and cancel
+jobs — all over HTTPS.
+
+.. note::
+
+    For a full description of the BLAHP plugin internals, credential format, jobstate file
+    layout, and the ``sfapi_helpers.py`` CLI, see
+    :ref:`nersc-sfapi-submission` in the Reference Guide.
+
+Prerequisites
+~~~~~~~~~~~~~
+
+The following must be in place on your Pegasus submit host before planning a workflow
+to run on Perlmutter.
+
+**1. SFAPI credentials**
+
+Register an SFAPI client at `https://iris.nersc.gov <https://iris.nersc.gov>`_ with the
+Red security level that allows you to submit jobs for 2 days, then store the all credentials in:
+
+.. code-block:: text
+
+    ~/.superfacility/clientid.txt      # SFAPI client ID (plain text)
+    ~/.superfacility/priv_key.jwk      # RSA private key in JWK JSON format
+    ~/.superfacility/pub_key.jwk      # RSA public key in JWK JSON format
+
+When creating the client, ensure that one of the two IP's you mention is the workflow
+submit host, from where you are running the workflows. There is a convenient drop
+down option in the IP presets that allows you to select your IP.
+
+
+.. figure:: ../images/sfapi-token-iris.png
+   :alt: The distributed resources appear to be part of a HTCondor pool.
+   :width: 100.0%
+
+   The distributed resources appear to be part of a HTCondor pool.
+
+
+**2. Python virtual environment with** ``sfapi_client``
+
+.. code-block:: console
+
+    $ python3 -m venv ~/superfacility-env
+    $ source ~/superfacility-env/bin/activate
+    (superfacility-env) $ pip install sfapi_client
+
+The virtual environment must be at ``~/superfacility-env``. The HTCondor blahp bindings
+activate this enviornment when interacting with sfapi
+
+**3. Pegasus SFAPI BLAHP scripts**
+
+The scripts (``sfapi_submit.sh``, ``sfapi_status.sh``, ``sfapi_cancel.sh``,
+``sfapi_ping.sh``, ``sfapi_helpers.py``, ``sfapi_setup.sh``,
+``sfapi_local_submit_attributes.sh``) ship with Pegasus under
+``$PEGASUS_SHARE_DIR/htcondor/glite/`` need to be installed in the HTCondor
+blahp directory.
+
+Site Catalog
+~~~~~~~~~~~~
+
+Below is an annotated site catalog entry for Perlmutter. The key differences from a
+standard glite/BOSCO site are:
+
+- ``grids`` uses ``type: sfapi`` with ``contact: perlmutter`` (the NERSC resource name).
+- ``condor: grid_resource: batch sfapi`` routes HTCondor submissions through the SFAPI BLAHP
+  plugin.
+- ``pegasus: style: glite`` enables the glite job-wrapping mechanism.
+- Scratch and output directories live on the CFS community filesystem visible from
+  Perlmutter compute nodes.
+
+.. code-block:: yaml
+
+    pegasus: '5.0'
+    sites:
+    - name: perlmutter
+      directories:
+      - type: sharedScratch
+        path: /global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-scratch
+        sharedFileSystem: false
+        fileServers:
+        - url: file:///global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-scratch
+          operation: all
+      - type: localStorage
+        path: /global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-outputs
+        sharedFileSystem: false
+        fileServers:
+        - url: file:///global/cfs/cdirs/<NERSC_PROJECT>/<NERSC_USERNAME>/wf-outputs
+          operation: all
+      grids:
+      - type: sfapi
+        contact: perlmutter
+        scheduler: slurm
+        jobtype: compute
+      profiles:
+        condor:
+          grid_resource: batch sfapi
+        env:
+          PEGASUS_HOME: /global/cfs/cdirs/<NERSC_PROJECT>/software/install/pegasus/default
+        pegasus:
+          style: glite
+          queue: debug           # Slurm partition (debug, regular, …)
+          project: <NERSC_PROJECT>
+          data.configuration: sharedfs
+          nodes: 1
+          cores: 1
+          runtime: 1800          # seconds
+          clusters.num: 2        # cluster jobs together to reduce queue overhead
+
+Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID and
+username respectively.
+
+The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
+:ref:`glite-mappings`.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+**SFAPI credential errors**
+    Verify that ``~/.superfacility/clientid.txt`` and ``~/.superfacility/priv_key.jwk``
+    exist, are readable only by the owner (``chmod 600``), and that the registered client
+    at `https://iris.nersc.gov <https://iris.nersc.gov>`_ has the ``compute:perlmutter``
+    and ``compute:dtns`` scopes.
+
+**Virtual environment not found**
+    ``sfapi_setup.sh`` will print an error message with installation instructions if
+    ``~/superfacility-env`` does not exist or does not contain ``sfapi_client``.
 
 
 .. _pyglidein:

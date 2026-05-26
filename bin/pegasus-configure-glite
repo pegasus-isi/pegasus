@@ -40,6 +40,7 @@ fi
 
 # new way
 if [ -d "$BLAHPD_LOCATION" ]; then
+    BLAHPD_LIBEXEC_DIR="$BLAHPD_LOCATION/libexec/blahp"
     # in case of RPM installs, we need to from /usr to /
     if [ "$BLAHPD_LOCATION" = "/usr" ]; then
         BLAHPD_LOCATION=""
@@ -51,6 +52,7 @@ if [ -d "$BLAHPD_LOCATION" ]; then
 elif [ -d "$GLITE_LOCATION" ]; then
     BLAHPD_CONFIG="$GLITE_LOCATION/etc/batch_gahp.config"
     BLAHPD_SCRIPTS_DIR="$GLITE_LOCATION/bin"
+    BLAHPD_LIBEXEC_DIR="$BLAHPD_SCRIPTS_DIR"
 fi
 
 for f in "$BLAHPD_CONFIG" "$BLAHPD_SCRIPTS_DIR"; do
@@ -65,39 +67,74 @@ for f in "$BLAHPD_CONFIG" "$BLAHPD_SCRIPTS_DIR"; do
     fi
 done
 
-# Copy all the pegasus scripts to the glite bin dir
-for f in "$PEGASUS_GLITE_DIR"/*.{sh,py}; do
-    echo "Installing "`basename "$f"`" into $BLAHPD_SCRIPTS_DIR/"
+# GH-2191 only the local_submit_attributes attributes go to etc dir
+# and we create symlinks to them from the libexec dir
+for f in "$PEGASUS_GLITE_DIR"/*local_submit_attributes.sh; do
+    base_attribs_file=`basename "$f"`
+    echo "Installing "$base_attribs_file" into $BLAHPD_SCRIPTS_DIR/"
     cp "$f" $BLAHPD_SCRIPTS_DIR/
+
+    # make sure there is a symlink in the $BLAHPD_LIBEXEC_DIR
+    # for local_submit_attributes.sh file
+    base_attribs_libexec_file="$BLAHPD_LIBEXEC_DIR/$base_attribs_file"
+    if [ -L "$base_attribs_libexec_file" ]; then
+        echo "Symlink for $base_attribs_file already exists in $BLAHPD_LIBEXEC_DIR. Removing"
+        rm $base_attribs_libexec_file
+
+    elif [ -f "$base_attribs_libexec_file" ]; then
+        # not a symlink. take a backup
+        mv $base_attribs_libexec_file "$base_attribs_libexec_file".bak
+    fi
+
+    # now create the symlink afresh
+    (
+        cd $BLAHPD_LIBEXEC_DIR
+        ln -s  ../../../etc/blahp/$base_attribs_file $base_attribs_file
+        echo "Created symlink $base_attribs_file in $BLAHPD_LIBEXEC_DIR"
+        echo `ls -l $base_attribs_file`
+    )
+
 done
 
-# Edit GLITE_CONFIG to add moab support
-echo "Adding moab support to batch_gahp.config"
+# copy all the non local attributes.sh file into the libexec directory
+for f in `ls "$PEGASUS_GLITE_DIR"/*.{sh,py} | grep -v local_submit_attributes`; do
+    echo "Installing "`basename "$f"`" into $BLAHPD_LIBEXEC_DIR/"
+    cp "$f" $BLAHPD_LIBEXEC_DIR/
+done
+
+# Edit GLITE_CONFIG to add moab and sfapi support
+echo "Adding moab and sfapi support to batch_gahp.config"
 BLAHPD_CONFIG_BAK=$BLAHPD_CONFIG.$(date +%F)
 cp $BLAHPD_CONFIG $BLAHPD_CONFIG_BAK
 awk '
 BEGIN {
     FS="=";
-    has_binpath=0;
+    has_moab_binpath=0;
+    has_sfapi_binpath=0;
 }
 {
     if ($1 == "supported_lrms") {
-        if (index($2,"moab")>0) {
-            print($0);
-        } else {
-            print($0",moab");
+        line=$0;
+        if (index($2,"moab")==0) {
+            line=line",moab";
         }
+        if (index($2,"sfapi")==0) {
+            line=line",sfapi";
+        }
+        print(line);
     } else {
         print($0);
     }
     if ($1 == "moab_binpath") {
-        has_binpath=1;
+        has_moab_binpath=1;
     }
+
 }
 END {
-    if (!has_binpath) {
+    if (!has_moab_binpath) {
         print("moab_binpath=`which msub 2>/dev/null|sed '\''s|/[^/]*$||'\''`")
     }
+
 }
 ' $BLAHPD_CONFIG_BAK > $BLAHPD_CONFIG
 

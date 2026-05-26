@@ -110,7 +110,7 @@ public class GLiteTest {
         // this.testWithRegex(j, DEFAULT_GRID_RESOURCE, ".*PER_PROCESS_MEMORY==\"([0-9]*)\".*",
         // "50");
         this.testWithPegasusClassADSVariables(
-                j, DEFAULT_GRID_RESOURCE, Pegasus.MEMORY_KEY, "PER_PROCESS_MEMORY", "50");
+                j, DEFAULT_GRID_RESOURCE, Pegasus.MEMORY_KEY, "TOTAL_MEMORY", "50");
     }
 
     // disable for GH-2175 @Test
@@ -369,7 +369,12 @@ public class GLiteTest {
         while (m.find()) {
             value = m.group(1);
         }
-        assertEquals(expectedClassAdKey, value);
+        assertEquals(
+                expectedClassAdKey,
+                value,
+                "For pegasus profile "
+                        + pegasusProfileKey
+                        + " corressponding pegasus classad set in correctly");
     }
 
     private void testWithRegex(Job j, String gridResource, String regex, String expected)

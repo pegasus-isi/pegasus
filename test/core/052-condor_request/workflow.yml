@@ -1,0 +1,51 @@
+x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '05-14-26T13:58:34Z'}
+pegasus: 5.0.4
+name: blackdiamond
+jobs:
+- type: job
+  namespace: pegasus
+  version: '4.0'
+  name: preprocess
+  id: ID0000001
+  arguments: [-a, preprocess, -T10, -i, f.a, -o, f.b1, f.b2]
+  uses:
+  - {lfn: f.b2, type: output, stageOut: true, registerReplica: true}
+  - lfn: f.a
+    metadata: {㐦: 㒦}
+    type: input
+  - {lfn: f.b1, type: output, stageOut: true, registerReplica: true}
+- type: job
+  namespace: pegasus
+  version: '4.0'
+  name: findrange
+  id: ID0000002
+  arguments: [-a, findrange, -T10, -i, f.b1, -o, f.c1]
+  uses:
+  - {lfn: f.b1, type: input}
+  - {lfn: f.c1, type: output, stageOut: true, registerReplica: true}
+- type: job
+  namespace: pegasus
+  version: '4.0'
+  name: findrange
+  id: ID0000003
+  arguments: [-a, findrange, -T10, -i, f.b2, -o, f.c2]
+  uses:
+  - {lfn: f.b2, type: input}
+  - {lfn: f.c2, type: output, stageOut: true, registerReplica: true}
+- type: job
+  namespace: pegasus
+  version: '4.0'
+  name: analyze
+  id: ID0000004
+  arguments: [-a, analyze, -T10, -i, f.c1, f.c2, -o, f.d]
+  uses:
+  - {lfn: f.c2, type: input}
+  - {lfn: f.d, type: output, stageOut: true, registerReplica: true}
+  - {lfn: f.c1, type: input}
+jobDependencies:
+- id: ID0000001
+  children: [ID0000002, ID0000003]
+- id: ID0000002
+  children: [ID0000004]
+- id: ID0000003
+  children: [ID0000004]
