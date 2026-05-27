@@ -28,7 +28,7 @@ from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.runtime_predictor import (
     RuntimePredictionConfig, WorkflowRuntimePredictor,
     _build_dag_levels, _extract_features, _get_condor_slot,
-    find_submit_dir, scan_sub_files, patch_sub_file,
+    find_submit_dir, scan_sub_files, patch_sub_file, read_meta_sizes,
 )
 
 
