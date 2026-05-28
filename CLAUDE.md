@@ -4,31 +4,112 @@ Pegasus Workflow Management System (v5.2.0-dev). Multi-language scientific workf
 
 ## Build System
 
-Dual build system: `pip install .` for Python+Java+C unified build, Ant for legacy dist packaging.
+Primary build: **scikit-build-core** (PEP 517) drives **CMake** to compile Java and C during `pip install`. No `setup.py`, no Ant for compilation.
 
-### pip-based build (primary)
+### pip / wheel build (primary)
 
 ```bash
-pip install .           # Build and install everything (Python + Java + C)
-pip install -e .        # Editable/development install
+pip install .                    # Build and install everything (Python + Java + C)
+pip install -e . --no-build-isolation  # Editable/development install (compiles once)
 PEGASUS_NO_JAVA=1 pip install .  # Skip Java compilation
 PEGASUS_NO_C=1 pip install .     # Skip C compilation
+python -m build --wheel          # Build a distributable wheel into dist/
 ```
 
-Project defined in `pyproject.toml` (setuptools backend). Custom build commands in `setup.py` compile Java and C during install.
+`pyproject.toml` uses `scikit_build_core.build` backend. CMake targets compile Java via `UseJava` (`add_jar()`) and C via native `add_executable()`. No `setup.py`.
 
-### Ant-based build (legacy dist packaging)
+### Makefile shortcuts
+
+```bash
+make build         # python -m build --wheel
+make dev           # pip install -e . --no-build-isolation
+make build-c       # cmake configure + build, Java OFF
+make build-java    # cmake configure + build, C OFF
+make build-worker  # build worker package tarball (slow: runs pip install)
+make clean         # remove _cmake_build/, dist/, *.egg-info
+make clean-java    # remove _cmake_build/java_src only
+make clean-c       # remove _cmake_build/c_src only
+make clean-worker  # remove _cmake_build/worker_package only
+```
+
+### Standalone CMake (no Python)
+
+```bash
+cmake -B _cmake_build -S .
+cmake --build _cmake_build
+cmake --install _cmake_build --prefix .   # installs to ./bin/, ./lib/, ./share/
+```
+
+### Install layout
+
+| Artifact | pip install location | standalone cmake |
+|----------|---------------------|-----------------|
+| `pegasus-kickstart`, `pegasus-cluster`, `pegasus-keg` | `<venv>/bin/` (on PATH) | `<prefix>/bin/` |
+| `libinterpose.so` | `<venv>/lib/pegasus/` | `<prefix>/lib/pegasus/` |
+| `pegasus.jar`, `pegasus-aws-batch.jar` | `<site-packages>/Pegasus/data/java/` | `<prefix>/share/pegasus/java/` |
+| `pegasus-worker-VERSION-PLATFORM.tar.gz` | `<site-packages>/Pegasus/data/worker-packages/` | `<prefix>/share/pegasus/worker-packages/` |
+
+C binaries are ELF executables installed directly to `<venv>/bin/` — **not** Python wrapper scripts.
+
+### CMake structure
+
+```
+CMakeLists.txt               # top-level: version, feature flags, install destinations
+c_src/kickstart/CMakeLists.txt
+c_src/cluster/CMakeLists.txt
+c_src/keg/CMakeLists.txt
+c_src/mpi-cluster/CMakeLists.txt  # optional; enable with -DPEGASUS_BUILD_MPI=ON
+java_src/CMakeLists.txt      # add_jar() for pegasus.jar + pegasus-aws-batch.jar
+worker_package/CMakeLists.txt   # worker tarball (ON by default)
+worker_package/assemble.cmake   # assembly script invoked by cmake -P
+```
+
+Feature flags (CMake options and env var overrides):
+
+| Flag | Default | Env override |
+|------|---------|--------------|
+| `PEGASUS_BUILD_C` | ON | `PEGASUS_NO_C=1` |
+| `PEGASUS_BUILD_JAVA` | ON | `PEGASUS_NO_JAVA=1` |
+| `PEGASUS_BUILD_MPI` | OFF | — |
+| `PEGASUS_BUILD_WORKER` | ON | `PEGASUS_NO_WORKER=1` |
+
+### Worker package
+
+The worker package (`pegasus-worker-VERSION-PLATFORM.tar.gz`) is a self-contained tarball deployed to remote compute nodes for nonsharedfs/PegasusLite execution. It bundles:
+- C binaries (`pegasus-kickstart`, `pegasus-cluster`, `pegasus-keg`)
+- Python worker scripts (`pegasus-transfer`, `pegasus-s3`, `pegasus-exitcode`, `pegasus-integrity`, `pegasus-checkpoint`)
+- The Pegasus Python package (`src/Pegasus/`)
+- External Python deps from `src/requirements.txt` (boto3, globus_sdk, Flask, etc.)
+- Shell helpers from `src/Pegasus/data/sh/`, `notification/`, `htcondor/`, `schema/`
+
+Built by default as part of `pip install .` and `make build`. To skip it:
+
+```bash
+PEGASUS_NO_WORKER=1 pip install .
+```
+
+To build only the worker package:
+
+```bash
+make build-worker
+```
+
+The Java planner (`CreateWorkerPackage.java`) looks for the tarball at `${PEGASUS_SHARE_DIR}/worker-packages/`.
+
+Java source/target level: 1.8. Version read from `build.properties`.
+
+### Ant (legacy dist packaging only)
+
+Ant is **not** used for compilation. It remains available for distribution packaging targets only:
 
 ```bash
 ant dist              # Build binary distribution (no docs)
 ant dist-release      # Build binary distribution with documentation
-ant compile           # Compile all code (Java + C + externals)
-ant compile-java      # Compile Java only
-ant compile-c         # Compile C tools (kickstart, cluster, keg)
-ant clean             # Remove all build artifacts
+ant test              # Run ALL tests (python → java → c → transfer)
+ant test-python       # Run Python tests via tox
+ant test-java         # Run Java JUnit tests
+ant test-c            # Run C unit tests (kickstart + PMC)
 ```
-
-Java source/target level: 1.8. Version defined in `build.properties`.
 
 ## CLI
 
@@ -42,7 +123,7 @@ pegasus analyzer        # Analyze workflow failures
 pegasus config --bin    # Query installation paths
 ```
 
-Legacy `pegasus-<tool>` commands still work via `[project.scripts]` entries in `pyproject.toml`.
+Legacy `pegasus-<tool>` commands still work via `[project.scripts]` entries in `pyproject.toml`. Note: `pegasus-kickstart`, `pegasus-cluster`, and `pegasus-keg` are C binaries installed directly to `<venv>/bin/` by CMake — they are not Python wrapper scripts.
 
 CLI source: `src/Pegasus/cli/main.py` (lazy-loaded subcommand group).
 
@@ -52,7 +133,7 @@ CLI source: `src/Pegasus/cli/main.py` (lazy-loaded subcommand group).
 tox                   # Run Python tests (all Python versions)
 tox -e py310          # Run Python tests with specific Python
 tox -e lint           # Run linting (ruff)
-ant test              # Run ALL tests (builds dist first, then python → java → c → transfer)
+ant test              # Run ALL tests (python → java → c → transfer)
 ant test-python       # Run Python tests via tox
 ant test-java         # Run Java JUnit tests
 ant test-c            # Run C unit tests (kickstart + PMC)
@@ -63,7 +144,9 @@ Test framework is pytest. Reports go to `test-reports/`.
 ## Code Formatting
 
 ```bash
-ant code-format-python   # Format all Python code (ruff)
+ruff check src/          # Lint Python
+ruff format src/         # Format Python
+ant code-format-python   # Format all Python code via ruff (Ant wrapper)
 ant code-format-java     # Format all Java code (AOSP style via google-java-format)
 ```
 
