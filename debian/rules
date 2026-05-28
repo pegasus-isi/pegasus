@@ -4,9 +4,6 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-11-openjdk-$(DEB_HOST_ARCH)) $(wildcard /usr/lib/jvm/java-8-openjdk-$(DEB_HOST_ARCH)) )
-PATH := ${JAVA_HOME}/bin:${PATH}
-
 
 # make sure packages are compatible with out repo tools
 # https://stackoverflow.com/questions/71196872/how-do-i-build-a-deb-without-zstd-compression-in-ubuntu-21-10
@@ -19,9 +16,7 @@ build: build-stamp
 
 build-stamp:
 	dh_testdir
-	ant dist-release
-	rm -f dist/*.tar.gz
-	mv dist/pegasus-* dist/pegasus
+	python3 -m build --wheel --no-isolation
 	touch build-stamp
 
 
@@ -30,37 +25,29 @@ install: build
 	dh_testroot
 	dh_prep
 	dh_installdirs
-	
-	# /etc/pegasus
-	mkdir -p debian/pegasus/etc/pegasus
-	cp -a dist/pegasus/etc/* debian/pegasus/etc/pegasus/
-	
-	# /usr/bin
-	mkdir -p debian/pegasus/usr
-	cp -r dist/pegasus/bin debian/pegasus/usr/
-	strip debian/pegasus/usr/bin/pegasus-cluster
-	strip debian/pegasus/usr/bin/pegasus-keg
-	strip debian/pegasus/usr/bin/pegasus-kickstart
-	
-	# /usr/share/
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/share debian/pegasus/usr/
-	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
-	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
-	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
-	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
-	
-	# /usr/lib
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/lib debian/pegasus/usr/
-	
-	# remove stuff we don't need
-	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
-	
-	# no pyc files in debian packages
+
+	python3 -m pip install \
+		--no-deps \
+		--no-index \
+		--root debian/pegasus \
+		--prefix /usr \
+		dist/pegasus_wms-*.whl
+
+	# Strip C binaries
+	strip debian/pegasus/usr/bin/pegasus-cluster   || true
+	strip debian/pegasus/usr/bin/pegasus-keg       || true
+	strip debian/pegasus/usr/bin/pegasus-kickstart || true
+
+	# Remove JAR license files that bloat the package
+	rm -f debian/pegasus/usr/lib/python*/dist-packages/Pegasus/data/java/COPYING.*
+	rm -f debian/pegasus/usr/lib/python*/dist-packages/Pegasus/data/java/EXCEPTIONS.*
+	rm -f debian/pegasus/usr/lib/python*/dist-packages/Pegasus/data/java/LICENSE.*
+	rm -f debian/pegasus/usr/lib/python*/dist-packages/Pegasus/data/java/NOTICE.*
+
+	# No pyc files in debian packages
 	find debian/pegasus/ -name \*.pyc -exec rm {} \;
 	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
-	
+
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -89,9 +76,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-	ant clean
-	rm -f src/externals/._boto*
-	rm -rf dist
+	rm -rf _cmake_build dist/
 	dh_clean
 
 
@@ -100,6 +85,4 @@ clean:
 	exit 1
 
 
-.PHONY: build  binary-indep binary-arch binary install clean
-
-
+.PHONY: build binary-indep binary-arch binary install clean
