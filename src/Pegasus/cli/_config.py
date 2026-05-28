@@ -16,7 +16,10 @@ import click
 def _get_data_dir():
     """Locate the Pegasus data directory using importlib.resources."""
     try:
-        from importlib.resources import files
+        try:
+            from importlib.resources import files
+        except (ImportError, AttributeError):
+            from importlib_resources import files
 
         data_dir = Path(str(files("Pegasus.data")))
         if data_dir.is_dir():
@@ -125,7 +128,10 @@ def config(
     # Version from package metadata
     _version = "5.2.0"
     try:
-        from importlib.metadata import version as pkg_version
+        try:
+            from importlib.metadata import version as pkg_version
+        except ImportError:
+            from importlib_metadata import version as pkg_version
         _version = pkg_version("pegasus-wms")
     except (ImportError, Exception):
         pass

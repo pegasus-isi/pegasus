@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.9"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
@@ -8,7 +8,7 @@ version = "5.2.0"
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.6"
 authors = [
     { name = "Pegasus Team", email = "pegasus@isi.edu" },
 ]
@@ -21,6 +21,9 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -37,21 +40,30 @@ dependencies = [
     # Core
     "PyYAML",
     "click>=8.0",
+    # Backports for Python < 3.7 / 3.8 / 3.9
+    "dataclasses; python_version < '3.7'",
+    "importlib-metadata; python_version < '3.8'",
+    "importlib-resources; python_version < '3.9'",
     # Worker / transfer
     "six>=1.9.0",
-    "boto3>1.12",
-    "globus-sdk>=3.23.0,<4",
+    "boto3>1.12,<1.24; python_version < '3.7'",
+    "boto3>1.12; python_version >= '3.7'",
+    "globus-sdk>=2.0,<3; python_version < '3.7'",
+    "globus-sdk>=3.23.0,<4; python_version >= '3.7'",
     # CLI / tools
     "GitPython",
     "pamela",
     "pika",
     # Web service / dashboard
-    "werkzeug<3.1.0",
-    "Flask>=2.2,<3.0",
+    "werkzeug<2.1; python_version < '3.7'",
+    "werkzeug<3.1.0; python_version >= '3.7'",
+    "Flask>=1.1,<2.1; python_version < '3.7'",
+    "Flask>=2.2,<3.0; python_version >= '3.7'",
     "Flask-Caching",
     "requests",
     # Database
-    "sqlalchemy>=1.4",
+    "sqlalchemy>=1.4,<2.0; python_version < '3.7'",
+    "sqlalchemy>=1.4; python_version >= '3.7'",
 ]
 
 [project.urls]
@@ -99,14 +111,38 @@ pegasus-globus-online-init = "Pegasus.cli.main:pegasus_globus_online_init"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
 
+# C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) are now
+# installed directly to <venv>/bin/ by CMake via the wheel scripts section.
+# No Python wrapper console_scripts entries are needed.
+
 [project.optional-dependencies]
 postgresql = ["psycopg2"]
 mysql = ["pymysql"]
 cwl = ["cwl-utils>=0.11", "jsonschema>=3.2"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.scikit-build]
+cmake.version = ">=3.20"
+cmake.build-type = "Release"
 
-[tool.setuptools.package-data]
-"Pegasus.data" = ["**/*"]
-"Pegasus.service" = ["**/*.html", "**/*.css", "**/*.js", "**/*.png", "**/*.gif", "**/*.ico"]
+# Python package location (src layout)
+wheel.packages = ["src/Pegasus"]
+
+# Source distribution: include everything cmake needs to build from source
+sdist.include = [
+    "CMakeLists.txt",
+    "c_src/**",
+    "java_src/**",
+    "share/pegasus/java/**",
+    "build.properties",
+    "release-tools/getsystem",
+    "release-tools/getversion",
+    "release-tools/determine-lib-dir",
+]
+sdist.exclude = [
+    "**/*.o",
+    "**/*.so",
+    "**/*.class",
+    "build/",
+    "dist/",
+    "_cmake_build/",
+]

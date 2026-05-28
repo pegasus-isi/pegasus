@@ -872,8 +872,10 @@ def pegasus_version():
     Returns the Pegasus version string.
     """
     try:
-        from importlib.metadata import version as pkg_version
-
+        try:
+            from importlib.metadata import version as pkg_version
+        except ImportError:
+            from importlib_metadata import version as pkg_version
         return pkg_version("pegasus-wms")
     except Exception:
         return "5.2.0"

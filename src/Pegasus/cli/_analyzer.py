@@ -451,7 +451,11 @@ def _generate_failed_jobs(options, failed_jobs):
             cout += _indent_console(("Failed Sub Workflow").center(80, "="))
             try:
                 result = subprocess.run(
-                    sub_wf_cmd, shell=True, capture_output=True, text=True
+                    sub_wf_cmd,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
                 )
                 cout += result.stdout
                 if result.stderr:

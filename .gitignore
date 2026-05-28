@@ -779,3 +779,7 @@ $RECYCLE.BIN/
 
 # Misc
 examples/
+
+# Pegasus build artifacts
+_cmake_build/
+/pegasus-*/

@@ -55,8 +55,9 @@ def find_java():
                 try:
                     result = subprocess.run(
                         [java_home_cmd, "-version", "1.8+"],
-                        capture_output=True,
-                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
                     )
                     if result.returncode == 0 and result.stdout.strip():
                         java_home = result.stdout.strip()
@@ -121,8 +122,9 @@ def compute_heap_args():
         try:
             result = subprocess.run(
                 ["/usr/sbin/sysctl", "-n", "hw.memsize"],
-                capture_output=True,
-                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
             )
             if result.returncode == 0:
                 mem_bytes = int(result.stdout.strip())
@@ -164,7 +166,10 @@ def get_pegasus_data_dir():
     filesystem-relative path for development installs.
     """
     try:
-        from importlib.resources import files
+        try:
+            from importlib.resources import files
+        except (ImportError, AttributeError):
+            from importlib_resources import files
 
         data_dir = files("Pegasus.data")
         # Convert to a path if possible
