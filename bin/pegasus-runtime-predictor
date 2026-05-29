@@ -169,33 +169,29 @@ def main():
         }
 
         results = predictor.predict(wf, sub_resources=sub_resources)
-        print(f"[pegasus-runtime-predictor] Predicted {len(results)} job(s) across all levels")
+
+        if target_level is not None and results:
+            level_results = [r for r in results if r.get("dag_level") == target_level]
+            print(f"[pegasus-runtime-predictor] Level {target_level}: "
+                  f"{len(level_results)} job(s) predicted")
+        else:
+            level_results = results
+            print(f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted")
 
         import pandas as pd
-
-        # Group results by level and write ALL levels' JSON/CSV atomically.
-        # This means the very first prescript (level 0) writes predictions for
-        # every level in one shot — subsequent prescripts skip computation entirely.
-        by_level: dict = {}
-        for r in results:
-            lvl = r.get("dag_level", 0)
-            by_level.setdefault(lvl, []).append(r)
-
-        for lvl, lvl_results in by_level.items():
-            s       = f"_L{lvl}"
-            j_path  = os.path.join(output_dir, f"runtime_predictions{s}.json")
-            c_path  = os.path.join(output_dir, f"runtime_predictions{s}.csv")
-            tmp_j   = j_path + ".tmp"
-            tmp_c   = c_path + ".tmp"
-            pd.DataFrame(lvl_results).to_csv(tmp_c, index=False)
-            with open(tmp_j, "w") as fh:
-                json.dump({"level": lvl, "total_jobs": len(lvl_results),
-                           "predictions": lvl_results}, fh, indent=2)
-            os.replace(tmp_c, c_path)
-            os.replace(tmp_j, j_path)
-
-        print(f"[pegasus-runtime-predictor] Written predictions for levels: "
-              f"{sorted(by_level.keys())} → {output_dir}")
+        # Write atomically: temp file → rename so readers never see partial output
+        tmp_json = json_path + ".tmp"
+        tmp_csv  = csv_path  + ".tmp"
+        pd.DataFrame(level_results).to_csv(tmp_csv, index=False)
+        with open(tmp_json, "w") as f:
+            json.dump({
+                "level":       target_level,
+                "total_jobs":  len(level_results),
+                "predictions": level_results,
+            }, f, indent=2)
+        os.replace(tmp_csv,  csv_path)
+        os.replace(tmp_json, json_path)
+        print(f"[pegasus-runtime-predictor] Done -> {json_path}")
     else:
         print(f"[pegasus-runtime-predictor] Level {target_level} predictions already exist — "
               f"skipping computation")
