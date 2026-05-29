@@ -120,6 +120,15 @@ def main():
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # Idempotency guard: when running as a DAGMan PRE script, parallel jobs at
+    # the same level each trigger this binary. Only the first call does work;
+    # subsequent calls see the output file and exit immediately.
+    if target_level is not None:
+        _out = os.path.join(output_dir, f"runtime_predictions_L{target_level}.json")
+        if os.path.exists(_out):
+            print(f"[pegasus-runtime-predictor] Level {target_level} already predicted — skipping")
+            sys.exit(0)
+
     print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
     wf = _load_workflow_from_yaml(workflow_yml)
 
