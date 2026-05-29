@@ -183,7 +183,7 @@ public class GlobusTest {
         org.hamcrest.MatcherAssert.assertThat(
                 Globus.rslToPegasusProfiles().isEmpty(), org.hamcrest.Matchers.is(false));
         org.hamcrest.MatcherAssert.assertThat(
-                Globus.rslToPegasusProfiles().containsKey(Globus.MAX_MEMORY_KEY),
+                Globus.rslToPegasusProfiles().containsKey(Globus.TOTAL_MEMORY_KEY),
                 org.hamcrest.Matchers.is(true));
     }
 
@@ -191,7 +191,7 @@ public class GlobusTest {
     public void testPegasusProfilesToRSLKeyContainsExpectedMappings() {
         assertThat(
                 Globus.pegasusProfilesToRSLKey().get(Pegasus.MEMORY_KEY),
-                is(Globus.MAX_MEMORY_KEY));
+                is(Globus.TOTAL_MEMORY_KEY));
         assertThat(
                 Globus.pegasusProfilesToRSLKey().get(Pegasus.RUNTIME_KEY),
                 is(Globus.MAX_WALLTIME_KEY));

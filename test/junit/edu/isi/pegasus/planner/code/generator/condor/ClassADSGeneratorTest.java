@@ -86,7 +86,7 @@ public class ClassADSGeneratorTest {
         assertThat(
                 ClassADSGenerator.mapPegasusResourceProfileToPegasusClassAdVariable(
                         Pegasus.MEMORY_KEY),
-                is("$(my.pegasus_memory_mb)"));
+                is("$(MY.pegasus_memory_mb)"));
     }
 
     @Test
@@ -118,12 +118,12 @@ public class ClassADSGeneratorTest {
         writer.flush();
         String output = buffer.toString();
 
-        assertThat(output, containsString("+pegasus_generator = \"Pegasus\""));
-        assertThat(output, containsString("+pegasus_root_wf_uuid = \"root-uuid\""));
-        assertThat(output, containsString("+pegasus_wf_uuid = \"wf-uuid\""));
-        assertThat(output, containsString("+pegasus_wf_name = \"\""));
-        assertThat(output, containsString("+pegasus_wf_app = \"my-app\""));
-        assertThat(output, containsString("+pegasus_wf_time = \"2026-03-30T12:00:00Z\""));
+        assertThat(output, containsString("+pegasus_generator = 'Pegasus'"));
+        assertThat(output, containsString("+pegasus_root_wf_uuid = 'root-uuid'"));
+        assertThat(output, containsString("+pegasus_wf_uuid = 'wf-uuid'"));
+        assertThat(output, containsString("+pegasus_wf_name = ''"));
+        assertThat(output, containsString("+pegasus_wf_app = 'my-app'"));
+        assertThat(output, containsString("+pegasus_wf_time = '2026-03-30T12:00:00Z'"));
     }
 
     @Test
@@ -162,11 +162,11 @@ public class ClassADSGeneratorTest {
         writer.flush();
         String output = buffer.toString();
 
-        assertThat(output, containsString("+pegasus_wf_xformation = \"ns::xform:1.0\""));
-        assertThat(output, containsString("+pegasus_wf_dax_job_id = \"null\""));
-        assertThat(output, containsString("+pegasus_wf_dag_job_id = \"clustered\""));
+        assertThat(output, containsString("+pegasus_wf_xformation = 'ns::xform:1.0'"));
+        assertThat(output, containsString("+pegasus_wf_dax_job_id = 'null'"));
+        assertThat(output, containsString("+pegasus_wf_dag_job_id = 'clustered'"));
         assertThat(output, containsString("+pegasus_job_class = 1"));
-        assertThat(output, containsString("+pegasus_site = \"local\""));
+        assertThat(output, containsString("+pegasus_site = 'local'"));
         assertThat(output, containsString("+pegasus_job_runtime = 180"));
         assertThat(output, containsString("+pegasus_cores = 8"));
         assertThat(output, containsString("+pegasus_gpus = 2"));
@@ -192,6 +192,6 @@ public class ClassADSGeneratorTest {
         ClassADSGenerator.generate(writer, dag, job, null);
         writer.flush();
 
-        assertThat(buffer.toString(), containsString("+pegasus_site = \"preselected-site\""));
+        assertThat(buffer.toString(), containsString("+pegasus_site = 'preselected-site'"));
     }
 }
