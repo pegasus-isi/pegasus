@@ -967,7 +967,16 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
      *  profiles:
      *      env:
      *          PATH: /usr/bin:/bin
-     *          x-ext: true
+     *  x-tags:
+     *    - name: gpu
+     *      profiles:
+     *        pegasus:
+     *          queue: gpu
+     *          glite.arguments: -C gpu
+     *    - name: cpu
+     *      profiles:
+     *        pegasus:
+     *          queue: normal
      * </pre>
      *
      * @param parser
@@ -1044,6 +1053,36 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
                         parser = profilesNode.traverse(oc);
                         Profiles profiles = parser.readValueAs(Profiles.class);
                         siteEntry.setProfiles(profiles);
+                    }
+                    break;
+
+                case X_TAGS:
+                    JsonNode tagNodes = node.get(key);
+                    if (tagNodes != null) {
+                        if (tagNodes.isArray()) {
+                            for (JsonNode tagNode : tagNodes) {
+                                String tagName = null;
+                                for (Iterator fieldIt = tagNode.fieldNames(); fieldIt.hasNext(); ) {
+                                    String field = (String) fieldIt.next();
+                                    if (field.equalsIgnoreCase("name")) {
+                                        tagName = tagNode.get("name").asText();
+                                    }
+                                }
+                                if (tagName == null) {
+                                    this.complain(
+                                            "No field - ",
+                                            SiteCatalogKeywords.X_TAGS.toString(),
+                                            "name",
+                                            tagNode);
+                                }
+                                JsonNode pNode = tagNode.get("profiles");
+                                if (pNode != null) {
+                                    parser = pNode.traverse(oc);
+                                    Profiles profiles = parser.readValueAs(Profiles.class);
+                                    System.out.println(profiles);
+                                }
+                            }
+                        }
                     }
                     break;
 
