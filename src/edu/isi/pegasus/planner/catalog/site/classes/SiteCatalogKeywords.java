@@ -51,7 +51,8 @@ public enum SiteCatalogKeywords {
     JOBS_IN_QUEUE("jobsInQueue"),
     IDLE_NODES("idleNodes"),
     TOTAL_NODES("totalNodes"),
-    SHARED_FILESYSTEM("sharedFileSystem");
+    SHARED_FILESYSTEM("sharedFileSystem"),
+    X_TAGS("x-tags");
 
     private String mName;
 
