@@ -103,7 +103,7 @@ The following ``pegasus`` namespace profile keys have a corresponding
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 25 50
+   :widths: 25 25 25 50
 
    * - Profile Key
      - Expression Key
