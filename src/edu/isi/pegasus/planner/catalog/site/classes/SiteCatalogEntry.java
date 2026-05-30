@@ -98,6 +98,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /** The list of replica catalog associated with the site. */
     private List<ReplicaCatalog> mReplicaCatalogs;
 
+    /** Map of profiles indexed by a tag name. */
+    private Map<String, Profiles> mTagsProfiles;
+
     /** The default constructor. */
     public SiteCatalogEntry() {
         this("");
@@ -151,6 +154,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
         mProfiles = new Profiles();
         mGridGateways = new HashMap();
         mReplicaCatalogs = new LinkedList();
+        mTagsProfiles = new HashMap();
     }
 
     /**
@@ -414,6 +418,26 @@ public class SiteCatalogEntry extends AbstractSiteData {
      */
     public Profiles getProfiles() {
         return mProfiles;
+    }
+
+    /**
+     * Sets the profiles associated a particular tag for the site
+     *
+     * @param name the tag name.
+     * @param profiles the profiles.
+     */
+    public void setTagProfiles(String name, Profiles profiles) {
+        this.mTagsProfiles.put(name, profiles);
+    }
+
+    /**
+     * Returns the profiles associated with a particular tag for the site.
+     *
+     * @param name the tag name.
+     * @return profiles.
+     */
+    public Profiles getTagProfiles(String name) {
+        return this.mTagsProfiles.get(name);
     }
 
     /**
@@ -772,6 +796,11 @@ public class SiteCatalogEntry extends AbstractSiteData {
 
             obj.setProfiles((Profiles) this.mProfiles.clone());
 
+            // associate all the tags and theri profiles
+            for (String name : this.mTagsProfiles.keySet()) {
+                obj.setTagProfiles(name, (Profiles) this.mTagsProfiles.get(name).clone());
+            }
+
         } catch (CloneNotSupportedException e) {
             // somewhere in the hierarch chain clone is not implemented
             throw new RuntimeException(
@@ -1079,7 +1108,7 @@ class SiteCatalogEntryDeserializer extends SiteDataJsonDeserializer<SiteCatalogE
                                 if (pNode != null) {
                                     parser = pNode.traverse(oc);
                                     Profiles profiles = parser.readValueAs(Profiles.class);
-                                    System.out.println(profiles);
+                                    siteEntry.setTagProfiles(tagName, profiles);
                                 }
                             }
                         }
