@@ -213,26 +213,32 @@ public class ClassADSGenerator {
         // get hold of the object holding the metadata
         // information about the workflow
         // pegasus is the generator
-        writer.println(generateClassAdAttribute(GENERATOR_AD_KEY, GENERATOR));
+        writer.println(generateClassAdAttributeWithDoubleQuotes(GENERATOR_AD_KEY, GENERATOR));
 
         // the root workflow and workflow uuid
-        writer.println(generateClassAdAttribute(ROOT_WF_UUID_KEY, dag.getRootWorkflowUUID()));
-        writer.println(generateClassAdAttribute(WF_UUID_KEY, dag.getWorkflowUUID()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(
+                        ROOT_WF_UUID_KEY, dag.getRootWorkflowUUID()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(WF_UUID_KEY, dag.getWorkflowUUID()));
 
         // the vds version
-        writer.println(generateClassAdAttribute(VERSION_AD_KEY, dag.getReleaseVersion()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(VERSION_AD_KEY, dag.getReleaseVersion()));
 
         // the workflow name
-        writer.println(generateClassAdAttribute(WF_NAME_AD_KEY, dag.getFlowName()));
+        writer.println(generateClassAdAttributeWithDoubleQuotes(WF_NAME_AD_KEY, dag.getFlowName()));
 
         // PM-1277 associate app from properties
         if (appName != null) {
-            writer.println(generateClassAdAttribute(WF_APP_KEY, appName));
+            writer.println(generateClassAdAttributeWithDoubleQuotes(WF_APP_KEY, appName));
         }
 
         // the workflow time
         if (dag.getMTime() != null) {
-            writer.println(generateClassAdAttribute(WF_TIME_AD_KEY, dag.getFlowTimestamp()));
+            writer.println(
+                    generateClassAdAttributeWithDoubleQuotes(
+                            WF_TIME_AD_KEY, dag.getFlowTimestamp()));
         }
     }
 
@@ -271,14 +277,16 @@ public class ClassADSGenerator {
 
         // the tranformation name
         writer.println(
-                generateClassAdAttribute(
+                generateClassAdAttributeWithDoubleQuotes(
                         ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName()));
 
         // put in the DAX
-        writer.println(generateClassAdAttribute(DAX_JOB_ID_KEY, job.getDAXID()));
+        writer.println(generateClassAdAttributeWithDoubleQuotes(DAX_JOB_ID_KEY, job.getDAXID()));
 
         // the supernode id
-        writer.println(generateClassAdAttribute(ClassADSGenerator.DAG_JOB_ID_KEY, job.getID()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(
+                        ClassADSGenerator.DAG_JOB_ID_KEY, job.getID()));
 
         // the class of the job
         writer.println(
@@ -291,13 +299,13 @@ public class ClassADSGenerator {
         if (job.condorVariables.containsKey(plusResourceKey)) {
             // pick the one pre populated
             writer.println(
-                    generateClassAdAttribute(
+                    generateClassAdAttributeWithDoubleQuotes(
                             ClassADSGenerator.RESOURCE_AD_KEY,
                             (String) job.condorVariables.removeKey(plusResourceKey)));
         } else {
             // generate the default one
             writer.println(
-                    generateClassAdAttribute(
+                    generateClassAdAttributeWithDoubleQuotes(
                             ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle()));
         }
 
@@ -464,6 +472,24 @@ public class ClassADSGenerator {
         sb.append("+");
         sb.append(name).append(" = ");
         sb.append(value);
+        return sb.toString();
+    }
+
+    /**
+     * Generates a classad attribute given the name and the value enclosed with double quotes.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the classad attribute.
+     * @return the classad attriubute.
+     */
+    private static String generateClassAdAttributeWithDoubleQuotes(String name, String value) {
+        StringBuilder sb = new StringBuilder(10);
+
+        sb.append("+");
+        sb.append(name).append(" = ");
+        sb.append("\"");
+        sb.append(value);
+        sb.append("\"");
         return sb.toString();
     }
 
