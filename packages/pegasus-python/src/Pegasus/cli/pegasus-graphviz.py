@@ -304,7 +304,7 @@ def parse_xform_name(path):
         f = open(path)
         for line in f.readlines():
             if "+pegasus_wf_xformation" in line:
-                return line.split("'")[1]
+                return line.split('"')[1]
 
     # Otherwise, guess the xform by stripping digits from the name
     name = fname.replace(".sub", "")
