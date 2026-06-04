@@ -157,7 +157,8 @@ public class ClassADSGenerator {
         String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
         if (varKey != null) {
             // $(MY.pegasus_memory_mb)
-            variable.append("$(MY.").append(varKey).append(")");
+            // GH-2176 we refer them with the jdl variables now
+            variable.append("$(").append(varKey).append(")");
         } else {
             throw new RuntimeException(
                     "Unable to map pegasus profile key to pegasus classad - " + profileKey);
