@@ -615,7 +615,12 @@ def _get_symbol_table(j, retry, outfile):
         except:
             pass
         symbols[key] = value
-    symbols["job_retry"] = retry
+
+    # we are doing this in a postscript. when a job fails first time
+    # retry value passed by DAGMan to exitcode is 0. However, from
+    # a user perspective the expression is for when a job is retried again
+    # so add + 1 for the expression evaluation.
+    symbols["job_retry"] = retry + 1
 
     # now try and get information from the job invocation
     # record and make it available

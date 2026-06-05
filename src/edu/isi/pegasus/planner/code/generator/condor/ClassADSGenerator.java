@@ -157,7 +157,8 @@ public class ClassADSGenerator {
         String varKey = ClassADSGenerator.pegasusProfilesToPegasusClassAdKeys().get(profileKey);
         if (varKey != null) {
             // $(MY.pegasus_memory_mb)
-            variable.append("$(MY.").append(varKey).append(")");
+            // GH-2176 we refer them with the jdl variables now
+            variable.append("$(").append(varKey).append(")");
         } else {
             throw new RuntimeException(
                     "Unable to map pegasus profile key to pegasus classad - " + profileKey);
@@ -213,26 +214,32 @@ public class ClassADSGenerator {
         // get hold of the object holding the metadata
         // information about the workflow
         // pegasus is the generator
-        writer.println(generateClassAdAttribute(GENERATOR_AD_KEY, GENERATOR));
+        writer.println(generateClassAdAttributeWithDoubleQuotes(GENERATOR_AD_KEY, GENERATOR));
 
         // the root workflow and workflow uuid
-        writer.println(generateClassAdAttribute(ROOT_WF_UUID_KEY, dag.getRootWorkflowUUID()));
-        writer.println(generateClassAdAttribute(WF_UUID_KEY, dag.getWorkflowUUID()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(
+                        ROOT_WF_UUID_KEY, dag.getRootWorkflowUUID()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(WF_UUID_KEY, dag.getWorkflowUUID()));
 
         // the vds version
-        writer.println(generateClassAdAttribute(VERSION_AD_KEY, dag.getReleaseVersion()));
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(VERSION_AD_KEY, dag.getReleaseVersion()));
 
         // the workflow name
-        writer.println(generateClassAdAttribute(WF_NAME_AD_KEY, dag.getFlowName()));
+        writer.println(generateClassAdAttributeWithDoubleQuotes(WF_NAME_AD_KEY, dag.getFlowName()));
 
         // PM-1277 associate app from properties
         if (appName != null) {
-            writer.println(generateClassAdAttribute(WF_APP_KEY, appName));
+            writer.println(generateClassAdAttributeWithDoubleQuotes(WF_APP_KEY, appName));
         }
 
         // the workflow time
         if (dag.getMTime() != null) {
-            writer.println(generateClassAdAttribute(WF_TIME_AD_KEY, dag.getFlowTimestamp()));
+            writer.println(
+                    generateClassAdAttributeWithDoubleQuotes(
+                            WF_TIME_AD_KEY, dag.getFlowTimestamp()));
         }
     }
 
@@ -249,6 +256,64 @@ public class ClassADSGenerator {
      */
     public static void generate(PrintWriter writer, ADag dag, Job job, String appName) {
 
+        generateJDLVariables(writer, job);
+
+        // get all the workflow classads
+        generate(writer, dag, appName);
+
+        // get the job classads
+
+        // the tranformation name
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(
+                        ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName()));
+
+        // put in the DAX
+        writer.println(generateClassAdAttributeWithDoubleQuotes(DAX_JOB_ID_KEY, job.getDAXID()));
+
+        // the supernode id
+        writer.println(
+                generateClassAdAttributeWithDoubleQuotes(
+                        ClassADSGenerator.DAG_JOB_ID_KEY, job.getID()));
+
+        // the class of the job
+        writer.println(
+                generateClassAdAttribute(ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType()));
+
+        // the resource on which the job is scheduled
+        // PM-796 only generate the resource ad key
+        // if job is not previously associated with it
+        String plusResourceKey = ClassADSGenerator.PLUS_RESOURCE_AD_KEY;
+        if (job.condorVariables.containsKey(plusResourceKey)) {
+            // pick the one pre populated
+            writer.println(
+                    generateClassAdAttributeWithDoubleQuotes(
+                            ClassADSGenerator.RESOURCE_AD_KEY,
+                            (String) job.condorVariables.removeKey(plusResourceKey)));
+        } else {
+            // generate the default one
+            writer.println(
+                    generateClassAdAttributeWithDoubleQuotes(
+                            ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle()));
+        }
+
+        // determine the cluster size
+        int csize =
+                (job instanceof AggregatedJob)
+                        ? ((AggregatedJob) job).numberOfConsitutentJobs()
+                        : 1;
+        writer.println(generateClassAdAttribute(ClassADSGenerator.JOB_CLUSTER_SIZE_AD_KEY, csize));
+    }
+
+    /**
+     * Generate all the condor submit file variables (also called JDL by HTCondor team) in the
+     * submit file for the job. This also generates all the variables for a job resource
+     * requirements.
+     *
+     * @param writer
+     * @param job
+     */
+    private static void generateJDLVariables(PrintWriter writer, Job job) {
         // GH-2183 lets generate the expr profiles as variables first
         Pegasus pegasusProfiles = job.vdsNS;
         for (Iterator it = pegasusProfiles.getProfileKeyIterator(); it.hasNext(); ) {
@@ -264,43 +329,6 @@ public class ClassADSGenerator {
             }
         }
 
-        // get all the workflow classads
-        generate(writer, dag, appName);
-
-        // get the job classads
-
-        // the tranformation name
-        writer.println(
-                generateClassAdAttribute(
-                        ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName()));
-
-        // put in the DAX
-        writer.println(generateClassAdAttribute(DAX_JOB_ID_KEY, job.getDAXID()));
-
-        // the supernode id
-        writer.println(generateClassAdAttribute(ClassADSGenerator.DAG_JOB_ID_KEY, job.getID()));
-
-        // the class of the job
-        writer.println(
-                generateClassAdAttribute(ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType()));
-
-        // the resource on which the job is scheduled
-        // PM-796 only generate the resource ad key
-        // if job is not previously associated with it
-        String plusResourceKey = ClassADSGenerator.PLUS_RESOURCE_AD_KEY;
-        if (job.condorVariables.containsKey(plusResourceKey)) {
-            // pick the one pre populated
-            writer.println(
-                    generateClassAdAttribute(
-                            ClassADSGenerator.RESOURCE_AD_KEY,
-                            (String) job.condorVariables.removeKey(plusResourceKey)));
-        } else {
-            // generate the default one
-            writer.println(
-                    generateClassAdAttribute(
-                            ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle()));
-        }
-
         // add the pegasus value if defined.
         String value = (String) job.vdsNS.getStringValue(Pegasus.RUNTIME_KEY);
         // else see if globus maxwalltime defined
@@ -311,7 +339,7 @@ public class ClassADSGenerator {
         } catch (Exception e) {
             // ignore
         }
-        writer.println(generateClassAdAttribute(ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime));
+        writer.println(generateSubmitFileVariable(ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime));
 
         // write out the cores if specified for job
         String coresvalue = job.vdsNS.getStringValue(Pegasus.CORES_KEY);
@@ -321,7 +349,7 @@ public class ClassADSGenerator {
         } catch (Exception e) {
             // ignore
         }
-        writer.println(generateClassAdAttribute(ClassADSGenerator.CORES_KEY, cores));
+        writer.println(generateSubmitFileVariable(ClassADSGenerator.CORES_KEY, cores));
 
         // PM-1621 write out the gpus if specified for job
         String gpusValue = job.vdsNS.getStringValue(Pegasus.GPUS_KEY);
@@ -332,7 +360,7 @@ public class ClassADSGenerator {
             // ignore
         }
         if (gpus >= 0) {
-            writer.println(generateClassAdAttribute(ClassADSGenerator.GPUS_KEY, gpus));
+            writer.println(generateSubmitFileVariable(ClassADSGenerator.GPUS_KEY, gpus));
         }
 
         // GH-2170 generate diskspace and memory
@@ -346,12 +374,12 @@ public class ClassADSGenerator {
             // no quoting of the value whatsoever. trust what user
             // specified.
             writer.println(
-                    ClassADSGenerator.generateClassAdAttributeWithNoQuotes(
+                    ClassADSGenerator.generateSubmitFileVariableWithNoQuotes(
                             ClassADSGenerator.MEMORY_KEY, memoryValue));
         }
         if (memory >= 0) {
             writer.println(
-                    ClassADSGenerator.generateClassAdAttribute(
+                    ClassADSGenerator.generateSubmitFileVariable(
                             ClassADSGenerator.MEMORY_KEY, memory));
         }
 
@@ -365,12 +393,12 @@ public class ClassADSGenerator {
             // no quoting of the value whatsoever. trust what user
             // specified.
             writer.println(
-                    ClassADSGenerator.generateClassAdAttributeWithNoQuotes(
+                    ClassADSGenerator.generateSubmitFileVariableWithNoQuotes(
                             ClassADSGenerator.DISKSPACE_KEY, diskValue));
         }
         if (disk >= 0) {
             writer.println(
-                    ClassADSGenerator.generateClassAdAttribute(
+                    ClassADSGenerator.generateSubmitFileVariable(
                             ClassADSGenerator.DISKSPACE_KEY, disk));
         }
 
@@ -378,31 +406,53 @@ public class ClassADSGenerator {
         if (job.vdsNS.containsKey(Pegasus.QUEUE_KEY)) {
             // pick the one pre populated
             writer.println(
-                    generateClassAdAttribute(
+                    generateSubmitFileVariable(
                             ClassADSGenerator.QUEUE_KEY,
                             job.vdsNS.getStringValue(Pegasus.QUEUE_KEY)));
         }
         if (job.vdsNS.containsKey(Pegasus.PROJECT_KEY)) {
             // pick the one pre populated
             writer.println(
-                    generateClassAdAttribute(
+                    generateSubmitFileVariable(
                             ClassADSGenerator.PROJECT_KEY,
                             job.vdsNS.getStringValue(Pegasus.PROJECT_KEY)));
         }
         if (job.vdsNS.containsKey(Pegasus.GLITE_ARGUMENTS_KEY)) {
             // pick the one pre populated
             writer.println(
-                    generateClassAdAttribute(
+                    generateSubmitFileVariable(
                             ClassADSGenerator.GLITE_ARGUMENTS_KEY,
                             job.vdsNS.getStringValue(Pegasus.GLITE_ARGUMENTS_KEY)));
         }
+    }
 
-        // determine the cluster size
-        int csize =
-                (job instanceof AggregatedJob)
-                        ? ((AggregatedJob) job).numberOfConsitutentJobs()
-                        : 1;
-        writer.println(generateClassAdAttribute(ClassADSGenerator.JOB_CLUSTER_SIZE_AD_KEY, csize));
+    /**
+     * Generates a submit file variable given the name and the value. No enclosing quotes added
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the variable.
+     * @return the JDL variable
+     */
+    private static String generateSubmitFileVariableWithNoQuotes(String name, String value) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name).append(" = ");
+        sb.append(value);
+
+        return sb.toString();
+    }
+
+    /**
+     * Generates a submit file variable given the name and the value. The value gets quoted in
+     * single quotes.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the variable.
+     * @return the JDL variable
+     */
+    private static String generateSubmitFileVariable(String name, int value) {
+        return ClassADSGenerator.generateSubmitFileVariableWithNoQuotes(
+                name, Integer.toString(value));
     }
 
     /**
@@ -411,7 +461,7 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad variable.
-     * @return the classad attriubute.
+     * @return the JDL variable
      */
     private static String generateSubmitFileVariable(String name, String value) {
         StringBuilder sb = new StringBuilder();
@@ -464,6 +514,24 @@ public class ClassADSGenerator {
         sb.append("+");
         sb.append(name).append(" = ");
         sb.append(value);
+        return sb.toString();
+    }
+
+    /**
+     * Generates a classad attribute given the name and the value enclosed with double quotes.
+     *
+     * @param name the attribute name.
+     * @param value the value/expression making the classad attribute.
+     * @return the classad attriubute.
+     */
+    private static String generateClassAdAttributeWithDoubleQuotes(String name, String value) {
+        StringBuilder sb = new StringBuilder(10);
+
+        sb.append("+");
+        sb.append(name).append(" = ");
+        sb.append("\"");
+        sb.append(value);
+        sb.append("\"");
         return sb.toString();
     }
 
