@@ -1,0 +1,9 @@
+pegasus.catalog.site.file=./sites.yml
+pegasus.catalog.site YAML
+pegasus.data.configuration = condorio
+
+# enable updating of submit file in case of errors
+dagman.post.arguments= -U
+
+pegasus.catalog.transformation.file ./transformations.yml
+pegasus.catalog.transformation YAML

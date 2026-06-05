@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+set -o  pipefail
+
+TOPDIR=`pwd`
+#TESTNAME=`basename $1
+TESTNAME="$1"
+
+echo "Running test $TOPDIR -> $TESTNAME"
+
+# generate the dax
+PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
+
+
+WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
+echo "work directory is $WORK_DIR"
+cd $WORK_DIR
+
+# now we are good to submit
+echo "Submitting the workflow for execution"
+pegasus-run $WORK_DIR
+
