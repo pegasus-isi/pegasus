@@ -114,7 +114,7 @@ preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").ad
 )
 # make the job fail, and then succeed on the first retry
 preprocess.add_pegasus_profile(queue="unknown",
-                               queue_expr='"scavenge" if job_retry >= 0 else "unknown"')
+                               queue_expr='"scavenge" if job_retry > 0 else "unknown"')
 
 preprocess.add_condor_profile(periodic_remove="(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 10)")
 
