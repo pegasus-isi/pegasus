@@ -1169,6 +1169,27 @@ if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
         "monitord entering it's own recovery mode. Population will start again for the workflow.."
     )
 
+# GH: optionally emit live workflow-monitor native events to a JSONL file,
+# multiplexed alongside the regular (DB) event sink. This lets the
+# workflow-monitor tool consume workflow progress live, as monitord parses it,
+# without waiting for events to land in (and be polled back out of) the
+# stampede database. Injecting it as a named workflow sink lets the existing
+# multiplex machinery build it next to the default (DB) sink with no other
+# changes; the DB population is unaffected.
+wfmonitor_prop = props.property("pegasus.monitord.wfmonitor.url")
+if wfmonitor_prop is not None and not no_events:
+    wfmonitor_prop = wfmonitor_prop.strip()
+    if wfmonitor_prop == "" or wfmonitor_prop.lower() in ("true", "yes", "on", "1"):
+        # bare boolean -> default location in the run dir
+        wfmonitor_url = "wfmonitor://" + os.path.join(run, "monitord-events.jsonl")
+    elif "://" not in wfmonitor_prop:
+        # plain filesystem path
+        wfmonitor_url = "wfmonitor://" + os.path.abspath(wfmonitor_prop)
+    else:
+        wfmonitor_url = wfmonitor_prop
+    props.property("pegasus.catalog.workflow.wfmonitor.url", wfmonitor_url)
+    logger.info("Enabling workflow-monitor live event sink at %s" % wfmonitor_url)
+
 # Create wf_event_sink object
 restart_logging = False
 if no_events:
@@ -1338,10 +1359,8 @@ if wf._monitord_exit_code == 0:
 while len(wfs) > 0:
     # Go through each of our workflows
     for workflow_entry in wfs:
-
         # Check if we are waiting for the dagman.out file to appear...
         if workflow_entry.DMOF is None:
-
             # Yes... check if it has shown up...
 
             # First, we test if the file is already there, in case we are running in replay mode

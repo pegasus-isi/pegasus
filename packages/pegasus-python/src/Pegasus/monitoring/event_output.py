@@ -279,6 +279,287 @@ class FileEventSink(EventSink):
         self._log.trace("close.end")
 
 
+class WorkflowMonitorEventSink(EventSink):
+    """Write workflow events as workflow-monitor native JSONL.
+
+    Translates the stampede event stream monitord generates into the record
+    schema consumed by the ``workflow-monitor`` tool
+    (https://github.com/pegasusai/workflow-monitor) and appends them, one JSON
+    object per line, to a file.  This lets workflow-monitor obtain workflow
+    progress live, as monitord parses it, without waiting for events to be
+    committed to and then polled back out of the stampede database.
+
+    Only the Pegasus-derived records are produced here (``workflow_start``,
+    ``jobs_init``, ``workflow_state``, ``job_state``).  HTCondor records and the
+    end-of-run aggregates (``workflow_stats``/``workflow_end``) are added by
+    workflow-monitor itself, which is the single writer of the final
+    ``workflow-events.jsonl``.
+
+    The cross-event correlation this sink keeps (``type_desc`` per job,
+    transformation/argv per task, carried-forward maxrss/exitcode/stdout/stderr)
+    reproduces in memory the joins the stampede DB would otherwise perform.
+    """
+
+    # event name (with STAMPEDE_NS prefix) -> [status==-1 state, status==0 state].
+    # Copied verbatim from Pegasus.db.workflow_loader.WorkflowLoader.jobstate so
+    # the emitted "state" values are identical to the stampede jobstate column
+    # (which is what workflow-monitor reads today). The index is int(status)+1;
+    # callers only ever pass status -1, 0, or none (-> success/normal variant).
+    _JOB_STATES = {
+        "stampede.job_inst.pre.start": ["PRE_SCRIPT_STARTED", "PRE_SCRIPT_STARTED"],
+        "stampede.job_inst.pre.term": [
+            "PRE_SCRIPT_TERMINATED",
+            "PRE_SCRIPT_TERMINATED",
+        ],
+        "stampede.job_inst.pre.end": ["PRE_SCRIPT_FAILED", "PRE_SCRIPT_SUCCESS"],
+        "stampede.job_inst.submit.end": ["SUBMIT_FAILED", "SUBMIT"],
+        "stampede.job_inst.main.start": ["EXECUTE", "EXECUTE"],
+        "stampede.job_inst.main.term": ["JOB_EVICTED", "JOB_TERMINATED"],
+        "stampede.job_inst.main.end": ["JOB_FAILURE", "JOB_SUCCESS"],
+        "stampede.job_inst.post.start": ["POST_SCRIPT_STARTED", "POST_SCRIPT_STARTED"],
+        "stampede.job_inst.post.term": [
+            "POST_SCRIPT_TERMINATED",
+            "POST_SCRIPT_TERMINATED",
+        ],
+        "stampede.job_inst.post.end": ["POST_SCRIPT_FAILED", "POST_SCRIPT_SUCCESS"],
+        "stampede.job_inst.held.start": ["JOB_HELD", "JOB_HELD"],
+        "stampede.job_inst.held.end": ["JOB_RELEASED", "JOB_RELEASED"],
+        "stampede.job_inst.image.info": ["IMAGE_SIZE", "IMAGE_SIZE"],
+        "stampede.job_inst.abort.info": ["JOB_ABORTED", "JOB_ABORTED"],
+        "stampede.job_inst.grid.submit.end": ["GRID_SUBMIT_FAILED", "GRID_SUBMIT"],
+        "stampede.job_inst.globus.submit.end": [
+            "GLOBUS_SUBMIT_FAILED",
+            "GLOBUS_SUBMIT",
+        ],
+    }
+
+    _WF_STATES = {
+        "stampede.xwf.start": "WORKFLOW_STARTED",
+        "stampede.xwf.end": "WORKFLOW_TERMINATED",
+    }
+
+    def __init__(self, path, restart=False, **kw):
+        super().__init__()
+        self._output = open(path, "w" if restart else "a", 1)
+        self._wf_uuid = None
+        self._last_ts = None
+        self._header_emitted = False
+        self._jobs_init_emitted = False
+        # Correlation state (replaces the stampede DB joins)
+        self._job_info = {}  # exec_job_id -> {"type_desc": str, "seq": int}
+        self._task_info = {}  # task_id -> {"transformation": str, "argv": str}
+        self._job_task = {}  # exec_job_id -> task_id
+        self._job_extra = {}  # exec_job_id -> {exitcode, stdout_file, stderr_file, maxrss, site}
+        self._job_seq = 0
+
+    # ── helpers ───────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _norm(kw):
+        """Canonicalize event keys to single-underscore form.
+
+        Static-bp events arrive with dotted keys remapped to ``__id`` while
+        dynamic events use ``__`` separators; both collapse the same way
+        json_encode does, so the handlers below can read stable names
+        (xwf_id, job_id, job_inst_id, type_desc, stdout_file, ...).
+        """
+        return {k.replace(".", "_").replace("__", "_"): v for k, v in kw.items()}
+
+    def _write(self, record):
+        record.setdefault("wf_uuid", self._wf_uuid)
+        self._output.write(json.dumps(record) + "\n")
+
+    @staticmethod
+    def _as_int(value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    # ── dispatch ──────────────────────────────────────────────────────────────
+
+    def send(self, event, kw):
+        self._log.trace("send.start event=%s", event)
+        try:
+            d = self._norm(kw)
+            if self._wf_uuid is None and d.get("xwf_id"):
+                self._wf_uuid = d["xwf_id"]
+            if d.get("ts") is not None:
+                self._last_ts = d["ts"]
+
+            full = STAMPEDE_NS + event
+            if event == "wf.plan":
+                self._on_wf_plan(d)
+            elif event == "job.info":
+                self._on_job_info(d)
+            elif event == "task.info":
+                self._on_task_info(d)
+            elif event == "wf.map.task_job":
+                self._on_task_job_map(d)
+            elif event in ("static.end", "xwf.start"):
+                self._emit_jobs_init()
+                if event == "xwf.start":
+                    self._on_wf_state(full, d)
+            elif event == "xwf.end":
+                self._on_wf_state(full, d)
+            elif event == "inv.end":
+                self._on_inv_end(d)
+            elif full in self._JOB_STATES:
+                self._on_job_state(full, d)
+        except Exception:
+            # Never let a translation hiccup take down the (multiplexed) sink.
+            self._log.error(
+                "wfmonitor sink error on event %s: %s", event, traceback.format_exc()
+            )
+        self._log.trace("send.end event=%s", event)
+
+    # ── handlers ──────────────────────────────────────────────────────────────
+
+    def _on_wf_plan(self, d):
+        if self._header_emitted:
+            return
+        self._header_emitted = True
+        self._write(
+            {
+                "event_type": "workflow_start",
+                "timestamp": d.get("ts"),
+                "dax_label": d.get("dax_label"),
+                "user": d.get("user"),
+                "planner_version": d.get("planner_version"),
+                "submit_dir": d.get("submit_dir"),
+                "wf_start": None,  # authoritative start arrives with xwf.start
+            }
+        )
+
+    def _on_job_info(self, d):
+        name = d.get("job_id")
+        if not name:
+            return
+        if name not in self._job_info:
+            self._job_seq += 1
+            self._job_info[name] = {
+                "type_desc": d.get("type_desc"),
+                "seq": self._job_seq,
+            }
+
+    def _on_task_info(self, d):
+        tid = d.get("task_id")
+        if not tid:
+            return
+        self._task_info[tid] = {
+            "transformation": d.get("transformation"),
+            "argv": d.get("argv"),
+        }
+
+    def _on_task_job_map(self, d):
+        name = d.get("job_id")
+        tid = d.get("task_id")
+        if name and tid:
+            self._job_task[name] = tid
+
+    def _emit_jobs_init(self):
+        if self._jobs_init_emitted:
+            return
+        self._jobs_init_emitted = True
+        jobs = []
+        for name, info in self._job_info.items():
+            entry = {
+                "job_id": info["seq"],
+                "exec_job_id": name,
+                "type_desc": info["type_desc"],
+            }
+            task = self._task_info.get(self._job_task.get(name))
+            if task:
+                if task.get("transformation"):
+                    entry["transformation"] = task["transformation"]
+                if task.get("argv"):
+                    entry["task_argv"] = task["argv"]
+            jobs.append(entry)
+        self._write(
+            {
+                "event_type": "jobs_init",
+                "timestamp": self._last_ts,
+                "total_jobs": len(jobs),
+                "jobs": jobs,
+            }
+        )
+
+    def _on_wf_state(self, full, d):
+        state = self._WF_STATES.get(full)
+        if state is None:
+            return
+        rec = {
+            "event_type": "workflow_state",
+            "timestamp": d.get("ts"),
+            "state": state,
+            "status": self._as_int(d.get("status")),
+        }
+        if state == "WORKFLOW_STARTED":
+            rec["wf_start"] = d.get("ts")
+        else:
+            rec["wf_end"] = d.get("ts")
+        self._write(rec)
+
+    def _on_inv_end(self, d):
+        name = d.get("job_id")
+        if not name or d.get("maxrss") is None:
+            return
+        maxrss = self._as_int(d.get("maxrss"))
+        if maxrss is not None:
+            self._job_extra.setdefault(name, {})["maxrss"] = maxrss
+
+    def _on_job_state(self, full, d):
+        name = d.get("job_id")
+        if not name:
+            return
+        # jobs_init must precede the first job_state (e.g. if static.end was absent)
+        if not self._jobs_init_emitted:
+            self._emit_jobs_init()
+
+        idx = self._as_int(d.get("status"))
+        idx = 1 if idx is None else max(0, min(1, idx + 1))
+        state = self._JOB_STATES[full][idx]
+
+        # Carry forward per-job enrichment as it becomes known.
+        extra = self._job_extra.setdefault(name, {})
+        exitcode = self._as_int(d.get("exitcode"))
+        if exitcode is not None:
+            extra["exitcode"] = exitcode
+        if d.get("stdout_file"):
+            extra["stdout_file"] = d["stdout_file"]
+        if d.get("stderr_file"):
+            extra["stderr_file"] = d["stderr_file"]
+        if d.get("site"):
+            extra["site"] = d["site"]
+
+        info = self._job_info.get(name, {})
+        rec = {
+            "event_type": "job_state",
+            "timestamp": d.get("ts"),
+            "exec_job_id": name,
+            "type_desc": info.get("type_desc"),
+            "state": state,
+            "job_id": info.get("seq"),
+        }
+        if "exitcode" in extra:
+            rec["exitcode"] = extra["exitcode"]
+        if extra.get("stdout_file"):
+            rec["stdout_file"] = extra["stdout_file"]
+        if extra.get("stderr_file"):
+            rec["stderr_file"] = extra["stderr_file"]
+        if "maxrss" in extra:
+            rec["maxrss"] = extra["maxrss"]
+        self._write(rec)
+
+    def close(self):
+        self._log.trace("close.start")
+        try:
+            self._output.close()
+        except Exception:
+            pass
+        self._log.trace("close.end")
+
+
 class TCPEventSink(EventSink):
     """
     Write wflow event logs to a host:port.
@@ -376,7 +657,7 @@ class AMQPEventSink(EventSink):
                         self._params.virtual_host,
                         self._exch,
                         self._params.credentials.username,
-                        not self._params.ssl_options is None,
+                        self._params.ssl_options is not None,
                     )
                 )
 
@@ -437,10 +718,10 @@ class AMQPEventSink(EventSink):
                         "Connection to %s:%s was closed - Will try to recover the connection"
                         % (self._params.host, self._params.port)
                     )
-                    time.sleep((2 ** reconnect_attempts) * 10)
+                    time.sleep((2**reconnect_attempts) * 10)
                     continue
 
-        if not self._conn is None:
+        if self._conn is not None:
             self._log.trace("connection - close.start")
             self._conn.close()
             self._log.trace("connection - close.end")
@@ -662,6 +943,12 @@ def create_wf_event_sink(
             url.port = 14380
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", f"{url.host}:{url.port}"
+    elif url.scheme == "wfmonitor":
+        # wfmonitor:///path/to/monitord-events.jsonl
+        # This sink owns its own (native workflow-monitor JSON) serialization,
+        # so it ignores the global encoder.
+        sink = WorkflowMonitorEventSink(url.path, **kw)
+        _type, _name = "wfmonitor", url.path
     elif url.scheme in ["amqp", "amqps"]:
         # amqp://[USERNAME:PASSWORD@]<hostname>[:port]/[<virtualhost>]/<exchange_name>
         if amqp is None:
