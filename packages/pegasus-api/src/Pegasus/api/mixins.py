@@ -565,6 +565,7 @@ class ProfileMixin:
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
         relative_submit_dir="relative.submit.dir",
+        tag="tag",
     )
     def add_pegasus_profile(
         self,
@@ -627,6 +628,7 @@ class ProfileMixin:
         pegasus_lite_env_source: Union[str, Path] = None,
         SSH_PRIVATE_KEY: str = None,
         relative_submit_dir: Union[str, Path] = None,
+        tag: str = None,
     ):
         """Add Pegasus profile(s).
 
@@ -746,6 +748,8 @@ class ProfileMixin:
         :type SSH_PRIVATE_KEY: str, optional
         :param relative_submit_dir: specify the relative directory a job's submit files are written to, defaults to None
         :type relative_submit_dir: Union[str, Path], optional
+        :param tag: associates a tag with a job; the planner uses this to select matching ``x-tags`` profiles from the site catalog entry and overlay them on top of the site's base profiles, defaults to None
+        :type tag: str, optional
         """
         ...
 

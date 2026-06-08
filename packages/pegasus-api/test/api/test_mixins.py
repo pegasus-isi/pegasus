@@ -379,6 +379,7 @@ class TestProfileMixin:
                 pegasus_lite_env_source="/path",
                 SSH_PRIVATE_KEY="/path",
                 relative_submit_dir="some-dir",
+                tag="gpu",
             )
         ) == id(obj)
 
@@ -440,8 +441,13 @@ class TestProfileMixin:
                 "pegasus_lite_env_source": "/path",
                 "SSH_PRIVATE_KEY": "/path",
                 "relative.submit.dir": "some-dir",
+                "tag": "gpu",
             }
         }
+
+    def test_add_pegasus_profile_tag(self, obj):
+        assert id(obj.add_pegasus_profile(tag="gpu")) == id(obj)
+        assert dict(obj.profiles) == {"pegasus": {"tag": "gpu"}}
 
     def test_add_pegasus_profiles(self, obj):
         assert id(obj.add_pegasus_profiles(gpus=1)) == id(obj)
