@@ -334,7 +334,7 @@ public class Cleanup implements CleanupImplementation {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        cJob.updateProfiles(mSiteStore.lookup(eSite).getProfiles());
+        cJob.updateProfiles(mSiteStore.lookup(eSite));
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391

@@ -633,7 +633,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        newJob.updateProfiles(mSiteStore.lookup(newJob.getSiteHandle()).getProfiles());
+        newJob.updateProfiles(mSiteStore.lookup(newJob.getSiteHandle()));
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391

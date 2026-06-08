@@ -28,6 +28,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
@@ -1704,6 +1705,17 @@ public class Job extends Data implements GraphNodeContent {
      */
     public static boolean typeInRange(int type) {
         return (type >= Job.UNASSIGNED_JOB && type <= Job.DAG_JOB);
+    }
+
+    /**
+     * Updates all the profile namespaces with the information associated in the Site Catalog
+     * catalog for this job. I
+     *
+     * @param entry the <code>TCEntry</code> object corresponding to the entry in the Transformation
+     *     Catalog for the job.
+     */
+    public void updateProfiles(SiteCatalogEntry entry) {
+        this.updateProfiles(entry.getProfiles());
     }
 
     /**
