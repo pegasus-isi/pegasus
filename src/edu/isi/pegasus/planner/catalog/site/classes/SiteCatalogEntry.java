@@ -861,6 +861,26 @@ public class SiteCatalogEntry extends AbstractSiteData {
 
             if (this.mProfiles != null) {
                 this.mProfiles.merge(entry.getProfiles(), overwrite);
+            } else {
+                this.mProfiles = entry.getProfiles();
+            }
+
+            if (!this.mTagsProfiles.isEmpty()) {
+                for (String toMergeTag : entry.getTags()) {
+                    if (this.getTags().contains(toMergeTag)) {
+                        // merge in the tag profiles
+                        this.getTagProfiles(toMergeTag)
+                                .merge(entry.getTagProfiles(toMergeTag), overwrite);
+                    } else {
+                        // just add in the tag and it's profiles
+                        this.setTagProfiles(toMergeTag, entry.getTagProfiles(toMergeTag));
+                    }
+                }
+
+            } else {
+                for (String tag : entry.getTags()) {
+                    this.setTagProfiles(tag, entry.getTagProfiles(tag));
+                }
             }
         }
 
