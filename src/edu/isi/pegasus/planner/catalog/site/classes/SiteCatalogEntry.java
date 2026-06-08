@@ -441,6 +441,15 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
+     * Returns a list of tags associated with the site.
+     *
+     * @return List of String objects enumerating the tagas associated with the site.
+     */
+    public Collection<String> getTags() {
+        return this.mTagsProfiles.keySet();
+    }
+
+    /**
      * Returns the value of VDS_HOME for a site.
      *
      * @return value if set else null.
@@ -1165,6 +1174,78 @@ class SiteCatalogEntrySerializer extends PegasusJsonSerializer<SiteCatalogEntry>
             gen.writeObject(entry.getProfiles());
         }
 
+        if (!entry.getTags().isEmpty()) {
+            List<TAGProfiles> tagProfiles = new LinkedList();
+            for (String tag : entry.getTags()) {
+                TAGProfiles tp = new TAGProfiles();
+                tp.setTAGName(tag);
+                tp.setProfiles(entry.getTagProfiles(tag));
+                tagProfiles.add(tp);
+            }
+            writeArray(gen, SiteCatalogKeywords.X_TAGS.getReservedName(), tagProfiles);
+        }
+
+        gen.writeEndObject();
+    }
+}
+
+/**
+ * Convenience class for YAML serialization
+ *
+ * @author vahi
+ */
+@JsonSerialize(using = TAGProfilesSerializer.class)
+class TAGProfiles {
+    private String mName;
+
+    private Profiles mProfiles;
+
+    public TAGProfiles() {
+        mName = new String();
+        mProfiles = new Profiles();
+    }
+
+    public void setTAGName(String name) {
+        this.mName = name;
+    }
+
+    public String getTAGName() {
+        return this.mName;
+    }
+
+    public void setProfiles(Profiles p) {
+        this.mProfiles = p;
+    }
+
+    public Profiles getProfiles() {
+        return this.mProfiles;
+    }
+}
+
+/**
+ * Custom serializer for YAML representation of TAGProfiles
+ *
+ * @author Karan Vahi
+ */
+class TAGProfilesSerializer extends PegasusJsonSerializer<TAGProfiles> {
+
+    public TAGProfilesSerializer() {}
+
+    /**
+     * Serializes contents into YAML representation
+     *
+     * @param tagProfiles
+     * @param gen
+     * @param sp
+     * @throws IOException
+     */
+    @Override
+    public void serialize(TAGProfiles tagProfiles, JsonGenerator gen, SerializerProvider sp)
+            throws IOException {
+        gen.writeStartObject();
+        writeStringField(gen, SiteCatalogKeywords.NAME.getReservedName(), tagProfiles.getTAGName());
+        gen.writeFieldName(SiteCatalogKeywords.PROFILES.getReservedName());
+        gen.writeObject(tagProfiles.getProfiles());
         gen.writeEndObject();
     }
 }
