@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.jupiter.api.AfterAll;
@@ -339,6 +342,76 @@ public class JobTest {
         Job j = new Job();
         j.setTransformation(null, "keg.rajiv", null);
         assertEquals("keg.rajiv", j.getStagedExecutableBaseName());
+    }
+
+    // GH-2192
+    @Test
+    public void testUpdateProfilesFromSiteEntryTagOverridesBaseProfiles() {
+        SiteCatalogEntry entry = new SiteCatalogEntry("compute");
+
+        Profiles baseProfiles = new Profiles();
+        baseProfiles.addProfile(new Profile("pegasus", "queue", "debug"));
+        baseProfiles.addProfile(new Profile("pegasus", "project", "m4144"));
+        entry.setProfiles(baseProfiles);
+
+        Profiles gpuProfiles = new Profiles();
+        gpuProfiles.addProfile(new Profile("pegasus", "queue", "gpu"));
+        gpuProfiles.addProfile(new Profile("pegasus", "glite.arguments", "-C gpu"));
+        entry.setTagProfiles("gpu", gpuProfiles);
+
+        Job job = new Job();
+        job.vdsNS.construct(Pegasus.TAG_KEY, "gpu");
+        job.updateProfiles(entry);
+
+        // tag profile overrides base queue
+        assertEquals("gpu", job.vdsNS.getStringValue("queue"));
+        // tag profile adds new key
+        assertEquals("-C gpu", job.vdsNS.getStringValue("glite.arguments"));
+        // base profile not shadowed by tag is preserved
+        assertEquals("m4144", job.vdsNS.getStringValue("project"));
+    }
+
+    // GH-2192
+    @Test
+    public void testUpdateProfilesFromSiteEntryNoMatchingTag() {
+        SiteCatalogEntry entry = new SiteCatalogEntry("compute");
+
+        Profiles baseProfiles = new Profiles();
+        baseProfiles.addProfile(new Profile("pegasus", "queue", "debug"));
+        entry.setProfiles(baseProfiles);
+
+        Profiles gpuProfiles = new Profiles();
+        gpuProfiles.addProfile(new Profile("pegasus", "queue", "gpu"));
+        entry.setTagProfiles("gpu", gpuProfiles);
+
+        // job has a tag that does not exist in the site entry
+        Job job = new Job();
+        job.vdsNS.construct(Pegasus.TAG_KEY, "hpc");
+        job.updateProfiles(entry);
+
+        // only base profiles applied; tag profiles not merged
+        assertEquals("debug", job.vdsNS.getStringValue("queue"));
+    }
+
+    // GH-2192
+    @Test
+    public void testUpdateProfilesFromSiteEntryNoTagOnJob() {
+        SiteCatalogEntry entry = new SiteCatalogEntry("compute");
+
+        Profiles baseProfiles = new Profiles();
+        baseProfiles.addProfile(new Profile("pegasus", "queue", "debug"));
+        entry.setProfiles(baseProfiles);
+
+        Profiles gpuProfiles = new Profiles();
+        gpuProfiles.addProfile(new Profile("pegasus", "queue", "gpu"));
+        entry.setTagProfiles("gpu", gpuProfiles);
+
+        // job has no tag set
+        Job job = new Job();
+        job.updateProfiles(entry);
+
+        // only base profiles applied
+        assertEquals("debug", job.vdsNS.getStringValue("queue"));
     }
 
     private void testPegasusFile(PegasusFile expected, PegasusFile actual) {
