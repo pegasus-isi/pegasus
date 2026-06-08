@@ -1716,6 +1716,17 @@ public class Job extends Data implements GraphNodeContent {
      */
     public void updateProfiles(SiteCatalogEntry entry) {
         this.updateProfiles(entry.getProfiles());
+
+        // GH-2192. Now apply profiles in the site catalog for the tag
+        // associated with the job.
+        if (this.vdsNS.containsKey(Pegasus.TAG_KEY)) {
+            String jobTag = this.vdsNS.getStringValue(Pegasus.TAG_KEY);
+            // check if job tag exists in the site entry , update profiles
+            // accordingly
+            if (entry.getTags().contains(jobTag)) {
+                this.updateProfiles(entry.getTagProfiles(jobTag));
+            }
+        }
     }
 
     /**

@@ -288,6 +288,12 @@ public class Pegasus extends Namespace {
     public static final String TYPE_KEY = "type";
 
     /**
+     * The name of the key that denotes the tag associated with the job. TAGS are user assigned and
+     * can be any value.
+     */
+    public static final String TAG_KEY = "tag";
+
+    /**
      * The style indicating that the submit files are to be generated for a vanilla condor
      * execution.
      */
@@ -733,7 +739,8 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(TRANSFER_THREADS_KEY) == 0)
                         || (key.compareTo(TRANSFER_SLS_ARGUMENTS_KEY) == 0)
                         || (key.compareTo(TRANSFER_SLS_THREADS_KEY) == 0)
-                        || (key.compareTo(TYPE_KEY) == 0)) {
+                        || (key.compareTo(TYPE_KEY) == 0)
+                        || (key.compareTo(TAG_KEY) == 0)) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;
