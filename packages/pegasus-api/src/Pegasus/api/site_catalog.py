@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 from Pegasus.api.errors import DuplicateError
-from Pegasus.api.mixins import ProfileMixin
+from Pegasus.api.mixins import Namespace, ProfileMixin
 from Pegasus.api.writable import Writable, _filter_out_nones
 
 PEGASUS_VERSION = "5.0.4"
@@ -409,6 +409,7 @@ class Site(ProfileMixin):
         self.os_version = os_version
 
         self.profiles = defaultdict(OrderedDict)
+        self.tags = defaultdict(OrderedDict)
 
     @_chained
     def add_directories(self, *directories: Directory):
@@ -446,6 +447,63 @@ class Site(ProfileMixin):
 
             self.grids.append(g)
 
+    @_chained
+    def add_tag_profiles(
+        self,
+        name: str,
+        ns: Namespace,
+        key: Optional[str] = None,
+        value: Optional[Union[str, int, float, bool, Path]] = None,
+        **kw,
+    ):
+        """
+        add_tag_profiles(self, name: str, ns: Namespace, key: Optional[str] = None, value: Optional[str, int, float, bool, Path] = None, **kw)
+        Add profile(s) to a named tag for this site. Tag profiles are applied on
+        top of the site's base profiles when a job carries a matching ``pegasus.tag``
+        profile, allowing per-tag resource overrides (e.g. separate GPU and CPU
+        queue settings on the same site).
+
+        .. code-block:: python
+
+            # Example
+            site.add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+            site.add_tag_profiles("gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu")
+            site.add_tag_profiles("cpu", Namespace.PEGASUS, queue="normal")
+
+        :param name: tag name
+        :type name: str
+        :param ns: profile namespace defined in :py:class:`~Pegasus.api.mixins.Namespace`
+        :type ns: Namespace
+        :param key: profile key; required when the key is not a valid Python identifier (e.g. contains ``"."``)
+        :type key: Optional[str]
+        :param value: profile value paired with *key*
+        :type value: Optional[Union[str, int, float, bool, Path]]
+        :param kw: ``key=value`` pairs added as profiles when the keys are valid Python identifiers
+        :raises TypeError: ns must be one of :py:class:`~Pegasus.api.mixins.Namespace`
+        :return: self
+        """
+        if not isinstance(ns, Namespace):
+            raise TypeError(
+                "invalid ns: {ns}; ns should be one of {enum_str}".format(
+                    ns=ns, enum_str=", ".join(n.value for n in Namespace)
+                )
+            )
+
+        if name not in self.tags:
+            self.tags[name] = defaultdict(OrderedDict)
+
+        ns_str = ns.value
+
+        if key and value is not None:
+            if isinstance(value, Path) or type(value) == bool:
+                value = str(value)
+            self.tags[name][ns_str].update({key: value})
+        else:
+            for k, v in kw.items():
+                if isinstance(v, Path) or type(v) == bool:
+                    kw[k] = str(v)
+            self.tags[name][ns_str].update(kw)
+
     def __json__(self):
         return _filter_out_nones(
             OrderedDict(
@@ -461,6 +519,27 @@ class Site(ProfileMixin):
                         "profiles",
                         OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
                         if len(self.profiles) > 0
+                        else None,
+                    ),
+                    (
+                        "x-tags",
+                        [
+                            OrderedDict(
+                                [
+                                    ("name", tag_name),
+                                    (
+                                        "profiles",
+                                        OrderedDict(
+                                            sorted(
+                                                tag_profiles.items(), key=lambda _: _[0]
+                                            )
+                                        ),
+                                    ),
+                                ]
+                            )
+                            for tag_name, tag_profiles in self.tags.items()
+                        ]
+                        if self.tags
                         else None,
                     ),
                 ]

@@ -9,6 +9,7 @@ import yaml
 from jsonschema import validate
 
 from Pegasus.api.errors import DuplicateError
+from Pegasus.api.mixins import Namespace
 from Pegasus.api.site_catalog import (
     OS,
     PEGASUS_VERSION,
@@ -255,6 +256,81 @@ class TestSite:
         )
 
         assert id(a) == id(b)
+
+    def test_add_tag_profiles_invalid_namespace(self):
+        with pytest.raises(TypeError) as e:
+            Site("s").add_tag_profiles("gpu", "bad_namespace", queue="gpu")
+
+        assert "invalid ns: bad_namespace" in str(e)
+
+    def test_add_tag_profiles_single_tag(self):
+        site = Site("s")
+        site.add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+        site.add_tag_profiles(
+            "gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu"
+        )
+
+        assert "gpu" in site.tags
+        assert site.tags["gpu"]["pegasus"]["queue"] == "gpu"
+        assert site.tags["gpu"]["pegasus"]["glite.arguments"] == "-C gpu"
+
+    def test_add_tag_profiles_multiple_tags(self):
+        site = Site("s")
+        site.add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+        site.add_tag_profiles("cpu", Namespace.PEGASUS, queue="normal")
+
+        assert "gpu" in site.tags
+        assert "cpu" in site.tags
+        assert site.tags["gpu"]["pegasus"]["queue"] == "gpu"
+        assert site.tags["cpu"]["pegasus"]["queue"] == "normal"
+
+    def test_add_tag_profiles_chaining(self):
+        site = Site("s")
+        a = site.add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+        b = site.add_tag_profiles("cpu", Namespace.PEGASUS, queue="normal")
+
+        assert id(a) == id(b)
+
+    def test_tojson_with_tag_profiles(self, convert_yaml_schemas_to_json, load_schema):
+        site = Site("s", arch=Arch.X86_64, os_type=OS.LINUX)
+        site.add_pegasus_profile(queue="debug")
+        site.add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+        site.add_tag_profiles(
+            "gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu"
+        )
+        site.add_tag_profiles("cpu", Namespace.PEGASUS, queue="normal")
+
+        result = json.loads(json.dumps(site, cls=_CustomEncoder))
+
+        expected = {
+            "name": "s",
+            "arch": "x86_64",
+            "os.type": "linux",
+            "directories": [],
+            "profiles": {"pegasus": {"queue": "debug"}},
+            "x-tags": [
+                {
+                    "name": "gpu",
+                    "profiles": {
+                        "pegasus": {"glite.arguments": "-C gpu", "queue": "gpu"}
+                    },
+                },
+                {"name": "cpu", "profiles": {"pegasus": {"queue": "normal"}},},
+            ],
+        }
+
+        """
+        sc_site_schema = load_schema("sc-5.0.json")["$defs"]["site"]
+        validate(instance=result, schema=sc_site_schema)
+        """
+
+        assert result == expected
+
+    def test_tojson_no_tag_profiles(self):
+        site = Site("s")
+        result = json.loads(json.dumps(site, cls=_CustomEncoder))
+
+        assert "x-tags" not in result
 
     def test_tojson_with_profiles(self):
         site = Site(

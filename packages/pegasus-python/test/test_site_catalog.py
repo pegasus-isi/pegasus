@@ -5,6 +5,7 @@ import pytest
 
 import Pegasus
 from Pegasus import yaml
+from Pegasus.api.mixins import Namespace
 from Pegasus.api.site_catalog import (
     OS,
     Arch,
@@ -55,6 +56,50 @@ def sc2():
         )
         .add_grids(Grid(Grid.CONDOR, "contact", Scheduler.CONDOR,))
     )
+
+
+@pytest.fixture(scope="module")
+def sc_with_tags():
+    return SiteCatalog().add_sites(
+        Site("compute", arch=Arch.X86_64, os_type=OS.LINUX)
+        .add_directories(
+            Directory(Directory.SHARED_SCRATCH, "/scratch", False).add_file_servers(
+                FileServer("file:///scratch", Operation.ALL)
+            )
+        )
+        .add_pegasus_profile(queue="debug")
+        .add_tag_profiles("gpu", Namespace.PEGASUS, queue="gpu")
+        .add_tag_profiles(
+            "gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu"
+        )
+        .add_tag_profiles("cpu", Namespace.PEGASUS, queue="normal")
+    )
+
+
+def test_to_sc_with_tag_profiles(sc_with_tags):
+    expected = json.loads(json.dumps(sc_with_tags, cls=_CustomEncoder))
+    result = json.loads(json.dumps(_to_sc(expected), cls=_CustomEncoder))
+    assert result == expected
+
+
+@pytest.mark.parametrize("_format", [("yml"), ("json")])
+def test_load_with_tag_profiles(sc_with_tags, _format):
+    with TemporaryFile(mode="w+") as f:
+        sc_with_tags.write(f, _format=_format)
+        f.seek(0)
+        new_sc = load(f)
+
+    result = json.loads(json.dumps(new_sc, cls=_CustomEncoder))
+    expected = json.loads(json.dumps(sc_with_tags, cls=_CustomEncoder))
+    assert result == expected
+
+
+def test_loads_yaml_with_tag_profiles(sc_with_tags):
+    new_sc = loads(yaml.dump(json.loads(json.dumps(sc_with_tags, cls=_CustomEncoder))))
+
+    result = json.loads(json.dumps(new_sc, cls=_CustomEncoder))
+    expected = json.loads(json.dumps(sc_with_tags, cls=_CustomEncoder))
+    assert result == expected
 
 
 def test_to_sc_with_optional_args_set(sc1):

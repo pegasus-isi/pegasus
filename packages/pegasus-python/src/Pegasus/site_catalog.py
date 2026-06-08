@@ -117,6 +117,12 @@ def _to_sc(d: dict) -> SiteCatalog:
             if s.get("profiles"):
                 site.profiles = defaultdict(dict, s.get("profiles"))
 
+            # add x-tags
+            if s.get("x-tags"):
+                for tag in s.get("x-tags"):
+                    tag_name = tag["name"]
+                    site.tags[tag_name] = defaultdict(dict, tag.get("profiles", {}))
+
             # add site to sc
             sc.add_sites(site)
 
