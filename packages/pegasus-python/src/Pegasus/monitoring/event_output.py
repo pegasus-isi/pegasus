@@ -32,6 +32,7 @@ from Pegasus import json
 from Pegasus.db import connection, expunge
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db.workflow_loader import WorkflowLoader
+from Pegasus.monitoring.plugin import MonitordPluginManager
 from Pegasus.netlogger import nlapi
 from Pegasus.tools import properties, utils
 
@@ -279,6 +280,50 @@ class FileEventSink(EventSink):
         self._log.trace("close.end")
 
 
+class PluginHostEventSink(EventSink):
+    """
+    An EventSink that fans monitord events out to enabled third-party plugins.
+
+    Each plugin runs on its own background thread fed by a bounded queue (see
+    :class:`Pegasus.monitoring.plugin.MonitordPluginManager`), so a slow or
+    crashing plugin can neither block monitord's parse loop nor disable the
+    database writer. ``send`` only enqueues -- it never blocks and never raises.
+
+    Attached to monitord's fan-out via the ``plugins://`` URL scheme, which is
+    injected as an extra ``pegasus.catalog.workflow.plugins.url`` endpoint when
+    any ``pegasus.monitord.plugins.*`` property is present.
+
+    Plugin config lives under ``pegasus.monitord.plugins.*``, which the
+    multiplex machinery strips from the per-endpoint ``props`` it hands each
+    child sink. monitord therefore threads the *full* properties object through
+    as ``monitord_props`` (alongside the ``restart``/``backup`` kwargs already
+    fanned out to every sink); we use it when present and fall back to ``props``
+    otherwise.
+    """
+
+    def __init__(self, dest, props=None, monitord_props=None, **kw):
+        super().__init__()
+        self._manager = MonitordPluginManager(
+            monitord_props if monitord_props is not None else props
+        )
+        started = self._manager.discover_and_start()
+        self._log.info("plugin host event sink started %d plugin(s)", started)
+
+    def send(self, event, kw):
+        # Other sinks receive the unqualified event name and prepend the
+        # namespace themselves; do the same so plugins see fully-qualified
+        # names (e.g. "stampede.job_inst.main.end"). The payload is passed
+        # through unmodified.
+        self._manager.dispatch(STAMPEDE_NS + event, kw)
+
+    def close(self):
+        self._manager.stop_all()
+
+    def flush(self):
+        # Nothing to flush synchronously -- delivery is queue-backed.
+        pass
+
+
 class TCPEventSink(EventSink):
     """
     Write wflow event logs to a host:port.
@@ -376,7 +421,7 @@ class AMQPEventSink(EventSink):
                         self._params.virtual_host,
                         self._exch,
                         self._params.credentials.username,
-                        not self._params.ssl_options is None,
+                        self._params.ssl_options is not None,
                     )
                 )
 
@@ -437,10 +482,10 @@ class AMQPEventSink(EventSink):
                         "Connection to %s:%s was closed - Will try to recover the connection"
                         % (self._params.host, self._params.port)
                     )
-                    time.sleep((2 ** reconnect_attempts) * 10)
+                    time.sleep((2**reconnect_attempts) * 10)
                     continue
 
-        if not self._conn is None:
+        if self._conn is not None:
             self._log.trace("connection - close.start")
             self._conn.close()
             self._log.trace("connection - close.end")
@@ -698,6 +743,11 @@ def create_wf_event_sink(
             **kw,
         )
         _type, _name = "AMQP", f"{url.host}:{url.port}/{url.path}"
+    elif url.scheme == "plugins":
+        # fan events out to enabled third-party monitord plugins. This needs an
+        # explicit branch because unknown schemes fall through to DBEventSink.
+        sink = PluginHostEventSink(dest, props=sink_props, **kw)
+        _type, _name = "plugins", "monitord-plugins"
     else:
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)

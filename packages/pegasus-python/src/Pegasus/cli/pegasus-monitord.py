@@ -1190,6 +1190,15 @@ else:
             logger.error("Invalid sqlite connection string passed %s " % event_dest)
         backup = True
 
+    # Enable monitord event plugins by injecting a synthetic multiplex
+    # endpoint, so the existing fan-out machinery drives the plugin host sink
+    # alongside the database sink. Only fires when at least one
+    # pegasus.monitord.plugins.* property is present (otherwise no behavior
+    # change).
+    if props.propertyset("pegasus.monitord.plugins.", False):
+        props.property("pegasus.catalog.workflow.plugins.url", "plugins://")
+        logger.info("Enabling monitord event plugin host (plugins:// sink)")
+
     try:
         wf_event_sink = eo.create_wf_event_sink(
             event_dest,
@@ -1199,6 +1208,9 @@ else:
             props=props,
             db_type=connection.DBType.WORKFLOW,
             backup=backup,
+            # full props for the plugin host: the multiplex layer strips
+            # pegasus.monitord.plugins.* from each endpoint's per-sink props.
+            monitord_props=props,
         )
         atexit.register(finish_stampede_loader)
     except Exception:
@@ -1338,10 +1350,8 @@ if wf._monitord_exit_code == 0:
 while len(wfs) > 0:
     # Go through each of our workflows
     for workflow_entry in wfs:
-
         # Check if we are waiting for the dagman.out file to appear...
         if workflow_entry.DMOF is None:
-
             # Yes... check if it has shown up...
 
             # First, we test if the file is already there, in case we are running in replay mode
