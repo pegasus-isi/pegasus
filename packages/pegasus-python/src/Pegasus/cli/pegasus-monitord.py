@@ -1174,6 +1174,15 @@ else:
             logger.error(f"Invalid sqlite connection string passed {event_dest} ")
         backup = True
 
+    # Enable monitord event plugins by injecting a synthetic multiplex
+    # endpoint, so the existing fan-out machinery drives the plugin host sink
+    # alongside the database sink. Only fires when at least one
+    # pegasus.monitord.plugins.* property is present (otherwise no behavior
+    # change).
+    if props.propertyset("pegasus.monitord.plugins.", False):
+        props.property("pegasus.catalog.workflow.plugins.url", "plugins://")
+        logger.info("Enabling monitord event plugin host (plugins:// sink)")
+
     try:
         wf_event_sink = eo.create_wf_event_sink(
             event_dest,
@@ -1183,6 +1192,9 @@ else:
             props=props,
             db_type=connection.DBType.WORKFLOW,
             backup=backup,
+            # full props for the plugin host: the multiplex layer strips
+            # pegasus.monitord.plugins.* from each endpoint's per-sink props.
+            monitord_props=props,
         )
         atexit.register(finish_stampede_loader)
     except Exception:
