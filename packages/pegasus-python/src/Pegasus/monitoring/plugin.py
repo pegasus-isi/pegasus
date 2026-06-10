@@ -144,11 +144,21 @@ class _PluginWorker:
         Enqueue an event for the plugin thread. Never blocks and never raises:
         a full queue drops the event (counted), and a dead worker is a no-op.
         This guarantees monitord's parse loop is never stalled by a plugin.
+
+        The payload is snapshotted with ``dict(kw)`` before it is queued. The
+        worker thread reads the payload asynchronously, while monitord's main
+        thread keeps -- and in places reuses/mutates -- the original dict (e.g.
+        the per-LFN ``rc.meta`` loop in ``workflow.py`` overwrites ``key``/
+        ``value`` and re-sends the same dict; ``wf.plan`` adds ``db_url`` after
+        the event is dispatched). A per-worker copy gives each plugin its own
+        isolated, stable payload and removes that cross-thread data race. A
+        shallow copy suffices because every value monitord produces is an
+        immutable scalar (str/int/float/bool/None).
         """
         if not self._thread.is_alive():
             return
         try:
-            self._queue.put_nowait((event, kw))
+            self._queue.put_nowait((event, dict(kw)))
         except queue.Full:
             self._dropped += 1
             if self._dropped == 1 or self._dropped % 1000 == 0:
