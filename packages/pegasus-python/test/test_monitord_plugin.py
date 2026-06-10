@@ -143,6 +143,29 @@ class BlockingPlugin(MonitordEventPlugin):
         self.handled.append(event)
 
 
+class GatedRecordingPlugin(MonitordEventPlugin):
+    """
+    Blocks inside the FIRST handle_event until released, then records every
+    event as ``(name, snapshot-of-payload)``. Pinning the worker on the first
+    event lets a test enqueue a second event and mutate its payload *before*
+    the worker thread ever reads it -- the exact ordering that exposes a
+    missing payload snapshot.
+    """
+
+    def __init__(self):
+        self.entered = threading.Event()
+        self.release = threading.Event()
+        self.events = []
+
+    def handle_event(self, event, kw):
+        if not self.entered.is_set():
+            self.entered.set()
+            self.release.wait(timeout=5)
+        # snapshot at record time; by now a missing copy upstream would
+        # already have let the producer's mutation bleed into ``kw``.
+        self.events.append((event, dict(kw)))
+
+
 # --------------------------------------------------------------------------- #
 # base class
 # --------------------------------------------------------------------------- #
@@ -295,6 +318,61 @@ def test_send_never_blocks_and_drops_when_full(monkeypatch):
     # unblock and let it drain, then shut down cleanly
     plugin.release.set()
     mgr.stop_all()
+
+
+# --------------------------------------------------------------------------- #
+# payload isolation — the queued payload must be snapshotted at submit time
+# --------------------------------------------------------------------------- #
+
+
+def test_payload_is_snapshotted_before_async_mutation(monkeypatch):
+    """
+    Regression for the cross-thread payload race (#2194 review).
+
+    monitord's main thread hands the event sink the *live* payload dict and, in
+    places, keeps mutating it after the event is dispatched: the rc.meta loop in
+    workflow.py reuses one dict and overwrites ``key``/``value`` between sends,
+    and wf.plan adds ``db_url`` after dispatch. The plugin worker reads the
+    payload asynchronously, so without a snapshot it can observe those later
+    mutations -- torn/incorrect data, or a corrupted dict if two plugins share
+    one object. ``_PluginWorker.submit`` must copy the payload with ``dict(kw)``
+    at enqueue time so each worker gets a stable, isolated view.
+
+    The worker is pinned inside the first handle_event so the mutation below is
+    guaranteed to happen *before* the worker dequeues the event under test;
+    without the snapshot this test deterministically observes the mutated dict.
+    """
+    _patch_entry_points(monkeypatch, {"gate": GatedRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.gate.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    # Pin the worker on a throwaway event so the next event waits in the queue.
+    mgr.dispatch("stampede.blocker", {"n": "0"})
+    assert plugin.entered.wait(timeout=2)
+
+    # Dispatch the event under test, then mutate the SAME dict the main thread
+    # still holds -- both shapes monitord actually produces:
+    #   * overwrite an existing key (rc.meta key/value reuse)
+    #   * add a new key after dispatch (wf.plan db_url)
+    payload = {"xwf__id": "abc", "key": "k1", "value": "v1"}
+    mgr.dispatch("stampede.rc.meta", payload)
+    payload["key"] = "MUTATED"
+    payload["value"] = "MUTATED"
+    payload["db_url"] = "sqlite:///leaked.db"
+
+    # Let the worker drain; it reads the queued event only now, after mutation.
+    plugin.release.set()
+    assert _wait_for(lambda: len(plugin.events) == 2)
+    mgr.stop_all()
+
+    # The worker must see the payload exactly as it was at dispatch time.
+    event, seen = plugin.events[1]
+    assert event == "stampede.rc.meta"
+    assert seen == {"xwf__id": "abc", "key": "k1", "value": "v1"}
+    # and the snapshot must be a distinct object from the producer's dict
+    assert seen is not payload
 
 
 # --------------------------------------------------------------------------- #
