@@ -247,6 +247,7 @@ SUSE:
     matrix:
     - ARCH:
       - x86_64
+      - arm64
       OS:
       - suse_15
   image: pegasus/buildenv:${OS}
