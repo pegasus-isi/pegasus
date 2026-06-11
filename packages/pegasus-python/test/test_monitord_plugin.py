@@ -456,3 +456,123 @@ def test_factory_no_plugins_is_plain_sink(tmp_path):
     assert isinstance(sink, eo.FileEventSink)
     assert not isinstance(sink, eo.PluginHostEventSink)
     sink.close()
+
+
+# --------------------------------------------------------------------------- #
+# tick() — wall-clock callbacks on the existing worker thread
+# --------------------------------------------------------------------------- #
+
+
+class TickingPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+        self.ticks = []
+        self.stopped = False
+        self.raise_in_tick = False
+
+    def handle_event(self, event, kw):
+        self.events.append(event)
+
+    def tick(self):
+        self.ticks.append(time.monotonic())
+        if self.raise_in_tick:
+            raise RuntimeError("boom in tick")
+
+    def stop(self):
+        self.stopped = True
+
+
+class SlowTickingPlugin(TickingPlugin):
+    """handle_event is slow enough that a preloaded queue keeps the worker
+    saturated for several tick intervals — exercising the starvation guard."""
+
+    def handle_event(self, event, kw):
+        time.sleep(0.02)
+        self.events.append(event)
+
+
+def _ticking_manager(monkeypatch, plugin_cls, extra_props=None):
+    _patch_entry_points(monkeypatch, {"tk": plugin_cls})
+    d = {"pegasus.monitord.plugins.tk.enabled": "true"}
+    d.update(extra_props or {})
+    mgr = MonitordPluginManager(_props(d))
+    mgr.discover_and_start()
+    return mgr, mgr._workers[0][1], mgr._workers[0][2]
+
+
+def test_ticks_fire_on_idle_queue(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        TickingPlugin,
+        {"pegasus.monitord.plugins.tk.tick_interval": "0.05"},
+    )
+    # no events at all: ticks must fire from queue idleness alone
+    assert _wait_for(lambda: len(plugin.ticks) >= 2)
+    mgr.stop_all()
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
+
+
+def test_no_ticks_without_property(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(monkeypatch, TickingPlugin)
+    mgr.dispatch("stampede.e0", {})
+    mgr.dispatch("stampede.e1", {})
+    assert _wait_for(lambda: len(plugin.events) == 2)
+    time.sleep(0.15)
+    # default tick_interval is 0 -> the blocking-get loop, no ticks ever
+    assert plugin.ticks == []
+    mgr.stop_all()
+
+
+def test_tick_exception_does_not_kill_worker(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        TickingPlugin,
+        {"pegasus.monitord.plugins.tk.tick_interval": "0.05"},
+    )
+    plugin.raise_in_tick = True
+    assert _wait_for(lambda: len(plugin.ticks) >= 1)
+    # a raising tick must not kill the worker or block event delivery
+    mgr.dispatch("stampede.after-tick", {})
+    assert _wait_for(lambda: plugin.events == ["stampede.after-tick"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+    assert plugin.stopped is True
+
+
+def test_ticks_interleave_under_continuous_flow(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        SlowTickingPlugin,
+        {"pegasus.monitord.plugins.tk.tick_interval": "0.05"},
+    )
+    # ~30 events x 0.02s handler = ~0.6s of continuous flow: get() never times
+    # out, so only the starvation guard can fire ticks in this window.
+    n = 30
+    for i in range(n):
+        mgr.dispatch(f"stampede.e{i}", {})
+    assert _wait_for(lambda: len(plugin.events) == n, timeout=5.0)
+    assert len(plugin.ticks) >= 1, "starvation guard never ticked"
+    # delivery order is untouched by interleaved ticks
+    assert plugin.events == [f"stampede.e{i}" for i in range(n)]
+    mgr.stop_all()
+
+
+def test_stop_all_drains_and_joins_ticking_plugin(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        TickingPlugin,
+        {"pegasus.monitord.plugins.tk.tick_interval": "0.05"},
+    )
+    n = 5
+    for i in range(n):
+        mgr.dispatch(f"stampede.e{i}", {})
+    mgr.stop_all()
+    # FIFO drain: every event ahead of the sentinel was processed
+    assert plugin.events == [f"stampede.e{i}" for i in range(n)]
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
+    # no tick can fire after the sentinel has been drained
+    ticks_at_stop = len(plugin.ticks)
+    time.sleep(0.2)
+    assert len(plugin.ticks) == ticks_at_stop
