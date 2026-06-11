@@ -14,4 +14,3 @@ pegasus (4.7.4-1+deb9) stretch; urgency=low
   * Build tag must be +deb9 (!?)
 
  -- Steffen Grunewald <steffen.grunewald@ligo.org>  Mon, 03 Jul 2017 16:10:00 +0200
-

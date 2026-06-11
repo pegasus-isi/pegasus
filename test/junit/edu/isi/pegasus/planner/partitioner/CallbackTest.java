@@ -17,12 +17,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class CallbackTest {
 
     @Test

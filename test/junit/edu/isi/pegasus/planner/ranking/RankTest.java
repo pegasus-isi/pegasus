@@ -17,10 +17,11 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Collection;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /** Tests for the Rank class (tests initialization and basic properties). */
 public class RankTest {

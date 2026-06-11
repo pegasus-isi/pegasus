@@ -47,7 +47,7 @@ class Slot {
 public:
     unsigned int rank;
     Host *host;
-    
+
     Slot(unsigned int rank, Host *host) {
         this->rank = rank;
         this->host = host;
@@ -80,7 +80,7 @@ class JobstateLog : public WorkflowEventListener {
 private:
     string path;
     FILE *logfile;
-    
+
     void open();
     void close();
 public:
@@ -94,7 +94,7 @@ private:
     string logpath;
     string dagpath;
     FILE *logfile;
-    
+
     void open();
     void close();
 public:
@@ -110,44 +110,44 @@ typedef list<Task *> TaskList;
 
 class Master {
     Communicator *comm;
-    
+
     string program;
     string dagfile;
     string outfile;
     string errfile;
     DAG *dag;
     Engine *engine;
-    
+
     FILE *resource_log;
-    
+
     vector<Slot *> slots;
     vector<Host *> hosts;
     SlotList free_slots;
     TaskQueue ready_queue;
-    
+
     int numworkers;
     double max_wall_time;
-    
+
     unsigned submitted_count;
     unsigned success_count;
     unsigned failed_count;
-    
+
     unsigned total_cpus;
     double total_runtime;
-    
+
     bool has_host_script;
-    
+
     double start_time;
     double finish_time;
     double wall_time;
-    
+
     FDCache *fdcache;
-    
+
     bool per_task_stdio;
-    
+
     list<WorkflowEventListener *> listeners;
     unsigned task_submit_seq;
-    
+
     void register_workers();
     void schedule_tasks();
     void wait_for_results();
@@ -162,8 +162,8 @@ class Master {
     void publish_event(WorkflowEvent event, Task *task);
     bool wall_time_exceeded();
 public:
-    Master(Communicator *comm, const string &program, Engine &engine, DAG &dag, const string &dagfile, 
-        const string &outfile, const string &errfile, bool has_host_script = false, 
+    Master(Communicator *comm, const string &program, Engine &engine, DAG &dag, const string &dagfile,
+        const string &outfile, const string &errfile, bool has_host_script = false,
         double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false,
         int maxfds = 0);
     ~Master();

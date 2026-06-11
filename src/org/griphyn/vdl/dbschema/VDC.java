@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.dbschema;
 
-import java.sql.*;
 import org.griphyn.vdl.classes.Definition;
+
+import java.sql.*;
 
 /**
  * This common schema interface defines the schemas in which the abstraction layers access the VDC.

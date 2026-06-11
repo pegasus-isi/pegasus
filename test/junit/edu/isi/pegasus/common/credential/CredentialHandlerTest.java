@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import org.junit.jupiter.api.Test;
 
 /**

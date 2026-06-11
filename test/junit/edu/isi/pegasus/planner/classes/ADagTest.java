@@ -21,9 +21,11 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Iterator;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the ADag class. */
 public class ADagTest {

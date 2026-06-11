@@ -17,13 +17,15 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
+
+import org.griphyn.vdl.euryale.HashedFileFactory;
+import org.griphyn.vdl.euryale.VirtualHashedFileFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.griphyn.vdl.euryale.HashedFileFactory;
-import org.griphyn.vdl.euryale.VirtualHashedFileFactory;
 
 /**
  * Hashed Mapper that bins all files associated with a job to a particular directory on the staging

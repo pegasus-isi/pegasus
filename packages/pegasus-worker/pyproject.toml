@@ -57,10 +57,6 @@ build-backend = "setuptools.build_meta"
 # ]
 # keywords=["scientific workflows"]
 
-# [dependency-groups]
-
-# dev = ["ruff", "tox"]
-
 # [project.urls]
 
 # Homepage = "https://pegasus.isi.edu"
@@ -68,6 +64,11 @@ build-backend = "setuptools.build_meta"
 # Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
 # Repository = "https://github.com/pegasus-isi/pegasus"
 # Issues = "https://github.com/pegasus-isi/pegasus/issues"
+
+
+# [dependency-groups]
+
+# dev = ["ruff", "tox"]
 
 
 [tool.isort]

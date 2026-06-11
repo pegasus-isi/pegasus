@@ -14,11 +14,12 @@
  */
 package org.griphyn.vdl.diagnozer;
 
+import org.griphyn.vdl.directive.*;
+import org.griphyn.vdl.toolkit.FriendlyNudge;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-import org.griphyn.vdl.directive.*;
-import org.griphyn.vdl.toolkit.FriendlyNudge;
 
 /**
  * Inspects various files in a run directory to help diagnoze an error.

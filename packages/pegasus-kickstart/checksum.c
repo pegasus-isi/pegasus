@@ -48,7 +48,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     *yaml = '\0';
     chksum_str[0] = '\0';
 
-    start_ts = get_ts(); 
+    start_ts = get_ts();
     if (!(inf = fopen(fname, "r"))) {
         return 0;
     }
@@ -56,7 +56,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
     sha256_begin(ctx);
     len = 0;
     do
-    {   
+    {
         len = (int)fread(buf, 1, BUFSIZE, inf);
         if (len) {
             sha256_hash((unsigned char*)buf, len, ctx);
@@ -73,7 +73,7 @@ int pegasus_integrity_yaml(const char *fname, char *yaml) {
         chksum_cur += 2;
     }
     chksum_str[SHA256_DIGEST_SIZE * 2] = '\0';
-   
+
     sprintf(buf, "      sha256: %s\n", chksum_str);
     strcat(yaml, buf);
     sprintf(buf, "      checksum_timing: %0.2f\n", duration);

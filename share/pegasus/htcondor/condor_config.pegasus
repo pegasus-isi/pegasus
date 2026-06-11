@@ -12,7 +12,7 @@
 CONCURRENCY_LIMIT_DEFAULT_pegasus_transfer   = 10
 
 # fine grained controls for different types of transfer jobs
-# if not specified then the default value is picked up 
+# if not specified then the default value is picked up
 # pegasus_transfer.stagein_LIMIT            = 5
 # pegasus_transfer.stageout_LIMIT  	    = 3
 # pegasus_transfer.inter_LIMIT 		    = 3
@@ -27,7 +27,7 @@ CONCURRENCY_LIMIT_DEFAULT_pegasus_transfer   = 10
 CONCURRENCY_LIMIT_DEFAULT_pegasus_auxillary = 10
 
 # fine grained controls for different types of auxillary jobs
-# if not specified then the default value is picked up 
+# if not specified then the default value is picked up
 # pegasus_auxillary.createdir_LIMIT   	   = 3
 # pegasus_auxillary.cleanup_LIMIT   	   = 3
 # pegasus_auxillary.registration_LIMIT 	   = 3

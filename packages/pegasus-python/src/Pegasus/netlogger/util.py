@@ -35,7 +35,7 @@ NL_HOME = "NETLOGGER_HOME"
 EOF_EVENT = "netlogger.EOF"
 
 MAGICDATE_EXAMPLES = ", ".join(
-    "%s" % s
+    f"{s}"
     for s in (
         "<N> weeks|days|hours|minutes|seconds time ago",
         "Today",
@@ -84,7 +84,7 @@ class ScriptOptionParser(OptionParser):
             default=0,
             action="count",
             dest="verbosity",
-            help="show verbose status information, " "repeat for even more detail",
+            help="show verbose status information, repeat for even more detail",
         ),
     )
 
@@ -186,7 +186,7 @@ def traceback():
         del tb
 
         file, function, line = tbinfo[-1]
-        info = " ".join(["[%s|%s|%s]" % x for x in tbinfo])
+        info = " ".join(["[{}|{}|{}]".format(*x) for x in tbinfo])
         return (file, function, line), t, v, info
 
     return str(compact_traceback())
@@ -204,10 +204,10 @@ def parse_nvp(args):
 
 
 def tzstr():
-    return "%s%02d:%02d" % (
+    return "{}{:02d}:{:02d}".format(
         ("+", "-")[time.timezone > 0],
-        time.timezone / 3600,
-        (time.timezone - int(time.timezone / 3600) * 3600) / 60,
+        int(time.timezone / 3600),
+        int((time.timezone - int(time.timezone / 3600) * 3600) / 60),
     )
 
 
@@ -261,7 +261,7 @@ class ProgressMeter:
                 dig = 1
             else:
                 dig = 0
-            fmt = "[ %%5d ] %%s, rate = %%.%df %%s/sec     \r" % dig
+            fmt = f"[ %5d ] %s, rate = %.{dig}f %s/sec     \r"
             self.ofile.write(fmt % (num, self.units, rate, self.units))
             self.ofile.flush()
             self.reset(num)
@@ -416,11 +416,10 @@ def getNextNumberedFile(path, mode="w", strip=False, open_file=True):
         next_num = numbered[0][0] + 1
     else:
         next_num = 1
-    next_file = "%s.%d" % (path, next_num)
+    next_file = f"{path}.{next_num:d}"
     if open_file:
         return file(next_file, mode)
-    else:
-        return next_file
+    return next_file
 
 
 def getAllNumberedFiles(path):
@@ -525,7 +524,7 @@ class NullFile:
         return False
 
     def next(self):
-        raise StopIteration()
+        raise StopIteration
 
     def read(self, n):
         return ""
@@ -603,8 +602,7 @@ class IncConfigObj(configobj.ConfigObj):
                     inc_file = file(inc_path)
                 except OSError:
                     raise OSError(
-                        "Cannot read file '%s' "
-                        "included from '%s'" % (inc_path, f.name)
+                        f"Cannot read file '{inc_path}' included from '{f.name}'"
                     )
                 # add contents of file to list of lines
                 j = 0
@@ -625,14 +623,11 @@ class IncConfigObj(configobj.ConfigObj):
             m = re.search(r'line "(\d+)"', str(E))
             if m is None:
                 raise
-            else:
-                # print file_lines
-                n = int(m.group(1)) - 1
-                filename, lineno = file_lines[n]
-                msg = 'Invalid line {} in {}: "{}"'.format(
-                    lineno, filename, lines[n].strip(),
-                )
-                raise configobj.ParseError(msg)
+            # print file_lines
+            n = int(m.group(1)) - 1
+            filename, lineno = file_lines[n]
+            msg = f'Invalid line {lineno} in {filename}: "{lines[n].strip()}"'
+            raise configobj.ParseError(msg)
 
     def getHasLoggingSection(self):
         """Return True if configuration had a [logging] section,
@@ -721,7 +716,7 @@ def sizeToBytes(s):
         raise ValueError("Not of form: <num> <units>")
     value, units = m.groups()
     if units not in _BFAC:
-        raise ValueError("Unrecognized units for '%s'" % s)
+        raise ValueError(f"Unrecognized units for '{s}'")
     return int(value) * _BFAC[units]
 
 
@@ -754,7 +749,7 @@ def as_bool(x):
             "false": False,
         }.get(x.lower(), None)
     if retval is None:
-        raise ValueError("Cannot convert to bool: %s" % x)
+        raise ValueError(f"Cannot convert to bool: {x}")
     return retval
 
 
@@ -772,7 +767,7 @@ def as_list(value, sep=" "):
         else:
             retval = value.split(sep)
     if retval is None:
-        raise ValueError("Cannot convert to list: %s" % value)
+        raise ValueError(f"Cannot convert to list: {value}")
     return retval
 
 
@@ -791,7 +786,7 @@ def parseParams(opt):
         try:
             name, val = nameval.split("=")
         except ValueError:
-            raise ValueError("Bad name=value format for '%s'" % nameval)
+            raise ValueError(f"Bad name=value format for '{nameval}'")
         params.append((name, val))
     return params
 
@@ -828,9 +823,7 @@ except ImportError:
             a = random.random() * 100000000000000000
         data = str(t) + " " + str(r) + " " + str(a)
         data = md5.md5(data).hexdigest()
-        return "{}-{}-{}-{}-{}".format(
-            data[0:8], data[8:12], data[12:16], data[16:20], data[20:32],
-        )
+        return f"{data[0:8]}-{data[8:12]}-{data[12:16]}-{data[16:20]}-{data[20:32]}"
 
 
 """
@@ -853,17 +846,10 @@ def wrap(text, n, leader=""):
     """
     if len(text) <= n:
         return text
-    else:
-        spc = _find_space(text, n)
-        if spc < 0:
-            return text
-        else:
-            return (
-                text[:spc]
-                + "\n"
-                + leader
-                + wrap(text[spc + 1 :].lstrip(), n, leader=leader)
-            )
+    spc = _find_space(text, n)
+    if spc < 0:
+        return text
+    return text[:spc] + "\n" + leader + wrap(text[spc + 1 :].lstrip(), n, leader=leader)
 
 
 def _find_space(text, maxpos):
@@ -887,7 +873,7 @@ def process_kvp(option, all={}, _bool={}, type="AMQP"):
     """
     parts = option.split("=", 1)
     if len(parts) != 2:
-        raise ValueError("argument '%s' not in form name=value" % option)
+        raise ValueError(f"argument '{option}' not in form name=value")
     key, value = parts
     if all and (key not in all):
         raise ValueError(f"unknown {type} option '{key}'.")
@@ -910,9 +896,9 @@ def stringize(v):
     if isinstance(v, str):
         result = v
     elif isinstance(v, float):
-        result = "%f" % v
+        result = f"{v:f}"
     elif isinstance(v, int):
-        result = "%d" % v
+        result = f"{v:d}"
     else:
         result = str(v)
     return result

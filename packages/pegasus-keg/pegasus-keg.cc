@@ -482,7 +482,7 @@ identify( char *result, size_t size, const char *arg0,
             strcpy( hostname, ifaddr );
         }
     }
-    
+
     append( result, size, "IP addr and hostname: %s\n", hostname );
 
     free( static_cast<void *>(line) );
@@ -551,7 +551,7 @@ data_unit_multiplier( char data_unit )
 char*
 allocate_mem_buffer( size_t mem_buf_size )
 /* purpose: allocate a memory buffor on heap and prevent it from being paged out
- * paramtr: mem_buf_size (size_t): the memory size to be allocated 
+ * paramtr: mem_buf_size (size_t): the memory size to be allocated
  * returns: a pointer to the allocated buffer */
 {
     char *memory_buffer = static_cast<char *>( malloc(mem_buf_size) );
@@ -683,7 +683,7 @@ generate_output_file( FILE *out, unsigned long xsize )
 /**
  * create a deep directory if it does not exist
  * paramtr: file_path  the directory to be created. must end in /
- * mode:    mode to assign to the directory 
+ * mode:    mode to assign to the directory
  */
 int
 mkpath(char* file_path, mode_t mode) {
@@ -728,7 +728,7 @@ main( int argc, char *argv[] )
     bool root_only_memory_allocation = false;
     size_t bufsize = getpagesize() << 4;
     if ( bufsize < 16384 ) bufsize = 16384;
-    char *buffer = static_cast<char *>( malloc(bufsize) );    
+    char *buffer = static_cast<char *>( malloc(bufsize) );
 
     int state = 0;
     bool condor = false;
@@ -865,7 +865,7 @@ main( int argc, char *argv[] )
         }
     }
 
-    if (sleeptime > 0 && timeout > 0) 
+    if (sleeptime > 0 && timeout > 0)
     {
         sleeptime = fabs(sleeptime - timeout);
     }
@@ -928,11 +928,11 @@ main( int argc, char *argv[] )
             {
                 out = fdopen( STDOUT_FILENO, "a" );
             }
-            else 
+            else
             {
                 char *filesize = strrchr( (char*)iox[2][i], '=' );
                 char filename[256];
-                
+
                 if ( filesize != NULL )
                 {
                     memcpy( filename, iox[2][i], sizeof(char) * ( filesize - iox[2][i] ) );
@@ -942,7 +942,7 @@ main( int argc, char *argv[] )
 
                     unsigned long long unit_multiplier = 1;
 
-                    if ( strchr( "BKMG\0", filesize[ strlen( filesize ) - 1 ] ) != NULL ) 
+                    if ( strchr( "BKMG\0", filesize[ strlen( filesize ) - 1 ] ) != NULL )
                     {
                         unit_multiplier = data_unit_multiplier( filesize[ strlen( filesize ) - 1 ] );
                     }
@@ -950,12 +950,12 @@ main( int argc, char *argv[] )
                     filesize[ strlen( filesize ) - 1 ] = '\0';
                     xsize = strtoul(filesize + 1, 0, 10) * unit_multiplier;
                 }
-                else 
+                else
                 {
 		    strcpy(filename, iox[2][i]);
 		    fprintf(stdout, "output file to be generated is %s\n", filename) ;
 		    // is there a directory path specified
-		    char* last_index =  strrchr( filename, '/' );  
+		    char* last_index =  strrchr( filename, '/' );
 		    if (last_index != NULL){
 			 char directory[256];
 			 /* ensure that directory has the trailing */
@@ -977,7 +977,7 @@ main( int argc, char *argv[] )
                 {
                     if ( xsize <= 0 )
                     {
-                        const char *xsize_str = iox[4][ i % iox[4].size() ];  
+                        const char *xsize_str = iox[4][ i % iox[4].size() ];
                         xsize = strtoul(xsize_str, 0, 10) * data_unit_multiplier( data_unit );
                     }
                     generate_output_file( out, xsize );
@@ -985,10 +985,10 @@ main( int argc, char *argv[] )
                 else
                 {
                     fputs( prefix, out );
-                    
+
                     if(memory_buffer != NULL) {
                         fputs( memory_buffer, out );
-                    }                    
+                    }
                 }
 
                 // create buffer, and fill with content

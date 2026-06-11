@@ -36,6 +36,7 @@ import edu.isi.pegasus.planner.code.generator.Braindump;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -911,6 +912,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
                 "Loading Inhertied ReplicaFiles files: " + files, LogManager.DEBUG_MESSAGE_LEVEL);
         this.mInheritedReplicaStore = this.getReplicaStoreFromFiles(files);
     }
+
     /**
      * Ends up loading the cache files so as to enable the lookup for the transient files created by
      * the parent jobs.

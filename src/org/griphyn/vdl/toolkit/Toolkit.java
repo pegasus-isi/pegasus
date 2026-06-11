@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.toolkit;
 
-import java.io.*;
-import java.util.Collection;
-import java.util.MissingResourceException;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.MissingResourceException;
 
 /**
  * This class is the base class for other toolkits. It provides basical common functions, to be

@@ -25,14 +25,18 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class DAX2CDAGTest {
 
     /*

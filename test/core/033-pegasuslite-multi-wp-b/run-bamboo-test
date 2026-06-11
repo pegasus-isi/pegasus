@@ -87,5 +87,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

@@ -10,8 +10,3 @@ pegasus.dir.useTimestamp = true
 
 # we want kickstart to always report environment
 pegasus.gridstart.arguments = -f
-
-
-
-
-

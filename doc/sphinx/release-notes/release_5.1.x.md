@@ -6,7 +6,7 @@
 
 
 We are happy to announce the release of Pegasus 5.1.2. It is a minor release in the 5.1 branch.  We invite our users to give it a
-try. 
+try.
 
 The release can be downloaded from:
 <https://pegasus.isi.edu/downloads>
@@ -14,29 +14,29 @@ The release can be downloaded from:
 
 #### Highlights of the Release
 
-1) Move to Condor File IO for OSDF transfers. 
+1) Move to Condor File IO for OSDF transfers.
 
-   OSDF transfers are now always delagated to HTCondor to manage using HTCondor file IO, 
-   especially when turning on Bypass Input File Staging. This applicable both for **condorio** and 
+   OSDF transfers are now always delagated to HTCondor to manage using HTCondor file IO,
+   especially when turning on Bypass Input File Staging. This applicable both for **condorio** and
    **nonsharedfs data** configurations.
 
-   More details can be found in the 
+   More details can be found in the
    [documentation](https://pegasus.isi.edu/docs/5.1.2/reference-guide/data-management.html#open-science-data-federation-osdf-stashcp-osdf-stash).
 
 2) Support for Flux
    This release of Pegasus has support for running workflows on HPC resources managed by
    [Flux](https://flux-framework.org) resource manager. This support relies on changes to
-   HTCondor which will be made available in an upcoming 25.7.0 release scheduled for 
-   March 2026. 
-   
-   Details of mapping Pegasus resource profiles to flux parameters can be found 
+   HTCondor which will be made available in an upcoming 25.7.0 release scheduled for
+   March 2026.
+
+   Details of mapping Pegasus resource profiles to flux parameters can be found
    [here](https://pegasus.isi.edu/docs/5.1.2/user-guide/deployment-scenarios.html#setting-job-requirements).
 
-   This [repository](https://github.com/TauferLab/pegasus_flux_user_deploy) has useful scripts that a user can use to deploy pegasus in user mode 
+   This [repository](https://github.com/TauferLab/pegasus_flux_user_deploy) has useful scripts that a user can use to deploy pegasus in user mode
    on Flux Systems. [\#2143](https://github.com/pegasus-isi/pegasus/issues/2143)
 
 
-3) Modified Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)   
+3) Modified Pegasus versioning scheme to use Semantic Versioning Scheme v2 [\#2126](https://github.com/pegasus-isi/pegasus/issues/2126)
 
 4) Support for Python 3.14
 
@@ -93,7 +93,7 @@ The release can be downloaded from:
 We are happy to announce the release of Pegasus 5.1.1. It is a minor release on top of
 Pegasus 5.1.0 which is a major release of Pegasus. It also includes all features and
 bug fixes from the 5.0 branch. We invite our users to give it a
-try. 
+try.
 
 We recommend that users upgrade to 5.1.1 and not 5.1.0 because 5.1.1 has a fix for
 [\#2113](https://github.com/pegasus-isi/pegasus/issues/2113) .
@@ -102,58 +102,58 @@ The release can be downloaded from:
 <https://pegasus.isi.edu/downloads>
 
 If you are an existing user, please carefully follow these
-instructions to upgrade at 
-<https://pegasus.isi.edu/docs/5.1.0/user-guide/migration.html#migrating-from-pegasus-5-0-x-to-pegasus-5-1> 
+instructions to upgrade at
+<https://pegasus.isi.edu/docs/5.1.0/user-guide/migration.html#migrating-from-pegasus-5-0-x-to-pegasus-5-1>
 
 #### Highlights of the Release
 
 1) Refined Data Transfer Mechanisms for Containerized Jobs
 
-    PegasusLite now offers two distinct approaches for handling data transfers in  
+    PegasusLite now offers two distinct approaches for handling data transfers in
     containerized jobs. The shift to host-based transfers as the default aims to
     simplify workflows and minimize the overhead associated with customizing container images.
 
-    *   **Host-Based Transfers (Default in 5.1.0):** Input and output data are staged on the 
+    *   **Host-Based Transfers (Default in 5.1.0):** Input and output data are staged on the
         host operating system before launching the container. This method utilizes pre-installed
-        data transfer tools on the host, reducing the need for additional configurations within 
+        data transfer tools on the host, reducing the need for additional configurations within
         the container.
-    *   **Container-Based Transfers:** Data transfers occur within the container prior to 
+    *   **Container-Based Transfers:** Data transfers occur within the container prior to
         executing user code. This approach requires the container image to include necessary
-        data transfer utilities like curl, ftp, or globus-online. Users preferring this method 
+        data transfer utilities like curl, ftp, or globus-online. Users preferring this method
         can set the property pegasus.transfer.container.onhost to false in their configuration files.
 
-    More details can be found in the 
+    More details can be found in the
     [documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#data-transfers-for-jobs-when-running-in-container).
 
-   
+
 2) Integration with HTCondor’s Container Universe
 
-    Pegasus 5.1.0 introduces support for HTCondor’s container universe, 
+    Pegasus 5.1.0 introduces support for HTCondor’s container universe,
     which is useful in pure HTCondor environments such as PATh/OSPool whereby the container
-    management is handled by HTCondor.  This integration simplifies job submission and execution, 
+    management is handled by HTCondor.  This integration simplifies job submission and execution,
     for environments where HTCondor’s container universe is available.
 
-    This enhancement builds upon Pegasus’s initial container support introduced in 
+    This enhancement builds upon Pegasus’s initial container support introduced in
     version 4.8.0, reflecting ongoing efforts to improve compatibility and user experience.
 
-    More details can be found in the 
+    More details can be found in the
     [documentation](https://pegasus.isi.edu/docs/5.1.0/user-guide/containers.html#configuring-workflows-to-use-containers).
 
 3) pegasus-status command line tool was rewritten in python, removing Pegasus perl
    dependency. The new *pegasus-status* command has better support for showing status of
    hierarchical workflows.
 
-4) Improved determination on what site a job runs on. Starting Pegasus 5.1.0 release, PegasusLite 
+4) Improved determination on what site a job runs on. Starting Pegasus 5.1.0 release, PegasusLite
    wrapped jobs send a location record that enables us to figure out what resource a job runs on.
    The location record can be found toward the end of the job .out file as a pegasus multipart record.
-   
-   More details can be found in the 
-   [documentation](https://pegasus.isi.edu/documentation/reference-guide/funding-citing-usage-stats.html#pegasus-lite-metrics).
- 
-5) Please note that RPM packaging for 5.1.x series is not compatible with the 5.0.x series.
-   If you try to update an existing 5.0.x install you will see an error similar to the trace below 
 
-``` 
+   More details can be found in the
+   [documentation](https://pegasus.isi.edu/documentation/reference-guide/funding-citing-usage-stats.html#pegasus-lite-metrics).
+
+5) Please note that RPM packaging for 5.1.x series is not compatible with the 5.0.x series.
+   If you try to update an existing 5.0.x install you will see an error similar to the trace below
+
+```
 dnf update pegasus
 ...
 Running transaction check
@@ -167,7 +167,7 @@ Error: Transaction test error:
 
    The recommended way is to first remove the 5.0.x install and then do the install.
 
-#### New Features and Improvements 
+#### New Features and Improvements
 
 1) update deployment scenarios documentation to include Open OnDemand configuration [\#2112](https://github.com/pegasus-isi/pegasus/issues/2112)
 2) Incorporate release notes into the documentation [\#2111](https://github.com/pegasus-isi/pegasus/issues/2111)
@@ -239,5 +239,3 @@ Error: Transaction test error:
 - test updates and python3 fixes [\#42](https://github.com/pegasus-isi/pegasus/pull/42) ([zaiyan-alam](https://github.com/zaiyan-alam))
 - Test updates [\#41](https://github.com/pegasus-isi/pegasus/pull/41) ([zaiyan-alam](https://github.com/zaiyan-alam))
 - PM-1874 gsiftp test updates [\#40](https://github.com/pegasus-isi/pegasus/pull/40) ([zaiyan-alam](https://github.com/zaiyan-alam))
-
-

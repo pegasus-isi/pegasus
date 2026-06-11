@@ -3,7 +3,7 @@
    "lfn": "data.txt",
    "linkage": "output",
    "id": 1,
-   "generate_checksum": true, 
+   "generate_checksum": true,
    "src_urls": [
      { "site_label": "computesite", "url": "file://$PWD/index.html", "priority": 100 }
    ],
@@ -11,4 +11,3 @@
      { "site_label": "computesite", "url": "file://$PWD/data.txt" }
    ] }
 ]
-

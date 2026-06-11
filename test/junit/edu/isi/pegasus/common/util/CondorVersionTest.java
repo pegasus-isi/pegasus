@@ -20,10 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.util.LinkedList;
-import java.util.regex.Matcher;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedList;
+import java.util.regex.Matcher;
 
 /**
  * Unit tests to test parsing of output of condor_version

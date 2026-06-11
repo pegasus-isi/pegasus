@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.common.util.Currently;
+
 import java.io.IOException;
 import java.util.Iterator;
 

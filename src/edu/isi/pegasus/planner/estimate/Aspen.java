@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -78,8 +79,8 @@ public class Aspen implements Estimator {
             throw new RuntimeException(
                     "Unable to determine path to executable "
                             + PEGASUS_ASPEN_CLIENT_NAME
-                            + " . Path to the bin directory for pegasus aspen estimate client not set."
-                            + " Please specify the property "
+                            + " . Path to the bin directory for pegasus aspen estimate client not"
+                            + " set. Please specify the property "
                             + ASPEN_BIN_PROPERTY_KEY);
         }
 

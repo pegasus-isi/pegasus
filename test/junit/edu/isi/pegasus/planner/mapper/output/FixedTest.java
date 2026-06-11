@@ -18,9 +18,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
 
 /** Tests for the Fixed output mapper class structure. */
 public class FixedTest {

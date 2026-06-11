@@ -18,11 +18,13 @@ package org.griphyn.vdl.planner;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class generates the shell scripts from a DAX. There is a script for each job in the dag, and

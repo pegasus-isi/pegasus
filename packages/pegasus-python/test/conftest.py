@@ -107,9 +107,7 @@ class FlaskTestClient:
             response = self.app.make_response(rv)
 
             # Post process Request
-            response = self.app.process_response(response)
-
-        return response
+            return self.app.process_response(response)
 
 
 @pytest.fixture(scope="session")
@@ -155,8 +153,7 @@ def cli(app):
 @pytest.fixture()
 def runner():
     """Return click test runner."""
-    runner = CliRunner()
-    return runner
+    return CliRunner()
 
 
 @pytest.fixture()

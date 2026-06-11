@@ -21,11 +21,13 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for CodeGenerator interface structure */
 public class CodeGeneratorTest {

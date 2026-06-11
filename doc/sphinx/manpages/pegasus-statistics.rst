@@ -154,4 +154,3 @@ Runs pegasus-statistics over all workflows in the STAMPEDE database:
 ::
 
    $ pegasus-statistics  --conf pegasusrc --multiple-wf
-

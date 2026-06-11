@@ -8,7 +8,7 @@ import pytest
 from Pegasus.client import condor
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_subprocess(mocker):
     class Popen:
         def __init__(self):
@@ -49,7 +49,11 @@ def test__handle_stream(caplog, log_lvl):
 
     # invoke stream handler
     condor._handle_stream(
-        proc=proc, stream=proc.stdout, dst=stuff, logger=test_logger, log_lvl=log_lvl,
+        proc=proc,
+        stream=proc.stdout,
+        dst=stuff,
+        logger=test_logger,
+        log_lvl=log_lvl,
     )
 
     assert stuff == [b"0\n", b"1\n", b"2\n", b"3\n", b"4\n"]

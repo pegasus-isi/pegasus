@@ -2,12 +2,12 @@ class InvalidMandatoryClauseError(Exception):
     """Error."""
 
 
-def mandatory_check(clause):
+def mandatory_check(clause) -> bool | None:
     try:
         compile(clause, "<string>", "eval")
         return True
     except SyntaxError as e:
-        raise InvalidMandatoryClauseError("Invalid mandatory clause: %s" % e)
+        raise InvalidMandatoryClauseError(f"Invalid mandatory clause: {e}")
 
 
 # Earlier range returned a list, but now it returns a range object,
@@ -80,9 +80,13 @@ def mandatory_parse(clause, symbols=None):
 
     """
     try:
-        return eval(clause, {}, symbols,)
+        return eval(
+            clause,
+            {},
+            symbols,
+        )
     except (SyntaxError, KeyError, NameError, ValueError) as e:
-        raise InvalidMandatoryClauseError("Invalid mandatory clause: %s" % e)
+        raise InvalidMandatoryClauseError(f"Invalid mandatory clause: {e}")
 
 
 """

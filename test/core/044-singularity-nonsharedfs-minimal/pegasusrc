@@ -8,8 +8,3 @@ pegasus.catalog.replica.file ./conf/rc.data
 pegasus.catalog.transformation.file ./conf/tc.yml
 
 pegasus.catalog.transformation YAML
-
-
-
-
-

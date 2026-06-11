@@ -2045,5 +2045,3 @@ regarding setup and usage, please visit the link referenced above.
    :width: 100.0%
 
    Data Collection/Visualization Pipeline
-
-

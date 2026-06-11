@@ -21,11 +21,13 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gnu.getopt.LongOpt;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
 
 /**
  * Structural tests for the CPlanner client class via reflection.

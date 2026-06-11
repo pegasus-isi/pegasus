@@ -49,6 +49,10 @@ import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import edu.isi.pegasus.planner.parser.XMLParser;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -56,8 +60,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML document conforming to the
@@ -71,6 +73,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     /** The "not-so-official" location URL of the DAX XMLParser Schema. */
     public static final String DEFAULT_SCHEMA_LOCATION =
             "http://pegasus.isi.edu/schema/dax-3.6.xsd";
+
     /** The "not-so-official" location URL of the DAX XMLParser Schema. */
     public static final String SCHEMA_LOCATION_DIRECTORY = "https://pegasus.isi.edu/schema/";
 
@@ -239,7 +242,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         }
 
         switch (element.charAt(0)) {
-                // a adag argument
+            // a adag argument
             case 'a':
                 if (element.equals("adag")) {
                     // for now the adag element is just a map of
@@ -270,7 +273,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return null;
 
-                // c child compound
+            // c child compound
             case 'c':
                 if (element.equals("child")) {
                     this.mParents = new LinkedList<PCRelation>();
@@ -295,7 +298,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return null;
 
-                // d dag dax job decaf
+            // d dag dax job decaf
             case 'd':
                 if (element.equals("dag") || element.equals("dax") || element.equals("dflow")) {
                     Job j = new Job();
@@ -392,7 +395,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of element decaf
                 return null; // end of d
 
-                // e executable edge
+            // e executable edge
             case 'e':
                 if (element.equals("executable")) {
                     String namespace = null;
@@ -459,7 +462,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 */
                 return null; // end of e
 
-                // f file
+            // f file
             case 'f':
                 if (element.equals("file")) {
                     // create a FileTransfer Object or shd it be ReplicaLocations?
@@ -492,7 +495,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                 return null; // end of f
 
-                // i invoke
+            // i invoke
             case 'i':
                 if (element.equals("invoke")) {
 
@@ -516,7 +519,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of element invoke
                 return null;
 
-                // j job
+            // j job
             case 'j':
                 if (element.equals("job")) {
                     Job j = new Job();
@@ -547,7 +550,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of element job
                 return null; // end of j
 
-                // l link job for a dataflow
+            // l link job for a dataflow
             case 'l':
                 if (element.equals("link")) {
 
@@ -581,7 +584,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return null;
 
-                // m metadata
+            // m metadata
             case 'm':
                 if (element.equals("metadata")) {
                     Profile p = new Profile();
@@ -604,7 +607,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                 return null; // end of case m
 
-                // p parent profile pfn
+            // p parent profile pfn
             case 'p':
                 if (element.equals("parent")) {
                     String parent = null;
@@ -672,7 +675,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of element pfn
                 return null; // end of case p
 
-                // s stdin stdout stderr
+            // s stdin stdout stderr
             case 's':
                 if (element.equals("stdin")
                         || element.equals("stdout")
@@ -701,7 +704,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 } // end of stdin|stdout|stderr
                 return null; // end of case s
 
-                // t transformation
+            // t transformation
             case 't':
                 if (element.equals("transformation")) {
                     String namespace = null, lname = null, version = null;
@@ -721,7 +724,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return null;
 
-                // u uses
+            // u uses
             case 'u':
                 if (element.equals("uses")) {
                     PegasusFile pf = new PegasusFile();
@@ -819,7 +822,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public boolean setElementRelation(String childElement, Object parent, Object child) {
 
         switch (childElement.charAt(0)) {
-                // a argument adag
+            // a argument adag
             case 'a':
                 if (child instanceof Arguments) {
                     Arguments a = (Arguments) child;
@@ -841,7 +844,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // c child
+            // c child
             case 'c':
                 if (child instanceof PCRelation) {
                     PCRelation pc = (PCRelation) child;
@@ -860,7 +863,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // d dax dag job decaf
+            // d dax dag job decaf
             case 'd':
                 if (parent instanceof Map) {
 
@@ -916,7 +919,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 */
                 return false;
 
-                // f file
+            // f file
             case 'f':
                 if (child instanceof ReplicaLocation) {
                     ReplicaLocation rl = (ReplicaLocation) child;
@@ -935,7 +938,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // e executable edge
+            // e executable edge
             case 'e':
                 if (child instanceof Executable) {
                     if (parent instanceof Map) {
@@ -962,7 +965,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // i invoke
+            // i invoke
             case 'i':
                 if (child instanceof Invoke) {
                     Invoke i = (Invoke) child;
@@ -999,7 +1002,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // j job
+            // j job
             case 'j':
                 if (child instanceof Job) {
                     if (parent instanceof Map) {
@@ -1021,7 +1024,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // l link job
+            // l link job
             case 'l':
                 if (child instanceof Link) {
                     if (parent instanceof DataFlowJob) {
@@ -1032,7 +1035,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // m metadata
+            // m metadata
             case 'm':
                 if (child instanceof Profile) {
                     Profile md = (Profile) child;
@@ -1066,7 +1069,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // p parent profile pfn
+            // p parent profile pfn
             case 'p':
                 if (parent instanceof PCRelation) {
                     if (child instanceof String) {
@@ -1126,7 +1129,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // s stdin stdout stderr
+            // s stdin stdout stderr
             case 's':
                 if (parent instanceof Job) {
                     Job j = (Job) parent;
@@ -1152,7 +1155,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // t transformation
+            // t transformation
             case 't':
                 if (parent instanceof Map) {
                     if (child instanceof CompoundTransformation) {
@@ -1163,7 +1166,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // u uses
+            // u uses
             case 'u':
                 if (child instanceof PegasusFile) {
                     PegasusFile pf = (PegasusFile) child;
@@ -1188,7 +1191,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-                // default case
+            // default case
             default:
                 return false;
         }
@@ -1325,7 +1328,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         }
     }
 
-    /** @param args */
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         LogManagerFactory.loadSingletonInstance().setLevel(5);
         /*DAXParser3 parser = new DAXParser3(  );

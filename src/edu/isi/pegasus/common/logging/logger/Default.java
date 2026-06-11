@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.logging.logger;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Currently;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

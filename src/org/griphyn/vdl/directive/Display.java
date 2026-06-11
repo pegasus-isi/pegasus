@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.directive;
 
-import java.io.*;
-import java.util.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.parser.DAXParser;
 import org.griphyn.vdl.util.DAX2DOT;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * The class converts a DAX specification into other formats for visualization purposes.

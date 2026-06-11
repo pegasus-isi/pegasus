@@ -17,11 +17,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Structural tests for the CredentialHandlerFactory class via reflection.

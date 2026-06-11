@@ -23,14 +23,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.TestMethodOrder;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Properties;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.TestMethodOrder;
 
 /**
  * Test class to test File based replica catalog.

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Currently;
@@ -36,6 +37,9 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2CDAG;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
+
+import org.apache.logging.log4j.Level;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -50,7 +54,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.logging.log4j.Level;
 
 /**
  *
@@ -194,10 +197,13 @@ public class ADAG {
 
     /** The "official" namespace URI of the site catalog schema. */
     public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
+
     /** XSI SCHEMA NAMESPACE */
     public static final String SCHEMA_NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
+
     /** The "not-so-official" location URL of the DAX schema definition. */
     public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-3.6.xsd";
+
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.6";
 
@@ -232,8 +238,10 @@ public class ADAG {
 
     /** The Name / Label of the DAX */
     private String mName;
+
     /** The Index of the dax object. I out of N */
     private int mIndex;
+
     /** The Count of the number of dax objects : N */
     private int mCount;
 
@@ -250,18 +258,21 @@ public class ADAG {
     private List<Job> mLJobs;
     private List<DAG> mLDAGs;
     private List<DAX> mLDAXs;
+
     /**
      * The List of Transformation objects
      *
      * @see Transformation
      */
     private Set<Transformation> mTransformations;
+
     /**
      * The list of Executable objects
      *
      * @see Executable
      */
     private Set<Executable> mExecutables;
+
     /**
      * The list of edu.isi.pegasus.planner.dax.File objects
      *
@@ -276,6 +287,7 @@ public class ADAG {
      * @see Edge
      */
     private Map<String, Set<Edge>> mDependencies;
+
     /** List of Notification objects */
     private List<Invoke> mInvokes;
 
@@ -979,7 +991,8 @@ public class ADAG {
                             + " or "
                             + child
                             + "is not added to the DAX.\n"
-                            + "Please add the jobs first to the dax and then add the dependencies between them\n");
+                            + "Please add the jobs first to the dax and then add the dependencies"
+                            + " between them\n");
         }
         return this;
     }
@@ -1012,6 +1025,7 @@ public class ADAG {
         }
         return edges;
     }
+
     /**
      * Add a parent child dependency with a dependency label
      *
@@ -1183,7 +1197,8 @@ public class ADAG {
         }
         // print jobs, daxes and dags
         writer.writeXMLComment(
-                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
+                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1"
+                        + " required)",
                 true);
         for (AbstractJob j : mJobs.values()) {
             j.toXML(writer, indent + 1);
@@ -1289,7 +1304,8 @@ public class ADAG {
             // compound transformations must be added by using executable.addRequirement()
             if (!adag.mTransformations.isEmpty()) {
                 throw new UnsupportedOperationException(
-                        "Compound transformations not supported when converting to YAML. Use Executable.addRequirement() instead.");
+                        "Compound transformations not supported when converting to YAML. Use"
+                                + " Executable.addRequirement() instead.");
             }
 
             // jobs
@@ -1410,10 +1426,12 @@ public class ADAG {
             j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
             j1.addInvoke(
                     WHEN.start,
-                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                            + " workflow@example.com");
             j1.addInvoke(
                     WHEN.at_end,
-                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                    "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                            + " workflow@example.com");
             dax.addJob(j1);
         }
         return dax;
@@ -1496,10 +1514,12 @@ public class ADAG {
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         j1.addInvoke(
                 WHEN.start,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         j1.addInvoke(
                 WHEN.at_end,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
@@ -1509,10 +1529,12 @@ public class ADAG {
         j2.addProfile("condor", "universe", "vanilla");
         j2.addInvoke(
                 WHEN.start,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         j2.addInvoke(
                 WHEN.at_end,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         dax.addDAG(j2);
 
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
@@ -1524,10 +1546,12 @@ public class ADAG {
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
         j3.addInvoke(
                 WHEN.start,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         j3.addInvoke(
                 WHEN.at_end,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
         dax.addDAX(j3);
 
@@ -1543,10 +1567,12 @@ public class ADAG {
         j4.uses(fd, File.LINK.OUTPUT);
         j4.addInvoke(
                 WHEN.start,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         j4.addInvoke(
                 WHEN.at_end,
-                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f"
+                        + " workflow@example.com");
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2", "1-2");

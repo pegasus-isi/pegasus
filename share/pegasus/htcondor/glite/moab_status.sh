@@ -107,7 +107,7 @@ END {
         echo "0"$result
         retcode=0
     elif [ "$checkjob_exit_code" -eq "153" ] ; then
-        # If the job has disappeared, assume it's completed 
+        # If the job has disappeared, assume it's completed
         # (same as globus)
         echo "0[BatchJobId=\"$jobid\";JobStatus=4;ExitCode=0]"
         retcode=0

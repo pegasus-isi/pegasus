@@ -15,9 +15,11 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.NameValue;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;

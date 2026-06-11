@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Namespace;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -725,6 +726,7 @@ public class PegasusProperties implements Cloneable {
 
         return mProps.getProperty("pegasus.dir.create.impl", "DefaultImplementation");
     }
+
     /**
      * It specifies whether to use the extended timestamp format for generation of timestamps that
      * are used to create the random directory name, and for the classads generation.
@@ -1946,6 +1948,7 @@ public class PegasusProperties implements Cloneable {
         // return mProps.getProperty( "pegasus.log.windward.log4j.http.url" );
         return mProps.getProperty("log4j.configuration");
     }
+
     /**
      * Returns the file to which all the logging needs to be directed to.
      *

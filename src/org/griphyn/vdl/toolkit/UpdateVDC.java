@@ -15,15 +15,18 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.Iterator;
-import java.util.Set;
+
 import org.griphyn.vdl.dbdriver.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * This class uses the <code>VDLxParser</code> to parse VDLx specifications and add them to the

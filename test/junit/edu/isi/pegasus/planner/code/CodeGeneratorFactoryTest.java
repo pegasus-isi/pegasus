@@ -22,10 +22,12 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import org.junit.jupiter.api.Test;
 
 /** Tests for CodeGeneratorFactory constants and structure */
 public class CodeGeneratorFactoryTest {

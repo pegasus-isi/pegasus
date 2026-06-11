@@ -9,7 +9,7 @@ module stampede-schema {
 
 
     organization "STAMPEDE project. NSF grant OCI-0943705";
-    contact "Dan Gunter 
+    contact "Dan Gunter
              Lawrence Berkeley National Laboratory
              Email: dkgunter@lbl.gov
 	     Karan Vahi
@@ -20,7 +20,7 @@ module stampede-schema {
         description
             "Updated schema compatible with Pegasus 4.6 release";
     }
- 
+
     /*
      * Derived types
      * -------------
@@ -29,7 +29,7 @@ module stampede-schema {
     // (Grid) DN
    typedef distinguished-name {
         type string;
-    } 
+    }
 
     // UUID
     // eg: B7B27B5E-0221-4D90-AF5D-A325C2DD951C
@@ -80,7 +80,7 @@ module stampede-schema {
 	    enum "dag";
 	}
     }
-   
+
 
    //Valid Condor Job States i.e the various ULOG_ events
    typedef condor_jobstates{
@@ -130,7 +130,7 @@ module stampede-schema {
             type nl_ts;
         }
 
-        /*leaf event { 
+        /*leaf event {
             description "Unique name of event";
             type string;
             mandatory true;
@@ -138,7 +138,7 @@ module stampede-schema {
 
         leaf level {
             description "Severity level of event. " +
-            "Subset of NetLogger BP levels. " + 
+            "Subset of NetLogger BP levels. " +
             "For '*.end' events, if status is non-zero then level should be Error.";
             type enumeration {
                 enum Info;
@@ -146,10 +146,10 @@ module stampede-schema {
             }
         }
 
-        leaf xwf.id { 
+        leaf xwf.id {
             description "DAG workflow id";
             type uuid;
-        }  
+        }
     }
 
     grouping base-job-inst {
@@ -218,14 +218,14 @@ module stampede-schema {
 
      container events {
        list event {
-          config false;  
+          config false;
           choice an_event {
             container stampede.wf.plan {
                 uses base-event;
-                leaf submit.hostname { 
+                leaf submit.hostname {
                     description "The hostname of the Pegasus submit host";
                     type inet:host;
-                    mandatory true; 
+                    mandatory true;
                 }
                 leaf dax.label {
                     description "Label for abstract workflow specification";
@@ -259,11 +259,11 @@ module stampede-schema {
                 }
                 leaf grid_dn {
                     description "Grid DN of submitter";
-                    type distinguished-name; 
+                    type distinguished-name;
                 }
                 leaf user {
                     description "User name of submitter";
-                    type string; 
+                    type string;
                 }
                 leaf submit.dir {
                     description "Directory path from which workflow was submitted";
@@ -276,30 +276,30 @@ module stampede-schema {
                 }
                 leaf parent.xwf.id {
                     description "Parent workflow in DAG, if any";
-                    type uuid; 
+                    type uuid;
                 }
                 leaf root.xwf.id {
                     description "Root of workflow hierarchy, in DAG. " +
                     "Use this workflow's UUID if it is the root";
                     type string;
-                    mandatory true; 
+                    mandatory true;
                 }
             }
-	    
+
 	    container stampede.static.start{
 	    	uses base-event;
-	    }	    
-	    
+	    }
+
 	    container stampede.static.end{
 	    	uses base-event;
-	    }	  
+	    }
 
             container stampede.xwf.start {
                 uses base-event;
                 leaf restart_count {
                     description "Number of times workflow was restarted (due to failures)";
                     type uint32;
-                    mandatory true; 
+                    mandatory true;
                 }
             }
 
@@ -308,7 +308,7 @@ module stampede-schema {
                 leaf restart_count {
                     description "Number of times workflow was restarted (due to failures)";
                     type uint32;
-                    mandatory true; 
+                    mandatory true;
                 }
                 leaf status {
                     description "Status of workflow. 0=success, -1=failure";
@@ -323,7 +323,7 @@ module stampede-schema {
                 leaf transformation {
                     description "Logical name of the underlying executable";
                     type string;
-                    mandatory true; 
+                    mandatory true;
                 }
                 leaf argv {
                     description "All arguments given to transformation on command-line";
@@ -349,7 +349,7 @@ module stampede-schema {
             container stampede.task.edge {
                 description "Represents child/parent relationship between two tasks in DAX";
                 uses base-event;
-                
+
                 leaf parent.task.id {
                     description "Parent task";
                     type string;
@@ -365,7 +365,7 @@ module stampede-schema {
             container stampede.wf.map.task_job {
                 description "Relates a DAX task to a DAG job.";
                 uses base-event;
-                
+
                 leaf task.id {
                     description "Identifier for the task in the DAX";
                     type string;
@@ -381,7 +381,7 @@ module stampede-schema {
 	    container stampede.xwf.map.subwf_job {
                 description "Relates a sub workflow to the corresponding job instance";
                 uses base-event;
-                
+
                 leaf subwf.id {
                     description "Sub Workflow Identified / UUID";
                     type string;
@@ -403,7 +403,7 @@ module stampede-schema {
             container stampede.job.info {
                 description "A description of a job in the DAG";
                 uses base-event;
-                
+
                 leaf job.id {
                     description "Identifier for job in the DAG";
                     type string;
@@ -454,7 +454,7 @@ module stampede-schema {
             container stampede.job.edge {
                 description "Parent/child relationship between two jobs in the DAG";
                 uses base-event;
-                
+
                 leaf parent.job.id {
                     description "Parent job";
                     type string;
@@ -464,7 +464,7 @@ module stampede-schema {
                     description "Child job";
                     type string;
                     mandatory true;
-                }        
+                }
             }
 
 
@@ -504,7 +504,7 @@ module stampede-schema {
             container stampede.job_inst.submit.end {
                 uses sched-job-inst;
                 description "When executable job is submitted";
-             
+
                 leaf status {
                     description "Status of workflow. 0=success, -1=failure";
                     type int16;
@@ -520,7 +520,7 @@ module stampede-schema {
             container stampede.job_inst.held.end {
                 uses sched-job-inst;
                 description "When the job is released after being held";
-                
+
                 leaf status {
                     description "Status of workflow. 0=success, -1=failure";
                     type int16;
@@ -532,7 +532,7 @@ module stampede-schema {
             container stampede.job_inst.main.start {
                 uses sched-job-inst;
                 description "Start of execution of a scheduler job";
-                
+
                 leaf stdin.file {
                     description "Path to file containing standard input of job";
                     type string;
@@ -562,9 +562,9 @@ module stampede-schema {
             }
 
             container stampede.job_inst.main.end {
-                uses sched-job-inst;                
+                uses sched-job-inst;
                 description "End of main part of scheduler job";
-                
+
                 leaf stdin.file {
                     description "Path to file containing standard input of job";
                     type string;
@@ -616,13 +616,13 @@ module stampede-schema {
 		leaf exitcode{
 	            description "the exitcode with which the executable exited";
 	            type int32;
-		    mandatory true;		        
+		    mandatory true;
 		}
 
-		leaf multiplier_factor{ 
+		leaf multiplier_factor{
 		     description "the multiplier factor for use in statistics";
-		     type int32; 
-		     mandatory true; 
+		     type int32;
+		     mandatory true;
 		}
 
                 // These values will be set if the job is clustered.
@@ -638,7 +638,7 @@ module stampede-schema {
                     }
                 }
             }
-	    
+
             container stampede.job_inst.post.start {
                 description "Start of a postscript for a job instance";
                 uses sched-job-inst;
@@ -652,7 +652,7 @@ module stampede-schema {
             container stampede.job_inst.post.end {
                 description "End of a postscript for a job instance";
                 uses sched-job-inst;
-                
+
                 leaf status {
                     description "Status of postscript. 0 is success, -1=failure";
                     type int32;
@@ -669,7 +669,7 @@ module stampede-schema {
             container stampede.job_inst.host.info {
                 description "Host information associated with a job instance";
                 uses base-job-inst;
-                
+
                 leaf site {
                     description "Site name";
                     type string;
@@ -700,7 +700,7 @@ module stampede-schema {
             container stampede.job_inst.image.info {
                 description "Image size associated with a job instance";
                 uses base-job-inst;
-                
+
                 leaf size {
                     description "Image size";
                     type uint64;
@@ -716,7 +716,7 @@ module stampede-schema {
             container stampede.inv.start {
                 description "Start of an invocation";
                 uses base-event;
-           	
+
                 leaf job_inst.id {
                     description "Job instance identifier i.e the submit sequence generated by monitord";
                     type int32;
@@ -728,18 +728,18 @@ module stampede-schema {
                     mandatory true;
                 }
 	            leaf inv.id {
-                    description "Identifier for invocation. " + 
+                    description "Identifier for invocation. " +
                                 "Sequence number, with -1=prescript and -2=postscript";
                     type int32;
                     mandatory true;
                 }
-	
+
             }
 
             container stampede.inv.end {
                 description "End of an invocation";
                 uses base-event;
-                
+
 		leaf job_inst.id {
                     description "Job instance identifier i.e the submit sequence generated by monitord";
                     type int32;
@@ -758,7 +758,7 @@ module stampede-schema {
                 }
 		        leaf start_time{
 		            description "The start time of the event";
-		            type nl_ts;	     
+		            type nl_ts;
 		        }
                 leaf dur {
                     description "Duration of invocation";
@@ -774,7 +774,7 @@ module stampede-schema {
                     type decimal64 {
                         fraction-digits "6";
                     }
-                }	
+                }
 
 	        leaf exitcode{
 	            description "the exitcode with which the	            executable exited";
@@ -803,8 +803,8 @@ module stampede-schema {
 	    //metadata related events
 	    container stampede.static.meta.start{
 	    	uses base-event;
-	    }	    
-	    
+	    }
+
 	    container stampede.static.meta.end{
 	    	uses base-event;
 	    }

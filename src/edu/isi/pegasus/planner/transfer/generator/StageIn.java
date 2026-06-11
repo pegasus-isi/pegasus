@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -706,7 +707,8 @@ public class StageIn extends Abstract {
                         // sanity check
                         if (ft.getSourceURLCount() == 0) {
                             throw new RuntimeException(
-                                    "No source URL's available for stage-in( remote ) transfers for file "
+                                    "No source URL's available for stage-in( remote ) transfers for"
+                                            + " file "
                                             + ft
                                             + " for job "
                                             + job.getID());
@@ -1026,7 +1028,8 @@ public class StageIn extends Abstract {
             throws RuntimeException {
         StringBuilder error = new StringBuilder();
         error.append(
-                        "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ")
+                        "Unable to select a Physical Filename (PFN) for file with logical filename"
+                                + " (LFN) as ")
                 .append(rl.getLFN())
                 .append(" for transfer to destination site (")
                 .append(destinationSite)

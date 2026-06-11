@@ -15,16 +15,19 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.StringTokenizer;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.router.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * This class generates the DAX per the request for an lfn or a derivation.
@@ -71,26 +74,33 @@ public class GetDAX extends Toolkit {
                         + linefeed
                         + "    --verbose      increases the verbosity level."
                         + linefeed
-                        + " -l|--label label  uses the specified label for the output DAX, default \"test\"."
+                        + " -l|--label label  uses the specified label for the output DAX, default"
+                        + " \"test\"."
                         + linefeed
-                        + " -o|--output DAX   writes the generated results into outfn, default is stdout."
+                        + " -o|--output DAX   writes the generated results into outfn, default is"
+                        + " stdout."
                         + linefeed
                         + " -m|--maxdepth max only search up to the specified depth, default is "
                         + Route.MAXIMUM_DEPTH
                         + "."
                         + linefeed
-                        + "                   For complex or large graphs, you may want to increase this."
+                        + "                   For complex or large graphs, you may want to increase"
+                        + " this."
                         + linefeed
-                        + " -X|--xmlns prefix uses an XML namespace prefix for the generated DAX document."
+                        + " -X|--xmlns prefix uses an XML namespace prefix for the generated DAX"
+                        + " document."
                         + linefeed
                         + linefeed
                         + "Group 1: At least one of these must be used, but none of group 2 below:"
                         + linefeed
-                        + " -n|--namespace ns uses namespace ns to search for matching DVs, default null."
+                        + " -n|--namespace ns uses namespace ns to search for matching DVs, default"
+                        + " null."
                         + linefeed
-                        + " -i|--name name    uses the specified DV name to search for it, required."
+                        + " -i|--name name    uses the specified DV name to search for it,"
+                        + " required."
                         + linefeed
-                        + " -v|--ver vs       uses the specified version to narrow DVs, default null."
+                        + " -v|--ver vs       uses the specified version to narrow DVs, default"
+                        + " null."
                         + linefeed
                         + linefeed
                         + "Group 2: All of these may be mixed, but not used with group 1 above:"
@@ -101,9 +111,11 @@ public class GetDAX extends Toolkit {
                         + linefeed
                         + " -F|--filelist lof read the LFNs from file lolfn, one per line."
                         + linefeed
-                        + " -D|--dv dv[,..]   requests the DV or list of DVs to be produced. Each argument"
+                        + " -D|--dv dv[,..]   requests the DV or list of DVs to be produced. Each"
+                        + " argument"
                         + linefeed
-                        + "                   is a fully-qualified derivation name namespace::name:version"
+                        + "                   is a fully-qualified derivation name"
+                        + " namespace::name:version"
                         + linefeed
                         + "                   with the usual omission rules applying."
                         + linefeed
@@ -125,7 +137,8 @@ public class GetDAX extends Toolkit {
                         + m_application
                         + ", please read the message."
                         + linefeed
-                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check your"
+                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check"
+                        + " your"
                         + linefeed
                         + "         configuration files and setup before filing a bug report."
                         + linefeed);
@@ -306,7 +319,8 @@ public class GetDAX extends Toolkit {
             if (!flag && group2 == 0) {
                 me.showUsage();
                 throw new RuntimeException(
-                        "You must specify either group 1 (-n -i -v) or group 2 (-f -F -L -D) options!");
+                        "You must specify either group 1 (-n -i -v) or group 2 (-f -F -L -D)"
+                                + " options!");
             }
 
             // bug#90/91: warn about mixing options groups

@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -428,8 +429,8 @@ public class PegasusAWSBatchGS implements GridStart {
             String value = (String) job.envVariables.get(key);
             int ch = key.charAt(0);
             switch (ch) {
-                    // "BOTO_CONFIG", "GOOGLE_PKCS12", "IRODS_ENVIRONMENT_FILE", "S3CFG",
-                    // "SSH_PRIVATE_KEY", "X509_USER_PROXY"
+                // "BOTO_CONFIG", "GOOGLE_PKCS12", "IRODS_ENVIRONMENT_FILE", "S3CFG",
+                // "SSH_PRIVATE_KEY", "X509_USER_PROXY"
                 case 'B':
                     if (key.startsWith("BOTO_CONFIG") || key.startsWith("BOTO_CONFIG_")) {
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket));

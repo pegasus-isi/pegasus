@@ -15,6 +15,7 @@
 package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import java.io.*;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -69,7 +70,9 @@ public class Version {
         return getVersion();
     }
 
-    /** @return The pegasus version */
+    /**
+     * @return The pegasus version
+     */
     public String getVersion() {
         return props.getProperty("pegasus.build.version");
     }
@@ -78,17 +81,23 @@ public class Version {
         return getVersion().split("[.]", 3);
     }
 
-    /** @return Major version number */
+    /**
+     * @return Major version number
+     */
     public String getMajor() {
         return splitVersion()[0];
     }
 
-    /** @return Minor version number */
+    /**
+     * @return Minor version number
+     */
     public String getMinor() {
         return splitVersion()[1];
     }
 
-    /** @return Patch version number plus other tags */
+    /**
+     * @return Patch version number plus other tags
+     */
     public String getPatch() {
         return splitVersion()[2];
     }
@@ -101,7 +110,9 @@ public class Version {
         return getTimestamp();
     }
 
-    /** @return the build timestamp */
+    /**
+     * @return the build timestamp
+     */
     public String getTimestamp() {
         return props.getProperty("pegasus.build.timestamp");
     }
@@ -116,7 +127,9 @@ public class Version {
         return getPlatform();
     }
 
-    /** @return The build platform */
+    /**
+     * @return The build platform
+     */
     public String getPlatform() {
         return props.getProperty("pegasus.build.platform");
     }
@@ -164,7 +177,9 @@ public class Version {
         return SysInfo.OS_RELEASE.valueOf(release);
     }
 
-    /** @return The Git hash that this version of Pegasus was built from */
+    /**
+     * @return The Git hash that this version of Pegasus was built from
+     */
     public String getGitHash() {
         return props.getProperty("pegasus.build.git.hash");
     }

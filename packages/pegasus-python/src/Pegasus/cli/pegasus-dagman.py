@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 pegasus-dagman
 
@@ -68,7 +66,7 @@ def find_prog(prog, dir=[]):
 logger = logging.getLogger("pegasus-dagman")
 
 # Use pegasus-config to find our lib path
-print("Pegasus DAGMAN is %s" % sys.argv[0])
+print(f"Pegasus DAGMAN is {sys.argv[0]}")
 
 utils.configureLogging()
 
@@ -94,13 +92,12 @@ def dagman_launch(dagman_bin, arguments=[]):
     """Launches the condor_dagman program with all
     the arguments passed to pegasus-dagman"""
     if dagman_bin is not None:
-
         arguments.insert(0, "condor_scheduniv_exec." + os.getenv("CONDOR_ID"))
         try:
             dagman_proc = subprocess.Popen(
                 arguments, stdout=sys.stdout, stderr=sys.stderr, executable=dagman_bin
             )
-            logger.info("Launched Dagman with Pid %d" % dagman_proc.pid)
+            logger.info(f"Launched Dagman with Pid {dagman_proc.pid:d}")
         except OSError as err:
             logger.error("Could not launch Dagman.", err)
             sys.exit(1)
@@ -127,7 +124,7 @@ def monitord_launch(monitord_bin, arguments=[]):
                 stderr=subprocess.STDOUT,
             )
             log.close()
-            logger.info("Launched Monitord with Pid %d" % monitord_proc.pid)
+            logger.info(f"Launched Monitord with Pid {monitord_proc.pid:d}")
             return monitord_proc
         except OSError as err:
             logger.error("Could not launch Monitord.", err)
@@ -144,17 +141,16 @@ def is_dagman_copy_to_spool():
     copy_to_spool = subprocess.Popen(
         [condor_config_val, "DAGMAN_COPY_TO_SPOOL"], stdout=subprocess.PIPE, shell=False
     ).communicate()[0]
-    logger.info("DAGMAN_COPY_TO_SPOOL is set to %s" % copy_to_spool)
+    logger.info(f"DAGMAN_COPY_TO_SPOOL is set to {copy_to_spool}")
     if copy_to_spool.lower().strip() == "true":
         return True
-    else:
-        return False
+    return False
 
 
 def sighandler(signum, frame):
-    """ Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM """
+    """Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM"""
     #   global dagman, monitord
-    logger.info("pegasus-dagman caught SIGNAL %s" % signum)
+    logger.info(f"pegasus-dagman caught SIGNAL {signum}")
     if dagman is not None:
         os.kill(dagman.pid, signum)
 
@@ -171,14 +167,13 @@ def sighandler(signum, frame):
             monitord_shutdown_time = time.time()
         else:
             # All signals other than SIGUSR1 are passed as is
-            logger.info("pegasus-dagman sent signal %s to monitord" % signum)
+            logger.info(f"pegasus-dagman sent signal {signum} to monitord")
             os.kill(monitord.pid, signum)
 
 
 # -- main--------------------------------------------------------------
 
 if __name__ == "__main__":
-
     # Create a new process group. PM-972: A change in HTCondor 8.2.9
     # (https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=5173) means that
     # HTCondor now sets up the process group for the process, and setpgid()
@@ -244,7 +239,7 @@ if __name__ == "__main__":
                         "monitord last exited with status %s", monitord.returncode
                     )
                     logger.info(
-                        "next monitord launch scheduled in about %d seconds" % (backoff)
+                        f"next monitord launch scheduled in about {backoff:d} seconds"
                     )
                     monitord_next_start = t + backoff - 1
                 # time to restart yet?
@@ -258,8 +253,7 @@ if __name__ == "__main__":
                 # GH-2134 max attempts have been reached, and
                 # we are not launching monitord again
                 logger.info(
-                    "monitord was not relaunched as max attempts of %d reached"
-                    % monitord_launch_attempts
+                    f"monitord was not relaunched as max attempts of {monitord_launch_attempts:d} reached"
                 )
                 monitord = None
 
@@ -268,8 +262,7 @@ if __name__ == "__main__":
             t = time.time()
             if t - monitord_shutdown_time > MONITORD_KILL_TIME:
                 logger.info(
-                    "monitord shudown time expired. Sending SIGINT to process %d"
-                    % monitord.pid
+                    f"monitord shudown time expired. Sending SIGINT to process {monitord.pid:d}"
                 )
                 os.kill(monitord.pid, signal.SIGINT)
 
@@ -281,14 +274,11 @@ if __name__ == "__main__":
 
     # Dagman and Monitord have exited. Lets exit pegasus-dagman with
     # a merged returncode
-    logger.info("Dagman exited with code %d" % dagman.returncode)
+    logger.info(f"Dagman exited with code {dagman.returncode:d}")
     logger.info(
-        "Monitord exited with code %d with a total of %d launch attempts on the workflow"
-        % (monitord_return_code or monitord.returncode, monitord_launch_attempts)
+        f"Monitord exited with code {monitord_return_code or monitord.returncode:d} with a total of {monitord_launch_attempts:d} launch attempts on the workflow"
     )
     if copy_to_spool:
-        logger.info(
-            "Removing copied condor_dagman from submit directory %s" % dagman_bin
-        )
+        logger.info(f"Removing copied condor_dagman from submit directory {dagman_bin}")
         os.remove(dagman_bin)
     sys.exit(dagman.returncode & monitord.returncode)

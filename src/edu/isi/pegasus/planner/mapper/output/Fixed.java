@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;

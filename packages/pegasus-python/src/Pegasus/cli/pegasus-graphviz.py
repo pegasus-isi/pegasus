@@ -61,11 +61,11 @@ def rgb2hex(r, g, b):
 
 # Generate some colors to add to the list
 s = 0.7
-for l in [0.70, 0.55]:
+for _l in [0.70, 0.55]:
     for h in range(0, 101, 10):
         if h == 40:
             continue
-        rgb = colorsys.hls_to_rgb(h / 100.0, l, s)
+        rgb = colorsys.hls_to_rgb(h / 100.0, _l, s)
         COLORS.append(rgb2hex(*rgb))
 
 
@@ -109,7 +109,7 @@ class Job(Node):
         if renderer.label_type == "xform":
             label = self.xform
         elif renderer.label_type == "id":
-            label = "%s" % self.id
+            label = f"{self.id}"
         elif renderer.label_type == "xform-id":
             label = f"{self.xform}\\n{self.id}"
         elif renderer.label_type == "label-xform":
@@ -176,7 +176,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             if name == "job":
                 job.xform = attrs.get("name")
                 if job.xform is None:
-                    raise Exception("Invalid DAX: job name missing for job %s" % job.id)
+                    raise Exception(f"Invalid DAX: job name missing for job {job.id}")
                 ns = attrs.get("namespace")
                 version = attrs.get("version")
                 if ns is not None:
@@ -233,11 +233,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 f.parents.append(self.last_job)
                 self.last_job.children.append(f)
             elif link == "inout":
-                print(
-                    "WARNING: inout file {} of {} creates a cycle.".format(
-                        f.id, self.last_job
-                    )
-                )
+                print(f"WARNING: inout file {f.id} of {self.last_job} creates a cycle.")
                 f.children.append(self.last_job)
                 f.parents.append(self.last_job)
                 self.last_job.parents.append(f)
@@ -245,7 +241,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             elif link == "none":
                 pass
             else:
-                raise Exception("Unrecognized link value: %s" % link)
+                raise Exception(f"Unrecognized link value: {link}")
         elif name == "child":
             self.lastchild = attrs.get("ref")
         elif name == "parent":
@@ -393,11 +389,7 @@ def parse_yamlfile(fname, include_files):
                     j.children.append(f)
                     f.parents.append(j)
                 elif link_type == "inout":
-                    print(
-                        "WARNING: inout file {} of {} creates a cycle.".format(
-                            f.id, j.id
-                        )
-                    )
+                    print(f"WARNING: inout file {f.id} of {j.id} creates a cycle.")
                     f.children.append(j)
                     f.parents.append(j)
                     j.parents.append(f)
@@ -447,7 +439,7 @@ def remove_xforms(dag, xforms):
     for _id in nodes.keys():
         node = nodes[_id]
         if isinstance(node, Job) and node.xform in xforms:
-            print("Removing %s" % node.id)
+            print(f"Removing {node.id}")
             for p in node.parents:
                 p.children.remove(node)
             for c in node.children:
@@ -469,8 +461,8 @@ def transitivereduction(dag):
     def visit(n):
         if n.mark == 1:
             raise Exception(
-                "Workflow is not a DAG: Node %s is part of a "
-                "cycle. Try without -f or with -s." % n
+                f"Workflow is not a DAG: Node {n} is part of a "
+                "cycle. Try without -f or with -s."
             )
 
         if n.mark == 0:
@@ -521,7 +513,6 @@ def transitivereduction(dag):
         # Compute the transitive closure and identify redundant edges
         reduced = []
         for w in v.children:
-
             w.mark += 1
 
             if isinstance(w, Job) and isinstance(v, Job) and w in v.closure:
@@ -601,8 +592,7 @@ class emit_dot:
 
     def renderNode(self, id, label, fillcolor, color="#000000", shape="ellipse"):
         self.out.write(
-            '    "%s" [shape=%s,color="%s",fillcolor="%s",label="%s"]\n'
-            % (id, shape, color, fillcolor, label)
+            f'    "{id}" [shape={shape},color="{color}",fillcolor="{fillcolor}",label="{label}"]\n'
         )
 
     def renderEdge(self, parentid, childid, color="#000000"):
@@ -634,7 +624,7 @@ SUPPORTED_DRAW_FORMATS = {"jpg", "jpeg", "png", "pdf", "gif", "svg"}
 
 def main():
     labeloptions = ["label", "xform", "id", "xform-id", "label-xform", "label-id"]
-    labeloptionsstring = ", ".join("'%s'" % l for l in labeloptions)
+    labeloptionsstring = ", ".join(f"'{lo}'" for lo in labeloptions)
     usage = "%prog [options] FILE"
     description = """Parses FILE and generates a DOT-formatted
 graphical representation of the DAG. FILE can be a Condor
@@ -654,9 +644,9 @@ DAGMan file, Pegasus YAML file, or Pegasus DAX file."""
         action="store",
         dest="label",
         default="label",
-        help="What attribute to use for labels. One of %s. "
+        help=f"What attribute to use for labels. One of {labeloptionsstring}. "
         "For 'label', the transformation is used for jobs that have no node-label. "
-        "[default: label]" % labeloptionsstring,
+        "[default: label]",
     )
     parser.add_option(
         "-o",
@@ -715,7 +705,7 @@ dot representation is output.""",
         parser.error("Either both --width and --height or neither")
 
     if options.label not in labeloptions:
-        parser.error("--label must be one of %s" % labeloptionsstring)
+        parser.error(f"--label must be one of {labeloptionsstring}")
 
     if len(args) < 1:
         parser.error("Please specify FILE")

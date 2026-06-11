@@ -17,14 +17,17 @@ package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class inserts annotations into the backend database.
@@ -84,7 +87,8 @@ public class InsertMeta extends Toolkit {
                         + " -f|--file lfn   limits candidates to logical filename matches."
                         + linefeed
                         + linefeed
-                        + "Option groups 1 and 2 are mutually exclusive. The metadata file is a texual"
+                        + "Option groups 1 and 2 are mutually exclusive. The metadata file is a"
+                        + " texual"
                         + linefeed
                         + "file with at least three columns, the key, the type and the value(s)."
                         + linefeed);

@@ -34,22 +34,22 @@ typedef struct {
     /* common (shared) portion */
     const char*      provider;    /* name of this provider */
     struct timeval   stamp;   /* when was this snapshot taken */
-    struct utsname   uname;   /* general system information */ 
+    struct utsname   uname;   /* general system information */
     unsigned long    pagesize;    /* size of a page in bytes */
 
     /* fall-back provider-specific portion */
 #ifdef _SC_PHYS_PAGES
-    unsigned long long ram_total; 
+    unsigned long long ram_total;
 #endif /* _SC_PHYS_PAGES */
 #ifdef _SC_AVPHYS_PAGES
-    unsigned long long ram_avail; 
+    unsigned long long ram_avail;
 #endif /* _SC_AVPHYS_PAGES */
 
 #ifdef _SC_NPROCESSORS_CONF
-    unsigned short   cpu_total; 
+    unsigned short   cpu_total;
 #endif /* _SC_NPROCESSORS_CONF */
 #ifdef _SC_NPROCESSORS_ONLN
-    unsigned short   cpu_online; 
+    unsigned short   cpu_online;
 #endif /* _SC_NPROCESSORS_ONLN */
 
 } MachineBasicInfo;

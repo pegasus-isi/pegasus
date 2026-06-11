@@ -171,7 +171,7 @@ class TestWritable:
     ):
 
         kwargs = {"mode": "w+"}
-        if type(file) == type(StringIO):
+        if type(file) is type(StringIO):
             kwargs = {}
 
         with file(**kwargs) as f:
@@ -216,7 +216,7 @@ class TestWritable:
     def test_set_path_given_TemporaryFile(self, writable_obj):
         f = TemporaryFile(mode="w")
         writable_obj.write(f)
-        assert writable_obj._path == None
+        assert writable_obj._path is None
         with pytest.raises(PegasusError) as e:
             writable_obj.path
 
@@ -227,7 +227,7 @@ class TestWritable:
     def test_set_path_given_StringIO(self, writable_obj):
         f = StringIO()
         writable_obj.write(f)
-        assert writable_obj._path == None
+        assert writable_obj._path is None
         with pytest.raises(PegasusError) as e:
             writable_obj.path
 
@@ -250,5 +250,5 @@ def test_filter_out_nones():
 
 
 def test_filter_out_nones_invalid_type():
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         _filter_out_nones(123)

@@ -19,11 +19,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.partitioner.Partition;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract cluster class structure. */
 public class AbstractTest {

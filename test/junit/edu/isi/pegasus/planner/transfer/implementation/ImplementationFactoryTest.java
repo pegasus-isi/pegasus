@@ -25,12 +25,16 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class ImplementationFactoryTest {
 
     @Test

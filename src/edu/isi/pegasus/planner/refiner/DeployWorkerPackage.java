@@ -47,6 +47,7 @@ import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1028,7 +1029,8 @@ public class DeployWorkerPackage extends Engine {
         intersection.retainAll(nonsharedFSSet);
         if (!intersection.isEmpty()) {
             throw new RuntimeException(
-                    "Worker package is set to be staged for both sharedfs and nonsharedfs|condorio mode for sites "
+                    "Worker package is set to be staged for both sharedfs and nonsharedfs|condorio"
+                            + " mode for sites "
                             + intersection);
         }
 
@@ -1400,7 +1402,8 @@ public class DeployWorkerPackage extends Engine {
                     mLogger.log(
                             "Not using the worker package from the submit host install "
                                     + mSubmitHostWorkerPackage
-                                    + " The scratch file server is a file url scheme for compute site "
+                                    + " The scratch file server is a file url scheme for compute"
+                                    + " site "
                                     + site,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     useSubmitHostWF = false;
@@ -1432,7 +1435,8 @@ public class DeployWorkerPackage extends Engine {
                 error.append("Unable to construct default entry for pegasus::worker for site ")
                         .append(site)
                         .append(
-                                " Add entry in TC for pegasus::worker of type STAGEABLE for sysinfo ")
+                                " Add entry in TC for pegasus::worker of type STAGEABLE for sysinfo"
+                                        + " ")
                         .append(mSiteStore.getSysInfo(site));
                 throw new RuntimeException(error.toString());
             }

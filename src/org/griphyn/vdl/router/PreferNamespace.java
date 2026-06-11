@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.classes.Derivation;
 import org.griphyn.vdl.util.Logging;
+
+import java.util.*;
 
 /**
  * This implementation of the arbitration interface prefers the first derivation within the same

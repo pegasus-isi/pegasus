@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException;
+
 import java.util.Collection;
 
 /**

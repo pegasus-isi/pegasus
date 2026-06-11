@@ -71,6 +71,6 @@ pegasus-plan \
     --relative-submit-dir ${RUN_ID} \
     --cleanup leaf \
     --submit \
-    ${DAX} 
+    ${DAX}
 
 set +x

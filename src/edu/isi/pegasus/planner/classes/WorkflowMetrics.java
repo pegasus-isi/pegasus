@@ -254,7 +254,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int type = job.getJobType();
         switch (type) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 mNumComputeTasks++;
                 break;
@@ -294,7 +294,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int type = job.getJobType();
         switch (type) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 if (job instanceof AggregatedJob) {
                     mNumClusteredJobs++;
@@ -378,7 +378,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int type = job.getJobType();
         switch (type) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 if (job instanceof AggregatedJob) {
                     mNumClusteredJobs--;
@@ -453,7 +453,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int type = job.getJobType();
         switch (type) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 mNumComputeTasks--;
                 break;
@@ -537,7 +537,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int count = 0;
         switch (jobType) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 count = mNumComputeTasks;
                 break;
@@ -566,7 +566,7 @@ public class WorkflowMetrics extends Data implements Cloneable {
         int count = 0;
         switch (jobType) {
 
-                // treating compute and staged compute as same
+            // treating compute and staged compute as same
             case Job.COMPUTE_JOB:
                 count = mNumComputeJobs;
                 break;

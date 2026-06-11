@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -697,7 +698,8 @@ public class InPlace extends AbstractCleanupStrategy {
             // the clustered cleanup job we are trying to create has
             // no files to delete
             mLogger.log(
-                    "\t\tClustered cleanup node is empty as files to be deleted are already deleted by other cleanup nodes "
+                    "\t\tClustered cleanup node is empty as files to be deleted are already deleted"
+                            + " by other cleanup nodes "
                             + clusteredCleanupNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;

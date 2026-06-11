@@ -188,7 +188,7 @@ Pegasus 4.8.0 Release has support for
     level https://pegasus.isi.edu/docs/4.8.0/data_transfers.php
 
 The following issues were addressed and more information can be found
-in the Pegasus Jira 
+in the Pegasus Jira
 
 #### New Features and Improvements
 
@@ -327,4 +327,3 @@ in the Pegasus Jira
     	        mode
 
 19) [PM-1218] – monitord replay against mysql with registration jobs [\#1332](https://github.com/pegasus-isi/pegasus/issues/1332)
-

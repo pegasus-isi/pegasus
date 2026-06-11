@@ -17,9 +17,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Collection;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the FileTransfer class. */
 public class FileTransferTest {

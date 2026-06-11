@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.dax.Invoke;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;

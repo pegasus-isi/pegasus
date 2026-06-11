@@ -779,4 +779,3 @@ In the file there are five types of events:
 
 .. |image0| image:: ../images/Pegasus_Job_State_Delay.jpg
    :width: 100.0%
-

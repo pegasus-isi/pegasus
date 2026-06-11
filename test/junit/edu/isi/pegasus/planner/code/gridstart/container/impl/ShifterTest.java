@@ -23,8 +23,10 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 /** Tests for the Shifter container shell wrapper class. */
 public class ShifterTest {

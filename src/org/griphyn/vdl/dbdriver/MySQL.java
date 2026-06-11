@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dbdriver;
 
+import org.griphyn.vdl.util.*;
+
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the driver API for the MySQL 4.* database.

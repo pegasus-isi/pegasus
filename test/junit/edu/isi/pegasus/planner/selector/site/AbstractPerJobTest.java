@@ -18,8 +18,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.selector.SiteSelector;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /**
  * Tests for the AbstractPerJob site selector class. Tests are exercised via the concrete Random

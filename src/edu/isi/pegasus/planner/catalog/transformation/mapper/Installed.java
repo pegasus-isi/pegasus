@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

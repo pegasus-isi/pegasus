@@ -22,11 +22,13 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the NetloggerJobMapper class. */
 public class NetloggerJobMapperTest {

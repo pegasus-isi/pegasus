@@ -16,9 +16,11 @@ package edu.isi.pegasus.planner.mapper.output;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
-import java.io.IOException;
+
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
+
+import java.io.IOException;
 
 /**
  * Maps the output files to a flat directory on the output site.

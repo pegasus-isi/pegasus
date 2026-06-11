@@ -21,7 +21,7 @@ EM_PORT = os.getuid() + 7919
 class EnsembleClientCommand(Command):
     def __init__(self):
         Command.__init__(self)
-        self.endpoint = "http://127.0.0.1:%d/" % EM_PORT
+        self.endpoint = f"http://127.0.0.1:{EM_PORT:d}/"
         self.username = emapp.config["USERNAME"]
         if not self.username:
             raise Exception("Specify USERNAME in configuration")
@@ -62,7 +62,7 @@ class EnsembleClientCommand(Command):
     def splitew(self, ew):
         r = ew.split(".")
         if len(r) != 2:
-            self.parser.error("Invalid ENSEMBLE.WORKFLOW: %s" % ew)
+            self.parser.error(f"Invalid ENSEMBLE.WORKFLOW: {ew}")
         return r
 
 
@@ -97,7 +97,7 @@ class ServerCommand(LoggingCommand):
             try:
                 manager.check_environment()
             except manager.EMError as e:
-                log.warning("%s: Ensemble manager disabled" % e.message)
+                log.warning(f"{e.message}: Ensemble manager disabled")
             else:
                 em_mgr = manager.EnsembleManager()
                 em_mgr.start()
@@ -183,7 +183,7 @@ class CreateCommand(EnsembleClientCommand):
             "max_running": self.options.max_running,
         }
 
-        response = self.post("/ensembles", data=request)
+        self.post("/ensembles", data=request)
 
 
 def pathfind(command):
@@ -238,11 +238,11 @@ class SubmitCommand(EnsembleClientCommand):
 
         exe = pathfind(command)
         if exe is None:
-            p.error("invalid planning command: %s" % command)
+            p.error(f"invalid planning command: {command}")
 
         args.insert(0, exe)
 
-        command = '"%s"' % '" "'.join(args)
+        command = '"{}"'.format('" "'.join(args))
 
         data = {
             "name": workflow,
@@ -251,7 +251,7 @@ class SubmitCommand(EnsembleClientCommand):
             "plan_command": command,
         }
 
-        response = self.post("/ensembles/%s/workflows" % ensemble, data=data)
+        self.post(f"/ensembles/{ensemble}/workflows", data=data)
 
 
 class WorkflowsCommand(EnsembleClientCommand):
@@ -275,7 +275,7 @@ class WorkflowsCommand(EnsembleClientCommand):
         if len(self.args) > 1:
             self.parser.error("Invalid argument")
 
-        response = self.get("/ensembles/%s/workflows" % self.args[0])
+        response = self.get(f"/ensembles/{self.args[0]}/workflows")
 
         result = response.json()
 
@@ -325,17 +325,17 @@ class StatusCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print("ID:           %s" % result["id"])
-        print("Name:         %s" % result["name"])
-        print("Plan Command: %s" % result["plan_command"])
-        print("Created:      %s" % formatts(result["created"]))
-        print("Updated:      %s" % formatts(result["updated"]))
-        print("State:        %s" % result["state"])
+        print("ID:           {}".format(result["id"]))
+        print("Name:         {}".format(result["name"]))
+        print("Plan Command: {}".format(result["plan_command"]))
+        print("Created:      {}".format(formatts(result["created"])))
+        print("Updated:      {}".format(formatts(result["updated"])))
+        print("State:        {}".format(result["state"]))
         print("UUID:         %s" % (result["wf_uuid"] or ""))
-        print("Priority:     %s" % result["priority"])
-        print("Base Dir:     %s" % result["basedir"])
+        print("Priority:     {}".format(result["priority"]))
+        print("Base Dir:     {}".format(result["basedir"]))
         print("Submit Dir:   %s" % (result["submitdir"] or ""))
-        print("Log:          %s" % result["log"])
+        print("Log:          {}".format(result["log"]))
 
 
 class AnalyzeCommand(EnsembleClientCommand):
@@ -363,7 +363,7 @@ class StateChangeCommand(EnsembleClientCommand):
             self.parser.error("Invalid argument")
 
         response = self.post(
-            "/ensembles/%s" % self.args[0], data={"state": self.newstate}
+            f"/ensembles/{self.args[0]}", data={"state": self.newstate}
         )
         result = response.json()
 
@@ -431,7 +431,7 @@ class ConfigCommand(EnsembleClientCommand):
         if len(request) == 0:
             self.parser.error("Specify --max-planning or --max-running")
 
-        response = self.post("/ensembles/%s" % ensemble, data=request)
+        response = self.post(f"/ensembles/{ensemble}", data=request)
 
         result = response.json()
 
@@ -575,7 +575,8 @@ class CronTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            f"/ensembles/{self.args.ensemble}/triggers/cron", data=request,
+            f"/ensembles/{self.args.ensemble}/triggers/cron",
+            data=request,
         )
 
         print(response.json()["message"])
@@ -648,7 +649,8 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         }
 
         response = self.post(
-            f"/ensembles/{self.args.ensemble}/triggers/file_pattern", data=request,
+            f"/ensembles/{self.args.ensemble}/triggers/file_pattern",
+            data=request,
         )
 
         print(response.json()["message"])

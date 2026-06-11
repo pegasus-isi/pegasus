@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.cluster;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.partitioner.Partition;
+
 import java.util.List;
 
 /**

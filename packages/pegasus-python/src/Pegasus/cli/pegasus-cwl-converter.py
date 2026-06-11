@@ -30,6 +30,7 @@ from Pegasus.api.errors import DuplicateError
 
 log = logging.getLogger("logger")
 
+
 # --- logging ------------------------------------------------------------------
 class ColoredFormatter(logging.Formatter):
     # printing debug level logs in yellow
@@ -38,9 +39,7 @@ class ColoredFormatter(logging.Formatter):
         "%(message)s \u001b[0m"
     )
 
-    debug_format = (
-        "%(asctime)s %(levelname)7s:  [%(funcName)s:%(lineno)d] " "%(message)s"
-    )
+    debug_format = "%(asctime)s %(levelname)7s:  [%(funcName)s:%(lineno)d] %(message)s"
 
     def __init__(self):
         super().__init__("%(asctime)s %(levelname)7s:  %(message)s")
@@ -207,9 +206,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
 
         if not tool_path.is_absolute():
             raise ValueError(
-                "{}.baseCommand: {} must be an absolute path".format(
-                    cwl_cmd_ln_tool.id, cwl_cmd_ln_tool.baseCommand
-                )
+                f"{cwl_cmd_ln_tool.id}.baseCommand: {cwl_cmd_ln_tool.baseCommand} must be an absolute path"
             )
 
         log.debug(f"baseCommand: {tool_path}")
@@ -223,9 +220,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             is_stageable = tr_specs[tool_path.name]["is_stageable"]
         except KeyError:
             log.warning(
-                "Unable to look up transformation: {} in transformation spec file. Using defaults: site='local', is_stageable=True".format(
-                    tool_path.name
-                )
+                f"Unable to look up transformation: {tool_path.name} in transformation spec file. Using defaults: site='local', is_stageable=True"
             )
 
         container_name = None
@@ -270,9 +265,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
                         pass
 
                     log.info(
-                        "Added <Container name={}, container_type='docker', image={}, image_site='local'> from CommandLineTool: {}".format(
-                            container_name, image, cwl_cmd_ln_tool.id
-                        )
+                        f"Added <Container name={container_name}, container_type='docker', image={image}, image_site='local'> from CommandLineTool: {cwl_cmd_ln_tool.id}"
                     )
                     log.warning(
                         "Container types in the transformation catalog will need to be modified if containers are not of type: docker or if image file exists on a site other than 'local'"
@@ -289,9 +282,7 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             container=container_name,
         )
         log.debug(
-            "tr = Transformation({}, site={}, pfn={}, is_stageable={})".format(
-                tool_path.name, site, str(tool_path), is_stageable
-            )
+            f"tr = Transformation({tool_path.name}, site={site}, pfn={str(tool_path)}, is_stageable={is_stageable})"
         )
         log.info(f"Adding <Transformation {tr.name}>")
 
@@ -299,15 +290,11 @@ def build_pegasus_tc(tr_specs: dict, cwl_wf: cwl.Workflow) -> TransformationCata
             tc.add_transformations(tr)
         except DuplicateError:
             log.warning(
-                "<Transformation {}> is a duplicate and has already been added.".format(
-                    tr.name
-                )
+                f"<Transformation {tr.name}> is a duplicate and has already been added."
             )
 
     log.info(
-        "Building transformation catalog complete. {} transformations, {} containers added.".format(
-            len(tc.transformations), len(tc.containers)
-        )
+        f"Building transformation catalog complete. {len(tc.transformations)} transformations, {len(tc.containers)} containers added."
     )
 
     return tc
@@ -339,9 +326,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
                 rc.add_replica("local", input_name, current_wf_inputs["path"])
             except KeyError:
                 log.exception(
-                    "Unable to obtain a path (pfn) for input file: {} from input spec file".format(
-                        input_name
-                    )
+                    f"Unable to obtain a path (pfn) for input file: {input_name} from input spec file"
                 )
                 sys.exit(1)
 
@@ -360,13 +345,12 @@ def collect_files(cwl_wf: cwl.Workflow) -> dict:
             f = get_basename(_input.id)
             wf_files[f] = f
             log.info(f"Collected input file: {f}")
-            log.debug("wf_files[{0}] = {0}".format(f))
+            log.debug(f"wf_files[{f}] = {f}")
 
         elif (
             isinstance(_input.type, cwl.InputArraySchema)
             and _input.type.items == "File"
         ):
-
             raise NotImplementedError(
                 "Support for File[] workflow input type in development"
             )
@@ -388,9 +372,7 @@ def collect_files(cwl_wf: cwl.Workflow) -> dict:
                 finally:
                     if not v:
                         raise ValueError(
-                            "outputBinding.glob must be specified (e.g. file1.txt) for {}".format(
-                                step.run
-                            )
+                            f"outputBinding.glob must be specified (e.g. file1.txt) for {step.run}"
                         )
 
                 if any(c in "*$" for c in v):
@@ -404,11 +386,7 @@ def collect_files(cwl_wf: cwl.Workflow) -> dict:
                     "Support for output types other than File is in development"
                 )
 
-    log.info(
-        "Collection of workflow files complete. {} files collected".format(
-            len(wf_files)
-        )
-    )
+    log.info(f"Collection of workflow files complete. {len(wf_files)} files collected")
 
     return wf_files
 
@@ -435,9 +413,7 @@ def collect_input_strings(wf_inputs: dict, cwl_wf: cwl.Workflow) -> dict:
                 sys.exit(1)
 
     log.info(
-        "Collection of workflow input strings complete. {} string/string[] inputs collected".format(
-            len(wf_input_str)
-        )
+        f"Collection of workflow input strings complete. {len(wf_input_str)} string/string[] inputs collected"
     )
 
     return wf_input_str
@@ -553,7 +529,6 @@ def build_pegasus_wf(
                             for f in step_inputs[get_name(step.id, _input.id)]
                         )
                     elif _input.type.items == "string":
-
                         current_arg += separator.join(
                             wf_input_str[step_inputs[get_name(step.id, _input.id)]]
                         )

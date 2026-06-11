@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJob;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Collection;
@@ -117,7 +118,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
                     .append(txJob.getSiteHandle());
             error.append(" . ")
                     .append(
-                            "Either add an entry in the TC or make sure that PEGASUS_HOME is set as an env profile in the site catalog for site ")
+                            "Either add an entry in the TC or make sure that PEGASUS_HOME is set as"
+                                    + " an env profile in the site catalog for site ")
                     .append(txJob.getSiteHandle())
                     .append(" . ");
             mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
@@ -288,7 +290,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         if (envs == null) {
             // cannot create default TC
             mLogger.log(
-                    "Unable to create a default entry for as could not construct necessary environment "
+                    "Unable to create a default entry for as could not construct necessary"
+                            + " environment "
                             + Separator.combine(namespace, name, version),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             // set the flag back to true

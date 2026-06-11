@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.site.heft.Algorithm;
 import edu.isi.pegasus.planner.selector.site.heft.HeftBag;
+
 import java.util.Iterator;
 import java.util.List;
 

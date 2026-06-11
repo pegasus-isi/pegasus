@@ -171,5 +171,3 @@ Example below
             longitude: 0
             organization: N/A
             subdomain: ads.isi.edu
-
-

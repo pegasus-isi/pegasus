@@ -21,9 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Iterator;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the AggregatedJob class. */
 public class AggregatedJobTest {

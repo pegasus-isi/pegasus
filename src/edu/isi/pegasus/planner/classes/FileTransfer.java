@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;

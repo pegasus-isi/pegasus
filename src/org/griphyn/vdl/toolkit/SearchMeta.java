@@ -16,15 +16,18 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.Iterator;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.Iterator;
 
 /**
  * This class searches definitions or LFNs which match a query.

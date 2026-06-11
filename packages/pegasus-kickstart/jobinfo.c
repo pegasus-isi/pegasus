@@ -282,12 +282,12 @@ int printYAMLJobInfo(FILE *out, int indent, const char* tag, const JobInfo* job)
 
     /* start tag with indentation */
     fprintf(out, "%*s%s:\n", indent, "", tag);
-    fprintf(out, "%*s  start: %s\n", indent, "", 
+    fprintf(out, "%*s  start: %s\n", indent, "",
             fmtisodate(job->start.tv_sec, job->start.tv_usec));
 
     /* ensure duration is always non-zero and greater than stime+utime */
     double duration = doubletime(job->finish) - doubletime(job->start);
-    if (duration < 0.003) 
+    if (duration < 0.003)
         duration = 0.003;
     fprintf(out, "%*s  duration: %.3f\n", indent, "", duration);
 
@@ -379,4 +379,3 @@ void deleteJobInfo(JobInfo* jobinfo) {
     /* final invalidation */
     jobinfo->isValid = 0;
 }
-

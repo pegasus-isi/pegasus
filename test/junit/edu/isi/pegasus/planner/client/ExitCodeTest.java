@@ -20,12 +20,14 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gnu.getopt.LongOpt;
+
+import org.griphyn.vdl.toolkit.Toolkit;
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import org.griphyn.vdl.toolkit.Toolkit;
-import org.junit.jupiter.api.Test;
 
 /** Structural tests for the ExitCode client class via reflection. */
 public class ExitCodeTest {

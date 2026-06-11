@@ -5,4 +5,3 @@ echo "Hello world!"
 
 # in the DAX, this job is specified to have an f.c output file
 echo "Hello world!" > $1
-

@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.directive;
 
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.parser.*;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.MissingResourceException;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.parser.*;
 
 /**
  * The class converts VDLt syntax into VDLx syntax.

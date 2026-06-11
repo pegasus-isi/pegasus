@@ -26,8 +26,20 @@ import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.griphyn.vdl.toolkit.Toolkit;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -45,15 +57,6 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
-import org.griphyn.vdl.toolkit.Toolkit;
 
 /**
  * This class interfaces the with the replica catalog API to delve into the underlying true catalog
@@ -228,26 +231,34 @@ public class RCClient extends Toolkit {
                         + linefeed
                         + " -v|--verbose   increases the verbosity level"
                         + linefeed
-                        + " -p|--pref k=v  enters the specified mapping into preferences (multi-use)."
+                        + " -p|--pref k=v  enters the specified mapping into preferences"
+                        + " (multi-use)."
                         + linefeed
-                        + " -P|--prefix property   prefix of properties to use to connect to RC. defaults to "
+                        + " -P|--prefix property   prefix of properties to use to connect to RC."
+                        + " defaults to "
                         + ReplicaCatalog.c_prefix
                         + linefeed
                         + "                remember quoting, e.g. -p 'format=%l %p %a'"
                         + linefeed
-                        + " -i|--insert fn the path to the file containing the mappings to be inserted."
+                        + " -i|--insert fn the path to the file containing the mappings to be"
+                        + " inserted."
                         + linefeed
-                        + "                Each line in the file denotes one mapping of format <LFN> <PFN> [k=v [..]]"
+                        + "                Each line in the file denotes one mapping of format"
+                        + " <LFN> <PFN> [k=v [..]]"
                         + linefeed
-                        + " -d|--delete fn the path to the file containing the mappings to be deleted."
+                        + " -d|--delete fn the path to the file containing the mappings to be"
+                        + " deleted."
                         + linefeed
-                        + "                Each line in the file denotes one mapping of format <LFN> <PFN> [k=v [..]]."
+                        + "                Each line in the file denotes one mapping of format"
+                        + " <LFN> <PFN> [k=v [..]]."
                         + linefeed
-                        + " -l|--lookup fn the path to the file containing the LFN's to be looked up."
+                        + " -l|--lookup fn the path to the file containing the LFN's to be looked"
+                        + " up."
                         + linefeed
                         + "                Each line in the file denotes one LFN"
                         + linefeed
-                        + "                For now attributes are not matched to determine the entries to delete."
+                        + "                For now attributes are not matched to determine the"
+                        + " entries to delete."
                         + linefeed
                         + " cmd [args]     exactly one of the commands below with arguments.");
 
@@ -260,7 +271,8 @@ public class RCClient extends Toolkit {
                         + linefeed
                         + " o permit whitespaces within PFNs (but not in SITE nor LFN)"
                         + linefeed
-                        + " o permit commands to deal with values that contain whitespaces (quoting)"
+                        + " o permit commands to deal with values that contain whitespaces"
+                        + " (quoting)"
                         + linefeed
                         + " o add some missing out-of-bounds checks to the format string"
                         + linefeed);
@@ -306,8 +318,12 @@ public class RCClient extends Toolkit {
      * @exception MissingResourceException
      */
     void connect(PegasusProperties properties, String propertyPrefix, String file)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     MissingResourceException {
 
         if (propertyPrefix != null) {

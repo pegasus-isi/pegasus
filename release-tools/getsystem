@@ -11,4 +11,3 @@ if [ $? != 0 ]; then
 fi
 echo $SYSTEM
 exit 0
-

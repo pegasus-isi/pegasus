@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-
-"""
-:mod:`analyzer` exposes an API to retrieve information regarding successful or failed jobs
+""":mod:`analyzer` exposes an API to retrieve information regarding successful or failed jobs.
 
 Basic Usage::
 
@@ -21,7 +18,6 @@ import tempfile
 import typing
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Dict
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -31,13 +27,12 @@ from Pegasus.tools import kickstart_parser, utils
 logger = logging.getLogger("pegasus-analyzer")
 utils.configureLogging(level=logging.WARNING)
 
-if sys.version_info > (3, 6):
-    setattr(typing, "_ClassVar", typing.ClassVar)
+typing._ClassVar = typing.ClassVar
 
 
 # --- classes -------------------------------------------------------------------------
 class WORKFLOW_STATUS(Enum):
-    """Workflow Status"""
+    """Workflow Status."""
 
     UNKNOWN = "unknown"
     RUNNING = "running"
@@ -46,10 +41,9 @@ class WORKFLOW_STATUS(Enum):
 
 
 class Job:
-    def __init__(self, job_name, job_state=""):
-        """
-        Initializes the Job class, setting job name,
-        and state, if provided
+    def __init__(self, job_name, job_state="") -> None:
+        """Initializes the Job class, setting job name,
+        and state, if provided.
         """
         self.name = job_name  # Job name
         self.state = job_state  # Job state
@@ -77,10 +71,8 @@ class Job:
         self.condor_subs = {}  # Lists of condor substitutions rom DAG VARS line
         self.wf_submit_dir = None  # the value of the variable wf_submit_dir indicating  wf submit directory in the submit file
 
-    def set_state(self, new_state):
-        """
-        This function updates a job state
-        """
+    def set_state(self, new_state) -> None:
+        """This function updates a job state."""
         self.state = new_state
 
 
@@ -162,7 +154,7 @@ class JobInstance:
     subwf_dir: str = None
     stdout_text: str = None
     stderr_text: str = None
-    tasks: Dict[str, Task] = field(default_factory=lambda: ({}))
+    tasks: dict[str, Task] = field(default_factory=lambda: ({}))
 
 
 @dataclass
@@ -172,7 +164,7 @@ class Jobs:
     failed: int = 0
     held: int = 0
     unsubmitted: int = 0
-    job_details: Dict[str, Dict] = field(default_factory=lambda: ({}))
+    job_details: dict[str, dict] = field(default_factory=lambda: ({}))
 
 
 @dataclass
@@ -192,13 +184,11 @@ class Workflow:
 
 # --- classes to store analyzer output ------------------------------------------------
 class AnalyzerOutput:
-    def __init__(self):
-        """
-        Initializes the Analyzer output class
-        """
+    def __init__(self) -> None:
+        """Initializes the Analyzer output class."""
         self.root_wf_uuid = None  # root workflow uuid
         self.root_submit_dir = None  # root workflow submit directory
-        self.workflows: Dict[Str:Workflow] = {}
+        self.workflows: dict[str, Workflow] = {}
         self.structure_output = {
             "root_wf_uuid": None,
             "submit_directory": None,
@@ -206,20 +196,17 @@ class AnalyzerOutput:
         }
 
     def as_dict(self):
-        """
-        Converts all data classes and returns the analyzer output as a dictionary
+        """Converts all data classes and returns the analyzer output as a dictionary.
 
         :return: A dict containing all workflow details
         :rtype: Dict[str,Dict]
         """
-
         for wf in self.workflows:
             self.structure_output["workflows"][wf] = asdict(self.workflows[wf])
         return self.structure_output
 
     def get_failed_workflows(self):
-        """
-        Returns a dictionary of failed workflows
+        """Returns a dictionary of failed workflows.
 
         :return: Dict of returned :class:`Pegasus.analyzer.Workflow` objects
         :rtype: Dict[str,Workflow]
@@ -231,8 +218,7 @@ class AnalyzerOutput:
         return failed_wfs
 
     def get_all_jobs(self):
-        """
-        Returns a dictionary of all jobs' details for the root workflow
+        """Returns a dictionary of all jobs' details for the root workflow.
 
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
@@ -240,13 +226,12 @@ class AnalyzerOutput:
         return self.workflows["root"].jobs.job_details
 
     def get_jobs_counts(self):
-        """
-        Returns a dataclass of jobs counts
+        """Returns a dataclass of jobs counts.
 
         :return: A dataclass :class:`Pegasus.analyzer.Counts` object
         """
         jobs = self.workflows["root"].jobs
-        counts = Counts(
+        return Counts(
             jobs.total,
             jobs.success,
             jobs.failed,
@@ -256,11 +241,9 @@ class AnalyzerOutput:
             [],
             [],
         )
-        return counts
 
     def get_failed_jobs(self):
-        """
-        Returns a dictionary of all failed jobs details
+        """Returns a dictionary of all failed jobs details.
 
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
@@ -268,8 +251,7 @@ class AnalyzerOutput:
         return self.workflows["root"].jobs.job_details.get("failed_jobs_details", None)
 
     def get_failing_jobs(self):
-        """
-        Returns a dictionary of all failing jobs details
+        """Returns a dictionary of all failing jobs details.
 
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
@@ -277,8 +259,7 @@ class AnalyzerOutput:
         return self.workflows["root"].jobs.job_details.get("failing_jobs_details", None)
 
     def get_held_jobs(self):
-        """
-        Returns a dictionary of all held jobs details
+        """Returns a dictionary of all held jobs details.
 
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
@@ -286,8 +267,7 @@ class AnalyzerOutput:
         return self.workflows["root"].jobs.job_details.get("held_jobs_details", None)
 
     def get_unknown_jobs(self):
-        """
-        Returns a dictionary of all unknown jobs details, for AnalyzeFiles only
+        """Returns a dictionary of all unknown jobs details, for AnalyzeFiles only.
 
         :return: Dict of returned :class:`Pegasus.analyzer.JobInstance` objects
         :rtype: Dict[str,JobInstance]
@@ -319,13 +299,11 @@ class BaseAnalyze:
     re_ks_invocation = re.compile(r"^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*")
     MAXLOGFILE = 1000  # For log file rotation, check files .000 to .999
 
-    def check_for_wf_start(options, counts):
-        """
-        This function checks if workflow did start.
+    def check_for_wf_start(options, counts) -> None:
+        """This function checks if workflow did start.
         If not then print helpful message
         :return:
         """
-
         if counts.unsubmitted == counts.total:
             # PM-1039 either the workflow did not start or other errors
             # check the dagman.out file
@@ -378,16 +356,12 @@ class BaseAnalyze:
                         BaseAnalyze.print_console(" Contents of " + dagman_lib_err)
                         BaseAnalyze.print_console(" " + dagman_lib_err_contents)
 
-    def print_console(stmt=""):
-        """
-        A utilty function to print to console with the correct indentation
-        """
+    def print_console(stmt="") -> None:
+        """A utilty function to print to console with the correct indentation."""
         print(indent + stmt)
 
-    def backticks(cmd_line):
-        """
-        what would a python program be without some perl love?
-        """
+    def backticks(cmd_line) -> None:
+        """What would a python program be without some perl love?"""
         o = subprocess.Popen(
             cmd_line, shell=True, stdout=subprocess.PIPE
         ).communicate()[0]
@@ -395,8 +369,7 @@ class BaseAnalyze:
             o = o.decode()
 
     def addon(options):
-        """
-        This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
+        """This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
         Only a certain subset of options are propogated to the sub workflow invocations if passed.
         """
         cmd_line_args = ""
@@ -421,10 +394,9 @@ class BaseAnalyze:
 
         return cmd_line_args
 
-    def parse_submit_file(my_job, options):
-        """
-        This function opens a submit file and reads site
-        and condor dagman log information
+    def parse_submit_file(my_job, options) -> None:
+        """This function opens a submit file and reads site
+        and condor dagman log information.
         """
         # First we check if this is a SUBDAG job from the dag file
         if my_job.is_subdag:
@@ -454,10 +426,7 @@ class BaseAnalyze:
             my_job.sub_file_parsed = True
 
             # Check if this job includes sub workflows
-            if my_job.is_subdax:
-                has_sub_workflow = True
-            else:
-                has_sub_workflow = False
+            has_sub_workflow = bool(my_job.is_subdax)
 
             # Parse submit file
             for line in SUB:
@@ -538,21 +507,19 @@ class BaseAnalyze:
                                             )
                                             continue
                                         # Compose directory... assuming replanning mode
-                                        my_retry_dir = my_dagman_dir + ".%03d" % (
-                                            my_retry
+                                        my_retry_dir = (
+                                            my_dagman_dir + f".{my_retry:03d}"
                                         )
                                         # If directory doesn't exist, let's change to rescue mode
                                         if not os.path.isdir(my_retry_dir):
                                             logger.debug(
-                                                "sub-workflow directory %s does not exist, shifting to rescue mode..."
-                                                % (my_retry_dir)
+                                                f"sub-workflow directory {my_retry_dir} does not exist, shifting to rescue mode..."
                                             )
                                             my_retry_dir = my_dagman_dir + ".000"
                                             if not os.path.isdir(my_retry_dir):
                                                 # Still not able to find it, output warning message
                                                 logger.warning(
-                                                    "sub-workflow directory %s does not exist!"
-                                                    % (my_retry_dir)
+                                                    f"sub-workflow directory {my_retry_dir} does not exist!"
                                                 )
                                                 continue
 
@@ -575,7 +542,7 @@ class BaseAnalyze:
                             # Now we do any substitutions from the DAG's VAR line (if any)
                             for my_key in my_job.condor_subs:
                                 v = v.replace(
-                                    "$(%s)" % (my_key), my_job.condor_subs[my_key]
+                                    f"$({my_key})", my_job.condor_subs[my_key]
                                 )
 
                             # Now, we collapse any remaining substitutions (not found in the VAR line)
@@ -615,16 +582,13 @@ class BaseAnalyze:
 
 
 class AnalyzeDB(BaseAnalyze):
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         self.analyzer_output = AnalyzerOutput()
         self.options = options
         self.counts = Counts(0, 0, 0, 0, 0, 0, [], [])
 
     def analyze_db(self, config_properties):
-        """
-        This function runs the analyzer using data from the database.
-        """
-
+        """This function runs the analyzer using data from the database."""
         # Get the database URL
         try:
             output_db_url = connection.url_by_submitdir(
@@ -637,9 +601,9 @@ class AnalyzeDB(BaseAnalyze):
             self.analyzer_output.root_wf_uuid = wf_uuid
             self.analyzer_output.root_submit_dir = self.options.input_dir
             self.analyzer_output.structure_output["root_wf_uuid"] = wf_uuid
-            self.analyzer_output.structure_output[
-                "submit_directory"
-            ] = self.options.input_dir
+            self.analyzer_output.structure_output["submit_directory"] = (
+                self.options.input_dir
+            )
 
         except connection.ConnectionError as e:
             raise AnalyzerError(
@@ -668,8 +632,7 @@ class AnalyzeDB(BaseAnalyze):
                 workflow_stats.close()
 
         logger.debug(
-            "Descendant Workflows database ids for %s are %s"
-            % (wf_uuid, descendant_wfs_ids)
+            f"Descendant Workflows database ids for {wf_uuid} are {descendant_wfs_ids}"
         )
 
         wf_id = None
@@ -681,8 +644,7 @@ class AnalyzeDB(BaseAnalyze):
 
         if wf_id is None:
             logger.error(
-                "Unable to determine the database id for workflow with uuid %s"
-                % wf_uuid
+                f"Unable to determine the database id for workflow with uuid {wf_uuid}"
             )
 
         wf_ids = []
@@ -695,19 +657,14 @@ class AnalyzeDB(BaseAnalyze):
         for wf_id in wf_ids:
             wf_detail = wf_details[wf_id]
 
-            if wf_detail.wf_uuid == wf_uuid:
-                wf_key = "root"
-            else:
-                wf_key = wf_detail.wf_uuid
+            wf_key = "root" if wf_detail.wf_uuid == wf_uuid else wf_detail.wf_uuid
             self.analyzer_output.workflows[wf_key] = self.get_wf_details(
                 wf_detail, wf_details
             )
             wf = self.analyzer_output.workflows[wf_key]
 
             logger.debug(
-                "Running analyzer on workflow with database id {} in submit dir {}".format(
-                    wf_id, wf_detail.submit_dir
-                )
+                f"Running analyzer on workflow with database id {wf_id} in submit dir {wf_detail.submit_dir}"
             )
 
             self.counts.failed = 0
@@ -730,14 +687,12 @@ class AnalyzeDB(BaseAnalyze):
         return self.analyzer_output
 
     def get_wf_details(self, wf_detail, wf_details):
-        """
-        Filters out workflow details to be used in the workflow structure
+        """Filters out workflow details to be used in the workflow structure.
 
         :param wf_detail: details regarding a workflow (wf_uuid, submit_dir, host etc.)
         :param wf_details: a dict of all workflows' details
         :return: returns a :class:`Pegasus.analyzer.Workflow` object
         """
-
         wf = Workflow(
             wf_detail.wf_uuid,
             wf_detail.dag_file_name,
@@ -759,15 +714,13 @@ class AnalyzeDB(BaseAnalyze):
 
         return wf
 
-    def analyze_db_for_wf(self, workflow_stats, wf_uuid, submit_dir, wf):
-        """
-        This function runs the analyzer using data from the database.
+    def analyze_db_for_wf(self, workflow_stats, wf_uuid, submit_dir, wf) -> None:
+        """This function runs the analyzer using data from the database.
         :param workflow_stats: the stampede statistics object initialized with the workflow, we want to analyze
         :param wf_uuid:  the uuid of the workflow we are analyzing
         :param submit_dir: the submit dir for the workflow
         :return:
         """
-
         self.counts.total = workflow_stats.get_total_jobs_status()
         total_success_failed = workflow_stats.get_total_succeeded_failed_jobs_status()
         self.counts.success = total_success_failed.succeeded
@@ -790,8 +743,7 @@ class AnalyzeDB(BaseAnalyze):
             workflow_status = self.get_workflow_status(workflow_states[-1])
 
         logger.debug(
-            "Workflow state determined from workflow database is %s"
-            % workflow_status.value
+            f"Workflow state determined from workflow database is {workflow_status.value}"
         )
 
         # PM-1039
@@ -834,10 +786,11 @@ class AnalyzeDB(BaseAnalyze):
                 failing_jobs[i] = failing_jobs[i]._asdict()
                 failing_job_id = failing_jobs[i]["job_instance_id"]
                 job_tasks = workflow_stats.get_invocation_info(failing_job_id)
-                wf.jobs.job_details["failing_jobs_details"][
-                    failing_job_id
-                ] = self.get_job_details(
-                    workflow_stats.get_job_instance_info(failing_job_id)[0], job_tasks,
+                wf.jobs.job_details["failing_jobs_details"][failing_job_id] = (
+                    self.get_job_details(
+                        workflow_stats.get_job_instance_info(failing_job_id)[0],
+                        job_tasks,
+                    )
                 )
 
         # Now, print information about jobs that failed...
@@ -861,14 +814,12 @@ class AnalyzeDB(BaseAnalyze):
                 )
 
     def get_job_details(self, job_instance_info, job_tasks):
-        """
-        Filters out workflow details to be used in the workflow structure
+        """Filters out workflow details to be used in the workflow structure.
 
         :param job_instance_info: information regarding a job (job_name, state, site etc.)
         :param job_tasks: information regarding all tasks in a job (hostname, exitcode, etc.)
         :return: returns a :class:`Pegasus.analyzer.JobInstance` object
         """
-
         job_instance = JobInstance(
             job_instance_info.job_name,
             job_instance_info.state,
@@ -918,12 +869,10 @@ class AnalyzeDB(BaseAnalyze):
         return job_instance
 
     def get_workflow_status(self, last_wf_state_record):
-        """
-        Determines the workflow status from the last workflow state record for the workflow from the workflow database
+        """Determines the workflow status from the last workflow state record for the workflow from the workflow database
         :param last_wf_state_record: of form  (wf_id, state, timestamp, restart_count, status)
-        :return: the workflow status as value of type enum WORKFLOW_STATUS
+        :return: the workflow status as value of type enum WORKFLOW_STATUS.
         """
-
         workflow_status = WORKFLOW_STATUS.UNKNOWN
         if last_wf_state_record is None:
             return workflow_status
@@ -942,13 +891,13 @@ class AnalyzeDB(BaseAnalyze):
                 else WORKFLOW_STATUS.FAILURE
             )
         else:
-            raise ValueError("Invalid worklfow state %s" % last_wf_state)
+            raise ValueError(f"Invalid worklfow state {last_wf_state}")
 
         return workflow_status
 
 
 class AnalyzeFiles(BaseAnalyze):
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         self.jsdl_filename = "jobstate.log"  # Default name of the log file to use
         self.jobs = {}  # List of jobs found in the jobstate.log file
         self.analyzer_output = AnalyzerOutput()
@@ -956,8 +905,7 @@ class AnalyzeFiles(BaseAnalyze):
         self.counts = Counts(0, 0, 0, 0, 0, 0, [], [])
 
     def analyze_files(self):
-        """
-        This function runs the analyzer using the files in the workflow
+        """This function runs the analyzer using the files in the workflow
         directory as the data source.
         """
         jsdl_path = None  # Path of the jobstate.log file
@@ -971,7 +919,7 @@ class AnalyzeFiles(BaseAnalyze):
         # Get the dag file if it was not specified by the user
         if dag_path is None:
             dag_path = self.find_file(self.options.input_dir, ".dag")
-            logger.info("using %s, use the --dag option to override" % (dag_path))
+            logger.info(f"using {dag_path}, use the --dag option to override")
 
         # Build dagman.out path
         dagman_out_path = dag_path + ".dagman.out"
@@ -983,9 +931,7 @@ class AnalyzeFiles(BaseAnalyze):
         if self.options.run_monitord:
             if self.options.output_dir is not None:
                 # If self.options.output_dir is specified, invoke monitord with that path
-                self.invoke_monitord(
-                    "%s.dagman.out" % (dag_path), self.options.output_dir
-                )
+                self.invoke_monitord(f"{dag_path}.dagman.out", self.options.output_dir)
                 # jobstate.log file uses wf_uuid as prefix
                 jsdl_path = os.path.join(
                     self.options.output_dir,
@@ -996,7 +942,7 @@ class AnalyzeFiles(BaseAnalyze):
                     # Run directory is writable, write monitord output to jobstate.log file
                     jsdl_path = os.path.join(self.options.input_dir, self.jsdl_filename)
                     # Invoke monitord
-                    self.invoke_monitord("%s.dagman.out" % (dag_path), None)
+                    self.invoke_monitord(f"{dag_path}.dagman.out", None)
                 else:
                     # User must provide the --output-dir option
                     raise AnalyzerError(
@@ -1064,8 +1010,7 @@ class AnalyzeFiles(BaseAnalyze):
         return self.analyzer_output
 
     def get_wf_details(self, wfparams):
-        """
-        Gets workflow details to be used in Analyzer Output
+        """Gets workflow details to be used in Analyzer Output.
 
         :param wfparams: A Dict containing workflow attributes from braindump
         :type: Dict
@@ -1126,11 +1071,10 @@ class AnalyzeFiles(BaseAnalyze):
         )
 
     def find_file(self, input_dir, file_type):
-        """
-        This function finds a file with the suffix file_type
+        """This function finds a file with the suffix file_type
         in the input directory. We assume there is just one
         file of the requested type in the directory (otherwise
-        the function will return the first file matching the type
+        the function will return the first file matching the type.
         """
         try:
             file_list = os.listdir(input_dir)
@@ -1143,16 +1087,14 @@ class AnalyzeFiles(BaseAnalyze):
 
         raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
-    def invoke_monitord(self, dagman_out_file, output_dir):
-        """
-        This function runs monitord on the given dagman_out_file.
-        """
+    def invoke_monitord(self, dagman_out_file, output_dir) -> None:
+        """This function runs monitord on the given dagman_out_file."""
         monitord_cmd = "pegasus-monitord -r --no-events"
         if output_dir is not None:
             # Add self.options.output_dir, if given
             monitord_cmd = monitord_cmd + " --output-dir " + output_dir
         monitord_cmd = monitord_cmd + " " + dagman_out_file
-        logger.info("running: %s" % (monitord_cmd))
+        logger.info(f"running: {monitord_cmd}")
 
         try:
             # status, output = commands.getstatusoutput(monitord_cmd)
@@ -1162,8 +1104,7 @@ class AnalyzeFiles(BaseAnalyze):
             raise AnalyzerError("could not invoke monitord, exiting...")
 
     def get_jsdl_filename(self, input_dir):
-        """
-        This function parses the braindump file in the self.options.input_dir,
+        """This function parses the braindump file in the self.options.input_dir,
         retrieving the wf_uuid and assembling the filename for the
         jobstate.log file.
         """
@@ -1177,9 +1118,8 @@ class AnalyzeFiles(BaseAnalyze):
 
         raise AnalyzerError("braindump.txt does not contain wf_uuid... exiting...")
 
-    def parse_dag_file(self, dag_fn):
-        """
-        This function walks through the dag file, learning about
+    def parse_dag_file(self, dag_fn) -> None:
+        """This function walks through the dag file, learning about
         all jobs before hand.
         """
         # Open dag file
@@ -1204,7 +1144,7 @@ class AnalyzeFiles(BaseAnalyze):
                 # This is a job line, let's parse it
                 my_job = line.split()
                 if len(my_job) != 3:
-                    logger.warning("confused parsing dag line: %s" % (line))
+                    logger.warning(f"confused parsing dag line: {line}")
                     continue
                 if not self.has_seen(my_job[1]):
                     self.add_job(my_job[1], "UNSUBMITTED")
@@ -1218,12 +1158,12 @@ class AnalyzeFiles(BaseAnalyze):
                         # Mark job as subdax
                         self.jobs[my_job[1]].is_subdax = True
                 else:
-                    logger.warning("job appears twice in dag file: %s" % (my_job[1]))
+                    logger.warning(f"job appears twice in dag file: {my_job[1]}")
             if line.startswith("SUBDAG EXTERNAL"):
                 # This is a subdag line, parse it to get job name and directory
                 my_job = line.split()
                 if len(my_job) != 6:
-                    logger.warning("confused parsing dag line: %s" % (line))
+                    logger.warning(f"confused parsing dag line: {line}")
                     continue
                 if not self.has_seen(my_job[2]):
                     self.add_job(my_job[2], "UNSUBMITTED")
@@ -1231,21 +1171,20 @@ class AnalyzeFiles(BaseAnalyze):
                     self.jobs[my_job[2]].dag_path = my_job[3]
                     self.jobs[my_job[2]].subdag_dir = my_job[5]
                 else:
-                    logger.warning("job appears twice in dag file: %s" % (my_job[2]))
+                    logger.warning(f"job appears twice in dag file: {my_job[2]}")
             if line.startswith("SCRIPT PRE"):
                 # This is a SCRIPT PRE line, parse it to get the script for the job
                 my_script = BaseAnalyze.re_parse_script_pre.search(line)
                 if my_script is None:
                     # Couldn't parse line
-                    logger.warning("confused parsing dag line: %s" % (line))
+                    logger.warning(f"confused parsing dag line: {line}")
                     continue
                 # Get job name, and check if we have it
                 my_job = my_script.group(1)
                 if not self.has_seen(my_job):
                     # Cannot find this job, ignore this line
                     logger.warning(
-                        "couldn't find job: %s for PRE SCRIPT line in dag file"
-                        % (my_job)
+                        f"couldn't find job: {my_job} for PRE SCRIPT line in dag file"
                     )
                     continue
                 # Good, copy PRE script line to our job structure
@@ -1258,7 +1197,7 @@ class AnalyzeFiles(BaseAnalyze):
                     if not self.has_seen(my_job):
                         # Cannot find this job, ignore this line
                         logger.warning(
-                            "couldn't find job: %s for VARS line in dag file" % (my_job)
+                            f"couldn't find job: {my_job} for VARS line in dag file"
                         )
                         continue
                     # Good, parse the condor substitutions, and create substitution dictionary
@@ -1267,10 +1206,8 @@ class AnalyzeFiles(BaseAnalyze):
                     ):
                         self.jobs[my_job].condor_subs[my_key] = my_val
 
-    def parse_jobstate_log(self, jobstate_fn):
-        """
-        This function parses the jobstate.log file, loading all job information
-        """
+    def parse_jobstate_log(self, jobstate_fn) -> None:
+        """This function parses the jobstate.log file, loading all job information."""
         # Open log file
         try:
             JSDL = open(jobstate_fn)
@@ -1294,7 +1231,7 @@ class AnalyzeFiles(BaseAnalyze):
 
             # Add to job list if we have never seen this job before
             if not self.has_seen(jobname):
-                logger.warning("job %s not present in dag file" % (jobname))
+                logger.warning(f"job {jobname} not present in dag file")
                 self.add_job(jobname, jobstate)
                 if jobname.startswith("pegasus-plan") or jobname.startswith("subdax_"):
                     # Mark job as subdax
@@ -1316,17 +1253,11 @@ class AnalyzeFiles(BaseAnalyze):
         JSDL.close()
 
     def has_seen(self, job_name):
-        """
-        This function returns true if we are already tracking job_name
-        """
-        if job_name in self.jobs:
-            return True
-        return False
+        """This function returns true if we are already tracking job_name."""
+        return job_name in self.jobs
 
-    def add_job(self, job_name, job_state=""):
-        """
-        This function adds a job to our list
-        """
+    def add_job(self, job_name, job_state="") -> None:
+        """This function adds a job to our list."""
         # Don't add the same job twice
         if job_name in self.jobs:
             return
@@ -1334,27 +1265,24 @@ class AnalyzeFiles(BaseAnalyze):
         newjob = Job(job_name, job_state)
         self.jobs[job_name] = newjob
 
-    def update_job_state(self, job_name, job_state=""):
-        """
-        This function updates the job state of a given job
-        """
+    def update_job_state(self, job_name, job_state="") -> None:
+        """This function updates the job state of a given job."""
         # Make sure we have this job
-        if not job_name in self.jobs:
+        if job_name not in self.jobs:
             # Print a warning message
-            logger.error("could not find job %s" % (job_name))
+            logger.error(f"could not find job {job_name}")
             return
 
         self.jobs[job_name].set_state(job_state)
 
-    def update_job_condor_info(self, job_name, condor_id="-"):
-        """
-        This function updates a job's condor_id (it splits it into process
-        and cluster)
+    def update_job_condor_info(self, job_name, condor_id="-") -> None:
+        """This function updates a job's condor_id (it splits it into process
+        and cluster).
         """
         # Make sure we have this job
-        if not job_name in self.jobs:
+        if job_name not in self.jobs:
             # Print a warning message
-            logger.error("could not find job %s" % (job_name))
+            logger.error(f"could not find job {job_name}")
             return
 
         # Nothing to do if condor_id is not defined
@@ -1370,11 +1298,8 @@ class AnalyzeFiles(BaseAnalyze):
         if len(my_split) >= 2:
             self.jobs[job_name].process = my_split[1]
 
-    def analyze(self):
-        """
-        This function processes all currently known jobs, generating some statistics
-        """
-
+    def analyze(self) -> None:
+        """This function processes all currently known jobs, generating some statistics."""
         for my_job in self.jobs:
             self.counts.total += 1
             if (
@@ -1395,10 +1320,8 @@ class AnalyzeFiles(BaseAnalyze):
                 self.counts.unknown_jobs.append(my_job)
                 self.counts.unknown += 1
 
-    def get_output_error(self, job):
-        """
-        This function outputs both output and error files for a given job.
-        """
+    def get_output_error(self, job) -> None:
+        """This function outputs both output and error files for a given job."""
         out_file = self.find_latest_log(job.stdout_file)
         err_file = self.find_latest_log(job.stderr_file)
         tasks = job.tasks
@@ -1412,9 +1335,9 @@ class AnalyzeFiles(BaseAnalyze):
                 # Count tasks, the same way as pegasus-monitord for Stampede
                 my_task_id = my_task_id + 1
                 tasks[my_task_id] = Task(task_submit_seq=my_task_id)
-                if not "derivation" in entry or not "transformation" in entry:
+                if "derivation" not in entry or "transformation" not in entry:
                     continue
-                if not "exitcode" in entry and not "error" in entry:
+                if "exitcode" not in entry and "error" not in entry:
                     continue
                 if "exitcode" in entry:
                     try:
@@ -1447,9 +1370,7 @@ class AnalyzeFiles(BaseAnalyze):
             job.stderr_text = self.dump_file(err_file)
 
     def find_latest_log(self, log_file_base):
-        """
-        This function tries to locate the latest log file
-        """
+        """This function tries to locate the latest log file."""
         last_log = None
         curr_log = None
 
@@ -1460,7 +1381,7 @@ class AnalyzeFiles(BaseAnalyze):
         sf = 0
 
         while sf < BaseAnalyze.MAXLOGFILE:
-            curr_log = log_file_base + ".%03d" % (sf)
+            curr_log = log_file_base + f".{sf:03d}"
             if os.access(curr_log, os.F_OK):
                 last_log = curr_log
                 sf = sf + 1
@@ -1470,29 +1391,25 @@ class AnalyzeFiles(BaseAnalyze):
         return last_log
 
     def dump_file(self, file):
-        """
-        This function dumps a file to our stdout
-        """
+        """This function dumps a file to our stdout."""
         data = ""
         if file is not None:
             try:
                 with open(file) as file:
                     data = file.read().rstrip()
             except Exception:
-                logger.warning("*** Cannot access: %s" % (file))
+                logger.warning(f"*** Cannot access: {file}")
         return data
 
 
 class DebugWF(BaseAnalyze):
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         self.options = options
 
-    def debug_workflow(self):
+    def debug_workflow(self) -> None:
+        """This function handles the mode where the analyzer
+        is used to debug a job in a workflow.
         """
-        This function handles the mode where the analyzer
-        is used to debug a job in a workflow
-        """
-
         # Check if we can find this job's submit file
         if not self.options.debug_job.endswith(".sub"):
             self.options.debug_job = self.options.debug_job + ".sub"
@@ -1514,7 +1431,7 @@ class DebugWF(BaseAnalyze):
             try:
                 self.options.debug_dir = tempfile.mkdtemp()
             except Exception:
-                raise AnalyzerError(f"could not create temporary directory!")
+                raise AnalyzerError("could not create temporary directory!")
 
         else:
             # Make sure directory specified is writable
@@ -1525,7 +1442,7 @@ class DebugWF(BaseAnalyze):
                     os.mkdir(self.options.debug_dir)
                 except Exception:
                     logger.error(
-                        "cannot create debug directory: %s" % (self.options.debug_dir)
+                        f"cannot create debug directory: {self.options.debug_dir}"
                     )
 
             # Check if we can write to the debug directory
@@ -1550,14 +1467,12 @@ class DebugWF(BaseAnalyze):
         # All done, in case we are back here!
         return
 
-    def debug_condor(self, my_job):
-        """
-        This function is used to debug a condor job. It creates a
+    def debug_condor(self, my_job) -> None:
+        """This function is used to debug a condor job. It creates a
         shell script in the debug_dir directory that is used to
         copy all necessary files to the (local) debug_dir directory
         and then execute the job locally.
         """
-
         # Set strict mode in order to parse everything in the submit file
         self.options.strict_mode = True
         # Parse submit file
@@ -1595,11 +1510,9 @@ class DebugWF(BaseAnalyze):
             )
             debug_script.write("\n")
             if my_job.wf_submit_dir:
-                debug_script.write("wf_submit_dir=%s" % my_job.wf_submit_dir)
+                debug_script.write(f"wf_submit_dir={my_job.wf_submit_dir}")
                 debug_script.write("\n")
-            debug_script.write(
-                "export pegasus_lite_work_dir=%s" % self.options.debug_dir
-            )
+            debug_script.write(f"export pegasus_lite_work_dir={self.options.debug_dir}")
             debug_script.write("\n")
             debug_script.write("# Copy any files that are needed\n")
 
@@ -1635,8 +1548,7 @@ class DebugWF(BaseAnalyze):
                 # older non pegasus lite mode /sipht case?
                 debug_script.write("# Set the execute bit on the executable\n")
                 debug_script.write(
-                    "chmod +x %s\n"
-                    % (os.path.join(self.options.debug_dir, my_job.executable))
+                    f"chmod +x {os.path.join(self.options.debug_dir, my_job.executable)}\n"
                 )
                 debug_script.write("\n")
             else:
@@ -1650,12 +1562,12 @@ class DebugWF(BaseAnalyze):
                 os.path.join(self.options.debug_dir, job_executable) + my_job.arguments
             )
 
-            debug_script.write('echo "executing job: %s"\n' % (job_executable))
+            debug_script.write(f'echo "executing job: {job_executable}"\n')
             debug_script.write("\n")
             debug_script.write("# Now, execute the job\n")
             # disable fail on error before launching
             debug_script.write("set +e\n")
-            debug_script.write("%s" % (job_executable))
+            debug_script.write(f"{job_executable}")
 
             # redirect stderr for pegasus lite jobs to separate err file
             if job_pegasus_lite_wrapper is not None:
@@ -1685,7 +1597,7 @@ class DebugWF(BaseAnalyze):
             debug_script.write("set +e \n")
             for out_file in my_job.transfer_output_files.split(","):
                 if len(out_file):
-                    debug_script.write("check_file %s\n" % out_file)
+                    debug_script.write(f"check_file {out_file}\n")
 
             debug_script.write(
                 """
@@ -1715,17 +1627,16 @@ class DebugWF(BaseAnalyze):
 
         # Print next step
         print()
-        print("%s: finished generating job debug script!" % (prog_base))
+        print(f"{prog_base}: finished generating job debug script!")
         print()
         print("To run it, you need to type:")
-        print("   $ cd %s" % (self.options.debug_dir))
-        print("   $ ./%s" % (debug_script_basename))
+        print(f"   $ cd {self.options.debug_dir}")
+        print(f"   $ ./{debug_script_basename}")
         print()
 
     def get_pegasus_lite_wrapper(self, my_job):
-        """
-        This function returns whether a Pegasus Lite Wrapper
-        exists for the job or not. Returns the path to wrapper if it exists
+        """This function returns whether a Pegasus Lite Wrapper
+        exists for the job or not. Returns the path to wrapper if it exists.
         """
         # First we check if this is a SUBDAG job from the dag file
         if my_job.is_subdag:
@@ -1756,9 +1667,8 @@ class DebugWF(BaseAnalyze):
         return pegasus_lite_wrapper
 
     def generate_pegasus_lite_debug_wrapper(self, pegasus_lite_wrapper):
-        """
-        This generates a debug wrapper for the pegasus lite job
-        It copies the the pegasus lite job till part of the stage out of outputs
+        """This generates a debug wrapper for the pegasus lite job
+        It copies the the pegasus lite job till part of the stage out of outputs.
         """
         if pegasus_lite_wrapper is None:
             return None
@@ -1782,11 +1692,10 @@ class DebugWF(BaseAnalyze):
 
                     if ks_invocation and ks_invocation.groups() > 0:
                         logger.debug(
-                            "Match found for kickstart invocation in pegasus lite wrapper %s"
-                            % ks_invocation.group(0)
+                            f"Match found for kickstart invocation in pegasus lite wrapper {ks_invocation.group(0)}"
                         )
                         logger.debug(
-                            "Executable to be replaced is %s" % ks_invocation.group(1)
+                            f"Executable to be replaced is {ks_invocation.group(1)}"
                         )
                         substituted_string = (
                             line[: ks_invocation.start(1)]
@@ -1794,7 +1703,7 @@ class DebugWF(BaseAnalyze):
                             + line[ks_invocation.end(1) :]
                         )
                         line = substituted_string
-                        logger.debug("Substituted invocation is %s" % line)
+                        logger.debug(f"Substituted invocation is {line}")
 
                 DEBUG_WRAPPER.write(line)
 

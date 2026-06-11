@@ -21,13 +21,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.util.Escape;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import java.util.Collection;
-import java.util.Properties;
-import java.util.regex.Pattern;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.util.Collection;
+import java.util.Properties;
+import java.util.regex.Pattern;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class RegexTest {
 
     @Test

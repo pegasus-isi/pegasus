@@ -16,10 +16,11 @@ package edu.isi.pegasus.planner.invocation;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.io.Serializable;
-import java.lang.reflect.Modifier;
 import org.griphyn.vdl.Chimera;
 import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+import java.lang.reflect.Modifier;
 
 /** Tests for Invocation abstract class structure. */
 public class InvocationTest {

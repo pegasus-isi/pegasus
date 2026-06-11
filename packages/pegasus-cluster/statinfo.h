@@ -20,7 +20,7 @@ extern
 int
 myaccess( const char* path );
 /* purpose: check a given file for being accessible and executable
- *          under the currently effective user and group id. 
+ *          under the currently effective user and group id.
  * paramtr: path (IN): current path to check
  * returns: 0 if the file is accessible, -1 for not
  */
@@ -31,7 +31,7 @@ find_executable( const char* fn );
 /* purpose: check the executable filename and correct it if necessary
  * paramtr: fn (IN): current knowledge of filename
  * returns: newly allocated fqpn of path to exectuble, or NULL if not found
- * globals: this will muck up the value in 'errno'. 
+ * globals: this will muck up the value in 'errno'.
  */
 
 #endif /* _STATINFO_H */

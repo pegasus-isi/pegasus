@@ -8,7 +8,9 @@ package edu.isi.pegasus.common.logging;
 import java.util.Collection;
 import java.util.Map;
 
-/** @author vahi */
+/**
+ * @author vahi
+ */
 public interface Event extends Cloneable {
 
     /**

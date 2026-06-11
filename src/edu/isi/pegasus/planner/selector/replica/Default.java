@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -134,7 +135,8 @@ public class Default implements ReplicaSelector {
             // were associated with the preference site.
             StringBuffer error = new StringBuffer();
             error.append(
-                            "Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ")
+                            "Unable to select a Physical Filename (PFN) for file with logical"
+                                    + " filename (LFN) as ")
                     .append(rl.getLFN())
                     .append(" for staging to site ")
                     .append(preferredSite)

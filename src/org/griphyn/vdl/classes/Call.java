@@ -15,11 +15,13 @@
 package org.griphyn.vdl.classes;
 
 import edu.isi.pegasus.common.util.Separator;
+
+import org.griphyn.vdl.util.SequenceGenerator;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.*;
-import org.griphyn.vdl.util.SequenceGenerator;
 
 /**
  * <code>Call</code> is an implementation of an anonymous <code>Derivation</code>. A call describes

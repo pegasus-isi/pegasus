@@ -23,13 +23,32 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     # PATH must be visible to which
     export PATH
 
-    # first look in the PATH
     I=0
-    eval PEXE_LIST$I="$(which python3 2>/dev/null)"
+
+    # pegasus-python is an alternatives pointer to the Python we want
+    eval PEXE_LIST$I="$(which pegasus-python 2>/dev/null)"
     I=$((I+1))
-    # has to be last to find user defined environments
-    eval PEXE_LIST$I="/usr/bin/python3"
-    I=$((I+1))
+
+    # look in the PATH for specific versions (3.17 down to 3.10)
+    for v in {17..10}; do
+        # Try to find the specific version in the user's current PATH
+        if TARGET_PATH=$(which "python3.$v" 2>/dev/null); then
+            eval PEXE_LIST$I="\$TARGET_PATH"
+            I=$((I+1))
+        fi
+    done
+
+    # Next, catch a generic python3 from the PATH if no specific versions matched
+    if TARGET_PATH=$(which python3 2>/dev/null); then
+        eval PEXE_LIST$I="\$TARGET_PATH"
+        I=$((I+1))
+    fi
+
+    # Has to be last to find user defined environments / system fallbacks
+    if [ -x "/usr/bin/python3" ]; then
+        eval PEXE_LIST$I="/usr/bin/python3"
+        I=$((I+1))
+    fi
 
     # Look for a python in the give list
     for i in `seq $I`; do
@@ -91,4 +110,3 @@ TOOL_PATH="$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py"
 
 # now execute
 exec "$PEGASUS_PYTHON" "$TOOL_PATH" "$@"
-

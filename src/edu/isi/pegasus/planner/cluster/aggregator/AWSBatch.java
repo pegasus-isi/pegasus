@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
@@ -26,6 +27,7 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

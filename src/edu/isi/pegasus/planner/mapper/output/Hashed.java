@@ -19,12 +19,14 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.griphyn.vdl.euryale.FileFactory;
+import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.griphyn.vdl.euryale.FileFactory;
-import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 
 /**
  * Maps the output files in a Hashed Directory structure on the output site.

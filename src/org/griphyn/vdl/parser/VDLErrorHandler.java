@@ -115,4 +115,5 @@ public class VDLErrorHandler implements ErrorHandler {
                                 + "]\n");
         // throw new SAXException("Fatal Error occurred");
     }
-};
+}
+;

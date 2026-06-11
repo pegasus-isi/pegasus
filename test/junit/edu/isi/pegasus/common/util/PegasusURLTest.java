@@ -20,10 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.util.LinkedList;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedList;
 
 /**
  * Test class to test the PegasusURL class and check if it parses the various URL combinations

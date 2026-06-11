@@ -11,4 +11,3 @@ pegasus.dir.useTimestamp=true
 pegasus.data.configuration = condorio
 
 pegasus.transfer.bypass.input.staging true
-

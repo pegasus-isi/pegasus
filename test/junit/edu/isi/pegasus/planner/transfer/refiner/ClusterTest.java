@@ -20,14 +20,18 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.transfer.Implementation;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class ClusterTest {
 
     @Test

@@ -27,16 +27,16 @@ ant test-c                    # Run all C tests (kickstart + PMC)
 
 The codebase is ~8 C source files with matching headers:
 
-| Module | Role |
-|--------|------|
-| `pegasus-cluster.c` | Main entry point: CLI parsing, event loop, fork/wait orchestration |
-| `job.c/h` | Job slot data structure (`Job`, `Jobs`) and slot management |
-| `parser.c/h` | Shell-style command line parsing via finite state automaton (handles quoting/escaping) |
-| `mysystem.c/h` | Signal management (SIGINT/SIGQUIT/SIGCHLD) and child process execution |
-| `report.c/h` | Progress reporting with POSIX file locking; handles kickstart-wrapped commands |
-| `tools.c/h` | Atomic I/O helpers, timestamp formatting (ISO 8601), timing utilities |
-| `statinfo.c/h` | Executable search via PATH lookup |
-| `try-cpus.c` | Standalone utility to detect processor count |
+| Module              | Role                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `pegasus-cluster.c` | Main entry point: CLI parsing, event loop, fork/wait orchestration                     |
+| `job.c/h`           | Job slot data structure (`Job`, `Jobs`) and slot management                            |
+| `parser.c/h`        | Shell-style command line parsing via finite state automaton (handles quoting/escaping) |
+| `mysystem.c/h`      | Signal management (SIGINT/SIGQUIT/SIGCHLD) and child process execution                 |
+| `report.c/h`        | Progress reporting with POSIX file locking; handles kickstart-wrapped commands         |
+| `tools.c/h`         | Atomic I/O helpers, timestamp formatting (ISO 8601), timing utilities                  |
+| `statinfo.c/h`      | Executable search via PATH lookup                                                      |
+| `try-cpus.c`        | Standalone utility to detect processor count                                           |
 
 **Execution flow:** Parse CLI → run optional `SEQEXEC_SETUP` → read commands line-by-line → fork up to N parallel children → wait and report → run optional `SEQEXEC_CLEANUP` → exit with aggregated status.
 

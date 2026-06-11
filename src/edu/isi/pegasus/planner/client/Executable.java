@@ -18,8 +18,10 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -141,6 +143,7 @@ public abstract class Executable {
     public static String convertException(Exception e) {
         return Executable.convertException(e, LogManager.TRACE_MESSAGE_LEVEL);
     }
+
     /**
      * Returns an error message that chains all the lower order error messages that might have been
      * thrown.

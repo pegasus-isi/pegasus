@@ -18,8 +18,9 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /**
  * Tests for SiteData. Since SiteData is abstract, tested via Connection (concrete subclass).

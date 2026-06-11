@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -36,6 +37,9 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
+import org.yaml.snakeyaml.LoaderOptions;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -54,7 +58,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class implements a replica catalog backend populated by parsing the meta files that are

@@ -20,10 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.logger.Default;
 import edu.isi.pegasus.common.logging.logger.Log4j;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.lang.reflect.Modifier;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Modifier;
+import java.util.Properties;
 
 /** Tests for the LogManagerFactory class. */
 public class LogManagerFactoryTest {

@@ -14,5 +14,3 @@ pegasus-analyzer
 
 # show some stats
 pegasus-statistics `pwd`
-
-

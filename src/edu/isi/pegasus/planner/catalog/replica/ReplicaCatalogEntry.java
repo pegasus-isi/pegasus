@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.util.*;
 
 /**

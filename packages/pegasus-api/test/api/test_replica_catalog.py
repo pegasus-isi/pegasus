@@ -59,7 +59,7 @@ class TestFile:
     def test_valid_file(self, lfn: str, size: int):
         assert File(lfn, size)
 
-    @pytest.mark.parametrize("lfn", [(1), (list())])
+    @pytest.mark.parametrize("lfn", [(1), ([[]])])
     def test_invalid_file(self, lfn: str):
         with pytest.raises(TypeError) as e:
             File(lfn)
@@ -285,7 +285,10 @@ class TestReplicaCatalog:
         )
 
         rc.add_replica(
-            "condorpool", "f.a", "/f.a", metadata={"size": 1024},
+            "condorpool",
+            "f.a",
+            "/f.a",
+            metadata={"size": 1024},
         )
 
         f_a_entry = rc.entries[("f.a", False)]
@@ -403,7 +406,10 @@ class TestReplicaCatalog:
                     "checksum": {"sha256": "123"},
                     "metadata": {"extra": "metadata", "size": 1024, "creator": "ryan"},
                 },
-                {"lfn": "f.b", "pfns": [{"site": "local", "pfn": "/f.b"}],},
+                {
+                    "lfn": "f.b",
+                    "pfns": [{"site": "local", "pfn": "/f.b"}],
+                },
                 {
                     "lfn": "*.txt",
                     "pfns": [{"site": "local", "pfn": "/path"}],

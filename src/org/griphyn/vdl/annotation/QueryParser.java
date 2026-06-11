@@ -127,10 +127,11 @@
  */
 package org.griphyn.vdl.annotation;
 
+import org.griphyn.vdl.dbschema.Annotation;
+
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import org.griphyn.vdl.dbschema.Annotation;
 
 /**
  * Parses the input stream and generates a query tree as output.

@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -43,7 +44,9 @@ public class XML3PrintVisitor extends AbstractXMLPrintVisitor {
     /** The version to report. */
     public static final String SCHEMA_VERSION = "3.0";
 
-    /** @author mayani */
+    /**
+     * @author mayani
+     */
     private enum DirectoryTypes {
         HEADFS_SCRATCH,
         HEADFS_STORAGE,

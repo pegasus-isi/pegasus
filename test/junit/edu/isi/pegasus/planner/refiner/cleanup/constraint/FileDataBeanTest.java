@@ -106,7 +106,8 @@ public class FileDataBeanTest {
         assertThat(
                 bean.toString(),
                 is(
-                        "FileDataBean{transformation='tx', id='id', type='type', filename='name', length=7}"));
+                        "FileDataBean{transformation='tx', id='id', type='type', filename='name',"
+                                + " length=7}"));
     }
 
     @Test
@@ -114,7 +115,8 @@ public class FileDataBeanTest {
         assertThat(
                 bean.toString(),
                 is(
-                        "FileDataBean{transformation='null', id='null', type='null', filename='null', length=0}"));
+                        "FileDataBean{transformation='null', id='null', type='null',"
+                                + " filename='null', length=0}"));
     }
 
     @Test

@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Enumeration;
 import java.util.Properties;
 

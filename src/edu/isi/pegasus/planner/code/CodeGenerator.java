@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
+
 import java.io.File;
 import java.util.Collection;
 

@@ -162,7 +162,7 @@
       data_truncated: false
       data: |
         output file to be generated is f.c1
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/execute/dir_189237/ks.err.ufHryj
       descriptor: 4

@@ -301,6 +301,3 @@ See Also
 ========
 
 pegasus-run(1)
-
-
-

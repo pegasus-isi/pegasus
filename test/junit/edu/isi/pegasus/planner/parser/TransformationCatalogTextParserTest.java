@@ -25,14 +25,18 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class TransformationCatalogTextParserTest {
 
     /*

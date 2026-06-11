@@ -15,18 +15,21 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.*;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.router.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.*;
 
 /**
  * This class generates implements the pipeline of the usual suspect from vdlt2vdlx via insert- or
@@ -75,7 +78,8 @@ public class VDLc extends VDLHelper {
                         + linefeed
                         + " -l|--label label  uses the specified label for the output DAX."
                         + linefeed
-                        + " -o|--output DAX   writes the generated results into outfn, use - for stdout."
+                        + " -o|--output DAX   writes the generated results into outfn, use - for"
+                        + " stdout."
                         + linefeed
                         + " -e|--empty        empty output DAX is not an error."
                         + linefeed
@@ -83,18 +87,23 @@ public class VDLc extends VDLHelper {
                         + Route.MAXIMUM_DEPTH
                         + "."
                         + linefeed
-                        + "                   For complex or large graphs, you may want to increase this."
+                        + "                   For complex or large graphs, you may want to increase"
+                        + " this."
                         + linefeed
-                        + " -X|--xmlns prefix uses an XML namespace prefix for the generated DAX document."
+                        + " -X|--xmlns prefix uses an XML namespace prefix for the generated DAX"
+                        + " document."
                         + linefeed
                         + linefeed
                         + "Request refining arguments: "
                         + linefeed
-                        + " -D|--dv dv[,..]   requests the DV or list of DVs to be produced. Each argument"
+                        + " -D|--dv dv[,..]   requests the DV or list of DVs to be produced. Each"
+                        + " argument"
                         + linefeed
-                        + "                   is a fully-qualified derivation name namespace::name:version."
+                        + "                   is a fully-qualified derivation name"
+                        + " namespace::name:version."
                         + linefeed
-                        + "                   In absence of this argument, all DVs seen will be requested."
+                        + "                   In absence of this argument, all DVs seen will be"
+                        + " requested."
                         + linefeed
                         + " -D|--derivation   is a synonym for the --dv option."
                         + linefeed
@@ -125,7 +134,8 @@ public class VDLc extends VDLHelper {
                         + m_application
                         + ", please read the message."
                         + linefeed
-                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check your"
+                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check"
+                        + " your"
                         + linefeed
                         + "         configuration files and setup before filing a bug report."
                         + linefeed);

@@ -26,15 +26,19 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class DAX2GraphTest {
 
     @Test
@@ -114,7 +118,8 @@ public class DAX2GraphTest {
         callback.cbChildren("ID0001", Arrays.asList("ID0002"));
 
         assertThat(
-                "cbChildren should currently repopulate the parent's child set with the parent node",
+                "cbChildren should currently repopulate the parent's child set with the parent"
+                        + " node",
                 parentNode.getChildren().contains(parentNode),
                 is(true));
         assertThat(

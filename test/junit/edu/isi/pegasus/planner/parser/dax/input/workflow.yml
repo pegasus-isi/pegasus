@@ -12,7 +12,7 @@ siteCatalog:
 replicaCatalog:
   replicas:
     - lfn: f.a
-      pfns: 
+      pfns:
         - pfn: file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a
           site: local
 

@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-
-"""
-Client for the Pegasus Agent service.
-"""
+"""Client for the Pegasus Agent service."""
 
 import logging
 
@@ -16,11 +12,9 @@ API_MAX_LENGTH = 30000
 
 
 class AgentClient:
-    """
-    Client for the Pegasus Agent service.
-    """
+    """Client for the Pegasus Agent service."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the AgentClient, loading endpoint and token from Pegasus properties."""
         self.props = properties.Properties()
         self.props.new()  # load the default properties
@@ -40,8 +34,7 @@ class AgentClient:
         self.client_version = utils.pegasus_version()
 
     def analyze(self, workflow_id, analyze_stdout):
-        """
-        Analyze a workflow using the Pegasus Agent service.
+        """Analyze a workflow using the Pegasus Agent service.
 
         :param workflow_id: unique identifier of the workflow to analyze
         :type workflow_id: str
@@ -51,7 +44,6 @@ class AgentClient:
         :rtype: str
         :raises RuntimeError: if the HTTP request fails
         """
-
         full_url = f"{self.url}/wf/analyze/ai/{workflow_id}"
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {
@@ -74,8 +66,7 @@ class AgentClient:
         return cout
 
     def statistics(self, workflow_id, stats_stdout):
-        """
-        Summarize workflow statistics using the Pegasus Agent service.
+        """Summarize workflow statistics using the Pegasus Agent service.
 
         :param workflow_id: unique identifier of the workflow
         :type workflow_id: str
@@ -85,7 +76,6 @@ class AgentClient:
         :rtype: str
         :raises RuntimeError: if the HTTP request fails
         """
-
         full_url = f"{self.url}/wf/statistics/ai/{workflow_id}"
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {

@@ -20,9 +20,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 /** Tests for the Default estimator. */
 public class DefaultTest {

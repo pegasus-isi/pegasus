@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.format.Netlogger;
 import edu.isi.pegasus.common.logging.format.Simple;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

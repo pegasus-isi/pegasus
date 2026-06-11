@@ -25,12 +25,14 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.GridStart;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Distribute GridStart implementation. */
 public class DistributeTest {

@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Optional, Set, Union
 
 from ._utils import _chained
 from .errors import DuplicateError
@@ -47,7 +46,7 @@ class File(MetadataMixin):
     """
 
     def __init__(
-        self, lfn: str, size: Optional[int] = None, for_planning: Optional[bool] = False
+        self, lfn: str, size: int | None = None, for_planning: bool | None = False
     ):
         """
         :param lfn: a unique logical filename
@@ -103,9 +102,9 @@ class _ReplicaCatalogEntry:
     def __init__(
         self,
         lfn: str,
-        pfns: Set[_PFN],
-        checksum: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        pfns: set[_PFN],
+        checksum: dict[str, str] | None = None,
+        metadata: dict[str, int | str | float] | None = None,
         regex: bool = False,
     ):
         self.lfn = lfn
@@ -119,7 +118,7 @@ class _ReplicaCatalogEntry:
             OrderedDict(
                 [
                     ("lfn", self.lfn),
-                    ("pfns", [pfn for pfn in self.pfns]),
+                    ("pfns", list(self.pfns)),
                     ("checksum", self.checksum if len(self.checksum) > 0 else None),
                     ("metadata", self.metadata if len(self.metadata) > 0 else None),
                     ("regex", self.regex if self.regex else None),
@@ -162,8 +161,8 @@ class ReplicaCatalog(Writable):
         self,
         site: str,
         pattern: str,
-        pfn: Union[str, Path],
-        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        pfn: str | Path,
+        metadata: dict[str, int | str | float] | None = None,
     ):
         r"""
         add_regex_replica(self, site: str, pattern: str, pfn: Union[str, Path], metadata: Optional[Dict[str, Union[int, str, float]]] = None)
@@ -177,7 +176,9 @@ class ReplicaCatalog(Writable):
                 rc.add_regex_replica("local", "f.a", "/Volumes/data/input/f.a")
 
                 # Example 2: Using groupings
-                rc.add_regex_replica("local", "alpha\.(csv|txt|xml)", "/Volumes/data/input/[1]/[0]")
+                rc.add_regex_replica(
+                    "local", "alpha\.(csv|txt|xml)", "/Volumes/data/input/[1]/[0]"
+                )
 
                 # If the file being looked up is alpha.csv, the pfn for the file will be
                 # generated as /Volumes/data/input/csv/alpha.csv
@@ -212,9 +213,7 @@ class ReplicaCatalog(Writable):
         if isinstance(pfn, Path):
             if not pfn.is_absolute():
                 raise ValueError(
-                    "Invalid pfn: {}, the given pfn must be an absolute path".format(
-                        pfn
-                    )
+                    f"Invalid pfn: {pfn}, the given pfn must be an absolute path"
                 )
 
             pfn = str(pfn)
@@ -227,10 +226,10 @@ class ReplicaCatalog(Writable):
     def add_replica(
         self,
         site: str,
-        lfn: Union[str, File],
-        pfn: Union[str, Path],
-        checksum: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        lfn: str | File,
+        pfn: str | Path,
+        checksum: dict[str, str] | None = None,
+        metadata: dict[str, int | str | float] | None = None,
     ):
         """
         add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Optional[Dict[str, str]] = None, metadata: Optiona[Dict[str, Union[int, str, float]]] = None)
@@ -248,7 +247,7 @@ class ReplicaCatalog(Writable):
                     "in.txt",
                     "/home/ryan/wf/in.txt",
                     checksum={"sha256": "abc123"},
-                    metadata={"creator": "pegasus"}
+                    metadata={"creator": "pegasus"},
                 )
 
                 # Example 3: Adding multiple pfns for the same lfn (metadata and checksum will be
@@ -274,18 +273,14 @@ class ReplicaCatalog(Writable):
         if isinstance(pfn, Path):
             if not pfn.is_absolute():
                 raise ValueError(
-                    "Invalid pfn: {}, the given path must be an absolute path".format(
-                        str(pfn)
-                    )
+                    f"Invalid pfn: {str(pfn)}, the given path must be an absolute path"
                 )
 
             pfn = str(pfn)
 
         if isinstance(pfn, File):
             raise TypeError(
-                "Invalid pfn: {}, the given pfn must be a str or pathlib.Path".format(
-                    pfn
-                )
+                f"Invalid pfn: {pfn}, the given pfn must be a str or pathlib.Path"
             )
 
         metadata = metadata or OrderedDict()
@@ -303,9 +298,7 @@ class ReplicaCatalog(Writable):
             for checksum_type in checksum:
                 if checksum_type.lower() not in ReplicaCatalog._SUPPORTED_CHECKSUMS:
                     raise ValueError(
-                        "Invalid checksum: {}, supported checksum types are: {}".format(
-                            checksum_type, ReplicaCatalog._SUPPORTED_CHECKSUMS
-                        )
+                        f"Invalid checksum: {checksum_type}, supported checksum types are: {ReplicaCatalog._SUPPORTED_CHECKSUMS}"
                     )
 
         # if an entry with the given lfn already exists, update it

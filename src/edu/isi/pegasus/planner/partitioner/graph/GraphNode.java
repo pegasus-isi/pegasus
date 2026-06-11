@@ -15,7 +15,9 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.planner.classes.Data;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;

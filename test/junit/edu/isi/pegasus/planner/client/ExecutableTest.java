@@ -20,13 +20,18 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import gnu.getopt.LongOpt;
-import java.util.MissingResourceException;
+
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.util.MissingResourceException;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ExecutableTest {
 
     @Test
@@ -88,7 +93,8 @@ public class ExecutableTest {
                 assertThrows(
                         MissingResourceException.class,
                         () -> executable.exposedInitialize(new String[0]),
-                        "initialize should currently fail while sanity-checking required Pegasus properties");
+                        "initialize should currently fail while sanity-checking required Pegasus"
+                                + " properties");
 
         assertThat(exception.getMessage(), is("The pegasus.home.bindir property was not set "));
         assertThat(exception.getKey(), equalTo("pegasus.home.bindir"));

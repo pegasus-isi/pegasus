@@ -607,7 +607,9 @@ public class Node {
     private long ancET;
     private long desET;
 
-    /** @return the sum of execution time of all ancestor tasks */
+    /**
+     * @return the sum of execution time of all ancestor tasks
+     */
     public long getAncET() {
         if (ancET < 0) {
             ancET = 0;
@@ -620,7 +622,9 @@ public class Node {
         return ancET;
     }
 
-    /** @return the sum of execution time of all descendant tasks */
+    /**
+     * @return the sum of execution time of all descendant tasks
+     */
     public long getDesET() {
         if (desET < 0) {
             desET = 0;
@@ -633,7 +637,9 @@ public class Node {
         return desET;
     }
 
-    /** @return the sum of execution time of all dependent tasks */
+    /**
+     * @return the sum of execution time of all dependent tasks
+     */
     public long getDepET() {
         return getAncET() + getDesET();
     }

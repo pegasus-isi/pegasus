@@ -21,10 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class GlobusTest {
 
     private Globus globus;

@@ -18,13 +18,15 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
+
 import org.supercsv.cellprocessor.ParseLong;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanReader;
 import org.supercsv.prefs.CsvPreference;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author Sudarshan Srinivasan

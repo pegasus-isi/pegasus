@@ -22,11 +22,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.classes.Data;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -421,14 +423,17 @@ class ReplicaStoreDeserializer extends ReplicaCatalogJsonDeserializer<ReplicaSto
                                 if (rl.isRegex()) {
                                     StringBuffer error = new StringBuffer();
                                     error.append(
-                                                    "Unable to deserialize into Replica Store an entry")
+                                                    "Unable to deserialize into Replica Store an"
+                                                            + " entry")
                                             .append(" ")
                                             .append("for lfn")
                                             .append(" ")
                                             .append(rl)
                                             .append(" ")
                                             .append(
-                                                    "as it has regex attribute set to true. Please specify such entries in a replica catalog file.");
+                                                    "as it has regex attribute set to true. Please"
+                                                            + " specify such entries in a replica"
+                                                            + " catalog file.");
                                     throw new ReplicaCatalogException(error.toString());
                                 }
                                 store.add(rl);

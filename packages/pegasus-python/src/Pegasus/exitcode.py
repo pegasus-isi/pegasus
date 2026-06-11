@@ -22,11 +22,11 @@ try:
 except ImportError:
     SUBMIT_FILE_UPDATE_ENABLED = False
 
-from Pegasus import expressions
-from Pegasus.cluster import RecordParser
-from Pegasus.monitoring.job import Job
-from Pegasus.monitoring.metadata import Metadata
-from Pegasus.tools import kickstart_parser
+from Pegasus import expressions  # noqa: E402
+from Pegasus.cluster import RecordParser  # noqa: E402
+from Pegasus.monitoring.job import Job  # noqa: E402
+from Pegasus.monitoring.metadata import Metadata  # noqa: E402
+from Pegasus.tools import kickstart_parser  # noqa: E402
 
 # logging
 log = {
@@ -78,31 +78,31 @@ def rotate_file(outfile, errfile):
 
     # Must end in .out
     if not outfile.endswith(".out"):
-        raise JobFailed("%s does not look like a kickstart .out file" % outfile)
+        raise JobFailed(f"{outfile} does not look like a kickstart .out file")
 
     # Find next file in sequence
     retry = None
     for i in range(0, 1000):
-        candidate = "%s.%03d" % (outfile, i)
+        candidate = f"{outfile}.{i:03d}"
         if not os.path.isfile(candidate):
             retry = i
             break
 
     # unlikely to occur
     if retry is None:
-        raise JobFailed("%s has been renamed too many times!" % (outfile))
+        raise JobFailed(f"{outfile} has been renamed too many times!")
 
     basename = outfile[:-4]
     log["retry"] = retry
 
     # rename .out to .out.000
-    newout = "%s.out.%03d" % (basename, retry)
+    newout = f"{basename}.out.{retry:03d}"
     os.rename(outfile, newout)
 
     # rename .err to .err.000 if it exists
     newerr = None
     if os.path.isfile(errfile):
-        newerr = "%s.err.%03d" % (basename, retry)
+        newerr = f"{basename}.err.{retry:03d}"
         os.rename(errfile, newerr)
 
     return newout, newerr
@@ -157,13 +157,13 @@ def check_cluster_summary(record):
     if "stat" in record:
         stat = record["stat"]
         if stat != "ok":
-            raise JobFailed("cluster-summary stat=%s" % stat)
+            raise JobFailed(f"cluster-summary stat={stat}")
 
     # If any of the tasks failed, then job failed
     if "failed" in record:
         failed = int(record["failed"])
         if failed > 0:
-            raise JobFailed("cluster-summary failed=%d" % failed)
+            raise JobFailed(f"cluster-summary failed={failed:d}")
 
     # If no tasks were submitted, then it succeeded
     if "submitted" in record:
@@ -181,7 +181,7 @@ def check_cluster_summary(record):
     if "succeeded" in record:
         succeeded = int(record["succeeded"])
         if succeeded == 0:
-            raise JobFailed("cluster-summary succeeded=%d" % succeeded)
+            raise JobFailed(f"cluster-summary succeeded={succeeded:d}")
 
     return 0
 
@@ -213,7 +213,7 @@ def check_kickstart_records(txt):
         raw = int(m.group(1))
         log["app_exitcode"] = raw
         if raw != 0:
-            raise JobFailed("task exited with raw status %d" % raw)
+            raise JobFailed(f"task exited with raw status {raw:d}")
         succeeded = succeeded + 1
 
     # xml
@@ -232,7 +232,7 @@ def check_kickstart_records(txt):
         else:
             raise JobFailed("<status> was missing valid 'raw' attribute")
         if raw != 0:
-            raise JobFailed("task exited with raw status %d" % raw)
+            raise JobFailed(f"task exited with raw status {raw:d}")
         succeeded = succeeded + 1
 
     # Fail if there were no invocation records and no cluster-summary
@@ -332,8 +332,7 @@ def get_errfile(outfile):
     right = ""
     if i + 5 < len(outfile):
         right = outfile[i + 4 :]
-    errfile = left + ".err" + right
-    return errfile
+    return left + ".err" + right
 
 
 def get_sub_file(outfile):
@@ -404,13 +403,13 @@ def exitcode(
     :raises JobFailed: If the job is determined to have failed.
     """
     if not os.path.isfile(outfile):
-        raise JobFailed("%s does not exist" % outfile)
+        raise JobFailed(f"{outfile} does not exist")
 
     errfile = get_errfile(outfile)
 
     # outfile Must end in .out
     if not outfile.endswith(".out"):
-        raise JobFailed("%s does not look like a kickstart .out file" % outfile)
+        raise JobFailed(f"{outfile} does not look like a kickstart .out file")
 
     meta_file = outfile[:-3] + "meta"
 
@@ -425,7 +424,7 @@ def exitcode(
             # if dagman has flagged the job as a failure, then always flag the job as error
             # PM-1746 highlights the case where jobs that get held are aborted eventually
             # by dagman
-            raise JobFailed("dagman reported non-zero exitcode: %d" % dagman_job_status)
+            raise JobFailed(f"dagman reported non-zero exitcode: {dagman_job_status:d}")
 
     # Next, read the output and error files
     stdout = readfile(outfile)
@@ -501,7 +500,7 @@ def update_job_submit_file(outfile, retry):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
     if not os.path.exists(sub_file):
-        raise JobFailed("Could not find job submit file %s" % sub_file)
+        raise JobFailed(f"Could not find job submit file {sub_file}")
 
     j = Job(
         name=jobname,
@@ -535,7 +534,7 @@ def update_job_submit_file(outfile, retry):
         # print(f"key {key} -> {value}")
         try:
             value = int(value)
-        except:
+        except Exception:
             pass
 
         expression = expressions.get(key)
@@ -552,7 +551,7 @@ def update_job_submit_file(outfile, retry):
             sed.apply(sub_file)
         except SedException as e:
             _log_error(e.message)
-        except:
+        except Exception:
             raise
 
 
@@ -593,9 +592,8 @@ def _get_sed_pattern(expression, symbols, key, value):
 
     # actually update the submit file with the new value
     # s/^\s*(\+?)(pegasus_queue)\s*=\s*("?)([^"]*)("?)/\1\2 = \3long\5/g
-    pattern = sed_pattern_update_pegasus_classads.format(key, newvalue)
+    return sed_pattern_update_pegasus_classads.format(key, newvalue)
     # print(pattern)
-    return pattern
 
 
 def _get_symbol_table(j, retry, outfile):
@@ -612,7 +610,7 @@ def _get_symbol_table(j, retry, outfile):
         value = j.get_pegasus_classads().get(key)
         try:
             value = int(value)
-        except:
+        except Exception:
             pass
         symbols[key] = value
 
@@ -638,7 +636,7 @@ def _get_symbol_table(j, retry, outfile):
             # invocations. we need to take max values or something??
             for key in invocation:
                 symbols[key] = invocation[key]
-    except:
+    except Exception:
         pass
 
     # determine the duration of the whole job. we get this
@@ -665,8 +663,7 @@ def _get_submit_file_backup_suffix():
 
     # log["retry"] is populated if rotation of stdout/stderr is enabled
     global_retry = log["retry"] if log["retry"] else 0
-    suffix = ".%03d" % global_retry
-    return suffix
+    return f".{global_retry:03d}"
 
 
 def _get_job_runtime(error_file):
@@ -692,7 +689,7 @@ def _get_job_runtime(error_file):
         runtime = runtime_match.group(1)
         try:
             runtime = int(runtime)
-        except:
+        except Exception:
             _log_error(f"Unable to convert {runtime} to int")
 
     return runtime
@@ -824,7 +821,7 @@ def main(args):
         action="store",
         type="string",
         dest="log_filename",
-        help="Name of the common log file in which stdout/stderr will" "be redirected.",
+        help="Name of the common log file in which stdout/stderr willbe redirected.",
     )
     parser.add_option(
         "-M",

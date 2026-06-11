@@ -1,6 +1,7 @@
 """
 NetLogger interactions with the Python logging module.
 """
+
 __rcsid__ = "$Id: logutil.py 772 2008-05-23 22:59:22Z dang $"
 
 import logging
@@ -182,7 +183,7 @@ class BPLogger(logging.Logger):
         self.log(logging.INFO, Level.INFO, event, **kwargs)
 
     def warning(self, event, **kwargs):
-        self.log(logging.WARN, Level.WARN, event, **kwargs)
+        self.log(logging.WARNING, Level.WARN, event, **kwargs)
 
     warn = warning
 
@@ -334,22 +335,22 @@ def profile(func):
 
     if func.__module__ == "__main__":
         f = func.__globals__["__file__"] or "unknown"
-        event = "%s" % os.path.splitext(os.path.basename(f))[0]
+        event = f"{os.path.splitext(os.path.basename(f))[0]}"
         log = _logger("script")
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = "%s" % func.__name__
-        log = _logger("%s" % func.__module__)
+        event = f"{func.__name__}"
+        log = _logger(f"{func.__module__}")
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
     def nl_profile_func(*args, **kw):
-        log.debug("%s.start" % event)
+        log.debug(f"{event}.start")
         try:
             v = func(*args, **kw)
         except Exception:
-            log.error("%s.end" % event)
+            log.error(f"{event}.end")
             raise
-        log.debug("%s.end" % event)
+        log.debug(f"{event}.end")
         return v
 
     return nl_profile_func
@@ -366,22 +367,22 @@ def profile_result(func):
 
     if func.__module__ == "__main__":
         f = func.__globals__["__file__"] or "unknown"
-        event = "%s" % os.path.splitext(os.path.basename(f))[0]
+        event = f"{os.path.splitext(os.path.basename(f))[0]}"
         log = _logger("script")
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
-        event = "%s" % func.__name__
-        log = _logger("%s" % func.__module__)
+        event = f"{func.__name__}"
+        log = _logger(f"{func.__module__}")
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
 
     def nl_profile_func(*args, **kw):
-        log.debug("%s.start" % event)
+        log.debug(f"{event}.start")
         try:
             v = func(*args, **kw)
         except Exception:
-            log.error("%s.end" % event)
+            log.error(f"{event}.end")
             raise
-        log.debug("%s.end" % event, result=v)
+        log.debug(f"{event}.end", result=v)
         return v
 
     return nl_profile_func
@@ -414,16 +415,16 @@ class Profiler(type):
         if not isinstance(func, types.FunctionType):
             return func
 
-        event = "%s" % func.__name__
+        event = f"{func.__name__}"
 
         def nl_profile_method(self, *args, **kw):
-            self._log.debug("%s.start" % event)
+            self._log.debug(f"{event}.start")
             try:
                 v = func(self, *args, **kw)
             except Exception:
-                self._log.error("%s.end" % event)
+                self._log.error(f"{event}.end")
                 raise
-            self._log.debug("%s.end" % event)
+            self._log.debug(f"{event}.end")
             return v
 
         return nl_profile_method
@@ -550,7 +551,7 @@ class OptionParser(optparse.OptionParser):
     }
 
     # Verbosity (number of -v's) to logging level
-    VBMAP = (logging.WARN, logging.INFO, logging.DEBUG, TRACE)
+    VBMAP = (logging.WARNING, logging.INFO, logging.DEBUG, TRACE)
 
     def __init__(self, can_be_daemon=False, **kwargs):
         """Add logging-related command-line options
@@ -563,8 +564,8 @@ class OptionParser(optparse.OptionParser):
                      version
         """
         if "version" not in kwargs:
-            version_str = "%prog, NetLogger Toolkit version: {}\n  {}".format(
-                NL_VERSION, NL_CREATE_DATE,
+            version_str = (
+                f"%prog, NetLogger Toolkit version: {NL_VERSION}\n  {NL_CREATE_DATE}"
             )
             version_str += "\n\n" + NL_COPYRIGHT
             kwargs["version"] = version_str
@@ -591,7 +592,7 @@ class OptionParser(optparse.OptionParser):
             action="store",
             dest=self.DEST_LOG,
             metavar="FILE",
-            help="write logs to FILE (%s)" % logfile_default,
+            help=f"write logs to FILE ({logfile_default})",
         )
         group.add_option(
             self.OPTIONS[self.DEST_ROT][0],
@@ -629,7 +630,7 @@ class OptionParser(optparse.OptionParser):
         option = self.get_option(opt)
         # Assumes the option's 'default' is set to None!
         if getattr(self.values, option.dest) is None:
-            self.error("%s option not supplied" % option)
+            self.error(f"{option} option not supplied")
 
     def parse_args(self, args=None):
         """Process command-line options.
@@ -662,11 +663,11 @@ class OptionParser(optparse.OptionParser):
                 self.error("Bad log rotation interval, too short")
             tm_unit = logrot[-1].lower()
             if tm_unit not in ("h", "m", "d"):
-                self.error("Bad log rotation unit '%s' " "not in m,h,d" % tm_unit)
+                self.error(f"Bad log rotation unit '{tm_unit}' not in m,h,d")
             try:
                 tm_interval = int(logrot[:-1])
             except ValueError:
-                self.error("Log rotation value '%s' must be an integer" % logrot[:-1])
+                self.error(f"Log rotation value '{logrot[:-1]}' must be an integer")
             do_logrot = True
             _tfrh = logging.handlers.TimedRotatingFileHandler
         else:
@@ -677,20 +678,19 @@ class OptionParser(optparse.OptionParser):
         if is_daemon:
             if logfile is None or logfile == "" or logfile == "-":  # missing/empty
                 self.error("log file is required in daemon mode")
-                return  # defensive
-            else:
-                # stderr and BP logs -> logfile
-                setLoggerClass(BPLogger)
-                logfile = logfile.strip()
-                try:
-                    if do_logrot:
-                        handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
-                    else:
-                        handler = logging.FileHandler(logfile)
-                except OSError as err:
-                    self.error(f"Cannot open log file '{logfile}': {err}")
-                sys.stderr = handler.stream
-                handler.setFormatter(logging.Formatter("%(message)s"))
+                return None  # defensive
+            # stderr and BP logs -> logfile
+            setLoggerClass(BPLogger)
+            logfile = logfile.strip()
+            try:
+                if do_logrot:
+                    handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
+                else:
+                    handler = logging.FileHandler(logfile)
+            except OSError as err:
+                self.error(f"Cannot open log file '{logfile}': {err}")
+            sys.stderr = handler.stream
+            handler.setFormatter(logging.Formatter("%(message)s"))
         else:
             if logfile is None or logfile == "":  # missing
                 # Pretty-BP logs -> stderr
@@ -721,7 +721,7 @@ class OptionParser(optparse.OptionParser):
         # delattr(options, self.DEST_VERBOSE)
         if quiet and (vb > 0):
             self.error("quiet and verbosity options conflict")
-            return  # defensive
+            return None  # defensive
         if quiet:
             log.setLevel(logging.CRITICAL + 1)
         else:

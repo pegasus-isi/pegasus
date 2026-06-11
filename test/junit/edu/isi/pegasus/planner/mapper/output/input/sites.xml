@@ -7,14 +7,14 @@
 		<file-server  operation="all" url="file:///test/junit/output/mapper/blackdiamond/work">
 		</file-server>
 	</directory>
-	
+
 	<directory  path="/test/junit/output/mapper/blackdiamond/outputs" type="shared-storage" free-size="" total-size="">
 		<file-server  operation="put"
 			      url="file:///test/junit/output/mapper/blackdiamond/outputs"/>
 		<file-server  operation="get"
 			      url="gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs"/>
 		<!--<file-server  operation="get" url="gsiftp://corbusier.isi.edu/test/junit/output/mapper/blackdiamond/outputs"/>-->
-		
+
 	</directory>
 
 	<profile namespace="pegasus" key="clusters.num" >1</profile>
@@ -29,11 +29,11 @@
 
 	<profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
 	<profile namespace="pegasus" key="style" >ssh</profile>
-	
+
         <profile namespace="pegasus" key="change.dir" >true</profile>
 
 
-	<!-- some globus and condor profile keys that get translated 
+	<!-- some globus and condor profile keys that get translated
 	    to remote_ce_requirements -->
 	<profile namespace="globus" key="queue">quick</profile>
 	<profile namespace="globus" key="hostcount">5</profile>
@@ -46,4 +46,3 @@
 	<profile namespace="pegasus" key="style" >condor</profile>
 </site>
 </sitecatalog>
-

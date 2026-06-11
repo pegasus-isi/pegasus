@@ -26,8 +26,10 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Profile;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 /**
  * Tests covering the pattern exercised by TestTransformationCatalog#main — creating, configuring

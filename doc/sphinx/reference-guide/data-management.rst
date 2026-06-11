@@ -274,7 +274,7 @@ In order to use S3, it is necessary to create a config file for the S3
 transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
-Next, you need create a Pegasus credentials files. See 
+Next, you need create a Pegasus credentials files. See
 :ref:`the section on credential staging <cred-staging>`. This file is
 picked up automatically when your workflow contains s3 transfers.
 
@@ -383,16 +383,16 @@ failure detection and recovery. Pegasus has limited support for
 Globus transfers.
 
 If you want to use Globus transfers in your workflow, all data has to be
-accessible via Globus collections. You cannot mix Globus 
+accessible via Globus collections. You cannot mix Globus
 transfers with other protocols. For most users, this means they will
 have to create an endpoint for their submit host, expose their data via a collection
-and modify both the replica catalog and Abstract Workflow generator so that all 
+and modify both the replica catalog and Abstract Workflow generator so that all
 URLs in the workflow are referencing the relevant Globus collections.
 
 The Globus service offers high security assurance and as such users and applications
 are required to authenticate themselves.
-To support Globus transfers, Pegasus workflows use OAuth tokens, 
-provided by the Globus Auth service, in order to authenticate themselves and use the 
+To support Globus transfers, Pegasus workflows use OAuth tokens,
+provided by the Globus Auth service, in order to authenticate themselves and use the
 Globus API to instantiate transfers between collections.
 
 Using *pegasus-globus-online-init*, a user can provide authorization to Pegasus
@@ -400,9 +400,9 @@ to retrieve a valid transfer access tokens. By default Pegasus acquires
 temporary tokens that expire within a few days. Using --permanent
 option you can request refreshable tokens that last until the token's session expires
 (or until access is revoked).
-With endpoints running Globus Connect Server(GCS) versions 5.4+ data collections 
+With endpoints running Globus Connect Server(GCS) versions 5.4+ data collections
 may require **data_access** consent to allow to operate on them (e.g., transfers).
-To acquire **data_access** consent for these collections under pegasus, 
+To acquire **data_access** consent for these collections under pegasus,
 you can use the ``--collections`` option and list the *UUIDs* of the collections
 you would like to give pegasus consent for.
 Additionally some endpoints have enabled the High Assurance setting which
@@ -428,7 +428,7 @@ and follow the steps.
   -p option. The number of days the token can be used is dictated by the policies of the
   domain authentication. Endpoints, such as OLCF, require re-authentication of the token
   every few days. As a result, *pegasus-globus-online-init* should be invoked frequently
-  to avoid transfer failures. 
+  to avoid transfer failures.
 
 URLs for data in Globus collections follow the scheme:
 *go://[collection_uuid]/[path]*. For example, a user named bsmith,
@@ -691,7 +691,7 @@ Pegasus has a generic credentials file located under
 ``~/.pegasus/credentials.conf``. This file is currently used for
 WebDAV and S3 transfers, but more protocols will probably be moved
 to this model in the future. To get started, create
-``~/.pegasus/credentials.conf`` and ensure the file is only 
+``~/.pegasus/credentials.conf`` and ensure the file is only
 readable by the current user:
 
 .. code-block:: bash
@@ -709,7 +709,7 @@ is just an arbitrary name with an endpoint entry. Example:
     # For simple username/password protocols, such as WebDAV,
     # just specify the hostname and credentials. In this
     # example, the credentials would be used for URLs
-    # matching the section, such as  
+    # matching the section, such as
     # webdav://data.cyverse.org/some/file.txt
 
     [data.cyverse.org]
@@ -1177,9 +1177,9 @@ Replica Catalog
          f = File(lfn="file.txt").add_metadata(creator="ryan")
          rc = ReplicaCatalog()
          rc.add_replica(
-            site="local", 
-            lfn=f, 
-            pfn="/inputs/file.txt", 
+            site="local",
+            lfn=f,
+            pfn="/inputs/file.txt",
             metadata={"more": "data"}
          )
 
@@ -1188,19 +1188,19 @@ Replica Catalog
       .. code-block::
          :emphasize-lines: 11,12,13
 
-         x-pegasus:                                                                      
-           apiLang: python                                                                  
-           createdBy: ryantanaka                                                            
-           createdOn: 09-29-20T17:02:28Z                                                 
-         pegasus: '5.0'                                                                  
-         replicas:                                                                       
-           - lfn: file.txt                                                                 
-             pfns:                                                                         
-               - site: local                                                                 
-                 pfn: /inputs/file.txt                                                       
-             metadata:                                                                     
-              more: data                                                                  
-              creator: ryan  
+         x-pegasus:
+           apiLang: python
+           createdBy: ryantanaka
+           createdOn: 09-29-20T17:02:28Z
+         pegasus: '5.0'
+         replicas:
+           - lfn: file.txt
+             pfns:
+               - site: local
+                 pfn: /inputs/file.txt
+             metadata:
+              more: data
+              creator: ryan
 
 Transformation Catalog
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -1230,21 +1230,21 @@ Transformation Catalog
       .. code-block::
          :emphasize-lines: 12,13,14,15
 
-         x-pegasus:                                                                      
-           apiLang: python                                                                  
-           createdBy: ryantanaka                                                            
-           createdOn: 09-29-20T17:22:44Z                                                 
-         pegasus: '5.0'                                                                  
-         transformations:                                                                
-           - name: process.sh                                                              
-             sites:                                                                        
-               - name: local                                                                 
-                 pfn: /usr/local/bin/process.sh                                              
-                 type: stageable                                                             
-                 metadata:                                                                   
-                   last_updated: '1601425319'                                                
-             metadata:                                                                     
-               step: data processing    
+         x-pegasus:
+           apiLang: python
+           createdBy: ryantanaka
+           createdOn: 09-29-20T17:22:44Z
+         pegasus: '5.0'
+         transformations:
+           - name: process.sh
+             sites:
+               - name: local
+                 pfn: /usr/local/bin/process.sh
+                 type: stageable
+                 metadata:
+                   last_updated: '1601425319'
+             metadata:
+               step: data processing
 
 Workflow
 ~~~~~~~~
@@ -1252,7 +1252,7 @@ Workflow
 .. tabs::
 
    .. tab:: Python API
-      
+
       .. code-block:: python
          :emphasize-lines: 2,5,8
 
@@ -1270,30 +1270,30 @@ Workflow
 
    .. tab:: YAML
 
-      .. code-block:: 
+      .. code-block::
          :emphasize-lines: 7,8,16,17,19,20
 
-         x-pegasus:                                                                      
-           apiLang: python                                                               
-           createdBy: ryantanaka                                                         
-           createdOn: 09-29-20T17:42:23Z                                                 
-         pegasus: '5.0'                                                                  
-         name: example                                                                   
-         metadata:                                                                       
-           creates: example output                                                       
-         jobs:                                                                           
-           - type: job                                                                     
-             name: process                                                                 
-             id: ID0000001                                                                 
-             arguments: []                                                                 
-             uses:                                                                         
-               - lfn: in_file.txt                                                            
-                 metadata:                                                                   
-                   creator: ryan                                                             
-                 type: input                                                                 
-             metadata:                                                                     
-               purpose: process data                                                       
-         jobDependencies: [] 
+         x-pegasus:
+           apiLang: python
+           createdBy: ryantanaka
+           createdOn: 09-29-20T17:42:23Z
+         pegasus: '5.0'
+         name: example
+         metadata:
+           creates: example output
+         jobs:
+           - type: job
+             name: process
+             id: ID0000001
+             arguments: []
+             uses:
+               - lfn: in_file.txt
+                 metadata:
+                   creator: ryan
+                 type: input
+             metadata:
+               purpose: process data
+         jobDependencies: []
 
 .. note::
 

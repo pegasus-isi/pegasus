@@ -8,4 +8,4 @@ pegasus.dir.storage.deep=false
 
 # always get the job environment in the
 # kickstart record
-pegasus.gridstart.arguments = -f 
+pegasus.gridstart.arguments = -f

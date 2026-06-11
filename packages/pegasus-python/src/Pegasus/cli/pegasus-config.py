@@ -11,15 +11,14 @@ from os.path import abspath, dirname, exists, join, normpath
 def _python_hash(**kw):
     """."""
     print(
-        """pegasus_bin_dir = "%(bin_dir)s"
-pegasus_conf_dir = "%(conf_dir)s"
-pegasus_java_dir = "%(java_dir)s"
-pegasus_python_dir = "%(python_dir)s"
-pegasus_python_externals_dir = "%(python_externals_dir)s"
-pegasus_share_dir = "%(share_dir)s"
-pegasus_schema_dir = "%(schema_dir)s"
-"""
-        % kw,
+        """pegasus_bin_dir = "{bin_dir}"
+pegasus_conf_dir = "{conf_dir}"
+pegasus_java_dir = "{java_dir}"
+pegasus_python_dir = "{python_dir}"
+pegasus_python_externals_dir = "{python_externals_dir}"
+pegasus_share_dir = "{share_dir}"
+pegasus_schema_dir = "{schema_dir}"
+""".format(**kw),
         end="",
     )
 
@@ -27,24 +26,23 @@ pegasus_schema_dir = "%(schema_dir)s"
 def _sh_dump(**kw):
     """."""
     print(
-        """PEGASUS_BIN_DIR="%(bin_dir)s";
+        """PEGASUS_BIN_DIR="{bin_dir}";
 export PEGASUS_BIN_DIR
-PEGASUS_CONF_DIR="%(conf_dir)s"
+PEGASUS_CONF_DIR="{conf_dir}"
 export PEGASUS_CONF_DIR
-PEGASUS_JAVA_DIR="%(java_dir)s"
+PEGASUS_JAVA_DIR="{java_dir}"
 export PEGASUS_JAVA_DIR
-PEGASUS_PYTHON_DIR="%(python_dir)s"
+PEGASUS_PYTHON_DIR="{python_dir}"
 export PEGASUS_PYTHON_DIR
-PEGASUS_PYTHON_EXTERNALS_DIR="%(python_externals_dir)s"
+PEGASUS_PYTHON_EXTERNALS_DIR="{python_externals_dir}"
 export PEGASUS_PYTHON_EXTERNALS_DIR
-PEGASUS_SHARE_DIR="%(share_dir)s"
+PEGASUS_SHARE_DIR="{share_dir}"
 export PEGASUS_SHARE_DIR
-PEGASUS_SCHEMA_DIR="%(schema_dir)s"
+PEGASUS_SCHEMA_DIR="{schema_dir}"
 export PEGASUS_SCHEMA_DIR
-CLASSPATH="%(classpath)s"
+CLASSPATH="{classpath}"
 export CLASSPATH
-"""
-        % kw,
+""".format(**kw),
         end="",
     )
 
@@ -180,7 +178,9 @@ def main():
         help="Dumps all settings in python format.",
     )
     parser.add_argument(
-        "--sh-dump", action="store_true", help="Dumps all settings in shell format.",
+        "--sh-dump",
+        action="store_true",
+        help="Dumps all settings in shell format.",
     )
 
     parser.add_argument(
@@ -194,7 +194,9 @@ def main():
         help="Print the directory containing configuration files.",
     )
     parser.add_argument(
-        "--java", action="store_true", help="Print the directory containing the jars.",
+        "--java",
+        action="store_true",
+        help="Print the directory containing the jars.",
     )
     parser.add_argument(
         "--python",
@@ -207,7 +209,9 @@ def main():
         help="Print the directory to the external Python libraries.",
     )
     parser.add_argument(
-        "--schema", action="store_true", help="Print the directory containing schemas.",
+        "--schema",
+        action="store_true",
+        help="Print the directory containing schemas.",
     )
     parser.add_argument(
         "--r",

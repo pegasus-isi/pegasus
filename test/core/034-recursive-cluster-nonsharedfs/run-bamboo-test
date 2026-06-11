@@ -94,7 +94,3 @@ pegasus-plan \
     --cluster label,horizontal \
     -vvvv \
     --submit blackdiamond.dax | tee plan.out
-
-
-
-

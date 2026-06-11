@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -50,7 +51,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public abstract class Abstract implements ContainerShellWrapper {
 
     public static final String SEPARATOR = "########################";
@@ -250,7 +253,8 @@ public abstract class Abstract implements ContainerShellWrapper {
             error.append("For job (").append(jobname).append(").");
         }
         error.append(
-                        " File Server not specified for head node scratch shared filesystem for site: ")
+                        " File Server not specified for head node scratch shared filesystem for"
+                                + " site: ")
                 .append(site);
         throw new RuntimeException(error.toString());
     }
@@ -566,7 +570,8 @@ public abstract class Abstract implements ContainerShellWrapper {
             sb.append("set -e").append('\n');
             sb.append("if [ $ec -ne 0 ]; then").append('\n');
             sb.append(
-                            "    echo \" Ignoring failure while transferring chkpoint files. Exicode was $ec\" 1>&2")
+                            "    echo \" Ignoring failure while transferring chkpoint files."
+                                    + " Exicode was $ec\" 1>&2")
                     .append('\n');
             sb.append("fi").append('\n');
             sb.append("\n");

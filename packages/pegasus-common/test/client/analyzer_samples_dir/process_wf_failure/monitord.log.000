@@ -1,4 +1,4 @@
-2023-03-03 23:09:49,308:INFO:pegasus-monitord(58): pegasus-monitord starting - pid 147796 
+2023-03-03 23:09:49,308:INFO:pegasus-monitord(58): pegasus-monitord starting - pid 147796
 2023-03-03 23:09:49,317:INFO:pegasus-monitord(456): Final Command line options are: ['-N', 'process-0.dag.dagman.out']
 2023-03-03 23:09:49,319:INFO:Pegasus.monitoring.event_output(630): Connecting workflow event sink to sqlite:////home/mzalam/processwf/process-workflow/submit/mzalam/pegasus/process/run0001/process-0.stampede.db
 Pegasus database was successfully created.

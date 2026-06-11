@@ -45,8 +45,7 @@ class NoAuthentication(BaseAuthentication):
         # Just return info for the user running the service
         if "username" in g:
             return user.get_user_by_username(g.username)
-        else:
-            return user.get_user_by_uid(os.getuid())
+        return user.get_user_by_uid(os.getuid())
 
 
 class PAMAuthentication(BaseAuthentication):

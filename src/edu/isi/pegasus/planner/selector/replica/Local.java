@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -45,7 +46,8 @@ public class Local implements ReplicaSelector {
 
     /** Sanity Check Error Message. */
     public static final String SANITY_CHECK_ERROR_MESSAGE_PREFIX =
-            "Local Replica Selector selects only local file URL's. Set transfers to run on submit host.";
+            "Local Replica Selector selects only local file URL's. Set transfers to run on submit"
+                    + " host.";
 
     /** The handle to the logging object that is used to log the various debug messages. */
     protected LogManager mLogger;

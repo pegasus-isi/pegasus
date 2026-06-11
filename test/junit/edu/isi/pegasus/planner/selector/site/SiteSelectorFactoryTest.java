@@ -21,8 +21,10 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.selector.SiteSelector;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 /** Tests for the SiteSelectorFactory class. */
 public class SiteSelectorFactoryTest {

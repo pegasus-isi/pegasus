@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.QuotedString;
 import edu.isi.pegasus.planner.parser.tokens.Token;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogReservedWord;
+
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
@@ -252,7 +253,9 @@ public class TransformationCatalogTextScanner {
         /** Boolean indicating whether to do variable expansion or not */
         private boolean mDoVariableExpansion;
 
-        /** @param reader */
+        /**
+         * @param reader
+         */
         public ExpanderLineNumberReader(
                 Reader reader, String commentPrefix, boolean doVariableExpansion)
                 throws IOException {

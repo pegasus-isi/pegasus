@@ -23,6 +23,27 @@ import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.common.AWSJobstateWriter;
 import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
 import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.batch.*;
+import software.amazon.awssdk.services.batch.model.*;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.sync.RequestBody;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,26 +67,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.batch.*;
-import software.amazon.awssdk.services.batch.model.*;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
-import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.sync.RequestBody;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class Synch {
 
     /** The ARN prefix identifier */
@@ -825,7 +830,8 @@ public class Synch {
             mExitCode = NON_TASK_FAILURE_EXITCODE;
         } catch (ExecutionException e) {
             mLogger.error(
-                    "Execution exception encountered while waiting for monitoring thread to complete ",
+                    "Execution exception encountered while waiting for monitoring thread to"
+                            + " complete ",
                     e);
             mExitCode = NON_TASK_FAILURE_EXITCODE;
         }
@@ -896,8 +902,9 @@ public class Synch {
             // example  remotehost-20241105220118703492-job-definition:2
             if (!arn.contains(":")) {
                 throw new PegasusAWSBatchException(
-                        "Malformed arn for job definition passed. Should be of form name:revision . "
-                                + "Please make sure revision number is included in the job definition passed "
+                        "Malformed arn for job definition passed. Should be of form name:revision ."
+                            + " Please make sure revision number is included in the job definition"
+                            + " passed "
                                 + arn);
             }
         }
@@ -1139,6 +1146,7 @@ public class Synch {
             this.mCommonFilesToS3.add(new File(f).getName());
         }
     }
+
     /**
      * Transfers the input files to the specified bucket
      *
@@ -1337,7 +1345,8 @@ public class Synch {
             }
         } else {
             mLogger.error(
-                    "Compute Environment was not deleted as it was not disabled after following number of retries "
+                    "Compute Environment was not deleted as it was not disabled after following"
+                            + " number of retries "
                             + max_disable_retries);
             return deleted;
         }
@@ -1474,6 +1483,7 @@ public class Synch {
 
         return isFile;
     }
+
     /**
      * Retrieves a property from the object. If not exists throws a runtime exception
      *
@@ -1628,7 +1638,9 @@ public class Synch {
                 .build();
     }
 
-    /** @param args the command line arguments */
+    /**
+     * @param args the command line arguments
+     */
     public static void main(String[] args) throws IOException {
 
         // log group: aws/batch/job job defn:

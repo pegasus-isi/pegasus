@@ -9,7 +9,7 @@
 08/17/22 17:08:26 ** Log last touched time unavailable (No such file or directory)
 08/17/22 17:08:26 ******************************************************
 08/17/22 17:08:26 Using config source: /etc/condor/condor_config
-08/17/22 17:08:26 Using local config sources: 
+08/17/22 17:08:26 Using local config sources:
 08/17/22 17:08:26    /etc/condor/config.d/00-htcondor-9.0.config
 08/17/22 17:08:26    /etc/condor/config.d/10-isi-main.conf
 08/17/22 17:08:26    /etc/condor/config.d/20-machine-specifics.conf
@@ -61,8 +61,8 @@
 08/17/22 17:08:26 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 08/17/22 17:08:26 DAGMAN_MAX_JOB_HOLDS setting: 100
 08/17/22 17:08:26 DAGMAN_HOLD_CLAIM_TIME setting: 20
-08/17/22 17:08:26 ALL_DEBUG setting: 
-08/17/22 17:08:26 DAGMAN_DEBUG setting: 
+08/17/22 17:08:26 ALL_DEBUG setting:
+08/17/22 17:08:26 DAGMAN_DEBUG setting:
 08/17/22 17:08:26 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 08/17/22 17:08:26 DAGMAN_REMOVE_NODE_JOBS setting: True
 08/17/22 17:08:26 DAGMAN will adjust edges after parsing
@@ -84,9 +84,9 @@
 08/17/22 17:08:26 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 08/17/22 17:08:26 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 08/17/22 17:08:26 TOKEN: No token found.
-08/17/22 17:08:26 
+08/17/22 17:08:26
 Unrecognized argument: -Condorlog
-08/17/22 17:08:26 
+08/17/22 17:08:26
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -135,7 +135,7 @@ Usage: condor_dagman -f -t -l .
 08/17/22 17:08:37 ** Log last touched 8/17 17:08:26
 08/17/22 17:08:37 ******************************************************
 08/17/22 17:08:37 Using config source: /etc/condor/condor_config
-08/17/22 17:08:37 Using local config sources: 
+08/17/22 17:08:37 Using local config sources:
 08/17/22 17:08:37    /etc/condor/config.d/00-htcondor-9.0.config
 08/17/22 17:08:37    /etc/condor/config.d/10-isi-main.conf
 08/17/22 17:08:37    /etc/condor/config.d/20-machine-specifics.conf
@@ -187,8 +187,8 @@ Usage: condor_dagman -f -t -l .
 08/17/22 17:08:37 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 08/17/22 17:08:37 DAGMAN_MAX_JOB_HOLDS setting: 100
 08/17/22 17:08:37 DAGMAN_HOLD_CLAIM_TIME setting: 20
-08/17/22 17:08:37 ALL_DEBUG setting: 
-08/17/22 17:08:37 DAGMAN_DEBUG setting: 
+08/17/22 17:08:37 ALL_DEBUG setting:
+08/17/22 17:08:37 DAGMAN_DEBUG setting:
 08/17/22 17:08:37 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 08/17/22 17:08:37 DAGMAN_REMOVE_NODE_JOBS setting: True
 08/17/22 17:08:37 DAGMAN will adjust edges after parsing
@@ -210,9 +210,9 @@ Usage: condor_dagman -f -t -l .
 08/17/22 17:08:37 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 08/17/22 17:08:37 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 08/17/22 17:08:37 TOKEN: No token found.
-08/17/22 17:08:37 
+08/17/22 17:08:37
 Unrecognized argument: -Condorlog
-08/17/22 17:08:37 
+08/17/22 17:08:37
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>

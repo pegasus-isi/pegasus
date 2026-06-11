@@ -15,21 +15,24 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
-import java.io.*;
-import java.lang.reflect.*;
-import java.net.InetAddress;
-import java.sql.*;
-import java.util.Properties;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
+
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
 import org.xmldb.api.*;
 import org.xmldb.api.base.*;
 import org.xmldb.api.modules.*;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.InetAddress;
+import java.sql.*;
+import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 
 /**
  * This class provides basic functionalities to interact with the backend database for invocation
@@ -70,8 +73,13 @@ public class NXDInvSchema extends DatabaseSchema implements PTC {
      * @throws javax.xml.parsers.ParserConfigurationException Exception
      */
     public NXDInvSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException,
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException,
                     ParserConfigurationException {
         // load the driver from the properties
         super(); // call minimalistic c'tor, no driver loading!

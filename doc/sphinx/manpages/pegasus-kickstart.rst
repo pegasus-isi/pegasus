@@ -701,4 +701,3 @@ Notes
 sha256 implementation by Dr Brian Gladman, Worcester, UK. Please see
 the source code at https://github.com/pegasus-isi for the full
 copyright notice.
-

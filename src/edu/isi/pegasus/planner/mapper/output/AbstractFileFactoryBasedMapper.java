@@ -24,6 +24,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
+import org.griphyn.vdl.euryale.FileFactory;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * The abstract class that serves as the base class for the File Factory based mappers.

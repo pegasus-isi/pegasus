@@ -49,10 +49,10 @@ Configuring Workflows To Use Containers
 
 Container support is provided by the :py:class:`Pegasus.api.transformation_catalog`
 Python module. Use this to generate the transformation catalog for your workflow
-when containers are used. 
+when containers are used.
 
-For each container used by your workflow transformations, create a :py:class:`~Pegasus.api.transformation_catalog.Container` 
-and add it to your :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`. 
+For each container used by your workflow transformations, create a :py:class:`~Pegasus.api.transformation_catalog.Container`
+and add it to your :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`.
 
 .. code-block:: python
 
@@ -75,9 +75,9 @@ When this container is run, anything specified in the ``arguments`` parameter is
 added as a cli argument to the resulting ``docker container run`` command that
 Pegasus generates. If ``bypass_staging`` is set to ``True``, the container will
 be pulled directly onto the compute node where the job is run rather than to an
-intermediate staging site first. 
+intermediate staging site first.
 
-Then, when creating :py:class:`~Pegasus.api.transformation_catalog.Transformation`\s, 
+Then, when creating :py:class:`~Pegasus.api.transformation_catalog.Transformation`\s,
 pass the appropriate container to the ``container`` parameter of the constructor. When ``is_stageable``
 is set to ``False``, this means that the transformation is installed at the given
 ``pfn`` **inside of the container**. If ``is_stageable`` is set to ``True``, the executable will be staged into
@@ -98,7 +98,7 @@ should be hosted somewhere and made accessible via a protocol such as HTTP.
                )
 
    # A stageable python script that must be executed inside tools_container because
-   # it contains packages that we have when we developed it locally, but may not be 
+   # it contains packages that we have when we developed it locally, but may not be
    # installed on a compute node. Note that "pfn" is not a file URL but rather an
    # http one because pegasus-transfer will need to fetch the file into the container.
    process_text_2nd_pass = Transformation(
@@ -552,4 +552,3 @@ it can then be symlinked from when the PegasusLite jobs start on the
 worker nodes of that cluster. In order to do this, you need to be
 running the ``nonsharedfs`` data configuration mode with the staging site
 set to be the same as the compute site.
-

@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,6 +39,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
@@ -160,7 +162,8 @@ public class Decaf extends Abstract {
                             .append(constitutentJob.getID())
                             .append(". ")
                             .append(
-                                    "Additional arguments can be specified by associating a selector profile named")
+                                    "Additional arguments can be specified by associating a"
+                                            + " selector profile named")
                             .append(" ")
                             .append(Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
                     mLogger.log(sb.toString(), LogManager.WARNING_MESSAGE_LEVEL);
@@ -200,7 +203,8 @@ public class Decaf extends Abstract {
             throw new RuntimeException(
                     "Data flow job with id "
                             + job.getID()
-                            + " should be mapped to a json file in Transformation Catalog. Is mapped to "
+                            + " should be mapped to a json file in Transformation Catalog. Is"
+                            + " mapped to "
                             + name);
         }
 
@@ -314,8 +318,9 @@ public class Decaf extends Abstract {
      */
     public String getClusterExecutableBasename() {
         throw new RuntimeException(
-                "DECAF job clusterer does not create default transformation catalog entries for decaf."
-                        + " Please specify an installed executable for transformation with namespace,name - "
+                "DECAF job clusterer does not create default transformation catalog entries for"
+                        + " decaf. Please specify an installed executable for transformation with"
+                        + " namespace,name - "
                         + Decaf.TRANSFORMATION_NAMESPACE
                         + ","
                         + Decaf.TRANSFORMATION_NAME);
@@ -557,7 +562,8 @@ public class Decaf extends Abstract {
                 if (j instanceof DataFlowJob.Link) {
                     // PM-1602 skip the job in the mpirun invocation
                     mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                            "Skipping data link job for invocation by mpirun as number of cores is"
+                                    + " 0 - "
                                     + j.getLogicalID(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     continue;
@@ -621,7 +627,8 @@ public class Decaf extends Abstract {
                 if (j instanceof DataFlowJob.Link) {
                     // PM-1602 skip the job in the mpirun invocation
                     mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                            "Skipping data link job for invocation by mpirun as number of cores is"
+                                    + " 0 - "
                                     + j.getLogicalID(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     continue;

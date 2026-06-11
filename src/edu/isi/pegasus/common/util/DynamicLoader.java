@@ -58,7 +58,9 @@ public class DynamicLoader {
     /** Stores the fully qualified class name to dynamically instantiate. */
     private String m_classname;
 
-    /** @param classname the classname */
+    /**
+     * @param classname the classname
+     */
     public DynamicLoader(String classname) {
         if ((this.m_classname = classname) == null)
             throw new NullPointerException("You must specify a fully-qualified class name");
@@ -106,8 +108,11 @@ public class DynamicLoader {
      * @see #setClassName( String )
      */
     public Object instantiate(Object[] arguments)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         // generate class array and populate with class of each argument
         Class[] temp = new Class[arguments.length];
         for (int i = 0; i < arguments.length; ++i) temp[i] = arguments[i].getClass();
@@ -145,8 +150,11 @@ public class DynamicLoader {
      * @see #setClassName( String )
      */
     public Object instantiate(Class[] classes, Object[] arguments)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         // complain on argument mismatch
         if (classes.length != arguments.length)
             throw new IllegalArgumentException("vector sizes must match");
@@ -184,9 +192,14 @@ public class DynamicLoader {
      * @see #setClassName( String )
      */
     public Object static_method(String method, Object[] arguments)
-            throws ClassNotFoundException, SecurityException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
-                    NullPointerException, IllegalArgumentException {
+            throws ClassNotFoundException,
+                    SecurityException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    NullPointerException,
+                    IllegalArgumentException {
         // generate class array and populate with class of each argument
         Class[] temp = new Class[arguments.length];
         for (int i = 0; i < arguments.length; ++i) temp[i] = arguments[i].getClass();

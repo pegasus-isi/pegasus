@@ -174,7 +174,7 @@ class ScriptTest(TestCase):
         cwdfile = "/tmp/forkscript.cwd"
         if os.path.isfile(cwdfile):
             os.remove(cwdfile)
-        em.forkscript("echo $PWD > %s" % cwdfile, cwd="/")
+        em.forkscript(f"echo $PWD > {cwdfile}", cwd="/")
         time.sleep(1)  # This just gives the script time to finish
         cwd = open(cwdfile).read().strip()
         self.assertEqual(cwd, "/")
@@ -202,7 +202,7 @@ class ScriptTest(TestCase):
         cwdfile = "/tmp/runscript.cwd"
         if os.path.isfile(cwdfile):
             os.remove(cwdfile)
-        em.runscript("echo $PWD > %s" % cwdfile, cwd="/")
+        em.runscript(f"echo $PWD > {cwdfile}", cwd="/")
         cwd = open(cwdfile).read().strip()
         self.assertEqual(cwd, "/")
         os.remove(cwdfile)
@@ -295,22 +295,21 @@ class WorkflowTest(UserTestCase):
 
         # Only the local site in the SC
         scfile = StringIO(
-            """<?xml version="1.0" encoding="UTF-8"?>
+            f"""<?xml version="1.0" encoding="UTF-8"?>
             <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                          xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
                          version="4.0">
                 <site  handle="local" arch="x86_64" os="LINUX">
-                    <directory type="shared-scratch" path="%(tmpdir)s/scratch">
-                        <file-server operation="all" url="file://%(tmpdir)s/scratch"/>
+                    <directory type="shared-scratch" path="{self.tmpdir}/scratch">
+                        <file-server operation="all" url="file://{self.tmpdir}/scratch"/>
                     </directory>
-                    <directory type="local-storage" path="%(tmpdir)s/storage">
-                        <file-server operation="all" url="file://%(tmpdir)s/storage"/>
+                    <directory type="local-storage" path="{self.tmpdir}/storage">
+                        <file-server operation="all" url="file://{self.tmpdir}/storage"/>
                     </directory>
                 </site>
             </sitecatalog>
         """
-            % {"tmpdir": self.tmpdir}
         )
 
         rc = catalogs.save_catalog("replica", self.username, "replica", "File", rcfile)
@@ -543,18 +542,17 @@ class WorkflowTest(UserTestCase):
         f.close()
 
         dax = StringIO(
-            """<?xml version="1.0" encoding="UTF-8"?>
+            f"""<?xml version="1.0" encoding="UTF-8"?>
             <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
                   version="3.4" name="process">
                 <file name="subdax.xml">
-                    <pfn url="file://%s" site="local"/>
+                    <pfn url="file://{subdaxfile}" site="local"/>
                 </file>
                 <dax id="ID0000001" file="subdax.xml">
                 </dax>
             </adag>
         """
-            % subdaxfile
         )
 
         e, ew = self.create_test_workflow(dax)

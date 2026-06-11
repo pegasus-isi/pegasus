@@ -25,6 +25,7 @@ The compiler is `mpicxx` by default. Override with `CXX=<path-to-mpi-compiler> m
 ## Running Tests
 
 Unit tests are standalone C++ executables (no test framework):
+
 ```bash
 ./test-strlib           # String library tests
 ./test-dag              # DAG parsing tests
@@ -49,6 +50,7 @@ Minimum 2 processes (1 master + 1 worker). See `--help` for all options.
 ## Architecture
 
 **Master-Worker MPI model:**
+
 - `pegasus-mpi-cluster.cpp` — Entry point, argument parsing, dispatches to master or worker based on MPI rank
 - `master.cpp/h` — Rank 0: registers workers, schedules tasks from a priority queue, collects results, manages Host/Slot resource tracking
 - `worker.cpp/h` — Ranks 1..N: receives tasks, executes via fork/exec (TaskHandler), reports results back; supports host scripts, CPU affinity, I/O forwarding
@@ -58,6 +60,7 @@ Minimum 2 processes (1 master + 1 worker). See `--help` for all options.
 - `mpicomm.cpp/h` — MPI send/recv wrapper with non-blocking polling and timeout support
 
 **Supporting modules:**
+
 - `fdcache.cpp/h` — LRU file descriptor cache to avoid exhaustion
 - `log.cpp/h` — Log levels: FATAL, ERROR, WARN, INFO, DEBUG, TRACE
 - `tools.cpp/h` — System utilities (hostname, memory/CPU detection, path handling, affinity)
@@ -66,6 +69,7 @@ Minimum 2 processes (1 master + 1 worker). See `--help` for all options.
 - `config.cpp/h` — Global configuration (CPU affinity settings)
 
 **DAG file format** (subset of Condor DAGMan):
+
 ```
 TASK <name> <command> [args...]
 EDGE <parent> <child>

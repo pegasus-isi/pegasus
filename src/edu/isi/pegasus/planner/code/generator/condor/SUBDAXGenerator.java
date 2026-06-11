@@ -47,6 +47,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -312,14 +313,16 @@ public class SUBDAXGenerator {
                 error.append("DAX file for subworkflow does not exist ")
                         .append(dax)
                         .append(
-                                " . Either set the --basename option to subworkflow or make sure dax exists");
+                                " . Either set the --basename option to subworkflow or make sure"
+                                        + " dax exists");
                 throw new RuntimeException(error.toString());
             }
             label = options.getBasenamePrefix();
             index = "0";
             labelBasedDir = label;
             mLogger.log(
-                    "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
+                    "DAX File for subworkflow does not exist. Set label value to the basename"
+                            + " option passed ",
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
@@ -867,7 +870,8 @@ public class SUBDAXGenerator {
             if (entries == null) {
                 mLogger.log(
                         Separator.combine(job.namespace, job.logicalName, job.version)
-                                + "  not catalogued in the Transformation Catalog. Trying to construct from the Site Catalog",
+                                + "  not catalogued in the Transformation Catalog. Trying to"
+                                + " construct from the Site Catalog",
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 entry = defaultTCEntry("local");
             } else {
@@ -887,7 +891,8 @@ public class SUBDAXGenerator {
             */
             if (entry == null) {
                 mLogger.log(
-                        "DAGMan not catalogued in the Transformation Catalog or the Site Catalog. Trying to construct from the environment",
+                        "DAGMan not catalogued in the Transformation Catalog or the Site Catalog."
+                                + " Trying to construct from the environment",
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 entry = constructTCEntryFromEnvironment();
             }
@@ -900,7 +905,8 @@ public class SUBDAXGenerator {
             throw new RuntimeException(
                     "Unable to construct entry for  "
                             + job.getCompleteTCName()
-                            + " from the Transformation Catalog, Site Catalog or the Environment for site "
+                            + " from the Transformation Catalog, Site Catalog or the Environment"
+                            + " for site "
                             + job.getSiteHandle());
         }
 

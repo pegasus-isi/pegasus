@@ -17,11 +17,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Arguments abstract class structure. */
 public class ArgumentsTest {

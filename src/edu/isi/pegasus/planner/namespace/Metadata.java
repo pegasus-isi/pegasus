@@ -16,11 +16,13 @@ package edu.isi.pegasus.planner.namespace;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;

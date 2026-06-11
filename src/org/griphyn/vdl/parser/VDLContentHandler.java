@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
 import org.xml.sax.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 /**
  * This class establishes the in-memory construction of Definition objects read, and does the
@@ -392,9 +393,9 @@ public class VDLContentHandler implements ContentHandler {
 
         // postcondition: string has content w/ length > 0
         switch (e.charAt(0)) {
-                //
-                // A
-                //
+            //
+            // A
+            //
             case 'a':
                 if (e.equals("argument")) {
                     Argument argument = new Argument();
@@ -414,9 +415,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // C
-                //
+            //
+            // C
+            //
             case 'c':
                 if (e.equals("call")) {
                     Call call = new Call();
@@ -446,9 +447,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // D
-                //
+            //
+            // D
+            //
             case 'd':
                 if (e.equals("declare")) {
                     Declare declaration = new Declare("", 0);
@@ -542,9 +543,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // L
-                //
+            //
+            // L
+            //
             case 'l':
                 if (e.equals("lfn")) { // remove const-lfn from here
                     LFN lfn = new LFN();
@@ -634,9 +635,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // M
-                //
+            //
+            // M
+            //
             case 'm':
                 if (e.equals("meta")) {
                     Logging.instance().log("app", 2, "entering meta mode");
@@ -646,9 +647,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // P
-                //
+            //
+            // P
+            //
             case 'p':
                 if (e.equals("profile")) {
                     Profile prof = new Profile();
@@ -688,9 +689,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // S
-                //
+            //
+            // S
+            //
             case 's':
                 if (e.equals("scalar")) {
                     Scalar scalar = new Scalar();
@@ -705,9 +706,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // T
-                //
+            //
+            // T
+            //
             case 't':
                 if (e.equals("text")) {
                     return new Text();
@@ -754,9 +755,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return null;
 
-                //
-                // U
-                //
+            //
+            // U
+            //
             case 'u':
                 if (e.equals("use")) {
                     Use use = new Use();
@@ -809,9 +810,9 @@ public class VDLContentHandler implements ContentHandler {
      */
     protected boolean setElementRelation(char initial, VDL parent, VDL child) {
         switch (initial) {
-                //
-                // A
-                //
+            //
+            // A
+            //
             case 'a':
                 if (parent instanceof Argument && child instanceof Leaf) {
                     // addLeaf is self-checking
@@ -820,9 +821,9 @@ public class VDLContentHandler implements ContentHandler {
                 }
                 return false;
 
-                //
-                // C
-                //
+            //
+            // C
+            //
             case 'c':
                 if (parent instanceof Call) {
                     Call c = (Call) parent;
@@ -836,9 +837,9 @@ public class VDLContentHandler implements ContentHandler {
                 }
                 return false;
 
-                //
-                // D
-                //
+            //
+            // D
+            //
             case 'd':
                 if (parent instanceof Declare && child instanceof Value) {
                     // setValue is self-checking
@@ -874,9 +875,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return false;
 
-                //
-                // L
-                //
+            //
+            // L
+            //
             case 'l':
                 if (parent instanceof org.griphyn.vdl.classes.List && child instanceof Scalar) {
                     ((org.griphyn.vdl.classes.List) parent).addScalar((Scalar) child);
@@ -892,9 +893,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return false;
 
-                //
-                // M
-                //
+            //
+            // M
+            //
             case 'm':
                 if (parent instanceof Meta) {
                     // dunno whatta do
@@ -904,9 +905,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return false;
 
-                //
-                // P
-                //
+            //
+            // P
+            //
             case 'p':
                 if (parent instanceof Profile && child instanceof Leaf) {
                     ((Profile) parent).addLeaf((Leaf) child);
@@ -920,9 +921,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return false;
 
-                //
-                // S
-                //
+            //
+            // S
+            //
             case 's':
                 if (parent instanceof Scalar && child instanceof Leaf) {
                     ((Scalar) parent).addLeaf((Leaf) child);
@@ -932,9 +933,9 @@ public class VDLContentHandler implements ContentHandler {
                 // unknown
                 return false;
 
-                //
-                // T
-                //
+            //
+            // T
+            //
             case 't':
                 if (parent instanceof Transformation) {
                     Transformation trans = (Transformation) parent;
@@ -961,9 +962,9 @@ public class VDLContentHandler implements ContentHandler {
                 // Text is a *leaf* !!
                 return false;
 
-                //
-                // U
-                //
+            //
+            // U
+            //
             case 'u':
                 // Use is a *leaf* !!
                 return false;

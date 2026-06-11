@@ -47,6 +47,10 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -63,8 +67,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML document conforming to the
@@ -194,7 +196,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
         SiteData object = null;
 
         switch (element.charAt(0)) {
-                // a alias
+            // a alias
             case 'a':
                 if (element.equals("alias")) {
                     String alias = null;
@@ -214,7 +216,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // c connection
+            // c connection
             case 'c':
                 if (element.equals("connection")) {
                     Connection c = new Connection();
@@ -234,7 +236,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // d directory
+            // d directory
             case 'd':
                 if (element.equals("directory")) {
                     Map<String, String> attributes = new HashMap();
@@ -265,7 +267,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // f
+            // f
             case 'f':
                 if (element.equals("file-server")) {
                     FileServer fs = new FileServer();
@@ -298,7 +300,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // g  grid
+            // g  grid
             case 'g':
                 if (element.equals("grid")) {
                     GridGateway gw = new GridGateway();
@@ -348,7 +350,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // m metadata
+            // m metadata
             case 'm':
                 if (element.equals("metadata")) {
                     Profile p = new Profile();
@@ -370,7 +372,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null; // end of case m
                 }
 
-                // p profile
+            // p profile
             case 'p':
                 if (element.equals("profile")) {
                     Profile p = new Profile();
@@ -393,7 +395,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // r replica-catalog
+            // r replica-catalog
             case 'r':
                 if (element.equals("replica-catalog")) {
                     ReplicaCatalog rc = new ReplicaCatalog();
@@ -416,7 +418,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return null;
                 }
 
-                // s shared scratch storage site
+            // s shared scratch storage site
             case 's':
                 if (element.equals("site")) {
                     SiteCatalogEntry site = new SiteCatalogEntry();
@@ -484,7 +486,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
     public boolean setElementRelation(String childElement, Object parent, Object child) {
 
         switch (childElement.charAt(0)) {
-                // a alias
+            // a alias
             case 'a':
                 // alias only appears in replica-catalog
                 if (child instanceof String && parent instanceof ReplicaCatalog) {
@@ -495,7 +497,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // c connection
+            // c connection
             case 'c':
                 // connection only appears in replica-catalog
                 if (child instanceof Connection && parent instanceof ReplicaCatalog) {
@@ -508,7 +510,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // d directory
+            // d directory
             case 'd':
                 // directory appears in the site element.
                 // can be multiple directorys
@@ -523,7 +525,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // f
+            // f
             case 'f':
                 // file-server appears in directory now
                 if (child instanceof FileServer && parent instanceof Directory) {
@@ -534,7 +536,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // g  grid
+            // g  grid
             case 'g':
                 // grid only appears in the site element
                 if (child instanceof GridGateway && parent instanceof SiteCatalogEntry) {
@@ -545,7 +547,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // p profile
+            // p profile
             case 'p':
                 // profile appear in file-server site head-fs worker-fs
                 if (child instanceof Profile) {
@@ -575,7 +577,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // m metadata
+            // m metadata
             case 'm':
                 if (child instanceof Profile) {
                     Profile md = (Profile) child;
@@ -589,7 +591,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                 }
                 return false;
 
-                // r replica-catalog
+            // r replica-catalog
             case 'r':
                 // replica-catalog appear in site
                 if (child instanceof ReplicaCatalog && parent instanceof SiteCatalogEntry) {
@@ -601,7 +603,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                     return false;
                 }
 
-                // s shared scratch storage site site-catalog
+            // s shared scratch storage site site-catalog
             case 's':
                 if (child instanceof SharedDirectory) {
                     // shared appears in scratch and storage
@@ -687,7 +689,9 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
         return this.mProps.getPoolSchemaLocation(poolconfig.getAbsolutePath());
     }
 
-    /** @param args */
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         LogManager logger = LogManagerFactory.loadSingletonInstance();
         PegasusProperties properties = PegasusProperties.nonSingletonInstance();

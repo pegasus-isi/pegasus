@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.generator.StageIn;
 import edu.isi.pegasus.planner.transfer.generator.StageOut;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;

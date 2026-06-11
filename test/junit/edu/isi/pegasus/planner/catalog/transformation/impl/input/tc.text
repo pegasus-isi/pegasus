@@ -1,10 +1,10 @@
 tr example::keg:1.0 {
- 
+
  #specify profiles that apply for all the sites for the  transformation
    #in each site entry the profile can be overriden
    profile env "APP_HOME" "/tmp/karan"
    profile env "JAVA_HOME" "/bin/java.1.5"
-  
+
    site isi {
     profile env "me" "with"
     profile condor "more" "test"
@@ -16,7 +16,7 @@ tr example::keg:1.0 {
     osversion "4"
     type "installed"
    }
- 
+
    site wind {
     profile env "me" "with"
      profile condor "more" "test"
@@ -29,7 +29,7 @@ tr example::keg:1.0 {
     }
  }
 
-#tr pegasus::keg:1.0{ 
+#tr pegasus::keg:1.0{
 tr ${NAMESPACE}::${NAME}:${VERSION} {
    site ${SITE}{
      profile env "me" "with"
@@ -41,25 +41,18 @@ tr ${NAMESPACE}::${NAME}:${VERSION} {
      osversion "4"
      type "STAGEABLE"
      }
-}  
-
-# support for metadata keyword
-tr myxform { 
-    site condorpool { 
-        pfn "/usr/bin/true" 
-        arch "x86_64" 
-        os "linux" 
-        type "INSTALLED" 
-        profile pegasus "clusters.size" "20" 
-        metadata "key" "value" 
-        metadata "appmodel" "myxform.aspen" 
-        metadata "version" "3.0" 
-    } 
 }
 
-   
-
-
-	
- 
-
+# support for metadata keyword
+tr myxform {
+    site condorpool {
+        pfn "/usr/bin/true"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+        profile pegasus "clusters.size" "20"
+        metadata "key" "value"
+        metadata "appmodel" "myxform.aspen"
+        metadata "version" "3.0"
+    }
+}

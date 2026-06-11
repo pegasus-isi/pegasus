@@ -18,6 +18,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Boolean;
@@ -55,6 +56,9 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.cleanup.Cleanup;
 import edu.isi.pegasus.planner.transfer.implementation.Transfer;
+
+import org.griphyn.vdl.euryale.VTorInUseException;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -73,7 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import org.griphyn.vdl.euryale.VTorInUseException;
 
 /**
  * This class generates the condor submit files for the DAG which has to be submitted to the Condor
@@ -1177,8 +1180,8 @@ public class CondorGenerator extends Abstract {
                     dag.getWorkflowMetrics().getNumDAXFiles(WorkflowMetrics.FILE_TYPE.total);
             if (fileCount > CondorGenerator.ABSTRACT_WF_VISUALIZE_FILE_LIMIT) {
                 mLogger.log(
-                        "Not generating the png file visualizing the abstract workflow with files as the"
-                                + " "
+                        "Not generating the png file visualizing the abstract workflow with files"
+                                + " as the "
                                 + (isAbstract ? "abstract" : "executable")
                                 + " "
                                 + "workflow has a file count of"

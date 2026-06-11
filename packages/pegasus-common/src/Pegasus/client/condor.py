@@ -1,5 +1,4 @@
-"""
-Condor queue utilities used by the Pegasus client status layer.
+"""Condor queue utilities used by the Pegasus client status layer.
 
 Provides helpers for executing ``condor_q`` commands and streaming their output.
 """
@@ -22,7 +21,7 @@ def _handle_stream(
     dst: list,
     logger: logging.Logger = None,
     log_lvl: int = None,
-):
+) -> None:
     """Handler for processing and logging byte streams from subprocess.Popen.
     :param proc: subprocess.Popen object used to run a pegasus CLI tool
     :type proc: subprocess.Popen
@@ -33,10 +32,10 @@ def _handle_stream(
     :param logger: the logger to use, defaults to None
     :type logger: logging.Logger, optional
     :param log_lvl: the log level to use (e.g. :code:`logging.INFO`, :code:`logging.ERROR`), defaults to None
-    :type log_lvl: int, optional
+    :type log_lvl: int, optional.
     """
 
-    def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
+    def _log(logger: logging.Logger, log_lvl: int, msg: bytes) -> None:
         if logger:
             log_func = {
                 10: logger.debug,
@@ -61,9 +60,9 @@ def _handle_stream(
 
         # Has proc terminated? If so, collect remaining output and exit.
         if proc.poll() is not None:
-            for l in stream.readlines():
-                dst.append(l)
-                log(l)
+            for line in stream.readlines():
+                dst.append(line)
+                log(line)
             break
 
 
@@ -108,8 +107,7 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     for sh in stream_handlers:
         sh.join()
     exit_code = proc.returncode
-    result = cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
-    return result
+    return cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
 
 
 def _q(cmd):

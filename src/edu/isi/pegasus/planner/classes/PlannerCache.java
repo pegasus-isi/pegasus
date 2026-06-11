@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
@@ -58,7 +59,9 @@ public class PlannerCache extends Data implements Cloneable {
     /** The PegasusProperties */
     private PegasusProperties mProps;
 
-    /** @return */
+    /**
+     * @return
+     */
     public String toString() {
         throw new UnsupportedOperationException("Not supported yet.");
     }

@@ -3,8 +3,8 @@
 strip_quotes() {
     # purpose: strip quotes from a variable value
     # paramtr: $str: the variable that needs to be stripped of quotes
-    #         
-    #         
+    #
+    #
     # returns: stripped out value
     echo ${1//\"/}
 }

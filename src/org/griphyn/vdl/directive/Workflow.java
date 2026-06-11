@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.directive;
 
-import java.io.*;
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
 
 /**
  * A <code>Workflow</code> object defines a context for running a derivation graph on the Grid as a

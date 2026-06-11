@@ -9,7 +9,7 @@
 03/03/23 23:09:48 ** Log last touched time unavailable (No such file or directory)
 03/03/23 23:09:48 ******************************************************
 03/03/23 23:09:48 Using config source: /home/mzalam/wf/condor/etc/condor_config
-03/03/23 23:09:48 Using local config sources: 
+03/03/23 23:09:48 Using local config sources:
 03/03/23 23:09:48    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 03/03/23 23:09:48 config Macros = 63, Sorted = 62, StringBytes = 1913, TablesBytes = 2316
 03/03/23 23:09:48 CLASSAD_CACHING is ENABLED
@@ -53,8 +53,8 @@
 03/03/23 23:09:48 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 03/03/23 23:09:48 DAGMAN_MAX_JOB_HOLDS setting: 100
 03/03/23 23:09:48 DAGMAN_HOLD_CLAIM_TIME setting: 20
-03/03/23 23:09:48 ALL_DEBUG setting: 
-03/03/23 23:09:48 DAGMAN_DEBUG setting: 
+03/03/23 23:09:48 ALL_DEBUG setting:
+03/03/23 23:09:48 DAGMAN_DEBUG setting:
 03/03/23 23:09:48 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 03/03/23 23:09:48 DAGMAN_REMOVE_NODE_JOBS setting: True
 03/03/23 23:09:48 DAGMAN will adjust edges after parsing
@@ -236,7 +236,7 @@
 03/03/23 23:11:24       Node Name: ls_ID0000001
 03/03/23 23:11:24            Noop: false
 03/03/23 23:11:24          NodeID: 1
-03/03/23 23:11:24     Node Status: STATUS_ERROR    
+03/03/23 23:11:24     Node Status: STATUS_ERROR
 03/03/23 23:11:24 Node return val: 1
 03/03/23 23:11:24           Error: Job exited with status 2 and POST Script failed with status 1 (after 1 node retries)
 03/03/23 23:11:24 Job Submit File: 00/00/ls_ID0000001.sub

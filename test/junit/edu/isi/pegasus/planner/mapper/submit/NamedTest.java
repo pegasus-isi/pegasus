@@ -21,12 +21,14 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /** Tests for the Named submit mapper class structure. */
 public class NamedTest {
@@ -133,7 +135,8 @@ public class NamedTest {
         org.hamcrest.MatcherAssert.assertThat(
                 e.getMessage()
                         .contains(
-                                "Pegasus Profile Key relative.submit.dir not specified. Unable to determine relative directory"),
+                                "Pegasus Profile Key relative.submit.dir not specified. Unable to"
+                                        + " determine relative directory"),
                 org.hamcrest.Matchers.is(true));
     }
 

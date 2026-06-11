@@ -361,6 +361,3 @@ internally call:
         workflow.py --inputs /home/ryan/input/f1.txt /home/ryan/input.f2.txt
 
 40 seconds after the trigger has started, it will shutdown.
-
-
-

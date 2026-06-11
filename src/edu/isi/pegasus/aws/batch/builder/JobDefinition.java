@@ -8,6 +8,17 @@ package edu.isi.pegasus.aws.batch.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import software.amazon.awssdk.services.batch.model.ContainerProperties;
+import software.amazon.awssdk.services.batch.model.Host;
+import software.amazon.awssdk.services.batch.model.JobDefinitionType;
+import software.amazon.awssdk.services.batch.model.KeyValuePair;
+import software.amazon.awssdk.services.batch.model.MountPoint;
+import software.amazon.awssdk.services.batch.model.RegisterJobDefinitionRequest;
+import software.amazon.awssdk.services.batch.model.RetryStrategy;
+import software.amazon.awssdk.services.batch.model.Ulimit;
+import software.amazon.awssdk.services.batch.model.Volume;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,15 +30,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import software.amazon.awssdk.services.batch.model.ContainerProperties;
-import software.amazon.awssdk.services.batch.model.Host;
-import software.amazon.awssdk.services.batch.model.JobDefinitionType;
-import software.amazon.awssdk.services.batch.model.KeyValuePair;
-import software.amazon.awssdk.services.batch.model.MountPoint;
-import software.amazon.awssdk.services.batch.model.RegisterJobDefinitionRequest;
-import software.amazon.awssdk.services.batch.model.RetryStrategy;
-import software.amazon.awssdk.services.batch.model.Ulimit;
-import software.amazon.awssdk.services.batch.model.Volume;
 
 /**
  * A Builder to get objects related to Registering a Job Definition The JSON specification can be

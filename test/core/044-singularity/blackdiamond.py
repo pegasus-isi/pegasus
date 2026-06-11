@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 import json
 import logging
@@ -47,7 +47,9 @@ COMPUTE = "condorpool"
 STAGING = config["STAGING"] if "STAGING" in config else "workflow-webdav"
 SHARED = config["SHARED"] if "SHARED" in config else False
 SYMLINK = config["SYMLINK"] if "SYMLINK" in config else False
-CONTAINER_ON_CVMFS = config["CONTAINER_ON_CVMFS"] if "CONTAINER_ON_CVMFS" in config else False
+CONTAINER_ON_CVMFS = (
+    config["CONTAINER_ON_CVMFS"] if "CONTAINER_ON_CVMFS" in config else False
+)
 if not STAGING:
     # empty value in test.config
     STAGING = COMPUTE
@@ -69,12 +71,17 @@ site_catalog_file = TOP_DIR / TEST_NAME / "sites.yml"
 logging.info("Generating site catalog at: {}".format(site_catalog_file))
 cmd_properties["pegasus.catalog.site.file"] = site_catalog_file
 
-compute_site = Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX).add_pegasus_profile(
-    style="condor").add_pegasus_profile(clusters_num=1)
+compute_site = (
+    Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
+    .add_pegasus_profile(style="condor")
+    .add_pegasus_profile(clusters_num=1)
+)
 if SHARED:
     compute_site.add_directories(
         Directory(
-            Directory.SHARED_SCRATCH, str(condorpool_scratch_dir), shared_file_system=SHARED
+            Directory.SHARED_SCRATCH,
+            str(condorpool_scratch_dir),
+            shared_file_system=SHARED,
         ).add_file_servers(
             FileServer(
                 "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
@@ -117,13 +124,17 @@ with open("{}/f.a".format(INPUT_DIR), "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn).write(str(replica_catalog_file))
+ReplicaCatalog().add_replica(
+    COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn
+).write(str(replica_catalog_file))
 
 # --- Transformations ----------------------------------------------------------
 
 transformation_catalog_file = TOP_DIR / TEST_NAME / "transformations.yml"
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
-logging.info("Generating transformation catalog at: {}".format(transformation_catalog_file))
+logging.info(
+    "Generating transformation catalog at: {}".format(transformation_catalog_file)
+)
 
 container_mounts = {}
 if SYMLINK:
@@ -134,10 +145,10 @@ base_container = Container(
     Container.SINGULARITY,
     image_site="condorpool" if CONTAINER_ON_CVMFS else "local",
     image="file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9"
-    if CONTAINER_ON_CVMFS else
-    "scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    if CONTAINER_ON_CVMFS
+    else "scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
-    **container_mounts
+    **container_mounts,
 )
 base_container.add_env("APP_HOME", "/tmp/myscratch")
 base_container.add_env("JAVA_HOME", "/bin/java.1.8")
@@ -215,7 +226,7 @@ try:
         output_sites=[LOCAL],
         cluster=["horizontal"],
         force=True,
-        **cmd_properties
+        **cmd_properties,
     )
 except PegasusClientError as e:
     logging.error(e.output)

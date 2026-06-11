@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import subprocess
 import sys
@@ -101,9 +101,7 @@ sites:
       PEGASUS_BIN_DIR: "{pegasus_bin_dir}"
     pegasus:
       ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
-""".format(
-    work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR
-)
+""".format(work_dir=str(WORK_DIR), pegasus_bin_dir=PEGASUS_BIN_DIR)
 
 with (TOP_DIR / "sites.yml").open(mode="w") as f:
     f.write(sites)

@@ -1,3 +1,3 @@
 1. Runtime based clustering.
-2. Executable staging in nonsharedfs mode.
-3. Enabled symlinking.
+1. Executable staging in nonsharedfs mode.
+1. Enabled symlinking.

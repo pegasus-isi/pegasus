@@ -157,8 +157,7 @@ def convert_datetime_to_printable_format(timestamp, date_time_filter="hour"):
     """
 
     local_date_time = convert_utc_to_local_datetime(timestamp)
-    date_formatted = local_date_time.strftime(get_date_format(date_time_filter))
-    return date_formatted
+    return local_date_time.strftime(get_date_format(date_time_filter))
 
 
 def convert_utc_to_local_datetime(utc_timestamp):
@@ -167,8 +166,7 @@ def convert_utc_to_local_datetime(utc_timestamp):
     @param timestamp :  the unix timestamp
     @return the date format in human readable format
     """
-    local_datetime = datetime.fromtimestamp(utc_timestamp)
-    return local_datetime
+    return datetime.fromtimestamp(utc_timestamp)
 
 
 def convert_stats_to_base_time(stats_by_time, date_time_filter="hour", isHost=False):
@@ -197,28 +195,27 @@ def convert_stats_to_base_time(stats_by_time, date_time_filter="hour", isHost=Fa
                 formatted_stats["timestamp"], date_time_filter
             )
         return formatted_stats_by_hour_list
-    else:
-        day_to_hour_mapping = {}
-        formatted_stats_by_day_list = []
-        for formatted_stats_by_hour in formatted_stats_by_hour_list:
-            formatted_stats_by_day = None
-            corresponding_day = convert_datetime_to_printable_format(
-                formatted_stats_by_hour["timestamp"], date_time_filter
-            )
-            id = ""
-            if isHost:
-                id += formatted_stats_by_hour["host"] + ":"
-            id += corresponding_day
-            if id in day_to_hour_mapping:
-                formatted_stats_by_day = day_to_hour_mapping[id]
-                formatted_stats_by_day["count"] += formatted_stats_by_hour["count"]
-                formatted_stats_by_day["runtime"] += formatted_stats_by_hour["runtime"]
-            else:
-                formatted_stats_by_day = formatted_stats_by_hour
-                formatted_stats_by_day["date_format"] = corresponding_day
-                day_to_hour_mapping[id] = formatted_stats_by_day
-                formatted_stats_by_day_list.append(formatted_stats_by_day)
-        return formatted_stats_by_day_list
+    day_to_hour_mapping = {}
+    formatted_stats_by_day_list = []
+    for formatted_stats_by_hour in formatted_stats_by_hour_list:
+        formatted_stats_by_day = None
+        corresponding_day = convert_datetime_to_printable_format(
+            formatted_stats_by_hour["timestamp"], date_time_filter
+        )
+        id = ""
+        if isHost:
+            id += formatted_stats_by_hour["host"] + ":"
+        id += corresponding_day
+        if id in day_to_hour_mapping:
+            formatted_stats_by_day = day_to_hour_mapping[id]
+            formatted_stats_by_day["count"] += formatted_stats_by_hour["count"]
+            formatted_stats_by_day["runtime"] += formatted_stats_by_hour["runtime"]
+        else:
+            formatted_stats_by_day = formatted_stats_by_hour
+            formatted_stats_by_day["date_format"] = corresponding_day
+            day_to_hour_mapping[id] = formatted_stats_by_day
+            formatted_stats_by_day_list.append(formatted_stats_by_day)
+    return formatted_stats_by_day_list
 
 
 def round_decimal_to_str(value, to=3):
@@ -230,5 +227,4 @@ def round_decimal_to_str(value, to=3):
     rounded_value = "-"
     if value is None:
         return rounded_value
-    rounded_value = str(round(float(value), to))
-    return rounded_value
+    return str(round(float(value), to))

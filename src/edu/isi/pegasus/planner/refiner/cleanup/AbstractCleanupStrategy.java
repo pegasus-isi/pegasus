@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -99,4 +99,3 @@ else
 	echo "Timer Expired: Waited 10 mins for diamond-a_ID0000001/diamond-a-0.cache file to be created"
 	exit 3
 fi
-

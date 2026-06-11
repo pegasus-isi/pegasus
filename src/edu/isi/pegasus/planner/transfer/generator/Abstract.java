@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.transfer.JobPlacer;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.io.File;
 
 /**

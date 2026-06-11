@@ -16,7 +16,7 @@ The release can be downloaded from https://pegasus.isi.edu/downloads
 
 1) [PM-1960] – Document debugging job submissions to HPC cluster [\#2072](https://github.com/pegasus-isi/pegasus/issues/2072)
 
-2) [PM-1982] – pegasus-aws-batch setup/delete options should not fail at first error [\#2085](https://github.com/pegasus-isi/pegasus/issues/2085) 
+2) [PM-1982] – pegasus-aws-batch setup/delete options should not fail at first error [\#2085](https://github.com/pegasus-isi/pegasus/issues/2085)
 
 3) [PM-1983] – AWS Batch Error: ClientException: Maximum number of jobs supported is 100 [\#2086](https://github.com/pegasus-isi/pegasus/issues/2086)
 
@@ -49,9 +49,9 @@ The release can be downloaded from https://pegasus.isi.edu/downloads
 
 #### New Features and Improvements
 
-1) [PM-1939] – Planner complains on http transfers if the user does not have a credentials file setup [\#2052](https://github.com/pegasus-isi/pegasus/issues/2052) 
+1) [PM-1939] – Planner complains on http transfers if the user does not have a credentials file setup [\#2052](https://github.com/pegasus-isi/pegasus/issues/2052)
 
-2) [PM-1940] – NPE for planning a workflow with sub workflows, where sub workflow job requires data from http endpoint [\#2053](https://github.com/pegasus-isi/pegasus/issues/2053) 
+2) [PM-1940] – NPE for planning a workflow with sub workflows, where sub workflow job requires data from http endpoint [\#2053](https://github.com/pegasus-isi/pegasus/issues/2053)
 
 3) [PM-1944] – Ability to specify a wrapper/launcher for containerized jobs in PegasusLite [\#2057](https://github.com/pegasus-isi/pegasus/issues/2057)
 
@@ -100,7 +100,7 @@ This release included improvements such as
 #### New Features and Improvements
 
 1)  [PM-1926] – pegasus should allow users to specify an input directory with executables to avoid creating a TC [\#2039](https://github.com/pegasus-isi/pegasus/issues/2039)
-            
+
 2)  [PM-1888] – Apptainer support [\#2001](https://github.com/pegasus-isi/pegasus/issues/2001)
 3)  [PM-1929] – convenient way to associate profiles for a site in properties file [\#2042](https://github.com/pegasus-isi/pegasus/issues/2042)
 4)  [PM-1931] – support for local SGE cluster in pegasus-init [\#2044](https://github.com/pegasus-isi/pegasus/issues/2044)
@@ -134,23 +134,23 @@ https://pegasus.isi.edu/downloads
 
 1)  [PM-1907]  Improve stash integration to be osdf:// aware [\#2020](https://github.com/pegasus-isi/pegasus/issues/2020)
 2)  [PM-1910]  Handle dagman no longer inheriting user environment for the dagman job [\#2023](https://github.com/pegasus-isi/pegasus/issues/2023)
-             
+
 3)  [PM-1911]  Add support for Arm 64 architecture (aarch64) [\#2024](https://github.com/pegasus-isi/pegasus/issues/2024)
 4)   [PM-1917]  Enable host-wide metrics collection [\#2030](https://github.com/pegasus-isi/pegasus/issues/2030)
 
 #### Bugs Fixed
 
 1)  [PM-1905]  File dependencies between sub workflow and compute jobs broken [\#2018](https://github.com/pegasus-isi/pegasus/issues/2018)
-             
+
 2)  [PM-1906]  Planner container mount point parsing breaks on . in the dir name [\#2019](https://github.com/pegasus-isi/pegasus/issues/2019)
-             
+
 3)  [PM-1909]  request_disk is incorrectly set to MBs instead of KBs [\#2022](https://github.com/pegasus-isi/pegasus/issues/2022)
 4)  [PM-1913]  +DAGNodeRetry for attrib=value assigment breaks on HTondor 10.0.x when direct submission is disabled [\#2026](https://github.com/pegasus-isi/pegasus/issues/2026)
-             
+
 5)  [PM-1916]  Data management between parent compute job and a sub workflow job broken [\#2029](https://github.com/pegasus-isi/pegasus/issues/2029)
-             
+
 6)  [PM-1918]  Inplace cleanup broken when a sub workflow job and a parent compute job has a data dependency [\#2031](https://github.com/pegasus-isi/pegasus/issues/2031)
-             
+
 
 ### Pegasus 5.0.5
 
@@ -401,15 +401,15 @@ https://pegasus.isi.edu/downloads
 4)  [PM-1753] – add Workflow.get_status() [\#1867](https://github.com/pegasus-isi/pegasus/issues/1867)
 
 5)  [PM-1767] – remove the default arguments, output_sites and cleanup in SubWorkflow.add_planner_args() [\#1881](https://github.com/pegasus-isi/pegasus/issues/1881)
-                
+
 
 6)  [PM-1786] – update usage of threading.Thread.isAlive() to be is_alive() in python scripts [\#1900](https://github.com/pegasus-isi/pegasus/issues/1900)
-                
+
 
 7)  [PM-1788] – Add configuration documentation for hierarchical workflows [\#1902](https://github.com/pegasus-isi/pegasus/issues/1902)
 
 8)  [PM-1429] – Introduce PEGASUS_ENV variable to define mode of workflow  i.e. development, production, etc [\#1543](https://github.com/pegasus-isi/pegasus/issues/1543)
-                
+
 
 9)  [PM-1651] – Add more profile keys in the add_pegasus_profile [\#1765](https://github.com/pegasus-isi/pegasus/issues/1765)
 
@@ -438,7 +438,7 @@ https://pegasus.isi.edu/downloads
 21) [PM-1780] – Refactor Transfer Engine Code [\#1894](https://github.com/pegasus-isi/pegasus/issues/1894)
 
 22) [PM-1787] – auxiliary.local is not considered when triggering symlink in PegasusLite in nonsharedfs mode [\#1901](https://github.com/pegasus-isi/pegasus/issues/1901)
-                
+
 
 23) [PM-1792] – decaf jobs over bosco [\#1906](https://github.com/pegasus-isi/pegasus/issues/1906)
 
@@ -1480,5 +1480,3 @@ https://pegasus.isi.edu/docs/5.0.0dev/migration.html#migrating-from-pegasus-4-9-
    The documentation has been moved to readthedocs style documentation using
    restructured text. The documentation can be found at
    https://pegasus.isi.edu/docs/5.0.0dev/index.html
-
-

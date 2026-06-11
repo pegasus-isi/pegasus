@@ -15,7 +15,9 @@ package org.griphyn.vdl.euryale;
 
 // import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class VirtualHashedFileFactoryTest {
 
     /*

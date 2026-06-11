@@ -227,7 +227,7 @@ ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) {
 
     this->msgsize = name.length() + 1 + sizeof(exitcode) + sizeof(runtime);
     this->msg = new char[this->msgsize];
-    
+
     int off = 0;
     strcpy(msg + off, name.c_str());
     off += name.length() + 1;
@@ -279,10 +279,10 @@ HostrankMessage::HostrankMessage(char *msg, unsigned msgsize, int source) : Mess
 
 HostrankMessage::HostrankMessage(int hostrank) {
     this->hostrank = hostrank;
-    
+
     this->msgsize = sizeof(hostrank);
     this->msg = new char [this->msgsize];
-    
+
     memcpy(msg, &hostrank, sizeof(hostrank));
 }
 
@@ -305,7 +305,7 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
 
     this->msgsize = task.length() + 1 + filename.length() + 1 + sizeof(size) + size;
     this->msg = new char [this->msgsize];
-    
+
     int off = 0;
     strcpy(msg + off, task.c_str());
     off += task.length() + 1;
@@ -315,4 +315,3 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
     off += sizeof(size);
     memcpy(msg + off, data, size);
 }
-

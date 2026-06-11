@@ -49,7 +49,6 @@ except AttributeError:
     def iteritems(d):
         return iter(d.items())
 
-
 else:
     # Python 2
     def itervalues(d):
@@ -63,7 +62,7 @@ else:
 # being created. Let's try setting the stack size to something sane
 # but not worry if the attempt fails.
 try:
-    threading.stack_size(2 * 1024 ** 2)
+    threading.stack_size(2 * 1024**2)
 except Exception:
     pass
 
@@ -616,7 +615,9 @@ class TransferHandlerBase:
 
         self.lock.acquire()
         cmd = '{} --generate-fullstat-yaml="{}={}"'.format(
-            tools.full_path("pegasus-integrity"), lfn, fname,
+            tools.full_path("pegasus-integrity"),
+            lfn,
+            fname,
         )
         try:
             tc = utils.TimedCommand(cmd)
@@ -797,7 +798,8 @@ class FileHandler(TransferHandlerBase):
                 cmd = f"ln -f -s '{t.get_src_path()}' '{t.get_dst_path()}'"
             else:
                 cmd = "/bin/cp -f -R -L '{}' '{}'".format(
-                    t.get_src_path(), t.get_dst_path(),
+                    t.get_src_path(),
+                    t.get_dst_path(),
                 )
             try:
                 tc = utils.TimedCommand(cmd)
@@ -2078,14 +2080,16 @@ class S3Handler(TransferHandlerBase):
                 # s3 -> s3
                 env = self._s3_cred_env(t.get_src_site_label())
                 cmd = tools.full_path("pegasus-s3") + " cp -f -c '{}' '{}'".format(
-                    t.src_url(), t.dst_url(),
+                    t.src_url(),
+                    t.dst_url(),
                 )
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
                 cmd = tools.full_path("pegasus-s3") + " get '{}' '{}'".format(
-                    t.src_url(), t.get_dst_path(),
+                    t.src_url(),
+                    t.get_dst_path(),
                 )
             else:
                 # this is a 'put'
@@ -2097,7 +2101,8 @@ class S3Handler(TransferHandlerBase):
                         continue
                 env = self._s3_cred_env(t.get_dst_site_label())
                 cmd = tools.full_path("pegasus-s3") + " put -f -b '{}' '{}'".format(
-                    t.get_src_path(), t.dst_url(),
+                    t.get_src_path(),
+                    t.dst_url(),
                 )
 
             try:
@@ -2723,7 +2728,8 @@ class GFALHandler(TransferHandlerBase):
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '{}' '{}'".format(
-                self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()),
+                self._gfal_url(t.src_url()),
+                self._gfal_url(t.dst_url()),
             )
 
             try:
@@ -3989,7 +3995,7 @@ class WebdavHandler(TransferHandlerBase):
         return True
 
     def _split_path(self, path):
-        (head, tail) = os.path.split(path)
+        head, tail = os.path.split(path)
         return (
             self._split_path(head) + [tail] if head and head != path else [head or tail]
         )
@@ -4402,7 +4408,7 @@ class SimilarWorkSet:
         # mkdirs
         if isinstance(self._transfers[0], Mkdir):
             try:
-                (success_list, failed_list) = self._primary_handler.do_mkdirs(
+                success_list, failed_list = self._primary_handler.do_mkdirs(
                     self._transfers
                 )
             except Exception:
@@ -4418,7 +4424,7 @@ class SimilarWorkSet:
         # removes
         if isinstance(self._transfers[0], Remove):
             try:
-                (success_list, failed_list) = self._primary_handler.do_removes(
+                success_list, failed_list = self._primary_handler.do_removes(
                     self._transfers
                 )
             except Exception:
@@ -4448,7 +4454,7 @@ class SimilarWorkSet:
         if self._secondary_handler is None:
             # one handler to rule them all!
             try:
-                (success_list, failed_list) = self._primary_handler.do_transfers(
+                success_list, failed_list = self._primary_handler.do_transfers(
                     self._transfers
                 )
             except Exception:
@@ -4523,7 +4529,10 @@ class SimilarWorkSet:
                     t_verify.lfn = t.lfn
                     t_verify.add_src(t.get_dst_site_label(), t.dst_url())
                     t_verify.add_dst("local", "file://" + temp_name)
-                    (success_verify, failed_verify,) = handler.do_transfers([t_verify])
+                    (
+                        success_verify,
+                        failed_verify,
+                    ) = handler.do_transfers([t_verify])
                     if failed_verify is []:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
@@ -4792,7 +4801,7 @@ def max_cmd_length():
     """
 
     for n in range(10, 20):
-        s = "X" * (2 ** n)
+        s = "X" * (2**n)
         cmd = "echo " + s + " >/dev/null"
         try:
             backticks(cmd)
@@ -4800,7 +4809,7 @@ def max_cmd_length():
             return (2 ** (n - 1)) / 2
 
     # we shouldn't really get here, but if we do, 2^20/2
-    return (2 ** 20) / 2
+    return (2**20) / 2
 
 
 def env_setup():
@@ -4930,7 +4939,7 @@ def prepare_local_dir(path):
         logger.debug("Creating local directory " + path)
         try:
             os.makedirs(path, 0o0755)
-        except os.error as err:
+        except OSError as err:
             # if dir already exists, ignore the error
             if not (os.path.isdir(path)):
                 raise RuntimeError(err)
@@ -5436,7 +5445,7 @@ def main():
     )
 
     # Parse command line options
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     setup_logger(options.debug)
 
     # Die nicely when asked to (Ctrl+C, system shutdown)

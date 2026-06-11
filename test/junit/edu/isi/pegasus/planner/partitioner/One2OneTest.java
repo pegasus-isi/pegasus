@@ -21,6 +21,9 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +31,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class One2OneTest {
 
     @Test

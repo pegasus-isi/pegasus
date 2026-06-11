@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -142,7 +143,8 @@ public class SiteFactory {
                 SiteCatalogEntry existing = result.lookup(handle);
                 existing.merge(localSiteStoreEntry, true);
                 logger.log(
-                        "Merged site catalog entry from remote github repo and local site catalog \n"
+                        "Merged site catalog entry from remote github repo and local site catalog"
+                                + " \n"
                                 + existing,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             } else {

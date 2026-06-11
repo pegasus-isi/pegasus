@@ -12,7 +12,7 @@ Generates and verifies data integrity with checksums
                         [--generate-yaml file]
                         [--generate-fullstat-yaml file]
                         [--generate-xmls file]
-                        [--generate-fullstat-xmls file]                        
+                        [--generate-fullstat-xmls file]
                         [--verify file]
                         [--print-timings]
                         [--debug]
@@ -62,4 +62,3 @@ Options
 
 **-d**; \ **--debug**
    Enables debugging output.
-

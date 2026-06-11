@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;

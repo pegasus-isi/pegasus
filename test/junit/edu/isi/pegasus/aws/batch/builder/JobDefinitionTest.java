@@ -17,18 +17,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import software.amazon.awssdk.services.batch.model.JobDefinitionType;
+import software.amazon.awssdk.services.batch.model.RegisterJobDefinitionRequest;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import software.amazon.awssdk.services.batch.model.JobDefinitionType;
-import software.amazon.awssdk.services.batch.model.RegisterJobDefinitionRequest;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class JobDefinitionTest {
 
     @TempDir File tempDir;
@@ -68,10 +72,8 @@ public class JobDefinitionTest {
     @Test
     public void testCreateFromHTTPSpecParameters() throws IOException {
         String json =
-                "{"
-                        + "\"type\": \"container\","
-                        + "\"parameters\": {\"input\": \"s3://bucket/input\", \"output\": \"s3://bucket/output\"}"
-                        + "}";
+                "{\"type\": \"container\",\"parameters\": {\"input\": \"s3://bucket/input\","
+                        + " \"output\": \"s3://bucket/output\"}}";
         File f = writeToTempFile("jd-http-params.json", json);
         RegisterJobDefinitionRequest req =
                 jd.createRegisterJobDefinitionRequestFromHTTPSpec(f, "test");
@@ -142,17 +144,9 @@ public class JobDefinitionTest {
     @Test
     public void testCreateFromHTTPSpecContainerMountPoints() throws IOException {
         String json =
-                "{"
-                        + "\"type\": \"container\","
-                        + "\"containerProperties\": {"
-                        + "  \"image\": \"busybox\","
-                        + "  \"memory\": 128,"
-                        + "  \"vcpus\": 1,"
-                        + "  \"mountPoints\": ["
-                        + "    {\"containerPath\": \"/data\", \"readOnly\": false, \"sourceVolume\": \"data-vol\"}"
-                        + "  ]"
-                        + "}"
-                        + "}";
+                "{\"type\": \"container\",\"containerProperties\": {  \"image\": \"busybox\", "
+                    + " \"memory\": 128,  \"vcpus\": 1,  \"mountPoints\": [    {\"containerPath\":"
+                    + " \"/data\", \"readOnly\": false, \"sourceVolume\": \"data-vol\"}  ]}}";
         File f = writeToTempFile("jd-http-mounts.json", json);
         RegisterJobDefinitionRequest req =
                 jd.createRegisterJobDefinitionRequestFromHTTPSpec(f, "test");
@@ -227,12 +221,9 @@ public class JobDefinitionTest {
     @Test
     public void testCreateFromBatchSpecReturnsList() throws IOException {
         String json =
-                "{"
-                        + "\"RegisterJobDefinition\": ["
-                        + "  {\"input\": {\"type\": \"container\", \"jobDefinitionName\": \"jd-1\"}},"
-                        + "  {\"input\": {\"type\": \"container\", \"jobDefinitionName\": \"jd-2\"}}"
-                        + "]"
-                        + "}";
+                "{\"RegisterJobDefinition\": [  {\"input\": {\"type\": \"container\","
+                    + " \"jobDefinitionName\": \"jd-1\"}},  {\"input\": {\"type\": \"container\","
+                    + " \"jobDefinitionName\": \"jd-2\"}}]}";
         File f = writeToTempFile("jd-batch.json", json);
         List<RegisterJobDefinitionRequest> reqs = jd.createRegisterJobDefinitionRequest(f, "test");
         assertThat(reqs, hasSize(2));

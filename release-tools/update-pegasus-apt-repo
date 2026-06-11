@@ -11,19 +11,19 @@ for OS in debian ubuntu; do
     mkdir -p $REPO_DIR/$OS
     echo "rsync -a -v -e ssh $REMOTE_REPO/$OS/. $REPO_DIR/$OS/"
     rsync -a -v -e ssh $REMOTE_REPO/$OS/. $REPO_DIR/$OS/
-        
+
     cd $REPO_DIR/$OS
-    
+
     for DIST in `cd dists && ls`; do
-    
+
         cd $REPO_DIR/$OS
-    
+
         for ARCH in i386 amd64; do
-    
+
             if [ ! -e dists/$DIST/main/binary-$ARCH ]; then
                 continue
             fi
-    
+
             echo
             echo "Updating Debian packages list for $DIST-$ARCH"
             cd $REPO_DIR/$OS
@@ -33,18 +33,17 @@ for OS in debian ubuntu; do
             gzip -9c Packages >Packages.gz
             bzip2 -9 -k -f Packages
         done
-    
-        # generate a release file and sign the repository 
+
+        # generate a release file and sign the repository
         cd $REPO_DIR/$OS/dists/$DIST
         apt-ftparchive -o APT::FTPArchive::Release::Codename=$DIST release . >Release
         rm -f Release.gpg
         gpg -abs -o Release.gpg Release
-    
+
     done
-    
+
     rsync -a -v -e ssh $REPO_DIR/$OS/. $REMOTE_REPO/$OS/
 
 done
 
 rm -rf $REPO_DIR
-

@@ -69,7 +69,6 @@ def _to_sc(d: dict) -> SiteCatalog:
 
             # add directories
             for _dir in s["directories"]:
-
                 dir_type = None
                 for enum_name, enum in _DirectoryType.__members__.items():
                     if _dir["type"] == enum.value:

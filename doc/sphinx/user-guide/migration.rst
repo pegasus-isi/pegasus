@@ -166,12 +166,12 @@ In Pegasus 5.0, a new YAML based workflow format has been introduced to replace
 the older DAX3 XML format (Pegasus is still capable of running DAX3 based
 workflows however, it is encouraged that the new workflow generators be used
 to create these YAML based workflows). Additionally, the Site Catalog, Transformation
-Catalog, and Replica Catalog formats have all been updated to a YAML based format. 
-Using the respective modules in the :doc:`/python/Pegasus.api`, these catalogs can be 
+Catalog, and Replica Catalog formats have all been updated to a YAML based format.
+Using the respective modules in the :doc:`/python/Pegasus.api`, these catalogs can be
 generated programatically. Furthermore, the ``pegasus.properties`` file used for
 configuration can be generated with this API. If you have existing catalogs that need to be converted
 to the newer format, usage of Pegasus catalog conversion tools are covered in the
-subsequent sections. 
+subsequent sections.
 
 .. attention::
     The :doc:`/python/Pegasus.api` requires **Python3.5+**.
@@ -199,11 +199,11 @@ Site Catalog
 ^^^^^^^^^^^^
 
 Prior to the 5.0 release, the Site Catalog has been written in XML. Although the
-format has changed from XML to YAML, the overall structure of this catalog remains unchanged. 
+format has changed from XML to YAML, the overall structure of this catalog remains unchanged.
 
 To convert an existing Site Catalog from XML to YAML use :doc:`/manpages/pegasus-sc-converter`.
 For example, to convert a Site Catalog file, ``sites.xml``, to YAML, use the following
-command::   
+command::
 
     pegasus-sc-converter -i sites.xml -o sites.yml
 
@@ -258,7 +258,7 @@ be used to generate a new Site Catalog programatically based on an existing XML 
                                                 )
             staging_site.add_directories(staging_site_shared_scratch_dir)
 
-            # add all the sites to the site catalog object 
+            # add all the sites to the site catalog object
             sc.add_sites(
                 local,
                 condorpool,
@@ -266,7 +266,7 @@ be used to generate a new Site Catalog programatically based on an existing XML 
             )
 
             # write the site catalog to the default path "./sites.yml"
-            sc.write()  
+            sc.write()
 
     .. tab:: sites.xml
 
@@ -302,7 +302,7 @@ be used to generate a new Site Catalog programatically based on an existing XML 
                     </directory>
                 </site>
 
-            </sitecatalog>  
+            </sitecatalog>
 
 
 Replica Catalog
@@ -335,29 +335,29 @@ Replica Catalog.
             # the Replica Catalog will be written to the default path "./replicas.yml"
 
     .. tab:: rc.txt
-        
+
         .. code-block:: none
 
             f.a file:///Volumes/data/inputs/f.a site="local"
 
-            f.b file:///Volumes/data/inputs/f.b site="local" 
+            f.b file:///Volumes/data/inputs/f.b site="local"
 
 
 Transformation Catalog
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The Transformation Catalog has been moved from a text based format to YAML. To convert
-an existing Transformation Catalog from the text based file format to YAML, use 
+an existing Transformation Catalog from the text based file format to YAML, use
 :doc:`/manpages/pegasus-tc-converter`. For example, to convert a Transformation Catalog
 file, ``tc.txt``, to YAML, use the following command::
 
     pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
 
 The following illustrates how :py:class:`Pegasus.api.transformation_catalog.TransformationCatalog` can
-be used to generate a new Transformation Catalog programatically based on an 
+be used to generate a new Transformation Catalog programatically based on an
 existing text based Transformation Catalog.
 
-.. tabs:: 
+.. tabs::
 
     .. tab:: generate_tc.py
 
@@ -368,14 +368,14 @@ existing text based Transformation Catalog.
             # create the TransformationCatalog object
             tc = TransformationCatalog()
 
-            # create and add the centos-pegasus container 
+            # create and add the centos-pegasus container
             centos_cont = Container(
                             "centos-pegasus",
                             Container.DOCKER,
                             "docker:///rynge/montage:latest",
                             mounts=["/Volumes/Workf/lfs1:/shared-data/:ro"]
                         ).add_profiles(Namespace.ENV, JAVA_HOME="/opt/java/1.6")
-                    
+
             tc.add_containers(centos_cont)
 
             # create and add the transformation
@@ -425,11 +425,11 @@ Workflow (formerly DAX)
 
 Pegasus 5.0 brings major API changes to our most used **DAX3** python API. Moving
 forward, users should use the ``Pegasus.api`` package described in the :ref:`api-python`
-API reference. The following section shows both the **DAX3** and **Pegasus.api** 
-representations of the classic *diamond* workflow. 
+API reference. The following section shows both the **DAX3** and **Pegasus.api**
+representations of the classic *diamond* workflow.
 
 .. note::
-    Method signatures in the Java DAX API remain exactly the same as it was prior 
+    Method signatures in the Java DAX API remain exactly the same as it was prior
     to the 5.0 release with the exception that it can now generate YAML. It is
     **recommended to use the Python API moving forward** as it supports more features
     such as catalog generation and access to pegasus command line tools.
@@ -488,7 +488,7 @@ representations of the classic *diamond* workflow.
 
             # --- Workflow -----------------------------------------------------------------
             '''
-                                    [f.b1] - (findrange) - [f.c1] 
+                                    [f.b1] - (findrange) - [f.c1]
                                     /                             \
             [f.a] - (preprocess)                               (analyze) - [f.d]
                                     \                             /
@@ -560,18 +560,18 @@ representations of the classic *diamond* workflow.
             a1 = File("f.a1")
             a1.addPFN(PFN("file://" + sys.argv[2] + "/f.a1", "condorpool"))
             diamond.addFile(a1)
-                
+
             # Add executables to the DAX-level replica catalog
             # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
             # the remote PEGASUS_HOME to build the path.
             e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=False)
             e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
             diamond.addExecutable(e_preprocess)
-                
+
             e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=False)
             e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
             diamond.addExecutable(e_findrange)
-                
+
             e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=False)
             e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
             diamond.addExecutable(e_analyze)
@@ -619,7 +619,7 @@ representations of the classic *diamond* workflow.
             diamond.addDependency(Dependency(parent=frr, child=analyze))
 
             # Write the DAX to stdout
-            diamond.writeXML(sys.stdout)                
+            diamond.writeXML(sys.stdout)
 
 
 To begin creating a workflow, you will first need to import the classes made
@@ -642,7 +642,7 @@ available in ``Pegasus.api``. Simply replace ``DAX3`` with ``api``.
 
 
 The workflow object has been changed from ``ADAG`` to ``Workflow``. By default,
-job dependencies will be inferred based on job input and output files. 
+job dependencies will be inferred based on job input and output files.
 
 .. tabs::
 
@@ -659,12 +659,12 @@ job dependencies will be inferred based on job input and output files.
             diamond = ADAG("diamond")
 
 
-In DAX3, you were able to add files directly to the ``ADAG`` object. With the newer 5.0 api, 
+In DAX3, you were able to add files directly to the ``ADAG`` object. With the newer 5.0 api,
 any file that has a physical file name (i.e. any initial input file to the workflow)
-should be added to the :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`. 
+should be added to the :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`.
 In this example, we add the replica catalog to the workflow after all input files
 have been added to it. You also have the option to write this out to a separate file
-for ``pegasus-plan`` to pick up. 
+for ``pegasus-plan`` to pick up.
 
 .. tabs::
 
@@ -674,23 +674,23 @@ for ``pegasus-plan`` to pick up.
 
             fa = File("f.a").add_metadata(creator="ryan")
             rc = ReplicaCatalog().add_replica("local", fa, Path(".").resolve() / "f.a")
-            wf.add_replica_catalog(rc)   
+            wf.add_replica_catalog(rc)
 
     .. tab:: Pegasus.DAX3
 
         .. code-block:: python
 
-            a = File("f.a") 
+            a = File("f.a")
             a.addPFN(PFN("file://"+ os.getcwd() + "/f.a", "local"))
             diamond.addFile(a)
 
 
 In DAX3, you were also able to add executables directly to the ``ADAG`` object. In
 5.0, the way to do this is to first add them to a :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog`
-and then add that catalog to the workflow as shown below. **Note that we now refer 
+and then add that catalog to the workflow as shown below. **Note that we now refer
 to executables as transformations**. In DAX3, you were not able to add containers
 directly to the ``ADAG`` object. They would instead need to be cataloged in the
-text based transformation catalog file. With the new api, you may create 
+text based transformation catalog file. With the new api, you may create
 containers and add them to the workflow through the transformation catalog. For
 more information see :ref:`containers`. Just as with the replica catalog,
 you have the option to write this catalog out to a separate file for ``pegasus-plan``
@@ -723,9 +723,9 @@ to pick up.
             diamond.addExecutable(e_preprocess)
 
 
-When specifying :py:class:`~Pegasus.api.workflow.AbstractJob` inputs and outputs, 
+When specifying :py:class:`~Pegasus.api.workflow.AbstractJob` inputs and outputs,
 simply add the :py:class:`~Pegasus.api.replica_catalog.File`\s as inputs or outputs.
-Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below. 
+Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below.
 
 .. tabs::
 
@@ -757,8 +757,8 @@ Unlike DAX3, you do not need to specify ``job.uses(..)`` as seen below.
 
 Hierarchical workflows can be created by adding :py:class:`~Pegasus.api.workflow.SubWorkflow`
 jobs. The second argument, ``is_planned``, in ``SubWorkflow`` specifies whether or not it has already
-been planned by the pegasus planner. When ``is_planned=False``, this is the equivalent 
-of using the ``DAX`` object in ``Pegasus.DAX3``. When ``is_planned=True``, this 
+been planned by the pegasus planner. When ``is_planned=False``, this is the equivalent
+of using the ``DAX`` object in ``Pegasus.DAX3``. When ``is_planned=True``, this
 is the equivalent of using the ``DAG`` object in ``Pegasus.DAX3``.
 
 .. tabs::
@@ -774,7 +774,7 @@ is the equivalent of using the ``DAG`` object in ``Pegasus.DAX3``.
                      .add_args("--output-sites", "local", "-vvv")
 
          wf.add_jobs(blackdiamond_wf, sleep_wf)
-   
+
    .. tab:: Pegasus.DAX3
 
       .. code-block:: python
@@ -798,7 +798,7 @@ is the equivalent of using the ``DAG`` object in ``Pegasus.DAX3``.
          dax2.addArguments( '-vvv')
          adag.addJob(dax2)
 
-Profile functionality remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.ProfileMixin`). 
+Profile functionality remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.ProfileMixin`).
 Profiles can be added to the following:
 
     - :py:class:`~Pegasus.api.site_catalog.FileServer`
@@ -835,7 +835,7 @@ Profiles can be added to the following:
             job.addProfile(Profile(Namespace.ENV,'PATH','/bin'))
             job.profile(Namespace.CONDOR, "universe", "vanilla")
 
-Metadata functionality also remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.MetadataMixin`). 
+Metadata functionality also remains the same in Pegasus 5.0 (see :py:class:`~Pegasus.api.mixins.MetadataMixin`).
 Metadata can be added to the following:
 
     - :py:class:`~Pegasus.api.replica_catalog.File`
@@ -871,11 +871,11 @@ by calling :py:class:`~Pegasus.api.workflow.Workflow.plan` on the :py:class:`~Pe
 after all jobs have been added to it. If ``submit=True`` is given to ``wf.plan``,
 the workflow will be planned and submitted for execution. At that point, ``wf.plan()``
 will return. If you would like to block until the actual workflow execution is called
-then ``wf.plan(submit=True).wait()`` can be used. 
+then ``wf.plan(submit=True).wait()`` can be used.
 
 .. attention::
     To use this feature, the Pegasus binaries must be added to your ``PATH`` and it
-    is only supported in the new python api. 
+    is only supported in the new python api.
 
 .. code-block:: python
 
@@ -887,10 +887,10 @@ then ``wf.plan(submit=True).wait()`` can be used.
 
     from Pegasus.api import *
 
-    wf = Workflow("diamond")  
+    wf = Workflow("diamond")
 
     # Add properties
-    # .. 
+    # ..
     # .
 
     # Add files, transformations, and jobs here
@@ -905,7 +905,7 @@ then ``wf.plan(submit=True).wait()`` can be used.
 
         # braindump becomes accessible following a call to wf.plan()
         print(wf.braindump.submit_dir)
-    
+
         # wait for workflow execution to complete
         wf.wait()
 
@@ -918,7 +918,7 @@ then ``wf.plan(submit=True).wait()`` can be used.
 .. tip::
     Because the property file, catalogs, and the workflow can all be generated and
     run programatically, it is recommended to keep everything in a single script
-    so that a wrapper shell script is not needed. 
+    so that a wrapper shell script is not needed.
 
 
 
@@ -1461,5 +1461,3 @@ names for the clients that replaced them
    rank-dax                        pegasus-rank-dax
    transfer                        pegasus-transfer
    =============================== ====================
-
-

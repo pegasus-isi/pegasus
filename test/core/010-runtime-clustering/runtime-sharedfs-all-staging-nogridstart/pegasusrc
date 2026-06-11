@@ -8,4 +8,3 @@ pegasus.gridstart = None
 pegasus.catalog.transformation.mapper = Staged
 pegasus.transfer.worker.package = True
 pegasus.clusterer.preference = Runtime
-

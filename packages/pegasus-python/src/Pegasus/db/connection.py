@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -175,7 +174,7 @@ def connect(
                 # database is locked, getting PIDs and commands
                 p = urlparse(dburi)
                 out, err = subprocess.Popen(
-                    "fuser -u %s" % p.path,
+                    f"fuser -u {p.path}",
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=True,
@@ -184,7 +183,7 @@ def connect(
 
                 pids = out.decode("utf8").strip().replace(" ", ",")
                 out, err = subprocess.Popen(
-                    'ps -o "pid user command" -p %s' % pids,
+                    f'ps -o "pid user command" -p {pids}',
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=True,
@@ -192,8 +191,7 @@ def connect(
                 ).communicate()
                 if err:
                     raise ConnectionError(
-                        "Database is locked (%s): Unable to run ps command: %s"
-                        % (dburi, err),
+                        f"Database is locked ({dburi}): Unable to run ps command: {err}",
                         given_version=pegasus_version,
                         db_type=db_type,
                     )
@@ -205,10 +203,11 @@ def connect(
                     given_version=pegasus_version,
                     db_type=db_type,
                 )
-            else:
-                raise ConnectionError(
-                    f"{e} ({dburi})", given_version=pegasus_version, db_type=db_type,
-                )
+            raise ConnectionError(
+                f"{e} ({dburi})",
+                given_version=pegasus_version,
+                db_type=db_type,
+            )
 
     if not create and schema_check:
         try:
@@ -241,7 +240,7 @@ def connect_by_submitdir(
     cl_properties=None,
     print_version=True,
 ):
-    """ Connect to the database from submit directory and database type """
+    """Connect to the database from submit directory and database type"""
     dburi = url_by_submitdir(
         submit_dir, db_type, config_properties, cl_properties=cl_properties
     )
@@ -268,7 +267,7 @@ def connect_by_properties(
     verbose=True,
     print_version=True,
 ):
-    """ Connect to the database from properties file and database type """
+    """Connect to the database from properties file and database type"""
     props = properties.Properties()
     props.new(config_file=config_properties)
     _merge_properties(props, cl_properties)
@@ -291,7 +290,7 @@ def connect_by_properties(
 def url_by_submitdir(
     submit_dir, db_type, config_properties=None, top_dir=None, cl_properties=None
 ):
-    """ Get URL from the submit directory """
+    """Get URL from the submit directory"""
     if not submit_dir:
         raise ConnectionError(
             "A submit directory should be provided with the type parameter.",
@@ -337,7 +336,7 @@ def url_by_properties(
     cl_properties=None,
     props=None,
 ):
-    """ Get URL from the property file """
+    """Get URL from the property file"""
     # Validate parameters
     if not db_type:
         raise ConnectionError(
@@ -357,10 +356,10 @@ def url_by_properties(
     elif db_type.upper() == DBType.WORKFLOW:
         dburi = _get_workflow_uri(props, submit_dir, top_dir)
     else:
-        raise ConnectionError("Invalid database type '%s'." % db_type, db_type=db_type)
+        raise ConnectionError(f"Invalid database type '{db_type}'.", db_type=db_type)
 
     if dburi:
-        log.debug("Using database: %s" % dburi)
+        log.debug(f"Using database: {dburi}")
         return dburi
 
     raise ConnectionError("Unable to find a database URI to connect.", db_type=db_type)
@@ -373,7 +372,7 @@ def get_wf_uuid(submit_dir):
 
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        log.error("Unable to process braindump.txt in %s" % (submit_dir))
+        log.error(f"Unable to process braindump.txt in {submit_dir}")
         return None
 
     # Get wf_uuid for this workflow
@@ -402,6 +401,7 @@ def connect_to_master_db(user=None):
 
 # -------------------------------------------------------------------
 
+
 # This turns on foreign keys for SQLite3 connections
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(conn, record):
@@ -416,13 +416,13 @@ def _merge_properties(props, cl_properties):
     if cl_properties:
         for property in cl_properties:
             if "=" not in property:
-                raise ConnectionError("Malformed property: %s" % property)
+                raise ConnectionError(f"Malformed property: {property}")
             key, value = property.split("=")
             props.property(key, val=value)
 
 
 def _get_jdbcrc_uri(props=None):
-    """ Get JDBCRC URI from properties """
+    """Get JDBCRC URI from properties"""
     if props:
         replica_catalog = props.property("pegasus.catalog.replica")
         if not replica_catalog:
@@ -440,9 +440,7 @@ def _get_jdbcrc_uri(props=None):
 
         url = rc_info["url"]
         if not url:
-            raise ConnectionError(
-                "'%s' property not set." % PROP_CATALOG_REPLICA_DB_URL
-            )
+            raise ConnectionError(f"'{PROP_CATALOG_REPLICA_DB_URL}' property not set.")
         url = _parse_jdbc_uri(url)
         o = urlparse(url)
         host = o.netloc
@@ -484,12 +482,12 @@ def _get_jdbcrc_uri(props=None):
                 + database
             )
 
-        log.debug("Invalid JDBCRC driver: %s" % rc_info["driver"])
+        log.debug("Invalid JDBCRC driver: {}".format(rc_info["driver"]))
     return None
 
 
 def _get_master_uri(props=None):
-    """ Get MASTER URI """
+    """Get MASTER URI"""
     if props:
         dburi = props.property(PROP_CATALOG_MASTER_URL)
         if dburi:
@@ -501,8 +499,7 @@ def _get_master_uri(props=None):
     homedir = os.getenv("HOME", None)
     if homedir is None:
         raise ConnectionError(
-            "Environment variable HOME not defined, set %s property to point to the Dashboard database."
-            % PROP_DASHBOARD_OUTPUT
+            f"Environment variable HOME not defined, set {PROP_DASHBOARD_OUTPUT} property to point to the Dashboard database."
         )
 
     dir = os.path.join(homedir, ".pegasus")
@@ -512,9 +509,9 @@ def _get_master_uri(props=None):
         try:
             os.mkdir(dir, 0o755)
         except OSError:
-            raise ConnectionError("Unable to create directory: %s" % dir)
+            raise ConnectionError(f"Unable to create directory: {dir}")
     elif not os.access(dir, os.W_OK):
-        log.warning("Unable to write to directory: %s" % dir)
+        log.warning(f"Unable to write to directory: {dir}")
         return None
 
     # directory exists, touch the file and set permissions
@@ -525,18 +522,18 @@ def _get_master_uri(props=None):
             open(filename, "w").close()
             os.chmod(filename, 0o600)
         except Exception as e:
-            log.warning("unable to initialize MASTER db %s." % filename)
+            log.warning(f"unable to initialize MASTER db {filename}.")
             log.exception(e)
             return None
     elif not os.access(filename, os.W_OK):
-        log.warning("No read access for file: %s" % filename)
+        log.warning(f"No read access for file: {filename}")
         return None
 
     return "sqlite:///" + filename
 
 
 def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
-    """ Get WORKFLOW URI """
+    """Get WORKFLOW URI"""
     if props:
         dburi = props.property(PROP_CATALOG_WORKFLOW_URL)
         if dburi:
@@ -574,8 +571,7 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
             submit_dir, dag_file_name[: dag_file_name.find(".dag")] + ".stampede.db"
         )
 
-    dburi = "sqlite:///" + output_db_file
-    return dburi
+    return "sqlite:///" + output_db_file
 
 
 def _parse_jdbc_uri(dburi):
@@ -655,9 +651,7 @@ def _parse_props(dburi, props, db_type=None, connect_args=None):
 
             except ValueError as e:
                 raise ConnectionError(
-                    "Timeout properties should be set in seconds: {} ({})".format(
-                        e, dburi
-                    ),
+                    f"Timeout properties should be set in seconds: {e} ({dburi})",
                     db_type=db_type,
                 )
 
@@ -675,7 +669,7 @@ def _get_timeout_property(props, prop_name1, prop_name2):
     if props.property(prop_name1):
         return int(props.property(prop_name1))
 
-    elif props.property(prop_name2):
+    if props.property(prop_name2):
         return int(props.property(prop_name2))
 
     return None
@@ -696,7 +690,7 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
 
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        raise ConnectionError("File 'braindump.txt' not found in %s." % dir)
+        raise ConnectionError(f"File 'braindump.txt' not found in {dir}.")
 
     if top_level_wf_params["root_wf_uuid"] == top_level_wf_params["wf_uuid"]:
         return top_level_wf_params
@@ -729,16 +723,16 @@ def _backup_db(dburi):
     if urlparse(dburi).scheme == "sqlite":
         db_path = urlparse(dburi).path[1:]
         if os.path.isfile(db_path):
-            log.info("Rotating sqlite db file %s" % db_path)
+            log.info(f"Rotating sqlite db file {db_path}")
             mask = os.stat(db_path)[ST_MODE]
             rotated_backup_file = utils.rotate_log_file(db_path)
-            log.info("Rotated sqlite db file to %s" % rotated_backup_file)
+            log.info(f"Rotated sqlite db file to {rotated_backup_file}")
 
             if rotated_backup_file:
                 # GH-2134 truncate one previous backup if it exists
                 _truncate_previous_backup_file(rotated_backup_file, db_path)
             else:
-                log.error("Database was not rotated %s" % db_path)
+                log.error(f"Database was not rotated {db_path}")
 
     return mask
 
@@ -760,7 +754,7 @@ def _truncate_previous_backup_file(backup_file, prefix):
         file_to_truncate = utils.get_backedup_file(prefix, backup_number - 1)
         if file_to_truncate:
             utils.truncate_file(file_to_truncate)
-            log.info("Truncated db file  %s to 0 bytes" % file_to_truncate)
+            log.info(f"Truncated db file  {file_to_truncate} to 0 bytes")
         else:
             log.error(
                 f"Unable to determine backup file to truncate for prefix {prefix} with suffix {backup_number - 1}"

@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dbdriver;
 
+import org.griphyn.vdl.util.*;
+
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the driver API for the free, small, and fast file-based SQL Lite. This

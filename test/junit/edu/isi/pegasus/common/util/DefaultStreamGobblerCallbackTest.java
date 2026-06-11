@@ -20,15 +20,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.PrintStream;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class DefaultStreamGobblerCallbackTest {
 
     // -----------------------------------------------------------------------

@@ -18,8 +18,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.selector.SiteSelector;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /**
  * Tests for the Abstract site selector class. Uses concrete subclasses to exercise the abstract

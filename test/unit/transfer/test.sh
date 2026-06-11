@@ -33,14 +33,14 @@ function transfer_with_kickstart {
 }
 
 function test_integrity {
-    
+
     # try to trick transfer to invoke the wrong integrity executable
     rm -rf do-not-execute
     mkdir do-not-execute
     cp /bin/false do-not-execute/pegasus-integrity
     export PATH=$PWD/do-not-execute:$PATH
-    
-    rm -f $KICKSTART_INTEGRITY_DATA 
+
+    rm -f $KICKSTART_INTEGRITY_DATA
     if ! (transfer --file web-to-local.in); then
         echo "ERROR: pegasus-transfer exited non-zero"
         return 1
@@ -166,7 +166,7 @@ function test_integrity_kickstart_large {
  { "type": "transfer",
    "lfn": "file_$TID.data",
    "linkage": "input",
-   "generate_checksum": true, 
+   "generate_checksum": true,
    "id": $TID,
    "src_urls": [
      { "site_label": "local", "url": "file://$PWD/input.data", "priority": 100 }
@@ -232,5 +232,3 @@ run_test test_integrity_kickstart_large
 
 # cleanup
 rm -f $KICKSTART_INTEGRITY_DATA index.html data.txt
-
-

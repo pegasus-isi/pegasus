@@ -17,10 +17,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.notNullValue;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the Data abstract base class.

@@ -16,16 +16,18 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.common.util.Separator;
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.util.*;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.router.Cache;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.util.*;
 
 /**
  * This class provides basic functionalities to interact with the backend database, such as
@@ -101,8 +103,13 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * @throws java.io.IOException Exception
      */
     public AnnotationSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, VDC.PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with default schema c'tor");
@@ -190,18 +197,21 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
                         //	" SELECT distinct name FROM lfn_i WHERE did=? UNION " +
                         //	" SELECT distinct name FROM lfn_o WHERE did=? UNION " +
                         //	" SELECT distinct name FROM lfn_b WHERE did=? )" );
-                        "SELECT a.id FROM anno_lfn a, anno_lfn_i i WHERE i.name=a.name AND a.id=? UNION "
-                        + "SELECT a.id FROM anno_lfn a, anno_lfn_o o WHERE o.name=a.name AND a.id=? UNION "
-                        + "SELECT a.id FROM anno_lfn a, anno_lfn_b b WHERE b.name=a.name AND a.id=?");
+                        "SELECT a.id FROM anno_lfn a, anno_lfn_i i WHERE i.name=a.name AND a.id=?"
+                        + " UNION SELECT a.id FROM anno_lfn a, anno_lfn_o o WHERE o.name=a.name AND"
+                        + " a.id=? UNION SELECT a.id FROM anno_lfn a, anno_lfn_b b WHERE"
+                        + " b.name=a.name AND a.id=?");
 
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.xml.id", "SELECT xml FROM anno_definition WHERE id=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.xml",
-                "SELECT id,xml FROM anno_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id,xml FROM anno_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.id",
-                "SELECT id FROM anno_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id FROM anno_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
 
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.delete.xml", "DELETE FROM anno_definition WHERE id=?");
@@ -1101,7 +1111,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             switch (link) {
                 case LFN.NONE:
                     throw new RuntimeException("The linkage \"none\" is not permitted");
-                    // break;
+                // break;
                 case LFN.INPUT:
                     ps = this.m_dbdriver.getPreparedStatement("stmt.select.lfn_i");
                     break;
@@ -2716,7 +2726,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             switch (link) {
                 case LFN.NONE:
                     throw new RuntimeException("The linkage \"none\" is not permitted");
-                    // break;
+                // break;
                 case LFN.INPUT:
                     ps = this.m_dbdriver.getPreparedStatement("stmt.select.lfn_i.name.ex");
                     break;

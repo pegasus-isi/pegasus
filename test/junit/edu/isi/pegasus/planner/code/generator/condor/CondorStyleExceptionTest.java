@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the CondorStyleException class. */

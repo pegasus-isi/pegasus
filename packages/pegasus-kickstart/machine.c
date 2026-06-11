@@ -31,8 +31,8 @@
 #endif /* unknown */
 
 void initMachineInfo(MachineInfo* machine) {
-    /* purpose: initialize the data structure. 
-     * paramtr: machine (OUT): initialized MachineInfo structure. 
+    /* purpose: initialize the data structure.
+     * paramtr: machine (OUT): initialized MachineInfo structure.
      */
     /* initialize virtual method table */
 #ifdef __MFLAG
@@ -74,4 +74,3 @@ void deleteMachineInfo(MachineInfo* machine) {
     machine->dtor(machine->data);
     memset(machine, 0, sizeof(MachineInfo));
 }
-

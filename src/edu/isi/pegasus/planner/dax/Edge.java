@@ -23,8 +23,10 @@ public class Edge {
 
     /** The parent of the child */
     private String mChild;
+
     /** The parent of the parent */
     private String mParent;
+
     /** The edge label for the parent child relationship. Optional. */
     private String mLabel;
 
@@ -52,32 +54,44 @@ public class Edge {
         mLabel = label;
     }
 
-    /** @return the parent */
+    /**
+     * @return the parent
+     */
     public String getParent() {
         return mParent;
     }
 
-    /** @param parent the parent of the edge to set */
+    /**
+     * @param parent the parent of the edge to set
+     */
     public void setParent(String parent) {
         mParent = parent;
     }
 
-    /** @return the child of the edge */
+    /**
+     * @return the child of the edge
+     */
     public String getChild() {
         return mChild;
     }
 
-    /** @param child the child of the edge to set */
+    /**
+     * @param child the child of the edge to set
+     */
     public void setChild(String child) {
         mChild = child;
     }
 
-    /** @return the label */
+    /**
+     * @return the label
+     */
     public String getLabel() {
         return mLabel;
     }
 
-    /** @param label the label to set */
+    /**
+     * @param label the label to set
+     */
     public void setLabel(String label) {
         mLabel = label;
     }

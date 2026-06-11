@@ -17,18 +17,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Properties;
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import software.amazon.awssdk.services.batch.model.JobStatus;
 import software.amazon.awssdk.services.batch.model.ListJobsRequest;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Method;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class SynchTest {
 
     private Synch synch;

@@ -13,4 +13,3 @@ sleeptime = int(sys.argv[1])
 
 print("Sleeping for %d seconds" % sleeptime)
 time.sleep(int(sleeptime))
-

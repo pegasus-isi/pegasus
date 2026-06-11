@@ -19,9 +19,9 @@ function update_condor_states
         HELD_JOBS="0"
     fi
     HELD_JOBS=$(($HELD_JOBS + 0))
-    
+
     TS=`date +'%F %R'`
-    echo "$TS  -  Condor Jobs  -  Total: $TOTAL_JOBS   Held: $HELD_JOBS" 
+    echo "$TS  -  Condor Jobs  -  Total: $TOTAL_JOBS   Held: $HELD_JOBS"
 }
 
 update_condor_states
@@ -36,4 +36,3 @@ if [ $HELD_JOBS -gt 0 ]; then
 fi
 
 exit 0
-

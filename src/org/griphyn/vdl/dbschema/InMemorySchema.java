@@ -14,15 +14,16 @@
  */
 package org.griphyn.vdl.dbschema;
 
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.dbdriver.*;
+import org.griphyn.vdl.util.ChimeraProperties;
+import org.griphyn.vdl.util.Logging;
+
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.sql.SQLException;
 import java.util.*;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.dbdriver.*;
-import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This is a class that falls back not on a real database backend, but rather on an existing
@@ -74,8 +75,13 @@ public class InMemorySchema extends DatabaseSchema implements VDC {
      * @throws java.io.IOException Exception
      */
     public InMemorySchema(Definitions memory)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         super(); // call minimalistic c'tor
         this.m_memory = memory;
         this.m_dbschemaprops =

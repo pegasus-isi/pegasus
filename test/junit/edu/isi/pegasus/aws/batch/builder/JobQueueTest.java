@@ -17,18 +17,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import software.amazon.awssdk.services.batch.model.CreateJobQueueRequest;
+import software.amazon.awssdk.services.batch.model.JQState;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import software.amazon.awssdk.services.batch.model.CreateJobQueueRequest;
-import software.amazon.awssdk.services.batch.model.JQState;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class JobQueueTest {
 
     @TempDir File tempDir;
@@ -72,14 +76,9 @@ public class JobQueueTest {
     @Test
     public void testCreateFromHTTPSpecParsesBasicFields() throws IOException {
         String json =
-                "{"
-                        + "\"jobQueueName\": \"parsed-queue\","
-                        + "\"priority\": 10,"
-                        + "\"state\": \"DISABLED\","
-                        + "\"computeEnvironmentOrder\": ["
-                        + "  {\"computeEnvironment\": \"arn:aws:batch::111:ce/my-ce\", \"order\": 2}"
-                        + "]"
-                        + "}";
+                "{\"jobQueueName\": \"parsed-queue\",\"priority\": 10,\"state\":"
+                        + " \"DISABLED\",\"computeEnvironmentOrder\": [  {\"computeEnvironment\":"
+                        + " \"arn:aws:batch::111:ce/my-ce\", \"order\": 2}]}";
         File f = writeToTempFile("jq-http.json", json);
         CreateJobQueueRequest req =
                 jq.createJobQueueRequestFromHTTPSpec(
@@ -150,14 +149,11 @@ public class JobQueueTest {
     @Test
     public void testCreateFromBatchSpecReturnsList() throws IOException {
         String json =
-                "{"
-                        + "\"CreateJobQueue\": ["
-                        + "  {\"input\": {\"jobQueueName\": \"jq-1\", \"priority\": 1,"
-                        + "    \"computeEnvironmentOrder\": [{\"computeEnvironment\": \"arn:ce/ce-1\", \"order\": 1}]}},"
-                        + "  {\"input\": {\"jobQueueName\": \"jq-2\", \"priority\": 2,"
-                        + "    \"computeEnvironmentOrder\": [{\"computeEnvironment\": \"arn:ce/ce-2\", \"order\": 1}]}}"
-                        + "]"
-                        + "}";
+                "{\"CreateJobQueue\": [  {\"input\": {\"jobQueueName\": \"jq-1\", \"priority\": 1, "
+                    + "   \"computeEnvironmentOrder\": [{\"computeEnvironment\": \"arn:ce/ce-1\","
+                    + " \"order\": 1}]}},  {\"input\": {\"jobQueueName\": \"jq-2\", \"priority\":"
+                    + " 2,    \"computeEnvironmentOrder\": [{\"computeEnvironment\":"
+                    + " \"arn:ce/ce-2\", \"order\": 1}]}}]}";
         File f = writeToTempFile("jq-batch.json", json);
         List<CreateJobQueueRequest> reqs = jq.createJobQueueRequest(f);
         assertThat(reqs, hasSize(2));

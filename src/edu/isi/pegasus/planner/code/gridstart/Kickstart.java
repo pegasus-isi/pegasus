@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.transfer.SLS;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -126,6 +127,7 @@ public class Kickstart implements GridStart {
 
     /** Handle to the site catalog store. */
     private SiteStore mSiteStore;
+
     // private PoolInfoProvider mSiteHandle;
 
     /** Handle to Transformation Catalog. */
@@ -332,7 +334,8 @@ public class Kickstart implements GridStart {
                     // sanity check first to ensure the aggreagtors are not mixed
                     StringBuilder error = new StringBuilder();
                     error.append(
-                                    "Recursive Clustering does not support different job aggregators. Job Aggregator for clustered job ")
+                                    "Recursive Clustering does not support different job"
+                                            + " aggregators. Job Aggregator for clustered job ")
                             .append(job.getID())
                             .append(" ")
                             .append(aggregator.getClass())
@@ -888,7 +891,8 @@ public class Kickstart implements GridStart {
                     // we know there was no path determined from site catalog.
                     error.append(" . ")
                             .append(
-                                    "Make sure PEGASUS_HOME is set as an env profile in the site catalog for site ")
+                                    "Make sure PEGASUS_HOME is set as an env profile in the site"
+                                            + " catalog for site ")
                             .append(job.getSiteHandle());
                 }
 

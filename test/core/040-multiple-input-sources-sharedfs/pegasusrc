@@ -8,4 +8,3 @@ pegasus.condor.logs.symlink = false
 pegasus.transfer.worker.package = true
 
 pegasus.transfer.bypass.input.staging = true
-

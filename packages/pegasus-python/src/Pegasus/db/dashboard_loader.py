@@ -10,7 +10,6 @@ from Pegasus.db.schema import *
 
 
 class DashboardLoader(BaseLoader):
-
     MAX_RETRIES = 10  # maximum number of retries in case of operational errors that arise because of database locked/connection dropped
 
     """Load into the Stampede Dashboard SQL schema through SQLAlchemy.
@@ -103,7 +102,7 @@ class DashboardLoader(BaseLoader):
             # schema (unique indexes, etc).
             self.log.error('Insert failed for event "%s" : %s', linedata["event"], e)
             self.session.rollback()
-        except exc.OperationalError as e:
+        except exc.OperationalError:
             self.log.error("Connection seemingly lost - attempting to refresh")
             self.session.rollback()
             self.check_connection()
@@ -181,12 +180,10 @@ class DashboardLoader(BaseLoader):
         if retry == self.MAX_RETRIES + 1:
             # PM-1013 see if max retries is reached
             self.log.error(
-                "Maximum number of retries reached for dashboard_loader.hard_flush() method %s"
-                % self.MAX_RETRIES
+                f"Maximum number of retries reached for dashboard_loader.hard_flush() method {self.MAX_RETRIES}"
             )
             raise RuntimeError(
-                "Maximum number of retries reached for dashboard_loader.hard_flush() method %s"
-                % self.MAX_RETRIES
+                f"Maximum number of retries reached for dashboard_loader.hard_flush() method {self.MAX_RETRIES}"
             )
 
         retry = retry + 1

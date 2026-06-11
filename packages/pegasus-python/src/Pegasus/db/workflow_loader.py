@@ -162,10 +162,9 @@ class WorkflowLoader(BaseLoader):
                 self.log.exception(e)
                 self.log.error('Insert failed for event "%s"', linedata["event"])
                 self.session.rollback()
-            except exc.OperationalError as e:
+            except exc.OperationalError:
                 self.log.error(
-                    "Connection seemingly lost - attempting to refresh. Retry %s"
-                    % retry
+                    f"Connection seemingly lost - attempting to refresh. Retry {retry}"
                 )
                 self.session.rollback()
                 self.check_connection()
@@ -176,12 +175,10 @@ class WorkflowLoader(BaseLoader):
         else:
             # loop finished after all retries have been made
             self.log.error(
-                "Maximum number of retries reached for stampede_loader.process() method %s"
-                % retry
+                f"Maximum number of retries reached for stampede_loader.process() method {retry}"
             )
             raise RuntimeError(
-                "Maximum number of retries reached for stampede_loader.process() method %s"
-                % retry
+                f"Maximum number of retries reached for stampede_loader.process() method {retry}"
             )
 
         self.check_flush(increment=True)
@@ -283,12 +280,10 @@ class WorkflowLoader(BaseLoader):
         if retry == self.MAX_RETRIES + 1:
             # PM-1013 see if max retries is reached
             self.log.error(
-                "Maximum number of retries reached for workflow_loader.hard_flush() method %s"
-                % self.MAX_RETRIES
+                f"Maximum number of retries reached for workflow_loader.hard_flush() method {self.MAX_RETRIES}"
             )
             raise RuntimeError(
-                "Maximum number of retries reached for workflow_loader.hard_flush() method %s"
-                % self.MAX_RETRIES
+                f"Maximum number of retries reached for workflow_loader.hard_flush() method {self.MAX_RETRIES}"
             )
 
         retry = retry + 1
@@ -331,8 +326,7 @@ class WorkflowLoader(BaseLoader):
         except exc.OperationalError as e:
             self.log.exception(e)
             self.log.error(
-                "Connection problem during commit in hard_flush(): reattempting batch. Retry %s"
-                % retry
+                f"Connection problem during commit in hard_flush(): reattempting batch. Retry {retry}"
             )
             self.session.rollback()
             self.hard_flush(retry=retry)
@@ -510,7 +504,6 @@ class WorkflowLoader(BaseLoader):
             job_instance.event == "stampede.job_inst.submit.start"
             or job_instance.event == "stampede.job_inst.pre.start"
         ):
-
             iid = self.get_job_instance_id(job_instance, quiet=True)
 
             if not iid:
@@ -527,7 +520,6 @@ class WorkflowLoader(BaseLoader):
             job_instance.event == "stampede.job_inst.main.end"
             or job_instance.event == "stampede.job_inst.post.end"
         ):
-
             job_instance.job_instance_id = self.get_job_instance_id(job_instance)
 
             if self._batch:
@@ -696,10 +688,10 @@ class WorkflowLoader(BaseLoader):
                 .one()
             )
             task.job_id = job_id
-        except orm.exc.MultipleResultsFound as e:
+        except orm.exc.MultipleResultsFound:
             self.log.error("Multiple task results: cant map task: %s ", linedata)
             return
-        except orm.exc.NoResultFound as e:
+        except orm.exc.NoResultFound:
             self.log.error("No task found: cant map task: %s ", linedata)
             return
 
@@ -870,12 +862,12 @@ class WorkflowLoader(BaseLoader):
                 .one()
             )
             job_inst.subwf_id = subwf_id
-        except orm.exc.MultipleResultsFound as e:
+        except orm.exc.MultipleResultsFound:
             self.log.error(
                 "Multiple job instance results: cant map subwf: %s ", linedata
             )
             return
-        except orm.exc.NoResultFound as e:
+        except orm.exc.NoResultFound:
             self.log.error("No job instance found: cant map subwf: %s ", linedata)
             return
 
@@ -1030,7 +1022,7 @@ class WorkflowLoader(BaseLoader):
         """
         if (wf_id, task_dax_id) not in self.task_id_cache:
             try:
-                self.task_id_cache[((wf_id, task_dax_id))] = (
+                self.task_id_cache[(wf_id, task_dax_id)] = (
                     self.session.execute(
                         select(Task.task_id)
                         .where(Task.wf_id == wf_id)
@@ -1039,14 +1031,14 @@ class WorkflowLoader(BaseLoader):
                     .one()
                     .task_id
                 )
-            except orm.exc.MultipleResultsFound as e:
+            except orm.exc.MultipleResultsFound:
                 self.log.error(
                     "Multiple results found for wf_uuid/task_dax_id: %s/%s",
                     wf_id,
                     task_dax_id,
                 )
                 return None
-            except orm.exc.NoResultFound as e:
+            except orm.exc.NoResultFound:
                 self.log.error(
                     "No results found for wf_uuid/task_dax_id: %s/%s",
                     wf_id,
@@ -1105,10 +1097,10 @@ class WorkflowLoader(BaseLoader):
                 .one()
                 .lfn_id
             )
-        except orm.exc.MultipleResultsFound as e:
+        except orm.exc.MultipleResultsFound:
             self.log.error("Multiple results found for wf_uuid/lfn: %s/%s", wf_id, lfn)
             return None
-        except orm.exc.NoResultFound as e:
+        except orm.exc.NoResultFound:
             return None
 
         return lfn_id
@@ -1125,7 +1117,7 @@ class WorkflowLoader(BaseLoader):
         """
         if (wf_id, exec_id) not in self.job_id_cache:
             try:
-                self.job_id_cache[((wf_id, exec_id))] = (
+                self.job_id_cache[(wf_id, exec_id)] = (
                     self.session.execute(
                         select(Job.job_id)
                         .where(Job.wf_id == wf_id)
@@ -1134,20 +1126,20 @@ class WorkflowLoader(BaseLoader):
                     .one()
                     .job_id
                 )
-            except orm.exc.MultipleResultsFound as e:
+            except orm.exc.MultipleResultsFound:
                 self.log.error(
                     "Multiple results found for wf_uuid/exec_job_id: %s/%s",
                     wf_id,
                     exec_id,
                 )
                 return None
-            except orm.exc.NoResultFound as e:
+            except orm.exc.NoResultFound:
                 self.log.error(
                     "No results found for wf_uuid/exec_job_id: %s/%s", wf_id, exec_id
                 )
                 return None
 
-        return self.job_id_cache[((wf_id, exec_id))]
+        return self.job_id_cache[(wf_id, exec_id)]
 
     def get_job_instance_id(self, o, quiet=False):
         """
@@ -1217,7 +1209,7 @@ class WorkflowLoader(BaseLoader):
                         .one()
                         .host_id
                     )
-                except orm.exc.MultipleResultsFound as e:
+                except orm.exc.MultipleResultsFound:
                     self.log.error("Multiple host_id results for host: %s", host)
             job_instance = (
                 self.session.execute(

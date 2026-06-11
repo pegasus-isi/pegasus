@@ -14,10 +14,11 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.util.ArrayList;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
 import org.xml.sax.*;
+
+import java.util.ArrayList;
 
 /**
  * This class adds a given Definition from the parser's callback into the already established

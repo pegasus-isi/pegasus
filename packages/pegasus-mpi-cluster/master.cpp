@@ -30,9 +30,9 @@ static void on_signal(int signo) {
 
 static void log_invalid_message(Message *mesg) {
     /* Log as much information about the message as we can */
-    log_error("Master got invalid message: size=%u, source=%d", 
+    log_error("Master got invalid message: size=%u, source=%d",
               mesg->msgsize, mesg->source);
-    
+
     /* Write the message to a memory dump file */
     log_error("Writing invalid message to %s", MESSAGE_DUMP_FILE);
     FILE *dump = fopen(MESSAGE_DUMP_FILE, "w");
@@ -173,7 +173,7 @@ void Host::add_slot() {
 
 /* Log the number of resources this host currently has */
 void Host::log_resources(FILE *resource_log) {
-    log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
+    log_trace("Host %s now has %u MB, %u CPUs, and %u slots free",
         this->host_name.c_str(), this->memory_free, this->cpus_free, this->slots_free);
 
     if (resource_log == NULL) {
@@ -185,7 +185,7 @@ void Host::log_resources(FILE *resource_log) {
     gettimeofday(&ts, NULL);
     double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
 
-    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
+    fprintf(resource_log, "%lf,%u,%u,%u,%s\n",
             timestamp, slots_free, cpus_free, memory_free, host_name.c_str());
 }
 
@@ -202,7 +202,7 @@ void JobstateLog::open() {
     if (this->logfile != NULL) {
         return;
     }
-    
+
     this->logfile = fopen(path.c_str(), "a");
     if (this->logfile == NULL) {
         myfailures("Unable to open %s", path.c_str());
@@ -220,25 +220,25 @@ void JobstateLog::on_event(WorkflowEvent event, Task *task) {
     if (!logfile) {
         open();
     }
-    
+
     double now = current_time();
     switch (event) {
         case TASK_QUEUED:
-            fprintf(logfile, "%0.6lf %s SUBMIT %d.0 - - %u\n", now, 
+            fprintf(logfile, "%0.6lf %s SUBMIT %d.0 - - %u\n", now,
                     task->name.c_str(), task->submit_seq, task->submit_seq);
             break;
         case TASK_SUBMIT:
-            fprintf(logfile, "%0.6lf %s EXECUTE %d.0 - - %u\n", now, 
+            fprintf(logfile, "%0.6lf %s EXECUTE %d.0 - - %u\n", now,
                     task->name.c_str(), task->submit_seq, task->submit_seq);
             break;
         case TASK_SUCCESS:
-            fprintf(logfile, "%0.6lf %s JOB_TERMINATED %d.0 - - %u\n", now, 
+            fprintf(logfile, "%0.6lf %s JOB_TERMINATED %d.0 - - %u\n", now,
                     task->name.c_str(), task->submit_seq, task->submit_seq);
-            fprintf(logfile, "%0.6lf %s JOB_SUCCESS %d - - %u\n", now, 
+            fprintf(logfile, "%0.6lf %s JOB_SUCCESS %d - - %u\n", now,
                     task->name.c_str(), task->last_exitcode, task->submit_seq);
             break;
         case TASK_FAILURE:
-            fprintf(logfile, "%0.6lf %s JOB_TERMINATED %d.0 - - %u\n", now, 
+            fprintf(logfile, "%0.6lf %s JOB_TERMINATED %d.0 - - %u\n", now,
                     task->name.c_str(), task->submit_seq, task->submit_seq);
             fprintf(logfile, "%0.6lf %s JOB_FAILURE %d - - %u\n", now,
                     task->name.c_str(), task->last_exitcode, task->submit_seq);
@@ -269,7 +269,7 @@ void DAGManLog::open() {
     if (this->logfile != NULL) {
         return;
     }
-    
+
     this->logfile = fopen(logpath.c_str(), "w");
     if (this->logfile == NULL) {
         myfailures("Unable to open %s", logpath.c_str());
@@ -287,20 +287,20 @@ void DAGManLog::on_event(WorkflowEvent event, Task *task) {
     if (!logfile) {
         open();
     }
-    
+
     /* Format the timestamp for the log file entry */
     time_t ts;
     ::time(&ts);
     struct tm now;
     ::localtime_r(&ts, &now);
     char date[18];
-    sprintf(date, /*mm/dd/yy hh:mm:ss*/ "%02d/%02d/%02d %02d:%02d:%02d", 
-            now.tm_mon+1, now.tm_mday, now.tm_year-100, 
+    sprintf(date, /*mm/dd/yy hh:mm:ss*/ "%02d/%02d/%02d %02d:%02d:%02d",
+            now.tm_mon+1, now.tm_mday, now.tm_year-100,
             now.tm_hour, now.tm_min, now.tm_sec);
-    
+
     switch (event) {
         case TASK_QUEUED:
-            fprintf(logfile, "%s Submitting Condor Node %s job(s)...\n", 
+            fprintf(logfile, "%s Submitting Condor Node %s job(s)...\n",
                     date, task->name.c_str());
             fprintf(logfile, "%s Event: ULOG_SUBMIT for Condor Node %s (%d.0)\n",
                     date, task->name.c_str(), task->submit_seq);
@@ -327,7 +327,7 @@ void DAGManLog::on_event(WorkflowEvent event, Task *task) {
             fprintf(logfile, "%s ** condor_scheduniv_exec.0.0 (CONDOR_DAGMAN) "
                     "STARTING UP\n", date);
             fprintf(logfile, "%s ** PID = %d\n", date, getpid());
-            fprintf(logfile, "%s Parsing %s ...\n", date, dagpath.c_str()); 
+            fprintf(logfile, "%s Parsing %s ...\n", date, dagpath.c_str());
             break;
         case WORKFLOW_SUCCESS:
             fprintf(logfile, "%s **** condor_scheduniv_exec.0.0 (condor_DAGMAN) "
@@ -423,7 +423,7 @@ void Master::publish_event(WorkflowEvent event, Task *task) {
 void Master::submit_task(Task *task, int rank, const vector<cpu_t> &bindings) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
 
-    CommandMessage cmd(task->name, task->args, task->pegasus_id, 
+    CommandMessage cmd(task->name, task->args, task->pegasus_id,
             task->memory, task->cpus, bindings, task->pipe_forwards, task->file_forwards);
     comm->send_message(&cmd, rank);
 
@@ -433,23 +433,23 @@ void Master::submit_task(Task *task, int rank, const vector<cpu_t> &bindings) {
 }
 
 void Master::wait_for_results() {
-    // This will process all the waiting messages. If there are none 
-    // waiting, then it will block until one arrives. If there are 
-    // several waiting, then it will process them all and return without 
+    // This will process all the waiting messages. If there are none
+    // waiting, then it will block until one arrives. If there are
+    // several waiting, then it will process them all and return without
     // waiting.
     unsigned int tasks = 0;
     unsigned int messages = 0;
     do {
-        
-        /* If the user specifies a maximum wall time for the workflow, then 
-         * the master sets a timeout by calling alarm(), which causes the 
-         * kernel to send a SIGALRM when the timer expires. Also, on most 
-         * PBS systems when the max wall time is reached PBS sends the 
-         * process a SIGTERM. When PMC catches these signals it sets the 
-         * ABORT flag. In many MPI implementations, however, signals do 
-         * not interrupt blocking message calls such as MPI_Recv. So we 
-         * cannot be waiting in MPI_Recv when the signal is caught or we 
-         * cannot respond to it. So we give a timeout to recv_message so 
+
+        /* If the user specifies a maximum wall time for the workflow, then
+         * the master sets a timeout by calling alarm(), which causes the
+         * kernel to send a SIGALRM when the timer expires. Also, on most
+         * PBS systems when the max wall time is reached PBS sends the
+         * process a SIGTERM. When PMC catches these signals it sets the
+         * ABORT flag. In many MPI implementations, however, signals do
+         * not interrupt blocking message calls such as MPI_Recv. So we
+         * cannot be waiting in MPI_Recv when the signal is caught or we
+         * cannot respond to it. So we give a timeout to recv_message so
          * that it does not block forever.
          */
         double timeout = 0;
@@ -474,13 +474,13 @@ void Master::wait_for_results() {
             myfailure("Expected result or I/O data message");
         }
         delete mesg;
-        
+
         // We need to do this while tasks == 0 because the caller
         // of this method assumes that it will process at least one
         // task before returning
     } while (comm->message_waiting() || tasks == 0);
-    
-    log_trace("Processed %u task(s) and %u message(s) this cycle", 
+
+    log_trace("Processed %u task(s) and %u message(s) this cycle",
             tasks, messages);
 }
 
@@ -501,21 +501,21 @@ void Master::process_iodata(IODataMessage *mesg) {
         log_invalid_message(mesg);
         myfailure("Invalid I/O message: bad task name");
     }
-    
+
     log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
-    
+
     if (fdcache->write(mesg->filename, mesg->data, mesg->size) < 0) {
         log_error("Error writing %d bytes to %s for task %s", mesg->size,
                 mesg->filename.c_str(), mesg->task.c_str());
-        
+
         Task *task = this->dag->get_task(mesg->task);
         if (task == NULL) {
             // If the task is not found then there is a problem, but
             // we can probably just ignore it at this point.
-            myfailure("Unable to find task %s for I/O failure", 
+            myfailure("Unable to find task %s for I/O failure",
                       mesg->task.c_str());
         }
-        
+
         task->io_failed = true;
     }
 }
@@ -525,21 +525,21 @@ void Master::process_result(ResultMessage *mesg) {
     int exitcode = mesg->exitcode;
     int rank = mesg->source;
     double task_runtime = mesg->runtime;
-    
+
     total_runtime += task_runtime;
-    
+
     Task *task = this->dag->get_task(name);
 
     if (task->io_failed) {
-        // If there was an error processing I/O data for this task, 
+        // If there was an error processing I/O data for this task,
         // then record it as a failure
-        
+
         log_error("Task %s failed due to collective I/O errors", name.c_str());
         this->failed_count++;
-        
+
         // Set the exitcode to something non-zero to force the failure
         exitcode = 256;
-        
+
         // Reset the flag so that, if the task is retried, it won't
         // automatically fail again
         task->io_failed = false;
@@ -550,21 +550,21 @@ void Master::process_result(ResultMessage *mesg) {
         log_error("Task %s failed with exitcode %d", name.c_str(), exitcode);
         this->failed_count++;
     }
-    
+
     task->last_exitcode = exitcode;
-    
+
     this->engine->mark_task_finished(task, exitcode);
-    
+
     if (exitcode == 0) {
         publish_event(TASK_SUCCESS, task);
     } else {
         publish_event(TASK_FAILURE, task);
     }
-    
+
     // Mark slot idle
     log_trace("Worker %d is idle", rank);
     Slot *slot = slots[rank-1];
-    
+
     // Return resources to host
     slot->host->release_resources(task);
     slot->host->log_resources(resource_log);
@@ -578,12 +578,12 @@ void Master::merge_all_task_stdio() {
     if (per_task_stdio) {
         return;
     }
-    
+
     log_info("Merging task stdio from workers...");
-    
+
     FILE *task_stdout = stdout;
     FILE *task_stderr = stderr;
-    
+
     // Open task stdout
     if (outfile == "stdout") {
         task_stdout = stdout;
@@ -593,7 +593,7 @@ void Master::merge_all_task_stdio() {
             myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
         }
     }
-    
+
     // Open task stderr
     if (errfile == "stderr") {
         task_stderr = stderr;
@@ -605,24 +605,24 @@ void Master::merge_all_task_stdio() {
             myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
         }
     }
-    
+
     char rankstr[10];
     for (int i=1; i<=numworkers; i++) {
         log_debug("Merging stdio from worker %d...", i);
 
         sprintf(rankstr, "%d", i);
-        
+
         string task_outfile = this->dagfile + ".out." + rankstr;
         this->merge_task_stdio(task_stdout, task_outfile, "stdout");
-        
+
         string task_errfile = this->dagfile + ".err." + rankstr;
         this->merge_task_stdio(task_stderr, task_errfile, "stderr");
     }
-    
+
     if (fileno(task_stdout) > 2) {
         fclose(task_stdout);
     }
-    
+
     if (fileno(task_stderr) > 2) {
         fclose(task_stderr);
     }
@@ -630,7 +630,7 @@ void Master::merge_all_task_stdio() {
 
 void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &stream) {
     log_trace("Merging %s file: %s", stream.c_str(), srcfile.c_str());
-    
+
     FILE *src = fopen(srcfile.c_str(), "r");
     if (src == NULL) {
         // The file may not exist if the worker didn't run any tasks, just print a warning
@@ -641,7 +641,7 @@ void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &s
             myfailures("Unable to open task %s file: %s", stream.c_str(), srcfile.c_str());
         }
     }
-    
+
     char buf[BUFSIZ];
     while (1) {
         int r = fread(buf, 1, BUFSIZ, src);
@@ -656,9 +656,9 @@ void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &s
             myfailures("Error writing to dest file");
         }
     }
-    
+
     fclose(src);
-    
+
     if (unlink(srcfile.c_str())) {
         myfailures("Unable to delete task %s file: %s", stream.c_str(), srcfile.c_str());
     }
@@ -668,14 +668,14 @@ void Master::write_cluster_summary(bool failed) {
     // pegasus cluster output - used for provenance
     char date[32];
     iso2date(start_time, date, sizeof(date));
-    
+
     char summary[BUFSIZ];
     sprintf(summary, "[cluster-summary stat=\"%s\", tasks=%u, submitted=%u, succeeded=%u, failed=%u, extra=0,"
                  " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u]\n",
-                 failed ? "failed" : "ok", 
+                 failed ? "failed" : "ok",
                  this->dag->size(),
                  this->submitted_count,
-                 this->success_count, 
+                 this->success_count,
                  this->failed_count,
                  date,
                  wall_time,
@@ -684,7 +684,7 @@ void Master::write_cluster_summary(bool failed) {
                  total_runtime,
                  this->numworkers,
                  this->total_cpus);
-    
+
     int len = strlen(summary);
 
     // XXX This should probably be written to the task_stdout, but for most
@@ -696,21 +696,21 @@ void Master::write_cluster_summary(bool failed) {
 }
 
 /*
- * Register all workers, create hosts, create slots. Assign a host-centric 
- * rank to each of the workers. The worker with the lowest global rank on 
- * each host is given host rank 0, the next lowest is given host rank 1, 
+ * Register all workers, create hosts, create slots. Assign a host-centric
+ * rank to each of the workers. The worker with the lowest global rank on
+ * each host is given host rank 0, the next lowest is given host rank 1,
  * and so on. The master is not given a host rank.
  */
 void Master::register_workers() {
     typedef map<string, Host *> HostMap;
     HostMap hostmap;
-    
+
     typedef map<int, string> HostnameMap;
     HostnameMap hostnames;
-    
+
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
-        
+
         RegistrationMessage *msg = dynamic_cast<RegistrationMessage *>(comm->recv_message());
         if (msg == NULL) {
             myfailure("Expected registration message");
@@ -737,25 +737,25 @@ void Master::register_workers() {
             Host *host = hostmap[hostname];
             host->add_slot();
         }
-        
+
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
-    
+
     typedef map<string, int> RankMap;
     RankMap ranks;
-    
+
     // Create slots, assign a host rank to each worker
     for (int rank=1; rank<=numworkers; rank++) {
         string hostname = hostnames.find(rank)->second;
-        
+
         // Find host
         Host *host = hostmap.find(hostname)->second;
-        
+
         // Create new slot
         Slot *slot = new Slot(rank, host);
         slots.push_back(slot);
         free_slots.push_back(slot);
-        
+
         // Compute hostrank for this slot
         RankMap::iterator nextrank = ranks.find(hostname);
         int hostrank = 0;
@@ -763,13 +763,13 @@ void Master::register_workers() {
             hostrank = nextrank->second;
         }
         ranks[hostname] = hostrank + 1;
-        
+
         HostrankMessage hrmsg(hostrank);
         comm->send_message(&hrmsg, rank);
-        
+
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
-    
+
     // Log the initial resource freeability
     for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
@@ -778,7 +778,7 @@ void Master::register_workers() {
 }
 
 void Master::schedule_tasks() {
-    log_debug("Scheduling %d tasks on %d slots...", 
+    log_debug("Scheduling %d tasks on %d slots...",
         ready_queue.size(), free_slots.size());
 
     int scheduled = 0;
@@ -799,7 +799,7 @@ void Master::schedule_tasks() {
             // If the task fits, schedule it
             if (host->can_run(task)) {
 
-                log_trace("Matched task %s to slot %d on host %s", 
+                log_trace("Matched task %s to slot %d on host %s",
                     task->name.c_str(), slot->rank, host->name());
 
                 // Reserve the resources
@@ -816,14 +816,14 @@ void Master::schedule_tasks() {
                 match = true;
                 scheduled += 1;
 
-                // This is to break out of the slot loop so that we can 
+                // This is to break out of the slot loop so that we can
                 // consider the next task
                 break;
             }
         }
 
         if (!match) {
-            // If the task could not be scheduled, then we save it 
+            // If the task could not be scheduled, then we save it
             // and move on to the next one. It will be requeued later.
             log_trace("No slot found for task %s", task->name.c_str());
             deferred_tasks.push_back(task);
@@ -843,23 +843,23 @@ void Master::queue_ready_tasks() {
         Task *task = this->engine->next_ready_task();
 
         log_debug("Queueing task %s", task->name.c_str());
-        
+
         // Assign a submit sequence number to this task
         task->submit_seq = this->task_submit_seq++;
-        
+
         ready_queue.push(task);
-        
+
         publish_event(TASK_QUEUED, task);
     }
 }
 
 int Master::run() {
     log_info("Master starting with %d workers", numworkers);
-    
+
     start_time = current_time();
 
     publish_event(WORKFLOW_START, NULL);
-    
+
     // Install signal handlers
     struct sigaction signal_action;
     signal_action.sa_handler = on_signal;
@@ -871,20 +871,20 @@ int Master::run() {
     if (sigaction(SIGTERM, &signal_action, NULL) < 0) {
         myfailures("Unable to set signal handler for SIGTERM");
     }
-    
+
     // Set alarm to interrupt the master when the walltime is up
-    if (this->max_wall_time > 0.0) {    
+    if (this->max_wall_time > 0.0) {
         log_info("Setting max walltime to %lf minutes", this->max_wall_time);
         alarm((unsigned)ceil(max_wall_time * 60.0));
     }
-    
+
     register_workers();
-    
+
     // Check to make sure that there is at least one host capable
     // of executing every task
     for (DAG::iterator t = dag->begin(); t != dag->end(); t++){
         Task *task = (*t).second;
-        
+
         // Check all the hosts for one that can run the task
         bool match = false;
         for (unsigned h=0; h<hosts.size(); h++) {
@@ -894,20 +894,20 @@ int Master::run() {
                 break;
             }
         }
-        
+
         if (!match) {
             // There was no host found that was capable of executing the
             // task, so we must abort
-            myfailure("FATAL ERROR: No host is capable of running task %s", 
+            myfailure("FATAL ERROR: No host is capable of running task %s",
                 task->name.c_str());
         }
     }
-    
+
     // If there is a host script, wait here for it to run
     if (has_host_script) {
         comm->barrier();
     }
-    
+
     log_info("Starting workflow");
     double makespan_start = current_time();
     // Keep executing tasks until the workflow is finished or the master
@@ -918,27 +918,27 @@ int Master::run() {
         wait_for_results();
     }
 	double makespan_finish = current_time();
-    
+
     if (ABORT) {
         log_error("Aborting workflow");
     } else {
         log_info("Workflow finished");
     }
-    
+
     if (this->engine->max_failures_reached()) {
         log_error("Max failures reached: DAG prematurely aborted");
     }
-    
+
     // This must be done before write_cluster_summary so that the
     // wall time can be recorded in the cluster-summary record
     finish_time = current_time();
     wall_time = finish_time - start_time;
     double makespan = makespan_finish - makespan_start;
-    
+
     // Close FDCache here before merging output so that
     // we can be sure the data files are flushed
     fdcache->close();
-    
+
     // Compute resource utilization
     double master_util = total_runtime / (wall_time * (numworkers+1));
     double worker_util = total_runtime / (wall_time * numworkers);
@@ -946,7 +946,7 @@ int Master::run() {
         master_util = 0.0;
         worker_util = 0.0;
     }
-    
+
     log_info("Resource utilization (with master): %lf", master_util);
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
@@ -959,22 +959,22 @@ int Master::run() {
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);
-    
+
     if (!per_task_stdio) merge_all_task_stdio();
-    
+
     log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
         log_debug("Sending shutdown message to worker %d", i);
         ShutdownMessage shmsg;
         comm->send_message(&shmsg, i);
     }
-    
+
     if (failed) {
         publish_event(WORKFLOW_FAILURE, NULL);
     } else {
         publish_event(WORKFLOW_SUCCESS, NULL);
     }
-    
+
     if (ABORT) {
         myfailure("Workflow aborted");
         return 1;
@@ -986,4 +986,3 @@ int Master::run() {
         return 0;
     }
 }
-

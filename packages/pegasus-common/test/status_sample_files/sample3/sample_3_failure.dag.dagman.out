@@ -9,7 +9,7 @@
 06/23/22 09:57:37 ** Log last touched time unavailable (No such file or directory)
 06/23/22 09:57:37 ******************************************************
 06/23/22 09:57:37 Using config source: /etc/condor/condor_config
-06/23/22 09:57:37 Using local config sources: 
+06/23/22 09:57:37 Using local config sources:
 06/23/22 09:57:37    /etc/condor/config.d/00-htcondor-9.0.config
 06/23/22 09:57:37    /etc/condor/config.d/10-isi-main.conf
 06/23/22 09:57:37    /etc/condor/config.d/20-machine-specifics.conf
@@ -58,8 +58,8 @@
 06/23/22 09:57:37 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 06/23/22 09:57:37 DAGMAN_MAX_JOB_HOLDS setting: 100
 06/23/22 09:57:37 DAGMAN_HOLD_CLAIM_TIME setting: 20
-06/23/22 09:57:37 ALL_DEBUG setting: 
-06/23/22 09:57:37 DAGMAN_DEBUG setting: 
+06/23/22 09:57:37 ALL_DEBUG setting:
+06/23/22 09:57:37 DAGMAN_DEBUG setting:
 06/23/22 09:57:37 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 06/23/22 09:57:37 DAGMAN_REMOVE_NODE_JOBS setting: True
 06/23/22 09:57:37 DAGMAN will adjust edges after parsing
@@ -586,7 +586,7 @@
 06/23/22 10:00:28       Node Name: record_mutations_ID0000004
 06/23/22 10:00:28            Noop: false
 06/23/22 10:00:28          NodeID: 7
-06/23/22 10:00:28     Node Status: STATUS_ERROR    
+06/23/22 10:00:28     Node Status: STATUS_ERROR
 06/23/22 10:00:28 Node return val: 1
 06/23/22 10:00:28           Error: Job failed due to DAGMAN error -1002 and POST Script failed with status 1 (after 1 node retries)
 06/23/22 10:00:28 Job Submit File: 00/00/record_mutations_ID0000004.sub
@@ -598,7 +598,7 @@
 06/23/22 10:00:28       Node Name: record_mutations_ID0000002
 06/23/22 10:00:28            Noop: false
 06/23/22 10:00:28          NodeID: 8
-06/23/22 10:00:28     Node Status: STATUS_ERROR    
+06/23/22 10:00:28     Node Status: STATUS_ERROR
 06/23/22 10:00:28 Node return val: 1
 06/23/22 10:00:28           Error: Job failed due to DAGMAN error -1002 and POST Script failed with status 1 (after 1 node retries)
 06/23/22 10:00:28 Job Submit File: 00/00/record_mutations_ID0000002.sub
@@ -610,7 +610,7 @@
 06/23/22 10:00:28       Node Name: record_mutations_ID0000003
 06/23/22 10:00:28            Noop: false
 06/23/22 10:00:28          NodeID: 9
-06/23/22 10:00:28     Node Status: STATUS_ERROR    
+06/23/22 10:00:28     Node Status: STATUS_ERROR
 06/23/22 10:00:28 Node return val: 1
 06/23/22 10:00:28           Error: Job failed due to DAGMAN error -1002 and POST Script failed with status 1 (after 1 node retries)
 06/23/22 10:00:28 Job Submit File: 00/00/record_mutations_ID0000003.sub

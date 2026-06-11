@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -385,7 +386,8 @@ public class NoGridStart implements GridStart {
                 // JIRA PM-281
             } else {
                 mLogger.log(
-                        "Transfer of Executables in NoGridStart only works for staged computes jobs "
+                        "Transfer of Executables in NoGridStart only works for staged computes jobs"
+                                + " "
                                 + job.getName(),
                         LogManager.ERROR_MESSAGE_LEVEL);
             }

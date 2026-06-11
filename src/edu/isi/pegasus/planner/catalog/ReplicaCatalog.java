@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
 import java.util.*;
 
 /**
@@ -201,6 +202,7 @@ public interface ReplicaCatalog extends Catalog {
      * @see ReplicaCatalogEntry
      */
     public int insert(String lfn, String pfn, String handle);
+
     // ^^ MARKER ^^
 
     /**
@@ -261,6 +263,7 @@ public interface ReplicaCatalog extends Catalog {
      * @return the number of removed entries.
      */
     public int delete(String lfn, String name, Object value);
+
     // ^^ MARKER ^^
 
     /**
@@ -313,6 +316,7 @@ public interface ReplicaCatalog extends Catalog {
      * @see #removeByAttribute( String, Object )
      */
     public int removeByAttribute(String handle);
+
     // ^^ MARKER ^^
 
     /**

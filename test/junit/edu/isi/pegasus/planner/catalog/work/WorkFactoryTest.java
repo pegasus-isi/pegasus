@@ -25,10 +25,13 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class WorkFactoryTest {
 
     @Test

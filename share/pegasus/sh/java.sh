@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Common structure to all shell wrappers. This file
-# is sourced from the shell wrapper scripts. 
+# is sourced from the shell wrapper scripts.
 # $Id$
 #
 
@@ -115,4 +115,3 @@ while [ $# -gt 0 ]; do
      esac
      shift
 done
-

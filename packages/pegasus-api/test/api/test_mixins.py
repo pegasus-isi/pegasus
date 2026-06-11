@@ -164,7 +164,11 @@ class TestProfileMixin:
     )
     def test_add_valid_profiles(self, obj, given_value, expected_value):
         assert id(
-            obj.add_profiles(Namespace.ENV, ENV1="env1", ENV2=given_value,)
+            obj.add_profiles(
+                Namespace.ENV,
+                ENV1="env1",
+                ENV2=given_value,
+            )
         ) == id(obj)
 
         assert dict(obj.profiles) == {"env": {"ENV1": "env1", "ENV2": expected_value}}

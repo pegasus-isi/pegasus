@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
@@ -51,8 +52,12 @@ public class RCWrapper implements Wrapper {
      * @throws java.io.IOException exception
      */
     public RCWrapper()
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     MissingResourceException {
         m_rc = ReplicaFactory.loadInstance(CommonProperties.instance());
     }
@@ -75,8 +80,12 @@ public class RCWrapper implements Wrapper {
      * @throws java.io.IOException exception
      */
     public RCWrapper(CommonProperties props)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         m_rc = ReplicaFactory.loadInstance(props);
     }
 

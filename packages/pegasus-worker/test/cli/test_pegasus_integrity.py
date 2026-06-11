@@ -34,7 +34,11 @@ def test_generate(data_files, args, expected):
 
 
 @pytest.mark.parametrize(
-    "args,expected", [("--verify=data.1", 0), ("--verify=data.1;;;foo.2=data.2", 0),],
+    "args,expected",
+    [
+        ("--verify=data.1", 0),
+        ("--verify=data.1;;;foo.2=data.2", 0),
+    ],
 )
 def test_verify(data_files, args, expected):
     rv = subprocess.run([PYTHON_INTERPRETER, PEGASUS_INTEGRITY, args])

@@ -13,7 +13,9 @@
  */
 package edu.isi.pegasus.aws.batch.client;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 import static java.util.Arrays.asList;
 
 import edu.isi.pegasus.aws.batch.builder.Job;
@@ -22,6 +24,21 @@ import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
 import edu.isi.pegasus.aws.batch.impl.Synch;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.ValueConverter;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -36,20 +53,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.ValueConverter;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class PegasusAWSBatch {
 
     private static Logger mLogger;
@@ -96,25 +103,32 @@ public class PegasusAWSBatch {
         mOptionParser
                 .acceptsAll(
                         asList("ce", "compute-environment"),
-                        "the json file containing compute environment description to create or the ARN of existing compute environment or basename of an existing compute environment")
+                        "the json file containing compute environment description to create or the"
+                                + " ARN of existing compute environment or basename of an existing"
+                                + " compute environment")
                 .withRequiredArg()
                 .ofType(String.class);
         mOptionParser.acceptsAll(
                 asList("c", "create"),
-                "does not run any jobs. Only creates the job definition, compute environment and the job queue");
+                "does not run any jobs. Only creates the job definition, compute environment and"
+                        + " the job queue");
         mOptionParser.acceptsAll(
                 asList("d", "delete"),
-                "does not run any jobs. Only deletes the job definition, compute environment and the job queue");
+                "does not run any jobs. Only deletes the job definition, compute environment and"
+                        + " the job queue");
         mOptionParser
                 .acceptsAll(
                         asList("f", "files"),
-                        "comma separated list of files that need to be copied to the associated s3 bucket before any task starts")
+                        "comma separated list of files that need to be copied to the associated s3"
+                                + " bucket before any task starts")
                 .withRequiredArg()
                 .ofType(String.class);
         mOptionParser
                 .acceptsAll(
                         asList("j", "job-definition"),
-                        "the json file containing job definition to register for executing jobs or the ARN of existing job definition or basename of an existing job definition")
+                        "the json file containing job definition to register for executing jobs or"
+                            + " the ARN of existing job definition or basename of an existing job"
+                            + " definition")
                 .withRequiredArg()
                 .ofType(String.class);
         mOptionParser
@@ -126,14 +140,16 @@ public class PegasusAWSBatch {
         mOptionParser
                 .acceptsAll(
                         asList("p", "prefix"),
-                        "prefix to use for creating compute environment, job definition, job queue and s3 bucket")
+                        "prefix to use for creating compute environment, job definition, job queue"
+                                + " and s3 bucket")
                 .withRequiredArg()
                 .ofType(String.class)
                 .required();
         mOptionParser
                 .acceptsAll(
                         asList("q", "job-queue"),
-                        "the json file containing the job queue description to create or the ARN of existing job queue or basename of an existing job queue")
+                        "the json file containing the job queue description to create or the ARN of"
+                                + " existing job queue or basename of an existing job queue")
                 .withRequiredArg()
                 .ofType(String.class);
         mOptionParser
@@ -143,7 +159,8 @@ public class PegasusAWSBatch {
         mOptionParser
                 .acceptsAll(
                         asList("s", "s3"),
-                        "the S3 bucket to use for lifecycle of the client. If not specifed then a bucket is created based on the prefix passed")
+                        "the S3 bucket to use for lifecycle of the client. If not specifed then a"
+                                + " bucket is created based on the prefix passed")
                 .withRequiredArg()
                 .ofType(String.class);
         mOptionParser
@@ -184,7 +201,9 @@ public class PegasusAWSBatch {
         return options;
     }
 
-    /** @param args the command line arguments */
+    /**
+     * @param args the command line arguments
+     */
     public static void main(String[] args) {
 
         PegasusAWSBatch me = new PegasusAWSBatch();

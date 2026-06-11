@@ -20,10 +20,11 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
-import org.junit.jupiter.api.Test;
 
 /** Tests for Job invocation class. */
 public class JobTest {

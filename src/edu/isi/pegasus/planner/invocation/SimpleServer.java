@@ -15,9 +15,7 @@
 package edu.isi.pegasus.planner.invocation;
 
 import edu.isi.pegasus.planner.parser.InvocationParser;
-import java.io.*;
-import java.net.*;
-import java.util.Iterator;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +29,10 @@ import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.toolkit.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.net.*;
+import java.util.Iterator;
 
 public class SimpleServer extends Toolkit {
     private static final int port = 65533;

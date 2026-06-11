@@ -18,13 +18,15 @@ import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 
 /**
  * A factory class to load the appropriate Site Catalog XMLParser implementations based on version

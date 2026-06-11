@@ -92,4 +92,3 @@ fi
 if [ ! -z "${__flux_nnodes}" ] && [ -n "${GPUS}" ]; then
     echo "#FLUX: --gpus-per-slot=$(strip_quotes ${GPUS})"
 fi
-

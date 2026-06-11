@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
+
 import java.sql.*;
 import java.util.*;
 

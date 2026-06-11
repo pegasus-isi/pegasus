@@ -17,13 +17,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import org.griphyn.vdl.euryale.Callback;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class MultipleLookTest {
 
     @Test

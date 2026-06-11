@@ -15,6 +15,7 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,7 +124,8 @@ public class CondorVersion {
             int y = subs.length;
             if (y > CondorVersion.MAX_NUMBER_OF_VERSION_COMPONENTS) {
                 throw new IllegalArgumentException(
-                        "Only version numbers with max two dots are accepted i.e ( MAJOR.MINOR.PATCH ) "
+                        "Only version numbers with max two dots are accepted i.e ("
+                                + " MAJOR.MINOR.PATCH ) "
                                 + version);
             }
 

@@ -1,12 +1,13 @@
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
+import zipfile
 
 import click
-from git import Repo
-from git.exc import GitCommandError
 
 from Pegasus import yaml
 from Pegasus.api import *
@@ -30,9 +31,7 @@ pegasus_major_minor_version = (
 )
 
 #### Url to Sites.py on pegasushub and Sites.py location ####
-pegasushub_site_catalogs_url = "https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{}/Sites.py".format(
-    pegasus_major_minor_version
-)
+pegasushub_site_catalogs_url = f"https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{pegasus_major_minor_version}/Sites.py"
 wf_sites = os.path.join(pegasushub_data_path, f"{pegasus_major_minor_version}/Sites.py")
 
 
@@ -59,7 +58,7 @@ def update_workflow_list(wf_gallery):
 #### Update Site Catalogs and load Sites ####
 update_site_catalogs(wf_sites)
 sys.path.insert(0, os.path.join(pegasushub_data_path, pegasus_major_minor_version))
-import Sites  # isort:skip
+import Sites  # noqa: E402
 
 
 def console_select_workflow(workflows_available):
@@ -71,9 +70,7 @@ def console_select_workflow(workflows_available):
         type=click.IntRange(1, len(workflows_available)),
         show_default=True,
     )
-    workflow = workflows_available[workflow]
-
-    return workflow
+    return workflows_available[workflow]
 
 
 def console_select_site(wf_dir):
@@ -149,10 +146,10 @@ def console_select_site(wf_dir):
 
     #### Insert scratch dir and storage dir ####
     if site in Sites.SitesRequireScratch:
-        kwargs = dict(
-            text="What's the shared scratch space on the cluster that you want to use",
-            type=click.Path(),
-        )
+        kwargs = {
+            "text": "What's the shared scratch space on the cluster that you want to use",
+            "type": click.Path(),
+        }
 
         if share_filesystem_with_submit_node:
             kwargs["default"] = default_shared_scratch
@@ -212,9 +209,10 @@ def print_workflows(workflows_available):
 
 
 def clone_workflow(wf_dir, workflow):
-    workflow_source = "https://null:null@github.com/{}/{}.git".format(
+    zip_url = "https://github.com/{}/{}/archive/HEAD.zip".format(
         workflow["organization"], workflow["repo_name"]
     )
+    dest = os.path.join(os.getcwd(), wf_dir, workflow["repo_name"])
 
     click.echo(
         "Fetching workflow from https://github.com/{}/{}.git".format(
@@ -223,15 +221,21 @@ def clone_workflow(wf_dir, workflow):
     )
 
     try:
-        repo = Repo.clone_from(
-            workflow_source, os.path.join(os.getcwd(), wf_dir, workflow["repo_name"]),
-        )
-    except GitCommandError:
+        with tempfile.TemporaryDirectory() as tmp:
+            zip_path = os.path.join(tmp, "repo.zip")
+            urllib.request.urlretrieve(zip_url, zip_path)
+            with zipfile.ZipFile(zip_path) as zf:
+                zf.extractall(tmp)
+            extracted = next(
+                os.path.join(tmp, d)
+                for d in os.listdir(tmp)
+                if os.path.isdir(os.path.join(tmp, d))
+            )
+            shutil.move(extracted, dest)
+    except Exception:
         click.echo("This repository doesn't exist in this location or it's private.")
         click.echo("Exiting...")
         exit()
-
-    return
 
 
 def read_pegasushub_config(wf_dir, workflow):
@@ -245,7 +249,7 @@ def read_pegasushub_config(wf_dir, workflow):
 
     if config:
         if "scripts" in config:
-            if (not "generator" in config["scripts"]) or (
+            if ("generator" not in config["scripts"]) or (
                 config["scripts"]["generator"] == ""
             ):
                 config["scripts"]["generator"] = "workflow_generator.py"
@@ -274,17 +278,15 @@ def create_pegasus_properties(commands):
 
 
 def create_plan_script(exec_site_name, workflow_file):
-    plan_script = """#!/bin/sh
+    plan_script = f"""#!/bin/sh
 
 pegasus-plan --conf pegasus.properties \\
     --dir submit \\
-    --sites {} \\
+    --sites {exec_site_name} \\
     --output-sites local \\
     --cleanup leaf \\
     --force \\
-    {}""".format(
-        exec_site_name, workflow_file
-    )
+    {workflow_file}"""
 
     with open("plan.sh", "w+") as g:
         g.write(plan_script)
@@ -419,26 +421,16 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     exec_site.write()
 
     commands.append("#### Generating Sites Catalog ####")
-    generate_sites_cmd = """python3 {} \\
-    --execution-site {} \\
-    --project-name \"{}\" \\
-    --queue-name \"{}\" \\
-    --pegasus-home \"{}\" \\
-    --login-host \"{}\" \\
-    --transfer-endpoint \"{}\" \\
-    --scratch-parent-dir {} \\
-    --storage-parent-dir {} \\
-    """.format(
-        wf_sites,
-        site.name,
-        str(project_name),
-        queue_name,
-        pegasus_home,
-        login_host,
-        transfer_endpoint,
-        shared_scratch,
-        storage_dir,
-    )
+    generate_sites_cmd = f"""python3 {wf_sites} \\
+    --execution-site {site.name} \\
+    --project-name \"{str(project_name)}\" \\
+    --queue-name \"{queue_name}\" \\
+    --pegasus-home \"{pegasus_home}\" \\
+    --login-host \"{login_host}\" \\
+    --transfer-endpoint \"{transfer_endpoint}\" \\
+    --scratch-parent-dir {shared_scratch} \\
+    --storage-parent-dir {storage_dir} \\
+    """
     if remote_shared_scratch:
         generate_sites_cmd += f"--remote-scratch-parent-dir {remote_shared_scratch} "
     commands.append(generate_sites_cmd)
@@ -471,7 +463,7 @@ def read_workflows(wf_gallery, site):
     return workflows_available
 
 
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)

@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;

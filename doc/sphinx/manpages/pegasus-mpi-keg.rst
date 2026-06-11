@@ -82,6 +82,3 @@ Restrictions
 ============
 
 The same as **pegasus-keg**.
-
-
-

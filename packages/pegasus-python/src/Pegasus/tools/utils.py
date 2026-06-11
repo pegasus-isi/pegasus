@@ -187,7 +187,7 @@ def quote(s):
             # We need to utf-8 encode unicode strings
             s = s.encode("utf-8")
         else:
-            raise TypeError("Not a string: %s" % str(s))
+            raise TypeError(f"Not a string: {str(s)}")
 
     buf = []
     for byte in s:
@@ -196,7 +196,7 @@ def quote(s):
             # Any byte less than 0x20 is a control character
             # any byte >= 0x7F is either a control character
             # or a multibyte unicode character
-            buf.append("%%%02X" % byte)
+            buf.append(f"%{byte:02X}")
         elif c == "%":
             buf.append("%25")
         elif c == "'":
@@ -224,7 +224,7 @@ def unquote(s):
     passed to quote().
     """
     if not isinstance(s, str):
-        raise TypeError("Not a string: %s" % str(s))
+        raise TypeError(f"Not a string: {str(s)}")
 
     if isinstance(s, str):
         # Technically, this should not happen because
@@ -247,16 +247,13 @@ def isodate(now=int(time.time()), utc=False, short=False):
         my_time_u = time.gmtime(now)
         if short:
             return time.strftime("%Y%m%dT%H%M%SZ", my_time_u)
-        else:
-            return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time_u)
-    else:
-        my_time_l = time.localtime(now)
-        my_offset = int(calendar.timegm(my_time_l) - time.mktime(my_time_l))
-        offset = "%+03d%02d" % (my_offset / 3600, (abs(my_offset) % 3600) / 60)
-        if short:
-            return time.strftime("%Y%m%dT%H%M%S", my_time_l) + offset
-        else:
-            return time.strftime("%Y-%m-%dT%H:%M:%S", my_time_l) + offset
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time_u)
+    my_time_l = time.localtime(now)
+    my_offset = int(calendar.timegm(my_time_l) - time.mktime(my_time_l))
+    offset = f"{int(my_offset / 3600):+03d}{int((abs(my_offset) % 3600) / 60):02d}"
+    if short:
+        return time.strftime("%Y%m%dT%H%M%S", my_time_l) + offset
+    return time.strftime("%Y-%m-%dT%H:%M:%S", my_time_l) + offset
 
 
 def epochdate(timestamp):
@@ -268,18 +265,10 @@ def epochdate(timestamp):
         # Split date/time and timezone information
         m = parse_iso8601.search(timestamp)
         if m is None:
-            logger.warning('unable to match "%s" to ISO 8601' % timestamp)
+            logger.warning(f'unable to match "{timestamp}" to ISO 8601')
             return None
-        else:
-            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (
-                int(m.group(1)),
-                int(m.group(2)),
-                int(m.group(3)),
-                int(m.group(4)),
-                int(m.group(5)),
-                int(m.group(6)),
-            )
-            tz = m.group(8)
+        dt = f"{int(m.group(1)):04d}-{int(m.group(2)):02d}-{int(m.group(3)):02d} {int(m.group(4)):02d}:{int(m.group(5)):02d}:{int(m.group(6)):02d}"
+        tz = m.group(8)
 
         # my_time = datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
         my_time = datetime.datetime(*(time.strptime(dt, "%Y-%m-%d %H:%M:%S")[0:6]))
@@ -300,7 +289,7 @@ def epochdate(timestamp):
         return int(calendar.timegm(my_time.timetuple()))
 
     except Exception:
-        logger.warning('unable to parse timestamp "%s"' % timestamp)
+        logger.warning(f'unable to parse timestamp "{timestamp}"')
         return None
 
 
@@ -370,8 +359,8 @@ def read_braindump(filename):
     "This simply reads a braindump dict from the file specified"
     items = {}
     f = open(filename)
-    for l in f:
-        k, v = l.strip().split(" ", 1)
+    for line in f:
+        k, v = line.strip().split(" ", 1)
         k = k.strip()
         v = v.strip()
         items[k] = v
@@ -405,7 +394,7 @@ def _slurp_braindb(run, brain_alternate=None):
         k, v = line.split(" ", 1)
 
         if k == "run" and v != run and run != ".":
-            logger.warning("run directory mismatch, using %s" % (run))
+            logger.warning(f"run directory mismatch, using {run}")
             my_config[k] = run
         else:
             # Remove leading and trailing whitespaces from value
@@ -416,7 +405,7 @@ def _slurp_braindb(run, brain_alternate=None):
     my_file.close()
 
     # Done!
-    logger.debug("# slurped %s" % (my_braindb))
+    logger.debug(f"# slurped {my_braindb}")
     return my_config
 
 
@@ -448,7 +437,7 @@ def slurp_braindb(run_dir, brain_alternate=None):
         cfg = _slurp_braindb(run_dir, brain_alternate)
     else:
         if bdump.is_file() is False:
-            raise TypeError("%s is not a valid file" % bdump.resolve())
+            raise TypeError(f"{bdump.resolve()} is not a valid file")
 
         with bdump.open("r") as fp:
             cfg = braindump.load(fp)
@@ -500,7 +489,7 @@ def parse_exit(ec):
             my_core = " (core)"
         my_result = f"died on signal {my_signo}{my_core}"
     elif (ec >> 8) > 0:
-        my_result = "exit code %d" % (ec >> 8)
+        my_result = f"exit code {ec >> 8:d}"
     else:
         my_result = "OK"
 
@@ -535,10 +524,10 @@ def write_pid_file(pid_filename, ts=int(time.time())):
     """
     try:
         PIDFILE = open(pid_filename, "w")
-        PIDFILE.write("pid %s\n" % (os.getpid()))
-        PIDFILE.write("timestamp %s\n" % (isodate(ts)))
+        PIDFILE.write(f"pid {os.getpid()}\n")
+        PIDFILE.write(f"timestamp {isodate(ts)}\n")
     except OSError:
-        logger.error("cannot write PID file %s" % (pid_filename))
+        logger.error(f"cannot write PID file {pid_filename}")
     else:
         PIDFILE.close()
 
@@ -570,39 +559,33 @@ def pid_running(filename):
                     except OSError as err:
                         if err.errno == errno.ESRCH:
                             # pid is not found, monitoring cannot be running
-                            logger.info("pid %d not running anymore..." % (my_pid))
+                            logger.info(f"pid {my_pid:d} not running anymore...")
                             return False
-                        elif err.errno == errno.EPERM:
+                        if err.errno == errno.EPERM:
                             # pid cannot be killed because we don't have permission
-                            logger.debug(
-                                "no permission to talk to pid %d..." % (my_pid)
-                            )
+                            logger.debug(f"no permission to talk to pid {my_pid:d}...")
                             return True
-                        else:
-                            logger.warning(
-                                "unknown error while sending signal to pid %d"
-                                % (my_pid)
-                            )
-                            logger.warning(traceback.format_exc())
-                            return True
+                        logger.warning(
+                            f"unknown error while sending signal to pid {my_pid:d}"
+                        )
+                        logger.warning(traceback.format_exc())
+                        return True
                     except Exception:
                         logger.warning(
-                            "unknown error while sending signal to pid %d" % (my_pid)
+                            f"unknown error while sending signal to pid {my_pid:d}"
                         )
                         logger.warning(traceback.format_exc())
                         return True
                     else:
-                        logger.debug("pid %d still running..." % (my_pid))
+                        logger.debug(f"pid {my_pid:d} still running...")
                         return True
 
-            logger.warning(
-                "could not find pid line in file %s. continuing..." % (filename)
-            )
+            logger.warning(f"could not find pid line in file {filename}. continuing...")
 
             # Don't forget to close file
             PIDFILE.close()
         except Exception:
-            logger.warning("error processing file %s. continuing..." % (filename))
+            logger.warning(f"error processing file {filename}. continuing...")
             logger.warning(traceback.format_exc())
 
         return True
@@ -674,7 +657,7 @@ def loading_completed(run_dir):
                     return False
             LOG.close()
         except OSError:
-            logger.warning("could not process log file: %s" % (log_file))
+            logger.warning(f"could not process log file: {log_file}")
 
     # Otherwise, return true
     return True
@@ -698,7 +681,7 @@ def rotate_log_file(source_file):
     sf = 0
 
     while sf < MAXLOGFILE:
-        dest_file = source_file + ".%03d" % (sf)
+        dest_file = source_file + f".{sf:03d}"
         if os.access(dest_file, os.F_OK):
             # Continue to the next one
             sf = sf + 1
@@ -707,7 +690,7 @@ def rotate_log_file(source_file):
 
     # Safety check to see if we have reached the maximum number of log files
     if sf >= MAXLOGFILE:
-        logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
+        logger.error(f"{dest_file} exists, cannot rotate log file anymore!")
         sys.exit(1)
 
     # Now that we have source_file and dest_file, try to rotate the logs
@@ -731,7 +714,7 @@ def get_backedup_file(file, number):
     if number < 0:
         return None
 
-    return file + ".%03d" % (number)
+    return file + f".{number:03d}"
 
 
 def get_backup_number(file, prefix):
@@ -779,7 +762,7 @@ def truncate_file(source_file):
     try:
         with open(source_file, "w") as fp:
             fp.truncate(0)
-    except:
+    except Exception:
         logger.error("Unable to truncate file %s", source_file)
         return False
 
@@ -823,7 +806,7 @@ def write_table(f, fields, headers=None, widths=None, encoding=None):
 
         def writetable(table):
             cols = writer.headers or writer.widths
-            max_length = [_ for _ in cols]
+            max_length = list(cols)
 
             for row in table:
                 for i, col in enumerate(writer.fields):
@@ -853,7 +836,7 @@ def write_csv(f, fields, headers=None, dialect=csv.excel, encoding=None):
         _writerow = writer.writerow
 
         def writerow(row):
-            _writerow({k: v for k, v in zip(fields, row)})
+            _writerow(dict(zip(fields, row)))
 
         def writeheader():
             writer.writerow(writer.headers or writer.fieldnames)
@@ -895,3 +878,4 @@ def pegasus_version():
         if child.returncode != 0:
             raise Exception(err.decode("utf8").strip())
         return out.decode("utf8").strip()
+    return None

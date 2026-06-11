@@ -8,7 +8,7 @@ import time
 from functools import partial
 from os import path
 from pathlib import Path
-from typing import BinaryIO, Dict, List, Optional, Union
+from typing import BinaryIO
 
 from Pegasus import braindump, yaml
 from Pegasus.client import status
@@ -21,9 +21,9 @@ console_handler.setFormatter(logging.Formatter("%(message)s"))
 
 
 class PegasusClientError(Exception):
-    """Exception raised when an invoked pegasus command line tool returns non 0"""
+    """Exception raised when an invoked pegasus command line tool returns non 0."""
 
-    def __init__(self, message, result):
+    def __init__(self, message, result) -> None:
         super().__init__(message)
 
         self.output = result.stdout + "\n" + result.stderr
@@ -53,32 +53,32 @@ def from_env(pegasus_home: str = None):
 
 
 def get_planner_args(
-    basename: Optional[str] = None,
-    job_prefix: Optional[str] = None,
-    conf: Optional[Union[str, Path]] = None,
-    cluster: Optional[List[str]] = None,
-    sites: Optional[List[str]] = None,
-    output_sites: Optional[List[str]] = None,
-    staging_sites: Optional[Dict[str, str]] = None,
-    cache: Optional[List[Union[str, Path]]] = None,
-    input_dirs: Optional[List[Union[str, Path]]] = None,
-    output_dir: Optional[Union[str, Path]] = None,
-    transformations_dir: Optional[Union[str, Path]] = None,
-    dir: Optional[Union[str, Path]] = None,
-    relative_dir: Optional[Union[str, Path]] = None,
-    relative_submit_dir: Optional[Union[str, Path]] = None,
-    random_dir: Union[bool, str, Path] = False,
-    inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-    cleanup: Optional[str] = None,
-    reuse: Optional[List[Union[str, Path]]] = None,
+    basename: str | None = None,
+    job_prefix: str | None = None,
+    conf: str | Path | None = None,
+    cluster: list[str] | None = None,
+    sites: list[str] | None = None,
+    output_sites: list[str] | None = None,
+    staging_sites: dict[str, str] | None = None,
+    cache: list[str | Path] | None = None,
+    input_dirs: list[str | Path] | None = None,
+    output_dir: str | Path | None = None,
+    transformations_dir: str | Path | None = None,
+    dir: str | Path | None = None,
+    relative_dir: str | Path | None = None,
+    relative_submit_dir: str | Path | None = None,
+    random_dir: bool | str | Path = False,
+    inherited_rc_files: list[str | Path] | None = None,
+    cleanup: str | None = None,
+    reuse: list[str | Path] | None = None,
     verbose: int = 0,
     quiet: int = 0,
     force: bool = False,
     force_replan: bool = False,
-    forward: Optional[List[str]] = None,
+    forward: list[str] | None = None,
     submit: bool = False,
-    java_options: Optional[List[str]] = None,
-    **properties: Dict[str, str],
+    java_options: list[str] | None = None,
+    **properties: dict[str, str],
 ):
     """Build the argument list for ``pegasus-plan`` from keyword parameters.
 
@@ -143,9 +143,7 @@ def get_planner_args(
     if output_sites:
         if not isinstance(output_sites, list):
             raise TypeError(
-                "invalid output_sites: {}; list of str must be given".format(
-                    output_sites
-                )
+                f"invalid output_sites: {output_sites}; list of str must be given"
             )
 
         cmd.extend(("--output-sites", ",".join(output_sites)))
@@ -153,9 +151,7 @@ def get_planner_args(
     if staging_sites:
         if not isinstance(staging_sites, dict):
             raise TypeError(
-                "invalid staging_sites: {}; dict<str, str> must be given".format(
-                    staging_sites
-                )
+                f"invalid staging_sites: {staging_sites}; dict<str, str> must be given"
             )
 
         cmd.extend(
@@ -195,7 +191,7 @@ def get_planner_args(
         cmd.extend(("--relative-submit-dir", str(relative_submit_dir)))
 
     if random_dir:
-        if random_dir == True:
+        if random_dir is True:
             cmd.append("--randomdir")
         else:
             cmd.append(f"--randomdir={random_dir}")
@@ -203,9 +199,7 @@ def get_planner_args(
     if inherited_rc_files:
         if not isinstance(inherited_rc_files, list):
             raise TypeError(
-                "invalid inherited_rc_files: {}; list of str must be given".format(
-                    inherited_rc_files
-                )
+                f"invalid inherited_rc_files: {inherited_rc_files}; list of str must be given"
             )
 
         cmd.extend(
@@ -243,9 +237,7 @@ def get_planner_args(
     if java_options:
         if not isinstance(java_options, list):
             raise TypeError(
-                "invalid java_options: {}; list of str must be given".format(
-                    java_options
-                )
+                f"invalid java_options: {java_options}; list of str must be given"
             )
 
         for opt in java_options:
@@ -255,8 +247,7 @@ def get_planner_args(
 
 
 class Client:
-    """
-    Pegasus workflow management client.
+    """Pegasus workflow management client.
 
     Wraps the Pegasus CLI tools (``pegasus-plan``, ``pegasus-run``,
     ``pegasus-status``, etc.) with threaded streaming I/O so that tool
@@ -264,8 +255,9 @@ class Client:
     programmatic use.
     """
 
-    def __init__(self, pegasus_home: str):
-        """
+    def __init__(self, pegasus_home: str) -> None:
+        """Constructor.
+
         :param pegasus_home: root directory of the Pegasus installation
         :type pegasus_home: str
         """
@@ -292,28 +284,28 @@ class Client:
         basename: str = None,
         job_prefix: str = None,
         conf: str = None,
-        cluster: List[str] = None,
-        sites: List[str] = None,
-        output_sites: List[str] = ["local"],
-        staging_sites: Dict[str, str] = None,
-        cache: List[str] = None,
-        input_dirs: List[str] = None,
+        cluster: list[str] = None,
+        sites: list[str] = None,
+        output_sites: list[str] = ["local"],  # noqa: B006
+        staging_sites: dict[str, str] = None,
+        cache: list[str] = None,
+        input_dirs: list[str] = None,
         output_dir: str = None,
         transformations_dir: str = None,
         dir: str = None,
         relative_dir: str = None,
         relative_submit_dir: str = None,
-        random_dir: Union[bool, str] = False,
-        inherited_rc_files: List[str] = None,
+        random_dir: bool | str = False,
+        inherited_rc_files: list[str] = None,
         cleanup: str = "none",
-        reuse: List[str] = None,
+        reuse: list[str] = None,
         verbose: int = 0,
         quiet: int = 0,
         force: bool = False,
         force_replan: bool = False,
-        forward: List[str] = None,
+        forward: list[str] = None,
         submit: bool = False,
-        java_options: List[str] = None,
+        java_options: list[str] = None,
         **kwargs,
     ):
         """Invoke ``pegasus-plan`` to generate an executable workflow.
@@ -396,8 +388,7 @@ class Client:
             self._log.info("\n\n" + json_output["message"].strip() + "\n\n")
             self._log.info(f"pegasus-run {submit_dir}")
 
-        workflow = Workflow(submit_dir, self)
-        return workflow
+        return Workflow(submit_dir, self)
 
     def run(self, submit_dir: str, verbose: int = 0, grid: bool = False):
         """Submit a planned workflow by invoking ``pegasus-run``.
@@ -442,7 +433,7 @@ class Client:
 
         return rv.json
 
-    def status(self, submit_dir: str, long: bool = False, verbose: int = 0):
+    def status(self, submit_dir: str, long: bool = False, verbose: int = 0) -> None:
         """Print the current workflow status by invoking ``pegasus-status``.
 
         :param submit_dir: path to the workflow submit directory
@@ -467,11 +458,8 @@ class Client:
         self._exec(cmd)
 
     @staticmethod
-    def _parse_status_output(
-        status_output: str, root_wf_name: str
-    ) -> Union[dict, None]:
-        """
-        Internal method for parsing ``pegasus-status`` output.
+    def _parse_status_output(status_output: str, root_wf_name: str) -> dict | None:
+        """Internal method for parsing ``pegasus-status`` output.
 
         :param status_output: text output from ``pegasus-status -l``
         :type status_output: str
@@ -489,9 +477,7 @@ class Client:
         #
         # the pattern would match the second line
         pattern = re.compile(
-            r"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{wf_name}.*)".format(
-                wf_name=root_wf_name
-            )
+            rf"\s*(([\d,]+\s+){{7}})(\d+\.\d+\s+)(\w+\s+)(\*{root_wf_name}.*)"
         )
         # matched groups are as follows:
         # group 1: first 7 digit values
@@ -598,7 +584,7 @@ class Client:
 
         return parsed_status_output
 
-    def get_status(self, root_wf_name: str, submit_dir: str) -> Union[dict, None]:
+    def get_status(self, root_wf_name: str, submit_dir: str) -> dict | None:
         """Return a dict containing the current workflow status.
 
         :param root_wf_name: basename of the root DAG
@@ -610,7 +596,7 @@ class Client:
         """
         return self._retrieve_status.fetch_status(submit_dir, json=True)
 
-    def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5):
+    def wait(self, root_wf_name: str, submit_dir: str, delay: int = 5) -> None:
         """Block until the workflow completes or fails, printing a live progress bar.
 
         Polls :meth:`get_status` every ``delay`` seconds and renders a colored
@@ -624,13 +610,12 @@ class Client:
         :param delay: polling interval in seconds, defaults to 5
         :type delay: int, optional
         """
-
         # color strings for terminal output
-        blue = lambda s: "\x1b[1;34m" + s + "\x1b[0m"
-        green = lambda s: "\x1b[1;32m" + s + "\x1b[0m"
-        yellow = lambda s: "\x1b[1;33m" + s + "\x1b[0m"
-        cyan = lambda s: "\x1b[1;36m" + s + "\x1b[0m"
-        red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"
+        blue = lambda s: "\x1b[1;34m" + s + "\x1b[0m"  # noqa: E731
+        green = lambda s: "\x1b[1;32m" + s + "\x1b[0m"  # noqa: E731
+        yellow = lambda s: "\x1b[1;33m" + s + "\x1b[0m"  # noqa: E731
+        cyan = lambda s: "\x1b[1;36m" + s + "\x1b[0m"  # noqa: E731
+        red = lambda s: "\x1b[1;31m" + s + "\x1b[0m"  # noqa: E731
 
         # progress bar length
         bar_len = 25
@@ -677,9 +662,7 @@ class Client:
                         "\r["
                         + green("#" * filled_len)
                         + ("-" * (bar_len - filled_len))
-                        + "] {percent:>5}% ..{state} {stats}".format(
-                            percent=percent_done, state=state, stats=stats_tuple
-                        )
+                        + f"] {percent_done:>5}% ..{state} {stats_tuple}"
                     )
 
                     if state == "Running":
@@ -702,7 +685,7 @@ class Client:
                 "\nCancelling Client.wait(). Your workflow is still running and can be monitored with pegasus-status"
             )
 
-    def remove(self, submit_dir: str, verbose: int = 0):
+    def remove(self, submit_dir: str, verbose: int = 0) -> None:
         """Remove a running or held workflow by invoking ``pegasus-remove``.
 
         :param submit_dir: path to the workflow submit directory
@@ -727,7 +710,7 @@ class Client:
         verbose: int = 0,
         json_mode: bool = False,
         traverse_all: bool = False,
-    ):
+    ) -> None:
         """Analyze a workflow by invoking ``pegasus-analyzer``.
 
         :param submit_dir: path to the workflow submit directory
@@ -753,7 +736,7 @@ class Client:
         )
         self._exec(cmd)
 
-    def statistics(self, submit_dir: str, verbose: int = 0):
+    def statistics(self, submit_dir: str, verbose: int = 0) -> None:
         """Print workflow statistics by invoking ``pegasus-statistics``.
 
         :param submit_dir: path to the workflow submit directory
@@ -782,10 +765,10 @@ class Client:
         no_simplify: bool = True,
         label: str = "label",
         output: str = None,
-        remove: List[str] = None,
+        remove: list[str] = None,
         width: int = None,
         height: int = None,
-    ):
+    ) -> None:
         """Generate a GraphViz dot representation of a workflow by invoking ``pegasus-graphviz``.
 
         :param workflow_file: path to the workflow YAML file
@@ -844,7 +827,7 @@ class Client:
         dst: list,
         logger: logging.Logger = None,
         log_lvl: int = None,
-    ):
+    ) -> None:
         """Handler for processing and logging byte streams from subprocess.Popen.
 
         :param proc: subprocess.Popen object used to run a pegasus CLI tool
@@ -859,7 +842,7 @@ class Client:
         :type log_lvl: int, optional
         """
 
-        def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
+        def _log(logger: logging.Logger, log_lvl: int, msg: bytes) -> None:
             if logger:
                 log_func = {
                     10: logger.debug,
@@ -884,9 +867,9 @@ class Client:
 
             # Has proc terminated? If so, collect remaining output and exit.
             if proc.poll() is not None:
-                for l in stream.readlines():
-                    dst.append(l)
-                    log(l)
+                for line in stream.readlines():
+                    dst.append(line)
+                    log(line)
 
                 break
 
@@ -966,9 +949,8 @@ class Workflow:
     explicitly on each call.
     """
 
-    def __init__(self, submit_dir: str, client: Client = None):
-        """
-        :param submit_dir: path to the workflow submit directory
+    def __init__(self, submit_dir: str, client: Client = None) -> None:
+        """:param submit_dir: path to the workflow submit directory
         :type submit_dir: str
         :param client: Pegasus client to use; if None, :func:`from_env` is called, defaults to None
         :type client: Client, optional
@@ -995,7 +977,7 @@ class Workflow:
         return self._client
 
     @client.setter
-    def client(self, client: Client):
+    def client(self, client: Client) -> None:
         self._client = client
 
         if self._client:
@@ -1027,9 +1009,8 @@ class Workflow:
 class Result:
     """An object to store outcome from the execution of a script."""
 
-    def __init__(self, cmd, exit_code, stdout_bytes, stderr_bytes):
-        """
-        :param cmd: the command that was executed
+    def __init__(self, cmd, exit_code, stdout_bytes, stderr_bytes) -> None:
+        """:param cmd: the command that was executed
         :type cmd: list
         :param exit_code: exit code returned by the process
         :type exit_code: int
@@ -1045,7 +1026,7 @@ class Result:
         self._json = None
         self._yaml = None
 
-    def raise_exit_code(self):
+    def raise_exit_code(self) -> None:
         """Raise :exc:`ValueError` if the exit code is non-zero.
 
         :raises ValueError: if ``exit_code != 0``
@@ -1080,8 +1061,7 @@ class Result:
             if not self._json:
                 self._json = json.loads(self.output)
             return self._json
-        else:
-            return None
+        return None
 
     # @property
     # def ndjson(self):
@@ -1100,8 +1080,7 @@ class Result:
             if not self._yaml:
                 self._yaml = yaml.load(self.output)
             return self._yaml
-        else:
-            return None
+        return None
 
     @property
     def yaml_all(self):
@@ -1110,5 +1089,4 @@ class Result:
             if not self._yaml:
                 self._yaml = yaml.load_all(self.output)
             return self._yaml
-        else:
-            return None
+        return None

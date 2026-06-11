@@ -22,9 +22,9 @@ Usage: pegasus-metadata [-h] [-v] [-c] {task,file,workflow} ... submit_dir
 #  limitations under the License.
 ##
 
-
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -47,7 +47,7 @@ from Pegasus.tools import utils
 def configure_logging(verbosity=0):
     verbosity = min(3, verbosity)
 
-    log_levels = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
+    log_levels = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
 
     utils.configureLogging(level=log_levels[verbosity])
 
@@ -57,7 +57,7 @@ def get_workflow_uuid(submit_dir):
     bdump_txt = Path(submit_dir) / "braindump.txt"
 
     if bdump_yml.exists() is False and bdump_txt.exists() is False:
-        raise ValueError("Not a valid workflow submit directory: %r" % submit_dir)
+        raise ValueError(f"Not a valid workflow submit directory: {submit_dir!r}")
 
     braindump = utils.slurp_braindb(submit_dir)
     return braindump["root_wf_uuid"], braindump["wf_uuid"]
@@ -69,7 +69,7 @@ def get_workflow_uri(submit_dir):
 
 def render_metas(metas, indent=""):
     if not metas:
-        print("%sNo metadata found" % indent)
+        print(f"{indent}No metadata found")
         return
 
     max_key_len = 0
@@ -88,7 +88,7 @@ def workflow_metadata(recursive=False, submit_dir=".", *args, **kwargs):
 
     try:
         root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
-        logging.debug("Workflow UUID: %s" % wf_uuid)
+        logging.debug(f"Workflow UUID: {wf_uuid}")
         db_uri = get_workflow_uri(submit_dir)
 
         queries = StampedeWorkflowQueries(db_uri)
@@ -99,13 +99,13 @@ def workflow_metadata(recursive=False, submit_dir=".", *args, **kwargs):
             )
 
             for wf in wfs.records:
-                print("Workflow %s" % wf.wf_uuid)
+                print(f"Workflow {wf.wf_uuid}")
                 workflow_metas = queries.get_workflow_meta(wf_uuid).records
                 render_metas(workflow_metas, "    ")
 
         else:
             workflow_metas = queries.get_workflow_meta(wf_uuid).records
-            print("Workflow %s" % wf_uuid)
+            print(f"Workflow {wf_uuid}")
             render_metas(workflow_metas, "    ")
 
     except ValueError as e:
@@ -130,18 +130,18 @@ def task_metadata(abs_task_id=None, submit_dir=".", *args, **kwargs):
 
     try:
         root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
-        logging.debug("Workflow UUID: %s" % wf_uuid)
+        logging.debug(f"Workflow UUID: {wf_uuid}")
         db_uri = get_workflow_uri(submit_dir)
 
         queries = StampedeWorkflowQueries(db_uri)
 
-        logging.debug("Get task metadata for abs_task_id %s" % abs_task_id)
+        logging.debug(f"Get task metadata for abs_task_id {abs_task_id}")
         workflow = queries.get_workflow_tasks(
-            wf_uuid, query="t.abs_task_id == %r" % abs_task_id
+            wf_uuid, query=f"t.abs_task_id == {abs_task_id!r}"
         )
 
         if workflow.total_filtered == 0:
-            raise ValueError("Invalid task_name %r" % abs_task_id)
+            raise ValueError(f"Invalid task_name {abs_task_id!r}")
 
         task_id = workflow.records[0].task_id
         task_metas = queries.get_task_meta(task_id).records
@@ -177,7 +177,7 @@ def file_metadata(
 
     try:
         root_wf_uuid, wf_uuid = get_workflow_uuid(submit_dir)
-        logging.debug("Workflow UUID: %s" % wf_uuid)
+        logging.debug(f"Workflow UUID: {wf_uuid}")
         db_uri = get_workflow_uri(submit_dir)
 
         queries = StampedeWorkflowQueries(db_uri)
@@ -190,14 +190,14 @@ def file_metadata(
                 print("No files found")
 
         else:
-            logging.debug("Get file metadata for lfn %r" % file_name)
+            logging.debug(f"Get file metadata for lfn {file_name!r}")
 
             workflow_files = queries.get_workflow_files(
-                wf_uuid, query="l.lfn == %r" % file_name
+                wf_uuid, query=f"l.lfn == {file_name!r}"
             )
 
             if workflow_files.total_filtered == 0:
-                raise ValueError("Invalid file %r" % file_name)
+                raise ValueError(f"Invalid file {file_name!r}")
 
         if trace:
             wf_file = workflow_files.records.values()[0]
@@ -214,23 +214,23 @@ def file_metadata(
 
             if root_wf:
                 root_wf_metas = queries.get_workflow_meta(root_wf.wf_id).records
-                print("Root Workflow %s" % root_wf.wf_uuid)
+                print(f"Root Workflow {root_wf.wf_uuid}")
                 render_metas(root_wf_metas, "    ")
                 print()
 
             wf_metas = queries.get_workflow_meta(wf_id).records
-            print("Workflow %s" % wf.wf_uuid)
+            print(f"Workflow {wf.wf_uuid}")
             render_metas(wf_metas, "    ")
             print()
 
             task = queries.get_task(task_id)
             task_metas = queries.get_task_meta(task_id).records
-            print("Task %s" % task.abs_task_id)
+            print(f"Task {task.abs_task_id}")
             render_metas(task_metas, "    ")
             print()
 
         for wf_file in workflow_files.records:
-            print("File %s" % wf_file.lfn)
+            print(f"File {wf_file.lfn}")
             render_metas(wf_file.meta, "    ")
 
     except ValueError as e:

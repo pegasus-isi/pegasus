@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -414,7 +415,8 @@ public abstract class Abstract implements CondorStyle {
                 .append(" for job ")
                 .append(job.getID())
                 .append(
-                        " is specified under MOUNT_UNDER_SCRATCH variable in condor configuration on the submit host")
+                        " is specified under MOUNT_UNDER_SCRATCH variable in condor configuration"
+                                + " on the submit host")
                 .append(this.mMountUnderScratchDirs);
 
         throw new CondorStyleException(error.toString());

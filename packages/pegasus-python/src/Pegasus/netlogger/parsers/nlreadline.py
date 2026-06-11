@@ -2,6 +2,7 @@
 File wrapper that changes the semantics of the readline function
 to never return a non-empty line without a line terminator.
 """
+
 __rcsid__ = "$Id: nlreadline.py 22911 2008-06-03 05:06:10Z dang $"
 __author__ = "Dan Gunter"
 
@@ -26,9 +27,7 @@ class BufferedReadline:
                 return self.__dict__[x]
             except KeyError:
                 raise AttributeError(
-                    "'{}' object has no attribute '{}'".format(
-                        self.__class__.__name__, x
-                    )
+                    f"'{self.__class__.__name__}' object has no attribute '{x}'"
                 )
         return getattr(self._f, x)
 
@@ -57,7 +56,7 @@ class BufferedReadline:
         """Override readlines() so it calls our readline()."""
         if self._f is None:
             return ""
-        return [line for line in self.readline()]
+        return list(self.readline())
 
     def xreadlines(self):
         """Override xreadlines() so it calls our readline()."""

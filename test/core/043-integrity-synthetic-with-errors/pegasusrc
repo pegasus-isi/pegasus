@@ -9,4 +9,3 @@ pegasus.transfer.worker.package = true
 pegasus.integrity.checking = full
 
 dagman.retry = 10
-

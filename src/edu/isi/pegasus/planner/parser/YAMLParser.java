@@ -23,18 +23,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.networknt.schema.JsonMetaSchema;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.yaml.snakeyaml.LoaderOptions;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * An abstract base class for YAML Parser invoked from catalog implementations

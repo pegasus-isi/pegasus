@@ -40,5 +40,3 @@ Options
 **WORKFLOW_DIR**
    The directory where you want to create the new workflow
    configuration.
-
-

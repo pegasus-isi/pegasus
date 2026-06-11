@@ -2096,5 +2096,3 @@ pegasus-status
 pegasus-remove.
 	This client lets you remove a running workflow from the condor queue.
         A rescue dag will be generated which can be submitted by just running pegasus-run on the dag directory.
-
-

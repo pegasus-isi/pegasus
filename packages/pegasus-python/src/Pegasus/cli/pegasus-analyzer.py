@@ -31,13 +31,17 @@ indent = ""  # the corresponding indent string
 
 class HelpCmd(click.Command):
     def format_usage(self, ctx, formatter):
-        click.echo(f"Usage: pegasus-analyzer [options] workflow_directory")
+        click.echo("Usage: pegasus-analyzer [options] workflow_directory")
 
 
 @click.command(cls=HelpCmd, options_metavar="<options>")
 @click.pass_context
 @click.option(
-    "--verbose", "-v", "vb", count=True, help="Increase verbosity, repeatable",
+    "--verbose",
+    "-v",
+    "vb",
+    count=True,
+    help="Increase verbosity, repeatable",
 )
 @click.option(
     "-i",
@@ -227,7 +231,7 @@ def pegasus_analyzer(
 ):
 
     if vb == 0:
-        lvl = logging.WARN
+        lvl = logging.WARNING
     elif vb == 1:
         lvl = logging.INFO
     else:
@@ -271,7 +275,7 @@ def pegasus_analyzer(
     if dag_filename:
         options.input_dir = os.path.abspath(os.path.split(dag_filename)[0])
         # Assume current directory if input dir is empty
-        if input_dir == None:
+        if input_dir is None:
             options.input_dir = os.getcwd()
     else:
         # Select directory where jobstate.log is located
@@ -288,7 +292,7 @@ def pegasus_analyzer(
             debug = analyzer.DebugWF(options)
             debug.debug_workflow()
             ctx.exit(0)
-        except:
+        except Exception:
             ctx.exit(1)
 
     # sanity check
@@ -355,7 +359,7 @@ def generate_analyzer_output(ctx, options, output):
     else:
         cout += "Done".center(80, "*")
         cout += "\n"
-        cout += "%s: end of status report" % (analyzer.prog_base)
+        cout += f"{analyzer.prog_base}: end of status report"
         cout += "\n"
 
     return cout
@@ -384,25 +388,21 @@ def generate_output(ctx, options, wf):
     cout += "\n"
     cout += indent_console(" Summary ".center(80, "*"))
     cout += "\n"
-    cout += indent_console(" Submit Directory   : %s" % (wf.submit_dir))
-    cout += indent_console(" Workflow Status    : %s" % (wf.wf_status))
+    cout += indent_console(f" Submit Directory   : {wf.submit_dir}")
+    cout += indent_console(f" Workflow Status    : {wf.wf_status}")
 
-    cout += indent_console(" Total jobs         : % 6d" % (counts.total))
+    cout += indent_console(f" Total jobs         : {counts.total: 6d}")
     cout += indent_console(
-        " # jobs succeeded   : % 6d (%3.2f%%)"
-        % (counts.success, 100 * (1.0 * counts.success / (counts.total or 1)))
+        f" # jobs succeeded   : {counts.success: 6d} ({100 * (1.0 * counts.success / (counts.total or 1)):3.2f}%)"
     )
     cout += indent_console(
-        " # jobs failed      : % 6d (%3.2f%%)"
-        % (counts.failed, 100 * (1.0 * counts.failed / (counts.total or 1)))
+        f" # jobs failed      : {counts.failed: 6d} ({100 * (1.0 * counts.failed / (counts.total or 1)):3.2f}%)"
     )
     cout += indent_console(
-        " # jobs held        : % 6d (%3.2f%%)"
-        % (counts.held, 100 * (1.0 * counts.held / (counts.total or 1)))
+        f" # jobs held        : {counts.held: 6d} ({100 * (1.0 * counts.held / (counts.total or 1)):3.2f}%)"
     )
     cout += indent_console(
-        " # jobs unsubmitted : % 6d (%3.2f%%)"
-        % (counts.unsubmitted, 100 * (1.0 * counts.unsubmitted / (counts.total or 1)))
+        f" # jobs unsubmitted : {counts.unsubmitted: 6d} ({100 * (1.0 * counts.unsubmitted / (counts.total or 1)):3.2f}%)"
     )
     if options.use_files:
         if "unknown_jobs_details" in wf.jobs.job_details:
@@ -410,8 +410,7 @@ def generate_output(ctx, options, wf):
         else:
             unknown = 0
         cout += indent_console(
-            " # jobs unknown     : % 6d (%3.2f%%)"
-            % (unknown, 100 * (1.0 * unknown / (counts.total or 1)))
+            f" # jobs unknown     : {unknown: 6d} ({100 * (1.0 * unknown / (counts.total or 1)):3.2f}%)"
         )
     cout += "\n"
 
@@ -438,9 +437,7 @@ def generate_output(ctx, options, wf):
 
     if counts.failed > 0:
         cout += indent_console(
-            "Workflow failed : wf_uuid: {} submit dir: {}\n".format(
-                wf.wf_uuid, wf.submit_dir,
-            )
+            f"Workflow failed : wf_uuid: {wf.wf_uuid} submit dir: {wf.submit_dir}\n"
         )
 
     return cout
@@ -458,12 +455,12 @@ def generate_held_jobs(options, held_jobs):
         cout += indent_console(job.center(80, "="))
         cout += "\n"
         cout += indent_console(
-            "submit file            : %s" % (held_job["submit_file"])
+            "submit file            : {}".format(held_job["submit_file"])
         )
         cout += indent_console(
-            "last_job_instance_id   : %s" % (held_job["last_job_instance_id"])
+            "last_job_instance_id   : {}".format(held_job["last_job_instance_id"])
         )
-        cout += indent_console("reason                 : %s" % (held_job["reason"]))
+        cout += indent_console("reason                 : {}".format(held_job["reason"]))
         cout += "\n"
 
     return cout
@@ -541,16 +538,16 @@ def generate_job_instance(options, job_instance_info):
     if options.print_invocation:
         cout += "\n"
         cout += indent_console(
-            "To re-run this job, use: %s %s"
-            % ((job_instance_info.executable or "-"), (job_instance_info.argv or "-"))
+            "To re-run this job, use: {} {}".format(
+                (job_instance_info.executable or "-"), (job_instance_info.argv or "-")
+            )
         )
         cout += "\n"
     if options.print_pre_script and len(job_instance_info.pre_executable or "") > 0:
         cout += "\n"
         cout += indent_console("SCRIPT PRE:")
         cout += indent_console(
-            "%s %s"
-            % (
+            "{} {}".format(
                 (job_instance_info.pre_executable or ""),
                 (job_instance_info.pre_argv or ""),
             )
@@ -559,7 +556,7 @@ def generate_job_instance(options, job_instance_info):
 
     if job_instance_info.subwf_dir != "-":
         # This job has a sub workflow
-        user_cmd = " %s" % (prog_base)
+        user_cmd = f" {prog_base}"
 
         # get any options that need to be invoked for the sub workflow
         # extraOptions = addon(options)
@@ -567,13 +564,11 @@ def generate_job_instance(options, job_instance_info):
 
         if options.use_files:
             if options.output_dir is not None:
-                user_cmd = user_cmd + " --output-dir %s" % (options.output_dir)
+                user_cmd = user_cmd + f" --output-dir {options.output_dir}"
 
             # get any options that need to be invoked for the sub workflow
 
-            sub_wf_cmd = "{} {} -d {}".format(
-                user_cmd, extraOptions, os.path.split(job_instance_info.subwf_dir)[0],
-            )
+            sub_wf_cmd = f"{user_cmd} {extraOptions} -d {os.path.split(job_instance_info.subwf_dir)[0]}"
 
         else:
             my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
@@ -584,12 +579,7 @@ def generate_job_instance(options, job_instance_info):
                 )
                 my_wfdir = os.path.join(options.input_dir, my_wfdir)
 
-            sub_wf_cmd = "{} {} -d {} --top-dir {}".format(
-                user_cmd,
-                extraOptions,
-                my_wfdir,
-                (options.top_dir or options.input_dir),
-            )
+            sub_wf_cmd = f"{user_cmd} {extraOptions} -d {my_wfdir} --top-dir {options.top_dir or options.input_dir}"
         if not options.recurse_mode:
             # we print only if recurse mode is disabled
             cout += indent_console(" This job contains sub workflows!")
@@ -639,12 +629,12 @@ def generate_tasks_info(options, job_instance_info):
             ("Task #" + str(my_task.task_submit_seq) + " - Summary").center(80, "-")
         )
         cout += "\n"
-        cout += indent_console("site        : %s" % (job_instance_info.site))
-        cout += indent_console("hostname    : %s" % (job_instance_info.hostname))
-        cout += indent_console("executable  : %s" % (my_task.executable))
-        cout += indent_console("arguments   : %s" % (my_task.arguments))
-        cout += indent_console("exitcode    : %s" % (my_task.exitcode))
-        cout += indent_console("working dir : %s" % (job_instance_info.work_dir))
+        cout += indent_console(f"site        : {job_instance_info.site}")
+        cout += indent_console(f"hostname    : {job_instance_info.hostname}")
+        cout += indent_console(f"executable  : {my_task.executable}")
+        cout += indent_console(f"arguments   : {my_task.arguments}")
+        cout += indent_console(f"exitcode    : {my_task.exitcode}")
+        cout += indent_console(f"working dir : {job_instance_info.work_dir}")
         cout += "\n"
 
         if not options.quiet_mode:
@@ -665,8 +655,8 @@ def generate_tasks_info(options, job_instance_info):
                     cout += indent_console(ji_stdout_text)
             else:
                 # Now, print task stdout and stderr, if anything is there
-                my_stdout_str = "#@ %d stdout" % (my_task.task_submit_seq)
-                my_stderr_str = "#@ %d stderr" % (my_task.task_submit_seq)
+                my_stdout_str = f"#@ {my_task.task_submit_seq:d} stdout"
+                my_stderr_str = f"#@ {my_task.task_submit_seq:d} stderr"
 
                 # Start with stdout
                 my_stdout_start = ji_stdout_text.find(my_stdout_str)

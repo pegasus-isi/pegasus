@@ -30,11 +30,13 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract condor style class. */
 public class AbstractTest {

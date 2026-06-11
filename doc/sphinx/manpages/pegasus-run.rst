@@ -139,5 +139,3 @@ See Also
 ========
 
 pegasus-plan(1)
-
-

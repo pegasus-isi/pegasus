@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -32,7 +31,7 @@ class Version(BaseVersion):
 
     def update(self, force=False):
         "Add archived field to master_workflow table"
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         # TODO We might need to check to see if the field already exists first
         try:
             self.db.execute(

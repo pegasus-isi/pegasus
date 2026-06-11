@@ -21,9 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class VDSSysInfo2NMITest {
 
     @Test

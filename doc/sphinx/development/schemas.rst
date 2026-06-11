@@ -724,5 +724,3 @@ terms of the local machine. Please note that
    data products in the replica catalog, especially in larger scenarios.
 
 -  The **jobDependencies** elements define the control flow between the jobs.
-
-

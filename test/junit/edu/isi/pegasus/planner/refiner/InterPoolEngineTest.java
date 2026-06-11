@@ -27,10 +27,12 @@ import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.util.LinkedList;
-import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A JUnit Test to test the Interpool Engine

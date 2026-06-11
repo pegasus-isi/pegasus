@@ -126,5 +126,3 @@ pegasus-plan \
     --staging-site staging \
     --output-sites local \
     --submit dax.yml | tee $TOP_DIR/plan.out
-
-

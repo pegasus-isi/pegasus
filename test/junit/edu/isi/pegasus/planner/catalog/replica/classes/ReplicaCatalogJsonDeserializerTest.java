@@ -19,10 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Modifier;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ReplicaCatalogJsonDeserializerTest {
 
     @Test

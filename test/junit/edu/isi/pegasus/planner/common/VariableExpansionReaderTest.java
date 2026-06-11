@@ -17,11 +17,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.SetSystemProperty;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.SetSystemProperty;
 
 /** Unit tests for VariableExpansionReader. */
 public class VariableExpansionReaderTest {

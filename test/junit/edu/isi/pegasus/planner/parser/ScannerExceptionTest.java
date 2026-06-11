@@ -17,9 +17,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.LineNumberReader;
 import java.io.StringReader;
-import org.junit.jupiter.api.Test;
 
 /** Tests for {@link ScannerException}. */
 public class ScannerExceptionTest {

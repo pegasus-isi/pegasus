@@ -18,13 +18,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import org.yaml.snakeyaml.LoaderOptions;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.regex.Pattern;
-import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * Helper Class to detect type of a file.

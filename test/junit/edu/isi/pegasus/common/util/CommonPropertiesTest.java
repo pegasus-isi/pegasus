@@ -20,6 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+
+import org.junit.jupiter.api.*;
+import org.junitpioneer.jupiter.RestoreSystemProperties;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -32,8 +36,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.*;
-import org.junitpioneer.jupiter.RestoreSystemProperties;
 
 /**
  * Test class to test the Common Properties that loads the various properties

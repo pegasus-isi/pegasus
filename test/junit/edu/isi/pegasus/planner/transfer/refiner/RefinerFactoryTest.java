@@ -25,12 +25,16 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class RefinerFactoryTest {
 
     @Test

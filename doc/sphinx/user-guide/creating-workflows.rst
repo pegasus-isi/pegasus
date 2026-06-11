@@ -489,5 +489,3 @@ environment setup script file that is sourced in the PegasusLite wrapper
 before your job is invoked. This setup script can be used to set up the environment
 for your job. Details on how to configure this can be found in the
 :ref:`PegasusLite chapter<source-env-in-pegasuslite>`.
-
-

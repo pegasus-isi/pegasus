@@ -2,7 +2,7 @@
 
 # This script generates a requirements.txt file for the pegasus-wms packages
 # specific to the supported Python versions. It ignores packages that are to
-# be installed externally, like PyYAML, GitPython, and cryptography.
+# be installed externally, like PyYAML, and cryptography.
 
 set -e
 
@@ -21,7 +21,6 @@ for i in {6..14}; do
 
     ls -1 p3${i} | sort | grep -iv pegasus_wms | \
         grep -Eiv '(cryptography|cffi|pycparser)' | \
-        grep -Eiv '(gitpython|gitdb|smmap|typing-extensions)' | \
         grep -iv pyyaml | \
         sed -E "s/^([^-]*)-([^-]*)[-.].*/\1==\2;python_version=='3.$i'/g" | \
         sed -E "s/\.tar(\.gz)?//g" >> $DIR/src/requirements.txt

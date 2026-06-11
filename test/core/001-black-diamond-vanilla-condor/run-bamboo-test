@@ -66,4 +66,3 @@ pegasus-plan \
     --randomdir \
     blackdiamond.dax \
     | tee plan.out
-

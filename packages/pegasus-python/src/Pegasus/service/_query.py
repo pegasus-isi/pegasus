@@ -95,17 +95,17 @@ def query_parse(clause, **symbols):
 
     .. example::
 
-        >>> str( query_parse("w.wf_id == 1") )
+        >>> str(query_parse("w.wf_id == 1"))
         'workflow.wf_id = :wf_id_1'
 
-        >>> str( query_parse("w.wf_id > 1 and w.wf_id < 5") )
+        >>> str(query_parse("w.wf_id > 1 and w.wf_id < 5"))
         'workflow.wf_id > :wf_id_1 AND workflow.wf_id < :wf_id_2'
     """
 
     try:
         n = ast.parse(clause.strip(",") + ",", mode="eval").body
     except SyntaxError as e:
-        raise InvalidQueryError("Invalid query: %s" % e)
+        raise InvalidQueryError(f"Invalid query: {e}")
 
     if not isinstance(n, ast.Tuple):
         raise InvalidQueryError("Invalid condition: must evaluate to a boolean value")
@@ -180,8 +180,7 @@ class _QueryEvaluator(ast.NodeVisitor):
         name = self._symbols.get(n.id, BUILTINS.get(n.id, None))
         if n.id not in self._symbols and n.id not in BUILTINS:
             raise NameError(
-                "Invalid name <%s> at Line <%d> Col "
-                "<%d>" % (n.id, n.lineno, n.col_offset)
+                f"Invalid name <{n.id}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
             )
 
         return name
@@ -216,8 +215,7 @@ class _QueryEvaluator(ast.NodeVisitor):
             func = self.visit(n.func)
         except AttributeError:
             raise InvalidQueryError(
-                "Invalid name <%s> at Line <%d> Col <%d>"
-                % (n.func.attr, n.lineno, n.col_offset)
+                f"Invalid name <{n.func.attr}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
             )
 
         # Args
@@ -233,7 +231,7 @@ class _QueryEvaluator(ast.NodeVisitor):
     # Catch All
     def generic_visit(self, n):
         raise InvalidQueryError(
-            "Invalid query at Line <%d> Col <%d>" % (n.lineno, n.col_offset)
+            f"Invalid query at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
         )
 
 
@@ -241,11 +239,11 @@ def _main():
     import sys
 
     logging.basicConfig(level=logging.DEBUG)
-    logging.debug("Expression <%s>", sys.argv[1])
+    print(f"Expression <{sys.argv[1]}>")
     from Pegasus.db.schema import Workflow
 
     result = query_parse(sys.argv[1], Workflow)
-    logging.debug("Evaluation Result <%s>", result[0])
+    print(f"Evaluation Result <{result[0]}>")
 
 
 if __name__ == "__main__":

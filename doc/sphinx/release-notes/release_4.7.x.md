@@ -381,4 +381,3 @@ submissions
 3) [PM-1124] – Hashed Output Mappers throw unable to instantiate error [\#1238](https://github.com/pegasus-isi/pegasus/issues/1238)
 
 4) [PM-1127] – Wf adds worker package staging even though it has already placed a worker package in place [\#1241](https://github.com/pegasus-isi/pegasus/issues/1241)
-

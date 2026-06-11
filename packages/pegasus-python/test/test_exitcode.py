@@ -139,15 +139,24 @@ class ExitcodeTestCase(unittest.TestCase):
         # 1       | 1  | Task failed
         # dagman_job_status is zero but kickstart record says failure
         self.assertRaises(
-            JobFailed, ec, "yaml-failed.out", dagman_job_status=0,
+            JobFailed,
+            ec,
+            "yaml-failed.out",
+            dagman_job_status=0,
         )
         self.assertRaises(
-            JobFailed, ec, "yaml-failed.out", dagman_job_status=1,
+            JobFailed,
+            ec,
+            "yaml-failed.out",
+            dagman_job_status=1,
         )
         # PM-1821 dagman job status has highest priority. trigger failure even though
         # kickstart record says zero exitcode
         self.assertRaises(
-            JobFailed, ec, "yaml-ok.out", dagman_job_status=1,
+            JobFailed,
+            ec,
+            "yaml-ok.out",
+            dagman_job_status=1,
         )
         # empty stdout only success in case of --no-invocations
         self.assertRaises(JobFailed, ec, "empty.out")

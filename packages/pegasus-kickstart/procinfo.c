@@ -1,20 +1,20 @@
-/* This module collects I/O, memory and CPU usage info about a job and all 
- * of its child processes. Each child (and grandchild) is traced using 
+/* This module collects I/O, memory and CPU usage info about a job and all
+ * of its child processes. Each child (and grandchild) is traced using
  * ptrace. When the child is about to exit the tracing proces (kickstart)
- * looks it up in the /proc file system and determines: what the maximum 
- * virtual memory size was (vmpeak), what the maximum physical memory size 
- * was (rsspeak), how much time the process spent in the kernel (stime), 
- * how much time the process spent in user mode (utime) and how much 
- * wall-clock time elapsed between when the process was launched and when 
+ * looks it up in the /proc file system and determines: what the maximum
+ * virtual memory size was (vmpeak), what the maximum physical memory size
+ * was (rsspeak), how much time the process spent in the kernel (stime),
+ * how much time the process spent in user mode (utime) and how much
+ * wall-clock time elapsed between when the process was launched and when
  * it exited (wtime), how many bytes were read and written, how many
  * characters were read and written, how many read and write system calls
  * were made. The data is added to the invocation record as a series of
  * <proc> entries.
  *
  * NOTE:
- * This won't work if the job requires any executable to be notified when 
- * one of its children stops (i.e. some process needs to wait() for a 
- * child to get a SIGSTOP and then deliver a SIGCONT). See the man page 
+ * This won't work if the job requires any executable to be notified when
+ * one of its children stops (i.e. some process needs to wait() for a
+ * child to get a SIGSTOP and then deliver a SIGCONT). See the man page
  * for ptrace() for more info.
  */
 
@@ -204,7 +204,7 @@ static int proc_read_io(ProcInfo *item) {
     }
 
     /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
+     * there on older kernels, or on kernels without task IO
      * accounting. If it is missing, just bail out.
      */
     if (access(iofile, F_OK) < 0) {
@@ -265,7 +265,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
         PTRACE_NEXTSTOP = PTRACE_SYSCALL;
     }
 
-    /* TODO We need to find a way to stop tracing all of our children 
+    /* TODO We need to find a way to stop tracing all of our children
      * if we encounter an error so that we don't leave a lot of processes
      * hanging around in the t state
      */
@@ -371,7 +371,7 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
 
                     /* If this is the main process, then get the exit status.
                      * We have to do this here because the normal exit status
-                     * we get from wait4 above does not properly capture the 
+                     * we get from wait4 above does not properly capture the
                      * exit status of signalled processes.
                      */
                     if (cpid == main) {
@@ -537,18 +537,18 @@ int printYAMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
                      "%*s    syscr: %"PRIu64"\n"
                      "%*s    syscw: %"PRIu64"\n",
                      indent, "", i->pid,
-                     indent, "", i->ppid, 
-                     indent, "", i->pid, 
+                     indent, "", i->ppid,
+                     indent, "", i->pid,
                      indent, "", i->exe,
                      indent, "", i->start,
                      indent, "", i->stop,
                      indent, "", i->utime,
                      indent, "", i->stime,
                      indent, "", i->iowait,
-                     indent, "", i->fin_threads, 
-                     indent, "", i->max_threads, 
+                     indent, "", i->fin_threads,
+                     indent, "", i->max_threads,
                      indent, "", i->tot_threads,
-                     indent, "", i->vmpeak, 
+                     indent, "", i->vmpeak,
                      indent, "", i->rsspeak,
                      indent, "", i->rchar,
                      indent, "", i->wchar,
@@ -620,4 +620,3 @@ void deleteProcInfo(ProcInfo *procs) {
         free(p);
     }
 }
-

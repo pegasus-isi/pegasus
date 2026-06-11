@@ -204,7 +204,7 @@
         2023-03-04 11:56:37,635    INFO:  Stats: Total 3 transfers, 1.3 KB transferred in 4 seconds. Rate: 339.9 B/s (2.7 Kb/s)
         2023-03-04 11:56:37,635    INFO:         Between sites local->local : 3 transfers, 1.3 KB transferred in 4 seconds. Rate: 339.9 B/s (2.7 Kb/s)
         2023-03-04 11:56:37,636    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_381836/ks.err.RDjsHL
       descriptor: 4

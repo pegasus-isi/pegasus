@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

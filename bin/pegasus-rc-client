@@ -20,4 +20,3 @@ nice "${JAVA}" \
        "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
        "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
        $addon edu.isi.pegasus.planner.client.RCClient $args
-

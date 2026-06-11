@@ -16,7 +16,7 @@ Build-Depends: debhelper (>= 9),
        python3-setuptools-scm,
        zlib1g-dev
 Standards-Version: 3.9.4
-X-Python3-Version: >= 3.6
+X-Python3-Version: >= 3.10
 Homepage: https://pegasus.isi.edu
 
 Package: pegasus
@@ -34,4 +34,3 @@ Description: Workflow management system for HTCondor, Grid, and Clouds
  application is formalized as a workflow the Pegasus Workflow
  Management Service can map it onto available compute resources
  and execute the steps in appropriate order.
-

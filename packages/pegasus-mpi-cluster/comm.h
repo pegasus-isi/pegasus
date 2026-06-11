@@ -19,4 +19,3 @@ public:
 };
 
 #endif /* COMM_H */
-

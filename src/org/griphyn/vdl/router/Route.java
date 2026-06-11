@@ -16,12 +16,14 @@ package org.griphyn.vdl.router;
 
 // java.util.List clashes with org.griphyn.vdl.classes.List
 import edu.isi.pegasus.common.util.Separator;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class traverses the dependency tree. The tree is built by {@link Derivation} objects. The
@@ -311,7 +313,8 @@ public class Route {
             }
             return result;
         }
-    };
+    }
+    ;
 
     /**
      * Stores a reference to the underlying data as top-of-stack. At the bottom of the stack,
@@ -473,12 +476,12 @@ public class Route {
 
         // traverse Value tree
         switch (v.getContainerType()) {
-                // this is a regular SCALAR
+            // this is a regular SCALAR
             case org.griphyn.vdl.classes.Value.SCALAR:
                 appendScalarDaxLeaf((Scalar) v, result);
                 break;
 
-                // this is a regular LIST
+            // this is a regular LIST
             case org.griphyn.vdl.classes.Value.LIST:
                 org.griphyn.vdl.classes.List list = (org.griphyn.vdl.classes.List) v;
                 if (prefix != null && prefix.length() > 0) result.add(new PseudoText(prefix));
@@ -1168,9 +1171,9 @@ public class Route {
                     final String m =
                             "requestDerivation("
                                     + id
-                                    + ") reached an unreachable branch. "
-                                    + "I am not quite prepared for this, so I will rather exit now than "
-                                    + "create havoc. Please contact support, supply your data and actions.";
+                                    + ") reached an unreachable branch. I am not quite prepared for"
+                                    + " this, so I will rather exit now than create havoc. Please"
+                                    + " contact support, supply your data and actions.";
                     throw new RuntimeException(m);
                 }
             } else {

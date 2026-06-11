@@ -3,20 +3,20 @@
 
 #include <sys/types.h>
 
-extern 
-void 
+extern
+void
 pegasus_statfs( char* buffer, size_t capacity );
 
-extern 
+extern
 void
 pegasus_loadavg( char* buffer, size_t capacity );
 
 extern
 void
-pegasus_meminfo( char* buffer, size_t capacity ); 
+pegasus_meminfo( char* buffer, size_t capacity );
 
 extern
 void
-pegasus_cpuinfo( char* buffer, size_t capacity ); 
+pegasus_cpuinfo( char* buffer, size_t capacity );
 
 #endif // _PEGASUS_LINUX_HH

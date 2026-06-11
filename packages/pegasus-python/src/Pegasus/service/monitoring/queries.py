@@ -82,7 +82,7 @@ class WorkflowQueries:
         if isinstance(use_cache, bool):
             self._use_cache = use_cache
         else:
-            raise TypeError("Expecting boolean, found %s" % type(use_cache))
+            raise TypeError(f"Expecting boolean, found {type(use_cache)}")
 
     def _cache_key_from_query(self, stmt):
         compiled = stmt.set_label_style(LABEL_STYLE_TABLENAME_PLUS_COL).compile()
@@ -95,13 +95,13 @@ class WorkflowQueries:
 
     def _get_count(self, stmt, use_cache=True, timeout=60):
         count_stmt = select(func.count()).select_from(stmt.subquery())
-        cache_key = "%s.count" % self._cache_key_from_query(count_stmt)
+        cache_key = f"{self._cache_key_from_query(count_stmt)}.count"
         if use_cache and cache.get(cache_key):
-            log.debug("Cache Hit: %s" % cache_key)
+            log.debug(f"Cache Hit: {cache_key}")
             count = cache.get(cache_key)
 
         else:
-            log.debug("Cache Miss: %s" % cache_key)
+            log.debug(f"Cache Miss: {cache_key}")
             count = self.session.execute(count_stmt).scalar()
             t = timeout(count) if callable(timeout) else timeout
             cache.set(cache_key, count, t)
@@ -109,13 +109,13 @@ class WorkflowQueries:
         return count
 
     def _get_all(self, stmt, use_cache=True, timeout=60, scalars=True):
-        cache_key = "%s.all" % self._cache_key_from_query(stmt)
+        cache_key = f"{self._cache_key_from_query(stmt)}.all"
         if use_cache and cache.get(cache_key):
-            log.debug("Cache Hit: %s" % cache_key)
+            log.debug(f"Cache Hit: {cache_key}")
             record = cache.get(cache_key)
 
         else:
-            log.debug("Cache Miss: %s" % cache_key)
+            log.debug(f"Cache Miss: {cache_key}")
             result = self.session.execute(stmt)
             record = (
                 result.scalars().unique().all() if scalars else result.unique().all()
@@ -126,13 +126,13 @@ class WorkflowQueries:
         return record
 
     def _get_one(self, stmt, use_cache=True, timeout=60, scalars=True):
-        cache_key = "%s.one" % self._cache_key_from_query(stmt)
+        cache_key = f"{self._cache_key_from_query(stmt)}.one"
         if use_cache and cache.get(cache_key):
-            log.debug("Cache Hit: %s" % cache_key)
+            log.debug(f"Cache Hit: {cache_key}")
             record = cache.get(cache_key)
 
         else:
-            log.debug("Cache Miss: %s" % cache_key)
+            log.debug(f"Cache Miss: {cache_key}")
             result = self.session.execute(stmt)
             record = result.scalars().one() if scalars else result.one()
             t = timeout(record) if callable(timeout) else timeout
@@ -149,14 +149,14 @@ class WorkflowQueries:
             x = query_parse(query, **resource)
             q = q.where(x[0])
         except (KeyError, AttributeError):
-            log.exception("Invalid query %s" % query)
-            raise InvalidQueryError("Invalid query %s" % query)
+            log.exception(f"Invalid query {query}")
+            raise InvalidQueryError(f"Invalid query {query}")
         except NameError as e:
-            log.exception("Invalid field %s" % e)
-            raise InvalidQueryError("Invalid field %s" % e)
+            log.exception(f"Invalid field {e}")
+            raise InvalidQueryError(f"Invalid field {e}")
         except Exception:
-            log.exception("Invalid query %s" % query)
-            raise InvalidQueryError("Invalid query %s" % query)
+            log.exception(f"Invalid query {query}")
+            raise InvalidQueryError(f"Invalid query {query}")
 
         return q
 
@@ -172,7 +172,7 @@ class WorkflowQueries:
                 field = getattr(resource[prefix], identifier)
             except (KeyError, AttributeError):
                 log.exception(f"Invalid field {prefix}.{identifier}")
-                raise InvalidSortError("Invalid field %r" % identifier)
+                raise InvalidSortError(f"Invalid field {identifier!r}")
 
             if sort_dir == "ASC":
                 q = q.order_by(field)
@@ -324,18 +324,16 @@ class MasterWorkflowQueries(WorkflowQueries):
             return record
 
         except NoResultFound as e:
-            log.exception("Not Found: Root Workflow for given m_wf_id (%s)" % m_wf_id)
+            log.exception(f"Not Found: Root Workflow for given m_wf_id ({m_wf_id})")
             raise e
 
     def _get_max_master_workflow_state(self, m_wf_id=None, mws=MasterWorkflowstate):
         qmax = self._get_recent_master_workflow_state(m_wf_id, mws)
         qmax = qmax.subquery("max_timestamp")
 
-        q = select(mws).join(
+        return select(mws).join(
             qmax, and_(mws.wf_id == qmax.c.wf_id, mws.timestamp == qmax.c.max_time)
         )
-
-        return q
 
     def _get_recent_master_workflow_state(self, m_wf_id=None, mws=MasterWorkflowstate):
         q = select(mws.wf_id, func.max(mws.timestamp).label("max_time"))
@@ -344,9 +342,7 @@ class MasterWorkflowQueries(WorkflowQueries):
             log.debug("filter on m_wf_id")
             q = q.where(mws.wf_id == m_wf_id)
 
-        q = q.group_by(mws.wf_id)
-
-        return q
+        return q.group_by(mws.wf_id)
 
 
 class StampedeWorkflowQueries(WorkflowQueries):
@@ -651,11 +647,9 @@ class StampedeWorkflowQueries(WorkflowQueries):
         qmax = self._get_recent_workflow_state(wf_id, ws)
         qmax = qmax.subquery("max_timestamp")
 
-        q = select(ws).join(
+        return select(ws).join(
             qmax, and_(ws.wf_id == qmax.c.wf_id, ws.timestamp == qmax.c.max_time)
         )
-
-        return q
 
     def _get_recent_workflow_state(self, wf_id=None, ws=Workflowstate):
         q = select(ws.wf_id, func.max(ws.timestamp).label("max_time"))
@@ -664,9 +658,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             log.debug("filter on wf_id")
             q = q.where(ws.wf_id == wf_id)
 
-        q = q.group_by(ws.wf_id)
-
-        return q
+        return q.group_by(ws.wf_id)
 
     # Job
 
@@ -912,9 +904,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             log.debug("filter on job_instance_id")
             q = q.where(js.job_instance_id == job_instance_id)
 
-        q = q.group_by(js.job_instance_id)
-
-        return q
+        return q.group_by(js.job_instance_id)
 
     # Task
 
@@ -1224,9 +1214,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
             log.debug("filter on job_id")
             q = q.where(ji.job_id == job_id)
 
-        q = q.group_by(ji.job_id)
-
-        return q
+        return q.group_by(ji.job_id)
 
     # Invocation
 
@@ -1492,15 +1480,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.where(Job.job_id == JobInstance.job_id)
 
         q = q.where(Job.wf_id == wf_id)
-        q = q.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode == 0
-        )  # noqa: E711
+        q = q.where(JobInstance.exitcode != None).where(JobInstance.exitcode == 0)  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode == 0
-        )  # noqa: E711
+        qjss = qjss.where(JobInstance.exitcode != None).where(JobInstance.exitcode == 0)  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1576,15 +1560,11 @@ class StampedeWorkflowQueries(WorkflowQueries):
         q = q.where(Job.job_id == JobInstance.job_id)
 
         q = q.where(Job.wf_id == wf_id)
-        q = q.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode != 0
-        )  # noqa: E711
+        q = q.where(JobInstance.exitcode != None).where(JobInstance.exitcode != 0)  # noqa: E711
 
         # Recent
         qjss = self._get_recent_job_instance()
-        qjss = qjss.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode != 0
-        )  # noqa: E711
+        qjss = qjss.where(JobInstance.exitcode != None).where(JobInstance.exitcode != 0)  # noqa: E711
         qjss = qjss.subquery("max_jss")
 
         q = q.join(
@@ -1659,9 +1639,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         )
 
         q = q.where(Job.wf_id == wf_id)
-        q = q.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode != 0
-        )  # noqa: E711
+        q = q.where(JobInstance.exitcode != None).where(JobInstance.exitcode != 0)  # noqa: E711
 
         q = q.where(Job.job_id == JobInstance.job_id)
 
@@ -1682,9 +1660,7 @@ class StampedeWorkflowQueries(WorkflowQueries):
         # Recent
         qjss = self._get_recent_job_instance()
         qjss = qjss.where(Job.wf_id == wf_id)
-        qjss = qjss.where(JobInstance.exitcode != None).where(
-            JobInstance.exitcode != 0
-        )  # noqa: E711
+        qjss = qjss.where(JobInstance.exitcode != None).where(JobInstance.exitcode != 0)  # noqa: E711
 
         qjss = qjss.where(Job.job_id == JobInstance.job_id)
         qjss = qjss.subquery("allmaxjss")

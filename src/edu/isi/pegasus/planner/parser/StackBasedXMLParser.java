@@ -20,12 +20,14 @@ package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 
 /**
  * An abstract base class that XML Parsers can use if they use stack internally to store the

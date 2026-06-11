@@ -105,7 +105,7 @@ int startBasicMachine(FILE *out, int indent, const char* tag,
 
     /* <machine> open tag */
     fprintf(out, "%*s%s:\n", indent-2, "", tag);
-    fprintf(out, "%*s  page-size: %lu\n", indent-2, "", 
+    fprintf(out, "%*s  page-size: %lu\n", indent-2, "",
                  machine->pagesize);
 
     /* <uname> */
@@ -179,4 +179,3 @@ void deleteBasicMachine(void* data) {
         free(data);
     }
 }
-

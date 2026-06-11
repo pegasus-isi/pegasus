@@ -9,5 +9,3 @@ pegasus.condor.logs.symlink = false
 # instead pegasus should transfer it only for
 # site condorpool
 # pegasus.transfer.worker.package true
-
-

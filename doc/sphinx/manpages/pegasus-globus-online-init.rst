@@ -54,5 +54,5 @@ Options
    collections in them. Access can be revoked from the globus web interface.
 
 **-d**; \ **--domains**
-   A list of domain requirements that must be satisfied by the valid identities 
+   A list of domain requirements that must be satisfied by the valid identities
    of the user under globus auth. The token generated will be granted the domain.

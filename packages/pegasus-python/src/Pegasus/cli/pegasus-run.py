@@ -27,9 +27,9 @@ def check_dag(dag_file):
     dag_file = Path(dag_file)
 
     if not dag_file.is_file():
-        raise FileNotFoundError("%s not found" % dag_file)
-    elif not os.access(str(dag_file), os.R_OK):
-        raise PermissionError("%s is not readable" % dag_file)
+        raise FileNotFoundError(f"{dag_file} not found")
+    if not os.access(str(dag_file), os.R_OK):
+        raise PermissionError(f"{dag_file} is not readable")
 
     log.debug("# found %s", dag_file)
 
@@ -39,9 +39,9 @@ def check_dag_sub_file(dag_sub_file):
     dag_sub_file = Path(dag_sub_file)
 
     if not dag_sub_file.is_file():
-        raise FileNotFoundError("%s not found" % dag_sub_file)
-    elif not os.access(str(dag_sub_file), os.R_OK):
-        raise PermissionError("%s is not readable" % dag_sub_file)
+        raise FileNotFoundError(f"{dag_sub_file} not found")
+    if not os.access(str(dag_sub_file), os.R_OK):
+        raise PermissionError(f"{dag_sub_file} is not readable")
 
     log.debug("# dagman condor submit file is %s", dag_sub_file)
 
@@ -52,8 +52,8 @@ def get_condor_submit():
 
     if condor_submit is None:
         raise FileNotFoundError("condor_submit not found")
-    elif not os.access(condor_submit, os.X_OK):
-        raise PermissionError("%s is not executable" % condor_submit)
+    if not os.access(condor_submit, os.X_OK):
+        raise PermissionError(f"{condor_submit} is not executable")
 
     log.debug("# found %s", condor_submit)
     return condor_submit
@@ -64,9 +64,9 @@ def get_grid_proxy_info(globus_location):
     grid_proxy_info = Path(globus_location) / "bin" / "grid-proxy-info"
 
     if not grid_proxy_info.exists():
-        raise FileNotFoundError("%s not found" % grid_proxy_info)
-    elif not os.access(str(grid_proxy_info), os.X_OK):
-        raise PermissionError("%s is not executable" % grid_proxy_info)
+        raise FileNotFoundError(f"{grid_proxy_info} not found")
+    if not os.access(str(grid_proxy_info), os.X_OK):
+        raise PermissionError(f"{grid_proxy_info} is not executable")
 
     log.debug("# found %s", grid_proxy_info)
     return str(grid_proxy_info)
@@ -79,7 +79,7 @@ def salvage_log_file(condor_log):
     if condor_log.exists():
         cl = str(condor_log)
         for i in range(1000):
-            _cl = cl + ".%03d" % i
+            _cl = cl + f".{i:03d}"
             if not Path(_cl).exists():
                 log.debug("# log $result exists, rescuing from DAGMan.")
                 try:
@@ -97,10 +97,10 @@ def grid_check():
     if globus_location is None:
         raise ValueError(
             "Your environment setup misses GLOBUS_LOCATION.\n"
-            + "Please check carefully that you have sourced the correct setup files!",
+            "Please check carefully that you have sourced the correct setup files!",
         )
 
-    log.debug("# GLOBUS_LOCATION=%s" % globus_location)
+    log.debug(f"# GLOBUS_LOCATION={globus_location}")
 
     # sanity check: Is GLOBUS_LOCCATION part of LD_LIBRARY_PATH?
     llp = os.environ.get("LD_LIBRARY_PATH", "")
@@ -120,22 +120,21 @@ def grid_check():
     ec = rv.returncode
 
     if ec & 127:
-        raise ValueError("%s died on signal %d" % (gpi, ec & 127))
-    elif ec != 0:
-        raise ValueError("%s exited with status %d" % (gpi, ec))
+        raise ValueError(f"{gpi} died on signal {ec & 127:d}")
+    if ec != 0:
+        raise ValueError(f"{gpi} exited with status {ec:d}")
 
     time_left = int(rv.stdout.decode().strip())
     if time_left == -1:
         raise ValueError("Grid proxy not initialized, Please generate a new proxy")
-    elif time_left == 0:
+    if time_left == 0:
         raise ValueError("Grid proxy expired, please refresh")
-    elif time_left < 7200:
+    if time_left < 7200:
         raise ValueError(
-            "Too little time left (%d s) on grid proxy. Please refresh your proxy"
-            % time_left
+            f"Too little time left ({time_left:d} s) on grid proxy. Please refresh your proxy"
         )
 
-    log.debug("# grid proxy has %d s left" % time_left)
+    log.debug(f"# grid proxy has {time_left:d} s left")
 
 
 def exec_dag(dag_sub_file, condor_log):
@@ -146,10 +145,10 @@ def exec_dag(dag_sub_file, condor_log):
     check_dag_sub_file(dag_sub_file)
 
     salvage_log_file(condor_log)
-    click.secho("Submitting to condor %s" % dag_sub_file, err=True)
+    click.secho(f"Submitting to condor {dag_sub_file}", err=True)
     cmd = (condor_submit, "-terse", dag_sub_file)
 
-    rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    rv = subprocess.run(cmd, capture_output=True)
     rv.check_returncode()
     return float(rv.stdout.decode().split("-")[0].strip())
 
@@ -159,11 +158,11 @@ def exec_script(script):
     script = Path(script)
 
     if not script.is_file():
-        raise FileNotFoundError("%s not found" % script)
-    elif not os.access(str(script), os.X_OK):
-        raise PermissionError("%s is not executable" % script)
+        raise FileNotFoundError(f"{script} not found")
+    if not os.access(str(script), os.X_OK):
+        raise PermissionError(f"{script} is not executable")
 
-    log.debug("# found %s" % script)
+    log.debug(f"# found {script}")
 
     cmd = ("/bin/bash", str(script))
     rv = subprocess.run(cmd)
@@ -187,7 +186,11 @@ def exec_script(script):
     help="Output in JSON format.",
 )
 @click.option(
-    "-v", "--verbose", default=0, count=True, help="Raises debug level by 1.",
+    "-v",
+    "--verbose",
+    default=0,
+    count=True,
+    help="Raises debug level by 1.",
 )
 @click.argument(
     "submit-dir",
@@ -207,7 +210,7 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
     if not config:
         click.secho(
             click.style("Error: ", fg="red", bold=True)
-            + "%s is not a valid submit-dir" % submit_dir
+            + f"{submit_dir} is not a valid submit-dir"
         )
         ctx.exit(1)
 
@@ -216,7 +219,7 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
     except PermissionError:
         click.secho(
             click.style("Error: ", fg="red", bold=True)
-            + "Cannot change to directory %s" % submit_dir
+            + f"Cannot change to directory {submit_dir}"
         )
         ctx.exit(1)
 
@@ -264,25 +267,23 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
                 click.echo(dumps(config))
             else:
                 click.secho(
-                    """Submitting job(s).
-1 job(s) submitted to cluster %(job_id)d."""
-                    % {"job_id": job_id,},
+                    f"""Submitting job(s).
+1 job(s) submitted to cluster {job_id}.""",
                     err=True,
                 )
                 click.secho(
-                    """
+                    f"""
 Your workflow has been started and is running in the base directory:
 
-%(submit_dir)s
+{submit_dir}
 
 *** To monitor the workflow you can run ***
 
-pegasus-status -l %(submit_dir)s
+pegasus-status -l {submit_dir}
 
 *** To remove your workflow run ***
 
-pegasus-remove %(submit_dir)s"""
-                    % {"submit_dir": submit_dir}
+pegasus-remove {submit_dir}"""
                 )
         except (FileNotFoundError, PermissionError, ValueError) as e:
             click.secho(click.style("Error: ", fg="red", bold=True) + str(e))
@@ -292,7 +293,7 @@ pegasus-remove %(submit_dir)s"""
             if rc != 0:
                 click.secho(
                     click.style("Error: ", fg="red", bold=True)
-                    + "Running %s failed with %d" % (e.cmd, rc)
+                    + f"Running {e.cmd} failed with {rc:d}"
                 )
                 click.secho(
                     click.style("Message: ", fg="red", bold=True)
@@ -319,7 +320,7 @@ pegasus-remove %(submit_dir)s"""
             if rc != 0:
                 click.secho(
                     click.style("Error: ", fg="red", bold=True)
-                    + "Running %s failed with %d" % (config["script"], rc)
+                    + f"Running {config['script']} failed with {rc:d}"
                 )
                 ctx.exit(rc)
 

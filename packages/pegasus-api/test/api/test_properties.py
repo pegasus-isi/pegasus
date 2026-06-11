@@ -62,10 +62,8 @@ def test_set_item(k, v, props):
 def test__check_key(property_list, expected_result):
     for property in property_list:
         result = Properties._check_key(property)
-        assert (
-            result == expected_result
-        ), "Properties._check_key('{}') returned {} but {} was expected".format(
-            property, result, expected_result
+        assert result == expected_result, (
+            f"Properties._check_key('{property}') returned {result} but {expected_result} was expected"
         )
 
 
@@ -152,13 +150,12 @@ def test_add_invalid_site_profile(site, namespace, k, v, props):
 
 
 @pytest.mark.parametrize(
-    "site, namespace, k", [("condorpool", "condor", "+testKey")],
+    "site, namespace, k",
+    [("condorpool", "condor", "+testKey")],
 )
 def test_get_site_profile_key(site, namespace, k):
     key = Properties._get_site_profile_key(site, namespace, k)
-    assert key == "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
-        site=site, namespace=namespace, key=k
-    )
+    assert key == f"pegasus.catalog.site.sites.{site}.profiles.{namespace}.{k}"
 
 
 def test_write_str_filename(props):

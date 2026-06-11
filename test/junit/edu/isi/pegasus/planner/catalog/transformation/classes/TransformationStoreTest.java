@@ -24,13 +24,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class TransformationStoreTest {
 
     private TestSetup mTestSetup;
@@ -68,7 +71,8 @@ public class TransformationStoreTest {
         // following only works in singularity because a suffix is added as suffix to singularity
         // lfn
         "centos-pegasus, singularity, centos-pegasus, docker:///pegasus/centos-pegasus:latest",
-        "centos-pegasus, singularity, centos-pegasus, http:///pegasus.isi.edu/images/singularity/centos-pegasus.tar",
+        "centos-pegasus, singularity, centos-pegasus,"
+                + " http:///pegasus.isi.edu/images/singularity/centos-pegasus.tar",
     })
     public void testDifferentTXNameWithContainer(
             String txName, String containerType, String containerName, String imageURL) {
@@ -85,7 +89,8 @@ public class TransformationStoreTest {
     @ParameterizedTest
     @CsvSource({
         "centos-pegasus, docker, centos-pegasus, docker:///pegasus/centos-pegasus:latest",
-        "centos-pegasus.tar, singularity, centos-pegasus, http:///pegasus.isi.edu/images/singularity/centos-pegasus.tar",
+        "centos-pegasus.tar, singularity, centos-pegasus,"
+                + " http:///pegasus.isi.edu/images/singularity/centos-pegasus.tar",
     })
     public void testSameTXNameWithContainer(
             String txName, String containerType, String containerName, String imageURL) {

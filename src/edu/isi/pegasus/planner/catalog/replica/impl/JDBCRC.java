@@ -19,13 +19,15 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.common.PegasusDBAdmin;
+
+import org.sqlite.SQLiteConfig;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.*;
 import java.util.*;
-import org.sqlite.SQLiteConfig;
 
 /**
  * This class implements a replica catalog on top of a simple table in a JDBC database. This enables
@@ -123,9 +125,11 @@ public class JDBCRC implements ReplicaCatalog {
     private static final String mCStatements[] = { // 0:
         "SELECT m.key,m.value FROM rc_meta m WHERE lfn_id=?",
         // 1:
-        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=?",
+        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE"
+                + " l.lfn=?",
         // 2:
-        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE l.lfn=? AND p.site=?",
+        "SELECT l.lfn_id,p.pfn,p.site FROM rc_lfn l LEFT JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE"
+                + " l.lfn=? AND p.site=?",
         // 3:
         "DELETE p FROM rc_pfn p INNER JOIN rc_lfn l ON l.lfn_id=p.lfn_id AND l.lfn=? AND p.pfn=?",
         // 4:
@@ -147,7 +151,8 @@ public class JDBCRC implements ReplicaCatalog {
         // 10:
         "DELETE l FROM rc_lfn l INNER JOIN rc_pfn p ON l.lfn_id=p.lfn_id WHERE p.site=?",
         // 11:
-        "DELETE FROM rc_pfn WHERE pfn_id IN (SELECT pfn_id FROM rc_lfn INNER JOIN rc_pfn ON rc_lfn.lfn=? AND rc_pfn.pfn=?)",
+        "DELETE FROM rc_pfn WHERE pfn_id IN (SELECT pfn_id FROM rc_lfn INNER JOIN rc_pfn ON"
+                + " rc_lfn.lfn=? AND rc_pfn.pfn=?)",
         // 12:
         "INSERT INTO rc_lfn(lfn) VALUES(?)",
         // 13:
@@ -161,9 +166,11 @@ public class JDBCRC implements ReplicaCatalog {
         // 17:
         "UPDATE rc_meta SET value=? WHERE lfn_id=? and `key`=?",
         // 18:
-        "DELETE l FROM rc_lfn l LEFT JOIN rc_pfn p ON p.lfn_id=l.lfn_id WHERE l.lfn=? AND p.lfn_id IS NULL",
+        "DELETE l FROM rc_lfn l LEFT JOIN rc_pfn p ON p.lfn_id=l.lfn_id WHERE l.lfn=? AND p.lfn_id"
+                + " IS NULL",
         // 19:
-        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT rc_lfn.lfn_id FROM rc_lfn LEFT JOIN rc_pfn ON rc_lfn.lfn_id=rc_pfn.lfn_id WHERE rc_lfn.lfn=? AND rc_pfn.lfn_id IS NULL)"
+        "DELETE FROM rc_lfn WHERE lfn_id IN (SELECT rc_lfn.lfn_id FROM rc_lfn LEFT JOIN rc_pfn ON"
+                + " rc_lfn.lfn_id=rc_pfn.lfn_id WHERE rc_lfn.lfn=? AND rc_pfn.lfn_id IS NULL)"
     };
 
     /** Remembers if obtaining generated keys will work or not. */
@@ -334,7 +341,8 @@ public class JDBCRC implements ReplicaCatalog {
                     e,
                     LogManager.ERROR_MESSAGE_LEVEL);
             mLogger.log(
-                    "Also checkout the properties file to make sure right connection properties are specified "
+                    "Also checkout the properties file to make sure right connection properties are"
+                            + " specified "
                             + propertiesFile,
                     LogManager.ERROR_MESSAGE_LEVEL);
             return result;

@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.partitioner;
 import edu.isi.pegasus.planner.cluster.Clusterer;
 import edu.isi.pegasus.planner.cluster.ClustererException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.List;
 
 /**

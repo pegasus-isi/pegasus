@@ -103,16 +103,14 @@ class Notifications:
                 logger.info("error sending SIGTERM to notification script...")
             # Wait for child to finish
             logger.warning(
-                "waiting for notification process to finish: %s - %s"
-                % (my_notification, my_action)
+                f"waiting for notification process to finish: {my_notification} - {my_action}"
             )
             time.sleep(WAIT_CHILD_FINISH)
             my_p.poll()
             if my_p.returncode is None:
                 # Send SIGKILL now...
                 logger.warning(
-                    "killing notification process to finish: %s - %s"
-                    % (my_notification, my_action)
+                    f"killing notification process to finish: {my_notification} - {my_action}"
                 )
                 try:
                     os.kill(my_pid, signal.SIGKILL)
@@ -141,7 +139,7 @@ class Notifications:
 
         # Step 1: Look at existing notifications
         if len(self._active_notifications) > 0:
-            logger.info("active notifications: %d" % len(self._active_notifications))
+            logger.info(f"active notifications: {len(self._active_notifications):d}")
             # We have active notifications, let's check on their statuses
             my_notif_index = 0
             while my_notif_index < len(self._active_notifications):
@@ -163,38 +161,35 @@ class Notifications:
                         my_finished_out_fd.close()
                     except OSError:
                         logger.warning(
-                            "error closing stdout file for notification %s... continuing..."
-                            % (my_finished_notification)
+                            f"error closing stdout file for notification {my_finished_notification}... continuing..."
                         )
                     try:
                         my_finished_err_fd.close()
                     except OSError:
                         logger.warning(
-                            "error closing stderr file for notification %s... continuing..."
-                            % (my_finished_notification)
+                            f"error closing stderr file for notification {my_finished_notification}... continuing..."
                         )
 
                     if self._notifications_log is not None:
                         if logger.isEnabledFor(logging.INFO):
                             self._notifications_log.write("%s\n" % ("-" * 80))
                             self._notifications_log.write(
-                                "Notification time  : %s\n" % (utils.isodate())
+                                f"Notification time  : {utils.isodate()}\n"
                             )
                             self._notifications_log.write(
-                                "Notification event : %s\n" % (my_finished_notification)
+                                f"Notification event : {my_finished_notification}\n"
                             )
                             self._notifications_log.write(
-                                "Notification action: %s\n" % (my_finished_action)
+                                f"Notification action: {my_finished_action}\n"
                             )
                             self._notifications_log.write(
-                                "Notification status: %s\n" % (my_status)
+                                f"Notification status: {my_status}\n"
                             )
                             self._notifications_log.write("\n")
                             self._notifications_log.write("Notification environment\n")
                             for k in my_finished_notification_params:
                                 self._notifications_log.write(
-                                    "%s : %s\n"
-                                    % (k, my_finished_notification_params[k])
+                                    f"{k} : {my_finished_notification_params[k]}\n"
                                 )
                             self._notifications_log.write("\n")
                             self._notifications_log.write("stdout:\n")
@@ -204,8 +199,7 @@ class Notifications:
                                     self._notifications_log.write(line)
                             except OSError:
                                 logger.warning(
-                                    "error processing notification stdout file: %s. continuing..."
-                                    % (my_finished_out_fn)
+                                    f"error processing notification stdout file: {my_finished_out_fn}. continuing..."
                                 )
                             else:
                                 my_f.close()
@@ -217,8 +211,7 @@ class Notifications:
                                     self._notifications_log.write(line)
                             except OSError:
                                 logger.warning(
-                                    "error processing notification stderr file: %s. continuing..."
-                                    % (my_finished_err_fn)
+                                    f"error processing notification stderr file: {my_finished_err_fn}. continuing..."
                                 )
                             else:
                                 my_f.close()
@@ -227,13 +220,7 @@ class Notifications:
                         else:
                             # Only log a one-liner so we can debug things later if we need to
                             self._notifications_log.write(
-                                "%s - %s - %s - %s\n"
-                                % (
-                                    utils.isodate(),
-                                    my_finished_notification,
-                                    my_finished_action,
-                                    my_status,
-                                )
+                                f"{utils.isodate()} - {my_finished_notification} - {my_finished_action} - {my_status}\n"
                             )
                     else:
                         logger.critical(
@@ -246,15 +233,13 @@ class Notifications:
                         os.unlink(my_finished_out_fn)
                     except OSError:
                         logger.warning(
-                            "error deleting notification stdout file: %s. continuing..."
-                            % (my_finished_out_fn)
+                            f"error deleting notification stdout file: {my_finished_out_fn}. continuing..."
                         )
                     try:
                         os.unlink(my_finished_err_fn)
                     except OSError:
                         logger.warning(
-                            "error deleting notification stderr file: %s. continuing..."
-                            % (my_finished_err_fn)
+                            f"error deleting notification stderr file: {my_finished_err_fn}. continuing..."
                         )
 
                     # Delete this notification from our list
@@ -267,9 +252,7 @@ class Notifications:
         while len(self._pending_notifications) > 0:
             # Ok we have notifications to service...
             # print "pending notifications: %s" % (len(self._pending_notifications))
-            logger.info(
-                "pending notifications: %s" % (len(self._pending_notifications))
-            )
+            logger.info(f"pending notifications: {len(self._pending_notifications)}")
 
             # Check if we have reached the maximum number of concurrent notifications
             if len(self._active_notifications) > self._max_parallel_notifications:
@@ -291,7 +274,8 @@ class Notifications:
             my_complete_env.update(my_env)
             try:
                 my_notification = "{} - {}".format(
-                    my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"],
+                    my_env["PEGASUS_JOBID"],
+                    my_env["PEGASUS_EVENT"],
                 )
             except KeyError:
                 logger.warning(
@@ -316,8 +300,7 @@ class Notifications:
                 my_err_fn = my_temp_err[1]
             except OSError:
                 logger.warning(
-                    "cannot create temp files for notification: %s... skipping..."
-                    % (my_notification)
+                    f"cannot create temp files for notification: {my_notification}... skipping..."
                 )
                 continue
 
@@ -327,8 +310,7 @@ class Notifications:
                 my_f_err = open(my_err_fn, "w")
             except OSError:
                 logger.warning(
-                    "cannot open temp files for notification: %s... skipping..."
-                    % (my_notification)
+                    f"cannot open temp files for notification: {my_notification}... skipping..."
                 )
                 try:
                     os.unlink(my_out_fn)
@@ -345,8 +327,7 @@ class Notifications:
                 )
             except OSError:
                 logger.warning(
-                    "cannot start notification executable: %s... skipping..."
-                    % (my_notification)
+                    f"cannot start notification executable: {my_notification}... skipping..."
                 )
                 try:
                     my_f_out.close()
@@ -355,16 +336,14 @@ class Notifications:
                     os.unlink(my_err_fn)
                 except OSError:
                     logger.warning(
-                        "found problem cleaning up notification: %s... skipping..."
-                        % (my_notification)
+                        f"found problem cleaning up notification: {my_notification}... skipping..."
                     )
                     continue
                 # Clean up ok, just continue
                 continue
             except Exception:
                 logger.warning(
-                    "problem starting notification: %s... skipping..."
-                    % (my_notification)
+                    f"problem starting notification: {my_notification}... skipping..."
                 )
                 try:
                     my_f_out.close()
@@ -373,8 +352,7 @@ class Notifications:
                     os.unlink(my_err_fn)
                 except OSError:
                     logger.warning(
-                        "found problem cleaning up notification: %s... skipping..."
-                        % (my_notification)
+                        f"found problem cleaning up notification: {my_notification}... skipping..."
                     )
                     continue
                 # Clean up ok, just continue
@@ -397,7 +375,7 @@ class Notifications:
 
             # Add to the active list, and done!
             self._active_notifications.append(my_started_notification)
-            logger.info("started notification for: %s" % (my_notification))
+            logger.info(f"started notification for: {my_notification}")
 
         # Step 3: Check if any notifications ran over the allowed time
         if self._notifications_timeout > 0:
@@ -439,7 +417,8 @@ class Notifications:
             for my_action, my_env in self._pending_notifications:
                 try:
                     my_notification = "{} - {}".format(
-                        my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"],
+                        my_env["PEGASUS_JOBID"],
+                        my_env["PEGASUS_EVENT"],
                     )
                 except KeyError:
                     logger.warning(
@@ -447,8 +426,7 @@ class Notifications:
                     )
                     continue
                 logger.warning(
-                    "pending notification skipped: %s - %s"
-                    % (my_notification, my_action)
+                    f"pending notification skipped: {my_notification} - {my_action}"
                 )
 
         # Close notifications' log file
@@ -469,15 +447,14 @@ class Notifications:
         if notify_file is None:
             return 0
 
-        logger.info("loading notifications from %s" % (notify_file))
+        logger.info(f"loading notifications from {notify_file}")
 
         # Open file
         try:
             NOTIFY = open(notify_file)
         except OSError:
             logger.warning(
-                "cannot load notification file %s, continuing without notifications"
-                % (notify_file)
+                f"cannot load notification file {notify_file}, continuing without notifications"
             )
             return 0
 
@@ -502,18 +479,14 @@ class Notifications:
                 # This is an invocation notification, split and get all pieces
                 my_entry = line.split(None, 4)
                 if len(my_entry) != 5:
-                    logger.warning(
-                        "cannot parse notification: %s, skipping..." % (line)
-                    )
+                    logger.warning(f"cannot parse notification: {line}, skipping...")
                     continue
                 my_type = my_entry[0].lower()
                 my_id = my_entry[1]
                 try:
                     my_inv = int(my_entry[2])
                 except ValueError:
-                    logger.warning(
-                        "cannot parse notification: %s, skipping..." % (line)
-                    )
+                    logger.warning(f"cannot parse notification: {line}, skipping...")
                     continue
                 my_condition = my_entry[3]
                 my_action = my_entry[4]
@@ -521,9 +494,7 @@ class Notifications:
                 # This is a workflow/job notification, split and get all pieces
                 my_entry = line.split(None, 3)
                 if len(my_entry) != 4:
-                    logger.warning(
-                        "cannot parse notification: %s, skipping..." % (line)
-                    )
+                    logger.warning(f"cannot parse notification: {line}, skipping...")
                     continue
                 my_type = my_entry[0].lower()
                 my_id = my_entry[1]
@@ -535,8 +506,7 @@ class Notifications:
                 my_dict = my_notifications["workflow"]
                 if my_id != wf_uuid:
                     logger.warning(
-                        "workflow notification has id %s, our id is %s, skipping..."
-                        % (my_id, wf_uuid)
+                        f"workflow notification has id {my_id}, our id is {wf_uuid}, skipping..."
                     )
                     continue
 
@@ -545,23 +515,23 @@ class Notifications:
             elif my_type == "invocation":
                 my_dict = my_notifications["invocation"]
             else:
-                logger.warning("unknown notification type: %s, skipping..." % (line))
+                logger.warning(f"unknown notification type: {line}, skipping...")
                 continue
 
-            logger.debug("loading notification: %s" % (line))
+            logger.debug(f"loading notification: {line}")
             my_notifications_read = my_notifications_read + 1
 
             # Make sure id is in dictionary
-            if not my_id in my_dict:
+            if my_id not in my_dict:
                 my_dict[my_id] = {}
 
             # For invocations, one extra level...
             if my_type == "invocation":
                 my_dict = my_dict[my_id]
-                if not my_inv in my_dict:
+                if my_inv not in my_dict:
                     my_dict[my_inv] = {}
                 # Now add the notification condition, action pair
-                if not my_condition in my_dict[my_inv]:
+                if my_condition not in my_dict[my_inv]:
                     # No actions, start with the list
                     my_dict[my_inv][my_condition] = [my_action]
                 else:
@@ -569,14 +539,14 @@ class Notifications:
                     my_dict[my_inv][my_condition].append(my_action)
             else:
                 # Now add the notification condition, action pair
-                if not my_condition in my_dict[my_id]:
+                if my_condition not in my_dict[my_id]:
                     my_dict[my_id][my_condition] = [my_action]
                 else:
                     my_dict[my_id][my_condition].append(my_action)
 
         # Save our notifications for later use...
         if wf_uuid in self._notifications:
-            logger.debug("reloaded notifications for workflow %s" % (wf_uuid))
+            logger.debug(f"reloaded notifications for workflow {wf_uuid}")
         self._notifications[wf_uuid] = my_notifications
 
         # Close file
@@ -587,7 +557,7 @@ class Notifications:
 
         # Return number of notifications read
         logger.debug(
-            "loaded %d notifications for workflow %s" % (my_notifications_read, wf_uuid)
+            f"loaded {my_notifications_read:d} notifications for workflow {wf_uuid}"
         )
         return my_notifications_read
 
@@ -596,7 +566,7 @@ class Notifications:
         This function takes care of processing workflow-level notifications.
         """
         # Check if we have notifications for this workflow
-        if not wf._wf_uuid in self._notifications:
+        if wf._wf_uuid not in self._notifications:
             return
 
         # Get the notifications' dictionary for this workflow id
@@ -616,14 +586,13 @@ class Notifications:
             my_notifications = my_dict[wf._wf_uuid]
         else:
             logger.warning(
-                "notification has mismatching workflow id: %s different from %s"
-                % (wf._wf_uuid, str(my_dict))
+                f"notification has mismatching workflow id: {wf._wf_uuid} different from {str(my_dict)}"
             )
             return
 
         # Sanity check the state...
         if state != "start" and state != "end":
-            logger.warning("unknown workflow state %s, continuing..." % (state))
+            logger.warning(f"unknown workflow state {state}, continuing...")
             return
 
         # Now, match the workflow state to the conditions in the notifications...
@@ -675,7 +644,7 @@ class Notifications:
         This function takes care of processing job-level notifications.
         """
         # Check if we have notifications for this workflow
-        if not wf._wf_uuid in self._notifications:
+        if wf._wf_uuid not in self._notifications:
             return
 
         # Get the notifications' dictionary for this workflow id
@@ -688,7 +657,7 @@ class Notifications:
             return
 
         # Check if we have notifications for this job
-        if not job._exec_job_id in my_dict:
+        if job._exec_job_id not in my_dict:
             return
 
         my_notifications = my_dict[job._exec_job_id]
@@ -699,8 +668,7 @@ class Notifications:
                 job_has_post_script = True
         else:
             logger.warning(
-                "cannot find job %s in job_info database... skipping notification..."
-                % (job._exec_job_id)
+                f"cannot find job {job._exec_job_id} in job_info database... skipping notification..."
             )
             return
 
@@ -752,8 +720,8 @@ class Notifications:
             my_error = os.path.join(wf._original_submit_dir, job._error_file)
             # Use the rotated file names if at the end of the job
             if k != "start":
-                my_output = my_output + ".%03d" % (job._job_output_counter)
-                my_error = my_error + ".%03d" % (job._job_output_counter)
+                my_output = my_output + f".{job._job_output_counter:03d}"
+                my_error = my_error + f".{job._job_output_counter:03d}"
 
             # Ok, we have a match!
             for action in my_actions:
@@ -786,7 +754,7 @@ class Notifications:
             record = {}
 
         # Check if we have notifications for this workflow
-        if not wf._wf_uuid in self._notifications:
+        if wf._wf_uuid not in self._notifications:
             return
 
         # Get the notifications' dictionary for this workflow id
@@ -799,14 +767,14 @@ class Notifications:
             return
 
         # Check if we have notifications for this job
-        if not job._exec_job_id in my_dict:
+        if job._exec_job_id not in my_dict:
             return
 
         # Advance to the task dictionary
         my_dict = my_dict[job._exec_job_id]
 
         # Check if we have notifications for this invocation
-        if not task_id in my_dict:
+        if task_id not in my_dict:
             return
 
         my_notifications = my_dict[task_id]
@@ -835,12 +803,14 @@ class Notifications:
                 k = "at_end"
 
             # Here, we always use the rotated file names as the invocation has already finished...
-            my_output = os.path.join(
-                wf._original_submit_dir, job._output_file
-            ) + ".%03d" % (job._job_output_counter)
-            my_error = os.path.join(
-                wf._original_submit_dir, job._error_file
-            ) + ".%03d" % (job._job_output_counter)
+            my_output = (
+                os.path.join(wf._original_submit_dir, job._output_file)
+                + f".{job._job_output_counter:03d}"
+            )
+            my_error = (
+                os.path.join(wf._original_submit_dir, job._error_file)
+                + f".{job._job_output_counter:03d}"
+            )
 
             # Ok, we have a match!
             for action in my_actions:
@@ -874,10 +844,10 @@ class Notifications:
         """
 
         # Check if we have notifications for this workflow
-        if not wf_uuid in self._notifications:
+        if wf_uuid not in self._notifications:
             return
 
-        logger.debug("deleting notifications for workflow %s..." % (wf_uuid))
+        logger.debug(f"deleting notifications for workflow {wf_uuid}...")
 
         # Delete them from our dictionary
         del self._notifications[wf_uuid]

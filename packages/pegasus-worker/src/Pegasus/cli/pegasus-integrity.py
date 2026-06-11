@@ -62,7 +62,6 @@ except AttributeError:
     def iteritems(d):
         return iter(d.items())
 
-
 else:
     # Python 2
     def itervalues(d):
@@ -304,7 +303,8 @@ def generate_yaml(lfn, pfn):
     ts_end = time.time()
 
     return "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256, ts_end - ts_start,
+        sha256,
+        ts_end - ts_start,
     )
 
 
@@ -374,7 +374,8 @@ def generate_fullstat_yaml(lfn, pfn):
         )
     )
     yaml += "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256, ts_end - ts_start,
+        sha256,
+        ts_end - ts_start,
     )
     return yaml
 
@@ -586,7 +587,7 @@ def main():
     )
 
     # Parse command line options
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     setup_logger(options.debug)
 
     # sanity checks
@@ -622,7 +623,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = generate_yaml(lfn, pfn)
             if not results:
                 myexit(1)
@@ -634,7 +635,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = generate_fullstat_yaml(lfn, pfn)
             if not results:
                 myexit(1)
@@ -675,7 +676,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = check_integrity(pfn, lfn, meta_data, options.print_timings)
             if not results:
                 exit_code = 1

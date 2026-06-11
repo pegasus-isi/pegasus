@@ -172,7 +172,7 @@ int mylist_fill(mylist_p list, const char* fn) {
     }
     //printerr("DEBUG: Expanded the filename %s to %s\n", fn, expanded_fn->data);
     fn = (expanded_fn == NULL) ? fn : expanded_fn->data;
- 
+
     /* try to open file */
     if ((file=fopen(fn, "r")) == NULL) {
         return errno;
@@ -215,4 +215,3 @@ int mylist_fill(mylist_p list, const char* fn) {
     free((void*) line);
     return result;
 }
-

@@ -44,7 +44,8 @@ public class Arch implements Serializable {
     public static final Arch AMD64 = new Arch(_AMD64);
 
     public static final String err =
-            "Error: Illegal Architecture defined. Please specify one of the predefined types \n [INTEL32, INTEL64, AMD64, SPARCV7, SPARCV9]";
+            "Error: Illegal Architecture defined. Please specify one of the predefined types \n"
+                    + " [INTEL32, INTEL64, AMD64, SPARCV7, SPARCV9]";
 
     /**
      * Returns the value of the architecture as string.

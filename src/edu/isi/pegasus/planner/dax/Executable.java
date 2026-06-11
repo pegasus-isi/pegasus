@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.Notifications;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -66,22 +67,31 @@ public class Executable extends CatalogType {
         WINDOWS,
         windows
     }
+
     /** Namespace of the executable */
     protected String mNamespace;
+
     /** Name of the executable */
     protected String mName;
+
     /** Version of the executable */
     protected String mVersion;
+
     /** Architecture the executable is compiled for */
     protected ARCH mArch;
+
     /** Os the executable is compiled for */
     protected OS mOs;
+
     /** Os release the executable is compiled for */
     protected String mOsRelease;
+
     /** OS version the executable is compiled for */
     protected String mOsVersion;
+
     /** Glibc the executable is compiled for */
     protected String mGlibc;
+
     /** Flag to mark if the executable is installed or can be staged. */
     protected boolean mInstalled = true;
 
@@ -502,7 +512,8 @@ public class Executable extends CatalogType {
             mLogger.log(
                     "The executable element for "
                             + mName
-                            + " must have atleast 1 profile, 1 pfn or 1 metadata entry. Skipping empty executable element",
+                            + " must have atleast 1 profile, 1 pfn or 1 metadata entry. Skipping"
+                            + " empty executable element",
                     LogManager.WARNING_MESSAGE_LEVEL);
         } else {
             writer.startElement("executable", indent);

@@ -21,11 +21,13 @@ import static org.hamcrest.Matchers.nullValue;
 
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
+import org.junit.jupiter.api.Test;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Integrity class. */
 public class IntegrityTest {

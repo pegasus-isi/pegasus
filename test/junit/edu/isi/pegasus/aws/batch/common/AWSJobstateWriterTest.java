@@ -18,16 +18,20 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class AWSJobstateWriterTest {
 
     @TempDir File tempDir;

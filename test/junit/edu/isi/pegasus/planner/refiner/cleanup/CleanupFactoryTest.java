@@ -17,8 +17,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /** Structural tests for CleanupFactory. */
 public class CleanupFactoryTest {

@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.util.UnitConverter;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;

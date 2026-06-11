@@ -17,12 +17,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
-import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.File;
+import java.nio.file.Files;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class PDAXWriterTest {
 
     @Test

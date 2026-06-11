@@ -19,10 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.HashMap;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class PartitionerFactoryTest {
 
     @Test

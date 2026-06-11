@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -257,7 +258,8 @@ public class DataReuseEngine extends Engine implements Refiner {
                         || job.vdsNS.getBooleanValue(Pegasus.ENABLE_FOR_DATA_REUSE_KEY))) {
 
                     mLogger.log(
-                            "Partial Data Reuse Enabled. Not looking for output files in RC for job "
+                            "Partial Data Reuse Enabled. Not looking for output files in RC for job"
+                                    + " "
                                     + job.getID(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     continue;

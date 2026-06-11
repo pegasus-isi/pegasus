@@ -23,12 +23,17 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.planner.dax.Invoke;
-import java.io.IOException;
-import java.util.Collection;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+import java.io.IOException;
+import java.util.Collection;
+
+/**
+ * @author Karan Vahi
+ */
 public class NotificationsTest {
 
     public NotificationsTest() {}

@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public class CondorStyleFactory {
     /** The default package where the all the implementing classes are supposed to reside. */
     public static final String DEFAULT_PACKAGE_NAME =
             "edu.isi.pegasus.planner.code.generator.condor.style";
+
     //
 
     /** The name of the class implementing the Condor Style. */

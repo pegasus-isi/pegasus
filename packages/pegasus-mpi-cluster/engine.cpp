@@ -20,9 +20,9 @@ Engine::Engine(DAG &dag, const std::string &rescuefile, int max_failures) {
     if (!rescuefile.empty()) {
         this->open_rescue(rescuefile);
     }
-    
+
     this->failures = 0;
-    
+
     // Queue all tasks that are ready, but not done
     for (DAG::iterator i=this->dag->begin(); i!=this->dag->end(); i++) {
         Task *t = (*i).second;
@@ -47,7 +47,7 @@ void Engine::open_rescue(const std::string &filename) {
     if (this->rescue == NULL) {
         myfailure("Unable to open rescue file: %s", filename.c_str());
     }
-    
+
     // Mark done tasks as done in the new rescue file
     for (DAG::iterator i=this->dag->begin(); i!=this->dag->end(); i++) {
         Task *t = (*i).second;
@@ -85,7 +85,7 @@ void Engine::write_rescue(Task *task) {
         int rc = fdatasync(fileno(this->rescue));
 #endif
         if (rc != 0) {
-            log_error("Error on fsync/fdatasync of rescue file: %s", 
+            log_error("Error on fsync/fdatasync of rescue file: %s",
                     strerror(errno));
         }
 #endif
@@ -93,7 +93,7 @@ void Engine::write_rescue(Task *task) {
 }
 
 void Engine::mark_task_finished(Task *t, int exitcode) {
-    
+
     if (exitcode == 0) {
         // Task succeeded
         t->success = true;
@@ -107,14 +107,14 @@ void Engine::mark_task_finished(Task *t, int exitcode) {
             this->queue_ready_task(t);
             return;
         }
-        
+
         // Otherwise count the failure
         this->failures += 1;
     }
 
     // Remove from the queue
     this->queue.erase(t);
-    
+
     if (max_failures_reached()) {
         // Clear ready queue
         while (this->has_ready_task()) {
@@ -130,7 +130,7 @@ void Engine::mark_task_finished(Task *t, int exitcode) {
             }
         }
     }
-    
+
     // If we are finished, close rescue
     if (this->is_finished()) {
         this->close_rescue();
@@ -163,13 +163,13 @@ bool Engine::is_failed() {
     if (!finished) {
         myfailure("Not finished");
     }
-    
+
     for (DAG::iterator i=this->dag->begin(); i!=this->dag->end(); i++) {
         Task *t = (*i).second;
         if (!t->success) {
             return true;
         }
     }
-    
+
     return false;
 }

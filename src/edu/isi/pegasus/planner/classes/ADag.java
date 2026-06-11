@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.classes;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -24,6 +25,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -1118,7 +1120,9 @@ public class ADag extends Data implements Graph {
         return this.mGraphImplementor.getCyclicEdge();
     }
 
-    /** @param node the GraphNode */
+    /**
+     * @param node the GraphNode
+     */
     @Override
     public void setGraphNodeReference(GraphNode node) {
         throw new UnsupportedOperationException("GraphNode reference not set for ADag");

@@ -28,13 +28,17 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
-import java.io.PrintStream;
-import java.util.Map;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class DAX2LabelGraphTest {
 
     @Test

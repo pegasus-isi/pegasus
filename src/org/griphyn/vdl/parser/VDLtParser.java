@@ -14,10 +14,11 @@
  */
 package org.griphyn.vdl.parser;
 
+import org.griphyn.vdl.classes.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.griphyn.vdl.classes.*;
 
 /**
  * Parses the input stream and generates pool configuration map as output.
@@ -186,7 +187,8 @@ public class VDLtParser {
                     if (!(m_lookAhead instanceof VDLtVBar))
                         throw new VDLtParserException(
                                 m_scanner,
-                                "The rending information is separated by a bar from the bound variable");
+                                "The rending information is separated by a bar from the bound"
+                                        + " variable");
                     m_lookAhead = m_scanner.nextToken();
 
                 } else if (m_lookAhead instanceof VDLtVBar) {

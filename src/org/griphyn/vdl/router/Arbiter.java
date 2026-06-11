@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.classes.Derivation;
+
+import java.util.*;
 
 /**
  * This interface defines an arbitration. If multiple derivations produce the same output file, one

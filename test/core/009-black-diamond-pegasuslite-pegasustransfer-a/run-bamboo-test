@@ -70,4 +70,3 @@ pegasus-plan \
     --cleanup leaf \
     --submit \
     blackdiamond.dax | tee plan.out
-

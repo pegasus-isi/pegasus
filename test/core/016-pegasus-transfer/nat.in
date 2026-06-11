@@ -6,4 +6,3 @@ file:///lfs1/pegasus-transfer-testing/in/a.txt
 gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/medium-files/a.txt
 # dst 2 local
 file:///lfs1/pegasus-transfer-testing/in/a with spaces%20and%20urlencoding.txt
-

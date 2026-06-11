@@ -32,5 +32,3 @@ Options
    The directory where glite is installed. If this is not provided, then
    **condor_config_val** will be called to get the value of
    **GLITE_LOCATION** from the Condor configuration files.
-
-

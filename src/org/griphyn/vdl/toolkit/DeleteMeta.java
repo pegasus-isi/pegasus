@@ -17,14 +17,17 @@ package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class deletes annotations for definition's and lfn's

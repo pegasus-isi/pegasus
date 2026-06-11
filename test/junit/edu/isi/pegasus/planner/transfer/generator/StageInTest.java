@@ -50,16 +50,20 @@ import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class StageInTest {
 
     private PegasusBag mBag;

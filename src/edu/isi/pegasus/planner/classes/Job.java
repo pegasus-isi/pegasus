@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.PegasusURL;
@@ -44,6 +45,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -183,11 +185,11 @@ public class Job extends Data implements GraphNodeContent {
                 jtype = GridGateway.JOB_TYPE.cleanup;
                 break;
 
-                /*
-                case Job.SYMLINK_STAGE_IN_JOB:
-                    jtype = GridGateway.JOB_TYPE.transfer;
-                    break;
-                */
+            /*
+            case Job.SYMLINK_STAGE_IN_JOB:
+                jtype = GridGateway.JOB_TYPE.transfer;
+                break;
+            */
 
             case Job.UNASSIGNED_JOB:
             default:

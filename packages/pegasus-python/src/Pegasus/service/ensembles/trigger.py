@@ -8,7 +8,6 @@ import threading
 import time
 from glob import glob
 from pathlib import Path
-from typing import List, Optional
 
 from Pegasus import user
 from Pegasus.db import connection
@@ -23,7 +22,9 @@ class TriggerManager(threading.Thread):
     "trigger" table, and the state of each trigger in that table.
     """
 
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         threading.Thread.__init__(self, daemon=True)
 
         self.log = logging.getLogger("trigger.manager")
@@ -112,7 +113,9 @@ class TriggerManager(threading.Thread):
         # update state
         self.log.debug(
             "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name, old_state=trigger.state, new_state="RUNNING",
+                name=trigger_name,
+                old_state=trigger.state,
+                new_state="RUNNING",
             )
         )
         self.trigger_dao.update_state(
@@ -156,7 +159,7 @@ class TriggerThread(threading.Thread):
         ensemble: str,
         trigger: str,
         workflow_script: str,
-        workflow_args: List[str] = [],
+        workflow_args: list[str] = [],
     ):
 
         threading.Thread.__init__(self, name=(ensemble_id, trigger))
@@ -174,7 +177,7 @@ class TriggerThread(threading.Thread):
 
     def shutdown(self):
         """Gracefully shutdown this thread by setting the stop_event."""
-        self.log.info(f"shutting down")
+        self.log.info("shutting down")
         self.stop_event.set()
 
 
@@ -188,8 +191,8 @@ class CronTrigger(TriggerThread):
         trigger: str,
         interval: int,
         workflow_script: str,
-        workflow_args: Optional[List[str]] = None,
-        timeout: Optional[int] = None,
+        workflow_args: list[str] | None = None,
+        timeout: int | None = None,
         **kwargs,
     ):
 
@@ -218,11 +221,7 @@ class CronTrigger(TriggerThread):
                 cmd = [
                     "pegasus-em",
                     "submit",
-                    "{ens}.{tr}_{ts}".format(
-                        ens=self.ensemble,
-                        tr=self.trigger,
-                        ts=int(datetime.datetime.now().timestamp()),
-                    ),
+                    f"{self.ensemble}.{self.trigger}_{int(datetime.datetime.now().timestamp())}",
                 ]
                 cmd.extend(self.workflow_cmd)
 
@@ -266,8 +265,8 @@ class FilePatternTrigger(TriggerThread):
         trigger: str,
         interval: int,
         workflow_script: str,
-        workflow_args: Optional[List[str]] = None,
-        timeout: Optional[int] = None,
+        workflow_args: list[str] | None = None,
+        timeout: int | None = None,
         **kwargs,
     ):
         TriggerThread.__init__(
@@ -285,9 +284,7 @@ class FilePatternTrigger(TriggerThread):
         self.file_patterns = kwargs["file_patterns"]
 
     def __repr__(self):
-        return "<FilePatternTrigger {} interval={}s patterns={}>".format(
-            self.name, self.interval, self.file_patterns
-        )
+        return f"<FilePatternTrigger {self.name} interval={self.interval}s patterns={self.file_patterns}>"
 
     def run(self):
         """FilePatternTrigger main loop."""
@@ -301,11 +298,7 @@ class FilePatternTrigger(TriggerThread):
                     cmd = [
                         "pegasus-em",
                         "submit",
-                        "{ens}.{tr}_{ts}".format(
-                            ens=self.ensemble,
-                            tr=self.trigger,
-                            ts=int(datetime.datetime.now().timestamp()),
-                        ),
+                        f"{self.ensemble}.{self.trigger}_{int(datetime.datetime.now().timestamp())}",
                     ]
                     cmd.extend(self.workflow_cmd)
                     cmd.append("--inputs")
@@ -337,7 +330,7 @@ class FilePatternTrigger(TriggerThread):
         finally:
             self.log.debug("exited")
 
-    def collect_and_move_files(self) -> List[str]:
+    def collect_and_move_files(self) -> list[str]:
         """
         Collect absolute paths of all files that match the given file
         patterns, then move those files into a newly created subdirectory

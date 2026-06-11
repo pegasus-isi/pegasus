@@ -20,9 +20,10 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the TransformationCatalogKeywords enum. */
 public class TransformationCatalogKeywordsTest {

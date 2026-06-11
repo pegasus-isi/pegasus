@@ -17,9 +17,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

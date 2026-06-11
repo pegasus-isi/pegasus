@@ -204,7 +204,7 @@ Example
    argument *rundir* and requesting to itemize sub-DAGs.
 
 **pegasus-status -w 300 -Ll**
-   This invocation will parse the queue,show legends, 
+   This invocation will parse the queue,show legends,
    itemize DAG statistics of the current working
    directory, and redraw the terminal every five minutes with updated
    statistics.

@@ -14,10 +14,11 @@
  */
 package org.griphyn.vdl.euryale;
 
-import java.io.*;
-import java.util.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class is used to test the <code>DAXParser</code> class and the input file index. It parses

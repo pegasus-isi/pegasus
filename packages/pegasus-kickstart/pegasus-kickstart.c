@@ -81,7 +81,7 @@ static int obtainStatusCode(int raw) {
     } else if (WIFEXITED(raw)) {
         result = WEXITSTATUS(raw);
     } else if (WIFSIGNALED(raw)) {
-        result = 128 + WTERMSIG(raw); 
+        result = 128 + WTERMSIG(raw);
     } else if (WIFSTOPPED(raw)) {
         /* nothing to do to result */
     }
@@ -169,26 +169,26 @@ static void helpMe(const AppInfo* run) {
 
     fprintf(stderr,
             "Usage:\t%s [-i fn] [-o fn] [-e fn] [-l fn] [-n xid] [-N did] \\\n"
-            "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n" 
+            "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n"
             "\t[-B sz] [-F] [-f] (-I fn | app [appflags])\n", p);
     fprintf(stderr,
-            " -i fn\tConnects stdin of app to file fn, default is \"%s\".\n", 
+            " -i fn\tConnects stdin of app to file fn, default is \"%s\".\n",
             xlate(&run->input));
     fprintf(stderr,
             " -o fn\tConnects stdout of app to file fn, default is \"%s\".\n",
             xlate(&run->output));
     fprintf(stderr,
-            " -e fn\tConnects stderr of app to file fn, default is \"%s\".\n", 
+            " -e fn\tConnects stderr of app to file fn, default is \"%s\".\n",
             xlate(&run->error));
     fprintf(stderr,
             " -l fn\tProtocols invocation record into file fn, default is \"%s\".\n",
             xlate(&run->logfile));
-    fprintf(stderr, 
+    fprintf(stderr,
             " -n xid\tProvides the TR name, default is \"%s\".\n"
-            " -N did\tProvides the DV name, default is \"%s\".\n" 
+            " -N did\tProvides the DV name, default is \"%s\".\n"
             " -R res\tReflects the resource handle into record, default is \"%s\".\n"
             " -B sz\tResizes the data section size for stdio capture, default is %zu.\n",
-            show(run->xformation), show(run->derivation), 
+            show(run->xformation), show(run->derivation),
             show(run->sitehandle), data_section_size);
     fprintf(stderr,
             " -L lbl\tReflects the workflow label into record, no default.\n"
@@ -198,7 +198,7 @@ static void helpMe(const AppInfo* run) {
             " -I fn\tReads job and args from the file fn, one arg per line.\n"
             " -V\tDisplays the version and exit.\n"
             " -X\tMakes the application executable, no matter what.\n"
-            " -w dir\tSets a different working directory dir for jobs.\n" 
+            " -w dir\tSets a different working directory dir for jobs.\n"
             " -W dir\tLike -w, but also creates the directory dir if necessary.\n"
             " -S l=p\tProvides filename pairs to stat after start, multi-option.\n"
             " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
@@ -237,7 +237,7 @@ static void helpMe(const AppInfo* run) {
 static void finish() {
     if (!skip_atexit) {
         /* log the output here in case of abnormal termination */
-        if (!appinfo.isPrinted) { 
+        if (!appinfo.isPrinted) {
             printAppInfo(&appinfo);
         }
         deleteAppInfo(&appinfo);
@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
 
     /* Set the PATH variable before we copy env into appinfo */
     set_path();
-    
+
     /* Tell the app where to write integritydata */
     setenv("KICKSTART_INTEGRITY_DATA", appinfo.integritydata.file.name, 1);
 
@@ -813,4 +813,3 @@ REDIR:
 
     return result;
 }
-

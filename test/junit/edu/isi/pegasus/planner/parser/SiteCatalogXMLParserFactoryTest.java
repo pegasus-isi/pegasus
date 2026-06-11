@@ -22,6 +22,9 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -30,9 +33,10 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class SiteCatalogXMLParserFactoryTest {
 
     /*
@@ -65,7 +69,9 @@ public class SiteCatalogXMLParserFactoryTest {
         Files.write(
                 file,
                 Collections.singletonList(
-                        "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\" version=\"4.2\" schemaLocation=\"https://pegasus.isi.edu/schema sc-4.2.xsd\"/>"),
+                        "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\""
+                                + " version=\"4.2\" schemaLocation=\"https://pegasus.isi.edu/schema"
+                                + " sc-4.2.xsd\"/>"),
                 StandardCharsets.UTF_8);
 
         try {
@@ -217,7 +223,8 @@ public class SiteCatalogXMLParserFactoryTest {
         Files.write(
                 file,
                 Collections.singletonList(
-                        "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\" version=\""
+                        "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\""
+                                + " version=\""
                                 + version
                                 + "\" schemaLocation=\"https://pegasus.isi.edu/schema sc-"
                                 + version

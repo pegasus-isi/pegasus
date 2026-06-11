@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -328,7 +327,7 @@ def _validate_conf_type_options(
 
 
 def _add_common_options(object):
-    """ Add command line common options """
+    """Add command line common options"""
     object.parser.add_option(
         "-c",
         "--conf",
@@ -395,7 +394,7 @@ def _get_connection(
     force=False,
     print_version=True,
 ):
-    """ Get connection to the database based on the parameters
+    """Get connection to the database based on the parameters
     :param dburi: database URI
     :param cl_properties: commandline properties
     :param config_properties: Pegasus configuration properties file
@@ -417,7 +416,7 @@ def _get_connection(
             db_type=db_type,
             print_version=print_version,
         )
-    elif submit_dir:
+    if submit_dir:
         return connection.connect_by_submitdir(
             submit_dir,
             db_type,
@@ -429,7 +428,7 @@ def _get_connection(
             cl_properties=cl_properties,
             print_version=print_version,
         )
-    elif config_properties or _has_connection_properties(cl_properties):
+    if config_properties or _has_connection_properties(cl_properties):
         return connection.connect_by_properties(
             config_properties,
             db_type,

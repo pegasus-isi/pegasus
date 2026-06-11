@@ -19,14 +19,14 @@ class NoAuthFlaskTestCase:
         db = os.path.join(
             directory, "../../resources/monitoring-db/", "monitoring-rest-api-master.db"
         )
-        g.master_db_url = "sqlite:///%s" % db
-        g.stampede_db_url = "sqlite:///%s" % db
+        g.master_db_url = f"sqlite:///{db}"
+        g.stampede_db_url = f"sqlite:///{db}"
 
 
 class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_root_workflows(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?pretty-print=true" % self.user,
+            f"/api/v1/user/{self.user}/root?pretty-print=true",
             pre_callable=self.pre_callable,
         )
 
@@ -48,7 +48,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_query_with_prefix(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?pretty-print=false&query=r.wf_id == 1" % self.user,
+            f"/api/v1/user/{self.user}/root?pretty-print=false&query=r.wf_id == 1",
             pre_callable=self.pre_callable,
         )
 
@@ -61,8 +61,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_query_without_prefix(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?query=submit_hostname like '%%.edu'&order=wf_id"
-            % self.user,
+            f"/api/v1/user/{self.user}/root?query=submit_hostname like '%.edu'&order=wf_id",
             pre_callable=self.pre_callable,
         )
 
@@ -71,8 +70,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id == 1 or (r.wf_id.like(2) and r.grid_dn is None)&order=%%2br.wf_id"
-            % self.user,
+            f"/api/v1/user/{self.user}/root?query=r.wf_id == 1 or (r.wf_id.like(2) and r.grid_dn is None)&order=%2br.wf_id",
             pre_callable=self.pre_callable,
         )
 
@@ -87,8 +85,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_complex_query_2(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?query=r.wf_id < r.timestamp&order=r.wf_id"
-            % self.user,
+            f"/api/v1/user/{self.user}/root?query=r.wf_id < r.timestamp&order=r.wf_id",
             pre_callable=self.pre_callable,
         )
 
@@ -103,7 +100,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_ambiguous_query(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?query=timestamp > 1000.0&order=wf_id" % self.user,
+            f"/api/v1/user/{self.user}/root?query=timestamp > 1000.0&order=wf_id",
             pre_callable=self.pre_callable,
         )
 
@@ -111,7 +108,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_order(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?order=-r.wf_id" % self.user,
+            f"/api/v1/user/{self.user}/root?order=-r.wf_id",
             pre_callable=self.pre_callable,
         )
 
@@ -124,7 +121,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_bad_order(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?order=r.wf_i" % self.user,
+            f"/api/v1/user/{self.user}/root?order=r.wf_i",
             pre_callable=self.pre_callable,
         )
 
@@ -132,7 +129,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_start_index(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?start-index=1" % self.user,
+            f"/api/v1/user/{self.user}/root?start-index=1",
             pre_callable=self.pre_callable,
         )
 
@@ -145,7 +142,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_bad_start_index(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?start-index=AAA" % self.user,
+            f"/api/v1/user/{self.user}/root?start-index=AAA",
             pre_callable=self.pre_callable,
         )
 
@@ -153,7 +150,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_max_results(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?max-results=2" % self.user,
+            f"/api/v1/user/{self.user}/root?max-results=2",
             pre_callable=self.pre_callable,
         )
 
@@ -166,7 +163,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_bad_max_results(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?max-results=AAA" % self.user,
+            f"/api/v1/user/{self.user}/root?max-results=AAA",
             pre_callable=self.pre_callable,
         )
 
@@ -174,7 +171,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_paging(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root?start-index=1&max-results=2" % self.user,
+            f"/api/v1/user/{self.user}/root?start-index=1&max-results=2",
             pre_callable=self.pre_callable,
         )
 
@@ -187,7 +184,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_get_root_workflow_id(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1" % self.user, pre_callable=self.pre_callable
+            f"/api/v1/user/{self.user}/root/1", pre_callable=self.pre_callable
         )
 
         assert rv.status_code == 200
@@ -199,7 +196,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_get_root_workflow_uuid(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/7193de8c-a28d-4eca-b576-1b1c3c4f668b" % self.user,
+            f"/api/v1/user/{self.user}/root/7193de8c-a28d-4eca-b576-1b1c3c4f668b",
             pre_callable=self.pre_callable,
         )
 
@@ -212,7 +209,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_root_workflow(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1000000000" % self.user,
+            f"/api/v1/user/{self.user}/root/1000000000",
             pre_callable=self.pre_callable,
         )
 
@@ -222,7 +219,7 @@ class TestMasterWorkflowQueries(NoAuthFlaskTestCase):
 class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
     def test_get_workflows(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow",
             pre_callable=self.pre_callable,
         )
 
@@ -240,8 +237,7 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_uuid(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/7193de8c-a28d-4eca-b576-1b1c3c4f668b"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/7193de8c-a28d-4eca-b576-1b1c3c4f668b",
             pre_callable=self.pre_callable,
         )
 
@@ -268,7 +264,7 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_workflow(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1000000000" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1000000000",
             pre_callable=self.pre_callable,
         )
 
@@ -278,7 +274,7 @@ class TestStampedeWorkflowQueries(NoAuthFlaskTestCase):
 class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
     def test_get_workflow_metas(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/meta" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/meta",
             pre_callable=self.pre_callable,
         )
 
@@ -293,8 +289,7 @@ class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_meta_query(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/meta?query=wm.key == 'author'"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/meta?query=wm.key == 'author'",
             pre_callable=self.pre_callable,
         )
 
@@ -310,7 +305,7 @@ class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
 class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
     def test_get_workflow_files(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/files" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/files",
             pre_callable=self.pre_callable,
         )
 
@@ -328,8 +323,7 @@ class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_files_query(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/files?query=rm.key == 'sizeeee'"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/files?query=rm.key == 'sizeeee'",
             pre_callable=self.pre_callable,
         )
 
@@ -344,7 +338,7 @@ class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
 class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
     def test_get_workflowstates(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/state" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/state",
             pre_callable=self.pre_callable,
         )
 
@@ -365,7 +359,7 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1",
             pre_callable=self.pre_callable,
         )
 
@@ -380,7 +374,7 @@ class TestStampedeWorkflowStateQueries(NoAuthFlaskTestCase):
 class TestStampedeJobQueries(NoAuthFlaskTestCase):
     def test_get_workflow_jobs(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job",
             pre_callable=self.pre_callable,
         )
 
@@ -395,7 +389,7 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
 
     def test_get_job(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/1" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/1",
             pre_callable=self.pre_callable,
         )
 
@@ -408,7 +402,7 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_job(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/0" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/0",
             pre_callable=self.pre_callable,
         )
 
@@ -416,7 +410,7 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
 
     def test_get_running_jobs(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/successful" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/successful",
             pre_callable=self.pre_callable,
         )
 
@@ -434,7 +428,7 @@ class TestStampedeJobQueries(NoAuthFlaskTestCase):
 class TestStampedeHostQueries(NoAuthFlaskTestCase):
     def test_get_workflow_hosts(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/host" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/host",
             pre_callable=self.pre_callable,
         )
 
@@ -449,7 +443,7 @@ class TestStampedeHostQueries(NoAuthFlaskTestCase):
 
     def test_get_host(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/host/1" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/host/1",
             pre_callable=self.pre_callable,
         )
 
@@ -462,7 +456,7 @@ class TestStampedeHostQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_host(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/host/0" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/host/0",
             pre_callable=self.pre_callable,
         )
 
@@ -472,7 +466,7 @@ class TestStampedeHostQueries(NoAuthFlaskTestCase):
 class TestStampedeJobstateQueries(NoAuthFlaskTestCase):
     def test_get_jobstates(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/1/job-instance/3/state" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/1/job-instance/3/state",
             pre_callable=self.pre_callable,
         )
 
@@ -492,7 +486,7 @@ class TestStampedeJobstateQueries(NoAuthFlaskTestCase):
 class TestStampedeTaskQueries(NoAuthFlaskTestCase):
     def test_get_workflow_tasks(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/task",
             pre_callable=self.pre_callable,
         )
 
@@ -507,7 +501,7 @@ class TestStampedeTaskQueries(NoAuthFlaskTestCase):
 
     def test_get_job_tasks(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/11/task" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/11/task",
             pre_callable=self.pre_callable,
         )
 
@@ -522,7 +516,7 @@ class TestStampedeTaskQueries(NoAuthFlaskTestCase):
 
     def test_get_task(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task/1" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/task/1",
             pre_callable=self.pre_callable,
         )
 
@@ -535,7 +529,7 @@ class TestStampedeTaskQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_task(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task/0" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/task/0",
             pre_callable=self.pre_callable,
         )
 
@@ -545,7 +539,7 @@ class TestStampedeTaskQueries(NoAuthFlaskTestCase):
 class TestStampedeTaskMetaQueries(NoAuthFlaskTestCase):
     def test_get_workflow_metas(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task/1/meta" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/task/1/meta",
             pre_callable=self.pre_callable,
         )
 
@@ -560,8 +554,7 @@ class TestStampedeTaskMetaQueries(NoAuthFlaskTestCase):
 
     def test_get_workflow_meta_query(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/task/1/meta?query=tm.key == 'time'"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/task/1/meta?query=tm.key == 'time'",
             pre_callable=self.pre_callable,
         )
 
@@ -577,7 +570,7 @@ class TestStampedeTaskMetaQueries(NoAuthFlaskTestCase):
 class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
     def test_get_job_instances(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/6/job-instance",
             pre_callable=self.pre_callable,
         )
 
@@ -595,8 +588,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 
     def test_get_recent_job_instance(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance?recent=true"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/6/job-instance?recent=true",
             pre_callable=self.pre_callable,
         )
 
@@ -611,8 +603,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 
     def test_get_job_instance(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance?recent=true"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/6/job-instance?recent=true",
             pre_callable=self.pre_callable,
         )
 
@@ -625,7 +616,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_job_instance(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job-instance/0" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job-instance/0",
             pre_callable=self.pre_callable,
         )
 
@@ -635,7 +626,7 @@ class TestStampedeJobInstanceQueries(NoAuthFlaskTestCase):
 class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
     def test_get_workflow_invocations(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/invocation" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/invocation",
             pre_callable=self.pre_callable,
         )
 
@@ -653,8 +644,7 @@ class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
 
     def test_get_job_instance_invocations(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/job/6/job-instance/21/invocation"
-            % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/job/6/job-instance/21/invocation",
             pre_callable=self.pre_callable,
         )
 
@@ -672,7 +662,7 @@ class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
 
     def test_get_invocation(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/invocation/41" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/invocation/41",
             pre_callable=self.pre_callable,
         )
 
@@ -685,7 +675,7 @@ class TestStampedeInvocationQueries(NoAuthFlaskTestCase):
 
     def test_get_missing_invocation(self, cli):
         rv = cli.get_context(
-            "/api/v1/user/%s/root/1/workflow/1/invocation/0" % self.user,
+            f"/api/v1/user/{self.user}/root/1/workflow/1/invocation/0",
             pre_callable=self.pre_callable,
         )
 

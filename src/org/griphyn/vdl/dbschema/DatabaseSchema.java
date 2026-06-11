@@ -15,13 +15,15 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+
+import org.griphyn.vdl.dbdriver.*;
+import org.griphyn.vdl.util.ChimeraProperties;
+import org.griphyn.vdl.util.Logging;
+
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.dbdriver.*;
-import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This common schema interface defines the schemas in which the abstraction layers access any given
@@ -73,8 +75,12 @@ public abstract class DatabaseSchema implements Catalog {
      */
     public static DatabaseSchema loadSchema(
             String dbSchemaName, String propertyPrefix, Object[] arguments)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         Logging log = Logging.instance();
         log.log(
                 "dbschema",
@@ -136,8 +142,12 @@ public abstract class DatabaseSchema implements Catalog {
      * @see org.griphyn.vdl.util.ChimeraProperties
      */
     public static DatabaseSchema loadSchema(String propertyPrefix)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         return loadSchema(null, propertyPrefix, new Object[0]);
     }
 
@@ -183,8 +193,12 @@ public abstract class DatabaseSchema implements Catalog {
             String url,
             Properties dbDriverProperties,
             Properties dbSchemaProperties)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         Logging.instance()
                 .log(
@@ -265,8 +279,12 @@ public abstract class DatabaseSchema implements Catalog {
      * @throws java.io.IOException Exception
      */
     public DatabaseSchema(String dbDriverName, String propertyPrefix)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         Logging.instance().log("dbschema", 3, "accessing DatabaseSchema(String,String)");
 

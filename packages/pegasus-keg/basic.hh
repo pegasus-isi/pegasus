@@ -15,10 +15,10 @@
 #ifndef _PEGASUS_BASIC_HH
 #define _PEGASUS_BASIC_HH
 
-inline unsigned long int kils( unsigned long long int x ) 
+inline unsigned long int kils( unsigned long long int x )
 { return (x >> 10); }
 
-inline unsigned long int megs( unsigned long long int x ) 
+inline unsigned long int megs( unsigned long long int x )
 { return (x >> 20); }
 
 inline unsigned long int gigs( unsigned long long int x )
@@ -32,7 +32,7 @@ inline unsigned long int ters( unsigned long long int x )
 extern
 void
 smart_units( char* buffer, size_t capacity,
-	     unsigned long long int value ); 
-	     
+	     unsigned long long int value );
+
 
 #endif // _PEGASUS_BASIC_HH

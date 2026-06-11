@@ -369,8 +369,9 @@ class TestTransformation:
         ],
     )
     def test_get_key(self, transformation):
-        assert transformation._get_key() == "{}::{}::{}".format(
-            transformation.namespace, transformation.name, transformation.version
+        assert (
+            transformation._get_key()
+            == f"{transformation.namespace}::{transformation.name}::{transformation.version}"
         )
 
     def test_hash(self):

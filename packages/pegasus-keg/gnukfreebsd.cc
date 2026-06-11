@@ -12,24 +12,24 @@ void
 pegasus_statfs( char* buffer, size_t capacity )
 {
   if ( setfsent() ) {
-    struct fstab* mtab; 
+    struct fstab* mtab;
     char line[1024];
 
     while ( (mtab = getfsent()) ) {
-      struct statvfs vfs; 
+      struct statvfs vfs;
       /* Linux mount points may use [1] device, [2] label, [3] uuid
-       * thus checking fs_spec for slash becomes futile. 
-       * Checking mount point for slash instead. */ 
+       * thus checking fs_spec for slash becomes futile.
+       * Checking mount point for slash instead. */
       if ( mtab->fs_file[0] == '/' && statvfs( mtab->fs_file, &vfs ) != -1 ) {
-	if ( vfs.f_bsize > 0 && vfs.f_blocks > 0 ) { 
-	  char total[16], avail[16]; 
+	if ( vfs.f_bsize > 0 && vfs.f_blocks > 0 ) {
+	  char total[16], avail[16];
 	  unsigned long long size = vfs.f_frsize;
 	  smart_units( total, sizeof(total), (size * vfs.f_blocks) );
-	  smart_units( avail, sizeof(avail), (size * vfs.f_bavail) ); 
+	  smart_units( avail, sizeof(avail), (size * vfs.f_bavail) );
 
 	  snprintf( line, sizeof(line),
 		    "Filesystem Info: %-24s %s %s total, %s avail\n",
-		    mtab->fs_file, mtab->fs_vfstype, total, avail ); 
+		    mtab->fs_file, mtab->fs_vfstype, total, avail );
 	  strncat( buffer, line, capacity );
 	}
       }
@@ -43,7 +43,7 @@ pegasus_loadavg( char* buffer, size_t capacity )
 {
   char line[128];
   snprintf( line, sizeof(line), "Load Averages  : Unavailable\n");
-  strncat( buffer, line, capacity ); 
+  strncat( buffer, line, capacity );
 }
 
 void
@@ -51,7 +51,7 @@ pegasus_meminfo( char* buffer, size_t capacity )
 {
   char line[128];
   snprintf( line, sizeof(line), "Memory Usage MB:  Unavailable\n");
-  strncat( buffer, line, capacity ); 
+  strncat( buffer, line, capacity );
 }
 
 static const char* cpu_info = 0;
@@ -69,7 +69,7 @@ pegasus_cpuinfo( char* buffer, size_t capacity )
     // open /proc/cpuinfo to read
     FILE* proc = fopen( "/proc/cpuinfo", "r" );
     if ( proc == 0 ) return;
-  
+
     // FIXME: This assumes SMP for now
     bool within = false;
     while ( fgets( line, sizeof(line), proc ) ) {
@@ -86,15 +86,15 @@ pegasus_cpuinfo( char* buffer, size_t capacity )
 	if ( s ) cpu_speed = strdup(s+2);
       }
     }
-    fclose(proc); 
+    fclose(proc);
 
     if ( within ) {
       size_t cpu_size = 256;
       char* dynamic = static_cast<char*>( malloc(cpu_size) );
       snprintf( dynamic, cpu_size, "Processor Info.: %d x %s @ %s\n",
-		n_cpu, model_name ? model_name : "[unknown]", 
+		n_cpu, model_name ? model_name : "[unknown]",
 		cpu_speed ? cpu_speed : "[unknown]" );
-      cpu_info = const_cast<const char*>( dynamic ); 
+      cpu_info = const_cast<const char*>( dynamic );
     } else {
       cpu_info = "";
     }

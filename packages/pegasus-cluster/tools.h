@@ -45,9 +45,9 @@ showerr( const char* fmt, ... );
 /* purpose: printf-like error using (hopefully) atomic writes
  * paramtr: see printf()
  * returns: number of bytes written, -1 for error
- */ 
+ */
 
-/* as long as showerr() reports on stdout, we can use this macro */ 
+/* as long as showerr() reports on stdout, we can use this macro */
 #ifndef showout
 #define showout showerr
 #endif
@@ -58,14 +58,14 @@ timespec( struct timeval* tv );
 /* purpose: convert a timeval into float seconds with microseconds.
  * paramtr: tv (IN): pointer to struct timeval to convert
  * returns: seconds as float with microseconds.
- * warning: anything below millisecond resolution is unrealistic. 
+ * warning: anything below millisecond resolution is unrealistic.
  */
 
 extern
 double
 now( time_t* when );
 /* purpose: obtains an UTC timestamp with microsecond resolution.
- * paramtr: when (opt. OUT): where to save integral seconds into. 
+ * paramtr: when (opt. OUT): where to save integral seconds into.
  * returns: the timestamp, or -1.0 if it was completely impossible.
  */
 
@@ -76,7 +76,7 @@ isodate( time_t seconds, char* buffer, size_t size );
  * paramtr: seconds (IN): time stamp
  *          buffer (OUT): where to put the results
  *          size (IN): capacity of buffer
- * returns: pointer to start of buffer for convenience. 
+ * returns: pointer to start of buffer for convenience.
  */
 
 extern
@@ -86,7 +86,7 @@ iso2date( double seconds_wf, char* buffer, size_t size );
  * paramtr: seconds_wf (IN): time stamp with fractional seconds (millis)
  *          buffer (OUT): where to put the results
  *          size (IN): capacity of buffer
- * returns: pointer to start of buffer for convenience. 
+ * returns: pointer to start of buffer for convenience.
  */
 
 #endif /* _TOOLS_H */

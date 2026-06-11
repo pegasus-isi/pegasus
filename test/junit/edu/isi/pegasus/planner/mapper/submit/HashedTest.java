@@ -19,10 +19,12 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
-import java.io.File;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.File;
+import java.util.Properties;
 
 /** Tests for the Hashed submit mapper class structure. */
 public class HashedTest {

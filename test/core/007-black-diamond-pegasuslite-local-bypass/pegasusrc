@@ -11,4 +11,3 @@ pegasus.gridstart.arguments = -f
 
 # for GH-2065
 pegasus.transfer.bypass.input.staging = true
-

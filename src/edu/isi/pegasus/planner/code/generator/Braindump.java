@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.credential.impl.Proxy;
@@ -31,6 +32,14 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.globus.common.CoGProperties;
+import org.gridforum.jgss.ExtendedGSSManager;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.GSSManager;
+import org.ietf.jgss.GSSName;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,12 +49,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import org.globus.common.CoGProperties;
-import org.gridforum.jgss.ExtendedGSSManager;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
 
 /**
  * Braindump file code generator that generates a Braindump file for the executable workflow in the

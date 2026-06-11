@@ -50,12 +50,10 @@ def test_invalid__get_enum_str():
 def obj():
     def _obj():
         class Obj:
-            def __init__(self):
-                ...
+            def __init__(self): ...
 
             @_chained
-            def returnNone(self):
-                ...
+            def returnNone(self): ...
 
             @_chained
             def return_1(self):

@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Collection;
 
 /**

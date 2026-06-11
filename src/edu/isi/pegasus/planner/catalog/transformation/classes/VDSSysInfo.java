@@ -208,6 +208,7 @@ public class VDSSysInfo {
         }
         return result;
     }
+
     /**
      * Returns the output of the data class as string.
      *

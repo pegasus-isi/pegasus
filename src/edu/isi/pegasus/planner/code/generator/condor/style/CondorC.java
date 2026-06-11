@@ -48,6 +48,7 @@ public class CondorC extends Condor {
      */
     public static final String REMOTE_SHOULD_TRANSFER_FILES_KEY =
             edu.isi.pegasus.planner.namespace.Condor.REMOTE_SHOULD_TRANSFER_FILES_KEY;
+
     /** The name of key that designates when to transfer output. */
     public static final String WHEN_TO_TRANSFER_OUTPUT_KEY =
             edu.isi.pegasus.planner.namespace.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;

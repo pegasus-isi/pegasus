@@ -16,7 +16,9 @@ package edu.isi.pegasus.planner.catalog.transformation.classes;
 import java.util.HashMap;
 import java.util.Map;
 
-/** @author Mukund Murrali */
+/**
+ * @author Mukund Murrali
+ */
 public enum TransformationCatalogKeywords {
     PEGASUS("pegasus"),
     NAMESPACE("namespace"),

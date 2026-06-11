@@ -19,10 +19,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the WorkerSharedDirectory class. */
 public class WorkerSharedDirectoryTest {

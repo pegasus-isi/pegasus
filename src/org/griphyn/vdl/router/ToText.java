@@ -15,7 +15,6 @@
 
 package org.griphyn.vdl.router;
 
-import java.io.IOException;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
@@ -23,6 +22,8 @@ import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.toolkit.Toolkit;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.IOException;
 
 public class ToText extends Toolkit {
     public ToText(String arg0) {

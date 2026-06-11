@@ -62,11 +62,9 @@ logger = logging.getLogger("pegasus-monitord")
 # Ordered logging levels
 _LEVELS = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.TRACE]
 
-logger.info("pegasus-monitord starting - pid %d " % (os.getpid()))
+logger.info(f"pegasus-monitord starting - pid {os.getpid():d} ")
 
 # Add SEEK_CUR to os if Python version < 2.5
-if sys.version_info < (2, 5):
-    os.SEEK_CUR = 1
 
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(
@@ -175,7 +173,7 @@ def delete_pid_file():
     try:
         os.unlink(pid_filename)
     except OSError:
-        logger.error("cannot delete pid file %s" % (pid_filename))
+        logger.error(f"cannot delete pid file {pid_filename}")
 
 
 def close_wf_retry_file():
@@ -215,7 +213,7 @@ def finish_stampede_loader():
             except Exception:
                 logger.warning(
                     "could not call the finish method "
-                    + "in the nl loader class... exiting anyway"
+                    "in the nl loader class... exiting anyway"
                 )
                 logger.warning(traceback.format_exc())
     logger.info("DB flushing ended")
@@ -243,7 +241,7 @@ class WorkflowEntry:
 
 
 # Parse command line options
-prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
+prog_usage = f"usage: {prog_base} [options] workflow.dag.dagman.out"
 prog_desc = """Mandatory arguments: outfile is the log file produced by Condor DAGMan, usually ending in the suffix ".dag.dagman.out"."""
 
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
@@ -270,8 +268,7 @@ parser.add_option(
     action="store",
     type="string",
     dest="jsd",
-    help="Alternative job state file to write, default is %s in the workflow's directory"
-    % (utils.jobbase),
+    help=f"Alternative job state file to write, default is {utils.jobbase} in the workflow's directory",
 )
 parser.add_option(
     "-o",
@@ -317,8 +314,7 @@ parser.add_option(
     action="store",
     type="int",
     dest="notifications_max",
-    help="maximum number of concurrent notification concurrent notification scripts, 0 disable notifications, default is %d"
-    % (max_parallel_notifications),
+    help=f"maximum number of concurrent notification concurrent notification scripts, 0 disable notifications, default is {max_parallel_notifications:d}",
 )
 parser.add_option(
     "--notifications-timeout",
@@ -341,7 +337,7 @@ parser.add_option(
     action="store_const",
     const=1,
     dest="replay_mode",
-    help="disables checking for DAGMan's pid while running %s" % (prog_base),
+    help=f"disables checking for DAGMan's pid while running {prog_base}",
 )
 parser.add_option(
     "--db-stats",
@@ -430,7 +426,7 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 if not os.path.isdir(run):
-    logger.critical("Run directory %s does not exist" % run)
+    logger.critical(f"Run directory {run} does not exist")
     exit(1)
 os.chdir(run)
 
@@ -460,7 +456,7 @@ cmd_options = sys.argv[1:] + addon_cmd_options
 
 # parse again with extra options that might
 # been specified in the properties file
-logger.info("Final Command line options are: %s" % cmd_options)
+logger.info(f"Final Command line options are: {cmd_options}")
 (options, args) = parser.parse_args(cmd_options)
 
 # Set logging level
@@ -566,7 +562,7 @@ if options.output_dir is not None:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
     except OSError:
-        logger.critical("cannot create directory %s. exiting..." % (output_dir))
+        logger.critical(f"cannot create directory {output_dir}. exiting...")
         sys.exit(1)
 if options.event_dest is None:
     if options.no_events is not None:
@@ -682,7 +678,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
             logger.debug(f"job {jobid} is planned for site {my_site}")
             wf._job_site[jobid] = my_site
         else:
-            logger.debug("job %s does not have a site information!" % (jobid))
+            logger.debug(f"job {jobid} does not have a site information!")
 
     # A DAGMAN_SUBMIT event requires a new job (unless this was
     # already done by a PRE_SCRIPT_STARTED event, but we let the
@@ -704,17 +700,17 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
         # If not None, convert into seconds
         if my_time is not None:
             my_time = my_time * 60
-            logger.debug("job %s requests %d s walltime" % (jobid, my_time))
+            logger.debug(f"job {jobid} requests {my_time:d} s walltime")
             wf._walltime[jobid] = my_time
         else:
-            logger.debug("job %s does not request a walltime" % (jobid))
+            logger.debug(f"job {jobid} does not request a walltime")
 
         # Remember the run-site
         if my_site is not None:
             logger.debug(f"job {jobid} is planned for site {my_site}")
             wf._job_site[jobid] = my_site
         else:
-            logger.debug("job %s does not have a site information!" % (jobid))
+            logger.debug(f"job {jobid} does not have a site information!")
 
         # Nothing else to do... we should stop here...
         return my_job_submit_seq
@@ -730,7 +726,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
         my_job_submit_seq = wf.find_jobid(jobid)
 
     if my_job_submit_seq is None:
-        logger.warning("cannot find job_submit_seq for job: %s" % (jobid))
+        logger.warning(f"cannot find job_submit_seq for job: {jobid}")
         # Nothing else to do...
         return None
 
@@ -760,7 +756,7 @@ def process_dagman_out(wf, log_line):
     # This is used in the case of rescue dags, for skipping
     # what we have already seen in the dagman.out file
     if wf._line <= wf._last_processed_line:
-        return
+        return None
 
     # Strip end spaces, tabs, and <cr> and/or <lf>
     log_line = log_line.rstrip()
@@ -797,14 +793,7 @@ def process_dagman_out(wf, log_line):
         my_expr = re_parse_iso_stamp.search(log_line)
         if my_expr is not None:
             # /^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))/
-            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (
-                int(my_expr.group(1)),
-                int(my_expr.group(2)),
-                int(my_expr.group(3)),
-                int(my_expr.group(4)),
-                int(my_expr.group(5)),
-                int(my_expr.group(6)),
-            )
+            dt = f"{int(my_expr.group(1)):04d}-{int(my_expr.group(2)):02d}-{int(my_expr.group(3)):02d} {int(my_expr.group(4)):02d}:{int(my_expr.group(5)):02d}:{int(my_expr.group(6)):02d}"
             my_time = datetime.datetime(*(time.strptime(dt, "%Y-%m-%d %H:%M:%S")[0:6]))
 
             tz = my_expr.group(8)
@@ -829,7 +818,7 @@ def process_dagman_out(wf, log_line):
     if timestamp_found:
         split_log_line = log_line.split(None, 3)
         if len(split_log_line) >= 3:
-            logger.trace("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
+            logger.trace(f"debug: ## {wf._line:d}: {split_log_line[2][:64]}")
 
         # If in recovery mode, check if we reached the end of it
         # This is the DAGMan recovery mode . Not monitord recovery mode! Karan
@@ -837,7 +826,7 @@ def process_dagman_out(wf, log_line):
             if log_line.find("...done with RECOVERY mode") >= 0:
                 logger.info("DONE with DAGMAN RECOVERY MODE")
                 wf._skipping_recovery_lines = False
-            return
+            return None
 
         # Search for more content
         if re_parse_event.search(log_line) is not None:
@@ -873,7 +862,7 @@ def process_dagman_out(wf, log_line):
             # groups = script, jobid
             my_script = my_expr.group(1).upper()
             my_jobid = my_expr.group(2)
-            add(wf, my_jobid, "%s_SCRIPT_STARTED" % (my_script))
+            add(wf, my_jobid, f"{my_script}_SCRIPT_STARTED")
         elif re_parse_script_done.search(log_line) is not None:
             my_expr = re_parse_script_done.search(log_line)
             # groups = script, jobid
@@ -885,7 +874,7 @@ def process_dagman_out(wf, log_line):
                 add(wf, my_jobid, "PRE_SCRIPT_TERMINATED")
             if re_parse_script_successful.search(log_line) is not None:
                 # Remember success with artificial jobstate
-                add(wf, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
+                add(wf, my_jobid, f"{my_script}_SCRIPT_SUCCESS", status=0)
             elif re_parse_script_failed.search(log_line) is not None:
                 # Remember failure with artificial jobstate
                 my_expr = re_parse_script_failed.search(log_line)
@@ -896,12 +885,10 @@ def process_dagman_out(wf, log_line):
                     # Unable to convert exit code to integer -- should not happen
                     logger.warning("unable to convert exit code to integer!")
                     my_exit_code = 1
-                add(
-                    wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code
-                )
+                add(wf, my_jobid, f"{my_script}_SCRIPT_FAILURE", status=my_exit_code)
             else:
                 # Ignore
-                logger.warning("unknown pscript state: %s" % (log_line[-14:]))
+                logger.warning(f"unknown pscript state: {log_line[-14:]}")
         elif re_parse_job_failed.search(log_line) is not None:
             # Job has failed
             my_expr = re_parse_job_failed.search(log_line)
@@ -936,9 +923,7 @@ def process_dagman_out(wf, log_line):
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
             logger.info(
-                "DAGMan {} finished with exit code {}".format(
-                    wf._dag_file_name, wf._dagman_exit_code
-                )
+                f"DAGMan {wf._dag_file_name} finished with exit code {wf._dagman_exit_code}"
             )
             # Send info to database
             wf.change_wf_state("end")
@@ -957,15 +942,15 @@ def process_dagman_out(wf, log_line):
             try:
                 wf._dagman_pid = int(my_expr.group(1))
             except ValueError:
-                logger.critical("cannot set pid: %s" % (my_expr.group(1)))
+                logger.critical(f"cannot set pid: {my_expr.group(1)}")
                 sys.exit(42)
-            logger.info("DAGMan runs at pid %d" % (wf._dagman_pid))
+            logger.info(f"DAGMan runs at pid {wf._dagman_pid:d}")
         elif re_parse_dag_name.search(log_line) is not None:
             # Found the dag filename, read dag, and generate start event for the database
             my_expr = re_parse_dag_name.search(log_line)
             my_dag = my_expr.group(1)
             # Parse dag file
-            logger.info("using dag %s" % (my_dag))
+            logger.info(f"using dag {my_dag}")
 
             # PM-1334 potential fix. we parse dag file now in workflow constructor when we determine
             # there is a new workflow to track
@@ -983,8 +968,7 @@ def process_dagman_out(wf, log_line):
             my_condor_patch = int(my_expr.group(4))
             wf.set_dagman_version(my_condor_major, my_condor_minor, my_condor_patch)
             logger.info(
-                "Using DAGMan version %s %d"
-                % (my_condor_version, wf.get_dagman_version())
+                f"Using DAGMan version {my_condor_version} {wf.get_dagman_version():d}"
             )
         elif (
             re_parse_condor_logfile.search(log_line) is not None
@@ -997,14 +981,14 @@ def process_dagman_out(wf, log_line):
             else:
                 my_expr = re_parse_condor_logfile_insane.search(log_line)
             wf._condorlog = my_expr.group(1)
-            logger.info("Condor writes its logfile to %s" % (wf._condorlog))
+            logger.info(f"Condor writes its logfile to {wf._condorlog}")
 
             # Make a symlink for NFS-secured files
             my_log, my_base = utils.out2log(wf._run_dir, wf._out_file)
             if os.path.islink(my_log):
-                logger.info("symlink %s already exists" % (my_log))
+                logger.info(f"symlink {my_log} already exists")
             elif os.access(my_log, os.R_OK):
-                logger.info("%s is a regular file, not touching" % (my_base))
+                logger.info(f"{my_base} is a regular file, not touching")
             else:
                 logger.info("trying to create local symlink to common log")
                 if os.access(wf._condorlog, os.R_OK) or not os.access(
@@ -1012,17 +996,17 @@ def process_dagman_out(wf, log_line):
                 ):
                     if os.access(my_log, os.R_OK):
                         try:
-                            os.rename(my_log, "%s.bak" % (my_log))
+                            os.rename(my_log, f"{my_log}.bak")
                         except OSError:
                             logger.warning(f"error renaming {my_log} to {my_log}.bak")
                     try:
                         os.symlink(wf._condorlog, my_log)
                     except OSError:
-                        logger.info("unable to symlink %s" % (wf._condorlog))
+                        logger.info(f"unable to symlink {wf._condorlog}")
                     else:
                         logger.info(f"symlink {wf._condorlog} -> {my_log}")
                 else:
-                    logger.info("%s exists but is not readable!" % (wf._condorlog))
+                    logger.info(f"{wf._condorlog} exists but is not readable!")
             # We only expect one of such files
             wf._multiline_file_flag = False
         elif re_parse_multiline_files.search(log_line) is not None:
@@ -1032,15 +1016,15 @@ def process_dagman_out(wf, log_line):
             # Entering recovery mode, skip lines until we reach the end
             logger.info("Enabling DAGMAN RECOVERY MODE")
             wf._skipping_recovery_lines = True
-            return
+            return None
         elif re_parse_dagman_aborted.search(log_line) is not None:
             # PM-767 dagman was aborted. just log in monitord log
             # eventually the dagman exit line will trigger failure in the DB
             logger.warning(
-                "DAGMan was aborted for workflow running in directory %s" % wf._run_dir
+                f"DAGMan was aborted for workflow running in directory {wf._run_dir}"
             )
             wf._current_state_reason = "DAGMan aborted as it received SIGUSR1 signal."
-            return
+            return None
         elif re_parse_job_held.search(log_line) is not None:
             # PM-749  figure out reason for job held
             my_expr = re_parse_job_held.search(log_line)
@@ -1051,8 +1035,7 @@ def process_dagman_out(wf, log_line):
             last_job = wf._last_known_job
             if last_job is None or last_job._job_state != "JOB_HELD":
                 logger.error(
-                    "Last known job %s is not held. Parsed  held job with reason %s "
-                    % (last_job, my_held_reason)
+                    f"Last known job {last_job} is not held. Parsed  held job with reason {my_held_reason} "
                 )
 
             # PM-749 insert a new JOB_HELD_REASON event that connects to held job
@@ -1065,6 +1048,7 @@ def process_dagman_out(wf, log_line):
     else:
         # Could not parse timestamp
         logger.info("time stamp format not recognized")
+    return None
 
 
 def sleeptime(retries):
@@ -1094,14 +1078,14 @@ def prog_sighup_handler(signum, frame):
     """
     This function catches SIGHUP.
     """
-    logger.info("ignoring signal %d" % (signum))
+    logger.info(f"ignoring signal {signum:d}")
 
 
 def prog_sigint_handler(signum, frame):
     """
     This function catches SIGINT.
     """
-    logger.warning("graceful exit on signal %d" % (signum))
+    logger.warning(f"graceful exit on signal {signum:d}")
     # Go through all workflows we are tracking
     for my_wf in wfs:
         if my_wf.wf is not None:
@@ -1126,7 +1110,7 @@ def prog_sigusr1_handler(signum, frame):
             root_logger.setLevel(_LEVELS[idx + 1])
     except ValueError:
         root_logger.setLevel(logging.INFO)
-        logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
+        logger.error(f"Unknown current level = {cur_level}, setting to INFO")
 
 
 def prog_sigusr2_handler(signum, frame):
@@ -1140,8 +1124,8 @@ def prog_sigusr2_handler(signum, frame):
         if idx > 0:
             root_logger.setLevel(_LEVELS[idx - 1])
     except ValueError:
-        root_logger.setLevel(logging.WARN)
-        logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
+        root_logger.setLevel(logging.WARNING)
+        logger.error(f"Unknown current level = {cur_level}, setting to WARN")
 
 
 #
@@ -1187,7 +1171,7 @@ else:
         try:
             event_dest.index("sqlite:///")
         except ValueError:
-            logger.error("Invalid sqlite connection string passed %s " % event_dest)
+            logger.error(f"Invalid sqlite connection string passed {event_dest} ")
         backup = True
 
     try:
@@ -1252,7 +1236,7 @@ else:
         )
 
 if millisleep is not None:
-    logger.info("using simulation delay of %d ms" % (millisleep))
+    logger.info(f"using simulation delay of {millisleep:d} ms")
 
 if fast_start_mode:
     logger.info("monitord started in fast start mode")
@@ -1273,7 +1257,7 @@ else:
 if restart_logging:
     subworkflow_db_file = wf_retry_fn + ".db"
     if os.path.isfile(subworkflow_db_file):
-        logger.info("Rotating sub workflow db file %s" % subworkflow_db_file)
+        logger.info(f"Rotating sub workflow db file {subworkflow_db_file}")
         utils.rotate_log_file(subworkflow_db_file)
 
 
@@ -1283,8 +1267,7 @@ try:
     atexit.register(close_wf_retry_file)
 except Exception:
     logger.critical(
-        "cannot create persistent storage file for sub-workflow retry information... exiting... %s"
-        % wf_retry_fn
+        f"cannot create persistent storage file for sub-workflow retry information... exiting... {wf_retry_fn}"
     )
     logger.error(traceback.format_exc())
     sys.exit(1)
@@ -1338,10 +1321,8 @@ if wf._monitord_exit_code == 0:
 while len(wfs) > 0:
     # Go through each of our workflows
     for workflow_entry in wfs:
-
         # Check if we are waiting for the dagman.out file to appear...
         if workflow_entry.DMOF is None:
-
             # Yes... check if it has shown up...
 
             # First, we test if the file is already there, in case we are running in replay mode
@@ -1350,8 +1331,7 @@ while len(wfs) > 0:
                     f_stat = os.stat(workflow_entry.dagman_out)
                 except OSError:
                     logger.critical(
-                        "error: workflow not started, %s does not exist, dropping this workflow..."
-                        % (workflow_entry.dagman_out)
+                        f"error: workflow not started, {workflow_entry.dagman_out} does not exist, dropping this workflow..."
                     )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1369,7 +1349,7 @@ while len(wfs) > 0:
                     if workflow_entry.n_retries > 100:
                         # We tried too long, just exit
                         logger.critical(
-                            "%s never made an appearance" % (workflow_entry.dagman_out)
+                            f"{workflow_entry.dagman_out} never made an appearance"
                         )
                         workflow_entry.delete_workflow = True
                         # Close jobstate.log, if any
@@ -1379,15 +1359,14 @@ while len(wfs) > 0:
                         continue
                     # Continue waiting
                     logger.info(
-                        "waiting for dagman.out file, retry %d"
-                        % (workflow_entry.n_retries)
+                        f"waiting for dagman.out file, retry {workflow_entry.n_retries:d}"
                     )
                     workflow_entry.sleep_time = time.time() + sleeptime(
                         workflow_entry.n_retries
                     )
                 else:
                     # Another error
-                    logger.critical("stat %s" % (workflow_entry.dagman.out))
+                    logger.critical(f"stat {workflow_entry.dagman.out}")
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1396,7 +1375,7 @@ while len(wfs) > 0:
                     continue
             except Exception:
                 # Another exception
-                logger.critical("stat %s" % (workflow_entry.dagman.out))
+                logger.critical(f"stat {workflow_entry.dagman.out}")
                 workflow_entry.delete_workflow = True
                 # Close jobstate.log, if any
                 if workflow_entry.wf is not None:
@@ -1409,7 +1388,7 @@ while len(wfs) > 0:
                     workflow_entry.DMOF = open(workflow_entry.dagman_out)
                     workflow_entry.dagman_out_appeared = True
                 except OSError:
-                    logger.critical("opening %s" % (workflow_entry.dagman_out))
+                    logger.critical(f"opening {workflow_entry.dagman_out}")
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1419,11 +1398,11 @@ while len(wfs) > 0:
 
         if workflow_entry.DMOF is not None:
             try:
-                logger.trace("stating file: %s" % (workflow_entry.dagman_out))
+                logger.trace(f"stating file: {workflow_entry.dagman_out}")
                 f_stat = os.stat(workflow_entry.dagman_out)
             except OSError:
                 # stat error
-                logger.critical("stat %s" % (workflow_entry.dagman_out))
+                logger.critical(f"stat {workflow_entry.dagman_out}")
                 workflow_entry.delete_workflow = True
                 # Close jobstate.log, if any
                 if workflow_entry.wf is not None:
@@ -1435,7 +1414,7 @@ while len(wfs) > 0:
             if f_stat[6] == workflow_entry.ml_current:
                 # Death by natural causes
                 if workflow_entry.wf._dagman_exit_code is not None and not replay_mode:
-                    logger.info("workflow %s ended" % (workflow_entry.dagman_out))
+                    logger.info(f"workflow {workflow_entry.dagman_out} ended")
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
                     if workflow_entry.wf is not None:
@@ -1465,8 +1444,7 @@ while len(wfs) > 0:
                 if workflow_entry.ml_retries > 17280:
                     # Too long without change
                     logger.critical(
-                        "too long without action, stopping workflow %s"
-                        % (workflow_entry.dagman_out)
+                        f"too long without action, stopping workflow {workflow_entry.dagman_out}"
                     )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1480,8 +1458,7 @@ while len(wfs) > 0:
                 if replay_mode and workflow_entry.ml_retries > 5:
                     # We are in replay mode, so we should have everything here
                     logger.info(
-                        "no more action, stopping workflow %s"
-                        % (workflow_entry.dagman_out)
+                        f"no more action, stopping workflow {workflow_entry.dagman_out}"
                     )
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1493,7 +1470,7 @@ while len(wfs) > 0:
             elif f_stat[6] < workflow_entry.ml_current:
                 # Truncated file, booh!
                 logger.critical(
-                    "%s file truncated, time to exit" % (workflow_entry.dagman_out)
+                    f"{workflow_entry.dagman_out} file truncated, time to exit"
                 )
                 workflow_entry.delete_workflow = True
                 # Close jobstate.log, if any
@@ -1508,7 +1485,7 @@ while len(wfs) > 0:
                     ml_rbuffer = workflow_entry.DMOF.read(DAGMAN_OUT_MAX_READ_SIZE)
                 except Exception:
                     # Error while reading
-                    logger.critical("while reading %s" % (workflow_entry.dagman_out))
+                    logger.critical(f"while reading {workflow_entry.dagman_out}")
                     workflow_entry.wf._monitord_exit_code = 42
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1520,16 +1497,14 @@ while len(wfs) > 0:
                 if len(ml_rbuffer) < DAGMAN_OUT_MAX_READ_SIZE:
                     # PM-947 we have caught up with the workflow
                     logger.debug(
-                        "monitord has caught up with dagman out file %s"
-                        % (workflow_entry.dagman_out)
+                        f"monitord has caught up with dagman out file {workflow_entry.dagman_out}"
                     )
                     workflow_entry.caught_up_with_dagman_out = True
 
                 if len(ml_rbuffer) == 0:
                     # Detected EOF
                     logger.critical(
-                        "detected EOF, resetting position to %d"
-                        % (workflow_entry.ml_current)
+                        f"detected EOF, resetting position to {workflow_entry.ml_current:d}"
                     )
                     workflow_entry.DMOF.seek(workflow_entry.ml_current)
                 else:
@@ -1569,8 +1544,7 @@ while len(wfs) > 0:
                                 if new_dagman_out in tracked_workflows:
                                     # Yes, no need to do it again...
                                     logger.info(
-                                        "already tracking workflow: %s, not adding"
-                                        % (new_dagman_out)
+                                        f"already tracking workflow: {new_dagman_out}, not adding"
                                     )
                                     tracking_already = True
                             else:
@@ -1583,13 +1557,12 @@ while len(wfs) > 0:
                                         # Found it, exit loop
                                         tracking_already = True
                                         logger.info(
-                                            "already tracking workflow: %s, not adding"
-                                            % (new_dagman_out)
+                                            f"already tracking workflow: {new_dagman_out}, not adding"
                                         )
                                         break
                             if not tracking_already:
                                 logger.info(
-                                    "found new workflow to track: %s" % (new_dagman_out)
+                                    f"found new workflow to track: {new_dagman_out}"
                                 )
                                 # Not tracking this workflow, let's try to add it to our list
                                 new_run_dir = os.path.dirname(new_dagman_out)
@@ -1635,12 +1608,7 @@ while len(wfs) > 0:
                                     )
                                 else:
                                     logger.warning(
-                                        "cannot link job %s:%s to its subwf because we don't have info for dir: %s"
-                                        % (
-                                            parent_jobid,
-                                            parent_jobseq,
-                                            os.path.dirname(new_dagman_out),
-                                        )
+                                        f"cannot link job {parent_jobid}:{parent_jobseq} to its subwf because we don't have info for dir: {os.path.dirname(new_dagman_out)}"
                                     )
 
                         if millisleep is not None:
@@ -1648,12 +1616,7 @@ while len(wfs) > 0:
 
                     ml_pos = workflow_entry.DMOF.tell()
                     logger.debug(
-                        "processed chunk of %d bytes"
-                        % (
-                            ml_pos
-                            - workflow_entry.ml_current
-                            - len(workflow_entry.ml_buffer)
-                        )
+                        f"processed chunk of {ml_pos - workflow_entry.ml_current - len(workflow_entry.ml_buffer):d} bytes"
                     )
                     workflow_entry.ml_current = ml_pos
                     workflow_entry.ml_retries = 0
@@ -1666,14 +1629,14 @@ while len(wfs) > 0:
 
     # End of main for loop, still in the while loop...
 
-    logger.trace("currently tracking %d workflow(s)..." % (len(wfs)))
+    logger.trace(f"currently tracking {len(wfs):d} workflow(s)...")
 
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
     while wf_index < len(wfs):
         workflow_entry = wfs[wf_index]
         if workflow_entry.delete_workflow is True:
-            logger.info("finishing workflow: %s" % (workflow_entry.dagman_out))
+            logger.info(f"finishing workflow: {workflow_entry.dagman_out}")
             # Close dagman.out file, if any
             if workflow_entry.DMOF is not None:
                 workflow_entry.DMOF.close()
@@ -1735,6 +1698,6 @@ if do_notifications is True and monitord_notifications is not None:
         monitord_notifications.service_notifications()
         time.sleep(SLEEP_WAIT_NOTIFICATION)
 
-logger.info("monitord process %d exiting with 0" % os.getpid())
+logger.info(f"monitord process {os.getpid():d} exiting with 0")
 
 sys.exit(0)

@@ -24,7 +24,10 @@ parser = ArgumentParser(
     )
 )
 parser.add_argument(
-    "-p", "--permanent", action="store_true", help="request a refreshable token",
+    "-p",
+    "--permanent",
+    action="store_true",
+    help="request a refreshable token",
 )
 parser.add_argument(
     "-e",

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 import json
 import logging
@@ -60,26 +60,28 @@ site_catalog_file = TOP_DIR / TEST_NAME / "sites.yml"
 logging.info("Generating site catalog at: {}".format(site_catalog_file))
 cmd_properties["pegasus.catalog.site.file"] = site_catalog_file
 
-compute_site = Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX).add_pegasus_profile(
-    style="ssh").add_pegasus_profile(clusters_num=1)
+compute_site = (
+    Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
+    .add_pegasus_profile(style="ssh")
+    .add_pegasus_profile(clusters_num=1)
+)
 
-compute_site.add_grids( Grid(
-                Grid.BATCH,
-                "rynge@eclair-sub-01.isi.edu:22",
-                Scheduler.SLURM,
-                job_type=SupportedJobs.COMPUTE,
-            )
-        )
+compute_site.add_grids(
+    Grid(
+        Grid.BATCH,
+        "rynge@eclair-sub-01.isi.edu:22",
+        Scheduler.SLURM,
+        job_type=SupportedJobs.COMPUTE,
+    )
+)
 
-compute_site.add_pegasus_profile(queue="scavenge",
-                                 project="scavenge",
-                                 glite_arguments=" --cpus-per-task=1 ",
-                                 style="ssh");
-
-
-SiteCatalog().add_sites(
-    compute_site
-).write(str(site_catalog_file))
+compute_site.add_pegasus_profile(
+    queue="scavenge",
+    project="scavenge",
+    glite_arguments=" --cpus-per-task=1 ",
+    style="ssh",
+)
+SiteCatalog().add_sites(compute_site).write(str(site_catalog_file))
 
 # --- Replicas -----------------------------------------------------------------
 replica_catalog_file = TOP_DIR / TEST_NAME / "replicas.yml"
@@ -93,54 +95,49 @@ with open("{}/f.a".format(INPUT_DIR), "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
-ReplicaCatalog().add_replica(COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn).write(str(replica_catalog_file))
+ReplicaCatalog().add_replica(
+    COMPUTE if SHARED else LOCAL, fa, INPUT_DIR / fa.lfn
+).write(str(replica_catalog_file))
 
 
 # --- Transformations ----------------------------------------------------------
 
 transformation_catalog_file = TOP_DIR / TEST_NAME / "transformations.yml"
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
-logging.info("Generating transformation catalog at: {}".format(transformation_catalog_file))
+logging.info(
+    "Generating transformation catalog at: {}".format(transformation_catalog_file)
+)
 
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL,
-        PEGASUS_LOCATION,
-        is_stageable=True,
-        arch=Arch.X86_64,
-        os_type=OS.LINUX
+        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX
     )
 )
 # make the job fail, and then succeed on the first retry
-preprocess.add_pegasus_profile(queue="unknown",
-                               queue_expr='"scavenge" if job_retry > 0 else "unknown"')
+preprocess.add_pegasus_profile(
+    queue="unknown", queue_expr='"scavenge" if job_retry > 0 else "unknown"'
+)
 
-preprocess.add_condor_profile(periodic_remove="(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 10)")
+preprocess.add_condor_profile(
+    periodic_remove="(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 10)"
+)
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL,
-        PEGASUS_LOCATION,
-        is_stageable=True,
-        arch=Arch.X86_64,
-        os_type=OS.LINUX
+        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX
     )
 )
 
 analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL,
-        PEGASUS_LOCATION,
-        is_stageable=True,
-        arch=Arch.X86_64,
-        os_type=OS.LINUX
+        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX
     )
 )
 
-TransformationCatalog().add_transformations(
-    preprocess, findrage, analyze
-).write(str(transformation_catalog_file))
+TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
+    str(transformation_catalog_file)
+)
 
 # --- Workflow -----------------------------------------------------------------
 logging.info("Generating workflow")
@@ -178,7 +175,7 @@ try:
         output_sites=[LOCAL],
         cluster=["horizontal"],
         force=True,
-        **cmd_properties
+        **cmd_properties,
     )
 except PegasusClientError as e:
     logging.error(e.output)

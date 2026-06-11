@@ -17,8 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /**
  * Tests structural properties of the Abstract aggregator base class via reflection, since the class

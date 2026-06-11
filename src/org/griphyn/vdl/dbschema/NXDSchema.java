@@ -15,15 +15,7 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.common.util.Separator;
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Properties;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
@@ -34,6 +26,17 @@ import org.w3c.dom.Element;
 import org.xmldb.api.*;
 import org.xmldb.api.base.*;
 import org.xmldb.api.modules.*;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 
 /**
  * This class provides basic functionalities to interact with the backend database, such as
@@ -113,8 +116,13 @@ public class NXDSchema extends DatabaseSchema implements XDC {
      * @throws javax.xml.parsers.ParserConfigurationException Exception
      */
     public NXDSchema(String dbDriver)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException,
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException,
                     ParserConfigurationException {
         // load the driver from the properties
         super(); // call minimalistic c'tor, no driver loading!
@@ -623,7 +631,8 @@ public class NXDSchema extends DatabaseSchema implements XDC {
             xquery = "for $n in distinct-values(//derivation/@namespace) order by $n return $n";
         else
             xquery =
-                    "for $n in distinct-values(//derivation/@namespace|//transformation/@namespace) order by $n return $n";
+                    "for $n in distinct-values(//derivation/@namespace|//transformation/@namespace)"
+                            + " order by $n return $n";
 
         java.util.List result = searchElements(xquery);
 
@@ -645,13 +654,19 @@ public class NXDSchema extends DatabaseSchema implements XDC {
 
         if (type == Definition.TRANSFORMATION)
             xquery =
-                    "for $d in //transformation order by $d/@namespace empty least, $d/@name, $d/@version return string-join((string-join(($d/@namespace, $d/@name), '::'), $d/@version), ':')";
+                    "for $d in //transformation order by $d/@namespace empty least, $d/@name,"
+                        + " $d/@version return string-join((string-join(($d/@namespace, $d/@name),"
+                        + " '::'), $d/@version), ':')";
         else if (type == Definition.DERIVATION)
             xquery =
-                    "for $d in //derivation order by $d/@namespace empty least, $d/@name, $d/@version return string-join((string-join(($d/@namespace, $d/@name), '::'), $d/@version), ':')";
+                    "for $d in //derivation order by $d/@namespace empty least, $d/@name,"
+                        + " $d/@version return string-join((string-join(($d/@namespace, $d/@name),"
+                        + " '::'), $d/@version), ':')";
         else
             xquery =
-                    "for $d in (//transformation|//derivation) order by $d/@namespace empty least, $d/@name, $d/@version return string-join((string-join(($d/@namespace, $d/@name), '::'), $d/@version), ':')";
+                    "for $d in (//transformation|//derivation) order by $d/@namespace empty least,"
+                        + " $d/@name, $d/@version return string-join((string-join(($d/@namespace,"
+                        + " $d/@name), '::'), $d/@version), ':')";
 
         java.util.List result = searchElements(xquery);
 
@@ -1043,7 +1058,8 @@ public class NXDSchema extends DatabaseSchema implements XDC {
 
             // create the annotation
             String anno =
-                    "<annotation xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><metadata subject=\""
+                    "<annotation xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+                            + " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><metadata subject=\""
                             + subject
                             + "\" name=\""
                             + primary
@@ -1482,7 +1498,10 @@ public class NXDSchema extends DatabaseSchema implements XDC {
                 return searchElements(xquery);
             } else {
                 xquery +=
-                        ", $n := substring-before($mn, '::'), $na := substring-after($mn, '::'), $iv := if ($na) then $na else $mn, $v := substring-after($iv, ':'), $ib := substring-before($iv, ':'), $i := if ($ib) then $ib else $iv,";
+                        ", $n := substring-before($mn, '::'), $na := substring-after($mn, '::'),"
+                            + " $iv := if ($na) then $na else $mn, $v := substring-after($iv, ':'),"
+                            + " $ib := substring-before($iv, ':'), $i := if ($ib) then $ib else"
+                            + " $iv,";
                 xquery +=
                         " $t := if ($n) then if ($v) then //"
                                 + defn

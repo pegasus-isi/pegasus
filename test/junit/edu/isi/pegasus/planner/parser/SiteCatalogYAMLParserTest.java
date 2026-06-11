@@ -24,16 +24,20 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class SiteCatalogYAMLParserTest {
 
     /*

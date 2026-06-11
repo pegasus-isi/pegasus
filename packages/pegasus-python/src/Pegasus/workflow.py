@@ -164,7 +164,7 @@ def _to_wf(d: dict) -> Workflow:
             dependencies = defaultdict(_JobDependency)
             for item in d.get("jobDependencies"):
                 dependencies[item["id"]] = _JobDependency(
-                    item["id"], {child for child in item["children"]}
+                    item["id"], set(item["children"])
                 )
 
             wf.dependencies = dependencies

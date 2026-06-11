@@ -26,14 +26,18 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Rafael Ferreira da Silva */
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+/**
+ * @author Rafael Ferreira da Silva
+ */
 public class JDBCRCTest {
 
     private TestSetup mTestSetup;

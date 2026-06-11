@@ -54,4 +54,3 @@ for job in "$@"; do
     fi
     jc=$(($jc+1))
 done
-

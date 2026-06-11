@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

@@ -68,7 +68,7 @@ MONITORD_RECOVER_FILE = (
 PRESCRIPT_TASK_ID = -1  # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2  # id for postscript tasks
 MAX_OUTPUT_LENGTH = (
-    2 ** 16 - 1
+    2**16 - 1
 )  # in bytes, maximum we can put into the database for job's stdout and stderr
 UNKNOWN_FAILURE_CODE = 2  # unknown failure code when inserting an END event betweeen consecutive workflow start events
 
@@ -100,7 +100,7 @@ class Workflow:
         :return: int version
         """
 
-        version = "%02d%02d%02d" % (major, minor, patch)
+        version = f"{major:02d}{minor:02d}{patch:02d}"
         return int(version)
 
     # class level variable constant
@@ -167,8 +167,7 @@ class Workflow:
         except Exception:
             # Error sending this event... disable the sink from now on...
             logger.warning(
-                "DASHBOARD DB NL-LOAD-ERROR --> %s - %s"
-                % (
+                "DASHBOARD DB NL-LOAD-ERROR --> {} - {}".format(
                     self._wf_uuid,
                     (
                         (self._dax_label or "unknown")
@@ -198,9 +197,9 @@ class Workflow:
         try:
             DAG = open(dag_file)
         except Exception:
-            logger.warning("unable to read %s!" % (dag_file))
+            logger.warning(f"unable to read {dag_file}!")
         else:
-            logger.info("Parsing DAG file %s" % dag_file)
+            logger.info(f"Parsing DAG file {dag_file}")
             for dag_line in DAG:
                 lc_dag_line = dag_line.lower().lstrip()
                 if lc_dag_line.startswith("job"):
@@ -366,7 +365,7 @@ class Workflow:
         try:
             IN = open(in_file)
         except Exception:
-            logger.warning("unable to read %s!" % (in_file))
+            logger.warning(f"unable to read {in_file}!")
             return None
 
         tasks_found = 0
@@ -388,12 +387,7 @@ class Workflow:
                     my_task_info = tasks[my_task_id]
                 except Exception:
                     logger.warning(
-                        "cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s"
-                        % (
-                            my_task_id,
-                            jobname,
-                            os.path.join(self._run_dir, self._dag_file_name),
-                        )
+                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {os.path.join(self._run_dir, self._dag_file_name)}"
                     )
                     continue
                 my_task_info["transformation"] = my_transformation
@@ -419,12 +413,7 @@ class Workflow:
                     my_task_info = tasks[tasks_found]
                 except Exception:
                     logger.warning(
-                        "cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s"
-                        % (
-                            my_task_id,
-                            jobname,
-                            os.path.join(self._run_dir, self._dag_file_name),
-                        )
+                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {os.path.join(self._run_dir, self._dag_file_name)}"
                     )
                     continue
                 my_task_info["argument-vector"] = my_argv
@@ -455,9 +444,7 @@ class Workflow:
         try:
             INPUT = open(my_fn)
         except Exception:
-            logger.info(
-                "cannot open state file %s, continuing without state..." % (my_fn)
-            )
+            logger.info(f"cannot open state file {my_fn}, continuing without state...")
             return
 
         try:
@@ -479,7 +466,7 @@ class Workflow:
                     # Another job counter
                     self._job_counters[my_job] = my_count
         except Exception:
-            logger.error("error processing state file %s" % (my_fn))
+            logger.error(f"error processing state file {my_fn}")
 
         # Close the file
         try:
@@ -509,26 +496,24 @@ class Workflow:
         try:
             OUT = open(my_fn, "w")
         except Exception:
-            logger.error("cannot open state file %s" % (my_fn))
+            logger.error(f"cannot open state file {my_fn}")
             return
 
         try:
             # Write first line with the last job_submit_seq used
-            OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
+            OUT.write(f"monitord_job_sequence {self._job_submit_seq:d}\n")
             # Then, write the last line number of the dagman.out file we processed
             if self._line > self._last_processed_line:
-                OUT.write("monitord_dagman_out_sequence %s\n" % (self._line))
+                OUT.write(f"monitord_dagman_out_sequence {self._line}\n")
             else:
-                OUT.write(
-                    "monitord_dagman_out_sequence %s\n" % (self._last_processed_line)
-                )
+                OUT.write(f"monitord_dagman_out_sequence {self._last_processed_line}\n")
             # Next, write the restart count
-            OUT.write("monitord_workflow_restart_count %d\n" % (self._restart_count))
+            OUT.write(f"monitord_workflow_restart_count {self._restart_count:d}\n")
             # Finally, write all job_counters
             for my_job in self._job_counters:
-                OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
+                OUT.write(f"{my_job} {self._job_counters[my_job]:d}\n")
         except Exception:
-            logger.error("cannot write state to log file %s" % (my_fn))
+            logger.error(f"cannot write state to log file {my_fn}")
 
         # Close the file
         try:
@@ -561,15 +546,13 @@ class Workflow:
                     if my_key == "line_processed":
                         self._previous_processed_line = int(my_value.strip())
                         logger.info(
-                            "monitord last processed line: %d"
-                            % (self._previous_processed_line)
+                            f"monitord last processed line: {self._previous_processed_line:d}"
                         )
                         break
                 RECOVER.close()
             except Exception:
                 logger.info(
-                    "couldn't open/parse recover file information: %s"
-                    % (my_recover_file)
+                    f"couldn't open/parse recover file information: {my_recover_file}"
                 )
 
     def write_workflow_progress(self):
@@ -591,16 +574,14 @@ class Workflow:
         try:
             RECOVER = open(my_recover_file, "w")
         except Exception:
-            logger.error("cannot open recover file: %s" % (my_recover_file))
+            logger.error(f"cannot open recover file: {my_recover_file}")
             return
 
         try:
             # Write line with information about where we are in the dagman.out file
-            RECOVER.write("line_processed %s\n" % (self._line))
+            RECOVER.write(f"line_processed {self._line}\n")
         except Exception:
-            logger.error(
-                "cannot write recover information to file: %s" % (my_recover_file)
-            )
+            logger.error(f"cannot write recover information to file: {my_recover_file}")
 
         # Close the file
         try:
@@ -756,8 +737,7 @@ class Workflow:
                 kwargs["level"] = "Error"
             if self._dagman_exit_code is None:
                 logger.warning(
-                    "%s - %s - %s - %s: DAGMan exit code hasn't been set..."
-                    % (
+                    "{} - {} - {} - {}: DAGMan exit code hasn't been set...".format(
                         self._wf_uuid,
                         (
                             (self._dax_label or "unknown")
@@ -791,31 +771,26 @@ class Workflow:
                 # PM-1062 subtract 1 second from the timestamp
                 prev_wf_end_timestamp = self._current_timestamp - 1
                 logger.warning(
-                    "Consecutive workflow START events detected for workflow with condor id %s running in directory %s ."
-                    % (self._dagman_condor_id, self._submit_dir)
-                    + " Inserting Workflow END event with timestamp %s"
-                    % (prev_wf_end_timestamp)
+                    f"Consecutive workflow START events detected for workflow with condor id {self._dagman_condor_id} running in directory {self._submit_dir} ."
+                    f" Inserting Workflow END event with timestamp {prev_wf_end_timestamp}"
                 )
                 self._dagman_exit_code = UNKNOWN_FAILURE_CODE
                 self.write_to_jobstate(
-                    "%d INTERNAL *** DAGMAN_FINISHED %s ***\n"
-                    % (prev_wf_end_timestamp, self._dagman_exit_code)
+                    f"{prev_wf_end_timestamp:.0f} INTERNAL *** DAGMAN_FINISHED {self._dagman_exit_code} ***\n"
                 )
                 self.db_send_wf_state("end", prev_wf_end_timestamp)
                 # PM-1217 reset exitcode to None as we don't want monitord to stop monitoring this workflow
                 self._dagman_exit_code = None
 
         if state == "start":
-            logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
+            logger.info(f"DAGMan starting with condor id {self._dagman_condor_id}")
             self.write_to_jobstate(
-                "%d INTERNAL *** DAGMAN_STARTED %s ***\n"
-                % (self._current_timestamp, self._dagman_condor_id)
+                f"{self._current_timestamp:.0f} INTERNAL *** DAGMAN_STARTED {self._dagman_condor_id} ***\n"
             )
             self._restart_count = self._restart_count + 1
         elif state == "end":
             self.write_to_jobstate(
-                "%d INTERNAL *** DAGMAN_FINISHED %s ***\n"
-                % (self._current_timestamp, self._dagman_exit_code)
+                f"{self._current_timestamp:.0f} INTERNAL *** DAGMAN_FINISHED {self._dagman_exit_code} ***\n"
             )
 
         # Take care of workflow-level notifications
@@ -843,7 +818,7 @@ class Workflow:
         jobs_to_delete = []
 
         # Compile list of jobs whose information we don't need anymore...
-        for (my_jobid, my_job_submit_seq) in self._jobs:
+        for my_jobid, my_job_submit_seq in self._jobs:
             my_job = self._jobs[my_jobid, my_job_submit_seq]
             my_job_state = my_job._job_state
             if my_job_state == "POST_SCRIPT_SUCCESS":
@@ -854,12 +829,12 @@ class Workflow:
                     # No postscript for this job
                     jobs_to_delete.append((my_jobid, my_job_submit_seq))
                 else:
-                    logger.debug("keeping job %s..." % (my_jobid))
+                    logger.debug(f"keeping job {my_jobid}...")
             else:
-                logger.debug("keeping job %s..." % (my_jobid))
+                logger.debug(f"keeping job {my_jobid}...")
 
         # Delete jobs...
-        for (my_jobid, my_job_submit_seq) in jobs_to_delete:
+        for my_jobid, my_job_submit_seq in jobs_to_delete:
             if my_jobid in self._walltime:
                 del self._walltime[my_jobid]
             if my_jobid in self._job_site:
@@ -884,8 +859,7 @@ class Workflow:
         if self._line < self._previous_processed_line:
             # Recovery mode, skip notification that we already did.
             logger.debug(
-                "Recovery mode: skipping notification already issued... line %s"
-                % (self._line)
+                f"Recovery mode: skipping notification already issued... line {self._line}"
             )
             return False
 
@@ -970,12 +944,8 @@ class Workflow:
         self._notify_file = None  # notification file
         self._notifications = None  # list of notifications for this workflow
         self._JSDB = None  # Handle for jobstate.log file
-        self._job_counters = (
-            {}
-        )  # Job counters for figuring out which output file to parse
-        self._job_info = (
-            {}
-        )  # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir, prescript_log]
+        self._job_counters = {}  # Job counters for figuring out which output file to parse
+        self._job_info = {}  # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir, prescript_log]
         self._valid_braindb = (
             True  # Flag for creating a new brain db if we don't find one
         )
@@ -1027,8 +997,7 @@ class Workflow:
                 self._fixed_addon_attrs["xwf__id"] = self._wf_uuid
         else:
             logger.error(
-                "wf_uuid not specified in braindump, skipping this (sub-)workflow. %s %s "
-                % (rundir, workflow_config_file)
+                f"wf_uuid not specified in braindump, skipping this (sub-)workflow. {rundir} {workflow_config_file} "
             )
             self._monitord_exit_code = 1
             return
@@ -1147,7 +1116,7 @@ class Workflow:
             )
 
         if not os.path.isfile(self._jsd_file):
-            logger.info("creating new file %s" % (self._jsd_file))
+            logger.info(f"creating new file {self._jsd_file}")
 
         try:
             # Create new file, or append to an existing one
@@ -1156,8 +1125,7 @@ class Workflow:
                 # in recovering from previous errors
                 # this is for rescue dags and when a workflow is run for the first time
                 logger.info(
-                    "Appending to existing jobstate.log replay_mode %s previous_processed_line %s"
-                    % (self._replay_mode, self._previous_processed_line)
+                    f"Appending to existing jobstate.log replay_mode {self._replay_mode} previous_processed_line {self._previous_processed_line}"
                 )
                 self._JSDB = open(self._jsd_file, "ab", 0)
             else:
@@ -1167,12 +1135,11 @@ class Workflow:
                 # or the recover mode
                 utils.rotate_log_file(self._jsd_file)
                 logger.info(
-                    " Rotating jobstate.log replay_mode %s previous_processed_line %s"
-                    % (self._replay_mode, self._previous_processed_line)
+                    f" Rotating jobstate.log replay_mode {self._replay_mode} previous_processed_line {self._previous_processed_line}"
                 )
                 self._JSDB = open(self._jsd_file, "wb", 0)
         except Exception:
-            logger.critical("error creating/appending to %s!" % (self._jsd_file))
+            logger.critical(f"error creating/appending to {self._jsd_file}!")
             self._monitord_exit_code = 1
             print(traceback.format_exc())
             return
@@ -1196,7 +1163,7 @@ class Workflow:
 
         # Say hello.... add start information to JSDB
         self.write_to_jobstate(
-            "%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start)
+            f"{self._workflow_start:d} INTERNAL *** MONITORD_STARTED ***\n"
         )
 
         # Write monitord.started file
@@ -1212,11 +1179,9 @@ class Workflow:
 
         # Remove monitord.done file, if it is there
         if self._output_dir is None:
-            my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+            os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
-            my_touch_name = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
-            )
+            os.path.join(self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}")
 
         try:
             os.unlink(my_touch_file)
@@ -1224,7 +1189,7 @@ class Workflow:
             pass
 
         # Add this workflow to Workflow's class master list
-        if not rundir in Workflow.wf_list:
+        if rundir not in Workflow.wf_list:
             Workflow.wf_list[rundir] = {
                 "wf_uuid": self._wf_uuid,
                 "parent_workflow_id": self._parent_workflow_id,
@@ -1249,7 +1214,7 @@ class Workflow:
                 my_static_file = open(self._static_bp_file)
             except Exception:
                 logger.critical(
-                    "cannot find static bp file %s, exiting..." % (self._static_bp_file)
+                    f"cannot find static bp file {self._static_bp_file}, exiting..."
                 )
                 sys.exit(1)
 
@@ -1266,9 +1231,9 @@ class Workflow:
                     my_keys = my_bp_parser.parseLine(my_line)
                     if len(my_keys) == 0:
                         continue
-                    if not "event" in my_keys:
+                    if "event" not in my_keys:
                         logger.error(
-                            "bad event in static bp file: %s, continuing..." % (my_line)
+                            f"bad event in static bp file: {my_line}, continuing..."
                         )
                         continue
                     my_event = my_keys["event"]
@@ -1289,8 +1254,7 @@ class Workflow:
                     self.output_to_db(my_event, remapped_keys)
             except Exception:
                 logger.critical(
-                    "error processing static bp file %s, exiting..."
-                    % (self._static_bp_file)
+                    f"error processing static bp file {self._static_bp_file}, exiting..."
                 )
                 logger.critical(traceback.format_exc())
                 sys.exit(1)
@@ -1299,8 +1263,7 @@ class Workflow:
                 my_static_file.close()
             except Exception:
                 logger.warning(
-                    "error closing static bp file %s, continuing..."
-                    % (self._static_bp_file)
+                    f"error closing static bp file {self._static_bp_file}, continuing..."
                 )
 
             # Send event to mark the end of the static content
@@ -1366,8 +1329,7 @@ class Workflow:
             )
 
         self.write_to_jobstate(
-            "%d INTERNAL *** MONITORD_FINISHED %d ***\n"
-            % (my_workflow_end, self._monitord_exit_code)
+            f"{my_workflow_end:d} INTERNAL *** MONITORD_FINISHED {self._monitord_exit_code:d} ***\n"
         )
         self._JSDB.close()
 
@@ -1377,9 +1339,9 @@ class Workflow:
         # Delete recovery file
         try:
             os.unlink(my_recover_file)
-            logger.info("recovery file deleted: %s" % (my_recover_file))
+            logger.info(f"recovery file deleted: {my_recover_file}")
         except Exception:
-            logger.warning("unable to remove recover file: %s" % (my_recover_file))
+            logger.warning(f"unable to remove recover file: {my_recover_file}")
 
         # Write monitord.done file
         if self._output_dir is None:
@@ -1391,15 +1353,11 @@ class Workflow:
         try:
             TOUCH = open(my_touch_name, "w")
             TOUCH.write(
-                "%s %.3f\n"
-                % (
-                    utils.isodate(my_workflow_end),
-                    (my_workflow_end - self._workflow_start),
-                )
+                f"{utils.isodate(my_workflow_end)} {my_workflow_end - self._workflow_start:.3f}\n"
             )
             TOUCH.close()
         except Exception:
-            logger.error("writing %s" % (my_touch_name))
+            logger.error(f"writing {my_touch_name}")
 
         # Remove our notifications from the notification lists
         if self._notifications_manager is not None:
@@ -1413,7 +1371,6 @@ class Workflow:
                     and os.access(self._condorlog, os.R_OK)
                     and self._condorlog.find("/") == 0
                 ):
-
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
                     my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
@@ -1424,16 +1381,16 @@ class Workflow:
                         try:
                             os.unlink(my_log)
                         except Exception:
-                            logger.error("removing %s" % (my_log))
+                            logger.error(f"removing {my_log}")
                         else:
                             try:
-                                os.rename("%s.copy" % (my_log), my_log)
+                                os.rename(f"{my_log}.copy", my_log)
                             except Exception:
                                 logger.error(f"renaming {my_log}.copy to {my_log}")
                             else:
-                                logger.info("copied common log to %s" % (self._run_dir))
+                                logger.info(f"copied common log to {self._run_dir}")
                     else:
-                        logger.info("%s: %d:%s" % (my_cmd, my_status, my_output))
+                        logger.info(f"{my_cmd}: {my_status:d}:{my_output}")
 
     def find_jobid(self, jobid):
         """
@@ -1462,7 +1419,7 @@ class Workflow:
             return None
 
         # Make sure the job is there
-        if not (jobid, my_job_submit_seq) in self._jobs:
+        if (jobid, my_job_submit_seq) not in self._jobs:
             logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
             return None
 
@@ -1688,8 +1645,8 @@ class Workflow:
         if my_job._output_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stdout__file"] = my_job._output_file + ".%03d" % (
-                    my_job._job_output_counter
+                kwargs["stdout__file"] = (
+                    my_job._output_file + f".{my_job._job_output_counter:03d}"
                 )
             else:
                 kwargs["stdout__file"] = my_job._output_file
@@ -1698,8 +1655,8 @@ class Workflow:
         if my_job._error_file is not None:
             if my_job._kickstart_parsed or my_job._has_rotated_stdout_err_files:
                 # Only use rotated filename for job with kickstart output
-                kwargs["stderr__file"] = my_job._error_file + ".%03d" % (
-                    my_job._job_output_counter
+                kwargs["stderr__file"] = (
+                    my_job._error_file + f".{my_job._job_output_counter:03d}"
                 )
             else:
                 kwargs["stderr__file"] = my_job._error_file
@@ -1711,9 +1668,7 @@ class Workflow:
                 if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
                     kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
-                    logger.warning(
-                        "truncating stdout for job %s" % (my_job._exec_job_id)
-                    )
+                    logger.warning(f"truncating stdout for job {my_job._exec_job_id}")
                 else:
                     # Put everything in
                     kwargs["stdout__text"] = my_job._stdout_text
@@ -1721,9 +1676,7 @@ class Workflow:
                 if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
                     # Need to truncate to avoid database problems...
                     kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
-                    logger.warning(
-                        "truncating stderr for job %s" % (my_job._exec_job_id)
-                    )
+                    logger.warning(f"truncating stderr for job {my_job._exec_job_id}")
                 else:
                     # Put everything in
                     kwargs["stderr__text"] = my_job._stderr_text
@@ -1752,7 +1705,7 @@ class Workflow:
             and task_type != "POST_SCRIPT"
             and task_type != "MAIN_JOB"
         ):
-            logger.warning("unknown task type: %s" % (task_type))
+            logger.warning(f"unknown task type: {task_type}")
             return
 
         # Make sure we include the wf_uuid, name, and job_submit_seq
@@ -1813,7 +1766,7 @@ class Workflow:
             and task_type != "POST_SCRIPT"
             and task_type != "MAIN_JOB"
         ):
-            logger.warning("unknown task type: %s" % (task_type))
+            logger.warning(f"unknown task type: {task_type}")
             return
 
         # Make sure we include the wf_uuid, name, and job_submit_seq
@@ -1948,8 +1901,7 @@ class Workflow:
                     # PM-1737 prevent divide by zero errors
                     if f_duration == 0.0:
                         logger.debug(
-                            "Duration of zero seconds encountered for job %s"
-                            % my_job._exec_job_id
+                            f"Duration of zero seconds encountered for job {my_job._exec_job_id}"
                         )
                     else:
                         kwargs["avg_cpu"] = kwargs["remote_cpu_time"] / f_duration
@@ -2139,8 +2091,7 @@ class Workflow:
 
         # Start empty
         logger.debug(
-            "Generating output integrity metric events for job %s "
-            % (my_job._exec_job_id)
+            f"Generating output integrity metric events for job {my_job._exec_job_id} "
         )
 
         for metric in my_job._integrity_metrics:
@@ -2171,12 +2122,12 @@ class Workflow:
 
     def db_send_task_monitoring_events(self, my_job, task_id, events):
         """
-               This function sends additional monitoring events
-               :param my_job:
-               :param my_task_id:
-               :param events: list of events with event and payload elements
-               :return:
-               """
+        This function sends additional monitoring events
+        :param my_job:
+        :param my_task_id:
+        :param events: list of events with event and payload elements
+        :return:
+        """
         # Check if database is configured
         if self._sink is None:
             return
@@ -2184,8 +2135,7 @@ class Workflow:
         # Start empty
         for event in events:
             logger.debug(
-                "Generating additional monitoring events for task %s in job %s"
-                % (task_id, my_job._exec_job_id)
+                f"Generating additional monitoring events for task {task_id} in job {my_job._exec_job_id}"
             )
             kwargs = {}
 
@@ -2210,7 +2160,7 @@ class Workflow:
 
             payload = event["payload"] if "payload" in event else None
             if payload is None:
-                logger.error("No payload retrieved from event %s" % event)
+                logger.error(f"No payload retrieved from event {event}")
 
             # each item in list has to be flattened and put in separate event?
             for item in payload:
@@ -2253,8 +2203,8 @@ class Workflow:
             # still we have rotated logs
             my_job_output_fn = my_job_output_fn_base
             if self.job_has_postscript(my_job._exec_job_id) or self._is_pmc_dag:
-                my_job_output_fn = my_job_output_fn_base + ".%03d" % (
-                    my_job._job_output_counter
+                my_job_output_fn = (
+                    my_job_output_fn_base + f".{my_job._job_output_counter:03d}"
                 )
                 my_job._has_rotated_stdout_err_files = True
 
@@ -2265,8 +2215,7 @@ class Workflow:
             # Check if successful
             if my_parser._open_error is True and not my_job.is_noop_job():
                 logger.error(
-                    "unable to read output file %s for job %s"
-                    % (my_job_output_fn, my_job._exec_job_id)
+                    f"unable to read output file {my_job_output_fn} for job {my_job._exec_job_id}"
                 )
 
         # Initialize task id counter
@@ -2278,8 +2227,7 @@ class Workflow:
             # update the main job exitcode
             my_job._main_job_exitcode = my_pegasuslite_ec
             logger.debug(
-                "Pegasus Lite Exitcode for job %s is %s"
-                % (my_job._exec_job_id, my_pegasuslite_ec)
+                f"Pegasus Lite Exitcode for job {my_job._exec_job_id} is {my_pegasuslite_ec}"
             )
 
         # PM-1295 attempt to read the job stderr file always
@@ -2290,13 +2238,11 @@ class Workflow:
 
             # Add job information to the Job class.
             logger.debug(
-                "Starting extraction of job_info from job output file %s "
-                % my_job_output_fn
+                f"Starting extraction of job_info from job output file {my_job_output_fn} "
             )
             my_invocation_found = my_job.extract_job_info(my_output)
             logger.debug(
-                "Completed extraction of job_info from job output file %s "
-                % my_job_output_fn
+                f"Completed extraction of job_info from job output file {my_job_output_fn} "
             )
 
             if my_invocation_found:
@@ -2304,7 +2250,7 @@ class Workflow:
                 # Loop through all records
                 for record in my_output:
                     # Skip non-invocation records
-                    if not "invocation" in record:
+                    if "invocation" not in record:
                         continue
 
                     # Take care of invocation-level notifications
@@ -2359,7 +2305,7 @@ class Workflow:
                 for record in my_output:
                     if "task" in record:
                         # Ok, this is a task record
-                        if not "id" in record:
+                        if "id" not in record:
                             logger.warning(
                                 "id missing from task record... skipping to next one"
                             )
@@ -2368,8 +2314,9 @@ class Workflow:
                             my_id = int(record["id"])
                         except Exception:
                             logger.warning(
-                                "task id looks invalid, cannot convert it to int: %s skipping to next"
-                                % (record["id"])
+                                "task id looks invalid, cannot convert it to int: {} skipping to next".format(
+                                    record["id"]
+                                )
                             )
                             continue
                         # Add to our list
@@ -2390,16 +2337,15 @@ class Workflow:
                                 record["raw"] = record["status"]
                             # Validate record
                             if (
-                                not "transformation" in record
-                                or not "derivation" in record
-                                or not "start" in record
-                                or not "duration" in record
-                                or not "name" in record
-                                or not "argument-vector" in record
+                                "transformation" not in record
+                                or "derivation" not in record
+                                or "start" not in record
+                                or "duration" not in record
+                                or "name" not in record
+                                or "argument-vector" not in record
                             ):
                                 logger.info(
-                                    "task %d has incomplete information, skipping it..."
-                                    % (i)
+                                    f"task {i:d} has incomplete information, skipping it..."
                                 )
                                 continue
 
@@ -2424,7 +2370,7 @@ class Workflow:
                             my_task_id = my_task_id + 1
                 else:
                     # No tasks found...
-                    logger.info("no tasks found for job %s..." % (my_job._exec_job_id))
+                    logger.info(f"no tasks found for job {my_job._exec_job_id}...")
         else:
             # This is the case where we cannot find kickstart records
             # in the output file, this will be true for SUBDAG jobs as well
@@ -2474,19 +2420,18 @@ class Workflow:
         if not job._exec_job_id.startswith("register_") or job._main_job_exitcode != 0:
             return
 
-        basename = "%s.in" % (job._exec_job_id)
+        basename = f"{job._exec_job_id}.in"
         # PM-833 the .in file should be picked up from job submit directory
         input_file = os.path.join(job._job_submit_dir, basename)
         logger.info(
-            "Populating locations corresponding to succeeded registration job  %s "
-            % input_file
+            f"Populating locations corresponding to succeeded registration job  {input_file} "
         )
 
         try:
             SUB = open(input_file)
         except OSError:
-            logger.error("unable to parse %s" % (input_file))
-            return None
+            logger.error(f"unable to parse {input_file}")
+            return
 
         # Parse input file
         for my_line in SUB:
@@ -2534,7 +2479,7 @@ class Workflow:
             return ec
 
         if job._has_rotated_stdout_err_files:
-            error_basename += ".%03d" % (job._job_output_counter)
+            error_basename += f".{job._job_output_counter:03d}"
 
         errfile = os.path.join(self._run_dir, error_basename)
         if errfile is None or not os.path.isfile(errfile):
@@ -2564,9 +2509,9 @@ class Workflow:
 
         if my_job_submit_seq is not None:
             # Job already exists
-            if not (jobid, my_job_submit_seq) in self._jobs:
+            if (jobid, my_job_submit_seq) not in self._jobs:
                 logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
-                return
+                return None
 
             my_job = self._jobs[jobid, my_job_submit_seq]
 
@@ -2584,18 +2529,16 @@ class Workflow:
             # Make sure job is not already there
             if (jobid, my_job_submit_seq) in self._jobs:
                 logger.warning(f"trying to add job twice: {jobid}, {my_job_submit_seq}")
-                return
+                return None
 
             # PM-1334 log extra errors if dag file is not populated
             job_submit_dir = self._run_dir
             if not self._job_info:
                 logger.error(
-                    "_job_info not populated for dag . Check if dag file was parsed by monitord %s %s"
-                    % (self._dag_file_name, self._out_file)
+                    f"_job_info not populated for dag . Check if dag file was parsed by monitord {self._dag_file_name} {self._out_file}"
                 )
                 logger.error(
-                    "Using workflow submit directory %s as job submit dir for %s "
-                    % (self._run_dir, jobid)
+                    f"Using workflow submit directory {self._run_dir} as job submit dir for {jobid} "
                 )
             else:
                 # PM-833 determine the job submit directory based on the path to the submit file
@@ -2605,12 +2548,10 @@ class Workflow:
                     )
                 except KeyError:
                     logger.error(
-                        "Job %s not in _job_info for %s %s"
-                        % (jobid, self._out_file, self._dag_file_name)
+                        f"Job {jobid} not in _job_info for {self._out_file} {self._dag_file_name}"
                     )
                     logger.error(
-                        "Using workflow submit directory %s as job submit dir for %s "
-                        % (self._run_dir, jobid)
+                        f"Using workflow submit directory {self._run_dir} as job submit dir for {jobid} "
                     )
 
             # Create new job container
@@ -2657,7 +2598,7 @@ class Workflow:
         """
 
         # Make sure job is already there
-        if not (jobid, job_submit_seq) in self._jobs:
+        if (jobid, job_submit_seq) not in self._jobs:
             logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return
 
@@ -2680,7 +2621,7 @@ class Workflow:
             # Need to get job_submit_seq from our hash table
             if jobid in self._jobs_map:
                 job_submit_seq = self._jobs_map[jobid]
-        if not (jobid, job_submit_seq) in self._jobs:
+        if (jobid, job_submit_seq) not in self._jobs:
             logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return
         # Got it
@@ -2706,19 +2647,11 @@ class Workflow:
             status = str(status)
 
         # Create content -- use one space only
-        my_line = "%d %s %s %s %s %s %d" % (
-            self._current_timestamp,
-            jobid,
-            job_state,
-            status or my_job._sched_id or "-",
-            my_job._site_name or "-",
-            walltime or "-",
-            job_submit_seq or "-",
-        )
-        logger.debug("new state: %s" % (my_line))
+        my_line = f"{self._current_timestamp:.0f} {jobid} {job_state} {status or my_job._sched_id or '-'} {my_job._site_name or '-'} {walltime or '-'} {job_submit_seq or '-'}"
+        logger.debug(f"new state: {my_line}")
 
         # Prepare for atomic append
-        self.write_to_jobstate("%s\n" % (my_line))
+        self.write_to_jobstate(f"{my_line}\n")
 
         if self._sink is None and not self._enable_notifications:
             # Not generating events and notifcations, nothing else to do
@@ -2776,8 +2709,7 @@ class Workflow:
                 # No JOB_TERMINATED OR JOB_SUCCESS OR JOB_FAILURE for this job instance
                 my_job._main_job_exitcode = my_job._post_script_exitcode
                 logger.warning(
-                    "Set main job exitcode for %s to post script failure code %s"
-                    % (my_job._exec_job_id, my_job._post_script_exitcode)
+                    f"Set main job exitcode for {my_job._exec_job_id} to post script failure code {my_job._post_script_exitcode}"
                 )
 
             # PM-793 we parse the job.out and .err files when postscript finishes
@@ -2823,9 +2755,10 @@ class Workflow:
             # we only do for prescript failures. once job starts running
             # the dagman output gets populated
             if self._job_info[my_job._exec_job_id][8] is not None:
-                my_job._output_file = self._job_info[my_job._exec_job_id][
-                    8
-                ] + ".%03d" % (my_job._job_output_counter)
+                my_job._output_file = (
+                    self._job_info[my_job._exec_job_id][8]
+                    + f".{my_job._job_output_counter:03d}"
+                )
                 my_job.read_job_out_file(my_job._output_file)
 
             # PM-704 and send the job end event to record failure
@@ -2909,7 +2842,7 @@ class Workflow:
             # PM-1061 for any job submission failure case, set it as job stderr, so that
             # it gets populated with the job instance end event
             my_job._stderr_text = utils.quote(
-                "Job submission failed because of HTCondor event %s" % job_state
+                f"Job submission failed because of HTCondor event {job_state}"
             )
             self.db_send_job_end(my_job, -1, True)
 
@@ -2925,8 +2858,7 @@ class Workflow:
             # PM-833 only for pmc only case rely on the workflow dag file
             if self._is_pmc_dag:
                 return self._run_dir
-            else:
-                logger.error("Submit file path not specified for job %s" % job_id)
+            logger.error(f"Submit file path not specified for job {job_id}")
             return None
 
         # return the directory component of the path
@@ -2939,12 +2871,12 @@ class Workflow:
         """
 
         # Find job
-        if not (jobid, job_submit_seq) in self._jobs:
+        if (jobid, job_submit_seq) not in self._jobs:
             logger.warning(f"cannot find job: {jobid}, {job_submit_seq}")
             return None, None
 
         # Check if we have an entry for this job
-        if not jobid in self._job_info:
+        if jobid not in self._job_info:
             return None, None
 
         # Get corresponding job
@@ -2960,8 +2892,8 @@ class Workflow:
                 # In the PMC case we need to set the names of the out and error
                 # file because we can't parse the .sub file, which doesn't exist
                 my_job._input_file = None
-                my_job._output_file = "%s.out" % my_job._exec_job_id
-                my_job._error_file = "%s.err" % my_job._exec_job_id
+                my_job._output_file = f"{my_job._exec_job_id}.out"
+                my_job._error_file = f"{my_job._exec_job_id}.err"
                 # TODO Find the actual site name for PMC tasks
             return None, None
 
@@ -3016,7 +2948,7 @@ class Workflow:
         job. Otherwise, it returns None.
         """
         # This shouldn't be the case...
-        if not jobid in self._job_info:
+        if jobid not in self._job_info:
             return None
 
         # First we take care of SUBDAG jobs
@@ -3030,32 +2962,30 @@ class Workflow:
         #                return None
         #            # Looks ok, return new dagman.out
         #            my_dagman_out = self._job_info[jobid][6] + ".dagman.out"
-        else:
-            # Now check if this is a pegasus-plan or a subdax_ job
+        # Now check if this is a pegasus-plan or a subdax_ job
 
-            # First, look for a jobid
-            my_job_submit_seq = self.find_jobid(jobid)
+        # First, look for a jobid
+        my_job_submit_seq = self.find_jobid(jobid)
 
-            # No such job, return None
-            if my_job_submit_seq is None:
-                return None
+        # No such job, return None
+        if my_job_submit_seq is None:
+            return None
 
-            # Make sure the job is there
-            if not (jobid, my_job_submit_seq) in self._jobs:
-                logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
-                return None
+        # Make sure the job is there
+        if (jobid, my_job_submit_seq) not in self._jobs:
+            logger.warning(f"cannot find job: {jobid}, {my_job_submit_seq}")
+            return None
 
-            my_job = self._jobs[jobid, my_job_submit_seq]
-            my_dagman_out = my_job._job_dagman_out
-            if my_dagman_out is None:
-                # PM-951 log error only for subdax jobs
-                if my_job._exec_job_id.startswith("subdax_"):
-                    logger.error(
-                        "unable to determine the dagman.out file to track for job %s %s "
-                        % (jobid, my_job_submit_seq)
-                    )
+        my_job = self._jobs[jobid, my_job_submit_seq]
+        my_dagman_out = my_job._job_dagman_out
+        if my_dagman_out is None:
+            # PM-951 log error only for subdax jobs
+            if my_job._exec_job_id.startswith("subdax_"):
+                logger.error(
+                    f"unable to determine the dagman.out file to track for job {jobid} {my_job_submit_seq} "
+                )
 
-                return None
+            return None
 
         # Got it!
         my_dagman_out = os.path.normpath(my_dagman_out)
@@ -3079,8 +3009,7 @@ class Workflow:
 
         if wf_retries is None:
             logger.warning(
-                "persistent wf_retry not available... using sub-workflow directory: %s"
-                % (my_dagman_dir)
+                f"persistent wf_retry not available... using sub-workflow directory: {my_dagman_dir}"
             )
             return my_dagman_out
 
@@ -3106,28 +3035,24 @@ class Workflow:
         wf_retries[my_dagman_dir] = my_retry
 
         # Compose directory... assuming replanning mode
-        my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
+        my_retry_dir = my_dagman_dir + f".{my_retry:03d}"
 
         # If directory doesn't exist, let's change to rescue mode
         if not os.path.isdir(my_retry_dir):
             logger.debug(
-                "sub-workflow directory %s does not exist, shifting to rescue mode..."
-                % (my_retry_dir)
+                f"sub-workflow directory {my_retry_dir} does not exist, shifting to rescue mode..."
             )
             my_retry_dir = my_dagman_dir + ".000"
 
             if not os.path.isdir(my_retry_dir):
                 # Still not able to find it, output warning message
                 logger.warning(
-                    "sub-workflow directory %s does not exist! Skipping this sub-workflow..."
-                    % (my_retry_dir)
+                    f"sub-workflow directory {my_retry_dir} does not exist! Skipping this sub-workflow..."
                 )
                 return None
 
         # Found sub-workflow directory, let's compose the final path to the new dagman.out file...
-        my_dagman_out = os.path.join(my_retry_dir, my_dagman_file)
-
-        return my_dagman_out
+        return os.path.join(my_retry_dir, my_dagman_file)
 
     def set_dagman_version(self, major, minor, patch):
         """

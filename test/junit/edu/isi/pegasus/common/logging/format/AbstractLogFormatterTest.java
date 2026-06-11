@@ -19,14 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.Event;
 import edu.isi.pegasus.common.logging.LogFormatter;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.EmptyStackException;
 import java.util.Stack;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /** Tests for the AbstractLogFormatter class. */
 public class AbstractLogFormatterTest {

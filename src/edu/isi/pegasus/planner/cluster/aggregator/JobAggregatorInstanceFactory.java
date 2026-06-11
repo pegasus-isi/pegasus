@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

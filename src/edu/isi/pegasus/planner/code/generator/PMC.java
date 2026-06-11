@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -115,7 +116,8 @@ public class PMC extends Abstract {
                         .append(") ")
                         .append(".")
                         .append(
-                                "For the PMC Code generator all jobs should be mapped to the same site. ");
+                                "For the PMC Code generator all jobs should be mapped to the same"
+                                        + " site. ");
                 throw new CodeGeneratorException(error.toString());
             }
 

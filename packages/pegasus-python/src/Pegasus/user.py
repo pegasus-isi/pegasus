@@ -43,7 +43,7 @@ class User:
 
     def get_master_db_url(self):
         """Return a SQLAlchemy connection URL for the user's master database."""
-        return "sqlite:///%s" % self.get_master_db()
+        return f"sqlite:///{self.get_master_db()}"
 
 
 def __user_from_pwd(pw):

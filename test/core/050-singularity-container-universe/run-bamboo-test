@@ -40,4 +40,3 @@ done
 # now we are good to submit
 echo "Submitting the workflow for execution"
 pegasus-run $WORK_DIR
-

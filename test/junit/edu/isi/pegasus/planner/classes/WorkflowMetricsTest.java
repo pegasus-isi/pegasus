@@ -19,7 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class WorkflowMetricsTest {
 
     // -----------------------------------------------------------------------

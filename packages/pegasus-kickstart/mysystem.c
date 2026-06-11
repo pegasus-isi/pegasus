@@ -568,4 +568,3 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo) {
     /* finalize */
     return jobinfo->status;
 }
-

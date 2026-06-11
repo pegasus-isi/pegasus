@@ -50,7 +50,7 @@ def test_from_env_no_pegasus_home(monkeypatch):
     assert "PEGASUS_HOME not found" in str(e)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_subprocess(mocker):
     class Popen:
         def __init__(self):
@@ -68,7 +68,7 @@ def mock_subprocess(mocker):
     mocker.patch("subprocess.Popen", return_value=Popen())
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def client():
     return Client("/path")
 
@@ -328,7 +328,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "pegasus_status_out, expected_dict",
+        ("pegasus_status_out", "expected_dict"),
         [
             (
                 dedent(
@@ -458,7 +458,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "status_output_str, expected_dict",
+        ("status_output_str", "expected_dict"),
         [
             (
                 dedent(
@@ -512,7 +512,8 @@ class TestClient:
                 stdout_bytes=status_output_str,
                 stderr_bytes=b"",
             ),
-        )"""
+        ).
+        """
         mocker.patch(
             "Pegasus.client.status.Status.fetch_status", return_value=expected_dict
         )
@@ -522,7 +523,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "status_output, expected_progress_bar",
+        ("status_output", "expected_progress_bar"),
         [
             (
                 {
@@ -660,11 +661,10 @@ class TestClient:
         assert str(e.value) == "cmd is required"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def make_result():
     def _make_result(cmd="command", exit_code=0, stdout=b"", stderr=b""):
-        r = Result(cmd, exit_code, stdout, stderr)
-        return r
+        return Result(cmd, exit_code, stdout, stderr)
 
     return _make_result
 
@@ -747,7 +747,7 @@ b: 2
 """
     )
 
-    d = [y for y in r.yaml_all]
+    d = list(r.yaml_all)
     assert isinstance(d, list)
     assert len(d) == 2
     assert d[0]["a"] == 1

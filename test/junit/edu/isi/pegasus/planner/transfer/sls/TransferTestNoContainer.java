@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 import static edu.isi.pegasus.planner.transfer.sls.TransferTest.mTestNumber;
+
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -25,11 +26,15 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
-/** @author vahi */
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author vahi
+ */
 public class TransferTestNoContainer extends TransferTest {
 
     @Test

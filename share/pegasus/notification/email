@@ -55,7 +55,7 @@ def usage(parser):
     parser.print_help()
     print('')
     myexit(1)
-    
+
 
 def validate_env_var(key):
     if not key in os.environ:
@@ -66,8 +66,8 @@ def send_using_smtp(sender, recipient, msg):
     server = smtplib.SMTP('localhost')
     server.sendmail(sender, recipient, msg)
     server.quit()
-    
-    
+
+
 def send_using_sendmail(sender, recipient, msg):
     p = os.popen('/usr/sbin/sendmail -t', 'w')
     p.write(msg)
@@ -116,7 +116,7 @@ if options.from_address != None:
 report = 'pegasus-status'
 if options.report != None:
     report = str.lower(options.report)
-        
+
 try:
     validate_env_var('PEGASUS_BIN_DIR')
     validate_env_var('PEGASUS_SUBMIT_DIR')
@@ -147,18 +147,18 @@ body = '***** Pegasus Workflow Event ****\r\n' + \
        'Workflow: ' + os.environ['PEGASUS_SUBMIT_DIR'] + '\r\n' + \
        'Job id:   ' + os.environ['PEGASUS_JOBID'] + '\r\n' + \
        'Event:    ' + os.environ['PEGASUS_EVENT'] + '\r\n'
-    
+
 if 'PEGASUS_STATUS' in os.environ:
     body = body + \
            'Status: ' + os.environ['PEGASUS_STATUS'] + '\r\n'
-    
+
 # pegasus-status report
 if report == 'pegasus-status':
     try:
         out = '\r\n\r\npegasus-status:\r\n\r\n' + \
               backticks(os.environ['PEGASUS_BIN_DIR'] + '/pegasus-status --noutf8 --nocolor' + \
                         ' --noqueue' + \
-                        ' ' + os.environ['PEGASUS_SUBMIT_DIR'] + ' 2>&1') 
+                        ' ' + os.environ['PEGASUS_SUBMIT_DIR'] + ' 2>&1')
         body = body + out
     except Exception as err:
         print('Error running pegasus-status: ' + str(err), file=sys.stderr)
@@ -176,7 +176,7 @@ if report == 'pegasus-statistics':
     except Exception as err:
         print('Error running pegasus-analyzer: ' + str(err), file=sys.stderr)
 
-# pegasus-analyzer report             
+# pegasus-analyzer report
 if report == 'pegasus-analyzer':
     try:
         out = '\r\n\r\npegasus-analyzer:\r\n\r\n' + \
@@ -203,8 +203,8 @@ if os.environ['PEGASUS_EVENT'] == 'start':
                       '-o dag.dot ' + dag_fname + ' >/dev/null 2>&1')
 
             # now try dot, which might not be installed
-            backticks('dot -Tsvg -oabstract.svg abstract.dot >/dev/null') 
-            backticks('dot -Tsvg -odag.svg dag.dot >/dev/null') 
+            backticks('dot -Tsvg -oabstract.svg abstract.dot >/dev/null')
+            backticks('dot -Tsvg -odag.svg dag.dot >/dev/null')
 
             # if we get here, it is save to attach the files to the email
             fp = open('abstract.svg', 'rb')

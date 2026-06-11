@@ -14,15 +14,16 @@
  */
 package org.griphyn.vdl.dbschema;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.util.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.router.Cache;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.util.*;
 
 /**
  * This class provides basic functionalities to interact with the backend database, such as
@@ -84,8 +85,13 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
      * @throws java.io.IOException Exception
      */
     public ChunkSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with default schema c'tor");
@@ -127,10 +133,12 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
                 "stmt.select.xml.id", "SELECT xml FROM vdc_definition WHERE id=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.xml",
-                "SELECT id,xml FROM vdc_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id,xml FROM vdc_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.id",
-                "SELECT id FROM vdc_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id FROM vdc_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
 
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.delete.xml", "DELETE FROM vdc_definition WHERE id=?");

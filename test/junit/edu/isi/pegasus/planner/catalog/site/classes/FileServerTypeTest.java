@@ -20,8 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
-import java.util.Collection;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.Collection;
 
 /**
  * Tests for FileServerType via FileServer (concrete subclass) and for the OPERATION enum.

@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.format.Netlogger;
 import edu.isi.pegasus.common.logging.format.Simple;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 

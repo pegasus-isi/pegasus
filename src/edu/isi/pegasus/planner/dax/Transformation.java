@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,10 +29,13 @@ public class Transformation {
 
     /** Namespace of the Transformation */
     protected String mNamespace;
+
     /** Name of the transformation */
     protected String mName;
+
     /** Version of the transformation */
     protected String mVersion;
+
     /** List of executable of files used by the transformation */
     protected List<CatalogType> mUses;
 

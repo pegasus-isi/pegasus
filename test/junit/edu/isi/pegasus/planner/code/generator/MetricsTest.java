@@ -21,6 +21,10 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.namespace.ENV;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -29,8 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /** Tests for the Metrics code generator class. */
 public class MetricsTest {

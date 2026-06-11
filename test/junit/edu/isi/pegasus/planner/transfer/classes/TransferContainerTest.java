@@ -18,10 +18,12 @@ import static org.hamcrest.Matchers.*;
 
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import java.util.Arrays;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Arrays;
 
 /** Tests for {@link TransferContainer}. */
 public class TransferContainerTest {

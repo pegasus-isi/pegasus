@@ -5,7 +5,7 @@ set -e
 TEST_DIR=$PWD
 
 echo "Generating the dax..."
-PYTHONPATH=$(pegasus-config --python) python3 daxgen.py dax.xml
+PYTHONPATH=$(pegasus-config --python) python3.12 daxgen.py dax.xml
 
 cat > sites.yml <<END
 pegasus: "5.0"

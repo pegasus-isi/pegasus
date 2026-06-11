@@ -110,4 +110,3 @@ else
 	[[ $1 ]] && exec "$@"
 	exec bash --login
 fi
-

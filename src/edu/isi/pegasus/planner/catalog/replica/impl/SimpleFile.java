@@ -23,6 +23,7 @@ import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;

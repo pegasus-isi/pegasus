@@ -20,6 +20,7 @@ import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
@@ -81,8 +82,12 @@ public class ReplicaFactory {
      * @see #loadInstance()
      */
     public static ReplicaCatalog loadInstance(PegasusBag bag)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
 
         // return loadInstance(bag, bag.getPegasusProperties().getPropertiesInSubmitDirectory());
         // PM-1535 we can no longer pass location of properties in the submit directory
@@ -112,8 +117,12 @@ public class ReplicaFactory {
      * @see #loadInstance()
      */
     public static ReplicaCatalog loadInstance(PegasusBag bag, String propFile)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
 
         // sanity check
         PegasusProperties properties = bag.getPegasusProperties();
@@ -210,8 +219,12 @@ public class ReplicaFactory {
      */
     public static ReplicaCatalog loadInstance(
             String catalogImplementor, PegasusBag bag, Properties connectProps)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         ReplicaCatalog result = null;
 
         if (catalogImplementor == null) {

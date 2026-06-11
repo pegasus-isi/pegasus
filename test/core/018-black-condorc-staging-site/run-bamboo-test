@@ -4,4 +4,4 @@ set -e
 set -v
 
 echo "Running blackdiamond.py"
-python3 blackdiamond.py
+python3.12 blackdiamond.py

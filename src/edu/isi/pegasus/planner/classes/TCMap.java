@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.classes;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

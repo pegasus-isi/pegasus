@@ -40,6 +40,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -413,7 +414,8 @@ public class Distribute implements GridStart {
         String sshKeyPath = mSSHCredHandler.getPath(job.getSiteHandle());
         if (sshKeyPath == null) {
             throw new RuntimeException(
-                    "Distribute Wrapper needs path to the private SSH Key. Please set the pegasus profile "
+                    "Distribute Wrapper needs path to the private SSH Key. Please set the pegasus"
+                            + " profile "
                             + mSSHCredHandler.getProfileKey()
                             + " for site "
                             + job.getSiteHandle());

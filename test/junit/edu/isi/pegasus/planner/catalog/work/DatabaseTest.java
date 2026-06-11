@@ -21,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
-import java.io.PrintStream;
-import java.util.Properties;
+
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Test;
+
+import java.io.PrintStream;
+import java.util.Properties;
 
 /** Tests for the Database work catalog implementation. */
 public class DatabaseTest {

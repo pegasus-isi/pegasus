@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dbdriver;
 
+import org.griphyn.vdl.util.*;
+
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the driver API for the PostGreSQL 7.3.* and 7.4.* series database. Please

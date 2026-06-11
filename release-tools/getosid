@@ -15,4 +15,3 @@ OSID=$(echo $SYSTEM | grep -E -o '[a-zA-Z]+_[0-9]+$' | sed 's/_//')
 
 echo $OSID
 exit 0
-

@@ -213,7 +213,7 @@ public class Separator {
                 case 5: // Vi+S
                     result[1] = save.toString();
                     save = new StringBuffer();
-                    // NO break on purpose
+                // NO break on purpose
                 case 1: // S
                     save.append(ch);
                     break;
@@ -344,7 +344,7 @@ public class Separator {
                 case 8:
                     if (save.length() > 0) name = save.toString();
                     save = new StringBuffer();
-                    // NO break on purpose
+                // NO break on purpose
                 case 1: // save
                     save.append(ch);
                     break;
@@ -358,14 +358,14 @@ public class Separator {
                     break;
                 case 5: // save(version), 4args
                     is4args = true;
-                    // NO break on purpose
+                // NO break on purpose
                 case 4: // save(version)
                     if (save.length() > 0) version = save.toString();
                     save = new StringBuffer();
                     break;
                 case 7: // save(max), 4args
                     is4args = true;
-                    // NO break on purpose
+                // NO break on purpose
                 case 6: // save(max)
                     if (save.length() > 0) max = save.toString();
                     save = new StringBuffer();

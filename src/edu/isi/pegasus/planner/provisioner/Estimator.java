@@ -18,10 +18,12 @@
 
 package edu.isi.pegasus.planner.provisioner;
 
+import org.w3c.dom.*;
+
 import java.io.*;
 import java.util.*;
+
 import javax.xml.parsers.*;
-import org.w3c.dom.*;
 
 /**
  * This Estimator is used to find the near-optimal number of processors required to complete
@@ -401,7 +403,8 @@ public class Estimator {
     public static void main(String[] args) {
         if (args.length < 3) {
             System.out.println(
-                    "Usage:<COMMAND> <DAX file name> <Estimate method> [<Requested finish time>] [<Precision of predicted execution time>]");
+                    "Usage:<COMMAND> <DAX file name> <Estimate method> [<Requested finish time>]"
+                            + " [<Precision of predicted execution time>]");
             System.out.println(" Estimation method = BTS : IterHEFT : DSC");
             System.out.println(" or = 1 (for BTS) : 2 (for IterHEFT) : 3 (for DSC)");
             return;

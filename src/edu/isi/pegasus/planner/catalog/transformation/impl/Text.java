@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
+
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -790,6 +791,7 @@ public class Text extends Abstract implements TransformationCatalog {
             throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
+
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical
      * transformation.

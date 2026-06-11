@@ -18,10 +18,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.isi.pegasus.common.util.XMLWriter;
-import java.io.StringWriter;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.StringWriter;
 
 /** Tests for the MetaData class. */
 public class MetaDataTest {

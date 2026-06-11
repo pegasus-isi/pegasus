@@ -29,11 +29,13 @@ import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A Planner specific namespace. It defines profiles that are used to fine tune Pegasus behaviour on

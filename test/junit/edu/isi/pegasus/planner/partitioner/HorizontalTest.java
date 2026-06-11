@@ -20,13 +20,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class HorizontalTest {
 
     @Test

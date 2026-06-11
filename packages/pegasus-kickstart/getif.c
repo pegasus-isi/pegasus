@@ -63,7 +63,7 @@ static void singleton_init(void) {
 int interface_list(struct ifconf* ifc) {
     /* purpose: returns the list of interfaces
      * paramtr: ifc (IO): initializes structure with buffer and length
-     * returns: sockfd for further queries, or -1 to indicate an error. 
+     * returns: sockfd for further queries, or -1 to indicate an error.
      * warning: caller must free memory in ifc.ifc_buf
      *          caller must close sockfd (result value)
      */
@@ -74,17 +74,17 @@ int interface_list(struct ifconf* ifc) {
     int lastlen, len, sockfd = 0;
 
     /* create a socket */
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) { 
-        int saverr = errno; 
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        int saverr = errno;
         printerr("ERROR: socket DGRAM: %d: %s\n",
                 errno, strerror(errno));
-        errno = saverr; 
+        errno = saverr;
         return -1;
     }
 
     /*
      * phase 1: guestimate size of buffer necessary to contain all interface
-     * information records. 
+     * information records.
      */
 #if defined(SIOCGLIFNUM)
     /* API exists to determine the correct buffer size */
@@ -97,8 +97,8 @@ int interface_list(struct ifconf* ifc) {
         if (errno != EINVAL) {
             int saverr = errno;
             close(sockfd);
-            errno = saverr; 
-            return -1; 
+            errno = saverr;
+            return -1;
         }
     } else {
         len = lastlen = ifnr.lifn_count * sizeof(struct ifreq);
@@ -124,10 +124,10 @@ int interface_list(struct ifconf* ifc) {
             printerr("WARN: ioctl SIOCGIFCONF: %d: %s\n",
                     errno, strerror(errno));
             if (errno != EINVAL || lastlen != 0) {
-                int saverr = errno; 
+                int saverr = errno;
                 close(sockfd);
-                errno = saverr; 
-                return -1; 
+                errno = saverr;
+                return -1;
             }
         } else {
             if (ifc->ifc_len == lastlen) break; /* success */
@@ -138,13 +138,13 @@ int interface_list(struct ifconf* ifc) {
     }
     /* POST CONDITION: Now the buffer contains list of all interfaces */
 
-    return sockfd; 
+    return sockfd;
 }
 
 struct ifreq* primary_interface(void) {
     /* purpose: obtain the primary interface information
      * returns: a newly-allocated structure containing the interface info,
-     *          or NULL to indicate an error. 
+     *          or NULL to indicate an error.
      */
     struct sockaddr_in sa;
     struct ifconf ifc;
@@ -160,8 +160,8 @@ struct ifreq* primary_interface(void) {
     memset(&primary, 0, sizeof(primary));
     singleton_init();
 
-    /* 
-     * phase 1: obtain list of interfaces 
+    /*
+     * phase 1: obtain list of interfaces
      */
     if ((sockfd = interface_list(&ifc)) == -1) {
         return NULL;
@@ -169,7 +169,7 @@ struct ifreq* primary_interface(void) {
 
     /*
      * phase 2: walk interface list until a good interface is reached
-     */ 
+     */
     /* Notice: recycle meaning of "len" in here */
     for (ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
         struct ifreq* ifr = (struct ifreq*) ptr;
@@ -263,7 +263,6 @@ void whoami(char* abuffer, size_t asize, char* ibuffer, size_t isize) {
     } else {
         /* error while trying to determine address of primary interface */
         if (abuffer) strncpy(abuffer, "0.0.0.0", asize);
-        if (ibuffer) strncpy(ibuffer, "(none)", isize); 
+        if (ibuffer) strncpy(ibuffer, "(none)", isize);
     }
 }
-

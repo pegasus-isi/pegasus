@@ -14,16 +14,18 @@
 package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dax.Filename;
 import org.griphyn.vdl.dax.Job;
 import org.griphyn.vdl.euryale.Callback;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class ends up writing a partitioned dax, that corresponds to one partition as defined by the

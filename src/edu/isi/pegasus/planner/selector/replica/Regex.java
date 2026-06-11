@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -243,7 +244,8 @@ public class Regex extends Default {
                 // replica not selected
                 StringBuffer error = new StringBuffer();
                 error.append(
-                                "[RegexReplicaSelector] Unable to select a Physical Filename (PFN) for file with logical filename (LFN) as ")
+                                "[RegexReplicaSelector] Unable to select a Physical Filename (PFN)"
+                                        + " for file with logical filename (LFN) as ")
                         .append(rl.getLFN())
                         .append(" for staging to site ")
                         .append(preferredSite)

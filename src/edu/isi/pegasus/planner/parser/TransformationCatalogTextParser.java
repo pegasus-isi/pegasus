@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.QuotedString;
 import edu.isi.pegasus.planner.parser.tokens.Token;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogReservedWord;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -279,7 +280,8 @@ public class TransformationCatalogTextParser {
             if (!(mLookAhead instanceof TransformationCatalogReservedWord)) {
                 throw new ScannerException(
                         mScanner.getLineNumber(),
-                        "expecting a reserved word describing a transformation attribute instead of "
+                        "expecting a reserved word describing a transformation attribute instead of"
+                                + " "
                                 + mLookAhead);
             }
 
@@ -494,7 +496,8 @@ public class TransformationCatalogTextParser {
             if (!(mLookAhead instanceof TransformationCatalogReservedWord)) {
                 throw new ScannerException(
                         mScanner.getLineNumber(),
-                        "expecting a reserved word describing a transformation attribute instead of "
+                        "expecting a reserved word describing a transformation attribute instead of"
+                                + " "
                                 + (TransformationCatalogReservedWord) mLookAhead);
             }
 

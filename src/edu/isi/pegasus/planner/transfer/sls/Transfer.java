@@ -42,6 +42,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.SLS;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1014,7 +1015,8 @@ public class Transfer implements SLS {
             error.append("[SLS Transfer] For job (").append(job.getID()).append(").");
         }
         error.append(
-                        "Unable to determine URL Prefix for the FileServer for scratch shared file system on site: ")
+                        "Unable to determine URL Prefix for the FileServer for scratch shared file"
+                                + " system on site: ")
                 .append(site);
         throw new RuntimeException(error.toString());
     }
@@ -1125,7 +1127,8 @@ public class Transfer implements SLS {
                     constructMessage(
                             job,
                             lfn,
-                            "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
+                            "Unable to find location of lfn in planner(get) cache with input"
+                                    + " staging bypassed"),
                     LogManager.WARNING_MESSAGE_LEVEL);
         }
 

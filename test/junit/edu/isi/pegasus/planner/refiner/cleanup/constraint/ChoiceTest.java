@@ -19,13 +19,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
 
 /** Tests for {@link Choice}. */
 public class ChoiceTest {
@@ -99,7 +101,8 @@ public class ChoiceTest {
         assertThat(
                 c.toString(),
                 is(
-                        "Choice{intermediateSpaceRequirement=7, balance=3, listOfJobs={job-1}, floatingFiles={}}"));
+                        "Choice{intermediateSpaceRequirement=7, balance=3, listOfJobs={job-1},"
+                                + " floatingFiles={}}"));
     }
 
     @Test

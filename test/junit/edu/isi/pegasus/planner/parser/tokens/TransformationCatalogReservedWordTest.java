@@ -17,9 +17,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Constructor;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 /** Tests for {@link TransformationCatalogReservedWord}. */
 public class TransformationCatalogReservedWordTest {

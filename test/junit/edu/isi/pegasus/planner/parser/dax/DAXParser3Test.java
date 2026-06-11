@@ -18,13 +18,17 @@ import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.LinkedList;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author vahi */
+import java.io.File;
+import java.util.LinkedList;
+
+/**
+ * @author vahi
+ */
 public class DAXParser3Test {
 
     /** The properties used for this test. */
@@ -143,7 +147,12 @@ public class DAXParser3Test {
         assertThat(
                 args,
                 is(
-                        "--frame-files --V1:V-HrecV2-967640000-10000.gwf --L1:L-L1_LDAS_C02_L2-967648128-128.gwf --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz --user-tag FULL_DATA"));
+                        "--frame-files --V1:V-HrecV2-967640000-10000.gwf"
+                            + " --L1:L-L1_LDAS_C02_L2-967648128-128.gwf"
+                            + " --L1:L-L1_LDAS_C02_L2-967648256-128.gwf --output"
+                            + " V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz --bank-file"
+                            + " H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz"
+                            + " --user-tag FULL_DATA"));
         mLogger.logEventCompletion();
     }
 

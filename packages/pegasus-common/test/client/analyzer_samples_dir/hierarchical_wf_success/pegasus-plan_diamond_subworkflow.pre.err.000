@@ -2,7 +2,7 @@
 2023-03-04 01:02:12: Executing on host workflow.isi.edu IP=128.9.46.53
 
 ########################[Pegasus Lite] Setting up workdir ########################
-2023-03-04 01:02:12: Checking /tmp for potential use as work space... 
+2023-03-04 01:02:12: Checking /tmp for potential use as work space...
 2023-03-04 01:02:12:   Workdir is /tmp/pegasus.EReATmFz3 - 35G available
 2023-03-04 01:02:12: Changing cwd to /tmp/pegasus.EReATmFz3
 

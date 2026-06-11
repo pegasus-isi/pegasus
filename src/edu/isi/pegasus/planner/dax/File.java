@@ -16,11 +16,13 @@ package edu.isi.pegasus.planner.dax;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.util.LinkedHashSet;
 
@@ -54,20 +56,27 @@ public class File extends CatalogType {
         FALSE,
         OPTIONAL
     }
+
     /** The namespace on a file. This is used for Executables only */
     protected String mNamespace;
+
     /** The logical name of the file. */
     protected String mName;
+
     /** The logical version of the file. This is used for executables only. */
     protected String mVersion;
+
     /*
      * The Linkage of the file. (Input, Output, or INOUT)
      */
     protected LINK mLink;
+
     /** Is the file optional */
     protected boolean mOptional = false;
+
     /** Should the file be registered in the replica catalog */
     protected boolean mRegister = true;
+
     /** Should the file be transferred on generation. */
     protected TRANSFER mTransfer = TRANSFER.TRUE;
 
@@ -474,7 +483,8 @@ public class File extends CatalogType {
 
             if (useForPlanning) {
                 throw new UnsupportedOperationException(
-                        "forPlanning attribute is only supported with yaml formatted abstract workflows");
+                        "forPlanning attribute is only supported with yaml formatted abstract"
+                                + " workflows");
             }
 
             if (mSize != null && !mSize.isEmpty()) {
@@ -495,7 +505,8 @@ public class File extends CatalogType {
                 mLogger.log(
                         "The file element for "
                                 + mName
-                                + " must have atleast 1 pfn or 1 metadata entry. Skipping empty file element",
+                                + " must have atleast 1 pfn or 1 metadata entry. Skipping empty"
+                                + " file element",
                         LogManager.WARNING_MESSAGE_LEVEL);
             } else {
                 writer.startElement("file", indent);

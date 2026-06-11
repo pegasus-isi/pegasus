@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Set;

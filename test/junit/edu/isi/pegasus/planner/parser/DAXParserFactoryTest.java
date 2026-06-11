@@ -31,12 +31,16 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+import java.io.File;
+import java.util.Map;
+
+/**
+ * @author Karan Vahi
+ */
 public class DAXParserFactoryTest {
 
     private PegasusBag mBag;

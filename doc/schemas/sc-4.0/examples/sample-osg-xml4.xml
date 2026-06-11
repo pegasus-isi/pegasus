@@ -8,20 +8,20 @@
 			<!-- external path is misleading here??? -->
 			<file-server operation="all" url="file:///tmp"/>
 		</directory>
-		
+
 		 <profile namespace="pegasus" key="style">condor</profile>
-	        <profile namespace="condor" key="universe">vanilla</profile>		
+	        <profile namespace="condor" key="universe">vanilla</profile>
 	</site>
-	
+
 	<!-- site unl is the staging site -->
 	<site handle="unl" arch="x86" os="LINUX">
 		<directory type="shared-scratch" path="/internal-mnt/panfs/CMS/data/engage/scratch" >
 			<!-- in this example we use http server to stage the inputs to the worker nodes -->
 			<file-server operation="get" url="http://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"/>
-			
+
 			<!-- in this example we use SRM server to stage the outputs from the worker nodes to staging site -->
              	       <file-server operation="put" url="srm://ff-se.unl.edu:8443/panfs/panasas/CMS/data/engage/scratch"/>
-          	</directory>	
+          	</directory>
         </site>
 
 	<site handle="local" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
@@ -29,7 +29,7 @@
 		<directory path="/data/local-scratch/user" type="shared-scratch">
 					<file-server operation="all" url="file:///data/local-scratch/user"/>
 		</directory>
-		
+
 		<!-- specify a local-storage directory if staging outputs to local site -->
 		<directory path="/data/local-storage/user" type="local-storage">
 					<file-server operation="all" url="file:///data/local-storage/user"/>

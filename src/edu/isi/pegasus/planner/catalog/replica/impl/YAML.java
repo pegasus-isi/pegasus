@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
@@ -48,6 +49,9 @@ import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidationResult;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
+
+import org.yaml.snakeyaml.LoaderOptions;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -70,7 +74,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class implements a replica catalog on top of a simple file with regular expression based

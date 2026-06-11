@@ -15,6 +15,7 @@
 package org.griphyn.vdl.classes;
 
 import edu.isi.pegasus.common.util.Separator;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;

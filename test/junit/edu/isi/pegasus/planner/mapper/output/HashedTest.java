@@ -19,10 +19,12 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
-import java.lang.reflect.Method;
-import java.util.Collections;
+
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
+import java.util.Collections;
 
 /** Tests for the Hashed output mapper class structure. */
 public class HashedTest {

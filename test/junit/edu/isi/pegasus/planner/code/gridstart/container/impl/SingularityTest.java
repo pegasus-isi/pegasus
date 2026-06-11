@@ -31,10 +31,13 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class SingularityTest {
 
     private static final String TEST_JOB_ID = "preprocess_ID1";
@@ -110,7 +113,9 @@ public class SingularityTest {
                 Integer.toString(mTestNumber++));
         Job j = (Job) mDAG.getNode(TEST_JOB_ID).getContent();
         String expected =
-                "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh";
+                "$singularity_exec exec --no-home --bind $PWD:/srv --bind"
+                        + " $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif"
+                        + " /srv/preprocess_ID1-cont.sh";
         assertThat(singularityInstance(j).containerRun(j).toString(), is(expected));
         mLogger.logEventCompletion();
     }
@@ -128,7 +133,10 @@ public class SingularityTest {
         assertThat(
                 singularityInstance(j).containerRun(j).toString(),
                 is(
-                        "$singularity_exec exec --no-home --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR --bind /shared/scratch:/scratch python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
+                        "$singularity_exec exec --no-home --bind $PWD:/srv --bind"
+                                + " $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR --bind"
+                                + " /shared/scratch:/scratch python3-minimal.sif"
+                                + " /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 
@@ -159,7 +167,9 @@ public class SingularityTest {
         assertThat(
                 singularityInstance(j).containerRun(j).toString(),
                 is(
-                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
+                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind"
+                                + " $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif"
+                                + " /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 
@@ -174,7 +184,9 @@ public class SingularityTest {
         assertThat(
                 singularityInstance(j).containerRun(j).toString(),
                 is(
-                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif /srv/preprocess_ID1-cont.sh"));
+                        "$singularity_exec exec --no-home --nv --bind $PWD:/srv --bind"
+                                + " $_CONDOR_SCRATCH_DIR:$_CONDOR_SCRATCH_DIR python3-minimal.sif"
+                                + " /srv/preprocess_ID1-cont.sh"));
         mLogger.logEventCompletion();
     }
 

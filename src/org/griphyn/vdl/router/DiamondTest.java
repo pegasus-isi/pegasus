@@ -15,19 +15,25 @@
 
 package org.griphyn.vdl.router;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.SQLException;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.Logging;
 
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.SQLException;
+
 public class DiamondTest {
     public static void main(String[] args)
-            throws IllegalArgumentException, IOException, ClassNotFoundException,
-                    NoSuchMethodException, InstantiationException, SQLException,
-                    IllegalAccessException, InvocationTargetException {
+            throws IllegalArgumentException,
+                    IOException,
+                    ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    SQLException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         // create debug output
         Logging.instance().register("dag", System.err);
         Logging.instance().register("state", System.err);

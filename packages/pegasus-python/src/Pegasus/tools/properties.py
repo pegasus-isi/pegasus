@@ -108,16 +108,16 @@ if len(sys.argv) > 0:
             k, v = my_arg.split("=", 1)
         except Exception:
             logger.warning(
-                "cannot parse command-line option %s... continuing..." % (my_arg)
+                f"cannot parse command-line option {my_arg}... continuing..."
             )
             k = ""
         if len(k):
             if k == "pegasus.properties" or k == "pegasus.user.properties":
                 logger.warning(
-                    "%s is no longer supported, ignoring, please use --conf!" % (k)
+                    f"{k} is no longer supported, ignoring, please use --conf!"
                 )
             else:
-                logger.debug("parsed property %s..." % (my_arg))
+                logger.debug(f"parsed property {my_arg}...")
                 initial[k] = v
             # print "key:value = %s:%s" % (k, v)
 
@@ -142,7 +142,7 @@ def parse_properties(my_file, hashref={}):
     if isinstance(my_file, str):
         my_file = open(my_file)
 
-    logger.debug("# parsing properties in %s..." % (my_file))
+    logger.debug(f"# parsing properties in {my_file}...")
 
     for line in my_file:
         # line will be of type bytes if my_file was opened from a zipfile
@@ -173,7 +173,7 @@ def parse_properties(my_file, hashref={}):
                 my_save += line
                 line = my_save
                 my_save = ""
-            logger.debug("#Property being parsed is # %s" % (line))
+            logger.debug(f"#Property being parsed is # {line}")
 
             # Try to parse property
             my_res = re_parse_property.search(line)
@@ -242,24 +242,23 @@ class Properties:
         # First, try config_file, highest priority
         if config_file is not None:
             if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
-                logger.debug("processing properties file %s..." % (config_file))
+                logger.debug(f"processing properties file {config_file}...")
                 my_config.update(parse_properties(config_file))
                 my_already_loaded = True
             else:
                 logger.warning(
-                    "cannot access properties file %s... continuing..." % (config_file)
+                    f"cannot access properties file {config_file}... continuing..."
                 )
 
         # Second, try rundir_propfile
         if not my_already_loaded and rundir_propfile is not None:
             if os.path.isfile(rundir_propfile) and os.access(rundir_propfile, os.R_OK):
-                logger.debug("processing properties file %s... " % (rundir_propfile))
+                logger.debug(f"processing properties file {rundir_propfile}... ")
                 my_config.update(parse_properties(rundir_propfile))
                 my_already_loaded = True
             else:
                 logger.warning(
-                    "cannot access properties file %s... continuing..."
-                    % (rundir_propfile)
+                    f"cannot access properties file {rundir_propfile}... continuing..."
                 )
 
         # look for $(HOME)/.pegasusrc
@@ -269,9 +268,7 @@ class Properties:
                 if os.path.isfile(my_user_propfile) and os.access(
                     my_user_propfile, os.R_OK
                 ):
-                    logger.debug(
-                        "processing properties file %s... " % (my_user_propfile)
-                    )
+                    logger.debug(f"processing properties file {my_user_propfile}... ")
                     my_config.update(parse_properties(my_user_propfile))
                     my_already_loaded = True
                 else:
@@ -287,9 +284,7 @@ class Properties:
                 if os.path.isfile(my_user_propfile) and os.access(
                     my_user_propfile, os.R_OK
                 ):
-                    logger.debug(
-                        "processing properties file %s... " % (my_user_propfile)
-                    )
+                    logger.debug(f"processing properties file {my_user_propfile}... ")
                     my_config.update(parse_properties(my_user_propfile))
                     my_already_loaded = True
                 else:
@@ -387,11 +382,11 @@ class Properties:
             try:
                 my_file = open(fn, "w")
             except Exception:
-                logger.warning("error opening %s !" % (fn))
+                logger.warning(f"error opening {fn} !")
                 return None
 
         # Add header
-        my_file.write("# generated %s\n" % (time.asctime()))
+        my_file.write(f"# generated {time.asctime()}\n")
         for my_key in self.m_config:
             # Write entry
             my_file.write(f"{my_key}={self.m_config[my_key]}\n")

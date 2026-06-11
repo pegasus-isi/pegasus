@@ -33,20 +33,13 @@ pre-job:
 Lint:
   <<: *retry-and-timeout
   stage: lint
-  parallel:
-    matrix:
-    - LANGUAGE:
-      - python
-      - java
-  image: python:3.6
+  image: python:3.14
   before_script:
-  - env
-  - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
+  - pip install pre-commit
   - apt update
-  - DEBIAN_FRONTEND=noninteractive apt install -y ant python3-pip
+  - DEBIAN_FRONTEND=noninteractive apt install -y openjdk-25-jdk-headless
   script:
-  - export bamboo_buildKey='value-irrelevant'
-  - ant code-format-${LANGUAGE}
+  - pre-commit run --show-diff-on-failure --color=always --all-files
   tags:
   - docker
 
@@ -60,20 +53,46 @@ Python:
     - ARCH:
       - x86_64
       - arm64
-      PYTHON_VERSION:
-      - '3.6'
-      - '3.7'
-      - '3.8'
-      - '3.9'
-      - '3.10'
-      - '3.11'
-      - '3.12'
-      - '3.13'
-      - '3.14'
       PACKAGE:
       - common
       - api
       - python
+      - worker
+  image: python:3.14
+  before_script:
+  - env
+  - export USER=nobody
+  - pip3 install --upgrade pip setuptools
+  - pip3 install tox-uv
+  script:
+  - cd packages/pegasus-${PACKAGE}; tox
+  coverage: '/Total coverage: \d+\.\d+%/'
+  artifacts:
+    when: always
+    reports:
+      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
+    paths:
+    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  tags:
+  - ${ARCH}
+  - docker
+
+# Only for Python versions not supported by uv
+Python Worker:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      PYTHON_VERSION:
+      - '3.6'
+      - '3.7'
+      PACKAGE:
       - worker
   image: python:${PYTHON_VERSION}
   before_script:

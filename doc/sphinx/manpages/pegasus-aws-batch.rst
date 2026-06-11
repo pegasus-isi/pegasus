@@ -359,5 +359,3 @@ Return Value
 successful. A non-zero exit status is returned in case of failure. If
 you run any jobs using the tool, then tool will return with a non zero
 exitcode in case one or more of your tasks fail.
-
-

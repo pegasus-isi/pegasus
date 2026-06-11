@@ -14,17 +14,19 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
-import javax.xml.parsers.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.util.VDLType;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import javax.xml.parsers.*;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an DAX document. This class extends

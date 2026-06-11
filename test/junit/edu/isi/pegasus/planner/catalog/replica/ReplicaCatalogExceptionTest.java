@@ -18,10 +18,14 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.CatalogException;
-import java.lang.reflect.Constructor;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Constructor;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ReplicaCatalogExceptionTest {
 
     @Test

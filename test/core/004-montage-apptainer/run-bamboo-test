@@ -31,5 +31,3 @@ pegasus-plan \
         --submit \
         data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
-
-

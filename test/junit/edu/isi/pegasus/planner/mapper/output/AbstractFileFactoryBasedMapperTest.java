@@ -24,12 +24,14 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
+import org.griphyn.vdl.euryale.FileFactory;
+import org.junit.jupiter.api.Test;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.griphyn.vdl.euryale.FileFactory;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the AbstractFileFactoryBasedMapper class structure. */
 public class AbstractFileFactoryBasedMapperTest {
@@ -112,7 +114,8 @@ public class AbstractFileFactoryBasedMapperTest {
         org.hamcrest.MatcherAssert.assertThat(
                 exception.getMessage(),
                 org.hamcrest.Matchers.is(
-                        "[test]  File Server not specified for shared-storage filesystem for operation put against site: local"));
+                        "[test]  File Server not specified for shared-storage filesystem for"
+                                + " operation put against site: local"));
     }
 
     @Test

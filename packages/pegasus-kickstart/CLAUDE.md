@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 **Standalone (from this directory):**
+
 ```bash
 make                    # Build pegasus-kickstart binary
 make clean              # Remove object files
@@ -12,6 +13,7 @@ make distclean          # Full clean including binary
 ```
 
 **From parent repo root (`pegasus/`):**
+
 ```bash
 ant compile-pegasus-kickstart   # Compile kickstart only
 ant compile-c                   # Compile all C tools
@@ -42,31 +44,32 @@ Pegasus-kickstart wraps job execution to capture metadata (timing, resource usag
 ### Execution Flow (pegasus-kickstart.c)
 
 1. Parse CLI arguments → set up `AppInfo` struct
-2. Change to working directory (`-w`/`-W`)
-3. Stat initial files (`-S` option)
-4. Execute setup → prejob → **main job** → postjob → cleanup (each via `mysystem.c` fork/exec)
-5. Stat final files (`-s` option)
-6. Write YAML report to logfile
+1. Change to working directory (`-w`/`-W`)
+1. Stat initial files (`-S` option)
+1. Execute setup → prejob → **main job** → postjob → cleanup (each via `mysystem.c` fork/exec)
+1. Stat final files (`-s` option)
+1. Write YAML report to logfile
 
 ### Key Modules
 
-| Module | Purpose |
-|--------|---------|
-| `pegasus-kickstart.c` | Entry point, CLI parsing, orchestrates execution flow |
-| `appinfo.c/h` | Top-level `AppInfo` struct — holds entire execution context |
-| `jobinfo.c/h` | Per-job metadata (setup/pre/main/post/cleanup) |
-| `mysystem.c/h` | Fork/exec/wait with signal handling and timeout |
-| `procinfo.c/h` | Per-process metrics via ptrace (Linux), resource tracking |
-| `statinfo.c/h` | File stat() capture and YAML formatting |
-| `machine/` | Platform abstraction — `basic.c` (common), `linux.c`, `darwin.c` |
-| `interpose.c` | `LD_PRELOAD` library for I/O interception (Linux x86_64 only) |
-| `checksum.c` + `sha2.c` | SHA-256 file integrity verification |
-| `parse.c` | Argument parsing and expansion |
-| `utils.c` | YAML quoting, time formatting helpers |
+| Module                  | Purpose                                                          |
+| ----------------------- | ---------------------------------------------------------------- |
+| `pegasus-kickstart.c`   | Entry point, CLI parsing, orchestrates execution flow            |
+| `appinfo.c/h`           | Top-level `AppInfo` struct — holds entire execution context      |
+| `jobinfo.c/h`           | Per-job metadata (setup/pre/main/post/cleanup)                   |
+| `mysystem.c/h`          | Fork/exec/wait with signal handling and timeout                  |
+| `procinfo.c/h`          | Per-process metrics via ptrace (Linux), resource tracking        |
+| `statinfo.c/h`          | File stat() capture and YAML formatting                          |
+| `machine/`              | Platform abstraction — `basic.c` (common), `linux.c`, `darwin.c` |
+| `interpose.c`           | `LD_PRELOAD` library for I/O interception (Linux x86_64 only)    |
+| `checksum.c` + `sha2.c` | SHA-256 file integrity verification                              |
+| `parse.c`               | Argument parsing and expansion                                   |
+| `utils.c`               | YAML quoting, time formatting helpers                            |
 
 ### Platform Abstraction
 
 `machine.c` uses function pointers (ctor/show/dtor) to dispatch to platform-specific implementations:
+
 - **Linux**: reads `/proc/` filesystem for CPU, memory, load, boot time
 - **Darwin**: uses `sysctl` calls for system info
 

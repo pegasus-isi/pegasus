@@ -22,14 +22,18 @@ import edu.isi.pegasus.planner.invocation.Architecture;
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
 import edu.isi.pegasus.planner.invocation.Usage;
 import edu.isi.pegasus.planner.invocation.WorkingDir;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class InvocationParserTest {
 
     @Test

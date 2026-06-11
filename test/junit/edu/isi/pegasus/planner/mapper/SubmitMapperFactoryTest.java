@@ -23,9 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the SubmitMapperFactory class constants and structure. */
 public class SubmitMapperFactoryTest {

@@ -15,12 +15,13 @@
 
 package org.griphyn.vdl.directive;
 
-import java.io.*;
-import java.util.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.parser.DAXParser;
 import org.griphyn.vdl.planner.*;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class makes concrete plans for a DAX, when planning using the shell planner.

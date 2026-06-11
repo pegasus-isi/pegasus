@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.generator.Braindump;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ public class PegasusDBAdmin {
         master,
         jdbcrc
     };
+
     /** */
     public static void updateProperties(PegasusBag bag, ADag workflow) {
         PegasusProperties properties = bag.getPegasusProperties();
@@ -247,16 +249,21 @@ public class PegasusDBAdmin {
                 message.append(command).append(" failed with status ").append(status).append(" .");
                 if (backendType == DB_ADMIN_BACKEND.master) {
                     message.append(
-                                    " Pegasus was unable to update the the worflow database file found at")
+                                    " Pegasus was unable to update the the worflow database file"
+                                            + " found at")
                             .append(
-                                    " ~/.pegasus/workflow.db . If this file is corrupted, a solution for")
+                                    " ~/.pegasus/workflow.db . If this file is corrupted, a"
+                                            + " solution for")
                             .append(
-                                    " problem is to remove the file with the command: rm -f ~/.pegasus/workflow.db ")
+                                    " problem is to remove the file with the command: rm -f"
+                                            + " ~/.pegasus/workflow.db ")
                             .append(
-                                    " - but note that doing so will remove old workflows from the Pegasus Dashboard.");
+                                    " - but note that doing so will remove old workflows from the"
+                                            + " Pegasus Dashboard.");
                 } else if (backendType == DB_ADMIN_BACKEND.jdbcrc) {
                     message.append(
-                                    "Pegasus was unable to update the the JDBCRC Backend using the command ")
+                                    "Pegasus was unable to update the the JDBCRC Backend using the"
+                                            + " command ")
                             .append(command);
                 }
                 throw new RuntimeException(message.toString());

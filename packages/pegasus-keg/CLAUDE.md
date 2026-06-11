@@ -18,6 +18,7 @@ make distclean          # Remove object files and built binary
 ```
 
 From the top-level Pegasus repo:
+
 ```bash
 ant compile-c           # Builds keg along with kickstart and cluster
 ant test-c              # Runs C test suite
@@ -36,14 +37,14 @@ There is no unit test suite — the test target simply runs the binary and check
 
 Single main source file with platform-specific modules:
 
-| File | Purpose |
-|------|---------|
-| `pegasus-keg.cc` | All core logic: arg parsing, I/O, CPU spin (Julia set fractal), memory allocation, network/system info |
-| `darwin.cc/hh` | macOS system info (sysctl, Mach kernel APIs, getmntinfo) |
-| `linux.cc/hh` | Linux system info (/proc, sysinfo, statvfs) |
-| `gnukfreebsd.cc/hh` | GNU/kFreeBSD support (partial — some stats unavailable) |
-| `basic.cc/hh` | Platform-independent utilities (`smart_units` byte formatting) |
-| `genversion.sh` | Generates `version.h` from git commit info at build time |
+| File                | Purpose                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `pegasus-keg.cc`    | All core logic: arg parsing, I/O, CPU spin (Julia set fractal), memory allocation, network/system info |
+| `darwin.cc/hh`      | macOS system info (sysctl, Mach kernel APIs, getmntinfo)                                               |
+| `linux.cc/hh`       | Linux system info (/proc, sysinfo, statvfs)                                                            |
+| `gnukfreebsd.cc/hh` | GNU/kFreeBSD support (partial — some stats unavailable)                                                |
+| `basic.cc/hh`       | Platform-independent utilities (`smart_units` byte formatting)                                         |
+| `genversion.sh`     | Generates `version.h` from git commit info at build time                                               |
 
 ## Key Design Decisions
 

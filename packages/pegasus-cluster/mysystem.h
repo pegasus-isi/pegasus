@@ -23,7 +23,7 @@
 typedef struct {
   struct sigaction intr;
   struct sigaction quit;
-  sigset_t         mask; 
+  sigset_t         mask;
 } Signals;
 
 extern
@@ -41,7 +41,7 @@ restore_signals( Signals* save );
  * paramtr: save (IN): previously saved signal state
  * returns: 0 on success, count of errors on failure
  * warning: errno may be useless to check in this case
- */ 
+ */
 
 extern
 void
@@ -60,7 +60,7 @@ mysystem( char* argv[], char* envp[], const char* special );
  * paramtr: argv (IN): NULL terminated argument vector
  *          envp (IN): NULL terminated environment vector
  *          special (IN): set for setup/cleanup jobs
- * returns: exit status from wait() family 
+ * returns: exit status from wait() family
  */
 
 #endif /* _MYSYSTEM_H */

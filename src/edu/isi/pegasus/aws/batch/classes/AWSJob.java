@@ -5,14 +5,15 @@
  */
 package edu.isi.pegasus.aws.batch.classes;
 
+import software.amazon.awssdk.services.batch.model.ContainerOverrides;
+import software.amazon.awssdk.services.batch.model.KeyValuePair;
+import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-import software.amazon.awssdk.services.batch.model.ContainerOverrides;
-import software.amazon.awssdk.services.batch.model.KeyValuePair;
-import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 
 public class AWSJob {
 

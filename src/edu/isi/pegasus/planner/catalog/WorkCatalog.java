@@ -58,6 +58,7 @@ public interface WorkCatalog extends Catalog {
             java.util.Date mTime,
             int state)
             throws WorkCatalogException;
+
     /**
      * Deletes a mapping from the work catalog.
      *

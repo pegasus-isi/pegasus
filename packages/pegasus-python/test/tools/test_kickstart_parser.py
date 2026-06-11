@@ -49,7 +49,7 @@ SINGLE_KICKSTART_RECORD = """- invocation: True
   resource: "condorpool"
   wf-label: "diamond"
   wf-stamp: "2025-03-07T15:01:09-08:00"
-  interface: 
+  interface:
   hostaddr: 0.0.0.0
   pid: 32401
   uid: 3520
@@ -235,7 +235,7 @@ SINGLE_KICKSTART_RECORD = """- invocation: True
 
 
 def compare_record_as_yaml(record, key, expected_yaml_value):
-    assert record.get("multipart") == True
+    assert record.get("multipart")
     assert record.get(key) is not None, f"key {key} is not present in record {record}"
     actual = yaml.dump(record.get(key), sort_keys=True)
     assert actual == expected_yaml_value

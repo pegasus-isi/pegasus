@@ -18,4 +18,3 @@ insufficient allocation - please contact your PI
  +   PBS_O_WORKDIR: /scratch/scratchdirs/vlynch/lynchve/pegasus/refinement/run0001
  +     Submit Args:
  + --------------------------------------------------------------------------
-

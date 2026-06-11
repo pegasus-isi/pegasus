@@ -42,4 +42,3 @@ fi
 if [ -n "${EXTRA_ARGUMENTS}" ]; then
     echo "#SBATCH $(strip_quotes "$EXTRA_ARGUMENTS")"
 fi
-

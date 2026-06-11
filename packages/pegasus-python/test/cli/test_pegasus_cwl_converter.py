@@ -666,7 +666,8 @@ def test_collect_files_file_array_input():
 
 
 @pytest.mark.parametrize(
-    "source_file", [({"type": "File"}), ({"type": "File", "outputBinding": {}})],
+    "source_file",
+    [({"type": "File"}), ({"type": "File", "outputBinding": {}})],
 )
 def test_collect_files_outputBinding_glob_missing(source_file):
     wf = cwl.load_document(
@@ -748,7 +749,11 @@ def test_collect_files_file_array_output():
                         "class": "CommandLineTool",
                         "baseCommand": "/usr/bin/tar",
                         "inputs": {},
-                        "outputs": {"source_files": {"type": "File[]",}},
+                        "outputs": {
+                            "source_files": {
+                                "type": "File[]",
+                            }
+                        },
                     },
                     "in": [],
                     "out": [],
@@ -938,7 +943,10 @@ def test_build_pegasus_wf():
                         "stageOut": True,
                         "type": "output",
                     },
-                    {"lfn": "input1", "type": "input",},
+                    {
+                        "lfn": "input1",
+                        "type": "input",
+                    },
                 ],
             },
             {
@@ -989,7 +997,11 @@ def test_build_pegasus_wf_job_contains_non_file_output():
                         "class": "CommandLineTool",
                         "baseCommand": "/command",
                         "inputs": {},
-                        "outputs": {"unsupported_output_type": {"type": "File[]",}},
+                        "outputs": {
+                            "unsupported_output_type": {
+                                "type": "File[]",
+                            }
+                        },
                     },
                     "in": {},
                     "out": ["unsupported_output_type"],
@@ -1016,10 +1028,11 @@ def test_main(mocker):
         ],
     )
 
-    with NamedTemporaryFile("w+") as cwl_wf_file, NamedTemporaryFile(
-        "w+"
-    ) as wf_input_spec_file, NamedTemporaryFile("w+") as tr_spec_file:
-
+    with (
+        NamedTemporaryFile("w+") as cwl_wf_file,
+        NamedTemporaryFile("w+") as wf_input_spec_file,
+        NamedTemporaryFile("w+") as tr_spec_file,
+    ):
         # saving path to be used in pegasus wf id
         cwl_wf_file.name
 
@@ -1046,7 +1059,11 @@ def test_main(mocker):
                             "cwlVersion": "v1.1",
                             "class": "CommandLineTool",
                             "baseCommand": "/command",
-                            "inputs": {"input_file": {"type": "File",}},
+                            "inputs": {
+                                "input_file": {
+                                    "type": "File",
+                                }
+                            },
                             "outputs": {
                                 "output_file": {
                                     "type": "File",
@@ -1095,7 +1112,10 @@ def test_main(mocker):
                 "name": "command",
                 "type": "job",
                 "uses": [
-                    {"lfn": "if", "type": "input",},
+                    {
+                        "lfn": "if",
+                        "type": "input",
+                    },
                     {
                         "lfn": "output.txt",
                         "registerReplica": True,

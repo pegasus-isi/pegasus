@@ -1055,14 +1055,14 @@ sets certain environment variables that contain
 information about the job and workflow state.
 
 The Pegasus release comes with an email notification client that can be used
-as a shell hook to send notifications as events occur. 
+as a shell hook to send notifications as events occur.
 
 .. note::
 
    Prior to Pegasus5.0, Pegasus supported the notion of an **Invoke** or
    **Notification**. In Pegasus5.0, this has been renamed to **Hooks** as
    there are plans to support additional hooks beyond shell script/executable
-   invocations. In the following sections, we use these terms interchangeably. 
+   invocations. In the following sections, we use these terms interchangeably.
 
 Specifying Hooks in the Workflow
 --------------------------------
@@ -1070,12 +1070,12 @@ Specifying Hooks in the Workflow
 You can specify shell hooks for the entire workflow, individual jobs (including subworkflows),
 and transformations (executables). This guide is written from the perspective of the
 Python API, however the following illustrates how shell hooks can also be added using
-the Java API. 
+the Java API.
 
 .. tabs::
 
    .. tab:: python
-    
+
     .. code-block:: python
 
         wf = Workflow("diamond")
@@ -1086,7 +1086,7 @@ the Java API.
         j.add_shell_hook(EventType.ERROR, "echo 'error'")
 
    .. tab:: java
-    
+
     .. code-block:: java
 
         ADAG wf = new ADAG("diamond");
@@ -1097,9 +1097,9 @@ the Java API.
         j1.addNotification(Invoke.WHEN.error, "echo error");
 
 Hooks may be specified multiple times, as needed. Each has a
-mandatory **EventType** (**when**) attribute with the following value set. 
+mandatory **EventType** (**when**) attribute with the following value set.
 
-.. table:: 
+.. table::
 
    ======================================== =====================================================================================================
    Enumeration of Values for when attribute Meaning
@@ -1127,7 +1127,7 @@ In the above example, the executable ``echo`` will be invoked twice when
 the workflow starts, once with the argument, ``hello1``, and a second time
 with the argument ``hello2``.
 
-See :py:class:`~Pegasus.api.mixings.HookMixin` for API usage documentation. 
+See :py:class:`~Pegasus.api.mixings.HookMixin` for API usage documentation.
 
 .. _pegasus-notify-file:
 
@@ -1231,7 +1231,7 @@ pegasus-monitord handles hooks:
 
 -  ``--notifications-timeout=nn``
    ``(pegasus.monitord.notifications.timeout=nn)``: This setting is used to
-   change how long will pegasus-monitord wait for a hook 
+   change how long will pegasus-monitord wait for a hook
    to finish. By default pegasus-monitord will wait for as long as it
    takes (possibly indefinitely) until a hook ends. With
    this option, pegasus-monitord will wait for at most nn seconds before
@@ -1323,4 +1323,3 @@ This can be used as follows:
 .. code-block:: python
 
     wf.add_shell_hook(EventType.START, "/pegasus/dist/pegasus-5.0.0dev/share/pegasus/notification/email --to email@school.edu")
-

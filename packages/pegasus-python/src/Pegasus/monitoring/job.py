@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Global variables
 good_rsl = {"maxcputime": 1, "maxtime": 1, "maxwalltime": 1}
-MAX_OUTPUT_LENGTH = 2 ** 16 - 1  # Only keep stdout to 64K
+MAX_OUTPUT_LENGTH = 2**16 - 1  # Only keep stdout to 64K
 
 # some constants
 NOOP_JOB_PREFIX = (
@@ -87,14 +87,7 @@ class IntegrityMetric:
         return hash(self.key())
 
     def __str__(self):
-        return "({},{},{}, {}, {} , {})".format(
-            self.type,
-            self.file_type,
-            self.count,
-            self.succeeded,
-            self.failed,
-            self.duration,
-        )
+        return f"({self.type},{self.file_type},{self.count}, {self.succeeded}, {self.failed} , {self.duration})"
 
     def key(self):
         return self.type + ":" + self.file_type
@@ -217,8 +210,7 @@ class Job:
             desc = Job.JOBTYPE_TO_DESC[self._job_type]
         else:
             logger.error(
-                "Unknown job type %s encountered for job %s"
-                % (self._job_type, self._exec_job_id)
+                f"Unknown job type {self._job_type} encountered for job {self._exec_job_id}"
             )
 
         return desc
@@ -231,11 +223,10 @@ class Job:
         :return:
         """
         for event in events:
-            if not "multipart" in event:
+            if "multipart" not in event:
                 # Not this one... skip to the next
                 logger.error(
-                    " Mismatched multipart record %s in job %s"
-                    % (event, self._exec_job_id)
+                    f" Mismatched multipart record {event} in job {self._exec_job_id}"
                 )
                 continue
             if "integrity_summary" in event:
@@ -312,8 +303,7 @@ class Job:
                 self._main_job_multiplier_factor = int(my_multiplier_factor)
             except ValueError:
                 logger.warning(
-                    "%s: cannot convert multiplier factor: %s"
-                    % (os.path.basename(submit_file), my_multiplier_factor)
+                    f"{os.path.basename(submit_file)}: cannot convert multiplier factor: {my_multiplier_factor}"
                 )
                 self._main_job_multiplier_factor = None
 
@@ -407,14 +397,13 @@ class Job:
             my_stats = os.stat(submit_file)
         except OSError:
             # Could not stat file
-            logger.error("stat %s" % (submit_file))
+            logger.error(f"stat {submit_file}")
             return my_result, my_site
 
         # Check submit file timestamp
         if stamp < my_stats[8]:  # mtime
             logger.info(
-                "%s: sub file modified: job timestamp=%d, file mtime=%d, diff=%d"
-                % (submit_file, stamp, my_stats[8], my_stats[8] - stamp)
+                f"{submit_file}: sub file modified: job timestamp={stamp:d}, file mtime={my_stats[8]:d}, diff={my_stats[8] - stamp:d}"
             )
 
         # Check if we need to parse the environment line
@@ -426,12 +415,11 @@ class Job:
         try:
             SUB = open(submit_file)
         except OSError:
-            logger.error("unable to parse %s" % (submit_file))
+            logger.error(f"unable to parse {submit_file}")
             return my_result, my_site
 
         # Parse submit file
         for my_line in SUB:
-
             # general look for pegasus classads first
             match = re_parse_pegasus_classads.search(my_line)
             if match:
@@ -486,8 +474,7 @@ class Job:
                 self._job_dagman_out = self.extract_dagman_out_from_condor_env(my_line)
                 if self._job_dagman_out is None:
                     logger.error(
-                        "Unable to parse dagman out file from environment key %s in submit file for job %s"
-                        % (my_line, self._exec_job_id)
+                        f"Unable to parse dagman out file from environment key {my_line} in submit file for job {self._exec_job_id}"
                     )
 
         SUB.close()
@@ -567,7 +554,7 @@ class Job:
                 # PM-1390 convert to integrity metrics
                 logger.debug("Multipart record %s", my_record)
                 self._add_multipart_events([my_record])
-            elif not "invocation" in my_record:
+            elif "invocation" not in my_record:
                 # Not this one... skip to the next
                 logger.trace("Skipping %s", my_record)
                 continue
@@ -609,8 +596,7 @@ class Job:
 
                     my_record["hostname"] = self._host_id
                     logger.trace(
-                        "For job %s preferring %s %s over kickstart reported hostname %s %s"
-                        % (
+                        "For job {} preferring {} {} over kickstart reported hostname {} {}".format(
                             self._exec_job_id,
                             my_record["hostname"],
                             my_record["hostaddr"],
@@ -641,15 +627,14 @@ class Job:
                 if stdout is not None:
                     try:
                         stdout_text_list.append(
-                            utils.quote("#@ %d stdout\n" % (my_task_number))
+                            utils.quote(f"#@ {my_task_number:d} stdout\n")
                         )
                         stdout_text_list.append(utils.quote(stdout))
                         stdout_text_list.append(utils.quote("\n"))
                         stdout_size += len(stdout) + 20
                     except KeyError:
                         logger.exception(
-                            "Unable to parse stdout section from kickstart record for task %s from file %s "
-                            % (my_task_number, self.get_rotated_out_filename())
+                            f"Unable to parse stdout section from kickstart record for task {my_task_number} from file {self.get_rotated_out_filename()} "
                         )
 
             if "stderr" in my_record:
@@ -666,15 +651,14 @@ class Job:
                 if stderr is not None:
                     try:
                         stdout_text_list.append(
-                            utils.quote("#@ %d stderr\n" % (my_task_number))
+                            utils.quote(f"#@ {my_task_number:d} stderr\n")
                         )
                         stdout_text_list.append(utils.quote(stderr))
                         stdout_text_list.append(utils.quote("\n"))
                         stdout_size += len(stderr) + 20
                     except KeyError:
                         logger.exception(
-                            "Unable to parse stderr section from kickstart record for task %s from file %s "
-                            % (my_task_number, self.get_rotated_out_filename())
+                            f"Unable to parse stderr section from kickstart record for task {my_task_number} from file {self.get_rotated_out_filename()} "
                         )
 
             # PM-1398 pass cpu info
@@ -698,7 +682,7 @@ class Job:
         # Look for clustered record...
         my_cluster_found = False
         for my_record in kickstart_output:
-            if not "clustered" in my_record:
+            if "clustered" not in my_record:
                 # Not this one... skip to the next
                 continue
             # Ok found it, fill in cluster parameters
@@ -734,7 +718,7 @@ class Job:
 
         basename = self._output_file
         if self._has_rotated_stdout_err_files:
-            basename += ".%03d" % (self._job_output_counter)
+            basename += f".{self._job_output_counter:03d}"
 
         return basename
 
@@ -746,7 +730,7 @@ class Job:
 
         basename = self._exec_job_id + ".err"
         if self._has_rotated_stdout_err_files:
-            basename += ".%03d" % (self._job_output_counter)
+            basename += f".{self._job_output_counter:03d}"
 
         return basename
 
@@ -795,7 +779,7 @@ class Job:
             self._stderr_text = None
             if not self.is_noop_job():
                 logger.warning(
-                    "unable to read error file: %s, continuing..." % (my_err_file)
+                    f"unable to read error file: {my_err_file}, continuing..."
                 )
         else:
             ERR.close()
@@ -820,7 +804,7 @@ class Job:
 
             basename = self._exec_job_id + ".out"
             if self._has_rotated_stdout_err_files:
-                basename += ".%03d" % (self._job_output_counter)
+                basename += f".{self._job_output_counter:03d}"
             out_file = os.path.join(run_dir, basename)
 
         try:
@@ -836,9 +820,7 @@ class Job:
         except OSError:
             self._stdout_text = None
             if not self.is_noop_job():
-                logger.warning(
-                    "unable to read output file: %s, continuing..." % (out_file)
-                )
+                logger.warning(f"unable to read output file: {out_file}, continuing...")
         else:
             OUT.close()
 
@@ -875,8 +857,7 @@ class Job:
             stdout = task_output
         else:
             logger.debug(
-                "Only grabbing %s of %s for task %s from file %s "
-                % (remaining, type, task_number, self.get_rotated_out_filename())
+                f"Only grabbing {remaining} of {type} for task {task_number} from file {self.get_rotated_out_filename()} "
             )
             if remaining > 0:
                 # we store only the first remaining chars
@@ -912,14 +893,13 @@ class Job:
                 try:
                     events.append(json.loads(payload))
                 except Exception:
-                    logger.error("Unable to convert payload %s to JSON" % payload)
+                    logger.error(f"Unable to convert payload {payload} to JSON")
                 start = task_output.find(MONITORING_EVENT_START_MARKER, end)
 
             task_data.write(task_output[end + len(MONITORING_EVENT_END_MARKER) :])
         except Exception as e:
             logger.error(
-                "Unable to parse monitoring events from job stdout for job %s"
-                % self._exec_job_id
+                f"Unable to parse monitoring events from job stdout for job {self._exec_job_id}"
             )
             logger.exception(e)
             # return the whole task output as is
@@ -983,9 +963,9 @@ class Job:
         if self._pegasus_classads:
             for key in self._pegasus_classads.keys():
                 if key in self.PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS:
-                    kwargs[
-                        self.PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS[key]
-                    ] = self._pegasus_classads[key]
+                    kwargs[self.PEGASUS_CLASSADS_TO_REQUEST_COMPOSITE_KEYS[key]] = (
+                        self._pegasus_classads[key]
+                    )
 
         # PM-1398 for DIBBS we want task monitoring event that has metadata
         # to be included in the composite event also
@@ -1018,14 +998,13 @@ class Job:
                     """
                     payload = event["payload"] if "payload" in event else None
                     if payload is None:
-                        logger.error("No payload retrieved from event %s" % event)
+                        logger.error(f"No payload retrieved from event {event}")
                     for m in event["payload"]:
                         if "name" in m and "value" in m:
                             kwargs["metadata__" + m["name"]] = m["value"]
                         else:
                             logger.error(
-                                "Additional monitoring event of type metadata can only have name value pairs in payload %s"
-                                % event
+                                f"Additional monitoring event of type metadata can only have name value pairs in payload {event}"
                             )
 
         # sanity check
@@ -1048,8 +1027,7 @@ class Job:
                 # integrity_verification_attempts multipart records in the same job.out file
                 if key in kwargs:
                     logger.debug(
-                        "key %s exists already. Need to merge into existing composite event for job %s"
-                        % (key, self._exec_job_id)
+                        f"key {key} exists already. Need to merge into existing composite event for job {self._exec_job_id}"
                     )
                     existing = kwargs[key]
 
@@ -1059,8 +1037,7 @@ class Job:
                             # generated. We only pick the first one. For other records if there is a dict
                             # and we detect multiple of them for the job, we should log an error
                             logger.error(
-                                "key %s exists as a dict and not a list. Ignoring for job %s"
-                                % (key, self._exec_job_id)
+                                f"key {key} exists as a dict and not a list. Ignoring for job {self._exec_job_id}"
                             )
                         continue
 

@@ -321,4 +321,3 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    However, some logic in keg relies on the device starting with a
    slash to recognize a true-file device.
    This is now fixed.
-

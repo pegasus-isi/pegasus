@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -136,8 +135,7 @@ class Version(BaseVersion):
             for table in tables:
                 self.db.execute(
                     text(
-                        "ALTER TABLE %s CONVERT TO CHARACTER SET utf8mb4"
-                        % table.__tablename__
+                        f"ALTER TABLE {table.__tablename__} CONVERT TO CHARACTER SET utf8mb4"
                     )
                 )
             self.db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
@@ -146,17 +144,14 @@ class Version(BaseVersion):
         elif self.db.get_bind().driver == "psycopg2":
             url = self.db.get_bind().url
             command = (
-                "psql %s" % url.database
+                f"psql {url.database}"
                 if not url.password
                 else f"export PGPASSWORD={url.password}; psql {url.database}"
             )
             if url.username:
-                command += " -U %s" % url.username
-            command += (
-                " -c \"UPDATE pg_database SET encoding = pg_char_to_encoding('UTF8') WHERE datname = '%s'\""
-                % url.database
-            )
-            log.debug("Executing: %s" % command)
+                command += f" -U {url.username}"
+            command += f" -c \"UPDATE pg_database SET encoding = pg_char_to_encoding('UTF8') WHERE datname = '{url.database}'\""
+            log.debug(f"Executing: {command}")
             child = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -173,7 +168,7 @@ class Version(BaseVersion):
         log.debug(f"Downgrading from version {DB_VERSION}")
 
     def _drop_indexes(self, index_list):
-        """"."""
+        """ "."""
         for index in index_list:
             try:
                 if self.db.get_bind().driver == "mysqldb":
@@ -181,7 +176,7 @@ class Version(BaseVersion):
                         text(f"DROP INDEX {index[0]} ON {index[1].__tablename__}")
                     )
                 else:
-                    self.db.execute(text("DROP INDEX %s" % index[0]))
+                    self.db.execute(text(f"DROP INDEX {index[0]}"))
             except (OperationalError, ProgrammingError):
                 pass
             except Exception as e:
@@ -190,17 +185,12 @@ class Version(BaseVersion):
         self.db.commit()
 
     def _create_indexes(self, index_list):
-        """"."""
+        """ "."""
         for index in index_list:
             try:
                 self.db.execute(
                     text(
-                        "CREATE INDEX {}_{}_COL ON {}({})".format(
-                            index[0].__tablename__,
-                            index[1].name,
-                            index[0].__tablename__,
-                            index[1].name,
-                        )
+                        f"CREATE INDEX {index[0].__tablename__}_{index[1].name}_COL ON {index[0].__tablename__}({index[1].name})"
                     )
                 )
             except (OperationalError, ProgrammingError):
@@ -527,7 +517,7 @@ class Version(BaseVersion):
         self.db.commit()
 
     def _update_sqlite_table(self, tbl, create_stmt):
-        """"."""
+        """ "."""
         try:
             from sqlalchemy import inspect as sa_inspect
 
@@ -571,6 +561,6 @@ class Version(BaseVersion):
                 self.db.commit()
 
         except (OperationalError, ProgrammingError, Exception) as e:
-            if not "no such table" in str(e):
+            if "no such table" not in str(e):
                 self.db.rollback()
                 raise DBAdminError(e)

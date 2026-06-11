@@ -25,6 +25,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -34,7 +37,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract code generator class. */
 public class AbstractTest {

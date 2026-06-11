@@ -20,6 +20,7 @@ import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.*;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;

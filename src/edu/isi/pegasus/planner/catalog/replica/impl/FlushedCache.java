@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.catalog.replica.impl;
 import edu.isi.pegasus.common.util.Escape;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;

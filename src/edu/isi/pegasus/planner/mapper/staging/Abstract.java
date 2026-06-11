@@ -21,10 +21,13 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
+
 import java.io.File;
 import java.util.Properties;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public abstract class Abstract implements StagingMapper {
 
     /** Handle to the logger */

@@ -21,11 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Condor;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the ContainerShellWrapperFactory class. */
 public class ContainerShellWrapperFactoryTest {

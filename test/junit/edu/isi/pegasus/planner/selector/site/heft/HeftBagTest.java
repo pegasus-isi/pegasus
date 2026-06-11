@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the HeftBag class constants and interface. */

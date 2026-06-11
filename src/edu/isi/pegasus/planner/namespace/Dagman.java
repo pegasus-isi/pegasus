@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;

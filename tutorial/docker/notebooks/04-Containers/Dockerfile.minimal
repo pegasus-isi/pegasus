@@ -23,4 +23,3 @@ RUN echo -e "scitech ALL=(ALL)       NOPASSWD:ALL\n" >> /etc/sudoers
 USER scitech
 
 WORKDIR /home/scitech
-

@@ -14,10 +14,11 @@
  */
 package org.griphyn.vdl.directive;
 
-import java.io.IOException;
-import java.util.MissingResourceException;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.IOException;
+import java.util.MissingResourceException;
 
 /**
  * The base class for directives. Directives are a set of high-level common modules that facilitate

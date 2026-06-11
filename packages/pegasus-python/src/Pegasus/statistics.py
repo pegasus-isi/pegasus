@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-
 import atexit
 import logging
 import os
-import sys
 import typing as t
 from collections import namedtuple
 from dataclasses import dataclass
@@ -21,8 +18,7 @@ from Pegasus.db.workflow.stampede_wf_statistics import StampedeWorkflowStatistic
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.tools import utils
 
-if sys.version_info > (3, 6):
-    setattr(t, "_ClassVar", t.ClassVar)
+setattr(t, "_ClassVar", t.ClassVar)
 
 log = logging.getLogger("pegasus-statistics")
 
@@ -31,7 +27,7 @@ format_seconds = stats_utils.format_seconds
 fstr = stats_utils.round_decimal_to_str
 
 
-def remove_file(path: t.Union[str, os.PathLike]):
+def remove_file(path: str | os.PathLike):
     """
     Remove a file.
 
@@ -94,13 +90,13 @@ class JobStatistics:
     #: The time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node.
     condor_delay: float = None
     #: The time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue.
-    resource: t.Optional[float] = None
+    resource: float | None = None
     #: The time spent on the resource as seen by Condor DAGMan. Is always >= Kickstart.
     runtime: float = None
     #: The stime taken for the completion of a clustered job.
-    seqexec: t.Optional[float] = None
+    seqexec: float | None = None
     #: The time difference between the time for the completion of a clustered job and sum of all the individual tasks Kickstart time.
-    seqexec_delay: t.Optional[float] = None
+    seqexec_delay: float | None = None
     #: The job retry count.
     retry_count: int = 0
     #: The exitcode for this job.
@@ -108,7 +104,7 @@ class JobStatistics:
     #: The name of the host where the job ran, as reported by Kickstart.
     hostname: str = None
 
-    def get_formatted_statistics(self) -> t.List[str]:
+    def get_formatted_statistics(self) -> list[str]:
         """Get formatted job statistics data."""
         return [
             self.name,
@@ -160,7 +156,7 @@ class TransformationStatistics:
     #: The mean of the average cpu utilization value corresponding to the transformation.
     avg_avg_cpu: float = None
 
-    def get_formatted_statistics(self) -> t.List[str]:
+    def get_formatted_statistics(self) -> list[str]:
         """Get formatted transformations statistics data."""
         return [
             self.transformation,
@@ -225,7 +221,7 @@ class PegasusStatistics:
 #       succeeded and failed count.
 """
     #: The column names for workflow summary file of type text.
-    workflow_summary_col_name_text: t.Tuple[str, ...] = (
+    workflow_summary_col_name_text: tuple[str, ...] = (
         "Type",
         "Succeeded",
         "Failed",
@@ -237,7 +233,7 @@ class PegasusStatistics:
     #: Column widths for workflow summary file.
     workflow_summary_col_size = (15, 10, 8, 12, 10, 10, 13)
     #: The column names for workflow summary file of type csv.
-    workflow_summary_col_name_csv: t.Tuple[str, ...] = (
+    workflow_summary_col_name_csv: tuple[str, ...] = (
         "Type",
         "Succeeded",
         "Failed",
@@ -280,7 +276,7 @@ class PegasusStatistics:
 #   from the sub workflows as well.
 """
     #: The column names for workflow summary file of type csv.
-    workflow_summary_time_col_name_csv: t.Tuple[str, ...] = (
+    workflow_summary_time_col_name_csv: tuple[str, ...] = (
         "stat_type",
         "time_seconds",
     )
@@ -315,7 +311,7 @@ class PegasusStatistics:
 #
 """
     #: The column names for workflow statistics file of type text.
-    workflow_stats_col_name_text: t.Tuple[str, ...] = (
+    workflow_stats_col_name_text: tuple[str, ...] = (
         "Type",
         "Succeeded",
         "Failed",
@@ -326,9 +322,9 @@ class PegasusStatistics:
         "WF Retries",
     )
     #: Column widths for workflow statistics file.
-    workflow_stats_col_size: t.Tuple[int, ...] = (15, 11, 10, 12, 10, 10, 15, 10)
+    workflow_stats_col_size: tuple[int, ...] = (15, 11, 10, 12, 10, 10, 15, 10)
     #: The column names for workflow statistics file of type csv.
-    workflow_stats_col_name_csv: t.Tuple[str, ...] = (
+    workflow_stats_col_name_csv: tuple[str, ...] = (
         "Workflow_Id",
         "Dax_Label",
         "Type",
@@ -372,7 +368,7 @@ class PegasusStatistics:
 #                  Kickstart
 """
     #: The column names for job statistics file of type text.
-    job_stats_col_name_text: t.Tuple[str, ...] = (
+    job_stats_col_name_text: tuple[str, ...] = (
         "Job",
         "Try",
         "Site",
@@ -390,7 +386,7 @@ class PegasusStatistics:
         "Hostname",
     )
     #: Column widths for job statistics file.
-    job_stats_col_size: t.Tuple[int, ...] = (
+    job_stats_col_size: tuple[int, ...] = (
         35,
         4,
         12,
@@ -408,7 +404,7 @@ class PegasusStatistics:
         30,
     )
     #: The column names for job statistics file of type csv.
-    job_stats_col_name_csv: t.Tuple[str, ...] = (
+    job_stats_col_name_csv: tuple[str, ...] = (
         "Workflow_Id",
         "Dax_Label",
         "Job",
@@ -459,7 +455,7 @@ class PegasusStatistics:
 #                    to the transformation.
 """
     #: The column names for transformation statistics file of type text.
-    transformation_stats_col_name_text: t.Tuple[str, ...] = (
+    transformation_stats_col_name_text: tuple[str, ...] = (
         "Transformation",
         "Type",
         "Count",
@@ -475,7 +471,7 @@ class PegasusStatistics:
         "Mean (avg. cpu)",
     )
     #: Column widths for transformation statistics file.
-    transformation_stats_col_size: t.Tuple[int, ...] = (
+    transformation_stats_col_size: tuple[int, ...] = (
         15,
         5,
         6,
@@ -491,7 +487,7 @@ class PegasusStatistics:
         16,
     )
     #: The column names for transformation statistics file of type csv.
-    transformation_stats_col_name_csv: t.Tuple[str, ...] = (
+    transformation_stats_col_name_csv: tuple[str, ...] = (
         "Workflow_Id",
         "Dax_Label",
         "Transformation",
@@ -525,16 +521,16 @@ class PegasusStatistics:
                 file-type combo
 """
     #: The column names for integrity statistics file of type text.
-    integrity_stats_col_name_text: t.Tuple[str, ...] = (
+    integrity_stats_col_name_text: tuple[str, ...] = (
         "Type",
         "File Type",
         "Count",
         "Total Duration",
     )
     #: Column widths for integrity statistics file.
-    integrity_stats_col_size: t.Tuple[int, ...] = (10, 15, 10, 25)
+    integrity_stats_col_size: tuple[int, ...] = (10, 15, 10, 25)
     #: The column names for integrity statistics file of type csv.
-    integrity_stats_col_name_csv: t.Tuple[str, ...] = (
+    integrity_stats_col_name_csv: tuple[str, ...] = (
         "Workflow_Id",
         "Dax_Label",
         "Type",
@@ -563,15 +559,15 @@ class PegasusStatistics:
 #   the number of invocations , total runtime sorted by %(time_filter)s
 """
     #: The column names for time statistics file of type text.
-    time_stats_col_name_text: t.List[str] = [
+    time_stats_col_name_text: list[str] = [
         "Date%(tf_format)s",
         "Count",
         "Runtime (sec)",
     ]
     #: Column widths for time statistics file.
-    time_stats_col_size: t.Tuple[int, ...] = (30, 20, 20)
+    time_stats_col_size: tuple[int, ...] = (30, 20, 20)
     #: The column names for time statistics file of type csv.
-    time_stats_col_name_csv: t.List[str] = [
+    time_stats_col_name_csv: list[str] = [
         "stat_type",
         "date%(tf_format)s",
         "count",
@@ -587,16 +583,16 @@ class PegasusStatistics:
 #   the number of invocations, total runtime on each host sorted by %(time_filter)s
 """
     #: The column names for host statistics file of type text.
-    time_host_stats_col_name_text: t.List[str] = [
+    time_host_stats_col_name_text: list[str] = [
         "Date%(tf_format)s",
         "Host",
         "Count",
         "Runtime (sec)",
     ]
     #: Column widths for host statistics file.
-    time_host_stats_col_size: t.Tuple[int, ...] = (23, 30, 10, 20)
+    time_host_stats_col_size: tuple[int, ...] = (23, 30, 10, 20)
     #: The column names for host statistics file of type csv.
-    time_host_stats_col_name_csv: t.List[str] = [
+    time_host_stats_col_name_csv: list[str] = [
         "stat_type",
         "date%(tf_format)s",
         "host",
@@ -630,11 +626,11 @@ class PegasusStatistics:
         self.multiple_wf = multiple_wf
         self.is_pmc = is_pmc
         self.is_uuid = is_uuid
-        self.submit_dirs: t.Union[str, t.Sequence[str]] = submit_dirs or []
+        self.submit_dirs: str | t.Sequence[str] = submit_dirs or []
         self.ai = ai
-        self.wf_uuids: t.Union[str, t.Sequence[str]] = []
+        self.wf_uuids: str | t.Sequence[str] = []
 
-        self.wf_uuid_list: t.Sequence[t.Tuple[str, StampedeStatistics]] = []
+        self.wf_uuid_list: t.Sequence[tuple[str, StampedeStatistics]] = []
         self.wf_stats: t.Any = None
         self.errors: int = 0
 
@@ -856,7 +852,7 @@ class PegasusStatistics:
             except ConnectionError:
                 msg = "Unable to determine database URL."
                 self.log.error(msg)
-                raise PegasusStatisticsError()
+                raise PegasusStatisticsError
         else:
             try:
                 self.output_db_url = connection.url_by_submitdir(
@@ -867,7 +863,7 @@ class PegasusStatistics:
                 self.log.error(msg)
                 raise PegasusStatisticsError(msg)
 
-        self.log.info("DB URL is: %s" % self.output_db_url)
+        self.log.info(f"DB URL is: {self.output_db_url}")
         _uuids = (
             self.wf_uuids
             if isinstance(self.wf_uuids, str)
@@ -884,7 +880,7 @@ class PegasusStatistics:
             delete_if_exists = True
             self.output_dir = Path(self.submit_dirs, self.default_output_dir)
 
-        self.log.info("Output directory is %s" % self.output_dir)
+        self.log.info(f"Output directory is {self.output_dir}")
         utils.create_directory(str(self.output_dir), delete_if_exists=delete_if_exists)
 
     def _compute_statistics(self):
@@ -898,9 +894,7 @@ class PegasusStatistics:
             _wf_found = self.wf_stats.initialize(self.wf_uuids)
 
             if _wf_found is False:
-                msg = "Workflow {!r} not found in database {!r}".format(
-                    self.wf_uuids, self.output_db_url
-                )
+                msg = f"Workflow {self.wf_uuids!r} not found in database {self.output_db_url!r}"
                 click.echo(msg)
                 raise PegasusStatisticsError(msg)
 
@@ -973,8 +967,7 @@ class PegasusStatistics:
     def _compute_workflow_retries(self, ind_of_wf_stats):
         """Get workflow retries data from the database."""
         ind_of_wf_stats.set_job_filter("all")
-        total_wf_retries = ind_of_wf_stats.get_workflow_retries()
-        return total_wf_retries
+        return ind_of_wf_stats.get_workflow_retries()
 
     def _compute_time_summary_statistics(self):
         """Get time summary data from the database."""
@@ -987,8 +980,10 @@ class PegasusStatistics:
 
     def _compute_integrity_summary_statistics(self):
         """Get integrity summary statistics data from the database."""
-        total_failed_jobs_integrity = self.wf_stats.get_total_succeeded_failed_jobs_status(
-            classify_error=True, tag="int.error"
+        total_failed_jobs_integrity = (
+            self.wf_stats.get_total_succeeded_failed_jobs_status(
+                classify_error=True, tag="int.error"
+            )
         )
         int_metrics_summary = self.wf_stats.get_summary_integrity_metrics()
         int_error_summary = self.wf_stats.get_tag_metrics("int.error")
@@ -1460,7 +1455,7 @@ class PegasusStatistics:
                     f"Generating job instance statistics information for workflow {wf_det.wf_uuid} ..."
                 )
                 writer.write(f"# {wf_det.wf_uuid} ({wf_det.dax_label})\n")
-                max_length = [_ for _ in self.job_stats_col_size]
+                max_length = list(self.job_stats_col_size)
                 job_stats_list = self._compute_job_statistics(ind_wf_stats)
 
                 for i, job_stats in enumerate(job_stats_list):
@@ -1523,17 +1518,15 @@ class PegasusStatistics:
                     f"Generating invocation statistics information for workflow {wf_det.wf_uuid} ..."
                 )
                 writer.write(f"\n# {wf_det.wf_uuid} ({wf_det.dax_label or 'All'})\n")
-                max_length = [_ for _ in self.transformation_stats_col_size]
+                max_length = list(self.transformation_stats_col_size)
                 transformation_stats = self._compute_transformation_statistics(
                     ind_wf_stats
                 )
 
                 for i, transformation_stat in enumerate(transformation_stats):
-                    transformation_stats[
-                        i
-                    ] = (
-                        transformation_stat
-                    ) = transformation_stat.get_formatted_statistics()
+                    transformation_stats[i] = transformation_stat = (
+                        transformation_stat.get_formatted_statistics()
+                    )
                     for i in range(13):
                         max_length[i] = max(max_length[i], len(transformation_stat[i]))
 
@@ -1604,7 +1597,7 @@ class PegasusStatistics:
                     f"Generating integrity statistics information for workflow {wf_det.wf_uuid} ..."
                 )
                 writer.write(f"\n# {wf_det.wf_uuid} ({wf_det.dax_label or 'All'})\n")
-                max_length = [_ for _ in self.integrity_stats_col_size]
+                max_length = list(self.integrity_stats_col_size)
                 integrity_stats = self._compute_integrity_statistics(ind_wf_stats)
 
                 if not integrity_stats:
@@ -1903,38 +1896,38 @@ class PegasusStatistics:
                     click.echo(line.rstrip())
                 click.echo()
 
-            click.echo("%-30s: %s" % ("Summary", name))
+            click.echo(f"{'Summary':<30}: {name}")
 
             if self.file_type == "csv":
                 name = (
                     Path(self.output_dir)
                     / f"{self.workflow_summary_time_file_name}.{extn}"
                 )
-                click.echo("%-30s: %s" % ("Summary Time", name))
+                click.echo(f"{'Summary Time':<30}: {name}")
 
         if self.calc_wf_stats:
             name = Path(self.output_dir) / f"{self.workflow_stats_file_name}.{extn}"
-            click.echo("%-30s: %s" % ("Workflow execution statistics", name))
+            click.echo(f"{'Workflow execution statistics':<30}: {name}")
 
         if self.calc_jb_stats:
             name = Path(self.output_dir) / f"{self.job_stats_file_name}.{extn}"
-            click.echo("%-30s: %s" % ("Job instance statistics", name))
+            click.echo(f"{'Job instance statistics':<30}: {name}")
 
         if self.calc_tf_stats:
             name = (
                 Path(self.output_dir) / f"{self.transformation_stats_file_name}.{extn}"
             )
-            click.echo("%-30s: %s" % ("Transformation statistics", name))
+            click.echo(f"{'Transformation statistics':<30}: {name}")
 
         if self.calc_int_stats:
             name = Path(self.output_dir) / f"{self.integrity_stats_file_name}.{extn}"
-            click.echo("%-30s: %s" % ("Integrity statistics", name))
+            click.echo(f"{'Integrity statistics':<30}: {name}")
 
         if self.calc_ti_stats:
             name = Path(self.output_dir) / f"{self.time_stats_file_name}.{extn}"
-            click.echo("%-30s: %s" % ("Time statistics", name))
+            click.echo(f"{'Time statistics':<30}: {name}")
             if extn == "csv":
-                click.echo("%-30s: %s" % ("Time statistics (per host)", name))
+                click.echo(f"{'Time statistics (per host)':<30}: {name}")
 
         if self.errors:
             msg = f"Failed to generate {self.errors} type(s) of statistics"

@@ -63,19 +63,19 @@ function test_one_worker_required {
 function test_run_diamond {
     output=$(mpiexec -np 2 $PMC -s test/diamond.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$output"
         return 1
     fi
-    
+
     n=$(echo "$output" | grep "status=0" | wc -l)
-    
+
     if [ $n -ne 4 ]; then
         echo "$output"
         return 1
     fi
-    
+
     stat=$(echo "$output" | grep 'stat="ok"' | wc -l)
     if [ $stat -ne 1 ]; then
         echo "$output"
@@ -87,7 +87,7 @@ function test_run_diamond {
 function test_out_err {
     mpiexec -np 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null >/dev/null 2>&1
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         return 1
     fi
@@ -96,18 +96,18 @@ function test_out_err {
 # Make sure the rescue file gets generated where we want it
 function test_rescue_file {
     RESCUE=$(mktemp test/diamond.dag.rescue.XXXXXX)
-    
+
     mpiexec -np 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE >/dev/null 2>&1
     RC=$?
-    
+
     LOG=$(cat $RESCUE)
-    
+
     if [ $RC -ne 0 ]; then
         return 1
     fi
-    
+
     CORRECT=$(printf "\nDONE A\nDONE B\nDONE C\nDONE D\n")
-    
+
     if [ "$LOG" != "$CORRECT" ]; then
         echo "$LOG"
         echo "ERROR Rescue file was incorrect"
@@ -119,25 +119,25 @@ function test_rescue_file {
 function test_host_script {
     OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hostscript.sh 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Host script test failed"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Worker 1: Launching host script" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Host script was not launched"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "HOSTSCRIPT stdout" ]] && ! [[ "$OUTPUT" =~ "HOSTSCRIPT stderr" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Host script did not generate the right output"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Host script exited with status 0" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Host script test failed"
@@ -149,13 +149,13 @@ function test_host_script {
 function test_fail_script {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script /bin/false 2>&1)
     RC=$?
-    
+
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Fail script test failed"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Host script failed" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Fail script test failed"
@@ -167,13 +167,13 @@ function test_fail_script {
 function test_fork_script {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/forkscript.sh -v 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Fork script test failed"
         return 1
     fi
-    
+
     if [[ "$OUTPUT" =~ "Unable to terminate host script process group" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Fork script test failed"
@@ -184,16 +184,16 @@ function test_fork_script {
 # Make sure host scripts time out after 60 seconds
 function test_hang_script {
     echo "This should take 60 seconds..."
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-cpus 4 --host-script test/hangscript.sh -v 2>&1)
     RC=$?
-    
+
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Hang script test failed"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Host script timed out" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Hang script test failed"
@@ -205,7 +205,7 @@ function test_hang_script {
 function test_memory_limit {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 100 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Host memory test failed"
@@ -217,14 +217,14 @@ function test_memory_limit {
 function test_insufficient_memory {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 99 2>&1)
     RC=$?
-    
+
     # This test should fail because 99 MB isn't enough to run the tasks in the DAG
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient memory test failed (1)"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "FATAL ERROR: No host is capable of running task" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient memory test failed (2)"
@@ -236,7 +236,7 @@ function test_insufficient_memory {
 function test_strict_limits {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag --strict-limits 2>&1)
     RC=$?
-    
+
     # This test should pass because 100 MB should be enough to run the tasks in the DAG
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
@@ -249,7 +249,7 @@ function test_strict_limits {
 function test_strict_limits_failure {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/limit.dag --strict-limits 2>&1)
     RC=$?
-    
+
     # This test should fail because 1 MB isn't enough to run the task in the DAG
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
@@ -262,7 +262,7 @@ function test_strict_limits_failure {
 function test_cpus_limit {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-memory 100 --host-cpus 2 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Host CPUs test failed"
@@ -274,14 +274,14 @@ function test_cpus_limit {
 function test_insufficient_cpus {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-cpus 1 2>&1)
     RC=$?
-    
+
     # This test should fail because 1 CPU isn't enough to run the tasks in the DAG
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient CPUs test failed (1)"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "FATAL ERROR: No host is capable of running task" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Insufficient CPUs test failed (2)"
@@ -293,20 +293,20 @@ function test_insufficient_cpus {
 function test_tries {
     OUTPUT=$(mpiexec -np 2 $PMC -s test/tries.dag -o /dev/null -e /dev/null -t 3 2>&1)
     RC=$?
-    
+
     # This test should fail because task B will fail twice
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Tries test failed"
         return 1
     fi
-    
+
     if [ $(echo "$OUTPUT" | grep "Task B failed" | wc -l) -ne 5 ]; then
         echo "$OUTPUT"
         echo "ERROR: Tries test failed"
         return 1
     fi
-    
+
     if [ $(echo "$OUTPUT" | grep "Task C failed" | wc -l) -ne 3 ]; then
         echo "$OUTPUT"
         echo "ERROR: Tries test failed"
@@ -318,22 +318,22 @@ function test_tries {
 function test_priority {
     OUTPUT=$(mpiexec -np 2 $PMC -v -v -s test/priority.dag -o /dev/null -e /dev/null --host-cpus 2 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Priority test failed"
         return 1
     fi
-    
+
     DESIRED="[trace] Scheduling task G
 [trace] Scheduling task I
 [trace] Scheduling task D
 [trace] Scheduling task E
 [trace] Scheduling task O
 [trace] Scheduling task N"
-    
+
     ACTUAL=$(echo "$OUTPUT" | grep "Scheduling task ")
-    
+
     if [ "$ACTUAL" != "$DESIRED" ]; then
         echo "$OUTPUT"
         echo "Actual: $ACTUAL"
@@ -347,31 +347,31 @@ function test_priority {
 function test_max_wall_time {
     OUTPUT=$(mpiexec -np 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
     RC=$?
-    
+
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on exitcode"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Aborting workflow" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on aborting"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "TASK stdout" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on task stdout"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "TASK stderr" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on task stderr"
         return 1
     fi
-    
+
     ELAPSED=$(echo "$OUTPUT" | grep "Wall time:" | cut -d" " -f4)
     if [ $(echo "$ELAPSED > 4.0" | bc -q) -eq 1 ]; then
         echo "$OUTPUT"
@@ -385,15 +385,15 @@ function test_max_wall_time {
 function test_resource_log {
     OUTPUT=$(mpiexec -np 3 $PMC -s test/sleep.dag --host-cpus 4 --host-memory 100 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Resource log test failed"
         return 1
     fi
-    
+
     LINES=$(cat test/sleep.dag.resource | wc -l)
-    
+
     if [ $LINES -ne 3 ]; then
         echo "ERROR: Expected 3 lines in the resource log got $LINES"
         return 1
@@ -404,7 +404,7 @@ function test_resource_log {
 function test_append_stdio {
     echo "onefish my stdout" > test/diamond.dag.out.1
     echo "twofish my stderr" > test/diamond.dag.err.1
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -v test/diamond.dag 2>&1)
     RC=$?
 
@@ -437,14 +437,14 @@ function test_forward {
         echo "ERROR: Forward test failed"
         return 1
     fi
-    
+
     FOO=$(grep "Variable FOO" test/forward.dag.foo | wc -l)
     if [ $? -ne 0 ] || [ $FOO -ne 2 ]; then
         echo "$OUTPUT"
         echo "ERROR: Forward test failed (foo problem)"
         return 1
     fi
-    
+
     BAR=$(grep "Variable BAR" test/forward.dag.bar | wc -l)
     if [ $? -ne 0 ] || [ $BAR -ne 2 ]; then
         echo "$OUTPUT"
@@ -463,7 +463,7 @@ function test_forward_fail {
         echo "ERROR: Forward failure test failed"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Task A failed due to collective I/O errors" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Forward failure test failed"
@@ -475,20 +475,20 @@ function test_forward_fail {
 function test_file_forward {
     OUTPUT=$(mpiexec -np 2 $PMC -v test/file_forward.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: File forward test failed"
         return 1
     fi
-    
+
     FOO=$(grep "foo" test/forward.dag.foo | wc -l)
     if [ $? -ne 0 ] || [ $FOO -ne 2 ]; then
         echo "$OUTPUT"
         echo "ERROR: File forward test failed (foo problem)"
         return 1
     fi
-    
+
     BAR=$(grep "bar" test/forward.dag.bar | wc -l)
     if [ $? -ne 0 ] || [ $BAR -ne 2 ]; then
         echo "$OUTPUT"
@@ -501,13 +501,13 @@ function test_file_forward {
 function test_file_forward_fail {
     OUTPUT=$(mpiexec -np 2 $PMC -v test/file_forward_fail.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: File forward fail test failed"
         return 1
     fi
-    
+
     if ! [[ "$OUTPUT" =~ "Task A: ./test is not a file" ]]; then
         echo "$OUTPUT"
         echo "ERROR: File forward fail test failed"
@@ -518,16 +518,16 @@ function test_file_forward_fail {
 function test_per_task_stdio {
     mkdir -p test/scratch
     cp test/diamond.dag test/scratch/
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -v --per-task-stdio test/scratch/diamond.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: Per task stdio test failed"
         return 1
     fi
-    
+
     NFILES=$(ls test/scratch/{A,B,C,D}.{out,err}.000 | wc -l)
     if [ $NFILES -ne 8 ]; then
         echo "$OUTPUT"
@@ -540,16 +540,16 @@ function test_per_task_stdio {
 function test_jobstate_log {
     mkdir -p test/scratch
     cp test/diamond.dag test/scratch/
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -v --jobstate-log test/scratch/diamond.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: jobstate.log test failed"
         return 1
     fi
-    
+
     if ! [ -f "test/scratch/jobstate.log" ]; then
         echo "$OUTPUT"
         echo "ERROR: jobstate.log file was not created"
@@ -560,22 +560,22 @@ function test_jobstate_log {
 function test_monitord_hack {
     mkdir -p test/scratch
     cp test/diamond.dag test/scratch/
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -v --monitord-hack test/scratch/diamond.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: monitord hack test failed"
         return 1
     fi
-    
+
     if [ $(ls test/scratch/*.out.000 | wc -l) -ne 4 ]; then
         echo "$OUTPUT"
         echo "ERROR: --monitord-hack did not cause --per-task-stdio"
         return 1
     fi
-    
+
     if ! [ -f "test/scratch/diamond.dag.dagman.out" ]; then
         echo "$OUTPUT"
         echo "ERROR: .dagman.out file was not created"
@@ -586,16 +586,16 @@ function test_monitord_hack {
 function test_monitord_hack_failure {
     mkdir -p test/scratch
     cp test/fail.dag test/scratch/
-    
+
     OUTPUT=$(mpiexec -np 2 $PMC -v --monitord-hack test/scratch/fail.dag 2>&1)
     RC=$?
-    
+
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
         echo "ERROR: monitord hack failure test failed"
         return 1
     fi
-    
+
     if ! [ -f "test/scratch/fail.dag.dagman.out" ]; then
         echo "$OUTPUT"
         echo "ERROR: .dagman.out file was not created"
@@ -802,4 +802,3 @@ if ! [ -z "$(which numactl)" ]; then
         run_test test_PM953
     fi
 fi
-

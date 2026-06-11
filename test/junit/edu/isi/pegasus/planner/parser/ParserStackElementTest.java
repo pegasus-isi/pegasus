@@ -20,11 +20,14 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ParserStackElementTest {
 
     /*

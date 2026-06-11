@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.credential;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class CredentialHandlerFactory {
 
     /** The default package where the all the implementing classes are supposed to reside. */
     public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.common.credential.impl";
+
     //
 
     /** The name of the class implementing the credentials */

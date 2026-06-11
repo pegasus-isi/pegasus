@@ -19,9 +19,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
-import org.junit.jupiter.api.Test;
 
 /** Tests for Usage invocation class. */
 public class UsageTest {

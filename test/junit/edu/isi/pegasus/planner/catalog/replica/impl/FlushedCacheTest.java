@@ -21,14 +21,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.Escape;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class FlushedCacheTest {
 
     @Test

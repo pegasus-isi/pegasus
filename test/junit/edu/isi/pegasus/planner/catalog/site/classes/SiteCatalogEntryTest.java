@@ -24,17 +24,22 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
 import edu.isi.pegasus.planner.classes.Profile;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class SiteCatalogEntryTest {
 
     public SiteCatalogEntryTest() {}

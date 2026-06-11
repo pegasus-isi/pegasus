@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import sys
 from pathlib import Path
@@ -138,7 +138,7 @@ should_have_been_removed = {
     "hello_ID_hello_0.sub",
     "hello_ID_hello_2.sub",
     "world_ID_world_1_2.sub",
-    "world_ID_world_2_0.sub" "world_ID_world_2_1.sub" "world_ID_world_2_2.sub",
+    "world_ID_world_2_0.subworld_ID_world_2_1.subworld_ID_world_2_2.sub",
 }
 
 found_submit_files = set()

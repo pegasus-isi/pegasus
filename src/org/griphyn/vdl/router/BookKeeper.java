@@ -14,6 +14,10 @@
  */
 package org.griphyn.vdl.router;
 
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.dax.*;
+import org.griphyn.vdl.util.*;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,9 +27,6 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.dax.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class stores state when constructing the DAG for output. It is expected that for each DAG

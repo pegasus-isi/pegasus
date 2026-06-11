@@ -24,7 +24,9 @@ import java.util.List;
  */
 public class TestLogFormatter {
 
-    /** @param fm the LOG formatter to use. */
+    /**
+     * @param fm the LOG formatter to use.
+     */
     public void writeTestLog(LogFormatter fm) {
         fm.setProgramName("Pegasus");
 
@@ -55,7 +57,9 @@ public class TestLogFormatter {
         System.out.println(fm.getEndEventMessage());
     }
 
-    /** @param args */
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         TestLogFormatter test = new TestLogFormatter();
         System.out.println("\n Logs in Netlogger Format");

@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -89,6 +90,7 @@ public abstract class Abstract implements JobAggregator {
 
     /** Handle to the site catalog store */
     protected SiteStore mSiteStore;
+
     // protected PoolInfoProvider mSiteHandle;
 
     /** The handle to the ADag object that contains the workflow being clustered. */

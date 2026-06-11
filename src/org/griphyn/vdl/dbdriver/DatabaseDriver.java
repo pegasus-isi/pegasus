@@ -15,13 +15,15 @@
 package org.griphyn.vdl.dbdriver;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+
+import org.griphyn.vdl.util.ChimeraProperties;
+import org.griphyn.vdl.util.Logging;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This common database interface that defines basic functionalities for interacting with backend
@@ -81,8 +83,12 @@ public abstract class DatabaseDriver {
      */
     public static DatabaseDriver loadDriver(
             String dbDriverName, String propertyPrefix, Object[] arguments)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         Logging log = Logging.instance();
         log.log(
@@ -143,8 +149,12 @@ public abstract class DatabaseDriver {
      * @see #loadDriver( String, String, Object[] )
      */
     public static DatabaseDriver loadDriver(String propertyPrefix)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         return loadDriver(null, propertyPrefix, new Object[0]);
     }

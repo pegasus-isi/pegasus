@@ -19,10 +19,12 @@ import static org.hamcrest.Matchers.*;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Tests for the Random transformation selector. */
 public class RandomTest {

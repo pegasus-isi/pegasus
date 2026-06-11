@@ -19,14 +19,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class DagInfoTest {
 
     private DagInfo mDagInfo;

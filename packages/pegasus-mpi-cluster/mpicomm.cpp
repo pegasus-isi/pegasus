@@ -100,13 +100,13 @@ bool MPICommunicator::message_waiting() {
 
 int MPICommunicator::wait_for_message(MPI_Status &status, double timeout) {
     /* On many MPI implementations MPI_Probe uses a busy wait loop. This
-     * really wreaks havoc on the load and CPU utilization of the workers 
-     * when there are no tasks to process or some slots are idle due to 
+     * really wreaks havoc on the load and CPU utilization of the workers
+     * when there are no tasks to process or some slots are idle due to
      * limited resource availability (memory and CPUs), and of the master
      * when there are no tasks to schedule or all slots are busy. In order
      * to avoid that we check here to see if there are any messages first,
      * and if there are not, then we wait for a few millis before checking
-     * again and keep doing that until there is a message waiting. This 
+     * again and keep doing that until there is a message waiting. This
      * should reduce the load/CPU usage on the system significantly. It
      * decreases responsiveness a bit, but it is a fair tradeoff.
      */
@@ -136,7 +136,7 @@ int MPICommunicator::wait_for_message(MPI_Status &status, double timeout) {
             // This causes the loop to spin rapidly for 1 second
             useconds_t sleeptime = 10; // Default is 10 usec
             if (i > 1e5) {
-                // Increase sleep time to 0.5 sec after 
+                // Increase sleep time to 0.5 sec after
                 // 1e5 x 10 usec = 1 second has elapsed
                 // This is only approximate of course
                 sleeptime = 5e5;
@@ -180,4 +180,3 @@ unsigned long MPICommunicator::sent() {
 unsigned long MPICommunicator::recvd() {
     return bytes_recvd;
 }
-

@@ -49,7 +49,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         except PermissionError:
             click.secho(
                 click.style("Error: ", fg="red", bold=True)
-                + "Cannot change to directory %s" % submit_dir
+                + f"Cannot change to directory {submit_dir}"
             )
             ctx.exit(1)
 
@@ -57,7 +57,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         if not config:
             click.secho(
                 click.style("Error: ", fg="red", bold=True)
-                + "%s is not a valid submit-dir" % submit_dir
+                + f"{submit_dir} is not a valid submit-dir"
             )
             ctx.exit(1)
 
@@ -83,7 +83,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         condor_rm = shutil.which("condor_rm")
         cmd = (condor_rm, dag_id)
 
-        rv = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        rv = subprocess.run(cmd, capture_output=True)
         if rv.returncode == 0:
             click.echo(rv.stdout.decode().strip())
             click.secho("✨ Success", fg="green")

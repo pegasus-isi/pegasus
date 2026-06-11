@@ -12,6 +12,7 @@ def _get_class_enum_member_str(_cls, _type):
             GT5 = "gt5"
             PBS = "pbs"
 
+
         class Grid:
             GT5 = _GridType.GT5
             PBS = _GridType.PBS
@@ -66,9 +67,7 @@ def _get_enum_str(enum_cls):
 
     if not issubclass(enum_cls, Enum):
         raise TypeError(
-            "invalid enum_cls: {cls}; enum_cls must be a subclass of Enum".format(
-                cls=enum_cls
-            )
+            f"invalid enum_cls: {enum_cls}; enum_cls must be a subclass of Enum"
         )
 
     return enum_cls.__name__ + ".<{members}>".format(
@@ -86,7 +85,7 @@ def _chained(f):
 
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        assert f(self, *args, **kwargs) == None
+        assert f(self, *args, **kwargs) is None
         return self
 
     return wrapper

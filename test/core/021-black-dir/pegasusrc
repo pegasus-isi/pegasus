@@ -7,4 +7,3 @@ pegasus.condor.logs.symlink = false
 
 # starting 5.0 default is condorio
 pegasus.data.configuration = sharedfs
-

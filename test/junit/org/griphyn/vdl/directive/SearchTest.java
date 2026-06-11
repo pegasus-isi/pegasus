@@ -15,7 +15,9 @@ package org.griphyn.vdl.directive;
 
 // import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class SearchTest {
 
     /*

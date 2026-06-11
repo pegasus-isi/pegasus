@@ -3,7 +3,7 @@ import re
 from configparser import DEFAULTSECT, ConfigParser
 from io import StringIO
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import TextIO
 
 __all__ = ["Properties"]
 
@@ -228,7 +228,7 @@ class Properties:
     _cfg_header_len = len(f"[{DEFAULTSECT}]\n")
 
     @staticmethod
-    def ls(prop: Optional[str] = None):
+    def ls(prop: str | None = None):
         """List property keys. Refer to
         `Configuration docs <https://pegasus.isi.edu/documentation/reference-guide/configuration.html>`_
         for additional information. If :code:`prop` is given, all properties
@@ -272,9 +272,7 @@ class Properties:
 
         if not self._check_key(k):
             log.warning(
-                "Unrecognized property key: '{}' has been set to '{}'".format(
-                    k, self._escape(v)
-                )
+                f"Unrecognized property key: '{k}' has been set to '{self._escape(v)}'"
             )
 
     def __getitem__(self, k):
@@ -322,8 +320,7 @@ class Properties:
         """
         if isinstance(v, str):
             return v
-        else:
-            return str(v)
+        return str(v)
 
     @staticmethod
     def _get_site_profile_key(site, namespace, key):
@@ -345,9 +342,7 @@ class Properties:
         if key is None:
             raise ValueError("Key cannot be none")
 
-        return "pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}".format(
-            site=site, namespace=namespace, key=key
-        )
+        return f"pegasus.catalog.site.sites.{site}.profiles.{namespace}.{key}"
 
     def add_site_profile(self, site, namespace, key, value):
         """Map a site profile to a property so the planner can override site catalog entries.
@@ -364,7 +359,7 @@ class Properties:
 
         self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 
-    def write(self, file: Optional[Union[str, Path, TextIO]] = None):
+    def write(self, file: str | Path | TextIO | None = None):
         """Write these properties to a file. If :code:`file` is not given, these
         properties are written to :code:`./pegasus.properties`
 
@@ -398,7 +393,5 @@ class Properties:
             file.write(props)
         else:
             raise TypeError(
-                "invalid file: {}; file must be of type str or file like object".format(
-                    file
-                )
+                f"invalid file: {file}; file must be of type str or file like object"
             )

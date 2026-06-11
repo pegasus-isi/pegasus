@@ -19,10 +19,12 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
-import java.io.File;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.File;
+import java.util.Properties;
 
 /** Tests for the Flat staging mapper class structure. */
 public class FlatTest {

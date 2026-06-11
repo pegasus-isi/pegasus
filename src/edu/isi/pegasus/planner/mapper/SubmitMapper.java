@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.mapper;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.io.File;
 import java.util.Properties;
 

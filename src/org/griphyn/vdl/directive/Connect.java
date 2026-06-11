@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.directive;
 
-import java.io.IOException;
-import java.lang.reflect.*;
-import java.util.MissingResourceException;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.parser.*;
+
+import java.io.IOException;
+import java.lang.reflect.*;
+import java.util.MissingResourceException;
 
 /**
  * The class dynamically loads a databaseschema
@@ -54,8 +55,12 @@ public class Connect extends Directive {
      * @throws java.io.IOException Exception
      */
     public DatabaseSchema connectDatabase(String schemaName)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         DatabaseSchema result = null;
         m_logger.log("connect", 0, "Connecting the database backend");
 
@@ -84,8 +89,12 @@ public class Connect extends Directive {
      * @throws java.io.IOException Exception
      */
     public DatabaseSchema connectDatabase(String schemaName, String dbDriverName)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException {
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException {
         DatabaseSchema result = null;
         m_logger.log("connect", 0, "Connecting the database backend");
 

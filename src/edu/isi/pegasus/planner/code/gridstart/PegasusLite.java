@@ -54,6 +54,7 @@ import edu.isi.pegasus.planner.refiner.RemoveDirectory;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -382,7 +383,8 @@ public class PegasusLite implements GridStart {
             error.append("Job ")
                     .append(job.getID())
                     .append(
-                            " cannot be wrapped with PegasusLite. Invalid data.configuration associated ")
+                            " cannot be wrapped with PegasusLite. Invalid data.configuration"
+                                    + " associated ")
                     .append(job.getDataConfiguration());
             throw new RuntimeException(error.toString());
         }
@@ -1361,7 +1363,8 @@ public class PegasusLite implements GridStart {
             error.append("For job (").append(jobname).append(").");
         }
         error.append(
-                        " File Server not specified for head node scratch shared filesystem for site: ")
+                        " File Server not specified for head node scratch shared filesystem for"
+                                + " site: ")
                 .append(site);
         throw new RuntimeException(error.toString());
     }

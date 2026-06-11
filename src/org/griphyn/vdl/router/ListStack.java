@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.util.Logging;
+
+import java.util.*;
 
 /**
  * This class maintains a stack of classes that implement the {@link java.util.List} interface.

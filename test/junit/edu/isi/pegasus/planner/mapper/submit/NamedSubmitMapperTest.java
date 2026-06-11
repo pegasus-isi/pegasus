@@ -26,14 +26,16 @@ import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.mapper.SubmitMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A JUnit Test to test the Named Submit Mapper mapper interface.

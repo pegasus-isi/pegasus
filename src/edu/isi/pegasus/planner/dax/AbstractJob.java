@@ -16,11 +16,13 @@ package edu.isi.pegasus.planner.dax;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +51,7 @@ public class AbstractJob {
     protected String mNamespace;
     protected String mVersion;
     protected String mNodeLabel;
+
     /** The metadata attributes associated with the whole workflow. */
     private Set<MetaData> mMetaDataAttributes;
 
@@ -589,7 +592,9 @@ public class AbstractJob {
         return this;
     }
 
-    /** @return File */
+    /**
+     * @return File
+     */
     public File getStdout() {
         return mStdout;
     }
@@ -725,7 +730,9 @@ public class AbstractJob {
         return this;
     }
 
-    /** @return File */
+    /**
+     * @return File
+     */
     public File getStderr() {
         return mStderr;
     }
@@ -860,7 +867,9 @@ public class AbstractJob {
         return this;
     }
 
-    /** @return Set of File objects */
+    /**
+     * @return Set of File objects
+     */
     public Set<File> getUses() {
         return mUses;
     }
@@ -1621,22 +1630,30 @@ public class AbstractJob {
         return false;
     }
 
-    /** @return String */
+    /**
+     * @return String
+     */
     public String getName() {
         return mName;
     }
 
-    /** @return String */
+    /**
+     * @return String
+     */
     public String getId() {
         return mId;
     }
 
-    /** @return String */
+    /**
+     * @return String
+     */
     public String getNodeLabel() {
         return mNodeLabel;
     }
 
-    /** @param label node lable */
+    /**
+     * @param label node lable
+     */
     public void setNodeLabel(String label) {
         this.mNodeLabel = label;
     }
@@ -1663,7 +1680,9 @@ public class AbstractJob {
         return hash;
     }
 
-    /** @param writer the XMLWriter */
+    /**
+     * @param writer the XMLWriter
+     */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }

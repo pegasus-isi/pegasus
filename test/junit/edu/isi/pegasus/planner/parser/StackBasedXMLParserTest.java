@@ -23,10 +23,7 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.xml.sax.Attributes;
@@ -35,7 +32,14 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.LocatorImpl;
 
-/** @author Rajiv Mayani */
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class StackBasedXMLParserTest {
 
     /*

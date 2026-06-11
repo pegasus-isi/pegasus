@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.refiner.cleanup.constraint.Choice;
 import edu.isi.pegasus.planner.refiner.cleanup.constraint.FloatingFile;
 import edu.isi.pegasus.planner.refiner.cleanup.constraint.OutOfSpaceError;
 import edu.isi.pegasus.planner.refiner.cleanup.constraint.Utilities;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -235,7 +236,9 @@ public class Constraint extends AbstractCleanupStrategy {
         }
     }
 
-    /** @param currentSiteJobs */
+    /**
+     * @param currentSiteJobs
+     */
     private void markStageIns(Graph workflow, String site, Set<GraphNode> currentSiteJobs) {
         for (GraphNode node : workflow.getRoots()) {
             // we only deal with create dir jobs or stage in jobs
@@ -344,7 +347,9 @@ public class Constraint extends AbstractCleanupStrategy {
         }
     }
 
-    /** @return */
+    /**
+     * @return
+     */
     private List<Choice> getCurrentChoices(String site) {
         List<Choice> choices = new LinkedList<Choice>();
         // Look at the execution of each head to decide how to proceed

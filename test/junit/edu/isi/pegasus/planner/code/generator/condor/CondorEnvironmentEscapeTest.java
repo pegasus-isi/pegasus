@@ -20,10 +20,12 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.namespace.ENV;
-import java.util.LinkedHashMap;
-import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * To test the Condor Environment Escaping logic implemented in Pegasus.

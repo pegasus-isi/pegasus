@@ -97,4 +97,3 @@ fi
 bls_wrap_up_submit
 
 exit $retcode
-

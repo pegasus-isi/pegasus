@@ -35,10 +35,13 @@ public class TransformationCatalogReservedWord implements Token {
 
     /** token value for the reserved word "pfn". */
     public static final int PFN = 3;
+
     /** token value for the reserved word "arch". */
     public static final int ARCH = 4;
+
     /** token value for the reserved word "os". */
     public static final int OS = 5;
+
     /** token value for the reserved word "osrelease". */
     public static final int OSRELEASE = 6;
 
@@ -144,6 +147,7 @@ public class TransformationCatalogReservedWord implements Token {
 
         return mSymbolTable;
     }
+
     /** This instance variable captures the token value for the reserved word. */
     private int mValue;
 

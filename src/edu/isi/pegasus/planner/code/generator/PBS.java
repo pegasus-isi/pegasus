@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -85,7 +86,8 @@ public class PBS extends Abstract {
             File localPMCPath = FindExecutable.findExec("pegasus-mpi-cluster");
             if (localPMCPath == null) {
                 throw new CodeGeneratorException(
-                        "PBS Code Generator: The executable pegasus-mpi-cluster is not accessible via $PATH environment variable.");
+                        "PBS Code Generator: The executable pegasus-mpi-cluster is not accessible"
+                                + " via $PATH environment variable.");
             }
             // construct PMC invocation
             StringBuffer sb = new StringBuffer();

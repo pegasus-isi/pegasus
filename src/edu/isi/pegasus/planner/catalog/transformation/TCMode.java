@@ -36,6 +36,7 @@ public class TCMode {
     public static final String OLDFILE_TC_CLASS = "OldFile";
 
     public static final String DEFAULT_TC_CLASS = "File";
+
     /** Default PACKAGE PATH for the TC implementing classes */
     public static final String PACKAGE_NAME = "org.griphyn.common.catalog.transformation.";
 

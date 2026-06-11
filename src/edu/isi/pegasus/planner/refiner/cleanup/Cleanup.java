@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -137,6 +138,7 @@ public class Cleanup implements CleanupImplementation {
     public Job createCleanupJob(String id, List files, Job job) {
         return this.createCleanupJob(id, files, job, job.getStagingSiteHandle());
     }
+
     /**
      * Creates a cleanup job that removes the files from remote working directory.This will
      * eventually make way to it's own interface.

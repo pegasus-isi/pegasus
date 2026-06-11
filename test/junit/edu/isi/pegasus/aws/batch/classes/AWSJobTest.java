@@ -17,13 +17,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Iterator;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 
-/** @author Rajiv Mayani */
+import java.util.Iterator;
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class AWSJobTest {
 
     private AWSJob mJob;

@@ -16,15 +16,11 @@ package edu.isi.pegasus.aws.batch.common;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.impl.Synch;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Iterator;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.AttemptDetail;
@@ -37,6 +33,13 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DeleteLogStreamRespo
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsResponse;
 import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Iterator;
 
 /**
  * A class to retrieve the cloud watch logs
@@ -88,6 +91,7 @@ public class CloudWatchLog {
     public Tuple<File, File> retrieve(AWSJob j) {
         return this.retrieve(j.getAWSJobID(), j.getTaskSummary());
     }
+
     /**
      * Retrieves a cloud watch log for an AWS Job
      *

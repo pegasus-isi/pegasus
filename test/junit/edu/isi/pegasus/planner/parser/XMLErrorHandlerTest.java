@@ -21,13 +21,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.PrintStream;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.xml.sax.SAXParseException;
 
-/** @author Rajiv Mayani */
+import java.io.PrintStream;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class XMLErrorHandlerTest {
 
     /*

@@ -17,8 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 /**
  * Structural tests for the Graph interface via reflection.

@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.namespace;
 
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;

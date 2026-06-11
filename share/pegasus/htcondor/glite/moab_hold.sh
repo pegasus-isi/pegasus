@@ -42,4 +42,3 @@ else
     echo "unsupported for this job status" >&2
     exit 1
 fi
-

@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
 
 /** Tests for {@link FloatingFile}. */
 public class FloatingFileTest {

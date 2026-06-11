@@ -1,7 +1,6 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
 
 from Pegasus.api._utils import _chained, _get_class_enum_member_str, _get_enum_str
 from Pegasus.api.errors import DuplicateError
@@ -119,9 +118,7 @@ class FileServer(ProfileMixin):
 
         if not isinstance(operation_type, Operation):
             raise TypeError(
-                "invalid operation_type: {operation_type}; operation_type must be one of {enum_str}".format(
-                    operation_type=operation_type, enum_str=_get_enum_str(Operation)
-                )
+                f"invalid operation_type: {operation_type}; operation_type must be one of {_get_enum_str(Operation)}"
             )
 
         self.operation_type = operation_type.value
@@ -170,7 +167,7 @@ class Directory:
     def __init__(
         self,
         directory_type: _DirectoryType,
-        path: Union[str, Path],
+        path: str | Path,
         shared_file_system: bool = False,
     ):
         """
@@ -185,10 +182,7 @@ class Directory:
         """
         if not isinstance(directory_type, _DirectoryType):
             raise TypeError(
-                "invalid directory_type: {directory_type}; directory type must be one of {cls_enum_str}".format(
-                    directory_type=directory_type,
-                    cls_enum_str=_get_class_enum_member_str(Directory, _DirectoryType),
-                )
+                f"invalid directory_type: {directory_type}; directory type must be one of {_get_class_enum_member_str(Directory, _DirectoryType)}"
             )
 
         self.directory_type = directory_type.value
@@ -224,9 +218,7 @@ class Directory:
         for fs in file_servers:
             if not isinstance(fs, FileServer):
                 raise TypeError(
-                    "invalid file_server: {file_server}; file_server must be of type FileServer".format(
-                        file_server=fs
-                    )
+                    f"invalid file_server: {fs}; file_server must be of type FileServer"
                 )
 
             self.file_servers.append(fs)
@@ -238,7 +230,7 @@ class Directory:
                     ("type", self.directory_type),
                     ("path", self.path),
                     ("sharedFileSystem", self.shared_file_system),
-                    ("fileServers", [fs for fs in self.file_servers]),
+                    ("fileServers", list(self.file_servers)),
                     ("freeSize", None),
                     ("totalSize", None),
                 ]
@@ -274,7 +266,7 @@ class Grid:
         grid_type: _GridType,
         contact: str,
         scheduler_type: Scheduler,
-        job_type: Optional[SupportedJobs] = None,
+        job_type: SupportedJobs | None = None,
     ):
         """
 
@@ -292,10 +284,7 @@ class Grid:
         """
         if not isinstance(grid_type, _GridType):
             raise TypeError(
-                "invalid grid_type: {grid_type}; grid_type must be one of {cls_enum_str}".format(
-                    grid_type=grid_type,
-                    cls_enum_str=_get_class_enum_member_str(Grid, _GridType),
-                )
+                f"invalid grid_type: {grid_type}; grid_type must be one of {_get_class_enum_member_str(Grid, _GridType)}"
             )
 
         self.grid_type = grid_type.value
@@ -304,9 +293,7 @@ class Grid:
 
         if not isinstance(scheduler_type, Scheduler):
             raise TypeError(
-                "invalid scheduler_type: {scheduler_type}; scheduler_type must be one of {enum_str}".format(
-                    scheduler_type=scheduler_type, enum_str=_get_enum_str(Scheduler)
-                )
+                f"invalid scheduler_type: {scheduler_type}; scheduler_type must be one of {_get_enum_str(Scheduler)}"
             )
 
         self.scheduler_type = scheduler_type.value
@@ -315,12 +302,9 @@ class Grid:
         if job_type is not None:
             if not isinstance(job_type, SupportedJobs):
                 raise TypeError(
-                    "invalid job_type: {job_type}; job_type must be one of {enum_str}".format(
-                        job_type=job_type, enum_str=_get_enum_str(SupportedJobs)
-                    )
+                    f"invalid job_type: {job_type}; job_type must be one of {_get_enum_str(SupportedJobs)}"
                 )
-            else:
-                self.job_type = job_type.value
+            self.job_type = job_type.value
 
     def __json__(self):
         return _filter_out_nones(
@@ -359,10 +343,10 @@ class Site(ProfileMixin):
     def __init__(
         self,
         name: str,
-        arch: Optional[Arch] = None,
-        os_type: Optional[OS] = None,
-        os_release: Optional[str] = None,
-        os_version: Optional[str] = None,
+        arch: Arch | None = None,
+        os_type: OS | None = None,
+        os_release: str | None = None,
+        os_version: str | None = None,
     ):
         """
         :param name: name of the site
@@ -385,24 +369,18 @@ class Site(ProfileMixin):
         if arch is not None:
             if not isinstance(arch, Arch):
                 raise TypeError(
-                    "invalid arch: {arch}; arch must be one of {enum_str}".format(
-                        arch=arch, enum_str=_get_enum_str(Arch)
-                    )
+                    f"invalid arch: {arch}; arch must be one of {_get_enum_str(Arch)}"
                 )
-            else:
-                self.arch = arch.value
+            self.arch = arch.value
         else:
             self.arch = arch
 
         if os_type is not None:
             if not isinstance(os_type, OS):
                 raise TypeError(
-                    "invalid os_type: {os_type}; os_type must be one of {enum_str}".format(
-                        os_type=os_type, enum_str=_get_enum_str(OS)
-                    )
+                    f"invalid os_type: {os_type}; os_type must be one of {_get_enum_str(OS)}"
                 )
-            else:
-                self.os_type = os_type.value
+            self.os_type = os_type.value
         else:
             self.os_type = os_type
 
@@ -425,9 +403,7 @@ class Site(ProfileMixin):
         for d in directories:
             if not isinstance(d, Directory):
                 raise TypeError(
-                    "invalid directory: {directory}; directory is not of type Directory".format(
-                        directory=d
-                    )
+                    f"invalid directory: {d}; directory is not of type Directory"
                 )
 
             self.directories.append(d)
@@ -458,8 +434,8 @@ class Site(ProfileMixin):
                     ("os.type", self.os_type),
                     ("os.release", self.os_release),
                     ("os.version", self.os_version),
-                    ("directories", [d for d in self.directories]),
-                    ("grids", [g for g in self.grids] if len(self.grids) > 0 else None),
+                    ("directories", list(self.directories)),
+                    ("grids", list(self.grids) if len(self.grids) > 0 else None),
                     (
                         "profiles",
                         OrderedDict(sorted(self.profiles.items(), key=lambda _: _[0]))
@@ -528,9 +504,7 @@ class SiteCatalog(Writable):
 
             if s.name in self.sites:
                 raise DuplicateError(
-                    "site with name: {} already exists in this SiteCatalog".format(
-                        s.name
-                    )
+                    f"site with name: {s.name} already exists in this SiteCatalog"
                 )
 
             self.sites[s.name] = s

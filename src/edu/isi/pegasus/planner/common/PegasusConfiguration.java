@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties.PEGASUS_MODE;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -349,7 +350,8 @@ public class PegasusConfiguration {
             if (imp == null || imp.getMountPoint() == null) {
                 // now throw an error
                 throw new RuntimeException(
-                        "No internal mount point specified  for HeadNode Storage Directory  for output site "
+                        "No internal mount point specified  for HeadNode Storage Directory  for"
+                                + " output site "
                                 + outputSite);
             }
 

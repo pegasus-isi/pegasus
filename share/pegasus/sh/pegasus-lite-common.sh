@@ -17,7 +17,7 @@
 ##
 
 #
-# This file contains a set of common bash funtions to be used by 
+# This file contains a set of common bash funtions to be used by
 # Pegasus Lite jobs
 #
 # Author: Mats Rynge <rynge@isi.edu>
@@ -49,7 +49,7 @@ fi
 
 pegasus_lite_setup_log()
 {
-    # PM-1132 set up the log explicitly to a file     
+    # PM-1132 set up the log explicitly to a file
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
 
         # rename the log file with approprite suffix
@@ -60,7 +60,7 @@ pegasus_lite_setup_log()
             if [ ! -e ${pegasus_lite_log_file}.${count} ] ; then
                 break
             fi
-        done    
+        done
         pegasus_lite_log_file=${pegasus_lite_log_file}.${count}
 
         # Close STDOUT file descriptor
@@ -164,7 +164,7 @@ pegasus_lite_internal_wp_shipped()
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package"
-    
+
         if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
             # make sure the provided worker package provided is for the this platform
             if [ $? = 0 ]; then
@@ -172,7 +172,7 @@ pegasus_lite_internal_wp_shipped()
                 if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
                     pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
                     return 1
-                fi 
+                fi
             fi
         else
             pegasus_lite_log "Skipping sanity check of included worker package because pegasus.transfer.worker.package.strict=$pegasus_lite_enforce_strict_wp_check"
@@ -205,7 +205,7 @@ pegasus_lite_wp_untarred()
     untar_dir=$(ls -d $pegasus_lite_start_dir/* | grep -E 'pegasus-[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z0-9]*-*') >/dev/null 2>&1
     if [ "X$untar_dir" != "X" ]; then
         pegasus_lite_log "The job contained a Pegasus worker package that was already untarred in $untar_dir"
-    
+
         if [ "X$pegasus_lite_enforce_strict_wp_check" = "Xtrue" ]; then
 	    # make sure the provided worker package provided is for the this platform
 	    if [ $? = 0 ]; then
@@ -213,7 +213,7 @@ pegasus_lite_wp_untarred()
                 if ! (echo "x$wp_name" | grep "$system") >/dev/null 2>&1 ; then
 		    pegasus_lite_log "Warning: worker package $wp_name does not seem to match the system $system"
 		    return 1
-                fi 
+                fi
 	    fi
         else
 	    pegasus_lite_log "Skipping sanity check of included worker package because pegasus.transfer.worker.package.strict=$pegasus_lite_enforce_strict_wp_check"
@@ -228,7 +228,7 @@ pegasus_lite_wp_untarred()
 	    pegasus_lite_log "Warning: unable to execute pegasus-kickstart out of $untar_dir . Will not use this install."
 	    return 1
 	fi
-	
+
         unset PEGASUS_HOME
         PATH=${worker_package_dir}/bin:$PATH
         export PATH
@@ -277,7 +277,7 @@ pegasus_lite_internal_wp_in_env()
 }
 
 
-pegasus_lite_internal_wp_download() 
+pegasus_lite_internal_wp_download()
 {
     # fall back - download a worker package from download.pegasus.isi.edu
 
@@ -301,7 +301,7 @@ pegasus_lite_internal_wp_download()
         export PATH="${cvmfs_base}/bin:$PATH"
         return 0
     fi
-    
+
     # Nevermind, download directly from Pegasus server
     url="http://download.pegasus.isi.edu/pegasus/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}"
@@ -359,14 +359,14 @@ pegasus_lite_setup_work_dir()
 
     if [ "x$pegasus_lite_work_dir" != "x" ]; then
         pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
-        
+
         if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
-	    if [ "x$found_lof" != "x" ]; then 
+	    if [ "x$found_lof" != "x" ]; then
 		# PM-968 PM-1021 copy all lof files from Condor scratch dir to directory where pegasus lite runs the job
                 pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
                 cp $pegasus_lite_start_dir/*.lof $pegasus_lite_work_dir
             fi
-	    if [ "x$found_meta" != "x" ]; then 
+	    if [ "x$found_meta" != "x" ]; then
 		# PM-1190 PM-1021 copy all meta files from Condor scratch dir to directory where pegasus lite runs the job
                 pegasus_lite_log "Copying meta files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
                 cp $pegasus_lite_start_dir/*.meta $pegasus_lite_work_dir
@@ -384,7 +384,7 @@ pegasus_lite_setup_work_dir()
 
     for d in $targets; do
 
-        pegasus_lite_log "Checking $d for potential use as work space... " 
+        pegasus_lite_log "Checking $d for potential use as work space... "
 
         # does the target exist?
         if [ ! -e $d ]; then
@@ -406,7 +406,7 @@ pegasus_lite_setup_work_dir()
         if touch $d/.dirtest.$$ >/dev/null 2>&1; then
             rm -f $d/.dirtest.$$ >/dev/null 2>&1
             d=`mktemp -d $d/pegasus.XXXXXXXXX`
-	    
+
             # GH-2156 we always want a full path . no relative paths
             # for pegasus_lite_work_dir . We get relative path when
             # Pegasus sets _CONDOR_SCRATCH_DIR=. in submit files
@@ -419,7 +419,7 @@ pegasus_lite_setup_work_dir()
 
             pegasus_lite_log "Changing cwd to $pegasus_lite_work_dir"
             cd $pegasus_lite_work_dir
-           
+
             # PM-1021 make sure pegasus_lite_work_dir and start dir are not same
             if [ ! $pegasus_lite_start_dir -ef $pegasus_lite_work_dir ]; then
 		if [ "x$found_lof" != "x" ]; then
@@ -427,7 +427,7 @@ pegasus_lite_setup_work_dir()
                     pegasus_lite_log "Copying lof files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
                     cp $pegasus_lite_start_dir/*.lof $pegasus_lite_work_dir
                 fi
-		if [ "x$found_meta" != "x" ]; then 
+		if [ "x$found_meta" != "x" ]; then
 		    # PM-1190, PM-1021 copy all meta files from Condor scratch dir to directory where pegasus lite runs the job
                     pegasus_lite_log "Copying meta files from $pegasus_lite_start_dir to $pegasus_lite_work_dir"
                     cp $pegasus_lite_start_dir/*.meta $pegasus_lite_work_dir
@@ -443,7 +443,7 @@ pegasus_lite_setup_work_dir()
 container_env()
 {
     # This function will grab environment variables and update them for use inside the container.
-    # Updated variables will be echoed to stdout, so the result can be redirected into the 
+    # Updated variables will be echoed to stdout, so the result can be redirected into the
     # container script.
 
     inside_work_dir=$1
@@ -468,7 +468,7 @@ container_env()
             fi
         done
     done
-        
+
     echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d"
 }
 
@@ -486,11 +486,11 @@ docker_init()
 {
     set -e
 
-    if [ $# -ne 1 ]; then 
+    if [ $# -ne 1 ]; then
         pegasus_lite_log "docker_init should be passed a docker url or a file"
         return 1
     fi
-    
+
     container_init
 
     # check if an image file was passed
@@ -498,7 +498,7 @@ docker_init()
     cont_image=""
 
     if [ "X${image_file}" != "X" ] ; then
-                
+
         if [ -e ${image_file} ] ; then
             pegasus_lite_log "container file is ${image_file}"
             # try and load the image
@@ -509,9 +509,9 @@ docker_init()
                 cont_image=$image
             done
         fi
-        
+
     fi
-    
+
     if [ "X${cont_image}" = "X" ]; then
         pegasus_lite_log "Unable to load image from $image_file"
         return 1
@@ -526,7 +526,7 @@ singularity_init()
 {
     set -e
 
-    if [ $# -ne 1 ]; then 
+    if [ $# -ne 1 ]; then
         pegasus_lite_log "singularity_init should be passed a docker url or a file"
         return 1
     fi
@@ -538,15 +538,15 @@ singularity_init()
     fi
 
     if [ "X$singularity_exec" = "X" ]; then
-	pegasus_lite_log "Unable to find apptainer or singularity executable"	
+	pegasus_lite_log "Unable to find apptainer or singularity executable"
 	return 1
     fi
     pegasus_lite_log "Using $singularity_exec to run the container"
     export singularity_exec
-    
+
     container_init
 
-    # for singularity we don't need to load anything like in docker.    
+    # for singularity we don't need to load anything like in docker.
 }
 
 shifter_init()
@@ -579,7 +579,7 @@ pegasus_lite_init()
         # announce version - we do this so pegasus-exitcode and other tools
         # can tell the job was a PegasusLite job
         pegasus_lite_log "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
-    
+
         # PM-1134 - provide some details on where we are running
         # PM-1144 - do not use HOSTNAME from env, as it might have come form getenv=true
         out="Executing on"
@@ -663,7 +663,7 @@ pegasus_lite_unexpected_exit()
     # note that there are two exit() functions, one for final
     # exit and one for unexepected. The final one is only called
     # at the last step of the lite script. The unexpected one
-    # can be called anytime if the script exists as a result 
+    # can be called anytime if the script exists as a result
     # of for example signals
     rc=$?
 
@@ -681,7 +681,7 @@ pegasus_lite_unexpected_exit()
         pegasus_lite_log "Last command exited with $rc"
     fi
 
-    # never allow the script to exit with 0 in case of 
+    # never allow the script to exit with 0 in case of
     # unexpected termination
     if [ "x$rc" = "x0" ]; then
         pegasus_lite_log "Unable to determine why the script was forced to exit!"
@@ -694,7 +694,7 @@ pegasus_lite_unexpected_exit()
         pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
     fi
 
-    
+
     pegasus_lite_end_time=$(date +%s)
     runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: runtime $runtime" 1>&2
@@ -709,14 +709,14 @@ pegasus_lite_final_exit()
     # note that there are two exit() functions, one for final
     # exit and one for unexepected. The final one is only called
     # at the last step of the lite script. The unexpected one
-    # can be called anytime if the script exists as a result 
+    # can be called anytime if the script exists as a result
     # of for example signals
     rc=1
 
     pegasus_include_multipart || true
-    
+
     # the exit code of the lite script should reflect the exit code
-    # from the user task    
+    # from the user task
     if [ "x$job_ec" = "x" ];then
         pegasus_lite_log "job_ec is missing - did the user task fail?"
     else
@@ -768,9 +768,9 @@ pegasus_lite_get_system()
     arch=`uname -m 2>&1` || arch="UNKNOWN"
     osname=`uname -s 2>&1` || osname="UNKNOWN"
     osversion=`uname -r 2>&1` || osversion="UNKNOWN"
-        
+
     if (echo $arch | grep -E '^i[0-9]86$') >/dev/null 2>&1; then
-        arch="x86" 
+        arch="x86"
     fi
 
     # align macos arm arch with linux (->aarch64)
@@ -784,7 +784,7 @@ pegasus_lite_get_system()
         if [ -e /etc/os-release ]; then
             osname=`grep -w ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
             osversion=`grep -w VERSION_ID /etc/os-release | head -n 1 | tr -d '"' | cut -d '=' -f 2`
-            
+
             case $osname in
                 "debian") osname="deb" ;;
                 "centos"|"rocky"|"almalinux"|"scientific") osname="rhel" ;;
@@ -817,7 +817,7 @@ pegasus_lite_get_system()
 
         # we only want major version numbers
         osversion=`echo $osversion | sed 's/[\.-].*//'`
-        
+
         if [ "X$osname" = "X" -o "X$osversion" = "X" ]; then
             echo "PegasusLite: 1 failed to get system info"
             exit 1
@@ -830,24 +830,24 @@ pegasus_lite_get_system()
     if [ "$osname" = "Darwin" ]; then
         osname="macos"
         osversion=`/usr/bin/sw_vers -productVersion`
-        
+
         # we only want major version numbers
         osversion=`echo $osversion | sed 's/[\.-].*//'`
 
         echo "${arch}_${osname}_${osversion}"
         return 0
     fi
-    
+
     if [ "$osname" = "FreeBSD" ]; then
         osname="freebsd"
-        
+
         # we only want major version numbers
         osversion=`echo $osversion | sed 's/[\.-].*//'`
 
         echo "${arch}_${osname}_${osversion}"
         return 0
     fi
-        
+
     # unable to determine detailed system information
     echo "${arch}_${osname}_${osversion}"
     return 1
@@ -879,7 +879,3 @@ pegasus_lite_section_end()
         duration=$(($ts - $start_ts))
     fi
 }
-
-
-
-

@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

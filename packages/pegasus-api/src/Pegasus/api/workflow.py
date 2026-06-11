@@ -4,7 +4,7 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import wraps
 from pathlib import Path
-from typing import Dict, List, Optional, TextIO, Union
+from typing import TextIO, Union
 
 from ._utils import _chained, _get_enum_str
 from .errors import DuplicateError, NotFoundError, PegasusError
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     """An abstract representation of a workflow job"""
 
-    def __init__(self, _id: Optional[str] = None, node_label: Optional[str] = None):
+    def __init__(self, _id: str | None = None, node_label: str | None = None):
         """
         :param _id: a unique id, if None is given then one will be assigned when this job is added to a :py:class:`~Pegasus.api.workflow.Workflow`, defaults to None
         :type _id: Optional[str]
@@ -52,7 +52,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = OrderedDict()
 
     @_chained
-    def add_inputs(self, *input_files: Union[File, str], bypass_staging: bool = False):
+    def add_inputs(self, *input_files: File | str, bypass_staging: bool = False):
         """
         add_inputs(self, *input_files: Union[File, str], bypass: bool = False)
         Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job.
@@ -70,9 +70,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         for file in input_files:
             if not isinstance(file, (File, str)):
                 raise TypeError(
-                    "invalid input_file: {file}; input_file(s) must be of type File or str".format(
-                        file=file
-                    )
+                    f"invalid input_file: {file}; input_file(s) must be of type File or str"
                 )
 
             if isinstance(file, str):
@@ -87,9 +85,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             )
             if _input in self.uses:
                 raise DuplicateError(
-                    "file: {file} has already been added as input to this job".format(
-                        file=file.lfn
-                    )
+                    f"file: {file.lfn} has already been added as input to this job"
                 )
 
             self.uses.add(_input)
@@ -105,7 +101,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_outputs(
         self,
-        *output_files: Union[File, str],
+        *output_files: File | str,
         stage_out: bool = True,
         register_replica: bool = True,
     ):
@@ -129,9 +125,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         for file in output_files:
             if not isinstance(file, (File, str)):
                 raise TypeError(
-                    "invalid output_file: {file}; output_file(s) must be of type File or str".format(
-                        file=file
-                    )
+                    f"invalid output_file: {file}; output_file(s) must be of type File or str"
                 )
 
             if isinstance(file, str):
@@ -145,9 +139,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
             )
             if output in self.uses:
                 raise DuplicateError(
-                    "file: {file} already added as output to this job".format(
-                        file=file.lfn
-                    )
+                    f"file: {file.lfn} already added as output to this job"
                 )
 
             self.uses.add(output)
@@ -163,7 +155,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_checkpoint(
         self,
-        checkpoint_file: Union[File, str],
+        checkpoint_file: File | str,
         stage_out: bool = True,
         register_replica: bool = True,
     ):
@@ -186,9 +178,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         if not isinstance(checkpoint_file, (File, str)):
             raise TypeError(
-                "invalid checkpoint_file: {file}; checkpoint_file must be of type File or str".format(
-                    file=checkpoint_file
-                )
+                f"invalid checkpoint_file: {checkpoint_file}; checkpoint_file must be of type File or str"
             )
 
         if isinstance(checkpoint_file, str):
@@ -203,15 +193,13 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
 
         if checkpoint in self.uses:
             raise DuplicateError(
-                "file: {file} already added as output to this job".format(
-                    file=checkpoint_file.lfn
-                )
+                f"file: {checkpoint_file.lfn} already added as output to this job"
             )
 
         self.uses.add(checkpoint)
 
     @_chained
-    def add_args(self, *args: Union[File, int, float, str]):
+    def add_args(self, *args: File | int | float | str):
         """
         add_args(self, *args: Union[File, int, float, str])
         Add arguments to this job. Each argument will be separated by a space.
@@ -224,7 +212,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.args.extend(args)
 
     @_chained
-    def set_stdin(self, file: Union[str, File]):
+    def set_stdin(self, file: str | File):
         """
         set_stdin(self, file: Union[str, File])
         Set stdin to a :py:class:`~Pegasus.api.replica_catalog.File` . If file
@@ -238,11 +226,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         if not isinstance(file, (File, str)):
-            raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
-                    file=file
-                )
-            )
+            raise TypeError(f"invalid file: {file}; file must be of type File or str")
 
         if self.stdin is not None:
             raise DuplicateError("stdin has already been set to a file")
@@ -264,7 +248,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def set_stdout(
         self,
-        file: Union[str, File],
+        file: str | File,
         stage_out: bool = True,
         register_replica: bool = True,
     ):
@@ -285,11 +269,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         if not isinstance(file, (File, str)):
-            raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
-                    file=file
-                )
-            )
+            raise TypeError(f"invalid file: {file}; file must be of type File or str")
 
         if self.stdout is not None:
             raise DuplicateError("stdout has already been set to a file")
@@ -311,7 +291,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def set_stderr(
         self,
-        file: Union[str, File],
+        file: str | File,
         stage_out: bool = True,
         register_replica: bool = True,
     ):
@@ -332,11 +312,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :return: self
         """
         if not isinstance(file, (File, str)):
-            raise TypeError(
-                "invalid file: {file}; file must be of type File or str".format(
-                    file=file
-                )
-            )
+            raise TypeError(f"invalid file: {file}; file must be of type File or str")
 
         if self.stderr is not None:
             raise DuplicateError("stderr has already been set to a file")
@@ -371,7 +347,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                             for arg in self.args
                         ],
                     ),
-                    ("uses", [use for use in self.uses]),
+                    ("uses", list(self.uses)),
                     (
                         "profiles",
                         (
@@ -388,7 +364,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                         (
                             OrderedDict(
                                 [
-                                    (hook_name, [hook for hook in values])
+                                    (hook_name, list(values))
                                     for hook_name, values in self.hooks.items()
                                 ]
                             )
@@ -426,11 +402,11 @@ class Job(AbstractJob):
 
     def __init__(
         self,
-        transformation: Union[str, Transformation],
-        _id: Optional[str] = None,
-        node_label: Optional[str] = None,
-        namespace: Optional[str] = None,
-        version: Optional[str] = None,
+        transformation: str | Transformation,
+        _id: str | None = None,
+        node_label: str | None = None,
+        namespace: str | None = None,
+        version: str | None = None,
     ):
         """
         :param transformation: :py:class:`~Pegasus.api.transformation_catalog.Transformation` object or name of the transformation that this job uses
@@ -455,9 +431,7 @@ class Job(AbstractJob):
             self.version = version
         else:
             raise TypeError(
-                "invalid transformation: {transformation}; transformation must be of type Transformation or str".format(
-                    transformation=transformation
-                )
+                f"invalid transformation: {transformation}; transformation must be of type Transformation or str"
             )
 
         AbstractJob.__init__(self, _id=_id, node_label=node_label)
@@ -525,8 +499,8 @@ class SubWorkflow(AbstractJob):
         self,
         file: Union[str, File, "Workflow"],
         is_planned: bool = False,
-        _id: Optional[str] = None,
-        node_label: Optional[str] = None,
+        _id: str | None = None,
+        node_label: str | None = None,
     ):
         """
         :param file: :py:class:`~Pegasus.api.replica_catalog.File`, the name of the workflow file as a :code:`str`, or :py:class:`~Pegasus.api.workflow.Workflow`
@@ -543,9 +517,7 @@ class SubWorkflow(AbstractJob):
 
         if not isinstance(file, (File, str, Workflow)):
             raise TypeError(
-                "invalid file: {file}; file must be of type File, str, or Workflow".format(
-                    file=file
-                )
+                f"invalid file: {file}; file must be of type File, str, or Workflow"
             )
 
         self.type = "condorWorkflow" if is_planned else "pegasusWorkflow"
@@ -566,32 +538,32 @@ class SubWorkflow(AbstractJob):
     def add_planner_args(
         self,
         *,
-        basename: Optional[str] = None,
-        job_prefix: Optional[str] = None,
-        conf: Optional[Union[str, Path]] = None,
-        cluster: Optional[List[str]] = None,
-        sites: Optional[List[str]] = None,
-        output_sites: Optional[List[str]] = None,
-        staging_sites: Optional[Dict[str, str]] = None,
-        cache: Optional[List[Union[str, Path]]] = None,
-        input_dirs: Optional[List[Union[str, Path]]] = None,
-        output_dir: Optional[Union[str, Path]] = None,
-        transformations_dir: Optional[Union[str, Path]] = None,
-        dir: Optional[Union[str, Path]] = None,
-        relative_dir: Optional[Union[str, Path]] = None,
-        relative_submit_dir: Optional[Union[str, Path]] = None,
-        random_dir: Union[bool, str, Path] = False,
-        inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-        cleanup: Optional[str] = None,
-        reuse: Optional[List[Union[str, Path]]] = None,
+        basename: str | None = None,
+        job_prefix: str | None = None,
+        conf: str | Path | None = None,
+        cluster: list[str] | None = None,
+        sites: list[str] | None = None,
+        output_sites: list[str] | None = None,
+        staging_sites: dict[str, str] | None = None,
+        cache: list[str | Path] | None = None,
+        input_dirs: list[str | Path] | None = None,
+        output_dir: str | Path | None = None,
+        transformations_dir: str | Path | None = None,
+        dir: str | Path | None = None,
+        relative_dir: str | Path | None = None,
+        relative_submit_dir: str | Path | None = None,
+        random_dir: bool | str | Path = False,
+        inherited_rc_files: list[str | Path] | None = None,
+        cleanup: str | None = None,
+        reuse: list[str | Path] | None = None,
         verbose: int = 0,
         quiet: int = 0,
         force: bool = False,
         force_replan: bool = False,
-        forward: Optional[List[str]] = None,
+        forward: list[str] | None = None,
         submit: bool = False,
-        java_options: Optional[List[str]] = None,
-        **properties: Dict[str, str],
+        java_options: list[str] | None = None,
+        **properties: dict[str, str],
     ):
         r"""
         add_planner_args(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: Optional[List[str]] = None, staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: Optional[str] = None, reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str, str])
@@ -773,9 +745,7 @@ class _Use:
 
         if not isinstance(link_type, _LinkType):
             raise TypeError(
-                "invalid link_type: {link_type}; link_type must one of {enum_str}".format(
-                    link_type=link_type, enum_str=_get_enum_str(_LinkType)
-                )
+                f"invalid link_type: {link_type}; link_type must one of {_get_enum_str(_LinkType)}"
             )
 
         if link_type != _LinkType.INPUT and bypass_staging:
@@ -865,9 +835,7 @@ def _needs_submit_dir(f):
     def wrapper(self, *args, **kwargs):
         if not self._submit_dir:
             raise PegasusError(
-                "{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}".format(
-                    f=f
-                )
+                f"{f} requires a submit directory to be set; Workflow.plan() must be called prior to {f}"
             )
 
         return f(self, *args, **kwargs)
@@ -991,9 +959,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
         if any(c in name for c in "/ "):
             raise ValueError(
-                "Invalid workflow name: {}, workflow name may not contain any / or spaces".format(
-                    name
-                )
+                f"Invalid workflow name: {name}, workflow name may not contain any / or spaces"
             )
 
         Writable.__init__(self)
@@ -1084,32 +1050,32 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     def plan(
         self,
         *,
-        conf: Optional[Union[str, Path]] = None,
-        basename: Optional[str] = None,
-        job_prefix: Optional[str] = None,
-        cluster: Optional[List[str]] = None,
-        sites: Optional[List[str]] = None,
-        output_sites: List[str] = ["local"],
-        staging_sites: Optional[Dict[str, str]] = None,
-        cache: Optional[List[Union[str, Path]]] = None,
-        input_dirs: Optional[List[Union[str, Path]]] = None,
-        output_dir: Optional[Union[str, Path]] = None,
-        transformations_dir: Optional[Union[str, Path]] = None,
-        dir: Optional[Union[str, Path]] = None,
-        relative_dir: Optional[Union[str, Path]] = None,
-        random_dir: Union[bool, str, Path] = False,
-        relative_submit_dir: Optional[Union[str, Path]] = None,
-        inherited_rc_files: Optional[List[Union[str, Path]]] = None,
-        cleanup: Optional[str] = None,
-        reuse: Optional[List[Union[str, Path]]] = None,
+        conf: str | Path | None = None,
+        basename: str | None = None,
+        job_prefix: str | None = None,
+        cluster: list[str] | None = None,
+        sites: list[str] | None = None,
+        output_sites: list[str] = ["local"],
+        staging_sites: dict[str, str] | None = None,
+        cache: list[str | Path] | None = None,
+        input_dirs: list[str | Path] | None = None,
+        output_dir: str | Path | None = None,
+        transformations_dir: str | Path | None = None,
+        dir: str | Path | None = None,
+        relative_dir: str | Path | None = None,
+        random_dir: bool | str | Path = False,
+        relative_submit_dir: str | Path | None = None,
+        inherited_rc_files: list[str | Path] | None = None,
+        cleanup: str | None = None,
+        reuse: list[str | Path] | None = None,
         verbose: int = 0,
         quiet: int = 0,
         force: bool = False,
         force_replan: bool = False,
-        forward: Optional[List[str]] = None,
+        forward: list[str] | None = None,
         submit: bool = False,
-        java_options: Optional[List[str]] = None,
-        **properties: Dict[str, str],
+        java_options: list[str] | None = None,
+        **properties: dict[str, str],
     ):
         r"""
         plan(self, conf: Optional[Union[str, Path]] = None, basename: Optional[str] = None, job_prefix: Optional[str] = None, cluster: Optional[List[str]] = None, sites: Optional[List[str]] = None, output_sites: List[str] = ["local"], staging_sites: Optional[Dict[str, str]] = None, cache: Optional[List[Union[str, Path]]] = None, input_dirs: Optional[List[str]] = None, output_dir: Optional[str] = None, dir: Optional[str] = None, relative_dir: Optional[Union[str, Path]] = None, random_dir: Union[bool, str, Path] = False, relative_submit_dir: Optional[Union[str, Path]] = None, inherited_rc_files: Optional[List[Union[str, Path]]] = None, cleanup: str = "inplace", reuse: Optional[List[Union[str,Path]]] = None, verbose: int = 0, quiet: int = 0, force: bool = False, force_replan: bool = False, forward: Optional[List[str]] = None, submit: bool = False, json: bool = False, java_options: Optional[List[str]] = None, **properties: Dict[str,str])
@@ -1343,7 +1309,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
 
     @_needs_submit_dir
     @_needs_client
-    def get_status(self) -> Union[dict, None]:
+    def get_status(self) -> dict | None:
         """
         get_status(self)
 
@@ -1561,10 +1527,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         include_files: bool = True,
         no_simplify: bool = True,
         label: str = "label",
-        output: Optional[str] = None,
-        remove: Optional[List[str]] = None,
-        width: Optional[int] = None,
-        height: Optional[int] = None,
+        output: str | None = None,
+        remove: list[str] | None = None,
+        width: int | None = None,
+        height: int | None = None,
     ):
         """
         graph(self, include_files: bool = True, no_simplify: bool = True, label: Literal["label", "xform", "id", "xform-id", "label-xform", "label-id"] = "label", output: Optional[str] = None, remove: Optional[List[str]] = None, width: Optional[int] = None, height: Optional[int] = None)
@@ -1613,7 +1579,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         )
 
     @_chained
-    def add_jobs(self, *jobs: Union[Job, SubWorkflow]):
+    def add_jobs(self, *jobs: Job | SubWorkflow):
         """
         add_jobs(self, *jobs: Union[Job, SubWorkflow])
         Add one or more jobs at a time to the Workflow
@@ -1730,9 +1696,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         """
         if not isinstance(tc, TransformationCatalog):
             raise TypeError(
-                "invalid catalog: {}; tc must be of type TransformationCatalog".format(
-                    tc
-                )
+                f"invalid catalog: {tc}; tc must be of type TransformationCatalog"
             )
 
         if self.transformation_catalog is not None:
@@ -1746,10 +1710,10 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     @_chained
     def add_dependency(
         self,
-        job: Union[Job, SubWorkflow],
+        job: Job | SubWorkflow,
         *,
-        parents: List[Union[Job, SubWorkflow]] = [],
-        children: List[Union[Job, SubWorkflow]] = [],
+        parents: list[Job | SubWorkflow] = [],
+        children: list[Job | SubWorkflow] = [],
     ):
         """
         add_dependency(self, job: Union[Job, SubWorkflow], *, parents: List[Union[Job, SubWorkflow]] = [], children: List[Union[Job, SubWorkflow]] = [])
@@ -1806,9 +1770,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             else:
                 if job._id in self.dependencies[parent._id].children_ids:
                     raise DuplicateError(
-                        "A dependency already exists between parent id: {} and job id: {}".format(
-                            parent._id, job._id
-                        )
+                        f"A dependency already exists between parent id: {parent._id} and job id: {job._id}"
                     )
 
                 self.dependencies[parent._id].children_ids.add(job._id)
@@ -1821,12 +1783,9 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
             for child in children:
                 if child._id in self.dependencies[job._id].children_ids:
                     raise DuplicateError(
-                        "A dependency already exists between job id: {} and child id: {}".format(
-                            job._id, child._id
-                        )
+                        f"A dependency already exists between job id: {job._id} and child id: {child._id}"
                     )
-                else:
-                    self.dependencies[job._id].children_ids.add(child._id)
+                self.dependencies[job._id].children_ids.add(child._id)
 
     def _infer_dependencies(self):
         """Internal function for automatically computing dependencies based on
@@ -1906,7 +1865,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
                             pass
 
     @_chained
-    def write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml"):
+    def write(self, file: str | TextIO | None = None, _format: str = "yml"):
         """
         write(self, file: Optional[Union[str, TextIO]] = None, _format: str = "yml")
         Write this workflow to a file. If no file is given,
@@ -1962,9 +1921,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         Writable.write(self, file, _format=_format)
 
         log.info(
-            "workflow {workflow} with {num_jobs} jobs generated and written to {dst}".format(
-                workflow=self.name, num_jobs=len(self.jobs), dst=file
-            )
+            f"workflow {self.name} with {len(self.jobs)} jobs generated and written to {file}"
         )
 
         # save path so that it can be used by Client.plan()
@@ -1994,10 +1951,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         hooks = None
         if len(self.hooks) > 0:
             hooks = OrderedDict(
-                [
-                    (hook_name, [hook for hook in values])
-                    for hook_name, values in self.hooks.items()
-                ]
+                [(hook_name, list(values)) for hook_name, values in self.hooks.items()]
             )
 
         profiles = None

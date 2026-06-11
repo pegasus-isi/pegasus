@@ -1,7 +1,6 @@
 import io
 import typing
 from dataclasses import fields
-from typing import Dict
 
 import pytest
 
@@ -19,42 +18,42 @@ def _isinstance_types(t):
 
 
 @pytest.mark.parametrize(
-    "s, obj",
-    (
+    ("s", "obj"),
+    [
         ("user: a", {"user": "a"}),
         ('user: "a"', {"user": "a"}),
         ('{"user": "a"}', {"user": "a"}),
         ('{"uses_pmc": true}', {"uses_pmc": "true"}),
         ('{"uses_pmc": true}', {"uses_pmc": True}),
-    ),
+    ],
 )
 def test_load(s, obj):
     fp = io.StringIO(s)
     b = load(fp)
 
     assert isinstance(b, Braindump)
-    for k, v in obj.items():
+    for k, _v in obj.items():
         assert k in cls_fields
         assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
         assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
 
 @pytest.mark.parametrize(
-    "s, obj",
-    (
+    ("s", "obj"),
+    [
         ("user: a", {"user": "a"}),
         ('user: "a"', {"user": "a"}),
         ('{"user": "a"}', {"user": "a"}),
         ('{"uses_pmc": true}', {"uses_pmc": "true"}),
         ('{"uses_pmc": true}', {"uses_pmc": True}),
-    ),
+    ],
 )
 def test_loads(s, obj):
     b = loads(s)
 
     assert isinstance(b, Braindump)
 
-    for k, v in obj.items():
+    for k, _v in obj.items():
         assert k in cls_fields
         assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
         assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
@@ -68,7 +67,7 @@ def test_loads_fail():
 
 @pytest.mark.parametrize(
     "obj",
-    (
+    [
         {"user": "a"},
         {
             "dax": "a.dax",
@@ -78,13 +77,13 @@ def test_loads_fail():
             "planner": "/plan",
         },
         {"uses_pmc": "true"},
-    ),
+    ],
 )
-def test_dump(obj: Dict):
+def test_dump(obj: dict):
     b = Braindump(**obj)
     fp = io.StringIO()
 
-    for k in obj.keys():
+    for k in obj:
         assert k in cls_fields
         assert isinstance(getattr(b, k), _isinstance_types(cls_fields[k].type))
 
@@ -97,7 +96,7 @@ def test_dump(obj: Dict):
 
 @pytest.mark.parametrize(
     "obj",
-    (
+    [
         {"user": "a"},
         {
             "dax": "a.dax",
@@ -107,9 +106,9 @@ def test_dump(obj: Dict):
             "planner": "/plan",
         },
         {"uses_pmc": "true"},
-    ),
+    ],
 )
-def test_dumps(obj: Dict):
+def test_dumps(obj: dict):
     b = Braindump(**obj)
 
     for k in obj:

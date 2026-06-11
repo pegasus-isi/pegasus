@@ -158,7 +158,7 @@ static void gather_darwin_procstate(unsigned state[MAX_STATE]) {
                                p->p_realtimer.it_value.tv_usec |
                                p->p_rtime.tv_sec |
                                p->p_rtime.tv_usec) != 0 ? STATE_RUNNING : STATE_SLEEPING]++;
-                        break; 
+                        break;
                     case SSLEEP:
                         state[STATE_WAITING]++;
                         break;
@@ -234,7 +234,7 @@ int printDarwinInfo(FILE *out, int indent, const MachineDarwinInfo *ptr) {
 
     /* <cpu> element */
     fprintf(out, "%*scpu_count: %hu\n%*scpu_speed: %lu\n%*scpu_vendor: %s\n%*scpu_name: %s\n",
-            indent, "", ptr->cpu_count, 
+            indent, "", ptr->cpu_count,
             indent, "", ptr->megahertz,
             indent, "", ptr->vendor_id,
             indent, "", ptr->model_name);
@@ -294,4 +294,3 @@ void deleteMachine(void* data) {
         free((void*) ptr);
     }
 }
-

@@ -10,4 +10,3 @@ for FILE in "$@"; do
 done
 
 ls -lh
-

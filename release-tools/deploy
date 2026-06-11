@@ -118,4 +118,3 @@ ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
 
 # only keep so many installs
 find . -maxdepth 1 -type d -mtime +10 -exec rm -rf {} \;
-

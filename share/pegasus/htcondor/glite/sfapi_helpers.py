@@ -331,7 +331,7 @@ def load_sflapi_client_secret():
 
     print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
- 
+
 
 # ---------------------------------------------------------------------------
 # Entry point

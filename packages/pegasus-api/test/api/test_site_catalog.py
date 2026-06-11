@@ -141,12 +141,13 @@ class TestGrid:
     ):
         with pytest.raises(TypeError) as e:
             Grid(
-                grid_type, contact, scheduler_type, job_type,
+                grid_type,
+                contact,
+                scheduler_type,
+                job_type,
             )
 
-        assert "invalid {invalid_var}: {value}".format(
-            invalid_var=invalid_var, value=locals()[invalid_var]
-        ) in str(e)
+        assert f"invalid {invalid_var}: {locals()[invalid_var]}" in str(e)
 
     def test_tojson(self, convert_yaml_schemas_to_json, load_schema):
         grid = Grid(
@@ -173,7 +174,11 @@ class TestGrid:
 
 class TestSite:
     @pytest.mark.parametrize(
-        "arch", [(Arch.AARCH64), (Arch.X86_64),],
+        "arch",
+        [
+            (Arch.AARCH64),
+            (Arch.X86_64),
+        ],
     )
     def test_valid_site(self, arch):
         assert Site(
@@ -196,9 +201,7 @@ class TestSite:
         with pytest.raises(TypeError) as e:
             Site(name, arch=arch, os_type=os_type)
 
-        assert "invalid {invalid_var}: {value}".format(
-            invalid_var=invalid_var, value=locals()[invalid_var]
-        ) in str(e)
+        assert f"invalid {invalid_var}: {locals()[invalid_var]}" in str(e)
 
     def test_add_valid_directory(self):
         site = Site("s")
@@ -386,8 +389,14 @@ def expected_json():
                         "path": "/data",
                         "sharedFileSystem": False,
                         "fileServers": [
-                            {"url": "scp://obelix.isi.edu/data", "operation": "put",},
-                            {"url": "http://obelix.isi.edu/data", "operation": "get",},
+                            {
+                                "url": "scp://obelix.isi.edu/data",
+                                "operation": "put",
+                            },
+                            {
+                                "url": "http://obelix.isi.edu/data",
+                                "operation": "get",
+                            },
                         ],
                     }
                 ],

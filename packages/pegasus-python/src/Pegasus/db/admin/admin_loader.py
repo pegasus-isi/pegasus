@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -250,9 +249,7 @@ def db_verify(db, check=False, pegasus_version=None, force=False, print_version=
             and not version == db_version
         ):
             raise DBAdminError(
-                "Database is NOT compatible with version: {} ({})".format(
-                    get_compatible_version(version), db.get_bind().url
-                ),
+                f"Database is NOT compatible with version: {get_compatible_version(version)} ({db.get_bind().url})",
                 db=db,
                 db_version=db_version,
                 given_version=pegasus_version,
@@ -289,17 +286,16 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
     if current_version == version:
         log.info("Your database is already downgraded.")
         return
-    elif current_version < version:
+    if current_version < version:
         raise DBAdminError(
             "Cannot downgrade to a higher version.",
             db=db,
             db_version=current_version,
             given_version=pegasus_version,
         )
-    elif version < DB_MIN_VERSION:
+    if version < DB_MIN_VERSION:
         raise DBAdminError(
-            "Cannot downgrade database to a version below Pegasus %s."
-            % get_compatible_version(DB_MIN_VERSION),
+            f"Cannot downgrade database to a version below Pegasus {get_compatible_version(DB_MIN_VERSION)}.",
             db=db,
             db_version=current_version,
             given_version=pegasus_version,
@@ -309,7 +305,6 @@ def db_downgrade(db, pegasus_version=None, force=False, verbose=True):
     _backup_db(db)
 
     for i in range(int(current_version), int(version) - 1, -1):
-
         if i == int(current_version):
             max_range = _get_minor_version(current_version)
         else:
@@ -361,9 +356,9 @@ def all_workflows_db(
     :param force: whether operations should be performed despite conflicts
     """
     # log files
-    file_prefix = "%s-dbadmin" % time.strftime("%Y%m%dT%H%M%S")
-    f_out = open("%s.out" % file_prefix, "w")
-    f_err = open("%s.err" % file_prefix, "w")
+    file_prefix = "{}-dbadmin".format(time.strftime("%Y%m%dT%H%M%S"))
+    f_out = open(f"{file_prefix}.out", "w")
+    f_err = open(f"{file_prefix}.err", "w")
 
     data = db.execute(
         select(
@@ -379,7 +374,7 @@ def all_workflows_db(
     for d in data:
         if d[1] == "WORKFLOW_TERMINATED":
             db_urls.append(d[0])
-            f_err.write("[ACTIVE] %s\n" % d[0])
+            f_err.write(f"[ACTIVE] {d[0]}\n")
 
     counts = {
         "total": len(data),
@@ -394,12 +389,12 @@ def all_workflows_db(
         msg = ["downgrading", "Downgraded"]
 
     print("")
-    print("Verifying and %s workflow databases:" % msg[0])
+    print(f"Verifying and {msg[0]} workflow databases:")
     i = counts["running"]
     for dburi in db_urls:
         log.debug(f"{msg[0]} '{dburi}'...")
         i += 1
-        sys.stdout.write("\r%d/%d" % (i, counts["total"]))
+        sys.stdout.write(f"\r{i:d}/{counts['total']:d}")
         sys.stdout.flush()
         try:
             if update:
@@ -422,19 +417,19 @@ def all_workflows_db(
                     con, pegasus_version=pegasus_version, force=force, verbose=False
                 )
             con.close()
-            f_out.write("[SUCCESS] %s\n" % dburi)
+            f_out.write(f"[SUCCESS] {dburi}\n")
             counts["success"] += 1
         except connection.ConnectionError as e:
             if "unable to open database file" in str(e):
-                f_err.write("[UNABLE TO CONNECT] %s\n" % dburi)
+                f_err.write(f"[UNABLE TO CONNECT] {dburi}\n")
                 counts["unable_to_connect"] += 1
                 log.debug(e)
             else:
-                f_err.write("[ERROR] %s\n" % dburi)
+                f_err.write(f"[ERROR] {dburi}\n")
                 counts["failed"] += 1
                 log.debug(e)
         except Exception as e:
-            f_err.write("[ERROR] %s\n" % dburi)
+            f_err.write(f"[ERROR] {dburi}\n")
             counts["failed"] += 1
             log.debug(e)
 
@@ -450,12 +445,13 @@ def all_workflows_db(
         )
     )
     print(
-        "  Unable to update (active workflows): %s/%s"
-        % (counts["running"], counts["total"])
+        "  Unable to update (active workflows): {}/{}".format(
+            counts["running"], counts["total"]
+        )
     )
     print("\nLog files:")
-    print("  %s.out (Succeeded operations)" % file_prefix)
-    print("  %s.err (Failed operations)" % file_prefix)
+    print(f"  {file_prefix}.out (Succeeded operations)")
+    print(f"  {file_prefix}.err (Failed operations)")
 
 
 def print_db_version(print_version, db_version, db, parse=True):
@@ -511,9 +507,7 @@ def _db_current_version(current_version, db, parse=False):
         if not current_version:
             raise DBAdminError(
                 "Your database is not compatible with any Pegasus version.\nRun 'pegasus-db-admin "
-                "update {}' to update it to the latest version.".format(
-                    db.get_bind().url
-                )
+                f"update {db.get_bind().url}' to update it to the latest version."
             )
 
     return current_version
@@ -546,9 +540,7 @@ def _discover_version(db, pegasus_version=None, force=False, verbose=True):
 
     if current_version > version:
         raise DBAdminError(
-            "Unable to run update. Current database version is newer than specified version '{}'.".format(
-                pegasus_version
-            ),
+            f"Unable to run update. Current database version is newer than specified version '{pegasus_version}'.",
             db=db,
             db_version=current_version,
             given_version=pegasus_version,
@@ -656,9 +648,10 @@ def _verify_tables(db, db_version=None):
 
     if len(missing_tables) > 0:
         raise DBAdminError(
-            "Missing database tables or tables are not updated:\n    %s\n"
-            "Run 'pegasus-db-admin update %s' to create/update your database."
-            % (" \n    ".join(missing_tables), db.get_bind().url),
+            "Missing database tables or tables are not updated:\n    {}\n"
+            "Run 'pegasus-db-admin update {}' to create/update your database.".format(
+                " \n    ".join(missing_tables), db.get_bind().url
+            ),
             db=db,
             db_version=db_version,
         )

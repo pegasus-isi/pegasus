@@ -16,12 +16,14 @@
 package org.griphyn.vdl.util;
 
 import edu.isi.pegasus.common.util.Separator;
+
+import org.griphyn.vdl.classes.LFN;
+import org.griphyn.vdl.dax.*;
+
 import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import org.griphyn.vdl.classes.LFN;
-import org.griphyn.vdl.dax.*;
 
 /**
  * Convert a dag structure into GraphViz dot format.

@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.partitioner.Topological;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;

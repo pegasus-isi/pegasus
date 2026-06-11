@@ -24,8 +24,10 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -94,6 +96,7 @@ public class TCConverter extends Executable {
         mLogger = LogManagerFactory.loadSingletonInstance(mProps);
         mLogger.logEventStart("event.pegasus.pegasus-tc-converter", "pegasus.version", mVersion);
     }
+
     /** Loads all the properties that would be needed by the Toolkit classes */
     public void loadProperties() {}
 
@@ -372,13 +375,17 @@ public class TCConverter extends Executable {
         String text =
                 "\n "
                         + getGVDSVersion()
-                        + "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> "
-                        + "\n        [-i <list of input files>] [-o <output file to write>] "
+                        + "\n"
+                        + " Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O"
+                        + " <output format> \n"
+                        + "        [-i <list of input files>] [-o <output file to write>] "
                         +
                         /* Disable Database conversion options
                         "\n        [-N <database user name>] [-P <database user password>] [-U <database url>] [-H <database host>] " +
                          */
-                        "\n        [-c <path to property file>] [-v] [-q] [-V] [-h] \n Type 'pegasus-tc-converter --help' for more help.";
+                        "\n"
+                        + "        [-c <path to property file>] [-v] [-q] [-V] [-h] \n"
+                        + " Type 'pegasus-tc-converter --help' for more help.";
 
         System.out.println(text);
     }
@@ -387,14 +394,21 @@ public class TCConverter extends Executable {
         StringBuffer text = new StringBuffer();
         text.append("\n " + getGVDSVersion());
         text.append(
-                "\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text , YAML ) and generates transformation catalog into given output format ( Text ,YAML )");
+                "\n"
+                    + " pegasus-tc-converter - Parses the transformation catalogs in given input"
+                    + " format ( Text , YAML ) and generates transformation catalog into given"
+                    + " output format ( Text ,YAML )");
         text.append("\n ");
         text.append(
-                "\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]");
+                "\n"
+                        + " Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>]"
+                        + " [--oformat <output format>]");
         text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
 
         text.append(
-                "\n       [--conf <path to property file>] [--verbose] [--quiet][--Version] [--help]");
+                "\n"
+                        + "       [--conf <path to property file>] [--verbose] [--quiet][--Version]"
+                        + " [--help]");
         text.append("\n");
         text.append("\n");
         text.append("\n Mandatory Options ");
@@ -404,20 +418,29 @@ public class TCConverter extends Executable {
         text.append("\n -O |--oformat        the output format of the file. Can be [Text, YAML] ");
         text.append("\n -i |--input          comma separated list of input files to convert.");
         text.append(
-                "\n -o |--output         the output file to which the output needs to be written to.");
+                "\n"
+                        + " -o |--output         the output file to which the output needs to be"
+                        + " written to.");
         text.append("\n");
         text.append("\n");
         text.append("\n Other Options ");
         text.append("\n");
         text.append("\n -c |--conf           path to  property file");
         text.append(
-                "\n -e |--expand         sets variable expansion on. Any variables in input files "
-                        + "\n                      will be expanded and their values will be written out to "
-                        + "\n                      output transformation catalog. ");
+                "\n"
+                    + " -e |--expand         sets variable expansion on. Any variables in input"
+                    + " files \n"
+                    + "                      will be expanded and their values will be written out"
+                    + " to \n"
+                    + "                      output transformation catalog. ");
         text.append(
-                "\n -v |--verbose        increases the verbosity of messages about what is going on");
+                "\n"
+                        + " -v |--verbose        increases the verbosity of messages about what is"
+                        + " going on");
         text.append(
-                "\n -q |--quiet          decreases the verbosity of messages about what is going on");
+                "\n"
+                        + " -q |--quiet          decreases the verbosity of messages about what is"
+                        + " going on");
         text.append("\n -V |--version        displays the version of the Pegasus Workflow Planner");
         text.append("\n -h |--help           generates this help.");
         text.append("\n");

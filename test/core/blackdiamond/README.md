@@ -1,20 +1,31 @@
 BlackDiamond Workflow
 
-pl-condorio 
+pl-condorio
 
-	Pegasus Lite in condor IO mode.
+```
+Pegasus Lite in condor IO mode.
+```
 
-pl-condorio-local  
+pl-condorio-local
 
-	Pegasus Lite in CondorIO mode on local site.
-pl-pt	
+```
+Pegasus Lite in CondorIO mode on local site.
+```
 
-	Pegasus Lite in Pegasus Transfer mode
+pl-pt
 
-pl-pt-local  
+```
+Pegasus Lite in Pegasus Transfer mode
+```
 
-	Pegasus Lite in Pegasus Transfer mode on local site.
+pl-pt-local
+
+```
+Pegasus Lite in Pegasus Transfer mode on local site.
+```
 
 sharedfs-symlink-nogridstart
 
-	SharedFS mode, with symlinking enabled and kickstart disabled.
+```
+SharedFS mode, with symlinking enabled and kickstart disabled.
+```

@@ -16,10 +16,12 @@
 package org.griphyn.vdl.dax;
 
 import edu.isi.pegasus.common.util.Separator;
+
+import org.griphyn.vdl.classes.LFN;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
-import org.griphyn.vdl.classes.LFN;
 
 /**
  * This class defines the specifics of a job to run in an abstract manner. All filename references

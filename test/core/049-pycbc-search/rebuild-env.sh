@@ -36,4 +36,4 @@ pip3 install -r companion.txt
 pip3 install  .
 
 # install the pegasus python dependencies
-pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+pip3 install boto3 certifi pyjwt pyyaml s3transfer six urllib3

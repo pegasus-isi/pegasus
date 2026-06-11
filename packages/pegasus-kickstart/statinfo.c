@@ -526,7 +526,7 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
                     ccount = 0;
                     lseek(fd, 0, SEEK_SET);
                     in = fdopen(fd, "r");
-                    while (ccount < cskip && (c = fgetwc(in)) != WEOF) 
+                    while (ccount < cskip && (c = fgetwc(in)) != WEOF)
                         ccount++;
                     /* the rest of the file can be dumped to the yaml output */
                     yamldump(in, out, indent+4);
@@ -563,4 +563,3 @@ void deleteStatInfo(StatInfo* statinfo) {
     /* invalidate */
     statinfo->source = IS_INVALID;
 }
-

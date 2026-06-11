@@ -17,7 +17,9 @@ package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
+
 import java.util.*;
 
 /**

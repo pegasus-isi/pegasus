@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Iterator;
 import java.util.List;
 

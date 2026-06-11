@@ -16,10 +16,12 @@
 package org.griphyn.vdl.dax;
 
 import edu.isi.pegasus.common.util.Currently;
+
+import org.griphyn.vdl.classes.LFN;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
-import org.griphyn.vdl.classes.LFN;
 
 /**
  * This class is the container for an abstract DAG description. It consists of three parts. <br>

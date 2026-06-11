@@ -13,7 +13,7 @@ execution resources, and sometimes Pegasus is deployed on an access
 point which is separate from the execution environment. At the
 minimum, Pegasus needs to be colocated with a HTCondor install
 having the schedd subsystem enabled.
-   
+
 
 .. _hosted:
 
@@ -68,7 +68,7 @@ multiple resources associated with a single HTCondor pool, where each
 resource identifies a subset of machine (worker nodes) in the pool.
 
 When running on a HTCondor pool, the user has to decide how Pegasus
-should transfer data. Please see :ref:`Data Staging Configuration <data-staging-configuration>` 
+should transfer data. Please see :ref:`Data Staging Configuration <data-staging-configuration>`
 for the options. The
 easiest is to use **condorio** as that mode does not require any extra
 setup - HTCondor will do the transfers using the existing HTCondor
@@ -156,8 +156,8 @@ AWS, or even another HTCondor cluster.
 `GlideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
 is a tool and host environment used mostly on the `Open Science Grid <http://www.opensciencegrid.org/>`__.
 
-Glideins can also be created by hand or scripts. This is a useful solution for 
-example for cluster which have no external job submit mechanisms or do not 
+Glideins can also be created by hand or scripts. This is a useful solution for
+example for cluster which have no external job submit mechanisms or do not
 allow outside networking.
 
 CondorC
@@ -727,7 +727,7 @@ HPC Clusters - User Install
 ===========================
 
 In this deployment model, HTCondor and Pegasus are installed on the login node as
-a binary installation within user space (typically the `$HOME` directory). 
+a binary installation within user space (typically the `$HOME` directory).
 
 * HTCondor daemons run on a per-user basis and must be launched by each user before submitting workflows.
 * This approach is ideal for environments where you do not have root/sudo access but need a functional workflow submission environment.
@@ -773,10 +773,10 @@ If the HTCondor services stop or the node is rebooted, simply run `condor_master
 
 .. note::
 
-    A common problem with user space installs is running into resource limits on 
+    A common problem with user space installs is running into resource limits on
     the login node. Some sites set "ulimits" to make sure users are not using
     up too much of the resources on the host. If HTCondor or you workflow
-    gets killed by the system, please examine the configured 
+    gets killed by the system, please examine the configured
     ulimits by running ``ulimits -a``, and discuss with your system
     administrator.
 
@@ -1051,11 +1051,11 @@ An example site catalog entry for a BOSCO site looks like this:
       pegasus:
         # SSH is the style to use for Bosco SSH submits.
         style: ssh
-        
+
         # Works around bug in the HTCondor GAHP, that does not
         # set the remote directory
         change.dir: 'true'
-        
+
         # Job requirements should be specified using Pegasus profiles.
         queue: default
         runtime: '300'
@@ -2048,7 +2048,7 @@ Localhost
 
 In this configuration, Pegasus schedules the jobs to run locally on the
 submit host. Running locally is a good approach for smaller workflows,
-testing workflows, and for demonstations such as the :ref:`tutorial`. 
+testing workflows, and for demonstations such as the :ref:`tutorial`.
 Pegasus supports two methods of local
 execution: local HTCondor pool, and shell planner. The former is
 preferred as the latter does not support all Pegasus' features (such as
@@ -2082,5 +2082,3 @@ capable of planning small workflows for local execution using a shell
 planner. Please refer to the ``share/pegasus/examples`` directory in
 your Pegasus installation, the shell planner's :ref:`documentation
 section <pegasus-plan-properties>`, or the tutorials, for details.
-
-

@@ -67,4 +67,3 @@ fi
 
 #now submit the workflow to run
 pegasus-run  $WORK_DIR
-

@@ -16,15 +16,18 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.toolkit.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This class gets the exit code of a job from invocation record.
@@ -61,7 +64,8 @@ public class ExitCode extends Toolkit {
                         + linefeed
                         + " -V|--version    print version information and exit."
                         + linefeed
-                        + " -v|--verbose    verbose mode, switches on property vds.log.app on stdout."
+                        + " -v|--verbose    verbose mode, switches on property vds.log.app on"
+                        + " stdout."
                         + linefeed
                         + " -i|--ignore     ignore exit code for failure, just add to database."
                         + linefeed
@@ -71,11 +75,13 @@ public class ExitCode extends Toolkit {
                         + linefeed
                         + " -e|--emptyfail  takes empty files to mean failure instead of ok."
                         + linefeed
-                        + " -f|--fail       stops parsing on the first error found instead of going on."
+                        + " -f|--fail       stops parsing on the first error found instead of going"
+                        + " on."
                         + linefeed
                         + " -l|--label tag  attaches the tag string (32 char max) to all records."
                         + linefeed
-                        + " -m|--mtime ISO  uses the ISO 8601 timestamp as WF mtime for all records."
+                        + " -m|--mtime ISO  uses the ISO 8601 timestamp as WF mtime for all"
+                        + " records."
                         + linefeed
                         + "                 Options -l and -m must be used in conjunction!"
                         + linefeed
@@ -96,7 +102,8 @@ public class ExitCode extends Toolkit {
                         + linefeed
                         + "  6  illegal state, inform vds-support@griphyn.org."
                         + linefeed
-                        + "  7  illegal state, stumbled over an exception, try --verbose for details"
+                        + "  7  illegal state, stumbled over an exception, try --verbose for"
+                        + " details"
                         + linefeed
                         + "  8  multiple 0..5 failures during parsing of multiple records"
                         + linefeed);

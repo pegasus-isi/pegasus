@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for TCFormatUtility. */

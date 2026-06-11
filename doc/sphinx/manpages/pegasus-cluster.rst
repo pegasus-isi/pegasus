@@ -324,5 +324,3 @@ previous incantations. We are slowly moving to the new name to avoid
 clashes in a larger OS installation setting. However, there is no
 pertinent need to change the internal name, too, as no name clashes are
 expected.
-
-

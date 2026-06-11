@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -658,7 +659,8 @@ public class Shell extends Abstract {
                     throw new CodeGeneratorException(
                             "File path "
                                     + f
-                                    + " needs to be absolute for Shell code generator to resolve for job "
+                                    + " needs to be absolute for Shell code generator to resolve"
+                                    + " for job "
                                     + job.getID());
                 }
                 value.append(",");

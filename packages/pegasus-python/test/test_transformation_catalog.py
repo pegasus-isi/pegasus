@@ -63,7 +63,11 @@ def tc2():
         TransformationCatalog()
         .add_transformations(
             Transformation("t1", namespace="test", version="1.0").add_sites(
-                TransformationSite("local", "/pfn", True,)
+                TransformationSite(
+                    "local",
+                    "/pfn",
+                    True,
+                )
             )
         )
         .add_containers(

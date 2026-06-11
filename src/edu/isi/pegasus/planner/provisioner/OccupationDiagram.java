@@ -47,6 +47,7 @@ public class OccupationDiagram {
             timeMap[i] = new LinkedList();
         }
     }
+
     /** Comparator which compare the schedulable duration of two nodes */
     private class NodeComp implements Comparator<Node> {
         // compare schedulable duration of two nodes

@@ -6,7 +6,7 @@ pegasus-cwl-converter
 
 pegasus-cwl-converter - converts a Common Workflow Language (CWL) workflow into
 a Pegasus workflow. Note that this utility is currently a **work in progress**
-and we are working towards providing more comprehensive support of the CWL 
+and we are working towards providing more comprehensive support of the CWL
 specification.
 
 ::
@@ -24,8 +24,8 @@ into Pegasus workflows.
 
 Additional Python Dependencies
 ==============================
-Pegasus does not ship with the **cwl-utils v0.11** and **jsonschema v3.2.0** 
-packages used by this utility, and must be installed prior: 
+Pegasus does not ship with the **cwl-utils v0.11** and **jsonschema v3.2.0**
+packages used by this utility, and must be installed prior:
 ``pip install pegasus-wms[cwl]``
 
 Positional Arguments
@@ -51,14 +51,14 @@ Positional Arguments
             is_stageable: <bool>
 
     Where each <executable name> is the name of the executable specified in the
-    ``baseCommand`` field of a CWL ``CommandLineTool``. Note that if 
+    ``baseCommand`` field of a CWL ``CommandLineTool``. Note that if
     ``baseCommand`` has something like ``/usr/bin/gcc``, the corresponding
     executable name that you would place in this file is just ``gcc``. The ``site``
     field specifies the site on which this transformation resides (must be one
-    of the sites specified in your Pegasus **site catalog**). 
+    of the sites specified in your Pegasus **site catalog**).
 
 **output_file_path**
-    Desired path of the generated Pegasus workflow file. 
+    Desired path of the generated Pegasus workflow file.
 
 Optional Arguments
 ==================
@@ -66,12 +66,12 @@ Optional Arguments
     Prints a concise help and exits.
 
 **-d**
-    Enables debug mode in the logger.  
+    Enables debug mode in the logger.
 
 Example
 =======
-Say that you have the following directory, ``my_cwl_workflow``, that contains a 
-main workflow CWL file, job CWL files, input specifications, input files, 
+Say that you have the following directory, ``my_cwl_workflow``, that contains a
+main workflow CWL file, job CWL files, input specifications, input files,
 and scripts or executables used by the jobs:
 
 ::
@@ -103,7 +103,7 @@ have the following ``baseCommand`` fields:
 | get_file_sizes.cwl | /Users/ryan/my_cwl_workflow/get_file_sizes.sh |
 +--------------------+-----------------------------------------------+
 
-Assuming that your Pegasus **site catalog** has two sites ``local`` and 
+Assuming that your Pegasus **site catalog** has two sites ``local`` and
 ``condorpool``, the transformation spec file would look something like:
 
 ::
@@ -119,10 +119,9 @@ Assuming that your Pegasus **site catalog** has two sites ``local`` and
         is_stageable: True
 
 Note that, ``gcc`` is only referenced once. Now that the transformation spec file
-has been created (let's call this ``tr_specs.yml``), ``pegasus-cwl-converter`` can be used to convert ``workflow.cwl`` 
+has been created (let's call this ``tr_specs.yml``), ``pegasus-cwl-converter`` can be used to convert ``workflow.cwl``
 into Pegasus's native format by calling:
 
 ::
 
         pegasus-cwl-converter workflow.cwl input.yml tr_specs.yml  pegasus_workflow.yml
-

@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.parser;
 
-import java.util.*;
 import org.griphyn.vdl.classes.*;
+
+import java.util.*;
 
 /**
  * This class keeps the name of an element and its corresponding java object reference. The

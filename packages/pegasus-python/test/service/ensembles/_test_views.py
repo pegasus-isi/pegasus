@@ -273,7 +273,7 @@ class TestEnsembleAPI(APITestCase):
             "tc.txt",
             "plan.sh",
         ]:
-            r = self.get("/ensembles/myensemble/workflows/mywf/%s" % f)
+            r = self.get(f"/ensembles/myensemble/workflows/mywf/{f}")
             self.assertEqual(r.status_code, 200, "Should return OK")
             self.assertTrue(len(r.data) > 0, "File should not be empty")
 

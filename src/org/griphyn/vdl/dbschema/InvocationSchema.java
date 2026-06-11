@@ -27,12 +27,14 @@ import edu.isi.pegasus.planner.invocation.StatCall;
 import edu.isi.pegasus.planner.invocation.StatInfo;
 import edu.isi.pegasus.planner.invocation.Status;
 import edu.isi.pegasus.planner.invocation.Usage;
+
+import org.griphyn.vdl.util.Logging;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This class provides basic functionalities to interact with the backend database for invocation
@@ -56,8 +58,13 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
      * @throws java.io.IOException Exception
      */
     public InvocationSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with parent schema c'tor");

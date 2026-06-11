@@ -14,6 +14,7 @@
 package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;

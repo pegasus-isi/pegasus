@@ -26,9 +26,11 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the submit host is a part of.
@@ -350,7 +352,10 @@ public class Condor extends Abstract {
                     // https://www.baeldung.com/java-check-string-number
                     mLogger.log(
                             String.format(
-                                    "For job %s condor profile %s was set directly to %s . Using that for the job. For numeric values, only set/associate corresponding pegasus resource profile %s for the job.",
+                                    "For job %s condor profile %s was set directly to %s . Using"
+                                        + " that for the job. For numeric values, only"
+                                        + " set/associate corresponding pegasus resource profile %s"
+                                        + " for the job.",
                                     job.getID(), classAdKey, condorProfileValue, pegasusKey),
                             LogManager.WARNING_MESSAGE_LEVEL);
 

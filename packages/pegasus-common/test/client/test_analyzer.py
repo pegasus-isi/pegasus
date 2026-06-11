@@ -12,32 +12,32 @@ pegasus_version = "5.0.1"
 prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def AnalyzerDatabase():
     return AnalyzeDB
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def AnalyzerFiles():
     return AnalyzeFiles
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def AnalyzerDebug():
     return DebugWF
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def AnalyzerOptions():
     return Options
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def BaseAnalyzer():
     return BaseAnalyze
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def Output():
     return AnalyzerOutput
 
@@ -113,7 +113,7 @@ class TestBaseAnalyze:
             workflow_base_dir="/home/mzalam/028-dynamic-hierarchy",
         )
 
-        assert BaseAnalyze.parse_submit_file(job, opts) == None
+        assert BaseAnalyze.parse_submit_file(job, opts) is None
 
     def test_parse_submit_file_no_retries(self, mocker, capsys, BaseAnalyzer):
         submit_file = os.path.join(
@@ -153,7 +153,7 @@ class TestAnalyzerOutput:
     def test_get_failed_workflows(self, Output):
         analyzer_output = Output()
         analyzer_output.workflows = {"wf-0": Workflow(wf_status="failure")}
-        expected = {"wf-0": Workflow(wf_status="failure")}
+        {"wf-0": Workflow(wf_status="failure")}
         assert analyzer_output.get_failed_workflows()["wf-0"].wf_status == "failure"
 
     def test_get_all_jobs(self, Output):
@@ -223,7 +223,7 @@ class TestAnalyzeDB:
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
 
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
-        with pytest.raises(KeyError) as err:
+        with pytest.raises(KeyError):
             analyze.analyze_db(None)
         captured = capsys.readouterr()
         captured_error = captured.err.lstrip()
@@ -439,14 +439,17 @@ class TestAnalyzeDB:
         mock_wf = mocker.MagicMock()
         mock_wf_stats = mocker.MagicMock()
         mock_wf_stats.configure_mock(
-            **{"get_failing_jobs.return_value": (1, 2, 3),}
+            **{
+                "get_failing_jobs.return_value": (1, 2, 3),
+            }
         )
 
         analyze = AnalyzerDatabase(Options(summary_mode=True))
         with pytest.raises(Exception) as err:
             analyze.analyze_db_for_wf(mock_wf_stats, "uuid-0", "submit_dir-0", mock_wf)
             assert "Workflow failed" in str(err)
-            assert "uuid-0" in str(err) and "submit_dir-0" in str(err)
+            assert "uuid-0" in str(err)
+            assert "submit_dir-0" in str(err)
 
     def DISABLED_test_analyze_db_for_wf_failing_jobs(
         self, mocker, capsys, AnalyzerDatabase
@@ -706,7 +709,7 @@ class TestAnalyzeFiles:
         assert analyzer_ouput.as_dict() == expected_output
 
     @pytest.mark.parametrize(
-        "out_dir, expected_output",
+        ("out_dir", "expected_output"),
         [
             (
                 None,
@@ -770,14 +773,14 @@ class TestAnalyzeFiles:
         )
         with pytest.raises(Exception) as err:
             analyze.invoke_monitord("", None)
-        assert "could not invoke monitord, exiting..." == str(err.value)
+        assert str(err.value) == "could not invoke monitord, exiting..."
         assert AnalyzerError == err.type
 
     def test_find_file_error(self, mocker, AnalyzerFiles):
         analyze = AnalyzerFiles(Options())
         with pytest.raises(Exception) as err:
             analyze.find_file("/random/dir", ".txt")
-        assert "cannot read directory: /random/dir" == str(err.value)
+        assert str(err.value) == "cannot read directory: /random/dir"
         assert AnalyzerError == err.type
 
     def test_find_file_not_found(self, mocker, AnalyzerFiles):
@@ -801,7 +804,7 @@ class TestAnalyzeFiles:
         with pytest.raises(Exception) as err:
             analyze.get_jsdl_filename(input_dir)
 
-        assert "cannot read braindump.txt file... exiting..." == str(err.value)
+        assert str(err.value) == "cannot read braindump.txt file... exiting..."
         assert AnalyzerError == err.type
 
     def test_get_jsdl_filename_no_wf_uuid(self, mocker, AnalyzerFiles):
@@ -812,7 +815,7 @@ class TestAnalyzeFiles:
         with pytest.raises(Exception) as err:
             analyze.get_jsdl_filename(input_dir)
 
-        assert "braindump.txt does not contain wf_uuid... exiting..." == str(err.value)
+        assert str(err.value) == "braindump.txt does not contain wf_uuid... exiting..."
         assert AnalyzerError == err.type
 
     def test_parse_dag_file(self, mocker, capsys, AnalyzerFiles):
@@ -853,7 +856,7 @@ class TestAnalyzeFiles:
         analyze = AnalyzerFiles(Options())
         analyze.jobs = {"job-0": Job("job-0", "running")}
 
-        assert analyze.add_job("job-0") == None
+        assert analyze.add_job("job-0") is None
 
     def test_update_job_state_error(self, mocker, capsys, AnalyzerFiles):
         analyze = AnalyzerFiles(Options())
@@ -868,7 +871,7 @@ class TestAnalyzeFiles:
         analyze = AnalyzerFiles(Options())
         analyze.jobs = {"job-0": Job("job-0", "running")}
 
-        assert analyze.update_job_condor_info("job-0") == None
+        assert analyze.update_job_condor_info("job-0") is None
 
     def test_update_job_condor_info_error(self, mocker, capsys, AnalyzerFiles):
         analyze = AnalyzerFiles(Options())
@@ -915,7 +918,7 @@ class TestDebugWF:
         debug = AnalyzerDebug(Options(debug_job=job, debug_dir="a.txt"))
         mocker.patch("os.mkdir", side_effect=AnalyzerError)
 
-        with pytest.raises(AnalyzerError) as err:
+        with pytest.raises(AnalyzerError):
             debug.debug_workflow()
         captured = capsys.readouterr()
         captured_error = captured.err.lstrip()

@@ -41,7 +41,6 @@ def convert_yaml_schemas_to_json():
     # convert each of the yml schemas to json
     for yml_filename, json_filename in json_schemas.items():
         with open(yml_filename) as yml_file, open(json_filename, "w") as json_file:
-
             json_str = json.dumps(yaml.safe_load(yml_file))
 
             # for references pointing to '*.yml' files, convert them to point

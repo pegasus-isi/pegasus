@@ -25,8 +25,6 @@ import tempfile
 import threading
 import time
 
-from six.moves.builtins import int
-
 # Module variables
 logger = logging.getLogger("Pegasus")
 

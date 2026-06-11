@@ -9,7 +9,7 @@
 08/31/22 17:40:33 ** Log last touched time unavailable (No such file or directory)
 08/31/22 17:40:33 ******************************************************
 08/31/22 17:40:33 Using config source: /Users/zaiyan/condor/etc/condor_config
-08/31/22 17:40:33 Using local config sources: 
+08/31/22 17:40:33 Using local config sources:
 08/31/22 17:40:33    /Users/zaiyan/condor/local/config.d/00-personal-condor
 08/31/22 17:40:33 config Macros = 62, Sorted = 61, StringBytes = 1915, TablesBytes = 2280
 08/31/22 17:40:33 CLASSAD_CACHING is ENABLED
@@ -53,8 +53,8 @@
 08/31/22 17:40:33 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 08/31/22 17:40:33 DAGMAN_MAX_JOB_HOLDS setting: 100
 08/31/22 17:40:33 DAGMAN_HOLD_CLAIM_TIME setting: 20
-08/31/22 17:40:33 ALL_DEBUG setting: 
-08/31/22 17:40:33 DAGMAN_DEBUG setting: 
+08/31/22 17:40:33 ALL_DEBUG setting:
+08/31/22 17:40:33 DAGMAN_DEBUG setting:
 08/31/22 17:40:33 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 08/31/22 17:40:33 DAGMAN_REMOVE_NODE_JOBS setting: True
 08/31/22 17:40:33 DAGMAN will adjust edges after parsing

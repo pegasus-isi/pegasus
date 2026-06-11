@@ -17,10 +17,11 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 
 /** Structural tests for the provisioner Estimator class via reflection. */
 public class EstimatorTest {

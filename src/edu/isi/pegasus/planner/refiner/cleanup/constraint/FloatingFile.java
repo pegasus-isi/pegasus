@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.refiner.cleanup.constraint;
 
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Set;
 
 /**

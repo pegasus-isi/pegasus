@@ -15,16 +15,17 @@
 
 package org.griphyn.vdl.directive;
 
-import java.io.*;
-import java.sql.SQLException;
-import java.util.MissingResourceException;
-import java.util.Set;
 import org.griphyn.vdl.classes.Definition;
 import org.griphyn.vdl.classes.Derivation;
 import org.griphyn.vdl.dbdriver.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.parser.*;
 import org.xml.sax.InputSource;
+
+import java.io.*;
+import java.sql.SQLException;
+import java.util.MissingResourceException;
+import java.util.Set;
 
 /**
  * This class parses VDL XML specifications and stores them to database backend.

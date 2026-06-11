@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.refiner.createdir.AbstractStrategy;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -438,11 +439,13 @@ public class RemoveDirectory extends Engine {
                     // if the staging site is local then it is fatal error
                     // else we log a warning
                     String error =
-                            "The submit directory and the scratch directory for the cleanup job match "
+                            "The submit directory and the scratch directory for the cleanup job"
+                                    + " match "
                                     + file;
                     if (site.equals("local")) {
                         error +=
-                                " . This will result in the cleanup job removing the submit directory as the workflow is running.";
+                                " . This will result in the cleanup job removing the submit"
+                                        + " directory as the workflow is running.";
                         throw new RuntimeException(error);
                     } else {
                         mLogger.log(error, LogManager.WARNING_MESSAGE_LEVEL);

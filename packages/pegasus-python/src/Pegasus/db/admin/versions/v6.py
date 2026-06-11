@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -41,7 +40,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         # check whether it is safe to do that
         # self.db.execute("DROP TABLE file")
 
@@ -129,7 +128,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.info("Downgrading from version %s" % DB_VERSION)
+        log.info(f"Downgrading from version {DB_VERSION}")
 
         log.info("Renaming 'rc_lfn' table...")
         if self.db.get_bind().driver == "mysqldb":
@@ -249,7 +248,7 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute(text("DROP TABLE %s" % table_name))
+            self.db.execute(text(f"DROP TABLE {table_name}"))
         except Exception:
             pass
 
@@ -260,6 +259,6 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute(text("DROP INDEX %s" % index_name))
+            self.db.execute(text(f"DROP INDEX {index_name}"))
         except Exception:
             pass

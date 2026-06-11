@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -299,7 +300,8 @@ public class CondorSingularity extends AbstractContainer {
                         constructMessage(
                                 job,
                                 containerLFN,
-                                "Unable to find location of lfn in planner(get) cache with input staging bypassed"),
+                                "Unable to find location of lfn in planner(get) cache with input"
+                                        + " staging bypassed"),
                         LogManager.WARNING_MESSAGE_LEVEL);
             }
             // construct the URL wrt to the planner cache location

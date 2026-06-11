@@ -369,7 +369,7 @@ void* initMachine(void) {
     gather_proc_uptime(&p->boottime, &p->idletime);
 
     version = extract_version(p->basic->uname.release);
-    /* This used to have an upper limit of 3.2 from PM-571, but it was 
+    /* This used to have an upper limit of 3.2 from PM-571, but it was
      * removed because the Linux kernel is changing version numbers too
      * fast to keep updating it.
      */
@@ -414,7 +414,7 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
 
     /* <cpu> element */
     fprintf(out, "%*scpu_count: %hu\n%*scpu_speed: %lu\n%*scpu_vendor: %s\n%*scpu_model: %s\n",
-            indent, "", ptr->cpu_count, 
+            indent, "", ptr->cpu_count,
             indent, "", ptr->megahertz,
             indent, "", ptr->vendor_id,
             indent, "", ptr->model_name);
@@ -442,7 +442,7 @@ int printLinuxInfo(FILE *out, int indent, const MachineLinuxInfo *ptr) {
         fprintf(out, "%*stask_total: %u\n", indent, "", ptr->tasks.total);
         for (LinuxState s=S_RUNNING; s<=S_OTHER; ++s) {
             if (ptr->tasks.state[s]) {
-                fprintf(out, "%*stask_%s: %hu\n", 
+                fprintf(out, "%*stask_%s: %hu\n",
                              indent, "", state_names[s], ptr->tasks.state[s]);
             }
         }
@@ -485,4 +485,3 @@ void deleteMachine(void* data) {
         free((void*) ptr);
     }
 }
-

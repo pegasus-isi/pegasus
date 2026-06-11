@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import subprocess
 import sys
@@ -95,9 +95,7 @@ sites:
      -
       operation: "all"
       url: "file://{work_dir}/outputs/local-site"
-""".format(
-    run_id=RUN_ID, work_dir=str(WORK_DIR), cluster_pegasus_home="/opt/pegasus"
-)
+""".format(run_id=RUN_ID, work_dir=str(WORK_DIR), cluster_pegasus_home="/opt/pegasus")
 
 with open("sites.yml", "w") as f:
     f.write(sites)
@@ -181,9 +179,7 @@ transformations:
     os.type: "linux"
     os.release: "rhel"
     os.version: "7"
-""".format(
-    pegasus_bin_dir=PEGASUS_BIN_DIR
-)
+""".format(pegasus_bin_dir=PEGASUS_BIN_DIR)
 
 with open("transformations.yml", "w") as f:
     f.write(transformations)

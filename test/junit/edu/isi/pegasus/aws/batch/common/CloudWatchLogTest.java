@@ -19,16 +19,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
-import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.model.AttemptContainerDetail;
 import software.amazon.awssdk.services.batch.model.AttemptDetail;
 import software.amazon.awssdk.services.batch.model.JobDetail;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Method;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class CloudWatchLogTest {
 
     private CloudWatchLog log;

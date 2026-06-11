@@ -34,7 +34,7 @@ class WorkflowBase:
 
     def __repr__(self):
         spacer = "  "
-        retval = "%s:" % self.__class__
+        retval = f"{self.__class__}:"
         if self._indent > 1:
             retval = f"\n{spacer * self._indent}+++ {self.__class__}:"
         for i in dir(self):
@@ -49,7 +49,9 @@ class WorkflowBase:
                 continue
             try:
                 retval += "\n{}* {} : {}".format(
-                    spacer * self._indent, i, eval("self.%s" % i),
+                    spacer * self._indent,
+                    i,
+                    eval(f"self.{i}"),
                 )
             except NotImplementedError as e:
                 retval += f"\n{spacer * self._indent}* {i} : WARNING: {e}"

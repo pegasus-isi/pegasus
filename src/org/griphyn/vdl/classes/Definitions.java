@@ -15,9 +15,11 @@
 package org.griphyn.vdl.classes;
 
 import edu.isi.pegasus.common.util.Currently;
+
+import org.griphyn.vdl.util.*;
+
 import java.io.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the container to carry any number of <code>Transformation</code> and <code>
@@ -115,6 +117,7 @@ public class Definitions extends VDL implements Serializable {
         {2, -2, 3, -1, -1}, // newlink == OUT
         {3, -2, 3, 3, -1}
     };
+
     /**
      * Checks the linkage of a transformation between a declared, previously used and currently used
      * variable of the same name.
@@ -169,8 +172,10 @@ public class Definitions extends VDL implements Serializable {
      * @see Declare
      */
     protected void sanitizeDefinition(Definition d)
-            throws IllegalArgumentException, IncompatibleLinkageException,
-                    UndeclaredVariableException, IllegalTransformationException {
+            throws IllegalArgumentException,
+                    IncompatibleLinkageException,
+                    UndeclaredVariableException,
+                    IllegalTransformationException {
         String newline = System.getProperty("line.separator", "\r\n");
 
         // update definition with namespace and version, if necessary

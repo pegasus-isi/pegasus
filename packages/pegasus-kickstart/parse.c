@@ -365,7 +365,7 @@ static void internalParse(const char *line, Map actionmap, Map statemap,
                 } else {
                     printerr("Error parsing arugments: state=%02d, class=%d, "
                              "action=%d, newstate=%02d, char=%02X (%c)\n",
-                             state, charclass, 8, newstate, *s, 
+                             state, charclass, 8, newstate, *s,
                              ((*s & 127) >= 32) ? *s : '.');
                 }
                 exit(1);
@@ -443,4 +443,3 @@ Node *parseArgVector(int argc, char* const* argv) {
 
     return head;
 }
-

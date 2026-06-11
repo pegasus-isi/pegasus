@@ -80,7 +80,7 @@ class LoggingCommand(Command):
             if verbosity >= 1:
                 log.exception(e)
             else:
-                sys.stderr.write("%s\n" % e)
+                sys.stderr.write(f"{e}\n")
             exit(1)
 
 
@@ -130,7 +130,7 @@ class CompoundCommand(Command):
             command = self.aliases[command]
 
         if command not in commandmap:
-            sys.stderr.write("Invalid command: %s\n" % command)
+            sys.stderr.write(f"Invalid command: {command}\n")
             exit(1)
 
         cmdclass = commandmap[command]

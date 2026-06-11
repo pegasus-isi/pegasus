@@ -61,13 +61,15 @@ class TestMandatoryParse:
 
     def test_memory_expr(self):
         result = mandatory_parse(
-            "'100MB' if dagnode_retry == 1 else '10MB'", symbols={"dagnode_retry": 1},
+            "'100MB' if dagnode_retry == 1 else '10MB'",
+            symbols={"dagnode_retry": 1},
         )
         assert result == "100MB"
 
     def test_memory_expr_retry_zero(self):
         result = mandatory_parse(
-            "'100MB' if dagnode_retry == 1 else '10MB'", symbols={"dagnode_retry": 0},
+            "'100MB' if dagnode_retry == 1 else '10MB'",
+            symbols={"dagnode_retry": 0},
         )
         assert result == "10MB"
 

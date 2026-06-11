@@ -68,16 +68,16 @@ class RecordParser:
             if self.la() == "[":
                 self.consume()
                 return (Token.START, "[")
-            elif self.la() == "]":
+            if self.la() == "]":
                 self.consume()
                 return (Token.END, "]")
-            elif self.la() == ",":
+            if self.la() == ",":
                 self.consume()
                 return (Token.COMMA, ",")
-            elif self.la() == "=":
+            if self.la() == "=":
                 self.consume()
                 return (Token.EQUALS, "=")
-            elif self.la().isspace():
+            if self.la().isspace():
                 # Whitespace
                 self.consume()
             elif self.la() == '"':
@@ -118,7 +118,7 @@ class RecordParser:
         self.expect(Token.START)
         rectype = self.expect(Token.VALUE)
         if rectype not in VALID_TYPES:
-            raise RecordParseException("Invalid record type: %s" % rectype, self.string)
+            raise RecordParseException(f"Invalid record type: {rectype}", self.string)
         record = {}
 
         while True:

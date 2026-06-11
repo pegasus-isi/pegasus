@@ -8,9 +8,3 @@ pegasus.catalog.replica.file ./conf/rc.data
 # we want it to be turned on and then be off
 # automatically for findrange jobs
 pegasus.integrity.checking = full
-
-
-
-
-
-

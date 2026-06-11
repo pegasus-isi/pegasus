@@ -13,10 +13,11 @@
  */
 package edu.isi.pegasus.common.util;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Utility class to allow for variable expansions in strings.

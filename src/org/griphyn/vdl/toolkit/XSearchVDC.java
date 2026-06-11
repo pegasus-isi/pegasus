@@ -16,13 +16,16 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.Iterator;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.Iterator;
 
 /**
  * This class searches definition's that match the namespace, name, version triple, then prints the
@@ -80,7 +83,8 @@ public class XSearchVDC extends Toolkit {
                         + linefeed
                         + " -t|--type tr|dv   Search only for TR or DV, default is both."
                         + linefeed
-                        + " -n|--namespace ns Search for matches with namespace ns, default wildcard."
+                        + " -n|--namespace ns Search for matches with namespace ns, default"
+                        + " wildcard."
                         + linefeed
                         + " -i|--name id      Search for matches with name id, default wildcard."
                         + linefeed
@@ -222,7 +226,8 @@ public class XSearchVDC extends Toolkit {
             if ((condition1 && (condition2 || condition3)) || (condition2 && condition3)) {
                 me.showUsage();
                 throw new RuntimeException(
-                        "ERROR: you must either specify the -n -i -v options, the -f option, or the -q option!");
+                        "ERROR: you must either specify the -n -i -v options, the -f option, or the"
+                                + " -q option!");
             }
 
             int link = -1;
@@ -330,9 +335,19 @@ public class XSearchVDC extends Toolkit {
 
                         xquery.append("='").append(args[start + 1]).append("']");
                         xquery.append(
-                                " let $mn:=$m/@name, $n := substring-before($mn, '::'), $na := substring-after($mn, '::'), $iv := if ($na) then $na else $mn, $v := substring-after($iv, ':'), $ib := substring-before($iv, ':'), $i := if ($ib) then $ib else $iv,");
+                                " let $mn:=$m/@name, $n := substring-before($mn, '::'), $na :="
+                                    + " substring-after($mn, '::'), $iv := if ($na) then $na else"
+                                    + " $mn, $v := substring-after($iv, ':'), $ib :="
+                                    + " substring-before($iv, ':'), $i := if ($ib) then $ib else"
+                                    + " $iv,");
                         xquery.append(
-                                " $t := if ($n) then if ($v) then //transformation[@namespace=$n][@name=$i][@version=$v] else //transformation[@namespace=$n][@name=$i][empty(@version)] else if ($v) then //transformation[empty(@namespace)][@name=$i][@version=$v] else //transformation[empty(@namespace)][@name=$i][empty(@version)]");
+                                " $t := if ($n) then if ($v) then"
+                                    + " //transformation[@namespace=$n][@name=$i][@version=$v] else"
+                                    + " //transformation[@namespace=$n][@name=$i][empty(@version)]"
+                                    + " else if ($v) then"
+                                    + " //transformation[empty(@namespace)][@name=$i][@version=$v]"
+                                    + " else"
+                                    + " //transformation[empty(@namespace)][@name=$i][empty(@version)]");
                         xquery.append(" return $t[declare[@link='");
                         xquery.append(args[start + 2]);
                         xquery.append("'][@name = $m/@select]]");
@@ -343,7 +358,8 @@ public class XSearchVDC extends Toolkit {
                         xquery.append("let $d := //derivation[.//lfn[@file=$lfn][@link='input']]");
                         xquery.append("return ( $d,");
                         xquery.append(
-                                "for $out in $d//lfn[@link='output']/@file  return v:dv_tree($out))");
+                                "for $out in $d//lfn[@link='output']/@file  return"
+                                        + " v:dv_tree($out))");
                         xquery.append("};");
                         xquery.append("let $d := v:dv_tree('")
                                 .append(args[start])
@@ -355,7 +371,8 @@ public class XSearchVDC extends Toolkit {
                         xquery.append("let $d := //derivation[.//lfn[@file=$lfn][@link='input']]");
                         xquery.append("return ( $lfn,");
                         xquery.append(
-                                "for $out in $d//lfn[@link='output']/@file  return v:lfn_tree($out))");
+                                "for $out in $d//lfn[@link='output']/@file  return"
+                                        + " v:lfn_tree($out))");
                         xquery.append("};");
                         xquery.append("let $f := v:lfn_tree('").append(args[start]);
                         xquery.append("') return distinct-values($f)");

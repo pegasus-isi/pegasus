@@ -20,13 +20,16 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class LogEventTest {
 
     @Test

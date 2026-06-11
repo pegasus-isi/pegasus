@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import java.util.HashMap;
 import java.util.Map;
 

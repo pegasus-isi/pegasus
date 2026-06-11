@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
@@ -43,6 +44,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;

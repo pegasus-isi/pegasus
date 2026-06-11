@@ -992,5 +992,3 @@ is used.
 
 **PMC_MAX_WALL_TIME**
    Alias for the **--max-wall-time** option.
-
-

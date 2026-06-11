@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -531,7 +532,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             if (c.getType() == Container.TYPE.docker || c.getType() == Container.TYPE.shifter) {
                 // log a warning
                 mLogger.log(
-                        "Specification of checksums in transformation catalog are not currently supported for container "
+                        "Specification of checksums in transformation catalog are not currently"
+                                + " supported for container "
                                 + c,
                         LogManager.WARNING_MESSAGE_LEVEL);
             } else {
@@ -699,7 +701,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             contains = n.containsKey(key);
             if (contains) {
                 mLogger.log(
-                        "Hints namespace is deprecated. Please use selector namespace instead. Found key "
+                        "Hints namespace is deprecated. Please use selector namespace instead."
+                                + " Found key "
                                 + key
                                 + " for job "
                                 + job.getID(),

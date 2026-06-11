@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the CondorGlideIN style class. */

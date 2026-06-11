@@ -33,7 +33,7 @@ int printYAMLUseInfo(FILE *out, int indent, const char* id,
     fprintf(out, "%*s  utime: %.3f\n", indent, "", doubletime(use->ru_utime));
     fprintf(out, "%*s  stime: %.3f\n", indent, "", doubletime(use->ru_stime));
 
-    fprintf(out, "%*s  maxrss: %lu\n", indent, "", 
+    fprintf(out, "%*s  maxrss: %lu\n", indent, "",
 #ifdef DARWIN
             /* On Mac OS X this is in bytes */
             use->ru_maxrss / 1024
@@ -133,4 +133,3 @@ void addUseInfo(struct rusage* sum, const struct rusage* summand) {
        became runnable or the current process used up its time slice.  */
     sum->ru_nivcsw += summand->ru_nivcsw;
 }
-

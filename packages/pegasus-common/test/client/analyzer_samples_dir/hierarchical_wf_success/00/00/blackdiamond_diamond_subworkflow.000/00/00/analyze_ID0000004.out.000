@@ -163,7 +163,7 @@
       data_truncated: false
       data: |
         output file to be generated is f.d
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/execute/dir_189483/ks.err.zBYDQp
       descriptor: 4

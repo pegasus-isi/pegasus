@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.Boolean;
@@ -50,8 +51,10 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.refiner.MainEngine;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -825,7 +828,8 @@ public class CPlanner extends Executable {
                 case 'd': // dax
                     options.setDAX(g.getOptarg());
                     mLogger.log(
-                            "--dax option is deprecated. The abstract workflow is passed via the last positional argument on the commandline.",
+                            "--dax option is deprecated. The abstract workflow is passed via the"
+                                    + " last positional argument on the commandline.",
                             LogManager.WARNING_MESSAGE_LEVEL);
                     break;
 
@@ -840,7 +844,8 @@ public class CPlanner extends Executable {
                         // log warning
                         StringBuffer sb = new StringBuffer();
                         sb.append(
-                                        "Submit Directory can only be set by specifying the --dir option now. ")
+                                        "Submit Directory can only be set by specifying the --dir"
+                                                + " option now. ")
                                 .append("Setting -D to ")
                                 .append(optarg)
                                 .append(" does not work");
@@ -1149,12 +1154,18 @@ public class CPlanner extends Executable {
                         + "\n"
                         + "Usage : pegasus-plan [-Dprop=value…]] [-b prefix]\n"
                         + "                     [-v] [-q] [-V] [-h]\n"
-                        + "                     [--conf propsfile] [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]\n"
-                        + "                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]\n"
-                        + "                     [--inherited-rc-files file1[,file2…]] [-j prefix] [--json] [-n]\n"
-                        + "                     [-I input-dir1[,input-dir2…]] [-O output-dir] [-o site1[,site2…]]\n"
-                        + "                     [-t transformations-dir] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]\n"
-                        + "                     [--randomdir[=dirname]][--relative-dir dir] [--relative-submit-dir dir] \n"
+                        + "                     [--conf propsfile] [-c cachefile[,cachefile…]]"
+                        + " [--cleanup cleanup strategy ]\n"
+                        + "                     [-C style[,style…]] [--dir dir] [--force]"
+                        + " [--force-replan]\n"
+                        + "                     [--inherited-rc-files file1[,file2…]] [-j prefix]"
+                        + " [--json] [-n]\n"
+                        + "                     [-I input-dir1[,input-dir2…]] [-O output-dir] [-o"
+                        + " site1[,site2…]]\n"
+                        + "                     [-t transformations-dir] [-s site1[,site2…]]"
+                        + " [--staging-site s1=ss1[,s2=ss2[..]]\n"
+                        + "                     [--randomdir[=dirname]][--relative-dir dir]"
+                        + " [--relative-submit-dir dir] \n"
                         + "                     [-X[non standard jvm option]] abstract-workflow]";
 
         System.out.println(text);
@@ -1170,113 +1181,199 @@ public class CPlanner extends Executable {
         text.append("\n $Id$ ")
                 .append("\n " + getGVDSVersion())
                 .append(
-                        "\n pegasus-plan - The main command line client which is used to run Pegasus")
+                        "\n"
+                            + " pegasus-plan - The main command line client which is used to run"
+                            + " Pegasus")
                 .append("\nUsage : pegasus-plan [-Dprop=value…]] [-b prefix]")
                 .append("\n                     [-v] [-q] [-V] [-h]")
                 .append(
-                        "\n                     [--conf propsfile] [-c cachefile[,cachefile…]] [--cleanup cleanup strategy ]")
+                        "\n"
+                            + "                     [--conf propsfile] [-c cachefile[,cachefile…]]"
+                            + " [--cleanup cleanup strategy ]")
                 .append(
-                        "\n                     [-C style[,style…]] [--dir dir] [--force] [--force-replan]")
+                        "\n"
+                                + "                     [-C style[,style…]] [--dir dir] [--force]"
+                                + " [--force-replan]")
                 .append(
-                        "\n                     [--inherited-rc-files file1[,file2…]] [-j prefix] [-n][-I input-dir1[,input-dir2…]]")
+                        "\n"
+                                + "                     [--inherited-rc-files file1[,file2…]] [-j"
+                                + " prefix] [-n][-I input-dir1[,input-dir2…]]")
                 .append(
-                        "\n                     [-O output-dir] [-o site1[,site2…]] [-s site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]")
+                        "\n"
+                                + "                     [-O output-dir] [-o site1[,site2…]] [-s"
+                                + " site1[,site2…]] [--staging-site s1=ss1[,s2=ss2[..]]")
                 .append(
-                        "\n                     [--randomdir[=dirname]] [--relative-dir dir] [--relative-submit-dir dir]")
+                        "\n"
+                            + "                     [--randomdir[=dirname]] [--relative-dir dir]"
+                            + " [--relative-submit-dir dir]")
                 .append("\n                     [-X[non standard jvm option]]")
                 .append("\n                     [abstract-workflow]")
                 .append("\n Options ")
                 .append(
-                        "\n -b |--basename        the basename prefix while constructing the per workflow files like .dag etc.")
+                        "\n"
+                            + " -b |--basename        the basename prefix while constructing the"
+                            + " per workflow files like .dag etc.")
                 .append("\n -c |--cache           comma separated list of replica cache files.")
                 .append(
-                        "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority")
+                        "\n"
+                                + " --inherited-rc-files  comma separated list of replica files."
+                                + " Locations mentioned in these have a lower priority")
                 .append("\n                       than the locations in the DAX file")
                 .append(
-                        "\n --cleanup             the cleanup strategy to use. Can be none|inplace|leaf|constraint. Defaults to inplace. ")
+                        "\n"
+                                + " --cleanup             the cleanup strategy to use. Can be"
+                                + " none|inplace|leaf|constraint. Defaults to inplace. ")
                 .append(
-                        "\n -C |--cluster         comma separated list of clustering techniques to be applied to the workflow to ")
+                        "\n"
+                            + " -C |--cluster         comma separated list of clustering techniques"
+                            + " to be applied to the workflow to ")
                 .append(
-                        "\n                       to cluster jobs in to larger jobs, to avoid scheduling overheads. Can be horizontal|label|whole .")
+                        "\n"
+                            + "                       to cluster jobs in to larger jobs, to avoid"
+                            + " scheduling overheads. Can be horizontal|label|whole .")
                 .append(
-                        "\n --conf                the path to the properties file to use for planning. Defaults to pegasus.properties file")
+                        "\n"
+                            + " --conf                the path to the properties file to use for"
+                            + " planning. Defaults to pegasus.properties file")
                 .append("\n                       in the current working directory ")
                 .append(
-                        "\n --dir                 the directory where to generate the executable workflow.")
+                        "\n"
+                                + " --dir                 the directory where to generate the"
+                                + " executable workflow.")
                 .append(
-                        "\n --relative-dir        the relative directory to the base directory where to generate the concrete workflow.")
+                        "\n"
+                            + " --relative-dir        the relative directory to the base directory"
+                            + " where to generate the concrete workflow.")
                 .append(
-                        "\n --relative-submit-dir the relative submit directory where to generate the concrete workflow. Overrides --relative-dir .")
+                        "\n"
+                                + " --relative-submit-dir the relative submit directory where to"
+                                + " generate the concrete workflow. Overrides --relative-dir .")
                 .append(
-                        "\n -f |--force           skip reduction of the workflow, resulting in build style dag.")
+                        "\n"
+                            + " -f |--force           skip reduction of the workflow, resulting in"
+                            + " build style dag.")
                 .append(
-                        "\n --force-replan        force replanning for sub workflows in case of failure. ")
+                        "\n"
+                            + " --force-replan        force replanning for sub workflows in case of"
+                            + " failure. ")
                 .append(
-                        "\n -F |--forward         any options that need to be passed ahead to pegasus-run in format option[=value] ")
+                        "\n"
+                            + " -F |--forward         any options that need to be passed ahead to"
+                            + " pegasus-run in format option[=value] ")
                 .append(
-                        "\n                       where value can be optional. e.g -F nogrid will result in --nogrid . The option ")
+                        "\n"
+                            + "                       where value can be optional. e.g -F nogrid"
+                            + " will result in --nogrid . The option ")
                 .append("\n                       can be repeated multiple times.")
                 .append(
-                        "\n -j |--job-prefix      the prefix to be applied while construction job submit filenames ")
+                        "\n"
+                            + " -j |--job-prefix      the prefix to be applied while construction"
+                            + " job submit filenames ")
                 .append(
-                        "\n -J |--json            boolean option to log the final planner output in json format to the stdout.")
+                        "\n"
+                                + " -J |--json            boolean option to log the final planner"
+                                + " output in json format to the stdout.")
                 .append("\n                       All other log messages get logged to the stderr.")
                 .append(
-                        "\n -I |--input-dir       comma separated list of optional input directories where the input files reside on submit host")
+                        "\n"
+                                + " -I |--input-dir       comma separated list of optional input"
+                                + " directories where the input files reside on submit host")
                 .append(
-                        "\n -O |--output-dir      an optional output directory where the output files should be transferred to on submit host. ")
+                        "\n"
+                            + " -O |--output-dir      an optional output directory where the output"
+                            + " files should be transferred to on submit host. ")
                 .append(
-                        "\n                       the directory specified is asscociated with the local-storage directory for the output site.")
+                        "\n"
+                            + "                       the directory specified is asscociated with"
+                            + " the local-storage directory for the output site.")
                 .append(
-                        "\n -o |--output-sites    comma separated list of output sites where the data products during workflow execution are ")
+                        "\n"
+                            + " -o |--output-sites    comma separated list of output sites where"
+                            + " the data products during workflow execution are ")
                 .append("\n                       transferred to.")
                 .append(
-                        "\n -s |--sites           comma separated list of executions sites on which to map the workflow.")
+                        "\n"
+                            + " -s |--sites           comma separated list of executions sites on"
+                            + " which to map the workflow.")
                 .append(
-                        "\n --staging-site        comma separated list of key=value pairs , where the key is the execution site and value is the")
+                        "\n"
+                                + " --staging-site        comma separated list of key=value pairs ,"
+                                + " where the key is the execution site and value is the")
                 .append("\n                       staging site for that execution site.")
                 .append(
-                        "\n -r |--randomdir       create random directories based on workflow label and the workflow uuid (listed in the ")
+                        "\n"
+                            + " -r |--randomdir       create random directories based on workflow"
+                            + " label and the workflow uuid (listed in the ")
                 .append(
-                        "\n                       braindump file) on remote staging sites where data transfer jobs for the workflow are executed.")
+                        "\n"
+                            + "                       braindump file) on remote staging sites where"
+                            + " data transfer jobs for the workflow are executed.")
                 .append(
-                        "\n                       If the basename option is set, then instead of the workflow label, the basename is used for")
+                        "\n"
+                            + "                       If the basename option is set, then instead"
+                            + " of the workflow label, the basename is used for")
                 .append(
-                        "\n                       generating the random directory name along with the workflow uuid.")
+                        "\n"
+                            + "                       generating the random directory name along"
+                            + " with the workflow uuid.")
                 .append(
-                        "\n -R |--reuse           comma separated list of submit directories of previous runs from which to pick up")
+                        "\n"
+                            + " -R |--reuse           comma separated list of submit directories of"
+                            + " previous runs from which to pick up")
                 .append("\n                       output replica catalogs for data reuse.")
                 // .append(// "\n --rescue           the number of times rescue dag should be
                 // submitted for sub
                 // workflows before triggering re-planning" +
                 .append("\n -S |--submit          submit the executable workflow generated")
                 .append(
-                        "\n --staging-site        comma separated list of key=value pairs, where key is the execution site and value is the")
+                        "\n"
+                                + " --staging-site        comma separated list of key=value pairs,"
+                                + " where key is the execution site and value is the")
                 .append(
-                        "\n -t |--transformations-dir directory where users transformations are picked up, defaults to transformations")
+                        "\n"
+                            + " -t |--transformations-dir directory where users transformations are"
+                            + " picked up, defaults to transformations")
                 .append(
-                        "\n -v |--verbose         increases the verbosity of messages about what is going on")
+                        "\n"
+                                + " -v |--verbose         increases the verbosity of messages about"
+                                + " what is going on")
                 .append(
-                        "\n -q |--quiet           decreases the verbosity of messages about what is going on")
+                        "\n"
+                                + " -q |--quiet           decreases the verbosity of messages about"
+                                + " what is going on")
                 .append(
-                        "\n -V |--version         displays the version of the Pegasus Workflow Management System")
+                        "\n"
+                            + " -V |--version         displays the version of the Pegasus Workflow"
+                            + " Management System")
                 .append(
-                        "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m")
+                        "\n"
+                            + " -X[non standard java option]  pass to jvm a non standard option ."
+                            + " e.g. -Xmx1024m -Xms512m")
                 .append("\n -h |--help            generates this help.")
                 .append(
-                        "\n [abstract-workflow]   the YAML input file that describes an abstract workflow. If not specified")
+                        "\n"
+                                + " [abstract-workflow]   the YAML input file that describes an"
+                                + " abstract workflow. If not specified")
                 .append(
-                        "\n                       the planner defaults to file *workflow.yml* in the current working directory. ")
+                        "\n"
+                            + "                       the planner defaults to file *workflow.yml*"
+                            + " in the current working directory. ")
                 .append("\n The following exitcodes are produced")
                 .append("\n 0 planner was able to generate an executable workflow")
                 .append(
-                        "\n 1 an error occurred. In most cases, the error message logged should give a")
+                        "\n"
+                            + " 1 an error occurred. In most cases, the error message logged should"
+                            + " give a")
                 .append("\n   clear indication as to where  things went wrong.")
                 .append(
-                        "\n 2 an error occured while loading a specific module implementation at runtime")
+                        "\n"
+                            + " 2 an error occured while loading a specific module implementation"
+                            + " at runtime")
                 .append("\n 3 an unaccounted java exception occurred at runtime")
                 .append(
-                        "\n 4 encountered an out of memory exception. Most probably ran out of heap memory.")
+                        "\n"
+                            + " 4 encountered an out of memory exception. Most probably ran out of"
+                            + " heap memory.")
                 .append("\n ");
 
         System.out.println(text);
@@ -1977,6 +2074,7 @@ public class CPlanner extends Executable {
         return deleted;
     }
 }
+
 /**
  * A filename filter for identifying the submit directory
  *

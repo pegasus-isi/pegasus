@@ -1,7 +1,7 @@
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Union
 
 from .errors import DuplicateError
 from .mixins import HookMixin, MetadataMixin, ProfileMixin
@@ -38,20 +38,20 @@ class Container(ProfileMixin):
 
         # Example 1: Docker
         centos_pegasus = Container(
-                            "centos-pegasus",
-                            Container.DOCKER,
-                            "docker:///ryan/centos-pegasus:latest",
-                            arguments="--shm-size",
-                            mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
-                        )
+            "centos-pegasus",
+            Container.DOCKER,
+            "docker:///ryan/centos-pegasus:latest",
+            arguments="--shm-size",
+            mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
+        )
 
         # Example 2: Singularity
         fb_nlp = Container(
-                    "fb-nlp",
-                    Container.SINGULARITY,
-                    image="library://papajim/default/fb-nlp",
-                    mounts=["/data:/mnt:ro"]
-                )
+            "fb-nlp",
+            Container.SINGULARITY,
+            image="library://papajim/default/fb-nlp",
+            mounts=["/data:/mnt:ro"],
+        )
 
     """
 
@@ -66,11 +66,11 @@ class Container(ProfileMixin):
         name: str,
         container_type: _ContainerType,
         image: str,
-        arguments: Optional[str] = None,
-        mounts: Optional[List[str]] = None,
-        image_site: Optional[str] = None,
-        checksum: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Union[int, str, float]]] = None,
+        arguments: str | None = None,
+        mounts: list[str] | None = None,
+        image_site: str | None = None,
+        checksum: dict[str, str] | None = None,
+        metadata: dict[str, int | str | float] | None = None,
         bypass_staging: bool = False,
     ):
         """
@@ -98,10 +98,7 @@ class Container(ProfileMixin):
 
         if not isinstance(container_type, _ContainerType):
             raise TypeError(
-                "invalid container_type: {container_type}; container_type must be one of {enum_str}".format(
-                    container_type=container_type,
-                    enum_str=_get_class_enum_member_str(Container, _ContainerType),
-                )
+                f"invalid container_type: {container_type}; container_type must be one of {_get_class_enum_member_str(Container, _ContainerType)}"
             )
 
         self.container_type = container_type.value
@@ -114,9 +111,7 @@ class Container(ProfileMixin):
             for checksum_type in checksum:
                 if checksum_type.lower() not in Container._SUPPORTED_CHECKSUMS:
                     raise ValueError(
-                        "invalid checksum: {}, supported checksum types are: {}".format(
-                            checksum_type, Container._SUPPORTED_CHECKSUMS
-                        )
+                        f"invalid checksum: {checksum_type}, supported checksum types are: {Container._SUPPORTED_CHECKSUMS}"
                     )
         self.checksum = checksum
 
@@ -170,14 +165,14 @@ class TransformationSite(ProfileMixin, MetadataMixin):
     def __init__(
         self,
         name: str,
-        pfn: Union[str, Path],
+        pfn: str | Path,
         is_stageable: bool = False,
         bypass_staging: bool = False,
-        arch: Optional[Arch] = None,
-        os_type: Optional[OS] = None,
-        os_release: Optional[str] = None,
-        os_version: Optional[str] = None,
-        container: Optional[Union[Container, str]] = None,
+        arch: Arch | None = None,
+        os_type: OS | None = None,
+        os_release: str | None = None,
+        os_version: str | None = None,
+        container: Container | str | None = None,
     ):
         """
         :param name: name of the site at which this :py:class:`~Pegasus.api.transformation_catalog.Transformation` resides
@@ -209,9 +204,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         if isinstance(pfn, Path):
             if not pfn.is_absolute():
                 raise ValueError(
-                    "invalid pfn: {}, the given pfn must be an absolute path".format(
-                        str(pfn)
-                    )
+                    f"invalid pfn: {str(pfn)}, the given pfn must be an absolute path"
                 )
 
             pfn = str(pfn)
@@ -231,24 +224,18 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         if arch is not None:
             if not isinstance(arch, Arch):
                 raise TypeError(
-                    "invalid arch: {arch}; arch must be one of {enum_str}".format(
-                        arch=arch, enum_str=_get_enum_str(Arch)
-                    )
+                    f"invalid arch: {arch}; arch must be one of {_get_enum_str(Arch)}"
                 )
-            else:
-                self.arch = arch.value
+            self.arch = arch.value
         else:
             self.arch = None
 
         if os_type is not None:
             if not isinstance(os_type, OS):
                 raise TypeError(
-                    "invalid os_type: {os_type}; os_type must be one of {enum_str}".format(
-                        os_type=os_type, enum_str=_get_enum_str(OS)
-                    )
+                    f"invalid os_type: {os_type}; os_type must be one of {_get_enum_str(OS)}"
                 )
-            else:
-                self.os_type = os_type.value
+            self.os_type = os_type.value
         else:
             self.os_type = None
 
@@ -263,9 +250,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
                 container_name = container
             else:
                 raise TypeError(
-                    "invalid container: {container}; container must be of type Container or str (the container name)".format(
-                        container=container
-                    )
+                    f"invalid container: {container}; container must be of type Container or str (the container name)"
                 )
         self.container = container_name
 
@@ -310,18 +295,18 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
     def __init__(
         self,
         name: str,
-        namespace: Optional[str] = None,
-        version: Optional[str] = None,
-        site: Optional[str] = None,
-        pfn: Optional[Union[str, Path]] = None,
+        namespace: str | None = None,
+        version: str | None = None,
+        site: str | None = None,
+        pfn: str | Path | None = None,
         is_stageable: bool = False,
         bypass_staging: bool = False,
-        arch: Optional[Arch] = None,
-        os_type: Optional[OS] = None,
-        os_release: Optional[str] = None,
-        os_version: Optional[str] = None,
-        container: Optional[Union[Container, str]] = None,
-        checksum: Optional[Dict[str, str]] = None,
+        arch: Arch | None = None,
+        os_type: OS | None = None,
+        os_release: str | None = None,
+        os_version: str | None = None,
+        container: Container | str | None = None,
+        checksum: dict[str, str] | None = None,
     ):
         """
         When a transformation resides on a single site, the
@@ -405,9 +390,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         }.items():
             if ":" in str(value):
                 raise ValueError(
-                    "invalid {field}: {value}; {field} must not contain ':' (colon) characters".format(
-                        field=field, value=value
-                    )
+                    f"invalid {field}: {value}; {field} must not contain ':' (colon) characters"
                 )
 
         self.name = name
@@ -442,9 +425,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             for checksum_type in checksum:
                 if checksum_type.lower() not in Transformation._SUPPORTED_CHECKSUMS:
                     raise ValueError(
-                        "invalid checksum: {}, supported checksum types are: {}".format(
-                            checksum_type, Transformation._SUPPORTED_CHECKSUMS
-                        )
+                        f"invalid checksum: {checksum_type}, supported checksum types are: {Transformation._SUPPORTED_CHECKSUMS}"
                     )
         self.checksum = checksum
 
@@ -471,16 +452,12 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         for ts in transformation_sites:
             if not isinstance(ts, TransformationSite):
                 raise TypeError(
-                    "invalid transformation_site: {transformation_site}; transformation_site must be of type TransformationSite".format(
-                        transformation_site=ts
-                    )
+                    f"invalid transformation_site: {ts}; transformation_site must be of type TransformationSite"
                 )
 
             if ts.name in self.sites:
                 raise DuplicateError(
-                    "transformation site: {name} has already been added to {transformation}".format(
-                        name=ts.name, transformation=self
-                    )
+                    f"transformation site: {ts.name} has already been added to {self}"
                 )
 
             self.sites[ts.name] = ts
@@ -526,9 +503,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
             }.items():
                 if ":" in str(value):
                     raise ValueError(
-                        "invalid {field}: {value}; {field} must not contain `:` characters".format(
-                            field=field, value=value
-                        )
+                        f"invalid {field}: {value}; {field} must not contain `:` characters"
                     )
 
             if namespace:
@@ -541,16 +516,12 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
 
         else:
             raise TypeError(
-                "invalid required_transformation: {required_transformation}; required_transformation must be of type Transformation or str".format(
-                    required_transformation=required_transformation
-                )
+                f"invalid required_transformation: {required_transformation}; required_transformation must be of type Transformation or str"
             )
 
         if key in self.requires:
             raise DuplicateError(
-                "transformation: {key} already added as a required transformation to {tr}".format(
-                    key=key, tr=self
-                )
+                f"transformation: {key} already added as a required transformation to {self}"
             )
 
         self.requires.add(key)
@@ -564,9 +535,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                     ("version", self.version),
                     (
                         "requires",
-                        [req for req in self.requires]
-                        if len(self.requires) > 0
-                        else None,
+                        list(self.requires) if len(self.requires) > 0 else None,
                     ),
                     ("sites", [site for _, site in self.sites.items()]),
                     (
@@ -579,7 +548,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
                         "hooks",
                         OrderedDict(
                             [
-                                (hook_name, [hook for hook in values])
+                                (hook_name, list(values))
                                 for hook_name, values in self.hooks.items()
                             ]
                         )
@@ -593,9 +562,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         )
 
     def __str__(self):
-        return "<Transformation {}::{}:{}>".format(
-            self.namespace, self.name, self.version
-        )
+        return f"<Transformation {self.namespace}::{self.name}:{self.version}>"
 
     def __hash__(self):
         return hash(self._get_key())
@@ -676,14 +643,14 @@ class TransformationCatalog(Writable):
             # Example
             tc.add_transformations(
                 Transformation(
-                        "analyze",
-                        site="condorpool",
-                        pfn="/usr/bin/pegasus-keg",
-                        is_stageable=False,
-                        arch=Arch.X86_64,
-                        os_type=OS.LINUX,
-                        container=centos_pegasus
-                    )
+                    "analyze",
+                    site="condorpool",
+                    pfn="/usr/bin/pegasus-keg",
+                    is_stageable=False,
+                    arch=Arch.X86_64,
+                    os_type=OS.LINUX,
+                    container=centos_pegasus,
+                )
             )
 
 
@@ -695,16 +662,12 @@ class TransformationCatalog(Writable):
         for tr in transformations:
             if not isinstance(tr, Transformation):
                 raise TypeError(
-                    "invalid transformation: {tr}, transformation(s) must be of type Transformation".format(
-                        tr=tr
-                    )
+                    f"invalid transformation: {tr}, transformation(s) must be of type Transformation"
                 )
 
             if tr._get_key() in self.transformations:
                 raise DuplicateError(
-                    "transformation: {key} has already been added to this TransformationCatalog".format(
-                        key=tr._get_key()
-                    )
+                    f"transformation: {tr._get_key()} has already been added to this TransformationCatalog"
                 )
 
             self.transformations[tr._get_key()] = tr
@@ -723,7 +686,7 @@ class TransformationCatalog(Writable):
                     "centos-pegasus",
                     Container.DOCKER,
                     "docker:///ryan/centos-pegasus:latest",
-                    mounts=["/Volumes/Work/lfs1:/shared-data/:ro"]
+                    mounts=["/Volumes/Work/lfs1:/shared-data/:ro"],
                 )
             )
 
@@ -736,16 +699,12 @@ class TransformationCatalog(Writable):
         for c in containers:
             if not isinstance(c, Container):
                 raise TypeError(
-                    "invalid container: {container}; container must be of type Container".format(
-                        container=c
-                    )
+                    f"invalid container: {c}; container must be of type Container"
                 )
 
             if c.name in self.containers:
                 raise DuplicateError(
-                    "container: {} has already been added to this TransformationCatalog".format(
-                        c.name
-                    )
+                    f"container: {c.name} has already been added to this TransformationCatalog"
                 )
 
             self.containers[c.name] = c

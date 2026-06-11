@@ -518,4 +518,3 @@ to be transferred
 
    More details at
     PM-675 [\#793](https://github.com/pegasus-isi/pegasus/issues/793)
-

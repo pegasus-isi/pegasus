@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.Map;
 
 /**
@@ -359,7 +360,8 @@ public class GLite extends Abstract {
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
             mLogger.log(
-                    "Glite mode supports only pbs, sge, slurm, flux, moab or cobalt submission. Will use PBS style attributes for job "
+                    "Glite mode supports only pbs, sge, slurm, flux, moab or cobalt submission."
+                            + " Will use PBS style attributes for job "
                             + job.getID()
                             + " with grid resource "
                             + gridResource,
@@ -371,7 +373,9 @@ public class GLite extends Abstract {
             // PM-1739 the approach in PM-1539 is no longer supported.
             // Point user to do the right thing
             throw new CondorStyleException(
-                    "Malformed gridResource specified. Please use style panda to enable Panda submissions. Also please specify this information as a grid gateway for site "
+                    "Malformed gridResource specified. Please use style panda to enable Panda"
+                        + " submissions. Also please specify this information as a grid gateway for"
+                        + " site "
                             + job.getSiteHandle());
         }
 
@@ -895,7 +899,8 @@ public class GLite extends Abstract {
                                             cores,
                                             nodes,
                                             existing,
-                                            "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn)."));
+                                            "do not satisfy cores = nodes * ppn. Please specify"
+                                                    + " only two of (nodes, cores, ppn)."));
                         }
                     } else {
                         job.globusRSL.construct(Globus.XCOUNT_KEY, Integer.toString(ppn));
@@ -951,7 +956,8 @@ public class GLite extends Abstract {
                     job.globusRSL.construct(Globus.COUNT_KEY, Integer.toString(nodes * ppn));
                 } else if (nodesSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for SGE submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for SGE submission for"
+                                    + " job "
                                     + job.getID());
                 }
                 // default case nothing specified
@@ -977,7 +983,8 @@ public class GLite extends Abstract {
                     job.globusRSL.construct(Globus.COUNT_KEY, Integer.toString(nodes * ppn));
                 } else if (nodesSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for SLURM submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for SLURM submission"
+                                    + " for job "
                                     + job.getID());
                 }
                 // default case nothing specified
@@ -1002,7 +1009,8 @@ public class GLite extends Abstract {
                     job.globusRSL.construct(Globus.HOST_COUNT_KEY, Integer.toString(cores / ppn));
                 } else if (coresSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for LSF submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for LSF submission for"
+                                    + " job "
                                     + job.getID());
                 }
                 // default case nothing specified

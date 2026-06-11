@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dax;
 
+import org.griphyn.vdl.classes.LFN;
+
 import java.io.IOException;
 import java.io.Writer;
-import org.griphyn.vdl.classes.LFN;
 
 /**
  * This class captures the logical filename and its linkage. Also, some static methods allow to use

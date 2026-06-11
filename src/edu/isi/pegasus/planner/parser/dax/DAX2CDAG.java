@@ -40,6 +40,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;

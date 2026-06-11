@@ -23,7 +23,7 @@ class _Json:
 
 
 @pytest.mark.parametrize(
-    "s, expected",
+    ("s", "expected"),
     [
         ('{"key": 1}', 1),
         ('{"key": "2018-10-10"}', "2018-10-10"),
@@ -34,12 +34,12 @@ class _Json:
 def test_loads(s, expected):
     """Test :meth:`Pegasus.json.loads`."""
     rv = loads(s)
-    assert type(rv["key"]) == type(expected)
+    assert type(rv["key"]) is type(expected)
     assert rv["key"] == expected
 
 
 @pytest.mark.parametrize(
-    "obj, expected",
+    ("obj", "expected"),
     [
         ({"key": 1}, '{"key": 1}'),
         ({"key": "2018-10-10"}, '{"key": "2018-10-10"}'),
@@ -55,7 +55,8 @@ def test_dumps(obj, expected):
 
 
 @pytest.mark.parametrize(
-    "obj, expected", [('{"key": 1}\n{"key": 2}', [{"key": 1}, {"key": 2}])],
+    ("obj", "expected"),
+    [('{"key": 1}\n{"key": 2}', [{"key": 1}, {"key": 2}])],
 )
 def test_load_all(obj, expected):
     """Test :meth:`Pegasus.json.load_all`."""
@@ -64,7 +65,7 @@ def test_load_all(obj, expected):
 
 
 @pytest.mark.parametrize(
-    "obj, expected",
+    ("obj", "expected"),
     [
         ({"key": 1}, '{"key": 1}\n'),
         ({"key": _Color.RED}, '{"key": "RED"}\n'),

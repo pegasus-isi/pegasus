@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +48,7 @@ public class GridStartFactory {
 
     /** The corresponding short names for the implementations. */
     public static String[] GRIDSTART_SHORT_NAMES = {"kickstart", "none"};
+
     /** The known gridstart implementations. */
     public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {"Kickstart", "NoGridStart"};
 

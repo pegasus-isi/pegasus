@@ -21,11 +21,13 @@ package edu.isi.pegasus.planner.parser;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;

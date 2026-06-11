@@ -8,9 +8,9 @@ kanonical executable for grids
 
    ::
 
-      pegasus-keg [-a appname] [ -t interval | -T interval] [-s interval] 
-                  [-l logname] [-P prefix] [-o fn [..]] [-i fn [..]] 
-                  [-G sz [..]] [-m memory] [-C] [-e env [..]] 
+      pegasus-keg [-a appname] [ -t interval | -T interval] [-s interval]
+                  [-l logname] [-P prefix] [-o fn [..]] [-i fn [..]]
+                  [-G sz [..]] [-m memory] [-C] [-e env [..]]
                   [-p parm [..]] [-u data_unit]
 
 
@@ -133,9 +133,9 @@ usage and exit with success.
    executable is to sleep in seconds. This can be used to emulate light
    work without straining the pool resources. If used together with the
    **-T** spin option, the sleep interval comes before the spin
-   interval. The default is no sleep time. Note that if the time 
-   taken by I/Os is larger than the sleep time, **pegasus-keg** will 
-   *exit immediately* (i.e, **pegasus-keg** will run 
+   interval. The default is no sleep time. Note that if the time
+   taken by I/Os is larger than the sleep time, **pegasus-keg** will
+   *exit immediately* (i.e, **pegasus-keg** will run
    for min(I/O time, interval)).
 
 **-T interval**
@@ -144,16 +144,16 @@ usage and exit with success.
    simulation is done by random julia set calculations. This option can
    be used to emulate an intense work to strain pool resources. If used
    together with the **-t** sleep option, the sleep interval comes
-   before the spin interval. The default is no spin time. Note that 
-   if the time  taken by I/Os is larger than the spin time, 
-   **pegasus-keg** will *exit immediately* (i.e, **pegasus-keg** 
+   before the spin interval. The default is no spin time. Note that
+   if the time  taken by I/Os is larger than the spin time,
+   **pegasus-keg** will *exit immediately* (i.e, **pegasus-keg**
    will run for min(I/O time, interval)).
 
 **-s interval**
    The interval is an amount of sleep time that the **pegasus-keg**
    executable is to sleep in seconds after performing any I/Os.
    With this option **pegasus-keg** will perform I/Os and then sleep
-   for the amount of seconds specified (i.e, **pegasus-keg** 
+   for the amount of seconds specified (i.e, **pegasus-keg**
    will run for I/O time + interval).
 
 
@@ -227,5 +227,3 @@ last CPU available in */dev/cpuinfo* .
 There is a limit of *4 \* page size* to the output buffer of things that
 .B pegasus-keg can report in its self-info dump. There is no such
 restriction on the input to output file copy.
-
-

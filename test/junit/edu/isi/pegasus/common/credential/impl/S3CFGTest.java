@@ -24,13 +24,17 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.io.File;
-import java.io.PrintStream;
-import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.File;
+import java.io.PrintStream;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class S3CFGTest {
 
     @Test

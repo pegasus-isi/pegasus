@@ -20,11 +20,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.junit.jupiter.api.*;
 
 /** Test class for file type detector */
 public class FileDetectorTest {
@@ -58,7 +59,8 @@ public class FileDetectorTest {
             mTestFile = File.createTempFile("pegasus", ".txt");
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write(
-                    "x-pegasus: {apiLang: python, createdBy: bamboo, createdOn: '07-15-20T12:17:46Z'}\n");
+                    "x-pegasus: {apiLang: python, createdBy: bamboo, createdOn:"
+                            + " '07-15-20T12:17:46Z'}\n");
             writer.write("pegasus: '5.0'\n");
             writer.write("name: blackdiamond");
             writer.close();
@@ -130,7 +132,8 @@ public class FileDetectorTest {
             writer.write(
                     "tr vahi::analyze:1.0 {\n"
                             + "\n"
-                            + "   #specify profiles that apply for all the sites for the transformation\n"
+                            + "   #specify profiles that apply for all the sites for the"
+                            + " transformation\n"
                             + "   #in each site entry the profile can be overriden\n"
                             + "   #profile env \"APP_HOME\" \"/tmp/karan\"\n"
                             + "   #profile env \"JAVA_HOME\" \"/bin/java.1.5\"\n"
@@ -164,20 +167,29 @@ public class FileDetectorTest {
             writer = new BufferedWriter(new FileWriter(mTestFile));
             writer.write(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                            + "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"https://pegasus.isi.edu/schema/sitecatalog https://pegasus.isi.edu/schema/sc-4.0.xsd\" version=\"4.0\">\n"
-                            + "\n"
-                            + "    <site  handle=\"local\" arch=\"ppc64le\" os=\"LINUX\">\n"
-                            + "        <directory type=\"shared-scratch\" path=\"/Volumes/Work/lfs1/work/pegasus-features/PM-1159/work\">\n"
-                            + "            <file-server operation=\"all\" url=\"file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/work\"/>\n"
-                            + "        </directory>\n"
-                            + "        <directory type=\"local-storage\" path=\"/Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs\">\n"
-                            + "            <file-server operation=\"all\" url=\"file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs\"/>\n"
-                            + "        </directory>\n"
-                            + "        <profile namespace=\"pegasus\" key=\"clusters.num\">1</profile>\n"
-                            + "        <profile namespace=\"env\" key=\"PEGASUS_HOME\">/usr/</profile>\n"
-                            + "    </site>\n"
-                            + "\n"
-                            + "</sitecatalog>");
+                        + "<sitecatalog xmlns=\"https://pegasus.isi.edu/schema/sitecatalog\""
+                        + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+                        + " xsi:schemaLocation=\"https://pegasus.isi.edu/schema/sitecatalog"
+                        + " https://pegasus.isi.edu/schema/sc-4.0.xsd\" version=\"4.0\">\n"
+                        + "\n"
+                        + "    <site  handle=\"local\" arch=\"ppc64le\" os=\"LINUX\">\n"
+                        + "        <directory type=\"shared-scratch\""
+                        + " path=\"/Volumes/Work/lfs1/work/pegasus-features/PM-1159/work\">\n"
+                        + "            <file-server operation=\"all\""
+                        + " url=\"file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/work\"/>\n"
+                        + "        </directory>\n"
+                        + "        <directory type=\"local-storage\""
+                        + " path=\"/Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs\">\n"
+                        + "            <file-server operation=\"all\""
+                        + " url=\"file:///Volumes/Work/lfs1/work/pegasus-features/PM-1159/outputs\"/>\n"
+                        + "        </directory>\n"
+                        + "        <profile namespace=\"pegasus\""
+                        + " key=\"clusters.num\">1</profile>\n"
+                        + "        <profile namespace=\"env\""
+                        + " key=\"PEGASUS_HOME\">/usr/</profile>\n"
+                        + "    </site>\n"
+                        + "\n"
+                        + "</sitecatalog>");
             writer.close();
             assertThat(FileDetector.isTypeYAML(mTestFile, 10), is(false));
         } catch (IOException ex) {

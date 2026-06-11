@@ -29,13 +29,15 @@ import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Stampede code generator class. */
 public class StampedeTest {

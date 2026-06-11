@@ -32,7 +32,6 @@ if __name__ == "__main__":
     # initial starting point
     i = 0
     try:
-
         # use checkpoint file if it exists
         try:
             with open(CHECKPOINT_FILE) as f:

@@ -2,6 +2,6 @@
  { "type": "transfer",
    "id": 1,
    "src_urls": [ { "site_label": "ISI_Bamboo", "url": "gsiftp://bamboo.isi.edu/lfs1/pegasus-transfer-testing/originals/large-file.dat" } ],
-   "dest_urls": [ { "site_label": "ISI_Workflow", "url": "gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/large-file.dat" } ] 
+   "dest_urls": [ { "site_label": "ISI_Workflow", "url": "gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/large-file.dat" } ]
  }
 ]

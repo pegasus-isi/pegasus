@@ -15,11 +15,14 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Stack;
 
-/** @author gmehta */
+/**
+ * @author gmehta
+ */
 public class XMLWriter {
 
     private Writer mWriter;

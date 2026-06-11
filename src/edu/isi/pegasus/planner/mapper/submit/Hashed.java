@@ -18,10 +18,12 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
+
+import org.griphyn.vdl.euryale.HashedFileFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import org.griphyn.vdl.euryale.HashedFileFactory;
 
 /**
  * A Hashed Submit Directory mapper that distributes the jobs across a hashed directory structure

@@ -20,12 +20,15 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.LongOpt;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 /** Unit tests for the VersionNumber client class. */
 public class VersionNumberTest {

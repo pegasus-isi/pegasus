@@ -22,11 +22,11 @@
 #include "parser.h"
 #include "tools.h"
 
-extern int debug; 
+extern int debug;
 
 /* create finite state automaton to remove one level of quoting in the
  * same manner as a shell. This means in particular, in case you are not
- * aware (see man of your shell): 
+ * aware (see man of your shell):
  *
  * o backslashes are meaningless inside single quotes
  * o single quotes are meaningless inside double quotes
@@ -53,7 +53,7 @@ static char c_state[6][6] =
     { 4, 1, 5, 4, 4, 9 },    /* 4: double quote mode */
     { 4, 4, 4, 4, 4, 7 } };  /* 5: double quote backslash mode */
 
-static char c_action[6][6] = 
+static char c_action[6][6] =
   { { 0, 0, 0, 0, 1, 0 },    /* 0: skip linear whitespace */
     { 0, 0, 0, 2, 1, 2 },    /* 1: gobble unquoted nonspaces */
     { 1, 1, 1, 1, 1, 0 },    /* 2: unquoted backslash */
@@ -87,9 +87,9 @@ format_printable( char* buf, size_t size, char ch )
   if ( isprint(ch) ) {
     snprintf( buf, size, "\"%c\"", ch );
   } else {
-    snprintf( buf, size, "0x%02x", (unsigned char) ch ); 
+    snprintf( buf, size, "0x%02x", (unsigned char) ch );
   }
-  return buf; 
+  return buf;
 }
 
 size_t
@@ -97,7 +97,7 @@ interpretArguments( char* cmd, char*** argv )
 /* purpose: removes one layer of quoting and escaping, shell-style
  * paramtr: cmd (IO): commandline to split
  * paramtr: argv (OUT): argv[] vector, newly allocated vector
- * returns: argc 
+ * returns: argc
  */
 {
   t_node* head = NULL;

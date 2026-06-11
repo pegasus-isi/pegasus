@@ -15,20 +15,20 @@
 #    Return a classad describing the status of a LSF job
 #
 #
-# Copyright (c) Members of the EGEE Collaboration. 2004. 
+# Copyright (c) Members of the EGEE Collaboration. 2004.
 # See http://www.eu-egee.org/partners/ for details on the copyright
-# holders.  
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0 
-# 
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
+# holders.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 # limitations under the License.
 #
 
@@ -56,7 +56,7 @@ getwn=""
 getcreamport=""
 
 usedBLParser="no"
-   
+
 srvfound=""
 
 BLClient="${blah_bin_directory}/BLClient"
@@ -65,7 +65,7 @@ BLClient="${blah_bin_directory}/BLClient"
 # Parse parameters
 ###############################################################
 
-while getopts "wn" arg 
+while getopts "wn" arg
 do
     case "$arg" in
     w) getwn="yes" ;;
@@ -124,7 +124,7 @@ for  reqfull in $pars ; do
      reqfull=${reqfull:4}
      requested=`echo $reqfull | sed -e 's/^.*\///'`
      datenow=`echo $reqfull | sed 's/\/.*//'`
-		     
+
      if [ "x$lsf_nologaccess" == "xyes" ]; then
 
         staterr=/tmp/${requested}_staterr
@@ -139,7 +139,7 @@ BEGIN {
 /Job </ {
     current_job = substr($0, index($0, "<")+1)
     current_job = substr(current_job, 1, index(current_job, ">") -1)
-    
+
     print "[BatchJobId=\"" current_job "\";"
 }
 
@@ -152,31 +152,31 @@ BEGIN {
 
 /Starting / { jobstatus = 2 }
 
-/Signal <KILL>/ { 
-                 jobstatus = 3 
+/Signal <KILL>/ {
+                 jobstatus = 3
 		 exit
 		 }
 
-/Done successfully/ { 
+/Done successfully/ {
                     jobstatus = 4
 		    exitcode = 0
 		    exit
 		    }
 
-/Exited with exit code/ { 
+/Exited with exit code/ {
                          jobstatus = 4
-		         exitcode = substr($0, index($0, ".")-4) 
+		         exitcode = substr($0, index($0, ".")-4)
 		         exitcode = substr(exitcode, index(exitcode, ".")-1, index(exitcode, " ")-2)
-			 exit 
+			 exit
 		        }
 /Suspended/ { suspended = 1 }
 
 /resumed/ { suspended = 0 }
 
 
-END {        
+END {
 	if (jobstatus == 0) { exit 1 }
-	if (suspended == 1) {jobstatus=5} 
+	if (suspended == 1) {jobstatus=5}
 	if (jobstatus == 2 || jobstatus == 4) {
 		print "WorkerNode=\"" current_wn "\";"
 	}
@@ -194,7 +194,7 @@ END {
 `
         errout=`cat $staterr`
 	rm -f $staterr 2>/dev/null
-	
+
         if [ -z "$errout" ] ; then
                 echo "0"$result
                 retcode=0
@@ -205,11 +205,11 @@ END {
 
 
      else
-		
+
 	result=""
 	cliretcode=0
 	if [ "x$lsf_BLParser" == "xyes" ] ; then
-    
+
 		usedBLParser="yes"
 		result=`echo $reqfull| $BLClient -a $lsf_BLPserver -p $lsf_BLPport`
     		cliretcode=$?
@@ -220,7 +220,7 @@ END {
                         cliretcode=0
                 fi
 	fi
-	
+
         if [ "$cliretcode" == "1" -a "x$lsf_fallback" == "xno" ] ; then
          echo "1ERROR: not able to talk with logparser on ${lsf_BLPserver}:${lsf_BLPport}"
          exit 0
@@ -281,7 +281,7 @@ BEGIN {
  	rex_uhold    = "\"JOB_STATUS\" \"[0-9\.]+\" [0-9]+ " jobId " 16 "
  	rex_pend     = "\"JOB_STATUS\" \"[0-9\.]+\" [0-9]+ " jobId " 1 "
 	jobstatus = 0
-	
+
 	print "["
 	print "BatchjobId = \"" jobId "\";"
 }
@@ -377,11 +377,10 @@ END {
 		if [ "x$pr_removal" == "xYes" ] ; then
         		rm -f ${proxy_dir}/${requested}.proxy 2>/dev/null
     		fi
-		usedBLParser="no"	
+		usedBLParser="no"
 	fi
 	logs=""
-	
+
      fi #close of if-else on $lsf_nologaccess
 done
 exit 0
-

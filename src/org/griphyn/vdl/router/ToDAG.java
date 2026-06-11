@@ -16,10 +16,9 @@
 package org.griphyn.vdl.router;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
@@ -27,6 +26,10 @@ import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.toolkit.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 public class ToDAG extends Toolkit {
     /** ctor: Constructs a new instance object with the given application name. */

@@ -19,12 +19,15 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class EscapeTest {
 
     @Test

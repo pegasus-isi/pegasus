@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -244,7 +245,8 @@ public class Directory extends Abstract implements TransformationCatalog {
                 String pfn = this.mURLPrefix + f.getAbsolutePath();
                 if (!f.canExecute()) {
                     mLogger.log(
-                            "Skipping file to create as a transformation since the execute bit is not set "
+                            "Skipping file to create as a transformation since the execute bit is"
+                                    + " not set "
                                     + pfn,
                             LogManager.WARNING_MESSAGE_LEVEL);
                 }
@@ -902,6 +904,7 @@ public class Directory extends Abstract implements TransformationCatalog {
             throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
+
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical
      * transformation.
@@ -1043,11 +1046,13 @@ public class Directory extends Abstract implements TransformationCatalog {
 
         if (siteStore == null) {
             throw new RuntimeException(
-                    "Site Store is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+                    "Site Store is not populated. Is required to assign the system information for"
+                            + " generated transformations out of Directory backend");
         }
         if (options == null) {
             throw new RuntimeException(
-                    "Planner Options is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+                    "Planner Options is not populated. Is required to assign the system information"
+                            + " for generated transformations out of Directory backend");
         }
 
         SysInfo result = null;

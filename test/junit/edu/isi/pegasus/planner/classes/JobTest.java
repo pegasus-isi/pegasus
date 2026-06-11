@@ -13,9 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.jupiter.api.Test;
 
 /**
  * Test class for testing creation of jobs
@@ -74,7 +76,8 @@ public class JobTest {
                 "id: ID000001\n"
                         + "name: preprocess\n"
                         + "arguments:\n"
-                        + "  [\"-a\", \"preprocess\", \"-T60\", \"-i\", \"f.a\", \"-o\", \"f.b1\", \"f.b2\"]";
+                        + "  [\"-a\", \"preprocess\", \"-T60\", \"-i\", \"f.a\", \"-o\", \"f.b1\","
+                        + " \"f.b2\"]";
 
         Job job = mapper.readValue(test, Job.class);
         assertThat(job, is(notNullValue()));

@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.planner;
 
-import java.util.Iterator;
 import org.griphyn.vdl.dax.*;
+
+import java.util.Iterator;
 
 /**
  * This class converts a given DAX into the internal representation of a graph.

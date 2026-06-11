@@ -180,7 +180,7 @@ double doubletime(struct timeval t) {
 }
 
 void now(struct timeval* t) {
-    /* purpose: capture a point in time with microsecond extension 
+    /* purpose: capture a point in time with microsecond extension
      * paramtr: t (OUT): where to store the captured time
      */
     int timeout = 0;
@@ -282,4 +282,3 @@ char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value) {
 
     return buffer;
 }
-

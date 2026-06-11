@@ -41,7 +41,7 @@
    <job id="j1" namespace="pegasus" name="preprocess" version="4.0">
       <!-- <argument></argument> -->
       <metadata key="time">60</metadata>
-     
+
       <uses name="f.a" link="input">
          <metadata key="size">1024</metadata>
       </uses>
@@ -51,7 +51,7 @@
       <invoke when="at_end">/pegasus/libexec/notification/email -t notify@example.com</invoke>
    </job>
    <job id="j2" namespace="pegasus" name="findrange" version="4.0">
-     <argument></argument> 
+     <argument></argument>
      <metadata key="time">60</metadata>
       <uses name="f.b1" link="input"/>
       <uses name="f.c1" link="output" transfer="true" register="true"/>
@@ -59,7 +59,7 @@
       <invoke when="at_end">/pegasus/libexec/notification/email -t notify@example.com</invoke>
    </job>
    <job id="j3" namespace="pegasus" name="findrange" version="4.0">
-     <argument>-a findrange -T 60 -i <file name="f.b2"/> -o <file name="f.c2"/></argument> 
+     <argument>-a findrange -T 60 -i <file name="f.b2"/> -o <file name="f.c2"/></argument>
      <metadata key="time">60</metadata>
       <uses name="f.b2" link="input"/>
       <uses name="f.c2" link="output" transfer="true" register="true"/>
@@ -67,7 +67,7 @@
       <invoke when="at_end">/pegasus/libexec/notification/email -t notify@example.com</invoke>
    </job>
     <job id="j4" namespace="pegasus" name="analyze" version="4.0">
-      
+
       <argument>-a analyze -T 60 -i<file name="f.c1"/>,<file name="f.c2"/> -o<file name="f.d"/></argument>
       <metadata key="time">60</metadata>
       <uses name="f.c1" link="input"/>
@@ -78,7 +78,7 @@
    </job>
    <job id="j5" namespace="ligo" name="inspiral-full-data" version="4.0">
 
-     
+
       <argument>--frame-files --V1:<file name="V-HrecV2-967640000-10000.gwf"/> --L1:<file name="L-L1_LDAS_C02_L2-967648128-128.gwf"/> --L1:<file name="L-L1_LDAS_C02_L2-967648256-128.gwf"/> --output <file name="V1H1L1-INSPIRAL_FULL_DATA_JOB0-967648572-1105.xml.gz"/> --bank-file <file name="H1L1V1-PREGEN_TMPLTBANK_SPLITTABLE_BANK0-967593543-86400.xml.gz"/> --user-tag FULL_DATA</argument>
       <metadata key="time">60</metadata>
    </job>

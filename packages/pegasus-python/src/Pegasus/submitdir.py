@@ -43,8 +43,7 @@ class MasterDatabase:
         if submit_dir:
             q = q.where(MasterWorkflow.submit_dir == submit_dir)
 
-        wf = self.session.execute(q).scalars().first()
-        return wf
+        return self.session.execute(q).scalars().first()
 
     def get_master_workflow_for_submitdir(self, submitdir):
         q = select(MasterWorkflow).where(MasterWorkflow.submit_dir == submitdir)
@@ -86,7 +85,7 @@ class WorkflowDatabase:
 
         # If not found, do nothing
         if w is None:
-            log.warning("Workflow not found in workflow DB: %s" % wf_uuid)
+            log.warning(f"Workflow not found in workflow DB: {wf_uuid}")
             return
 
         # Delete it
@@ -116,9 +115,9 @@ class WorkflowDatabase:
             .scalars()
             .all()
         ):
-            log.info("Old submit dir: %s" % wf.submit_dir)
+            log.info(f"Old submit dir: {wf.submit_dir}")
             wf.submit_dir = wf.submit_dir.replace(src, dest)
-            log.info("New submit dir: %s" % wf.submit_dir)
+            log.info(f"New submit dir: {wf.submit_dir}")
 
 
 class SubmitDir:
@@ -132,7 +131,7 @@ class SubmitDir:
             if raise_err is False:
                 return
 
-            raise SubmitDirException("Invalid submit dir: %s" % submitdir)
+            raise SubmitDirException(f"Invalid submit dir: {submitdir}")
 
         self.braindump_file = os.path.join(self.submitdir, "braindump.yml")
         if not os.path.isfile(self.braindump_file):
@@ -285,11 +284,11 @@ class SubmitDir:
         dest = os.path.abspath(dest)
 
         if os.path.isfile(dest):
-            raise SubmitDirException("Destination is a file: %s" % dest)
+            raise SubmitDirException(f"Destination is a file: {dest}")
 
         if os.path.isdir(dest):
             if os.path.exists(os.path.join(dest, "braindump.txt")):
-                raise SubmitDirException("Destination is a submit dir: %s" % dest)
+                raise SubmitDirException(f"Destination is a submit dir: {dest}")
             dest = os.path.join(dest, os.path.basename(self.submitdir))
 
         # Verify that we aren't trying to move a subworkflow
@@ -320,14 +319,14 @@ class SubmitDir:
             # Update the master db's db_url
             # Note that this will only update the URL if it is an sqlite file
             # located in the submitdir
-            log.info("Old master db_url: %s" % wf.db_url)
+            log.info(f"Old master db_url: {wf.db_url}")
             wf.db_url = db_url.replace(self.submitdir, dest)
-            log.info("New master db_url: %s" % wf.db_url)
+            log.info(f"New master db_url: {wf.db_url}")
 
             # Change the master db's submit_dir
-            log.info("Old master submit_dir: %s" % wf.submit_dir)
+            log.info(f"Old master submit_dir: {wf.submit_dir}")
             wf.submit_dir = dest
-            log.info("New master submit_dir: %s" % wf.submit_dir)
+            log.info(f"New master submit_dir: {wf.submit_dir}")
 
         # Update the ensemble record if one exists
         ew = mdb.get_ensemble_workflow(self.wf_uuid)
@@ -537,7 +536,7 @@ class SubmitDir:
             # Connect to master database
             home = expanduser("~")
             mdbsession = connection.connect(
-                "sqlite:///%s/.pegasus/workflow.db" % home,
+                f"sqlite:///{home}/.pegasus/workflow.db",
                 db_type=connection.DBType.MASTER,
             )
             mdb = MasterDatabase(mdbsession)
@@ -546,33 +545,21 @@ class SubmitDir:
                 if wf_uuid is None:
                     wfs = mdb.get_master_workflow_for_submitdir(self.submitdir)
                     if wfs:
-                        msg = (
-                            "Invalid submit dir: %s, Specify --wf-uuid <WF_UUID> to detach\n"
-                            % self.submitdir
-                        )
+                        msg = f"Invalid submit dir: {self.submitdir}, Specify --wf-uuid <WF_UUID> to detach\n"
                         msg += (
                             "\tWorkflow UUID, DAX Label, Submit Hostname, Submit Dir.\n"
                         )
                         for wf in wfs:
-                            msg += "\t{}, {}, {}, {}\n".format(
-                                wf.wf_uuid,
-                                wf.dax_label,
-                                wf.submit_hostname,
-                                wf.submit_dir,
-                            )
+                            msg += f"\t{wf.wf_uuid}, {wf.dax_label}, {wf.submit_hostname}, {wf.submit_dir}\n"
                         raise SubmitDirException(msg)
 
-                    else:
-                        raise SubmitDirException(
-                            "Invalid submit dir: %s" % self.submitdir
-                        )
+                    raise SubmitDirException(f"Invalid submit dir: {self.submitdir}")
 
-                else:
-                    # Delete
-                    mdb.delete_master_workflow(wf_uuid, submit_dir=self.submitdir)
+                # Delete
+                mdb.delete_master_workflow(wf_uuid, submit_dir=self.submitdir)
 
-                    # Update the master db
-                    mdbsession.commit()
+                # Update the master db
+                mdbsession.commit()
 
             finally:
                 mdbsession.close()

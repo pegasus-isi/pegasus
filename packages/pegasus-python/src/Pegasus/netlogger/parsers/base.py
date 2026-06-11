@@ -57,8 +57,7 @@ def getGuid(*strings):
     for s in strings:
         m5.update(s)
     t = m5.hexdigest()
-    guid = f"{t[:8]}-{t[8:12]}-{t[12:16]}-{t[16:20]}-{t[20:]}"
-    return guid
+    return f"{t[:8]}-{t[8:12]}-{t[12:16]}-{t[16:20]}-{t[20:]}"
 
 
 def autoParseValue(vstr):
@@ -117,7 +116,7 @@ class BPError(ValueError):
         self.msg = msg
 
     def __str__(self):
-        return "Parser error on line %i: %s" % (self.lineno, self.msg)
+        return f"Parser error on line {self.lineno:d}: {self.msg}"
 
 
 class BPValidationError(BPError):
@@ -345,8 +344,7 @@ class BaseParser(ProcessInterface, DoesLogging):
     def getFilename(self):
         if self._infile:
             return self._infile.name
-        else:
-            return ""
+        return ""
 
     def getOffset(self):
         """Return the offset of the last entirely parsed line.
@@ -454,8 +452,7 @@ class BaseParser(ProcessInterface, DoesLogging):
         # return the item
         if item is None:
             return None
-        else:
-            return self._result(item)
+        return self._result(item)
 
     def _read_line(self):
         """Read one line."""
@@ -537,8 +534,7 @@ class BaseParser(ProcessInterface, DoesLogging):
             sl = s.lower()
             if sl in ("yes", "on", "true", "1"):
                 return True
-            else:
-                return False
+            return False
         return bool(s)
 
     def __str__(self):
@@ -725,4 +721,4 @@ def getTimezone(t=None):
     formatted as [+/-]HH:MM
     """
     hr, min, sign = nldate.getLocaltimeOffsetParts(t)
-    return "%s%02d:%02d" % (sign, hr, min)
+    return f"{sign}{hr:02d}:{min:02d}"

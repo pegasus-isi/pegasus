@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.selector.SiteSelector;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +70,8 @@ public class GroupTest {
         assertThat(
                 mSelector.description(),
                 is(
-                        "Site selector doing clustering on the basis of key group in pegasus namespace"));
+                        "Site selector doing clustering on the basis of key group in pegasus"
+                                + " namespace"));
     }
 
     @Test

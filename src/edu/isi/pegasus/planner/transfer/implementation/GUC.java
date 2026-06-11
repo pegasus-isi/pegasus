@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -197,7 +198,8 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
         if (envs == null) {
             // cannot create default TC
             mLogger.log(
-                    "Unable to create a default entry for as could not construct necessary environment "
+                    "Unable to create a default entry for as could not construct necessary"
+                            + " environment "
                             + Separator.combine(namespace, name, version),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             // set the flag back to true

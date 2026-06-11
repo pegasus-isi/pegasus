@@ -207,10 +207,10 @@ class StampedeStatistics:
             self._root_wf_id = result.wf_id
             self._root_wf_uuid = result.wf_uuid
             self._is_root_wf = result.root_wf_id == result.wf_id
-        except orm.exc.MultipleResultsFound as e:
+        except orm.exc.MultipleResultsFound:
             self.log.error("Multiple results found for wf_uuid: %s", root_wf_uuid)
             raise
-        except orm.exc.NoResultFound as e:
+        except orm.exc.NoResultFound:
             self.log.error("No results found for wf_uuid: %s", root_wf_uuid)
             raise
 
@@ -271,10 +271,10 @@ class StampedeStatistics:
             result = self.session.execute(q).one()
             root_wf_id = result.root_wf_id
             wf_id = result.wf_id
-        except orm.exc.MultipleResultsFound as e:
+        except orm.exc.MultipleResultsFound:
             self.log.error("Multiple results found for wf_uuid: %s", wf_uuid)
             raise
-        except orm.exc.NoResultFound as e:
+        except orm.exc.NoResultFound:
             self.log.error("No results found for wf_uuid: %s", wf_uuid)
             raise
 
@@ -459,14 +459,13 @@ class StampedeStatistics:
             )
         """
         JobInstanceSubMax = orm.aliased(JobInstance)
-        sub_q = (
+        return (
             select(func.max(JobInstanceSubMax.job_submit_seq).label("max_id"))
             .where(JobInstanceSubMax.job_id == JobInstance.job_id)
             .correlate(JobInstance)
             .group_by(JobInstanceSubMax.job_id)
             .subquery()
         )
-        return sub_q
 
     def get_total_jobs_status(self):
         """
@@ -589,9 +588,7 @@ class StampedeStatistics:
         q = select(func.count(JobInstance.job_instance_id.label("last_job_instance")))
         q = q.where(JobInstance.job_id == sq_1.c.jobid)
         q = q.where(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.where(JobInstance.exitcode == 0).where(
-            JobInstance.exitcode != None
-        )  # noqa: E711
+        q = q.where(JobInstance.exitcode == 0).where(JobInstance.exitcode != None)  # noqa: E711
         return self.session.execute(q).scalar()
 
     def get_failing_jobs(self):
@@ -647,11 +644,7 @@ class StampedeStatistics:
         q = select(JobInstance.job_instance_id.label("last_job_instance"))
         q = q.where(JobInstance.job_id == sq_1.c.jobid)
         q = q.where(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.where(JobInstance.exitcode != 0).where(
-            JobInstance.exitcode != None
-        )  # noqa: E711
-
-        return q
+        return q.where(JobInstance.exitcode != 0).where(JobInstance.exitcode != None)  # noqa: E711
 
     def get_total_running_jobs_status(self):
         JobInstanceSub = orm.aliased(JobInstance, name="JobInstanceSub")
@@ -688,14 +681,13 @@ class StampedeStatistics:
         The states arg is a list of strings.
         Returns an appropriate subquery.
         """
-        q = (
+        return (
             select(Jobstate.job_instance_id)
             .where(Jobstate.job_instance_id == JobInstance.job_instance_id)
             .correlate(JobInstance)
             .where(Jobstate.state.in_(states))
             .subquery()
         )
-        return q
 
     def get_total_jobs_retries(self):
         """
@@ -795,7 +787,7 @@ class StampedeStatistics:
             .subquery()
         )
 
-        q = (
+        return (
             select(Invocation.invocation_id)
             .where(Invocation.abs_task_id != None)  # noqa: E711
             .where(Invocation.job_instance_id == sq_2.c.last_job_instance_id)
@@ -806,8 +798,6 @@ class StampedeStatistics:
         # q = self._base_task_status_query()
         # q = q.where(Invocation.exitcode == 0)
         # return session.execute(select(func.count()).select_from(q.subquery())).scalar()
-
-        return q
 
     def _base_task_statistics_query(self, success=True, pmc=False):
         w = orm.aliased(Workflow, name="w")
@@ -856,8 +846,7 @@ class StampedeStatistics:
             sq_2 = sq_2.where(Invocation.exitcode == 0)
         else:
             sq_2 = sq_2.where(Invocation.exitcode != 0)
-        sq_2 = sq_2.group_by(sq_1.c.wf_id)
-        return sq_2
+        return sq_2.group_by(sq_1.c.wf_id)
 
     def _task_statistics_query_sum(self, success=True, pmc=False):
         s = self._base_task_statistics_query(success, pmc).subquery("tt")
@@ -1117,9 +1106,7 @@ class StampedeStatistics:
 
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
-            q = q.where(
-                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
-            )  # noqa: E711
+            q = q.where(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))  # noqa: E711
 
         return self.session.execute(q).first()
 
@@ -1328,14 +1315,13 @@ class StampedeStatistics:
             col = func.max(Jobstate.timestamp)
         elif function == "min":
             col = func.min(Jobstate.timestamp)
-        sq = (
+        return (
             select(col)
             .where(Jobstate.job_instance_id == JobInstance.job_instance_id)
             .correlate(JobInstance)
             .where(Jobstate.state.in_(states))
             .scalar_subquery()
         )
-        return sq
 
     def get_job_states(self):
         """
@@ -1482,12 +1468,8 @@ class StampedeStatistics:
         q = q.where(Job.wf_id.in_(self._wfs))
         q = q.where(Job.job_id == JobInstance.job_id)
         if not all_jobs:
-            q = q.where(
-                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
-            )  # noqa: E711
-        q = q.where(JobInstance.exitcode != 0).where(
-            JobInstance.exitcode != None
-        )  # noqa: E711
+            q = q.where(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))  # noqa: E711
+        q = q.where(JobInstance.exitcode != 0).where(JobInstance.exitcode != None)  # noqa: E711
         if final:
             q = q.group_by(JobInstance.job_id)
         q = q.order_by(JobInstance.job_submit_seq)
@@ -1896,11 +1878,23 @@ class StampedeStatistics:
             # maxrss
             func.min(Invocation.maxrss).label("min_maxrss"),
             func.max(Invocation.maxrss).label("max_maxrss"),
-            cast(func.avg(Invocation.maxrss), Float,).label("avg_maxrss"),
+            cast(
+                func.avg(Invocation.maxrss),
+                Float,
+            ).label("avg_maxrss"),
             # avg_cpu
-            cast(func.min(Invocation.avg_cpu), Float,).label("min_avg_cpu"),
-            cast(func.max(Invocation.avg_cpu), Float,).label("max_avg_cpu"),
-            cast(func.avg(Invocation.avg_cpu), Float,).label("avg_avg_cpu"),
+            cast(
+                func.min(Invocation.avg_cpu),
+                Float,
+            ).label("min_avg_cpu"),
+            cast(
+                func.max(Invocation.avg_cpu),
+                Float,
+            ).label("max_avg_cpu"),
+            cast(
+                func.avg(Invocation.avg_cpu),
+                Float,
+            ).label("avg_avg_cpu"),
         )
         q = q.where(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.where(Invocation.wf_id.in_(self._wfs))
@@ -1921,12 +1915,11 @@ class StampedeStatistics:
     def _get_host_filter(self):
         if self._host_filter is None:
             return None
-        elif isinstance(self._host_filter, str):
+        if isinstance(self._host_filter, str):
             return Host.hostname == self._host_filter
-        elif isinstance(self._host_filter, type([])):
+        if isinstance(self._host_filter, type([])):
             return Host.hostname.in_(self._host_filter)
-        else:
-            return None
+        return None
 
     def _get_xform_filter(self):
         if (
@@ -1937,29 +1930,26 @@ class StampedeStatistics:
                 "Can't set both transform include and exclude - reset s.set_transformation_filter()"
             )
             return None
-        elif (
+        if (
             self._xform_filter["include"] is None
             and self._xform_filter["exclude"] is None
         ):
             return None
-        elif self._xform_filter["include"] is not None:
+        if self._xform_filter["include"] is not None:
             if isinstance(self._xform_filter["include"], str):
                 return Invocation.transformation == self._xform_filter["include"]
-            elif isinstance(self._xform_filter["include"], type([])):
+            if isinstance(self._xform_filter["include"], type([])):
                 return Invocation.transformation.in_(self._xform_filter["include"])
-            else:
-                return None
-        elif self._xform_filter["exclude"] is not None:
+            return None
+        if self._xform_filter["exclude"] is not None:
             if isinstance(self._xform_filter["exclude"], str):
                 return Invocation.transformation != self._xform_filter["exclude"]
-            elif isinstance(self._xform_filter["exclude"], type([])):
+            if isinstance(self._xform_filter["exclude"], type([])):
                 return not_(
                     Invocation.transformation.in_(self._xform_filter["exclude"])
                 )
-            else:
-                return None
-        else:
             return None
+        return None
 
     def get_invocation_by_time(self):
         """

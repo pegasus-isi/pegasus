@@ -47,5 +47,3 @@ Options
 
 **--debug**
    Enables debugging output.
-
-

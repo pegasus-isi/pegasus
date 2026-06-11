@@ -26,9 +26,11 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the CondorC style class. */
 public class CondorCTest {

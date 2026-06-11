@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -34,6 +35,7 @@ import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.ScannerException;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -538,6 +540,7 @@ public class Container implements Cloneable {
         Container c = (Container) obj;
         return this.toString().equals(c.toString());
     }
+
     /**
      * Returns textual description of object
      *

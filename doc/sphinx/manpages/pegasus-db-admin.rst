@@ -210,6 +210,3 @@ example, you should adjust them as you may like):
    net_write_timeout = 900
 
 After making these changes to my.cnf you must restart MySQL.
-
-
-

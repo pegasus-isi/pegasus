@@ -137,4 +137,3 @@ Example
 ::
 
    pegasus-sc-converter -i sites.xml -o sites.yml  -O YAML -v
-

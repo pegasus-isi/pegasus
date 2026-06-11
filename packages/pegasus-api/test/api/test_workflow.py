@@ -82,11 +82,18 @@ class Test_Use:
                 _Use(
                     File("a"), _LinkType.INPUT, stage_out=None, register_replica=False
                 ),
-                {"lfn": "a", "type": "input", "registerReplica": False,},
+                {
+                    "lfn": "a",
+                    "type": "input",
+                    "registerReplica": False,
+                },
             ),
             (
                 _Use(File("a"), _LinkType.INPUT, stage_out=None, register_replica=None),
-                {"lfn": "a", "type": "input",},
+                {
+                    "lfn": "a",
+                    "type": "input",
+                },
             ),
             (
                 _Use(
@@ -1052,7 +1059,7 @@ class TestWorkflow:
 
         try:
             wf.add_site_catalog(sc)
-        except:
+        except Exception:
             pytest.fail("should not have raised exception")
 
     def test_add_invalid_site_catalog(self):
@@ -1078,7 +1085,7 @@ class TestWorkflow:
 
         try:
             wf.add_replica_catalog(rc)
-        except:
+        except Exception:
             pytest.fail("should not have raised exception")
 
     def test_add_invalid_replica_catalog(self):
@@ -1104,7 +1111,7 @@ class TestWorkflow:
 
         try:
             wf.add_transformation_catalog(tc)
-        except:
+        except Exception:
             pytest.fail("should not have raised exception")
 
     def test_add_invalid_transformation_catalog(self):
@@ -1518,7 +1525,10 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {"lfn": "if.txt", "type": "input",},
+                                {
+                                    "lfn": "if.txt",
+                                    "type": "input",
+                                },
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
@@ -1555,7 +1565,10 @@ class TestWorkflow:
                             "file": "subwf_testID.yml",
                             "arguments": ["arg1"],
                             "uses": [
-                                {"lfn": "if.txt", "type": "input",},
+                                {
+                                    "lfn": "if.txt",
+                                    "type": "input",
+                                },
                                 {"lfn": "subwf_testID.yml", "type": "input"},
                             ],
                         }
@@ -1886,9 +1899,10 @@ class TestWorkflow:
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
 
         # create a fake temporary submit dir and braindump.yml file
-        with TemporaryDirectory() as td, (Path(td) / "braindump.yml").open(
-            "w+"
-        ) as bd_file:
+        with (
+            TemporaryDirectory() as td,
+            (Path(td) / "braindump.yml").open("w+") as bd_file,
+        ):
             yaml.dump({"user": "ryan", "submit_dir": "/submit_dir"}, bd_file)
             bd_file.seek(0)
             mocker.patch(
@@ -2101,12 +2115,10 @@ def obj():
                 self._submit_dir = None
 
             @_needs_client
-            def func_that_requires_client(self):
-                ...
+            def func_that_requires_client(self): ...
 
             @_needs_submit_dir
-            def func_that_requires_submit_dir(self):
-                ...
+            def func_that_requires_submit_dir(self): ...
 
         return Obj()
 
@@ -2129,5 +2141,5 @@ def test__needs_submit_dir(obj):
 
 
 def test__needs_submit_dir_invalid(obj):
-    with pytest.raises(PegasusError) as e:
+    with pytest.raises(PegasusError):
         obj.func_that_requires_submit_dir()

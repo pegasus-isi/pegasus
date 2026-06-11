@@ -41,15 +41,19 @@ import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RestoreSystemProperties;
 
-/** @author Karan Vahi */
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+
+/**
+ * @author Karan Vahi
+ */
 public class StageOutTest {
 
     private PegasusBag mBag;

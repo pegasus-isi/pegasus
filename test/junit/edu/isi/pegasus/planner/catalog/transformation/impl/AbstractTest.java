@@ -25,11 +25,15 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class AbstractTest {
 
     @Test

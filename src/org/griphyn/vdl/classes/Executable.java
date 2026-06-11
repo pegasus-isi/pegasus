@@ -27,16 +27,22 @@ import java.util.*;
 public class Executable {
     /** Condor vanilla universe to run unmodified jobs. */
     public static final int CONDOR_VANILLA = 0;
+
     /** Condor standard universe to run condor_compiled jobs. */
     public static final int CONDOR_STANDARD = 1;
+
     /** Condor scheduler universe to run on the submit host. */
     public static final int CONDOR_SCHEDULER = 2;
+
     /** Condor globus universe to talk to a GRAM system. */
     public static final int CONDOR_GLOBUS = 3;
+
     /** Condor PVM universe to do what? */
     public static final int CONDOR_PVM = 4;
+
     /** Condor Java universe to do what? */
     public static final int CONDOR_JAVA = 5;
+
     /** Condor MPI universe to do what? */
     public static final int CONDOR_MPI = 6;
 

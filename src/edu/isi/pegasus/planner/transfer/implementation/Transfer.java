@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;

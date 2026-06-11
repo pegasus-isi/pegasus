@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -183,7 +184,8 @@ public class Restricted extends Default {
             // none were associated with the preference pool.
             // replica not selected
             throw new RuntimeException(
-                    "Unable to select a Physical Filename (PFN) for the file with logical filename (LFN) as "
+                    "Unable to select a Physical Filename (PFN) for the file with logical filename"
+                            + " (LFN) as "
                             + lfn);
         }
 
