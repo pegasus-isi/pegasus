@@ -32,6 +32,7 @@ lives in :mod:`Pegasus.monitoring.event_output` as ``PluginHostEventSink``.
 
 import logging
 import queue
+import time
 import traceback
 from threading import Thread
 
@@ -45,6 +46,7 @@ MONITORD_PLUGIN_ENTRY_POINT_GROUP = "pegasus.monitord.plugins"
 # Per-plugin defaults (overridable via pegasus.monitord.plugins.<name>.*).
 DEFAULT_QUEUE_SIZE = 10000
 DEFAULT_JOIN_TIMEOUT = 10.0
+DEFAULT_TICK_INTERVAL = 0.0  # 0 = no ticks; the worker blocks exactly as before
 
 
 class MonitordEventPlugin:
@@ -95,6 +97,26 @@ class MonitordEventPlugin:
             unmodified, exactly as monitord produced it.
         """
 
+    def tick(self):
+        """
+        Called periodically on this plugin's dedicated background thread (the
+        same thread as :meth:`handle_event`, so the two never run concurrently
+        and shared state needs no locking).
+
+        Opt-in: ticks fire only when
+        ``pegasus.monitord.plugins.<name>.tick_interval`` is set to a positive
+        number of seconds. The cadence is *at most every interval*, not exact:
+        a tick fires when the event queue has been idle for the interval, or
+        immediately after an event when the interval has elapsed since the
+        last tick. Use it for wall-clock work that must not depend on event
+        flow (e.g. polling an external system while the workflow is quiet).
+
+        Exceptions are caught and logged exactly like :meth:`handle_event`
+        exceptions; a failing tick never kills the worker. ``tick()`` is never
+        called after the shutdown sentinel has been drained, so it cannot race
+        :meth:`stop`.
+        """
+
     def stop(self):
         """
         Called once after all events have been processed and this plugin's
@@ -123,11 +145,13 @@ class _PluginWorker:
         plugin,
         queue_size=DEFAULT_QUEUE_SIZE,
         join_timeout=DEFAULT_JOIN_TIMEOUT,
+        tick_interval=DEFAULT_TICK_INTERVAL,
     ):
         self._name = name
         self._plugin = plugin
         self._log = logging.getLogger(f"{__name__}._PluginWorker.{name}")
         self._join_timeout = join_timeout
+        self._tick_interval = tick_interval
         # queue_size <= 0 means unbounded (matches queue.Queue default)
         maxsize = queue_size if queue_size and queue_size > 0 else 0
         self._queue = queue.Queue(maxsize=maxsize)
@@ -168,25 +192,71 @@ class _PluginWorker:
                     self._dropped,
                 )
 
+    def _handle(self, event, kw):
+        try:
+            self._plugin.handle_event(event, kw)
+        except Exception:
+            # A misbehaving plugin must never kill its own thread.
+            self._log.error(
+                "plugin %r handle_event(%s) raised:\n%s",
+                self._name,
+                event,
+                traceback.format_exc(),
+            )
+
+    def _tick(self):
+        try:
+            self._plugin.tick()
+        except Exception:
+            # Same isolation contract as handle_event: a failing tick is
+            # logged, never fatal to the worker.
+            self._log.error(
+                "plugin %r tick() raised:\n%s",
+                self._name,
+                traceback.format_exc(),
+            )
+
     def _run(self):
+        interval = self._tick_interval
+        if not interval or interval <= 0:
+            # No ticks configured: block exactly as before (zero overhead).
+            while True:
+                item = self._queue.get()
+                try:
+                    if item is self._SENTINEL:
+                        return
+                    event, kw = item
+                    self._handle(event, kw)
+                finally:
+                    self._queue.task_done()
+
+        # Ticking variant. The first tick fires only after one full idle
+        # interval; thereafter at most every interval, from whichever comes
+        # first: the queue going idle, or an event completing past the mark.
+        last_tick = time.monotonic()
         while True:
-            item = self._queue.get()
+            timeout = max(0.0, interval - (time.monotonic() - last_tick))
+            try:
+                item = self._queue.get(timeout=timeout)
+            except queue.Empty:
+                # Idle path: nothing was dequeued, so no task_done().
+                self._tick()
+                last_tick = time.monotonic()
+                continue
             try:
                 if item is self._SENTINEL:
+                    # FIFO drain guarantee: both tick sites are unreachable
+                    # from here, so tick() can never follow the sentinel.
                     return
                 event, kw = item
-                try:
-                    self._plugin.handle_event(event, kw)
-                except Exception:
-                    # A misbehaving plugin must never kill its own thread.
-                    self._log.error(
-                        "plugin %r handle_event(%s) raised:\n%s",
-                        self._name,
-                        event,
-                        traceback.format_exc(),
-                    )
+                self._handle(event, kw)
             finally:
                 self._queue.task_done()
+            # Starvation guard: under continuous event flow get() never times
+            # out, so tick here once the interval has lapsed.
+            if time.monotonic() - last_tick >= interval:
+                self._tick()
+                last_tick = time.monotonic()
 
     def close(self):
         """
@@ -264,6 +334,10 @@ class MonitordPluginManager:
                 join_timeout=self._float_prop(
                     f"pegasus.monitord.plugins.{name}.join_timeout",
                     DEFAULT_JOIN_TIMEOUT,
+                ),
+                tick_interval=self._float_prop(
+                    f"pegasus.monitord.plugins.{name}.tick_interval",
+                    DEFAULT_TICK_INTERVAL,
                 ),
             )
             worker.start()
