@@ -1,9 +1,10 @@
 # monitord plugin system — payload race condition (review of #2194)
 
-**Status:** fixed
+**Status:** fixed (commit `c3d6be873`), validated in live deployments 2026-06-11/12
 **Scope:** `pegasus-monitord` entry-point plugin system added in commit `4d37e5a45`
 ("Add entry-point plugin system to pegasus-monitord (#2194)") on branch
-`monitord-plugin-system`.
+`monitord-plugin-system`. The later `tick()` addition (`2a6a23fca`) is covered in
+"Post-fix findings" below — it does not change this analysis.
 **Fix:** one-line snapshot in `_PluginWorker.submit` + a deterministic regression
 test.
 
@@ -209,16 +210,55 @@ Why this resolves it:
 `plugin.start(props)` with **no timeout** (`plugin.py:240`). Shutdown is
 hardened with `join_timeout`, but startup is not — a plugin whose `start()`
 blocks will hang monitord startup. Low severity (plugins are opt-in and
-operator-controlled, not arbitrary runtime input). Worth a doc note that
-`start()` must not block, or a startup watchdog. Left as-is for now.
+operator-controlled, not arbitrary runtime input). The user-facing docs now
+state that `start()` must not block (reference guide → Monitoring → "Event
+Plugins"); a startup watchdog is still a possible hardening. Code left as-is.
+
+## Post-fix findings (2026-06-11/12, live deployments)
+
+The plugin system + fix ran in production-like deployments (FABRIC testbed:
+HTCondor pool, apt Pegasus 5.1.2 with the three plugin files overlaid, the
+`workflow-monitor` `wfmonitor` plugin enabled) across diamond and
+containerized earthquake workflows. Payloads were clean throughout — no torn
+fields observed with the snapshot in place.
+
+**Triage warning — bogus timestamps that LOOK like this race usually aren't.**
+The field runs surfaced `jobs_init`-style records carrying small-integer
+timestamps (e.g. `539286`, `692252` — values that grew exactly with wall-clock
+time between runs). These were initially suspected to be torn payloads from
+this race, but they **survived the fix** and root-caused elsewhere:
+`pegasus-plan`'s (Java) netlogger writer stamps the `<dag>.static.bp` roster
+events (`task.info`, `job.info`, the task/job maps) with a monotonic/uptime
+clock rendered as 1970-era ISO dates (`ts=1970-01-09T00:17:32Z` ≈ node
+uptime). monitord's replay converts them faithfully
+(`utils.epochdate`, `workflow.py` static-bp loop), so plugins receive
+non-epoch `ts` values on those events — and the same artifact sits in every
+5.1.2 stampede database. When debugging "corrupted" plugin payloads, check
+the static.bp file before suspecting this race; plugin authors should treat
+`ts` values below a sane epoch bound as not-a-timestamp (the `wfmonitor`
+plugin guards with a `>= 1e9` check).
+
+**The `tick()` addition (`2a6a23fca`) does not reopen the analysis.** The
+optional idle tick runs on the *same* per-plugin worker thread as
+`handle_event` (the worker's `queue.get(timeout=…)` idle path plus a
+between-events starvation guard), so it is serialized with event handling,
+touches no event payloads, and both tick call sites are unreachable once the
+shutdown sentinel is dequeued — the FIFO drain-and-join `close()` semantics
+and the "single driver thread" reasoning above are unchanged. With
+`tick_interval` unset the worker runs the original blocking-get loop
+verbatim.
 
 ## Verification
 
 ```
 cd packages/pegasus-python
-# (dev env: PYTHONPATH over the four packages/pegasus-*/src dirs)
-pytest test/test_monitord_plugin.py -q
-# 13 passed   (12 original + test_payload_is_snapshotted_before_async_mutation)
+PYTHONPATH="../pegasus-common/src:../pegasus-api/src" uv run --no-project \
+  --with pytest,pytest-mock,click,flask,pyyaml,GitPython \
+  python -m pytest test/test_monitord_plugin.py -q
+# 15 passed, 3 skipped
+#   (12 original + test_payload_is_snapshotted_before_async_mutation
+#    + 5 tick() tests; the 3 skips are the event_output host-sink tests,
+#    which importorskip on Pegasus.db/sqlalchemy)
 ```
 
 Proof the test guards the fix: reverting `dict(kw)` → `kw` makes
