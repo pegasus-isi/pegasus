@@ -39,6 +39,7 @@ EOT
 
 echo
 echo "Converting the cwl workflow to pegasus format"
+export PEGASUS_PYTHON=`which python3`
 pegasus-cwl-converter \
     --debug \
     ./cwl/blackdiamond.cwl \
@@ -89,6 +90,7 @@ EOF
 
 echo
 echo "Planning and submitting the converted workflow"
+unset PEGASUS_PYTHON
 pegasus-plan \
     --conf pegasus.conf \
     --force \
