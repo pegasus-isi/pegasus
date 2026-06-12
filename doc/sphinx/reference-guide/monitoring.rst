@@ -175,6 +175,124 @@ in addition to default SQLite you can configure as follows:
 If you want to only override the default SQLite population, then you
 can specify the ``pegasus.catalog.workflow.url`` property.
 
+.. _monitord-event-plugins:
+
+Event Plugins
+~~~~~~~~~~~~~
+
+In addition to publishing to external endpoints, third-party Python
+packages can receive every :ref:`stampede event <stampede-wf-events>`
+**live, in-process**, by registering a plugin under the
+``pegasus.monitord.plugins`` entry-point group. Each enabled plugin runs
+on its own background thread inside ``pegasus-monitord``, fed from a
+bounded queue — no forking of monitord, no polling the stampede database
+after the fact.
+
+Plugins are doubly opt-in: a plugin runs only when it is (a) installed
+and registered under the entry-point group, **and** (b) explicitly
+enabled via properties. With no plugin properties set, monitord's
+behavior is unchanged.
+
+**Writing a plugin.** Subclass
+``Pegasus.monitoring.plugin.MonitordEventPlugin`` and override the hooks
+you need (all default to no-ops):
+
+::
+
+   from Pegasus.monitoring.plugin import MonitordEventPlugin
+
+   class MyPlugin(MonitordEventPlugin):
+
+       def start(self, props=None):
+           # Called once, on monitord's main thread, before events flow.
+           # Read your config from pegasus.monitord.plugins.<name>.* keys:
+           cfg = props.propertyset("pegasus.monitord.plugins.myplugin.", remove=True)
+           self.out = open(cfg.get("output", "events.jsonl"), "a", 1)
+
+       def handle_event(self, event, kw):
+           # Called per event on this plugin's OWN background thread.
+           # event: fully-qualified name, e.g. "stampede.job_inst.main.end"
+           # kw:    payload dict, keys use "__" separators (xwf__id, job__id)
+           self.out.write(f"{event}\n")
+
+       def tick(self):
+           # Optional wall-clock callback on the SAME worker thread (only
+           # when tick_interval is set > 0) -- e.g. poll an external system
+           # while the workflow is quiet and no events are flowing.
+           pass
+
+       def stop(self):
+           # Called once after all events are processed and the worker
+           # thread has been joined.
+           self.out.close()
+
+Register it in your package's metadata (``pyproject.toml``):
+
+::
+
+   [project.entry-points."pegasus.monitord.plugins"]
+   myplugin = "mypackage.mymodule:MyPlugin"
+
+**Enabling and configuring.** Plugins are controlled purely through
+properties (no monitord command-line options), in the
+``pegasus.monitord.plugins.<name>.*`` namespace, where ``<name>`` is the
+entry-point name:
+
+::
+
+   pegasus.monitord.plugins.myplugin.enabled        true
+   # optional host-level tuning:
+   pegasus.monitord.plugins.myplugin.queue_size     10000   # bounded event queue (default 10000)
+   pegasus.monitord.plugins.myplugin.join_timeout   10.0    # shutdown join bound, seconds (default 10)
+   pegasus.monitord.plugins.myplugin.tick_interval  5       # >0 enables tick() (default 0 = no ticks)
+   # any other key in the namespace is yours, via props.propertyset(...)
+
+**Threading and delivery contract.**
+
+-  ``start()`` and ``stop()`` run on monitord's main thread, once each;
+   ``handle_event()`` and ``tick()`` run on the plugin's own dedicated
+   thread, so they never race each other and shared plugin state needs
+   no locking. ``start()`` must not block — it runs synchronously inside
+   monitord startup.
+
+-  Events are delivered to a single plugin **in order**; different
+   plugins (and monitord's own database writer) run concurrently. Do not
+   assume an event has been committed to the stampede database by the
+   time you observe it.
+
+-  Each plugin receives its **own snapshot** of the event payload, taken
+   at enqueue time — producer-side reuse of payload dicts and other
+   plugins' mutations cannot tear it.
+
+-  Delivery is **best-effort**: the queue is bounded
+   (drop-on-overflow, counted and logged), workers are daemon threads,
+   and shutdown joins are bounded by ``join_timeout``. A plugin that
+   raises, wedges, or falls behind is isolated and logged; it never
+   blocks, grows, or kills monitord.
+
+-  A single monitord may process a root workflow and its sub-workflows;
+   demultiplex on the ``xwf__id`` / ``root__xwf__id`` payload keys if
+   you keep per-workflow state.
+
+-  With ``tick_interval`` set, ``tick()`` fires **at most every
+   interval** — when the event queue has been idle that long, or right
+   after an event once the interval has elapsed — and never after
+   shutdown begins. It is the supported way to do wall-clock work (e.g.
+   polling an external service) without a thread of your own.
+
+**Payload caveat.** The roster events replayed from the planner's
+``<dag>.static.bp`` file (``task.info``, ``job.info``, and the task/job
+maps) can carry non-wall-clock ``ts`` values (1970-era stamps from the
+planner's netlogger writer). Treat ``ts`` values below a sane epoch
+bound as not-a-timestamp rather than folding them into time-tracking
+state.
+
+A complete production example is the ``wfmonitor`` plugin in
+`workflow-monitor <https://github.com/pegasus-isi/workflow-monitor>`__
+(``src/workflow_monitor/monitord_plugin.py``), which translates the live
+event stream into its native JSONL records and uses ``tick()`` to poll
+HTCondor alongside.
+
 .. _stampede-schema-overview:
 
 Overview of the Workflow Database Schema.
