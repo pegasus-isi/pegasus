@@ -10,7 +10,7 @@ from pathlib import Path
 from authlib.jose import JsonWebKey
 import json
 from io import BytesIO
-import os
+import os 
 
 # Module-level credential globals; set by load_sflapi_client_secret() or
 # injected externally (e.g. from sfapi_submit.sh inline Python).
@@ -106,9 +106,16 @@ def download_file(source, destination):
         if not remote_file.is_file():
             raise SfApiHelperError(f"File not found on remote: {source}")
         buffer = remote_file.download()
-        with open(destination, 'w') as f:
-            shutil.copyfileobj(buffer, f)
-            print(f"Downloaded {os.path.abspath(destination)}")
+
+        if isinstance(buffer, BytesIO):
+            with open(destination, "wb") as f:
+                f.write(buffer.getbuffer())
+            print(f"Downloaded Binary File: {os.path.abspath(destination)}")
+        else:
+            # StringIO
+            with open(destination, 'w') as f:
+                shutil.copyfileobj(buffer, f)
+                print(f"Downloaded File: {os.path.abspath(destination)}")
 
 def download_job_outputs(blahp_job_id):
     """
