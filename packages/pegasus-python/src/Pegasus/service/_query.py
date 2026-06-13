@@ -34,6 +34,8 @@ UNARY_OPERATORS = {
 
 BUILTINS = {"None": None}
 
+ALLOWED_COLUMN_METHODS = frozenset({"like", "ilike"})
+
 
 class InvalidQueryError(Exception):
     pass
@@ -66,7 +68,8 @@ def query_parse(clause, **symbols):
         - >=
         - in
 
-    Supported Functions
+    Supported Functions (only these may be called, and only as a method on a
+    column identifier, e.g. ``user.name.like('%foo%')``)
         - like
         - ilike
 
@@ -158,19 +161,14 @@ class _QueryEvaluator(ast.NodeVisitor):
     # Identifiers
     def visit_Attribute(self, n):
         self._log.info("Attribute <%s> <%s>", n.value, n.attr)
+        if n.attr.startswith("_"):
+            raise InvalidQueryError(
+                f"Invalid attribute <{n.attr}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
+            )
         value = self.visit(n.value)
         if isinstance(value, dict):
             return value[n.attr]
         return getattr(value, n.attr)
-
-    def visit_Subscript(self, n):
-        self._log.info("Subscript <%s> <%s>", n.value, n.slice)
-        value = self.visit(n.value)
-        slice = self.visit(n.slice)
-        return value[slice]
-
-    def visit_Index(self, n):
-        return self.visit(n.value)
 
     def visit_keyword(self, n):
         return {n.arg: n.value}
@@ -210,7 +208,14 @@ class _QueryEvaluator(ast.NodeVisitor):
         return {self.visit(n) for n in n.elts}
 
     def visit_Call(self, n):
-        args = []
+        if (
+            not isinstance(n.func, ast.Attribute)
+            or n.func.attr not in ALLOWED_COLUMN_METHODS
+        ):
+            raise InvalidQueryError(
+                f"Invalid function call at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
+            )
+
         try:
             func = self.visit(n.func)
         except AttributeError:
@@ -219,7 +224,7 @@ class _QueryEvaluator(ast.NodeVisitor):
             )
 
         # Args
-        args.extend([self.visit(a) for a in n.args])
+        args = [self.visit(a) for a in n.args]
 
         # Keyword Args
         kwargs = {}

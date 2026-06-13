@@ -301,6 +301,34 @@ class TestStampedeWorkflowMetaQueries(NoAuthFlaskTestCase):
         assert len(metas["records"]) == 1
         assert metas["records"][0]["value"] == "test"
 
+    @pytest.mark.parametrize(
+        "clause",
+        [
+            # Original published exploit chain.
+            "wm.__init__.__globals__['__builtins__']['__import__']('os').system('id')",
+            # Dunder traversal.
+            "wm.__class__ == 1",
+            "wm.wf_id.__class__ == 1",
+            # Subscripting is no longer supported.
+            "wm.wf_id['x'] == 1",
+            # Calls other than like/ilike are rejected.
+            "wm.metadata.create_all()",
+            # Bare-name (constructor) call.
+            "r() == 1",
+            # __call__ bypass attempt.
+            "wm.wf_id.like.__call__(2)",
+            "wm.__init__.__globals__['__builtins__']['__import__']('os').system('id')",
+        ],
+    )
+    def test_malicious_queries_rejected(self, cli, clause):
+        rv = cli.get_context(
+            f"/api/v1/user/{self.user}/root/1/workflow/1/meta?query={clause}",
+            pre_callable=self.pre_callable,
+        )
+
+        assert rv.status_code == 400
+        assert rv.content_type.lower() == "application/json"
+
 
 class TestStampedeWorkflowFilesQueries(NoAuthFlaskTestCase):
     def test_get_workflow_files(self, cli):
