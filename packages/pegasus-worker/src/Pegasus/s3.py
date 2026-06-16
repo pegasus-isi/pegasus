@@ -557,8 +557,7 @@ def cp(args):
 
         if can_create:
             s3.create_bucket(
-                Bucket=dest.bucket,
-                **get_create_bucket_configuration(region_name),
+                Bucket=dest.bucket, **get_create_bucket_configuration(region_name),
             )
 
     # ensure that none of the keys in srcs exist in dest
@@ -643,8 +642,7 @@ def mkdir(args):
 
     if can_create:
         s3.create_bucket(
-            Bucket=uri.bucket,
-            **get_create_bucket_configuration(region_name),
+            Bucket=uri.bucket, **get_create_bucket_configuration(region_name),
         )
     else:
         log.warning(
@@ -828,8 +826,7 @@ def put(args):
 
         if can_create:
             s3.create_bucket(
-                Bucket=uri.bucket,
-                **get_create_bucket_configuration(region_name),
+                Bucket=uri.bucket, **get_create_bucket_configuration(region_name),
             )
 
     if not args.force:
