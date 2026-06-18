@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This package is distributed in two ways:
 
 1. **Merged into the `pegasus-wms` wheel** via CMake `install(DIRECTORY)` — so `pegasus transfer`, `pegasus s3`, etc. work after `pip install pegasus-wms`.
-2. **Bundled into the self-contained worker tarball** (`pegasus-worker-VERSION-PLATFORM.tar.gz`) via `make build-worker` — staged to remote execution nodes by the planner at runtime.
+1. **Bundled into the self-contained worker tarball** (`pegasus-worker-VERSION-PLATFORM.tar.gz`) via `make build-worker` — staged to remote execution nodes by the planner at runtime.
 
 ## Build and Test Commands
 

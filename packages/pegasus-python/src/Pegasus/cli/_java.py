@@ -55,9 +55,8 @@ def find_java():
                 try:
                     result = subprocess.run(
                         [java_home_cmd, "-version", "1.8+"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        universal_newlines=True,
+                        capture_output=True,
+                        text=True,
                     )
                     if result.returncode == 0 and result.stdout.strip():
                         java_home = result.stdout.strip()
@@ -122,9 +121,8 @@ def compute_heap_args():
         try:
             result = subprocess.run(
                 ["/usr/sbin/sysctl", "-n", "hw.memsize"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
+                capture_output=True,
+                text=True,
             )
             if result.returncode == 0:
                 mem_bytes = int(result.stdout.strip())
@@ -200,8 +198,7 @@ def get_pegasus_data_dir():
         candidate = candidate.parent
 
     raise click.ClickException(
-        "Cannot locate Pegasus data directory. "
-        "Ensure Pegasus is properly installed."
+        "Cannot locate Pegasus data directory. Ensure Pegasus is properly installed."
     )
 
 
@@ -220,9 +217,7 @@ def get_java_dir():
         if java_dir.is_dir():
             return java_dir
 
-    raise click.ClickException(
-        f"Cannot locate Java JARs directory under {data_dir}"
-    )
+    raise click.ClickException(f"Cannot locate Java JARs directory under {data_dir}")
 
 
 def get_schema_dir():
@@ -233,9 +228,7 @@ def get_schema_dir():
         if candidate.is_dir():
             return candidate
 
-    raise click.ClickException(
-        f"Cannot locate schema directory under {data_dir}"
-    )
+    raise click.ClickException(f"Cannot locate schema directory under {data_dir}")
 
 
 def build_classpath():
