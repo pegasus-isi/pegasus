@@ -118,6 +118,10 @@ forced-separate = ["Pegasus"]
 
 pythonpath = ["src"]
 testpaths = ["test"]
+filterwarnings = [
+    "ignore:unclosed database:ResourceWarning",
+    "ignore:Enable tracemalloc:ResourceWarning",
+]
 
 
 [tool.coverage.run]

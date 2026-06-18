@@ -8,7 +8,6 @@ Python CLI scripts delegate via runpy so their own option parsing and help
 text remain intact.  Java tools delegate to _java.run_java_tool().
 """
 
-import importlib.util
 import os
 import runpy
 import sys
@@ -18,8 +17,7 @@ import click
 
 _CLI_DIR = Path(__file__).parent
 _WORKER_CLI_DIR = (
-    _CLI_DIR.parent.parent.parent.parent.parent  # packages/pegasus-python/
-    .parent  # packages/
+    _CLI_DIR.parent.parent.parent.parent  # packages/
     / "pegasus-worker"
     / "src"
     / "Pegasus"
@@ -94,41 +92,191 @@ def cli():
 
 
 # Python subcommands
-cli.add_command(_script_cmd("analyzer", "pegasus-analyzer", "Analyze a Pegasus workflow"), name="analyzer")
-cli.add_command(_script_cmd("config", "pegasus-config", "Print Pegasus installation configuration"), name="config")
-cli.add_command(_script_cmd("cwl-converter", "pegasus-cwl-converter", "Convert CWL workflows to Pegasus format"), name="cwl-converter")
-cli.add_command(_script_cmd("dagman", "pegasus-dagman", "Run DAGMan for a Pegasus workflow"), name="dagman")
-cli.add_command(_script_cmd("db-admin", "pegasus-db-admin", "Administer the Pegasus workflow database"), name="db-admin")
+cli.add_command(
+    _script_cmd("analyzer", "pegasus-analyzer", "Analyze a Pegasus workflow"),
+    name="analyzer",
+)
+cli.add_command(
+    _script_cmd("config", "pegasus-config", "Print Pegasus installation configuration"),
+    name="config",
+)
+cli.add_command(
+    _script_cmd(
+        "cwl-converter",
+        "pegasus-cwl-converter",
+        "Convert CWL workflows to Pegasus format",
+    ),
+    name="cwl-converter",
+)
+cli.add_command(
+    _script_cmd("dagman", "pegasus-dagman", "Run DAGMan for a Pegasus workflow"),
+    name="dagman",
+)
+cli.add_command(
+    _script_cmd(
+        "db-admin", "pegasus-db-admin", "Administer the Pegasus workflow database"
+    ),
+    name="db-admin",
+)
 cli.add_command(_script_cmd("em", "pegasus-em", "Ensemble manager"), name="em")
-cli.add_command(_script_cmd("exitcode", "pegasus-exitcode", "Set job exit codes in the workflow"), name="exitcode")
-cli.add_command(_script_cmd("graphviz", "pegasus-graphviz", "Generate a Graphviz diagram of a workflow"), name="graphviz")
-cli.add_command(_script_cmd("init", "pegasus-init", "Initialize a Pegasus workflow"), name="init")
-cli.add_command(_script_cmd("metadata", "pegasus-metadata", "Query workflow metadata"), name="metadata")
-cli.add_command(_script_cmd("monitord", "pegasus-monitord", "Pegasus monitoring daemon"), name="monitord")
-cli.add_command(_script_cmd("preflight-check", "pegasus-preflight-check", "Check Pegasus runtime requirements"), name="preflight-check")
-cli.add_command(_script_cmd("remove", "pegasus-remove", "Remove a running Pegasus workflow"), name="remove")
-cli.add_command(_script_cmd("run", "pegasus-run", "Submit a planned workflow for execution"), name="run")
-cli.add_command(_script_cmd("service", "pegasus-service", "Start the Pegasus dashboard service"), name="service")
-cli.add_command(_script_cmd("statistics", "pegasus-statistics", "Generate workflow statistics"), name="statistics")
-cli.add_command(_script_cmd("status", "pegasus-status", "Show workflow execution status"), name="status")
-cli.add_command(_script_cmd("submitdir", "pegasus-submitdir", "Manage workflow submit directories"), name="submitdir")
+cli.add_command(
+    _script_cmd("exitcode", "pegasus-exitcode", "Set job exit codes in the workflow"),
+    name="exitcode",
+)
+cli.add_command(
+    _script_cmd(
+        "graphviz", "pegasus-graphviz", "Generate a Graphviz diagram of a workflow"
+    ),
+    name="graphviz",
+)
+cli.add_command(
+    _script_cmd("init", "pegasus-init", "Initialize a Pegasus workflow"), name="init"
+)
+cli.add_command(
+    _script_cmd("metadata", "pegasus-metadata", "Query workflow metadata"),
+    name="metadata",
+)
+cli.add_command(
+    _script_cmd("monitord", "pegasus-monitord", "Pegasus monitoring daemon"),
+    name="monitord",
+)
+cli.add_command(
+    _script_cmd(
+        "preflight-check",
+        "pegasus-preflight-check",
+        "Check Pegasus runtime requirements",
+    ),
+    name="preflight-check",
+)
+cli.add_command(
+    _script_cmd("remove", "pegasus-remove", "Remove a running Pegasus workflow"),
+    name="remove",
+)
+cli.add_command(
+    _script_cmd("run", "pegasus-run", "Submit a planned workflow for execution"),
+    name="run",
+)
+cli.add_command(
+    _script_cmd("service", "pegasus-service", "Start the Pegasus dashboard service"),
+    name="service",
+)
+cli.add_command(
+    _script_cmd("statistics", "pegasus-statistics", "Generate workflow statistics"),
+    name="statistics",
+)
+cli.add_command(
+    _script_cmd("status", "pegasus-status", "Show workflow execution status"),
+    name="status",
+)
+cli.add_command(
+    _script_cmd("submitdir", "pegasus-submitdir", "Manage workflow submit directories"),
+    name="submitdir",
+)
 
 # Worker subcommands (scripts live in packages/pegasus-worker/)
-cli.add_command(_script_cmd("transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow", worker=True), name="transfer")
-cli.add_command(_script_cmd("s3", "pegasus-s3", "Interact with S3 storage", worker=True), name="s3")
-cli.add_command(_script_cmd("integrity", "pegasus-integrity", "Check file integrity for a workflow", worker=True), name="integrity")
-cli.add_command(_script_cmd("checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow", worker=True), name="checkpoint")
-cli.add_command(_script_cmd("globus-online", "pegasus-globus-online", "Transfer files via Globus Online", worker=True), name="globus-online")
-cli.add_command(_script_cmd("globus-online-init", "pegasus-globus-online-init", "Initialize Globus Online credentials", worker=True), name="globus-online-init")
+cli.add_command(
+    _script_cmd(
+        "transfer",
+        "pegasus-transfer",
+        "Transfer files for a Pegasus workflow",
+        worker=True,
+    ),
+    name="transfer",
+)
+cli.add_command(
+    _script_cmd("s3", "pegasus-s3", "Interact with S3 storage", worker=True), name="s3"
+)
+cli.add_command(
+    _script_cmd(
+        "integrity",
+        "pegasus-integrity",
+        "Check file integrity for a workflow",
+        worker=True,
+    ),
+    name="integrity",
+)
+cli.add_command(
+    _script_cmd(
+        "checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow", worker=True
+    ),
+    name="checkpoint",
+)
+cli.add_command(
+    _script_cmd(
+        "globus-online",
+        "pegasus-globus-online",
+        "Transfer files via Globus Online",
+        worker=True,
+    ),
+    name="globus-online",
+)
+cli.add_command(
+    _script_cmd(
+        "globus-online-init",
+        "pegasus-globus-online-init",
+        "Initialize Globus Online credentials",
+        worker=True,
+    ),
+    name="globus-online-init",
+)
 
 # Java subcommands
-cli.add_command(_java_cmd("plan", "edu.isi.pegasus.planner.client.CPlanner", "Plan a Pegasus workflow from a DAX"), name="plan")
-cli.add_command(_java_cmd("version", "edu.isi.pegasus.planner.client.VersionNumber", "Print Pegasus version"), name="version")
-cli.add_command(_java_cmd("rc-client", "edu.isi.pegasus.planner.client.RCClient", "Interact with the Replica Catalog"), name="rc-client")
-cli.add_command(_java_cmd("rc-converter", "edu.isi.pegasus.planner.client.RCConverter", "Convert Replica Catalog format"), name="rc-converter")
-cli.add_command(_java_cmd("tc-converter", "edu.isi.pegasus.planner.client.TCConverter", "Convert Transformation Catalog format"), name="tc-converter")
-cli.add_command(_java_cmd("sc-converter", "edu.isi.pegasus.planner.client.SCClient", "Convert Site Catalog format"), name="sc-converter")
-cli.add_command(_java_cmd("aws-batch", "edu.isi.pegasus.aws.batch.client.PegasusAWSBatch", "Run workflows on AWS Batch"), name="aws-batch")
+cli.add_command(
+    _java_cmd(
+        "plan",
+        "edu.isi.pegasus.planner.client.CPlanner",
+        "Plan a Pegasus workflow from a DAX",
+    ),
+    name="plan",
+)
+cli.add_command(
+    _java_cmd(
+        "version",
+        "edu.isi.pegasus.planner.client.VersionNumber",
+        "Print Pegasus version",
+    ),
+    name="version",
+)
+cli.add_command(
+    _java_cmd(
+        "rc-client",
+        "edu.isi.pegasus.planner.client.RCClient",
+        "Interact with the Replica Catalog",
+    ),
+    name="rc-client",
+)
+cli.add_command(
+    _java_cmd(
+        "rc-converter",
+        "edu.isi.pegasus.planner.client.RCConverter",
+        "Convert Replica Catalog format",
+    ),
+    name="rc-converter",
+)
+cli.add_command(
+    _java_cmd(
+        "tc-converter",
+        "edu.isi.pegasus.planner.client.TCConverter",
+        "Convert Transformation Catalog format",
+    ),
+    name="tc-converter",
+)
+cli.add_command(
+    _java_cmd(
+        "sc-converter",
+        "edu.isi.pegasus.planner.client.SCClient",
+        "Convert Site Catalog format",
+    ),
+    name="sc-converter",
+)
+cli.add_command(
+    _java_cmd(
+        "aws-batch",
+        "edu.isi.pegasus.aws.batch.client.PegasusAWSBatch",
+        "Run workflows on AWS Batch",
+    ),
+    name="aws-batch",
+)
 
 
 # ── halt (was a shell script) ────────────────────────────────────────────────
@@ -220,8 +368,7 @@ def _do_configure_glite(argv: list) -> None:
     def _condor_val(key: str) -> str:
         result = subprocess.run(
             ["condor_config_val", key],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
         )
         return result.stdout.strip() if result.returncode == 0 else ""

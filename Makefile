@@ -3,10 +3,14 @@ CMAKE       ?= cmake
 BUILD_DIR   ?= _cmake_build
 WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
 
-.PHONY: build dev build-c build-java build-worker clean clean-java clean-c clean-worker help
+# Derive tox environment name from the active Python (e.g. py313)
+PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
+
+.PHONY: build dev build-c build-java build-worker clean clean-java clean-c clean-worker \
+        test test-python test-c help
 
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
-build:
+build: build-worker
 	$(PYTHON) -m build
 
 # Editable (development) install.
@@ -68,6 +72,42 @@ clean:
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true
 
+# Run all tests (Python + C).  C tests require `make build-c` to have been run first.
+test: test-python test-c
+
+# Run Python test suites for all four packages via tox.
+# Each package manages its own virtualenv; no prior install needed.
+test-python:
+	cd packages/pegasus-common && tox -e $(PY_VERSION)
+	cd packages/pegasus-api    && tox -e $(PY_VERSION)
+	cd packages/pegasus-worker && tox -e $(PY_VERSION)
+	cd packages/pegasus-python && tox -e $(PY_VERSION)
+
+# Run C integration tests.
+# kickstart tests require: make build-c  (populates $(BUILD_DIR)/packages/pegasus-kickstart/)
+# mpi-cluster tests require: mpicxx in PATH and make build-c with -DPEGASUS_BUILD_MPI=ON
+test-c:
+	@if [ -d "$(BUILD_DIR)/packages/pegasus-kickstart" ]; then \
+		echo "--- pegasus-kickstart tests ---"; \
+		_py_bin=$$($(PYTHON) -c "import sys,os; print(os.path.dirname(sys.executable))"); \
+		if [ -f "$$_py_bin/pegasus-integrity" ]; then \
+			ln -sf "$$_py_bin/pegasus-integrity" \
+			    "$(CURDIR)/$(BUILD_DIR)/packages/pegasus-kickstart/pegasus-integrity"; \
+		else \
+			echo "WARNING: pegasus-integrity not found in $$_py_bin — run 'make dev' first"; \
+		fi; \
+		cd packages/pegasus-kickstart/test && \
+		PEGASUS_BIN_DIR="$(CURDIR)/$(BUILD_DIR)/packages/pegasus-kickstart" ./test.sh; \
+	else \
+		echo "Skipping kickstart tests: run 'make build-c' first"; \
+	fi
+	@if command -v mpicxx >/dev/null 2>&1 && [ -f "$(BUILD_DIR)/packages/pegasus-mpi-cluster/pegasus-mpi-cluster" ]; then \
+		echo "--- pegasus-mpi-cluster tests ---"; \
+		$(MAKE) -C packages/pegasus-mpi-cluster test; \
+	else \
+		echo "Skipping mpi-cluster tests: requires mpicxx and 'make build-c' with -DPEGASUS_BUILD_MPI=ON"; \
+	fi
+
 help:
 	@echo "Pegasus WMS build targets (scikit-build-core / CMake):"
 	@echo ""
@@ -80,6 +120,11 @@ help:
 	@echo "  clean-java    Remove only Java cmake build output"
 	@echo "  clean-c       Remove only C cmake build output"
 	@echo "  clean-worker  Remove only worker package cmake build output"
+	@echo ""
+	@echo "Test targets:"
+	@echo "  test          Run all tests (Python + C; C tests need 'make build-c' first)"
+	@echo "  test-python   Run tox test suites for all four Python packages"
+	@echo "  test-c        Run C integration tests (kickstart + mpi-cluster if available)"
 	@echo ""
 	@echo "Variables:"
 	@echo "  PYTHON=$(PYTHON)     (override with PYTHON=/path/to/python)"

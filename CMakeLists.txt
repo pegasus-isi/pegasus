@@ -92,6 +92,16 @@ if(DEFINED SKBUILD_PLATLIB_DIR)
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
 endif()
 
+# Static runtime data — always installed regardless of Java/C build flags.
+# The Java planner and Python tools look these up via pegasus.home.sharedstatedir
+# which maps to Pegasus/data/ in the installed wheel.
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/sh/"
+        DESTINATION "${_data_base}/sh")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/notification/"
+        DESTINATION "${_data_base}/notification")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/htcondor/"
+        DESTINATION "${_data_base}/htcondor")
+
 if(PEGASUS_BUILD_C)
     add_subdirectory(packages/pegasus-kickstart)
     add_subdirectory(packages/pegasus-cluster)
@@ -185,12 +195,13 @@ if(PEGASUS_BUILD_JAVA)
             DESTINATION "${JAVA_DEST}/aws"
             FILES_MATCHING PATTERN "*.jar")
 
-    # ── Runtime data Java tools need ─────────────────────────────────────────
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/schema/"
-            DESTINATION "${SCHEMA_DEST}")
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/etc/"
-            DESTINATION "${ETC_DEST}")
 endif()
+
+# Schema and etc are needed by both Java planner and Python validation tools.
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/schema/"
+        DESTINATION "${SCHEMA_DEST}")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/etc/"
+        DESTINATION "${ETC_DEST}")
 
 # ── Worker tarball ────────────────────────────────────────────────────────────
 # Bundles packages/pegasus-worker + runtime deps (boto3, globus-sdk) into a

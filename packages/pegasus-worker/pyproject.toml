@@ -136,6 +136,10 @@ exclude = [
 
 pythonpath = ["src"]
 testpaths = ["test"]
+filterwarnings = [
+    "ignore:unclosed database:ResourceWarning",
+    "ignore:Enable tracemalloc:ResourceWarning",
+]
 
 "resource-path.directory-name-tests" = "test"
 "resource-path.directory-name-test-resources" = "resources"
