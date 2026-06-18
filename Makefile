@@ -69,6 +69,7 @@ clean-c:
 # Remove all build artifacts: cmake build dir, wheel output, egg-info, caches.
 clean:
 	rm -rf $(BUILD_DIR) dist/
+	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true
 
