@@ -19,10 +19,12 @@ make build-java    # Rebuild only Java JARs (pegasus.jar, pegasus-aws-batch.jar)
 make build-worker  # Build self-contained worker tarball + stage it for the wheel (slow)
 
 # Cleanup
-make clean         # Remove all build artifacts (_cmake_build/, dist/, egg-info, __pycache__)
+make clean         # Remove all build artifacts (_cmake_build/, dist/, egg-info, __pycache__, docs, test reports)
 make clean-c       # Remove only C cmake build output
 make clean-java    # Remove only Java cmake build output
 make clean-worker  # Remove worker cmake staging and the staged tarball
+make clean-test    # Remove test output (reports, coverage, compiled test classes) — keeps tox venvs
+make clean-doc     # Remove Sphinx output and dist/doc/
 ```
 
 `PYTHON`, `CMAKE`, and `BUILD_DIR` are overridable make variables (defaults: `python3`, `cmake`, `_cmake_build`). Feature flags: `PEGASUS_NO_C=1`, `PEGASUS_NO_JAVA=1`, `PEGASUS_NO_WORKER=1` env vars skip components. CMake options: `-DPEGASUS_BUILD_C=OFF`, `-DPEGASUS_BUILD_JAVA=OFF`, `-DPEGASUS_BUILD_WORKER=ON`.
@@ -32,21 +34,25 @@ Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLA
 ## Testing
 
 ```bash
+# Run all tests (Python + Java + C)
+make test
+
 # Python tests — each package has its own tox.ini
+make test-python   # runs tox for all four packages
+# or individually:
 cd packages/pegasus-python && tox -e py310
 cd packages/pegasus-api && tox -e py310
 cd packages/pegasus-common && tox -e py310
 cd packages/pegasus-worker && tox -e py310
 
-# C tests — kickstart integration tests
+# Java unit tests (JUnit 5) — requires make build-java first
+make test-java
+
+# C tests — requires make build-c first
+make test-c
+# or directly:
 cd packages/pegasus-kickstart/test
 PEGASUS_BIN_DIR=$(pwd)/../../../_cmake_build/packages/pegasus-kickstart ./test.sh
-
-# C tests — pegasus-mpi-cluster unit + integration tests
-cd packages/pegasus-mpi-cluster && make test
-
-# Java unit tests (JUnit, run from test/junit/)
-cd test/junit && ant test
 ```
 
 Test framework is pytest for Python. Reports go to `test-reports/`.
@@ -64,6 +70,19 @@ cd packages/pegasus-worker && tox -e lint
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
 - **Java**: google-java-format 1.7, AOSP style. Applies to `src/**/*.java` and `test/junit/**/*.java`. See `.pre-commit-config.yaml` for the exact invocation.
 - Pre-commit hooks available in `.pre-commit-config.yaml`
+
+## Documentation
+
+```bash
+make doc           # Build all docs → dist/doc/ (Sphinx HTML+man, Javadoc, schemas)
+make doc-sphinx    # Sphinx user guide (HTML + man pages; PDF if latexmk is installed)
+make doc-java      # Javadoc for planner dax/selector API (needs make build-java first)
+make doc-schemas   # Copy XSD/XML/YAML schemas to dist/doc/schemas/
+make doc-dist      # Package dist/doc/ → dist/pegasus-doc-VERSION.tar.gz
+make clean-doc     # Remove doc/sphinx/_build/, doc/sphinx/python/, dist/doc/
+```
+
+Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by `tox -e docs` in `packages/pegasus-python/`. PDF generation requires `latexmk`; skipped automatically when not installed.
 
 ## Architecture
 
