@@ -8,11 +8,27 @@ ifdef JAVA_HOME
 JAVA     ?= $(JAVA_HOME)/bin/java
 JAVAC    ?= $(JAVA_HOME)/bin/javac
 JAR_TOOL ?= $(JAVA_HOME)/bin/jar
+JAVADOC  ?= $(JAVA_HOME)/bin/javadoc
 else
 JAVA     ?= java
 JAVAC    ?= javac
 JAR_TOOL ?= jar
+JAVADOC  ?= javadoc
 endif
+
+# Project version (read from build.properties)
+VERSION := $(shell grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
+
+# Cross-platform sed -i: BSD sed (macOS) needs an empty-string suffix; GNU sed does not
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+SED_I   := sed -i ''
+else
+SED_I   := sed -i
+endif
+
+_DOC_BUILD := doc/sphinx/_build
+_DOC_OUT   := dist/doc
 
 # Derive tox environment name from the active Python (e.g. py313)
 PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
@@ -21,7 +37,8 @@ _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
 _JUNIT_REPORT_DIR  := test-reports/junit
 
 .PHONY: build dev build-c build-java build-worker clean clean-java clean-c clean-worker \
-        clean-test test test-python test-java test-c help
+        clean-test clean-doc test test-python test-java test-c \
+        doc doc-sphinx doc-java doc-schemas doc-dist help
 
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
 build: build-worker
@@ -91,12 +108,69 @@ clean-test:
 	rm -rf packages/pegasus-*/test-reports
 	find packages -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null; true
 
-# Remove all build artifacts: cmake build dir, wheel output, egg-info, caches.
-clean:
+# Remove documentation build artifacts (Sphinx output, generated RST, final dist/doc).
+clean-doc:
+	rm -rf $(_DOC_BUILD) doc/sphinx/python doc/sphinx/java $(_DOC_OUT)
+
+# Remove all artifacts: cmake build dir, wheel output, egg-info, caches, docs, test reports, etc.
+clean: clean-test clean-doc
 	rm -rf $(BUILD_DIR) dist/ test-reports/
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true
+
+# Build Sphinx user guide: HTML + man pages, plus PDF if latexmk is available.
+# Dependencies managed by tox -e docs in packages/pegasus-python.
+doc-sphinx:
+	$(SED_I) 's/^version = .*/version = "$(VERSION)"/' doc/sphinx/conf.py
+	$(SED_I) 's/^release = .*/release = "$(VERSION)"/' doc/sphinx/conf.py
+	@if command -v latexmk >/dev/null 2>&1; then \
+	    cd packages/pegasus-python && tox -e docs; \
+	else \
+	    echo "latexmk not found — skipping PDF, building HTML + man only"; \
+	    cd packages/pegasus-python && tox -e docs -- html man; \
+	fi
+	$(SED_I) 's/^version = .*/version = "5.0.0dev"/' doc/sphinx/conf.py
+	$(SED_I) 's/^release = .*/release = "5.0.0dev"/' doc/sphinx/conf.py
+	mkdir -p $(_DOC_OUT)/wordpress $(_DOC_OUT)/man
+	cp -r $(_DOC_BUILD)/html/. $(_DOC_OUT)/wordpress/
+	-cp $(_DOC_BUILD)/latex/*.pdf $(_DOC_OUT)/wordpress/ 2>/dev/null
+	find $(_DOC_BUILD)/man -maxdepth 1 -type f -exec cp {} $(_DOC_OUT)/man/ \;
+	@test -f "$(_DOC_BUILD)/html/python/Pegasus.api.html" || \
+	    (echo "ERROR: Python API docs not generated correctly"; exit 1)
+
+# Generate Javadoc for the planner public API (dax + selector packages).
+# Requires: make build-java  (produces $(BUILD_DIR)/jars/pegasus.jar)
+doc-java:
+	@if [ ! -f "$(BUILD_DIR)/jars/pegasus.jar" ]; then \
+	    echo "Skipping Javadoc: run 'make build-java' first"; \
+	else \
+	    echo "--- Javadoc ---"; \
+	    mkdir -p "$(CURDIR)/$(_DOC_OUT)/javadoc"; \
+	    $(JAVADOC) -encoding UTF-8 \
+	        -d "$(CURDIR)/$(_DOC_OUT)/javadoc" \
+	        -windowtitle "PEGASUS" \
+	        -doctitle "PEGASUS $(VERSION)" \
+	        -author -use -version -private \
+	        -Xdoclint:none \
+	        -link "https://docs.oracle.com/javase/8/docs/api/" \
+	        -cp "$(CURDIR)/share/pegasus/java/*:$(CURDIR)/share/pegasus/java/aws/*:$(CURDIR)/$(BUILD_DIR)/jars/pegasus.jar" \
+	        -sourcepath "$(CURDIR)/src" \
+	        -subpackages "edu.isi.pegasus.planner.dax:edu.isi.pegasus.planner.selector"; \
+	fi
+
+# Copy XSD/XML/YAML schema files into the doc output tree.
+doc-schemas:
+	mkdir -p $(_DOC_OUT)/schemas $(_DOC_OUT)/wordpress/schemas
+	cp -r doc/schemas/. $(_DOC_OUT)/schemas/
+	cp -r doc/schemas/. $(_DOC_OUT)/wordpress/schemas/
+
+# Build all documentation: user guide, Javadoc, and schemas.
+doc: doc-sphinx doc-java doc-schemas
+
+# Package documentation into a tarball: dist/pegasus-doc-VERSION.tar.gz
+doc-dist: doc
+	tar czf dist/pegasus-doc-$(VERSION).tar.gz -C $(_DOC_OUT) .
 
 # Run all tests (Python + Java + C).
 # Java tests require: make build-java
@@ -176,11 +250,19 @@ help:
 	@echo "  build-c       Re-build only C tools (pegasus-kickstart, cluster, keg)"
 	@echo "  build-java    Re-build only Java JARs (pegasus.jar, pegasus-aws-batch.jar)"
 	@echo "  build-worker  Build worker package tarball (slow: runs pip install)"
-	@echo "  clean         Remove all build artifacts"
+	@echo "  clean         Remove all artifacts"
 	@echo "  clean-test    Remove test output (reports, coverage, compiled test classes)"
+	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + dist/doc)"
 	@echo "  clean-java    Remove only Java cmake build output"
 	@echo "  clean-c       Remove only C cmake build output"
 	@echo "  clean-worker  Remove only worker package cmake build output"
+	@echo ""
+	@echo "Documentation targets:"
+	@echo "  doc           Build all docs: user guide (Sphinx), Javadoc, schemas"
+	@echo "  doc-sphinx    Build Sphinx HTML + man pages (+ PDF if LaTeX installed)"
+	@echo "  doc-java      Generate Javadoc (needs 'make build-java')"
+	@echo "  doc-schemas   Copy XSD/XML/YAML schemas into dist/doc"
+	@echo "  doc-dist      Package dist/doc into dist/pegasus-doc-VERSION.tar.gz"
 	@echo ""
 	@echo "Test targets:"
 	@echo "  test          Run all tests (Python + Java + C)"
@@ -192,7 +274,9 @@ help:
 	@echo "  PYTHON=$(PYTHON)     (override with PYTHON=/path/to/python)"
 	@echo "  CMAKE=$(CMAKE)       (override with CMAKE=/path/to/cmake)"
 	@echo "  JAVA=$(JAVA)         (override with JAVA=/path/to/java)"
+	@echo "  JAVADOC=$(JAVADOC)   (override with JAVADOC=/path/to/javadoc)"
 	@echo "  BUILD_DIR=$(BUILD_DIR)  (cmake build directory)"
+	@echo "  VERSION=$(VERSION)   (from build.properties)"
 	@echo ""
 	@echo "Environment overrides:"
 	@echo "  PEGASUS_NO_C=1      Skip C compilation"
