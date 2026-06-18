@@ -121,8 +121,6 @@ sdist.include = [
     "packages/pegasus-cluster/**",
     "packages/pegasus-keg/**",
     "packages/pegasus-mpi-cluster/**",
-    "java_src/**",
-    "worker_package/**",
     "share/pegasus/java/**",
     "build.properties",
     "release-tools/getsystem",
