@@ -47,6 +47,9 @@ dependencies = [
     "requests",
     # Database
     "sqlalchemy>=1.4",
+    # Worker runtime (transfer, s3, globus — pegasus-worker merged into this wheel)
+    "boto3>1.12",
+    "globus-sdk>=3.23.0,<4",
 ]
 
 [project.urls]
