@@ -1,6 +1,7 @@
-PYTHON    ?= python3
-CMAKE     ?= cmake
-BUILD_DIR ?= _cmake_build
+PYTHON      ?= python3
+CMAKE       ?= cmake
+BUILD_DIR   ?= _cmake_build
+WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
 
 .PHONY: build dev build-c build-java build-worker clean clean-java clean-c clean-worker help
 
@@ -31,7 +32,9 @@ build-java:
 	    -DPEGASUS_BUILD_WORKER=OFF
 	$(CMAKE) --build $(BUILD_DIR)
 
-# Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz).
+# Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz)
+# and stage it into the Python source tree so that `make build` includes it
+# in the wheel as Pegasus/data/worker-packages/<tarball>.
 # Slow: runs pip install for external deps.
 build-worker:
 	$(CMAKE) -B $(BUILD_DIR) -S . \
@@ -40,10 +43,14 @@ build-worker:
 	    -DPEGASUS_BUILD_JAVA=OFF \
 	    -DPEGASUS_BUILD_WORKER=ON
 	$(CMAKE) --build $(BUILD_DIR) --target build_worker_tarball
+	mkdir -p $(WORKER_DATA)
+	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
 
-# Remove only worker build artifacts.
+# Remove worker build artifacts (cmake staging dir and the staged tarball in the
+# Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
 clean-worker:
 	rm -rf $(BUILD_DIR)/worker_staging
+	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 
 # Remove only Java build artifacts — forces recompilation on next build.
 clean-java:

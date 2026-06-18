@@ -31,7 +31,7 @@ endif()
 option(PEGASUS_BUILD_C      "Compile C execution tools"               ON)
 option(PEGASUS_BUILD_JAVA   "Compile Java planner JARs"               ON)
 option(PEGASUS_BUILD_MPI    "Compile pegasus-mpi-cluster (optional)"  OFF)
-option(PEGASUS_BUILD_WORKER "Build the worker package tarball"        ON)
+option(PEGASUS_BUILD_WORKER "Build the worker package tarball"        OFF)
 
 if("$ENV{PEGASUS_NO_C}" STREQUAL "1")
     set(PEGASUS_BUILD_C OFF)
@@ -213,9 +213,8 @@ if(PEGASUS_BUILD_WORKER)
                 "boto3>1.12" "globus-sdk>=3.23.0,<4"
         COMMAND find "${_worker_staging}" -name "__pycache__" -type d -exec rm -rf {} +
         COMMAND find "${_worker_staging}" -name "*.dist-info" -type d -exec rm -rf {} +
-        COMMAND ${CMAKE_COMMAND} -E tar czf
-                "${CMAKE_BINARY_DIR}/${_worker_tarball}"
-                -C "${_worker_staging}" .
+        COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
+                "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" .
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         VERBATIM)
 
