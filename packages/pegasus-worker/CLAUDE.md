@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `pegasus-wms.worker` — Worker-side execution tools for the Pegasus Workflow Management System. Part of a four-package Python namespace (`Pegasus`) sharing code across pegasus-api, pegasus-common, pegasus-python, and pegasus-worker. The `__init__.py` files use `pkgutil.extend_path` for namespace package support.
 
+This package is distributed in two ways:
+
+1. **Merged into the `pegasus-wms` wheel** via CMake `install(DIRECTORY)` — so `pegasus transfer`, `pegasus s3`, etc. work after `pip install pegasus-wms`.
+2. **Bundled into the self-contained worker tarball** (`pegasus-worker-VERSION-PLATFORM.tar.gz`) via `make build-worker` — staged to remote execution nodes by the planner at runtime.
+
 ## Build and Test Commands
 
 ```bash
@@ -29,9 +34,6 @@ tox -e lint
 
 # Lint in CI mode (check only, no modifications)
 CI=true tox -e lint
-
-# Format/lint from repo root (runs tox -e lint for all Python packages)
-ant code-format-python    # from repo root
 ```
 
 ## Code Formatting
@@ -66,7 +68,7 @@ The lint environment runs these in order: autoflake → pyupgrade → isort → 
 
 ## Dependencies
 
-Runtime: `six>=1.9.0`, `boto3>1.12`, `globus-sdk>=3.23.0,<4` (Python 3.7+). Python >=3.6 required.
+Runtime: `boto3>1.12`, `globus-sdk>=3.23.0,<4`. Python >=3.6 required (kept low: worker runs on remote nodes that may have older Python).
 
 ## Testing Notes
 

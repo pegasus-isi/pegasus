@@ -4,53 +4,65 @@ Pegasus Workflow Management System (v5.2.0-dev). Multi-language scientific workf
 
 ## Build System
 
-Ant-based build with Make for C components. Default target is `dist`.
+scikit-build-core + CMake backend. A single `pip install .` installs the full distribution: Python packages, C binaries, and Java JARs. Java is compiled via CMake's `UseJava` module; C tools via CMake subdirectories. Version defined in `build.properties`.
 
 ```bash
-ant dist              # Build binary distribution (no docs)
-ant dist-release      # Build binary distribution with documentation
-ant compile           # Compile all code (Java + C + externals)
-ant compile-java      # Compile Java only
-ant compile-c         # Compile C tools (kickstart, cluster, keg)
-ant clean             # Remove all build artifacts
+# Full wheel build → dist/pegasus_wms-VERSION-PLATFORM.whl
+PYTHON=.venv/bin/python make build
+
+# Editable install for development (Python changes live; C/Java compiled once)
+make dev
+
+# Targeted partial rebuilds
+make build-c       # Rebuild only C tools (pegasus-kickstart, cluster, keg)
+make build-java    # Rebuild only Java JARs (pegasus.jar, pegasus-aws-batch.jar)
+make build-worker  # Build self-contained worker tarball + stage it for the wheel (slow)
+
+# Cleanup
+make clean         # Remove all build artifacts (_cmake_build/, dist/, egg-info, __pycache__)
+make clean-c       # Remove only C cmake build output
+make clean-java    # Remove only Java cmake build output
+make clean-worker  # Remove worker cmake staging and the staged tarball
 ```
 
-Java source/target level: 1.8. Version defined in `build.properties`.
+`PYTHON`, `CMAKE`, and `BUILD_DIR` are overridable make variables (defaults: `python3`, `cmake`, `_cmake_build`). Feature flags: `PEGASUS_NO_C=1`, `PEGASUS_NO_JAVA=1`, `PEGASUS_NO_WORKER=1` env vars skip components. CMake options: `-DPEGASUS_BUILD_C=OFF`, `-DPEGASUS_BUILD_JAVA=OFF`, `-DPEGASUS_BUILD_WORKER=ON`.
+
+Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLAGS`). All non-AWS Java sources (`edu.isi.pegasus.*`, `edu.isi.ikcap`, `org.griphyn.vdl`) compile into a single `pegasus.jar`; AWS Batch sources compile into `pegasus-aws-batch.jar`.
 
 ## Testing
 
 ```bash
-ant test              # Run ALL tests (builds dist first, then python → java → c → transfer)
-ant test-python       # Run Python tests via tox (all 4 packages)
-ant test-java         # Run Java JUnit tests
-ant test-c            # Run C unit tests (kickstart + PMC)
-ant test-kickstart    # Kickstart tests only
-ant test-pmc          # pegasus-mpi-cluster tests only
-ant test-transfer     # Transfer utility tests
-```
-
-### Python tests individually
-
-Each Python package under `packages/` has its own `tox.ini`. To run tests for a single package:
-
-```bash
+# Python tests — each package has its own tox.ini
 cd packages/pegasus-python && tox -e py310
 cd packages/pegasus-api && tox -e py310
 cd packages/pegasus-common && tox -e py310
 cd packages/pegasus-worker && tox -e py310
+
+# C tests — kickstart integration tests
+cd packages/pegasus-kickstart/test
+PEGASUS_BIN_DIR=$(pwd)/../../../_cmake_build/packages/pegasus-kickstart ./test.sh
+
+# C tests — pegasus-mpi-cluster unit + integration tests
+cd packages/pegasus-mpi-cluster && make test
+
+# Java unit tests (JUnit, run from test/junit/)
+cd test/junit && ant test
 ```
 
-Test framework is pytest. Reports go to `test-reports/`.
+Test framework is pytest for Python. Reports go to `test-reports/`.
 
 ## Code Formatting
 
 ```bash
-ant code-format-python   # Format all Python code
-ant code-format-java     # Format all Java code (AOSP style via google-java-format)
+# Python (run from each package directory)
+cd packages/pegasus-python && tox -e lint
+cd packages/pegasus-api && tox -e lint
+cd packages/pegasus-common && tox -e lint
+cd packages/pegasus-worker && tox -e lint
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
-- **Java**: google-java-format 1.7, AOSP style. Applies to `src/**/*.java` and `test/junit/**/*.java`
+- **Java**: google-java-format 1.7, AOSP style. Applies to `src/**/*.java` and `test/junit/**/*.java`. See `.pre-commit-config.yaml` for the exact invocation.
 - Pre-commit hooks available in `.pre-commit-config.yaml`
 
 ## Architecture
@@ -109,9 +121,13 @@ Python source lives under `packages/<pkg>/src/Pegasus/`.
 | `pegasus-keg/`         | C++      | Synthetic job generator for testing                   |
 | `pegasus-mpi-cluster/` | C++      | MPI-based distributed job clustering                  |
 
-### Executables — `bin/`
+### CLI Entry Points
 
-Key CLI entry points: `pegasus-plan` (main planner), `pegasus-rc-client`, `pegasus-tc-converter`, `pegasus-sc-converter`, `pegasus-version`.
+Installed as pip console scripts by `pyproject.toml`. After `pip install .` or `make dev`:
+
+- `pegasus <subcommand>` — unified Click CLI (`Pegasus.cli.main:cli`)
+- `pegasus-plan`, `pegasus-status`, `pegasus-rc-client`, etc. — legacy entry points (same functions, backward-compatible names)
+- C binaries (`pegasus-kickstart`, `pegasus-cluster`, `pegasus-keg`) — installed to `<venv>/bin/` directly by CMake via the wheel scripts section
 
 ## Configuration and Catalogs
 
