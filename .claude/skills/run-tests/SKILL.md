@@ -1,6 +1,8 @@
-______________________________________________________________________
-
-## name: run-tests description: Trigger and wait for Pegasus CI pipelines on GitLab (scitech-gitlab.isi.edu) — run unit tests, or run e2e/workflow tests. Use when asked to run CI, run e2e tests, run the pipeline, trigger a build, run unit tests on a branch, or wait for CI to pass/fail. e2e (type=workflow) takes hours; run it minimally. allowed-tools: Bash(glab pipeline run:*), Bash(glab api:*), Bash(glab auth status:*), Bash(jq:*), Bash(.claude/skills/run-tests/glab-pipeline.sh:*), Bash(./glab-pipeline.sh:*)
+---
+name: run-tests
+description: Trigger and wait for Pegasus CI pipelines on GitLab (scitech-gitlab.isi.edu) — run unit tests, or run e2e/workflow tests. Use when asked to run CI, run e2e tests, run the pipeline, trigger a build, run unit tests on a branch, or wait for CI to pass/fail. e2e (type=workflow) takes hours; run it minimally.
+allowed-tools: Bash(glab pipeline run:*), Bash(glab api:*), Bash(glab auth status:*), Bash(jq:*), Bash(.claude/skills/run-tests/glab-pipeline.sh:*), Bash(./glab-pipeline.sh:*)
+---
 
 # Run Pegasus CI pipelines (unit / e2e)
 
