@@ -1,56 +1,46 @@
 #!/bin/bash
+# Build a Pegasus .deb package from the current source tree.
+# Expected to run on a Debian/Ubuntu host with build dependencies installed
+# (debhelper, cmake, openjdk-*-jdk, python3-venv, etc. — see debian/control).
+#
+# Usage: release-tools/build-deb
+# Output: dist/deb/
 
 set -e
 
-VERSION=$1
-OSID=$2
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$TOP_DIR"
 
-if [ "x$VERSION" = "x" ]; then
-    echo "Please specify a version for the source tarball"
+if [ ! -e pyproject.toml ]; then
+    echo "ERROR: This does not look like a Pegasus source directory (pyproject.toml not found)."
     exit 1
 fi
 
-TOP_DIR=`pwd`
-
-# make sure we are in a source dir
-if [ ! -e build.xml ]; then
-    echo "This does not look a like a source directory. Exiting..."
-    exit 1
-fi
-
-# we assume the source tarball has already been built
-cd dist
-rm -rf pegasus-$VERSION
-tar xzf pegasus-$VERSION.tar.gz
-cd pegasus-$VERSION
-
-# Massage the Pegasus version to something which works well
-# in Debian. For dev/rc/... packages, use the ~ trick
-PACKAGE_VERSION=$VERSION
-BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
-EXTRAVER=`echo "$VERSION" | perl -p -e 's/[0-9]+\.[0-9]+\.[0-9]+//'`
-if [ "x$EXTRAVER" != "x" ]; then
-    # add timestamp - the goal is a version number like:
-    # 4.8.1~dev201709070934
-    EXTRAVER="$EXTRAVER"`date +'%Y%m%d%H%M'`
-    PACKAGE_VERSION="$BASEVER~$EXTRAVER"
-fi
-
-# create a debian/changelog - this is important to LIGO and other projects
-# picking up our source tarball and building Debian packages
-cd debian
-cp changelog.in changelog
-DATE_DEB=`date -R`
-perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$PACKAGE_VERSION/g" changelog
-perl -p -i -e "s/\\@DATE\\@/$DATE_DEB/g" changelog
-if [ "x$OSID" = "x" ]; then
-    perl -p -i -e "s/\\+\\@OSID\\@//g" changelog
+VERSION=$(grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
+BASEVER=$(echo "$VERSION" | perl -pe 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+EXTRAVER=$(echo "$VERSION" | perl -pe 's/[0-9]+\.[0-9]+\.[0-9]+//')
+if [ -n "$EXTRAVER" ]; then
+    EXTRAVER="${EXTRAVER}$(date +'%Y%m%d%H%M')"
+    PACKAGE_VERSION="${BASEVER}~${EXTRAVER}"
 else
-    perl -p -i -e "s/\\@OSID\\@/$OSID/g" changelog
+    PACKAGE_VERSION="$VERSION"
 fi
-cd ..
 
-# use bzip2 as that will be fairly generic across distros/versions
-dpkg-buildpackage -b -uc --compression=bzip2
+OSID="ubuntu$(lsb_release -rs | cut -d. -f1)"
+DATE_DEB=$(date -R)
 
-(cd .. && lintian pegasus_${PACKAGE_VERSION}*.changes) || true
+cp debian/changelog.in debian/changelog
+perl -pi -e "s/\@PEGASUS_VERSION\@/$PACKAGE_VERSION/g" debian/changelog
+perl -pi -e "s/\@DATE\@/$DATE_DEB/g" debian/changelog
+perl -pi -e "s/\@OSID\@/$OSID/g" debian/changelog
+
+echo "Building pegasus $PACKAGE_VERSION ($OSID)..."
+dpkg-buildpackage -b -uc --compression=gzip
+
+# dpkg-buildpackage writes output to the parent of the source tree
+mkdir -p dist/deb
+find "$TOP_DIR/.." -maxdepth 1 \( -name "pegasus_*.deb" -o -name "pegasus_*.changes" \) \
+    -exec cp {} dist/deb/ \;
+echo "--- Built packages ---"
+ls -lh dist/deb/pegasus_*.deb 2>/dev/null || true

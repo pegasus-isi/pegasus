@@ -1,57 +1,63 @@
 #!/bin/bash
+# Build a Pegasus .rpm package from the current source tree.
+# Expected to run on a RHEL/Rocky Linux host with build dependencies installed
+# (rpm-build, systemd-rpm-macros, cmake, java-*-openjdk-devel, python3.12-*, etc.
+# — see pegasus.spec.in BuildRequires).
+#
+# The RHEL major version is detected from the running system automatically.
+#
+# Usage: release-tools/build-rpms
+# Output: dist/rpm/
 
 set -e
 
-VERSION=$1
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$TOP_DIR"
 
-# make sure we are in a source dir
-if [ ! -e build.xml ]; then
-    echo "This does not look a like a source directory. Exiting..."
+if [ ! -e pyproject.toml ]; then
+    echo "ERROR: This does not look like a Pegasus source directory (pyproject.toml not found)."
     exit 1
 fi
 
-TOP_DIR=`mktemp -d`
-echo "RPM Dir: $TOP_DIR"
-
-function cleanup() {
-    rm -rf $TOP_DIR
-}
-trap cleanup EXIT
-
-mkdir -p $TOP_DIR/build/rpm/BUILD $TOP_DIR/build/rpm/RPMS $TOP_DIR/build/rpm/SOURCES $TOP_DIR/build/rpm/SPECS $TOP_DIR/build/rpm/SRPMS
-
-# create a new spec file with the custom version
-BASEVER=`echo "$VERSION" | perl -p -e 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/'`
-EXTRAVER=`echo "$VERSION" | perl -p -e 's/[0-9]+\.[0-9]+\.[0-9]+//'`
-EXTRAVER=${EXTRAVER/#-/_}
-RELEASE_VERSION="1%{?dist}"
-if [ "x$EXTRAVER" != "x" ]; then
-    # add timestamp - the goal is a version number like:
-    # 4.8.1dev-0.1.201709070934
-    RELEASE_VERSION="0.1."`date +'%Y%m%d%H%M'`"%{?dist}"
+# Detect RHEL major version from the running system
+RHEL_VERSION=$(rpm -E '%{rhel}' 2>/dev/null)
+if [ -z "$RHEL_VERSION" ] || [ "$RHEL_VERSION" = "%{rhel}" ]; then
+    RHEL_VERSION=$(. /etc/os-release 2>/dev/null && echo "${VERSION_ID%%.*}" || echo "9")
 fi
 
-cp dist/pegasus-$VERSION.tar.gz $TOP_DIR/build/rpm/SOURCES/pegasus-$BASEVER$EXTRAVER.tar.gz
-cp pegasus.spec.in pegasus.spec
-DATE_RPM=`date +'%a %b %d %Y'`
-perl -p -i -e "s/\\@PEGASUS_VERSION\\@/$BASEVER$EXTRAVER/g" pegasus.spec
-perl -p -i -e "s/\\@DATE\\@/$DATE_RPM/g" pegasus.spec
-perl -p -i -e "s/^Release:.*/Release:        $RELEASE_VERSION/g" pegasus.spec
+VERSION=$(grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
+RPM_VERSION=$(echo "$VERSION" | tr '-' '.')
+DATE_RPM=$(date +'%a %b %d %Y')
+echo "Building pegasus $RPM_VERSION for RHEL ${RHEL_VERSION}..."
 
-cp pegasus.spec $TOP_DIR/build/rpm/SPECS/
+RPM_DIR=$(mktemp -d)
+trap "rm -rf $RPM_DIR" EXIT
+mkdir -p "$RPM_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
-DIST=`./release-tools/getosid | perl -pe 's/rhel/.el/'`
+echo "--- Creating source tarball ---"
+tar czf "$RPM_DIR/SOURCES/pegasus-${RPM_VERSION}.tar.gz" \
+    --transform "s|^\./|pegasus-${RPM_VERSION}/|" \
+    --exclude=./.git \
+    --exclude=./_cmake_build \
+    --exclude=./_build_venv \
+    --exclude=./dist \
+    --exclude=./debian/pegasus \
+    .
 
-rpmbuild \
-    -ba \
-    --define "_topdir $TOP_DIR/build/rpm" \
-    --define "dist $DIST" \
-    --define "_version $VERSION" \
-    pegasus.spec
+echo "--- Preparing spec file ---"
+sed \
+    -e "s/@PEGASUS_VERSION@/$RPM_VERSION/g" \
+    -e "s/@DATE@/$DATE_RPM/g" \
+    pegasus.spec.in > "$RPM_DIR/SPECS/pegasus.spec"
 
-find $TOP_DIR/build/rpm -name \*.rpm -exec cp {} dist/ \;
-rm -f dist/*debug*
-mv dist/pegasus-*.src.rpm dist/pegasus-$VERSION.src.rpm
-cd dist
-echo "Generated RPMs:"
-ls -l *.rpm
+echo "--- Running rpmbuild ---"
+rpmbuild -bb \
+    --define "_topdir $RPM_DIR" \
+    --define "rhel ${RHEL_VERSION}" \
+    "$RPM_DIR/SPECS/pegasus.spec"
+
+mkdir -p dist/rpm
+find "$RPM_DIR/RPMS" -name "*.rpm" -exec cp {} dist/rpm/ \;
+echo "--- Built packages ---"
+ls -lh dist/rpm/pegasus-*.rpm 2>/dev/null || true

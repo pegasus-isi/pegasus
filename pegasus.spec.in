@@ -9,37 +9,39 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, javapackages-tools, make, openssl-devel, ant
-Requires:       which, graphviz, alternatives, %{?systemd_requires}
+BuildRequires:  gcc, gcc-c++, make, cmake, openssl-devel, systemd-rpm-macros
+Requires:       which, graphviz, %{?systemd_requires}
 
 %global debug_package %{nil}
 
 %if 0%{?rhel} == 8
-BuildRequires:  java-17-openjdk-devel, python3.12-devel, python3.12-pip, python3.12-setuptools
-Requires:       java-17-openjdk-headless, python3.12, python3.12-cryptography, python3.12-PyYAML
+BuildRequires:  java-17-openjdk-devel, python3.12-devel, python3.12-pip
+Requires:       java-17-openjdk-headless, python3.12
 %define pegasus_python 3.12
 %endif
 
 %if 0%{?rhel} == 9
-BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3.12-devel, python3.12-pip, python3.12-setuptools
-Requires:       java-21-openjdk-headless, python3.12, python3.12-cryptography, python3.12-PyYAML
+BuildRequires:  java-21-openjdk-devel, python3.12-devel, python3.12-pip
+Requires:       java-21-openjdk-headless, python3.12
 %define pegasus_python 3.12
 %endif
 
 %if 0%{?rhel} == 10
-BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3-devel, python3-pip, python3-setuptools
-Requires:       java-21-openjdk-headless, python3, python3-cryptography, python3-PyYAML
+BuildRequires:  java-21-openjdk-devel, python3-devel, python3-pip
+Requires:       java-21-openjdk-headless, python3
 %define pegasus_python 3.12
 %endif
 
-%define sourcedir %{name}-%{_version}
+# Resolve site-packages path using the same prefix pip uses during %%install,
+# so that %%files matches the actual install location.
+%global python_sitearch %(/usr/bin/python%{pegasus_python} -c "import sysconfig; print(sysconfig.get_paths(vars={'base': '/usr', 'platbase': '/usr'})['platlib'])")
 
-# Disables the automatic dependency generator, which will include
-# Python deps on packages we include inside our package
+%define sourcedir %{name}-%{version}
+
+# Disables the automatic dependency generator (we bundle deps inside the wheel)
 %{?python_disable_dependency_generator}
 
-# Turn off automatic python bytecompilation
-# Will bytecompile manually with Python 2 and 3 separately
+# Turn off automatic Python bytecompilation
 %undefine __brp_python_bytecompile
 
 %description
@@ -57,65 +59,50 @@ execute the steps in appropriate order.
 %setup -q -n %{sourcedir}
 
 %build
-export PEGASUS_PYTHON=/usr/bin/python%{pegasus_python}
-ant dist-release
+# Install build tooling into a temporary virtualenv (not available as distro packages)
+/usr/bin/python%{pegasus_python} -m venv _build_venv
+_build_venv/bin/pip install --upgrade pip scikit-build-core build
 
-# strip executables
-strip dist/pegasus-%{_version}/bin/pegasus-cluster
-strip dist/pegasus-%{_version}/bin/pegasus-kickstart
-strip dist/pegasus-%{_version}/bin/pegasus-keg
+# Build the wheel (includes worker tarball + C tools + Java JARs via cmake)
+PYTHON=$(pwd)/_build_venv/bin/python make build
 
 %install
+mkdir -p %{buildroot}%{_bindir} %{buildroot}%{python_sitearch}
 
-mkdir -p %{buildroot}/%{_sysconfdir}/%{name}
-mkdir -p %{buildroot}/%{_bindir}
-mkdir -p %{buildroot}/%{_datadir}
-mkdir -p %{buildroot}/%{_unitdir}
+/usr/bin/python%{pegasus_python} -m pip install \
+    --ignore-installed \
+    --root %{buildroot} \
+    --prefix /usr \
+    dist/pegasus_wms-*.whl
 
-cp -aR dist/pegasus-%{_version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
-cp -aR dist/pegasus-%{_version}/bin/* %{buildroot}/%{_bindir}/
-cp -aR dist/pegasus-%{_version}/lib* %{buildroot}/usr/
-cp -aR dist/pegasus-%{_version}/share/* %{buildroot}/%{_datadir}/
+# Strip C executables
+for bin in pegasus-kickstart pegasus-cluster pegasus-keg; do
+    test -f %{buildroot}%{_bindir}/$bin && strip %{buildroot}%{_bindir}/$bin || true
+done
 
-install -m 0644 dist/%{name}-%{_version}/share/pegasus/systemd-unit/pegasus-service.service %{buildroot}/%{_unitdir}/
+# Install systemd service unit from source tree
+install -d %{buildroot}%{_unitdir}
+install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \
+    %{buildroot}%{_unitdir}/
 
-# rm unwanted files
-rm -f  %{buildroot}/%{_bindir}/keg.condor
-rm -f  %{buildroot}/%{_datadir}/%{name}/java/COPYING.*
-rm -f  %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
-rm -f  %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
-rm -f  %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
-rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
+# Remove pyc files and caches
+find %{buildroot} -name "*.pyc" -delete
+find %{buildroot} -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 %files
 %defattr(-,root,root,-)
-%config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
-%{_libdir}/pegasus
-%{_libdir}/python*
-%{_datadir}/%{name}
+%{python_sitearch}/Pegasus/
+%{python_sitearch}/pegasus_wms-*.dist-info/
 %{_unitdir}/pegasus-service.service
 
-%pre
-# Handle previous install where /usr/lib64/pegasus/python was a directory
-if [ -d /usr/lib64/pegasus/python ] && [ ! -L /usr/lib64/pegasus/python ]; then
-    echo "Removing old /usr/lib64/pegasus/python directory to allow symlink install"
-    rm -rf /usr/lib64/pegasus/python
-fi
-
-/usr/sbin/update-alternatives --install /usr/bin/pegasus-python pegasus-python /usr/bin/python%{pegasus_python} 0
-
 %post
-# Enable the systemd user service (doesn't work in containers)
 systemctl daemon-reload >/dev/null 2>&1 || true
 
 %preun
-# Disable the service before uninstalling (doesn't work in containers)
 systemctl stop pegasus-service.service >/dev/null 2>&1 || true
 systemctl disable pegasus-service.service >/dev/null 2>&1 || true
 systemctl daemon-reload >/dev/null 2>&1 || true
-
-/usr/sbin/update-alternatives --remove-all pegasus-python
 
 %changelog
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@

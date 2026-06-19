@@ -1,14 +1,12 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-11-openjdk-$(DEB_HOST_ARCH)) $(wildcard /usr/lib/jvm/java-8-openjdk-$(DEB_HOST_ARCH)) )
-PATH := ${JAVA_HOME}/bin:${PATH}
+PYTHON3 := python3
 
 
-# make sure packages are compatible with out repo tools
+# Build .deb with gzip compression (compatible with older apt)
 # https://stackoverflow.com/questions/71196872/how-do-i-build-a-deb-without-zstd-compression-in-ubuntu-21-10
 override_dh_builddeb:
 	dh_builddeb -- -Zgzip
@@ -19,9 +17,14 @@ build: build-stamp
 
 build-stamp:
 	dh_testdir
-	ant dist-release
-	rm -f dist/*.tar.gz
-	mv dist/pegasus-* dist/pegasus
+
+	# Install build tooling into a temporary virtualenv (not available as distro packages)
+	$(PYTHON3) -m venv _build_venv
+	_build_venv/bin/pip install --upgrade pip scikit-build-core build
+
+	# Build the wheel (includes worker tarball + C tools + Java JARs via cmake)
+	PYTHON=_build_venv/bin/python make build
+
 	touch build-stamp
 
 
@@ -31,33 +34,37 @@ install: build
 	dh_prep
 	dh_installdirs
 
-	# /etc/pegasus
-	mkdir -p debian/pegasus/etc/pegasus
-	cp -a dist/pegasus/etc/* debian/pegasus/etc/pegasus/
+	# Install wheel and all runtime Python deps into the staging area.
+	# We bundle deps rather than declare apt equivalents because several
+	# (pamela, pika, globus-sdk, boto3, Flask-Caching) have no apt package.
+	_build_venv/bin/pip install \
+	    --ignore-installed \
+	    --prefix=$(CURDIR)/debian/pegasus/usr \
+	    dist/pegasus_wms-*.whl
 
-	# /usr/bin
-	mkdir -p debian/pegasus/usr
-	cp -r dist/pegasus/bin debian/pegasus/usr/
-	strip debian/pegasus/usr/bin/pegasus-cluster
-	strip debian/pegasus/usr/bin/pegasus-keg
-	strip debian/pegasus/usr/bin/pegasus-kickstart
+	# Debian's Python looks in dist-packages, not site-packages.
+	# Rename the directory pip creates so the installed packages are importable.
+	$(eval PY_VER := $(shell $(PYTHON3) -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"))
+	if [ -d "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/site-packages" ]; then \
+	    mv "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/site-packages" \
+	       "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/dist-packages"; \
+	fi
 
-	# /usr/share/
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/share debian/pegasus/usr/
-	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
-	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
-	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
-	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
+	# Strip C executables
+	-strip debian/pegasus/usr/bin/pegasus-kickstart
+	-strip debian/pegasus/usr/bin/pegasus-cluster
+	-strip debian/pegasus/usr/bin/pegasus-keg
 
-	# /usr/lib
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/lib debian/pegasus/usr/
+	# Install systemd service unit from source tree
+	install -d debian/pegasus/lib/systemd/system
+	install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \
+	    debian/pegasus/lib/systemd/system/
 
-	# remove stuff we don't need
-	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
+	# Fix shebangs: pip writes the build-venv path; replace with system python3
+	find debian/pegasus/usr/bin -type f \
+	    -exec sed -i '1s|^#!.*/python[^ ]*|#!/usr/bin/python3|' {} \;
 
-	# no pyc files in debian packages
+	# Remove pyc files and __pycache__
 	find debian/pegasus/ -name \*.pyc -exec rm {} \;
 	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
 
@@ -89,9 +96,8 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-	ant clean
-	rm -f src/externals/._boto*
-	rm -rf dist
+	make clean
+	rm -rf _build_venv
 	dh_clean
 
 
@@ -100,4 +106,4 @@ clean:
 	exit 1
 
 
-.PHONY: build  binary-indep binary-arch binary install clean
+.PHONY: build binary-indep binary-arch binary install clean

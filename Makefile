@@ -36,13 +36,16 @@ PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.vers
 _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
 _JUNIT_REPORT_DIR  := test-reports/junit
 
-.PHONY: build dev build-c build-java build-worker clean clean-java clean-c clean-worker \
-        clean-test clean-doc test test-python test-java test-c \
+.PHONY: build dev build-c build-java build-worker \
+        dist-deb dist-rpm \
+        clean clean-java clean-c clean-worker clean-test clean-doc \
+        test test-python test-java test-c \
         doc doc-sphinx doc-java doc-schemas doc-dist help
 
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
+# --wheel skips the sdist step, which would fail on absolute symlinks in _build_venv/.
 build: build-worker
-	$(PYTHON) -m build
+	$(PYTHON) -m build --wheel
 
 # Editable (development) install.
 # Python changes take effect immediately; C/Java are compiled once.
@@ -82,6 +85,18 @@ build-worker:
 	$(CMAKE) --build $(BUILD_DIR) --target build_worker_tarball
 	mkdir -p $(WORKER_DATA)
 	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
+
+# Build a .deb package using Docker (requires Docker).
+# debtest.Dockerfile is built and run with the source tree mounted.
+# Output lands in dist/deb/.
+dist-deb:
+	release-tools/build-deb
+
+# Build an .rpm package on the current host (must be RHEL/Rocky Linux).
+# RHEL version is detected automatically from the running system.
+# Output lands in dist/rpm/.
+dist-rpm:
+	release-tools/build-rpms
 
 # Remove worker build artifacts (cmake staging dir and the staged tarball in the
 # Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
@@ -250,6 +265,8 @@ help:
 	@echo "  build-c       Re-build only C tools (pegasus-kickstart, cluster, keg)"
 	@echo "  build-java    Re-build only Java JARs (pegasus.jar, pegasus-aws-batch.jar)"
 	@echo "  build-worker  Build worker package tarball (slow: runs pip install)"
+	@echo "  dist-deb      Build .deb package on this host → dist/deb/ (Ubuntu/Debian)"
+	@echo "  dist-rpm      Build .rpm package on this host → dist/rpm/ (RHEL/Rocky)"
 	@echo "  clean         Remove all artifacts"
 	@echo "  clean-test    Remove test output (reports, coverage, compiled test classes)"
 	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + dist/doc)"
