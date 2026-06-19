@@ -14,7 +14,7 @@ import os
 import pprint
 import sys
 import time
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from shlex import quote
 
 # PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
