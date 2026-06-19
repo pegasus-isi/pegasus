@@ -45,7 +45,7 @@ _JUNIT_REPORT_DIR  := test-reports/junit
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
 # --wheel skips the sdist step, which would fail on absolute symlinks in _build_venv/.
 build: build-worker
-	$(PYTHON) -m build --wheel
+	$(PYTHON) -m build
 
 # Editable (development) install.
 # Python changes take effect immediately; C/Java are compiled once.
@@ -98,6 +98,14 @@ dist-deb:
 dist-rpm:
 	release-tools/build-rpms
 
+# Build a source distribution (sdist) of the package. (Creates a .tar.gz file in dist/)
+dist-source:
+	$(PYTHON) -m build --sdist
+
+# Build a wheel distribution of the package. (Creates a .whl file in dist/)
+dist-wheel:
+	$(PYTHON) -m build --wheel
+
 # Remove worker build artifacts (cmake staging dir and the staged tarball in the
 # Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
 clean-worker:
@@ -120,6 +128,7 @@ clean-c:
 clean-test:
 	rm -rf $(_JAVA_TEST_CLASSES) $(BUILD_DIR)/jars/pegasus-test.jar test-reports/
 	rm -f packages/pegasus-*/.coverage
+	rm -rf packages/pegasus-*/.tox
 	rm -rf packages/pegasus-*/test-reports
 	find packages -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null; true
 
@@ -260,13 +269,15 @@ test-c:
 help:
 	@echo "Pegasus WMS build targets (scikit-build-core / CMake):"
 	@echo ""
-	@echo "  build         Build a distributable wheel into dist/"
+	@echo "  build         Build a wheel and source distribution into dist/"
 	@echo "  dev           Editable install (Python live; C/Java compile on first run)"
 	@echo "  build-c       Re-build only C tools (pegasus-kickstart, cluster, keg)"
 	@echo "  build-java    Re-build only Java JARs (pegasus.jar, pegasus-aws-batch.jar)"
 	@echo "  build-worker  Build worker package tarball (slow: runs pip install)"
 	@echo "  dist-deb      Build .deb package on this host → dist/deb/ (Ubuntu/Debian)"
 	@echo "  dist-rpm      Build .rpm package on this host → dist/rpm/ (RHEL/Rocky)"
+	@echo "  dist-source   Build a source distribution of the package. (Creates a .tar.gz file in dist/)"
+	@echo "  dist-wheel    Build a wheel distribution of the package. (Creates a .whl file in dist/)"
 	@echo "  clean         Remove all artifacts"
 	@echo "  clean-test    Remove test output (reports, coverage, compiled test classes)"
 	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + dist/doc)"

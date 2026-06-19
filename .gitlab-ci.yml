@@ -126,13 +126,14 @@ Java:
       - arm64
   image: pegasus/buildenv:rhel_9
   script:
-  - ant test-java
+  - make build-java
+  - make test-java
   artifacts:
     when: always
     reports:
-      junit: build/tests/classes/junitreport/*.xml
+      junit: test-reports/junit/*.xml
     paths:
-    - build/tests/classes/junitreport/*.xml
+    - test-reports/junit/*.xml
   tags:
   - ${ARCH}
   - docker
@@ -147,7 +148,8 @@ C:
       - arm64
   image: pegasus/buildenv:rhel_9
   script:
-  - ant test-kickstart test-transfer
+  - make build-c
+  - make test-c
   tags:
   - ${ARCH}
   - docker
@@ -159,10 +161,10 @@ Source:
   stage: build
   image: pegasus/buildenv:rhel_9
   script:
-  - ant clean dist-source dist-python-source
+  - pip install --upgrade pip scikit-build-core build
+  - make build
   artifacts:
     paths:
-    - dist/pegasus-*.tar.gz
     - dist/pegasus_wms*.tar.gz
     - dist/pegasus_wms*.whl
   dependencies: []
@@ -181,11 +183,12 @@ Alpine:
       - alpine_3
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release
+  - pip install --upgrade pip scikit-build-core build
+  - make build
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus_wms*.whl
+    - dist/pegasus_wms*.tar.gz
   dependencies: []
   tags:
   - ${ARCH}
@@ -204,12 +207,10 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  - make dist-rpm
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus-*.rpm
+    - dist/rpm/*.rpm
   dependencies: []
   tags:
   - ${ARCH}
@@ -227,12 +228,10 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  - make dist-rpm
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus-*.rpm
+    - dist/rpm/*.rpm
   dependencies: []
   tags:
   - ${ARCH}
@@ -252,11 +251,12 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release
+  - pip install --upgrade pip scikit-build-core build
+  - make build
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus_wms*.whl
+    - dist/pegasus_wms*.tar.gz
   dependencies: []
   tags:
   - ${ARCH}
@@ -275,12 +275,10 @@ Debian:
       - deb_13
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release dist-deb
+  - make dist-deb
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus*.deb
+    - dist/deb/*.deb
   dependencies: []
   tags:
   - ${ARCH}
@@ -299,12 +297,10 @@ Ubuntu:
       - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release dist-deb
+  - make dist-deb
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus*.deb
+    - dist/deb/*.deb
   dependencies: []
   tags:
   - ${ARCH}
@@ -325,11 +321,12 @@ macOS:
   - env
   - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
   script:
-  - ant dist-worker dist-release
+  - pip install --upgrade pip scikit-build-core build
+  - make build
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus_wms*.whl
+    - dist/pegasus_wms*.tar.gz
   dependencies: []
   tags:
   - ${ARCH}
@@ -342,12 +339,8 @@ Docs:
   image: pegasus/buildenv:rhel_9
   before_script:
   - env
-  #- set -ex
-  #- yum install -y epel-release
-  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
-  #- pip3 install tox
   script:
-  - ant dist-doc
+  - make doc-dist
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
@@ -378,7 +371,7 @@ Tutorial Container:
   stage: deploy
   script:
   - if [ "X${PEGASUS_VERSION}" = "X" ]; then echo "Unable to determine Pegasus version! Exiting..."; exit 1; fi
-  - cp dist/pegasus-*-*.rpm tutorial/docker
+  - cp dist/rpm/pegasus-*.rpm tutorial/docker
   - cd tutorial/docker
   - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
   - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
@@ -444,7 +437,7 @@ Release:
       --discussion-category "announcements" \
       $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "--prerelease") \
       ${PEGASUS_VERSION} \
-      dist/*.rpm dist/*.deb dist/pegasus-binary-*.tar.gz dist/pegasus-worker-*.tar.gz
+      dist/rpm/*.rpm dist/deb/*.deb dist/pegasus_wms*.whl dist/pegasus_wms*.tar.gz
   rules:
   - if: $CI_COMMIT_TAG
   dependencies:
@@ -601,16 +594,13 @@ Workflow Tests:
       EXEC:
       - launch-bamboo-test
   script:
-  - cd dist
-  - tar xzf pegasus-binary-*-x86_64*.tar.gz
-  - cd ..
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - pip install dist/pegasus_wms-*.whl
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
   - pre-job
-  - "RHEL: [x86_64, rhel_8]"
+  - Source
   tags:
   - bamboo
   retry: 0
@@ -635,19 +625,16 @@ Performance Tests:
       EXEC:
       - launch-bamboo-test-planner-only
   script:
-  - cd dist
-  - tar xzf pegasus-binary-*-x86_64*.tar.gz
-  - cd ..
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - pip install dist/pegasus_wms-*.whl
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
   - pre-job
-  - "RHEL: [x86_64, rhel_8]"
+  - Source
   needs:
   - pre-job
-  - "RHEL: [x86_64, rhel_8]"
+  - Source
   tags:
   - bamboo
   retry: 0
