@@ -53,6 +53,7 @@ dependencies = [
     "pymysql",
     "sqlalchemy",
     "pythonsed",          # For profile expression
+    "rich",               # Console/Markdown rendering for pegasus-analyzer
     "pegasus-wms.api",
     "pegasus-wms.common",
     "pegasus-wms.worker",
