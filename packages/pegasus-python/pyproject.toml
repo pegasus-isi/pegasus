@@ -52,6 +52,7 @@ dependencies = [
     "requests",
     "pymysql",
     "sqlalchemy",
+    "pythonsed",          # For profile expression
     "pegasus-wms.api",
     "pegasus-wms.common",
     "pegasus-wms.worker",
@@ -144,6 +145,7 @@ known-third-party = [
     "flask",
     "requests",
     "sqlaclhemy",
+    "PythonSed",
 ]
 forced-separate = ["Pegasus"]
 
