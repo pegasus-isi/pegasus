@@ -84,7 +84,7 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     out = []
     stdout_handler = threading.Thread(
         target=_handle_stream,
-        args=(proc, proc.stdout, out, _logger if stream_stderr else None, logging.INFO),
+        args=(proc, proc.stdout, out, _logger if stream_stdout else None, logging.INFO),
     )
     stream_handlers.append(stdout_handler)
     stdout_handler.start()
