@@ -225,7 +225,7 @@ public class Braindump {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         mBag = bag;
@@ -319,7 +319,7 @@ public class Braindump {
      *
      * @param dag the concrete workflow.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         try {
@@ -347,7 +347,7 @@ public class Braindump {
      * @param additionalEntries additional entries to go in the braindump file, overwriting the
      *     default entries.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag, Map<String, String> additionalEntries)
             throws CodeGeneratorException {
@@ -426,7 +426,7 @@ public class Braindump {
      */
     protected String getGridDN() {
         String dn = null;
-        // load and intialize the CredentialHandler Factory
+        // load and initialize the CredentialHandler Factory
         CredentialHandlerFactory factory = new CredentialHandlerFactory();
         factory.initialize(mBag);
         CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);

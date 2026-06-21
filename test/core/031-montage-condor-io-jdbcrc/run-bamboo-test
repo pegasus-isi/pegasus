@@ -32,7 +32,7 @@ cat $HOME/.jdbcrc-test.conf >> ../pegasus.properties
 echo "Updating the database..."
 pegasus-db-admin update --conf ../pegasus.properties -t jdbcrc
 
-echo "Cleanning the database..."
+echo "Cleaning the database..."
 pegasus-rc-client --conf ../pegasus.properties list >tmp.list
 pegasus-rc-client --conf ../pegasus.properties --delete tmp.list
 rm -f tmp.list

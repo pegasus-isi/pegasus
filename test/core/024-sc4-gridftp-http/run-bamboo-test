@@ -39,7 +39,7 @@ echo "Checking workflow files..."
 # check the cache to make sure it only has the expected URLS
 (cat rosetta-0.cache | grep -v "file-based replica catalog" | grep -v " http://" | grep -v "^rosetta.exe" >$TOP_DIR/cache.urls) || /bin/true
 if [ -s $TOP_DIR/cache.urls ]; then
-    echo "Fatal: Unexected URLs found in rosetta-0.cache:"
+    echo "Fatal: Unexpected URLs found in rosetta-0.cache:"
     cat $TOP_DIR/cache.urls
     exit 1
 fi

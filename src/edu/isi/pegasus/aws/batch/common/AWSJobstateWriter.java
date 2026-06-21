@@ -30,7 +30,7 @@ public class AWSJobstateWriter {
     /** Default constructor. */
     public AWSJobstateWriter() {}
 
-    public void initialze(File directory, String prefix, Logger logger) {
+    public void initialize(File directory, String prefix, Logger logger) {
         // "405596411149";
         mLogger = org.apache.logging.log4j.LogManager.getLogger(AWSJobstateWriter.class);
         try {
@@ -40,9 +40,9 @@ public class AWSJobstateWriter {
                                     new FileWriter(
                                             new File(directory, prefix + JOBSTATE_LOG_FILENAME))));
         } catch (IOException ex) {
-            mLogger.error("Unable to initalized jobstate writer to directory " + directory, ex);
+            mLogger.error("Unable to initialized jobstate writer to directory " + directory, ex);
             throw new RuntimeException(
-                    "Unable to initalized jobstate writer to directory " + directory, ex);
+                    "Unable to initialized jobstate writer to directory " + directory, ex);
         }
     }
 

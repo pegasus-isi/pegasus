@@ -89,7 +89,7 @@ public class InMemorySchema extends DatabaseSchema implements VDC {
     }
 
     /**
-     * Pass-thru to driver. Always returns false, as the backend is main memory.
+     * Pass through to driver. Always returns false, as the backend is main memory.
      *
      * @return true, if it is feasible to cache results from the driver false, if requerying the
      *     driver is sufficiently fast (e.g. driver is in main memory, or driver does caching
@@ -135,7 +135,7 @@ public class InMemorySchema extends DatabaseSchema implements VDC {
      * Saves a Definition, that is either a Transformation or Derivation, into the backend database.
      *
      * @param definition is the new Definition to store.
-     * @param overwrite true, if existing defitions will be overwritten by new ones with the same
+     * @param overwrite true, if existing definitions will be overwritten by new ones with the same
      *     primary (or secondary) key (-set), or false, if a new definition will be rejected on key
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
@@ -182,7 +182,7 @@ public class InMemorySchema extends DatabaseSchema implements VDC {
 
     /**
      * Delete a specific Definition objects from the database. No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * "Fake" definitions are permissible, meaning it just has the secondary key triple.
      *
      * <p>This method is not implemented!
      *

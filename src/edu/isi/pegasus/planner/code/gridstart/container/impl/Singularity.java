@@ -34,7 +34,7 @@ public class Singularity extends AbstractContainer {
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null;
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

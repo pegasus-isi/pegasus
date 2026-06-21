@@ -309,7 +309,7 @@ public class CondorTest {
                     credFile.toString());
 
             // the credential file is associated in the env with full path
-            // and nothing in condor varialbes
+            // and nothing in condor variables
             ENV expectedENV = this.defaultENV();
             expectedENV.construct(PegasusCredentials.CREDENTIALS_FILE, credFile.getPath());
             edu.isi.pegasus.planner.namespace.Condor expectedCondorVariables =

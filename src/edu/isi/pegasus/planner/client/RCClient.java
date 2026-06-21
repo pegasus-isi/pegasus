@@ -809,7 +809,7 @@ public class RCClient extends Toolkit {
 
         if (prompt) System.out.print("rc> ");
         while ((line = lnr.readLine()) != null) {
-            // do away with superflous whitespaces and comments
+            // do away with superfluous whitespaces and comments
             if ((pos = line.indexOf('#')) != -1) line = line.substring(0, pos);
             line = line.trim();
 
@@ -888,7 +888,7 @@ public class RCClient extends Toolkit {
 
         while (true) {
             while (counter < chunk && (line = lnr.readLine()) != null) {
-                // do away with superflous whitespaces and comments
+                // do away with superfluous whitespaces and comments
                 if ((pos = line.indexOf('#')) != -1) line = line.substring(0, pos);
                 line = line.trim();
 

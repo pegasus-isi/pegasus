@@ -158,7 +158,7 @@ done
 if [ "$STATUS" = "Success" ]; then
     # give monitord some time to finish
     sleep 1m
-    echo "*** Workflow finished succesfully ***"
+    echo "*** Workflow finished successfully ***"
     exit 0
 else
     echo "*** Workflow failed ***" 1>&1

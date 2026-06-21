@@ -206,8 +206,8 @@ public class BookKeeper {
     }
 
     /**
-     * Obtains an existing mapping of a DV indentification to a job id. The identification used to
-     * be the DV's short ID, but recent changes use the full ID.
+     * Obtains an existing mapping of a DV identification to a job id. The identification used to be
+     * the DV's short ID, but recent changes use the full ID.
      *
      * @param id is the derivation identifier
      * @return a job identifier, or null if no such mapping exists.
@@ -396,7 +396,7 @@ public class BookKeeper {
             where = hint.lastIndexOf(XXXXXX);
         }
 
-        // create a changable buffer
+        // create a changeable buffer
         StringBuffer sb = new StringBuffer(hint);
 
         // find end of substitution area

@@ -40,7 +40,7 @@ public interface ReplicaSelector {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param prefferedSite the preffered site for picking up the replicas.
+     * @param prefferedSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected
@@ -50,13 +50,13 @@ public interface ReplicaSelector {
 
     /**
      * Selects a single replica amongst all the replicas returned by the implementing Replica
-     * Mechanism. If more than one replica is found to be matching the preffered site, a random
+     * Mechanism. If more than one replica is found to be matching the preferred site, a random
      * replica is picked up from the matching replicas. Else, in case of no match any replica maybe
      * returned.
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param prefferedSite the preffered site for picking up the replicas.
+     * @param prefferedSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.

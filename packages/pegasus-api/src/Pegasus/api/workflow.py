@@ -1224,7 +1224,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
     ):
         """
         status(self, long: bool = False, json:bool=False, dirs:bool=False, legend:bool=False, noqueue:bool=False, debug:bool=False)
-        Monitor the workflow by quering Condor and directories.
+        Monitor the workflow by querying Condor and directories.
 
         Also returns current status information of the workflow as a dict in the
         following format:
@@ -1407,7 +1407,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         analyze(self, verbose: int = 0, json_mode: bool = False, traverse_all: bool = False)
         Debug a workflow.
 
-        Also returns all info from AnalyzerOutput as a json strucuture in the
+        Also returns all info from AnalyzerOutput as a json structure in the
         following format:
 
         .. code-block:: python

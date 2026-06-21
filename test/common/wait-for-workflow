@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# This should probably be implementd using pegasus-status or pegasus-analyzer,
+# This should probably be implemented using pegasus-status or pegasus-analyzer,
 # if we can get good exit codes
 #
 

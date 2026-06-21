@@ -104,7 +104,7 @@ public class DefaultImplementation implements Implementation {
     protected SubmitMapper mSubmitDirFactory;
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      */

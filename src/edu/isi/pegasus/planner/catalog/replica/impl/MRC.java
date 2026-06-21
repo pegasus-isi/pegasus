@@ -106,7 +106,7 @@ public class MRC implements ReplicaCatalog {
         return 0;
     }
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /** Explicitly free resources before the garbage collection hits. */
     public void close() {
         for (Iterator it = this.rcIterator(); it.hasNext(); ) {
             ReplicaCatalog catalog = (ReplicaCatalog) it.next();

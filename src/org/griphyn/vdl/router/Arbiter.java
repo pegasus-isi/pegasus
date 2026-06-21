@@ -29,7 +29,7 @@ import java.util.*;
  */
 public interface Arbiter {
     /**
-     * The lone method of the arbitrarion receives some environmental information about the position
+     * The lone method of the arbitration receives some environmental information about the position
      * in the call stack. Currently, this information is of limited nature. Furthermore, it receives
      * the list of candidates. From this list, one candidate must be chosen, and returned to as the
      * chosen one.

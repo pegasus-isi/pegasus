@@ -96,7 +96,7 @@ public abstract class Abstract {
      * @param bag bag of initialization objects
      * @param transferRefiner the transfer refiner being used
      */
-    protected void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
+    protected void initialize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
         mBag = bag;
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();

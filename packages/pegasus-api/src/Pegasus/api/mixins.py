@@ -406,7 +406,7 @@ class ProfileMixin:
         :type max_time: int, optional
         :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_wall_time: int, optional
-        :param min_memory: the minumum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :param min_memory: the minimum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type min_memory: str, optional
         :param project: associates an account with a job at the remote end, defaults to None
         :type project: str, optional
@@ -758,7 +758,7 @@ class ProfileMixin:
     ):
         """Add Selector profile(s).
 
-        The Selector namespace allows users to override the beahvior of the Workflow
+        The Selector namespace allows users to override the behavior of the Workflow
         Mapper during site selection. This gives you finer grained control over
         where a job executes and what executable it refers to.
 

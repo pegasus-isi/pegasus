@@ -357,7 +357,7 @@ class BaseAnalyze:
                         BaseAnalyze.print_console(" " + dagman_lib_err_contents)
 
     def print_console(stmt="") -> None:
-        """A utilty function to print to console with the correct indentation."""
+        """A utility function to print to console with the correct indentation."""
         print(indent + stmt)
 
     def backticks(cmd_line) -> None:
@@ -370,7 +370,7 @@ class BaseAnalyze:
 
     def addon(options):
         """This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
-        Only a certain subset of options are propogated to the sub workflow invocations if passed.
+        Only a certain subset of options are propagated to the sub workflow invocations if passed.
         """
         cmd_line_args = ""
 
@@ -891,7 +891,7 @@ class AnalyzeDB(BaseAnalyze):
                 else WORKFLOW_STATUS.FAILURE
             )
         else:
-            raise ValueError(f"Invalid worklfow state {last_wf_state}")
+            raise ValueError(f"Invalid workflow state {last_wf_state}")
 
         return workflow_status
 
@@ -1582,7 +1582,7 @@ class DebugWF(BaseAnalyze):
             # and checking the exit code, otherwise $? will break...
             debug_script.write("# Check error code\n")
             debug_script.write("rc=$?\n")
-            # reenable fail on error before launching
+            # re-enable fail on error before launching
             debug_script.write("set -e\n")
             debug_script.write("if [ $rc -eq 0 ]; then\n")
             debug_script.write('   echo "executable ran successfully"\n')

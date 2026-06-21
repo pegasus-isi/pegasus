@@ -48,7 +48,7 @@ public abstract class Executable {
     /** The object holding all the properties pertaining to Pegasus. */
     protected PegasusProperties mProps;
 
-    /** It stores the verison of the Griphyn Virtual Data System software. */
+    /** It stores the version of the Griphyn Virtual Data System software. */
     protected String mVersion;
 
     /** The error message to be logged. */
@@ -179,7 +179,7 @@ public abstract class Executable {
                     .append(": ")
                     .append(cause.getMessage());
 
-            // append just one elment of stack trace for each exception
+            // append just one element of stack trace for each exception
             message.append(" at ").append(cause.getStackTrace()[0]);
         }
         return message.toString();

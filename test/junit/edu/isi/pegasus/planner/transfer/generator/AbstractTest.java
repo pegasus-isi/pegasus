@@ -60,7 +60,7 @@ public class AbstractTest {
 
         Method initializeMethod =
                 Abstract.class.getDeclaredMethod(
-                        "initalize",
+                        "initialize",
                         edu.isi.pegasus.planner.classes.ADag.class,
                         edu.isi.pegasus.planner.classes.PegasusBag.class,
                         edu.isi.pegasus.planner.transfer.Refiner.class);

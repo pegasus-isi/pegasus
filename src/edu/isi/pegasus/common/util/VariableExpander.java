@@ -32,7 +32,7 @@ public class VariableExpander {
     private StrSubstitutor mExpander;
 
     /**
-     * The default constructor, which intializes the values from the System environment variables,
+     * The default constructor, which initializes the values from the System environment variables,
      * and has case sensitivity turned off.
      */
     public VariableExpander() {

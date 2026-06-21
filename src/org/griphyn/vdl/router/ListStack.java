@@ -49,7 +49,7 @@ public class ListStack {
     }
 
     /**
-     * Removes the tos, thus makeing the next-lower vector the tos.
+     * Removes the tos, thus making the next-lower vector the tos.
      *
      * @return the old top-of-stack.
      * @throws EmptyStackException if the stack did not have any elements.

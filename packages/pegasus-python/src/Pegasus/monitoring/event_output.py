@@ -478,7 +478,7 @@ class AMQPEventSink(EventSink):
 
     def close(self):
         if self._worker_thread.is_alive():
-            self._log.trace("Waiting for queue to emtpy.")
+            self._log.trace("Waiting for queue to empty.")
             self._msg_queue.join()  # wait for queue to empty if worker is alive
         self._stopping = True
         self._log.trace("Waiting for publisher thread to exit.")

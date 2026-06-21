@@ -69,7 +69,7 @@ Options
    This option turns off the output from parsing Condor Q.
 
    By default, Condor Q will be parsed for jobs belonging to the workflow
-   run directory specified as an arguemnt.
+   run directory specified as an argument.
 
 **-d**; \ **--debug**
    This is an internal debugging tool and should not be used outside the

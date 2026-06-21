@@ -328,7 +328,7 @@ Usage of the ``pegasus-em file-pattern-trigger`` command is as follows:
 - ``INTERVAL``: the time interval on which the trigger will operate; must be formatted as
   ``<int><s|m|h|d>`` (e.g. ``5m``)
 
-- ``FILE_PATTERN``: a file pattern acceptible by ``glob.glob``; note that
+- ``FILE_PATTERN``: a file pattern acceptable by ``glob.glob``; note that
   this pattern must begin with an absolute path (e.g., ``/inputs/*.csv``)
 
 - ``TIMEOUT``: a timeout for the trigger; must be formatted as ``<int><s|m|h|d>`` (e.g. ``1h``)

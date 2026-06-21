@@ -1172,7 +1172,7 @@ public class Job extends DAX implements Cloneable {
     /**
      * Helper: Formats the attributes of any {@link Filename} instance, or inherited instances.
      *
-     * @param tag is the name of the element to use when formating.
+     * @param tag is the name of the element to use when formatting.
      * @param indent is the indentation of the element, may be null.
      * @param namespace is an optional namespace to use in the tag.
      * @param f is an instance of a <code>Filename</code> object.

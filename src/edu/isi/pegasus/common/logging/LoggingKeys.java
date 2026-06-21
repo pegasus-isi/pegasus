@@ -14,7 +14,7 @@
 package edu.isi.pegasus.common.logging;
 
 /**
- * Some predifined logging keys to be used for logging.
+ * Some predefined logging keys to be used for logging.
  *
  * @author Karan Vahi
  * @author gmehta

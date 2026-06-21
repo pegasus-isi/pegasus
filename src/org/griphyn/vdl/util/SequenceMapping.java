@@ -27,8 +27,8 @@ import java.util.HashMap;
  */
 public class SequenceMapping {
     /**
-     * The forward mapping between the external indentifier and the internally generated sequence
-     * for the identifier.
+     * The forward mapping between the external identifier and the internally generated sequence for
+     * the identifier.
      */
     private HashMap m_forward;
 

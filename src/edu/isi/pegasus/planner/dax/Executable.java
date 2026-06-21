@@ -512,7 +512,7 @@ public class Executable extends CatalogType {
             mLogger.log(
                     "The executable element for "
                             + mName
-                            + " must have atleast 1 profile, 1 pfn or 1 metadata entry. Skipping"
+                            + " must have at least 1 profile, 1 pfn or 1 metadata entry. Skipping"
                             + " empty executable element",
                     LogManager.WARNING_MESSAGE_LEVEL);
         } else {

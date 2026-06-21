@@ -40,8 +40,8 @@ set_logger_class = setLoggerClass
 
 def get_logger(filename):
     """
-    Return a NetLogger logger with qualified name based on the provied
-    filename.  This method is indended to be called by scripts and
+    Return a NetLogger logger with qualified name based on the provided
+    filename.  This method is intended to be called by scripts and
     modules by passing in their own __file__ as filename after already
     having initialized the logging module via the NL OptionParser or
     some equivalent action.

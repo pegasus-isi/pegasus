@@ -55,7 +55,7 @@ pegasus-cleanup
     all cleanup jobs in the workflow. The maxjobs for this category is
     set to 4 by default.
 
-    This can be overriden by specifying the property
+    This can be overridden by specifying the property
     dagman.cleanup.maxjobs
 
 3) Support for CondorC
@@ -227,9 +227,9 @@ workflows
    More details at
     PM-616 [\#734](https://github.com/pegasus-isi/pegasus/issues/734)
 
-4) Properties propogation for sub workflows
+4) Properties propagation for sub workflows
 
-   There was a bug with properties propogation for hierarchal
+   There was a bug with properties propagation for hierarchal
    workflows when using PegasusLite for some sub workflows and
    sharedfs for others
 

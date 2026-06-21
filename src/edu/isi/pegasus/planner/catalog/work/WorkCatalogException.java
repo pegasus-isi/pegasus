@@ -36,7 +36,7 @@ public class WorkCatalogException extends CatalogException {
     /**
      * Constructs a <code>WorkCatalogException</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public WorkCatalogException(String s) {
         super(s);
@@ -46,7 +46,7 @@ public class WorkCatalogException extends CatalogException {
      * Constructs a <code>WorkCatalogException</code> with the specified detailed message and a
      * cause.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      * @param cause is the cause (which is saved for later retrieval by the {@link
      *     java.lang.Throwable#getCause()} method). A <code>null</code> value is permitted, and
      *     indicates that the cause is nonexistent or unknown.

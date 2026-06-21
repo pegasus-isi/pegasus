@@ -264,7 +264,7 @@ public class Job extends Data implements GraphNodeContent {
     public String stdErr;
 
     /**
-     * The arguements for the job. It is the contains the arguments for the job. This string is put
+     * The arguments for the job. It is the contains the arguments for the job. This string is put
      * in the arguments in Condor Submit File.
      */
     public String strargs;
@@ -298,11 +298,11 @@ public class Job extends Data implements GraphNodeContent {
 
     /**
      * For Condor Namespace. This contains the extra Condor options which one may want to specify.
-     * These are copied straightaway to the Submit file.
+     * These are copied straight away to the Submit file.
      */
     public Condor condorVariables;
 
-    /** To accomodate the environment variables which might needed to be set. */
+    /** To accommodate the environment variables which might needed to be set. */
     public ENV envVariables;
 
     /**
@@ -311,7 +311,7 @@ public class Job extends Data implements GraphNodeContent {
      */
     public Dagman dagmanVariables;
 
-    /** To accomodate all the hints that maybe passed through the DAX. */
+    /** To accommodate all the hints that maybe passed through the DAX. */
     public Hints hints;
 
     /** The Pegasus namespace variable. */
@@ -372,7 +372,7 @@ public class Job extends Data implements GraphNodeContent {
     /** A reference to the container to use to launch the transformation */
     private Container mContainer;
 
-    /** Intialises the member variables. */
+    /** Initialises the member variables. */
     public Job() {
         jobName = "";
         namespace = "";
@@ -714,7 +714,7 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      *
      * @param invoke the invoke object containing the notification
      */
@@ -723,7 +723,7 @@ public class Job extends Data implements GraphNodeContent {
     }
 
     /**
-     * Adds all the notifications specfied in the TransformationCatalogEntry to the underlying job
+     * Adds all the notifications specified in the TransformationCatalogEntry to the underlying job
      * notifications.
      *
      * @param entry the TransformationCatalogEntry object
@@ -1422,7 +1422,7 @@ public class Job extends Data implements GraphNodeContent {
      * Constructs the fully qualified name of a transformation with which to query the TC, including
      * the namespace and version.
      *
-     * @return the complete tranformation name.
+     * @return the complete transformation name.
      */
     public String getCompleteTCName() {
         return Separator.combine(namespace, logicalName, version);
@@ -1664,7 +1664,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Returns the arguments to the prescript for the job if set.
      *
-     * @return the argumetns to the prescript script that has to be run as a prescript, else null if
+     * @return the arguments to the prescript script that has to be run as a prescript, else null if
      *     no prescript has been set.
      */
     public String getPreScriptArguments() {
@@ -1712,7 +1712,7 @@ public class Job extends Data implements GraphNodeContent {
      * Updates all the profile namespaces with the information associated in the transformation
      * catalog for this job. It ends up updating already existing information, and adds supplemental
      * new information if present in the transformation catalog. The method does not explicitly
-     * check whehter the data object passed refers to this job or not. The calling method should
+     * check whether the data object passed refers to this job or not. The calling method should
      * ensure this.
      *
      * @param entry the <code>TCEntry</code> object corresponding to the entry in the Transformation
@@ -1733,7 +1733,7 @@ public class Job extends Data implements GraphNodeContent {
      * Updates all the profile namespaces with the information specified by the user in the
      * properties file, that apply to this job. It ends up updating already existing information,
      * and adds supplemental new information if present in the properties file. The method does not
-     * explicitly check whehter the data object passed refers to this job or not. The calling method
+     * explicitly check whether the data object passed refers to this job or not. The calling method
      * should ensure this.
      *
      * @param properties the <code>PegasusProperties</code> object containing the user properties.
@@ -1752,7 +1752,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Updates all the profile namespaces with the information specified in list of profile objects
      * passed. Pool catalog returns profile information as a list of <code>Profile</code> objects
-     * that need to be propogated to the job. It ends up updating already existing information, and
+     * that need to be propagated to the job. It ends up updating already existing information, and
      * adds supplemental new information if present in the properties file.
      *
      * @param profiles The <code>Profiles</code> that need to be incorporated in the jobs profile
@@ -1817,7 +1817,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Updates all the profile namespaces with the information specified in list of profile objects
      * passed. Pool catalog returns profile information as a list of <code>Profile</code> objects
-     * that need to be propogated to the job. It ends up updating already existing information, and
+     * that need to be propagated to the job. It ends up updating already existing information, and
      * adds supplemental new information if present in the properties file.
      *
      * @param profiles the list of <code>Profile</code> objects that need to be incorporated in the
@@ -1860,7 +1860,7 @@ public class Job extends Data implements GraphNodeContent {
 
     /**
      * Merges profiles from another job to this job in a controlled fashion. The merging of the
-     * profile is dependant upon the namespace to which it belongs. Some profiles maybe overriden,
+     * profile is dependent upon the namespace to which it belongs. Some profiles maybe overridden,
      * others maybe summed up etc.
      *
      * @param job the <code>Job</code> object containing the job description for the job whose
@@ -1919,7 +1919,7 @@ public class Job extends Data implements GraphNodeContent {
      * job has been scheduled to site "local" and the class of the job coressponds to the auxillary
      * jobs that have been created by Pegasus.
      *
-     * @return boolean true to indicate job can run in work directory, false job cant be run.
+     * @return boolean true to indicate job can run in work directory, false job can't be run.
      */
     public boolean runInWorkDirectory() {
         return !(executionPool != null

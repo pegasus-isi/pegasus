@@ -18,7 +18,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * The interface that defines the creation of a POSTSCRIPT for a job. The POSTSCRIPT created is
- * dependant on the GridStart being used to enable the job.
+ * dependent on the GridStart being used to enable the job.
  *
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$

@@ -51,7 +51,7 @@ public class PBS extends Abstract {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         super.initialize(bag);
@@ -64,7 +64,7 @@ public class PBS extends Abstract {
      *
      * @param dag the concrete workflow.
      * @return handle to the GRMS output file.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         Collection result = new ArrayList(1);
@@ -118,7 +118,7 @@ public class PBS extends Abstract {
      *
      * @param dag the dag of which the job is a part of.
      * @param job the <code>Job</code> object holding the information about that particular job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
         throw new CodeGeneratorException("The code generator only works on the workflow level");

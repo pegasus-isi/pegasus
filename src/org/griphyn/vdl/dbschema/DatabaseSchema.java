@@ -371,7 +371,7 @@ public abstract class DatabaseSchema implements Catalog {
     }
 
     /**
-     * pass-thru to driver.
+     * pass through to driver.
      *
      * @return true, if it is feasible to cache results from the driver false, if requerying the
      *     driver is sufficiently fast (e.g. driver is in main memory, or driver does caching

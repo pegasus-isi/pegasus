@@ -112,7 +112,7 @@ public abstract class Abstract implements JobAggregator {
      * @param name the name of the transformation
      * @return the complete transformation name
      */
-    public static String getCompleteTranformationName(String name) {
+    public static String getCompleteTransformationName(String name) {
         return Separator.combine(TRANSFORMATION_NAMESPACE, name, TRANSFORMATION_VERSION);
     }
 
@@ -356,7 +356,7 @@ public abstract class Abstract implements JobAggregator {
 
         // set the arguments for the clustered job
         // they are set in the end to ensure that profiles can
-        // be used to specify the argumetns
+        // be used to specify the arguments
         job.setArguments(this.aggregatedJobArguments(job));
 
         return;
@@ -491,7 +491,7 @@ public abstract class Abstract implements JobAggregator {
 
         mLogger.log(
                 "Creating a default TC entry for "
-                        + Abstract.getCompleteTranformationName(name)
+                        + Abstract.getCompleteTransformationName(name)
                         + " at site "
                         + site,
                 LogManager.DEBUG_MESSAGE_LEVEL);
@@ -501,7 +501,7 @@ public abstract class Abstract implements JobAggregator {
             // cannot create default TC
             mLogger.log(
                     "Unable to create a default entry for "
-                            + Abstract.getCompleteTranformationName(name),
+                            + Abstract.getCompleteTransformationName(name),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             // set the flag back to true
             return defaultTCEntry;
@@ -626,7 +626,7 @@ public abstract class Abstract implements JobAggregator {
             stdin = new File(directory, name);
             writer = new BufferedWriter(new FileWriter(stdin));
 
-            // traverse throught the jobs to determine input/output files
+            // traverse through the jobs to determine input/output files
             // and merge the profiles for the jobs
             // int taskid = 1;
 
@@ -637,16 +637,16 @@ public abstract class Abstract implements JobAggregator {
                                     job.nodeIterator(); // dont care about order
                     it.hasNext(); ) {
                 GraphNode node = (GraphNode) it.next();
-                Job constitutentJob = (Job) node.getContent();
+                Job constituentJob = (Job) node.getContent();
 
                 // handle stdin
-                if (constitutentJob instanceof AggregatedJob) {
+                if (constituentJob instanceof AggregatedJob) {
                     // PM-817 recursive clustering case, we need to
-                    // write out merge_XXXX.in file for constitutent job
+                    // write out merge_XXXX.in file for constituent job
                     // that is a clustered job itself
                     File file =
                             this.writeOutInputFileForJobAggregator(
-                                    (AggregatedJob) constitutentJob, taskid);
+                                    (AggregatedJob) constituentJob, taskid);
                     // slurp in contents of it's stdin
                     // taking care of the taskid increments across recursion
                     BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -671,17 +671,17 @@ public abstract class Abstract implements JobAggregator {
                     // write out the argument string to the
                     // stdin file for the fat job
 
-                    // genereate the comment string that has the
+                    // generate the comment string that has the
                     // taskid transformation derivation
-                    writer.write(getCommentString(constitutentJob, taskid) + "\n");
+                    writer.write(getCommentString(constituentJob, taskid) + "\n");
 
                     // the arguments are no longer set as condor profiles
                     // they are now set to the corresponding profiles in
                     // the Condor Code Generator only.
                     writer.write(
-                            constitutentJob.getRemoteExecutable()
+                            constituentJob.getRemoteExecutable()
                                     + " "
-                                    + constitutentJob.getArguments()
+                                    + constituentJob.getArguments()
                                     + "\n");
                     taskid++;
                 }

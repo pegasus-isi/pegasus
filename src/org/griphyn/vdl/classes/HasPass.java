@@ -138,7 +138,7 @@ public interface HasPass {
     public java.lang.String getUsesspace();
 
     /**
-     * Accessor: Obtains the maximum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the maximum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the maximum inclusive version number.
@@ -146,7 +146,7 @@ public interface HasPass {
     public String getMaxIncludeVersion();
 
     /**
-     * Accessor: Obtains the minimum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the minimum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the minimum inclusive version number.

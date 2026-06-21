@@ -53,7 +53,7 @@ public class CondorGlideIN extends Abstract {
      * pools?
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
 

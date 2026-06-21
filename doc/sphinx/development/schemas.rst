@@ -431,8 +431,8 @@ transformation catalog.
 
 The *type* attribute indicates whether it is a
 
-* job: compute job in the worflow
-* pegasusWorklfow: an abstract workflow embedded as a node in the workflow.
+* job: compute job in the workflow
+* pegasusWorkflow: an abstract workflow embedded as a node in the workflow.
 * condorWorkflow: a condor dag workflow embedded as a node in the workflow.
 
 The *argument* array element contains the complete command-line that is needed

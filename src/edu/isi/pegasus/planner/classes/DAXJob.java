@@ -131,7 +131,7 @@ public class DAXJob extends Job {
     public boolean addOutputFileLocation(PegasusBag bag, FileTransfer ft) {
         // check if the backend is initialized
         if (this.mOutputMapperBackend == null) {
-            intializeOutputMapperBackend(bag);
+            initializeOutputMapperBackend(bag);
         }
         NameValue<String, String> nv = ft.getDestURL();
         int result = this.mOutputMapperBackend.insert(ft.getLFN(), nv.getValue(), nv.getKey());
@@ -237,7 +237,7 @@ public class DAXJob extends Job {
      *
      * @param bag
      */
-    private void intializeOutputMapperBackend(PegasusBag bag) {
+    private void initializeOutputMapperBackend(PegasusBag bag) {
         this.mOutputMapperBackendPath =
                 this.getFileFullPath(
                         bag.getPlannerOptions().getSubmitDirectory(), DAXJob.OUTPUT_MAP_SUFFIX);

@@ -61,13 +61,13 @@ public class Derivation extends Definition // thus implements VDL
 
     /**
      * Any <code>Transformation</code> may exist in multiple versions. This argument specifies the
-     * minimum permissable version that can be used. FIXME: versioning is not really supported.
+     * minimum permissible version that can be used. FIXME: versioning is not really supported.
      */
     private String m_maxIncludeVersion;
 
     /**
      * Any <code>Transformation</code> may exist in multiple versions. This argument specifies the
-     * maximum permissable version that can be used. FIXME: versioning is not really supported.
+     * maximum permissible version that can be used. FIXME: versioning is not really supported.
      */
     private String m_minIncludeVersion;
 
@@ -107,12 +107,12 @@ public class Derivation extends Definition // thus implements VDL
 
     /**
      * Convenience ctor: Names a derivation and supplies the used <code>Transformation</code> as
-     * well as the permissable version range.
+     * well as the permissible version range.
      *
      * @param name is the name of the <code>Derivation</code>.
      * @param uses is the name of the <code>Transformation</code>.
-     * @param min is the minimum inclusive permissable version.
-     * @param max is the maximum inclusive permissable version.
+     * @param min is the minimum inclusive permissible version.
+     * @param max is the maximum inclusive permissible version.
      * @see Transformation
      */
     public Derivation(String name, String uses, String min, String max) {
@@ -132,8 +132,8 @@ public class Derivation extends Definition // thus implements VDL
      * @param version is the version of the <code>Derivation</code>.
      * @param us is the namespace to search for a <code>Transformation</code>.
      * @param uses is the name of the <code>Transformation</code>.
-     * @param min is the minimum inclusive permissable version.
-     * @param max is the maximum inclusive permissable version.
+     * @param min is the minimum inclusive permissible version.
+     * @param max is the maximum inclusive permissible version.
      * @see Transformation
      */
     public Derivation(
@@ -244,7 +244,7 @@ public class Derivation extends Definition // thus implements VDL
     }
 
     /**
-     * Accessor: Obtains the maximum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the maximum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the maximum inclusive version number.
@@ -255,7 +255,7 @@ public class Derivation extends Definition // thus implements VDL
     }
 
     /**
-     * Accessor: Obtains the minimum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the minimum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the minimum inclusive version number.
@@ -434,7 +434,7 @@ public class Derivation extends Definition // thus implements VDL
     }
 
     /**
-     * Accessor: Sets the maximum inclusive permissable version of a logical transformation to run
+     * Accessor: Sets the maximum inclusive permissible version of a logical transformation to run
      * with.
      *
      * @param miv is the (new) maximum inclusive version.
@@ -445,7 +445,7 @@ public class Derivation extends Definition // thus implements VDL
     }
 
     /**
-     * Accessor: Sets the minimum inclusive permissable version of a logical transformation to run
+     * Accessor: Sets the minimum inclusive permissible version of a logical transformation to run
      * with.
      *
      * @param miv is the (new) minimum inclusive version.

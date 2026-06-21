@@ -103,7 +103,7 @@ public class Cleanup implements CleanupImplementation {
      *
      * @return the complete transformation name
      */
-    public static String getCompleteTranformationName() {
+    public static String getCompleteTransformationName() {
         return Separator.combine(
                 TRANSFORMATION_NAMESPACE, TRANSFORMATION_NAME, TRANSFORMATION_VERSION);
     }
@@ -394,7 +394,7 @@ public class Cleanup implements CleanupImplementation {
             // should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ")
-                    .append(Cleanup.getCompleteTranformationName())
+                    .append(Cleanup.getCompleteTransformationName())
                     .append(" at site ")
                     .append(site);
 
@@ -419,7 +419,7 @@ public class Cleanup implements CleanupImplementation {
 
         mLogger.log(
                 "Creating a default TC entry for "
-                        + Cleanup.getCompleteTranformationName()
+                        + Cleanup.getCompleteTransformationName()
                         + " at site "
                         + site,
                 LogManager.DEBUG_MESSAGE_LEVEL);

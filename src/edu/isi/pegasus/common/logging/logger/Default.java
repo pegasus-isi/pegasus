@@ -394,7 +394,7 @@ public class Default extends LogManager {
      * date-timestamp generated would be 2003-06-06T14:31:27-07:00 where -07:00 denotes the timezone
      * offset of the local timezone from UTC.
      *
-     * @return the formattted timestamp;
+     * @return the formatted timestamp;
      */
     public String getTimeStamp() {
         String st = Default.mFormatter.now();

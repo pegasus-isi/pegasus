@@ -134,7 +134,7 @@ public class FileDetectorTest {
                             + "\n"
                             + "   #specify profiles that apply for all the sites for the"
                             + " transformation\n"
-                            + "   #in each site entry the profile can be overriden\n"
+                            + "   #in each site entry the profile can be overridden\n"
                             + "   #profile env \"APP_HOME\" \"/tmp/karan\"\n"
                             + "   #profile env \"JAVA_HOME\" \"/bin/java.1.5\"\n"
                             + "  \n"

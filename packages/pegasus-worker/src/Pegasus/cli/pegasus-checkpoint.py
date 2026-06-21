@@ -241,7 +241,7 @@ class CheckpointWorker(threading.Thread):
         matched = set()
 
         # n^2.. maybe can do a little better by pulling out files from files_in_cwd (using a set
-        # isntead) as we make matches so we don't try to iterate over it again
+        # instead) as we make matches so we don't try to iterate over it again
         for p in patterns:
             for f in files_in_cwd:
                 is_match = bool(p.fullmatch(f))
