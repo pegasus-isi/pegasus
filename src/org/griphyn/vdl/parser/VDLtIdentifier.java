@@ -26,7 +26,7 @@ class VDLtIdentifier implements VDLtToken {
     private String m_value;
 
     /**
-     * Contructs a new identifiert to pass.
+     * Constructs a new identifiert to pass.
      *
      * @param value is the name of the identifier
      */
@@ -37,7 +37,7 @@ class VDLtIdentifier implements VDLtToken {
     /**
      * Obtains the current name of the identifier passed.
      *
-     * @return the name of the identifer
+     * @return the name of the identifier
      */
     public String getValue() {
         return this.m_value;

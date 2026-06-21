@@ -339,7 +339,7 @@ after 2.4.0 release and some feature enhancements.
       <profile namespace="env" key="LD_LIBRARY_PATH">/usr/local/globus/default/lib</profile>
 
        <!-- the directory where a user wants to run the jobs on the
-   	nodes retrived from ec2 -->
+   	nodes retrieved from ec2 -->
        <profile namespace="env" key="wntmp">/mnt</profile>
 
        <profile namespace="pegasus" key="style">condor</profile>
@@ -485,7 +485,7 @@ launched on the remote node.
    If a user is part of the Engage VO they should set
    pegasus.catalog.site.osgmm.collector.host=engage-central.renci.org
 
-   The default VO used is LIGO. Can be overriden by specifying the
+   The default VO used is LIGO. Can be overridden by specifying the
    --vo option to pegasus-get-sites , or specifying the property
    pegasus.catalog.site.osgmm.vo
 
@@ -593,8 +593,8 @@ launched on the remote node.
    pegasus.transfer.srm.[sitename].service.url
    pegasus.transfer.srm.[sitename].service.mountpoint
 ```
-   Pegasus will then map SRM URL's associate with site to a paht on
-   the filesytem by replacing the service url component with the mount
+   Pegasus will then map SRM URL's associate with site to a path on
+   the filesystem by replacing the service url component with the mount
    point.
 
    For example if user has this specified
@@ -680,7 +680,7 @@ launched on the remote node.
 
 15) Removing profile keys as part of overriding profiles
 
-   There is now a notion of empty profile key valus in Pegasus.  The
+   There is now a notion of empty profile key values in Pegasus.  The
    default action on empty key value is to remove the key. Currently
    the following namespaces follow this convention
 
@@ -881,7 +881,7 @@ launched on the remote node.
    pegasus.selector.replica  Regex
 
    The Regex replica selector allows the user allows the user to
-   specifiy the regex expressions to use for ranking various PFNs
+   specify the regex expressions to use for ranking various PFNs
    returned from the Replica Catalog for a particular LFN. This
    replica selector selects the highest ranked PFN i.e the replica
    with the lowest rank value.
@@ -942,7 +942,7 @@ launched on the remote node.
    in local universe instead of scheduler universe.
 
    Additionally, extra checks were put in to handle the Condor File
-   Transfer Mechansim issues in case local/scheduler universe. This
+   Transfer Mechanism issues in case local/scheduler universe. This
    was tracked in bugzilla at
    http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=40
 
@@ -1030,7 +1030,7 @@ launched on the remote node.
     By default in case of deferred planning cleanup is turned off as
     the cleanup algorithm does not work across partitions.
     However, in scenarios where the partitions themseleves are
-    independant ( i.e. dont share files ), user can safely turn on
+    independent ( i.e. dont share files ), user can safely turn on
     cleanup.
 
     This can now be done by setting
@@ -1115,7 +1115,7 @@ launched on the remote node.
 
     There was a bug where tailstatd incorrectly generated events in
     the jobstate.log while parsing condor logs. This was due to an
-    errorneous regex expression for determining the event
+    erroneous regex expression for determining the event
     POST|PRE SCRIPT STARTED.
 
     The earlier expression did not allow for . in jobnames. This is
@@ -1214,7 +1214,7 @@ launched on the remote node.
    However, this can be configured by setting the property
    pegasus.transfer.setup.impl property. If you also, have
    pegasus.transfer.*.impl set in your properties file, then you need
-   explicilty set pegasus.transfer.setup.impl to GUC
+   explicitly set pegasus.transfer.setup.impl to GUC
 
 
    The code discovers the worker package by looking up pegasus::worker
@@ -1233,7 +1233,7 @@ launched on the remote node.
 
    There is an untar job added to the workflow after the setup job that
    un tars the worker package on the remote site. It defaults to /bin/tar .
-   However can be overriden by specifying the entry tar in the
+   However can be overridden by specifying the entry tar in the
    transformation catalog for a particular site.
 
 
@@ -1274,7 +1274,7 @@ launched on the remote node.
    The value passed to the source option is case sensitive.
 
    Additionally, the VORS module of pegasus-get-sites determines the
-   value of GLOBUS_LOCATION variable dependant on whether the
+   value of GLOBUS_LOCATION variable dependent on whether the
    auxillary jobmanager is of type fork or not.
 
    If it is of type fork then picks up the value of GLOBUS_LOCATION
@@ -1311,7 +1311,7 @@ launched on the remote node.
       event.pegasus.parsing.dax dax.id se18-gda-nested.dax - STARTED
       event.pegasus.parsing.dax dax.id se18-gda-nested.dax - FINISHED
       job.id jobGDA
-      job.id jobGDA query.name getpredicted performace time 10.00
+      job.id jobGDA query.name getpredicted performance time 10.00
       event.pegasus.ranking dax.id se18-gda.dax - FINISHED
 ```
 
@@ -1343,7 +1343,7 @@ launched on the remote node.
       ts=2008-09-06T12:26:20.100395Z event=event.pegasus.ranking \
       msgid=4dcecb68-74fe-4fd5-aa9e-ea1cee88727d \
       eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5 \
-      job.id="jobGDA" query.name="getpredicted performace" time="10.00"
+      job.id="jobGDA" query.name="getpredicted performance" time="10.00"
 
       ts=2008-09-06T12:26:20.102003Z event=event.pegasus.ranking.end \
       msgid=31f50f39-efe2-47fc-9f4c-07121280cd64 \
@@ -1813,7 +1813,7 @@ with jobs. For the above example, it will look as follows
    Also with the filename type added a type attribute. It defaults to
    data. Additionally user can have the values
    executable|pattern. Users can use type=executable to specify any
-   dependant executables that their jobs required. All executable
+   dependent executables that their jobs required. All executable
    files are tracked in the transformation catalog.
 
    The above change was tracked via bugzilla
@@ -1858,7 +1858,7 @@ with jobs. For the above example, it will look as follows
    Pegasus now allows the users to query multiple replica catalogs at
    the same time to discover the locations of input data sets.
 
-   For this a new Replica Catalog implmentation was developed.
+   For this a new Replica Catalog implementation was developed.
 
    The users need to do the following to use it.
 

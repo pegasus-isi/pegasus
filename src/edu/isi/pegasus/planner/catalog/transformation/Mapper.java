@@ -42,7 +42,7 @@ public abstract class Mapper {
     public static final String PACKAGE_NAME =
             "edu.isi.pegasus.planner.catalog.transformation.mapper";
 
-    /** The handle to the tranformation catalog. */
+    /** The handle to the transformation catalog. */
     protected TransformationCatalog mTCHandle;
 
     /** The handle to the RIC. */

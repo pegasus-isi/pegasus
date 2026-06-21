@@ -51,7 +51,7 @@ import java.util.Set;
  * tr example::keg:1.0 {
  *
  * #specify profiles that apply for all the sites for the transformation
- * #in each site entry the profile can be overriden
+ * #in each site entry the profile can be overridden
  *
  * profile env "APP_HOME" "/tmp/myscratch"
  * profile env "JAVA_HOME" "/opt/java/1.6"
@@ -454,7 +454,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @param namespace String The namespace of the transformation to search for.
      * @param name String The name of the transformation to search for.
      * @param version String The version of the transformation to search for.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiles found.
      * @throws Exception NotImplementedException if not implemented.
      * @see edu.isi.pegasus.planner.classes.Profile
@@ -472,7 +472,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @param type TCType The type of the transformation to search for. <br>
      *     (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
      * @throws Exception NotImplementedException if not implemented.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiless found.
      * @see edu.isi.pegasus.planner.classes.Profile
      */
@@ -674,7 +674,7 @@ public class Text extends Abstract implements TransformationCatalog {
      * @param system the System information associated with a physical transformation.
      * @param invokes the Notifications associated with the transformation.
      * @param write boolean to commit changes to backend catalog
-     * @return boolean true if succesfully added, returns false if error and throws exception.
+     * @return boolean true if successfully added, returns false if error and throws exception.
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo

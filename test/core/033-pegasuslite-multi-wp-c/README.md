@@ -1,7 +1,7 @@
 TEST DESCRIPTION
 
 - clustering is turned on
-- worker package transfer is not explicity set. instead it is only
+- worker package transfer is not explicitly set. instead it is only
   transferred for condorpool that is run in condorio mode.
 - CCG site is sharedfs
 - condorpool is condorio (default configuration)

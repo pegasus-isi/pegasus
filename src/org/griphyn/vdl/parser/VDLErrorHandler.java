@@ -22,7 +22,7 @@ import org.xml.sax.*;
 /**
  * This class is the error handler for the parser. It defines how to handle three different kinds of
  * parsing exceptions: warning, error, and fatal error. Here we simply print the error message and
- * the location where the error happend.
+ * the location where the error happened.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao

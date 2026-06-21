@@ -458,8 +458,8 @@ class ThrottleTimer:
         """Create timer.
 
         'run_ratio' is the desired ratio of the time between calls to the
-          time sleeping in ths timer.
-        'min_sleep_sec' is the mininum size of the argument to time.sleep(),
+          time sleeping in the timer.
+        'min_sleep_sec' is the minimum size of the argument to time.sleep(),
           before throttle() will actually call it. This attempts to minimize
           the inaccuracy encountered with very small sleep times.
         """

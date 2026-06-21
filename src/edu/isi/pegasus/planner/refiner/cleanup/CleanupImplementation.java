@@ -33,7 +33,7 @@ public interface CleanupImplementation {
     public static final String DEFAULT_CLEANUP_CATEGORY_KEY = "cleanup";
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      */

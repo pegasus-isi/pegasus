@@ -26,7 +26,7 @@ import java.util.List;
  * This class is an interface to the various TxCatalog implementations that Pegasus will use. It
  * defines the basic functionality for interfacing with various transformation Catalogs It defines
  * api's for the querying, adding and deleting transformation and associated mappings from the
- * implementing Tx Catalog By implementing this inteface a user can easily use his own TX Catalog
+ * implementing Tx Catalog By implementing this interface a user can easily use his own TX Catalog
  * with Pegasus.
  *
  * @author Gaurang Mehta
@@ -164,7 +164,7 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
      * @param namespace String The namespace of the transformation to search for.
      * @param name String The name of the transformation to search for.
      * @param version String The version of the transformation to search for.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiles found.
      * @throws Exception NotImplementedException if not implemented.
      * @see edu.isi.pegasus.planner.classes.Profile
@@ -180,7 +180,7 @@ public interface TransformationCatalog extends edu.isi.pegasus.planner.catalog.C
      * @param type TCType The type of the transformation to search for. <br>
      *     (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
      * @throws Exception NotImplementedException if not implemented.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiless found.
      * @see edu.isi.pegasus.planner.classes.Profile
      */

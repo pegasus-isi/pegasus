@@ -689,10 +689,10 @@ class WorkflowLoader(BaseLoader):
             )
             task.job_id = job_id
         except orm.exc.MultipleResultsFound:
-            self.log.error("Multiple task results: cant map task: %s ", linedata)
+            self.log.error("Multiple task results: can't map task: %s ", linedata)
             return
         except orm.exc.NoResultFound:
-            self.log.error("No task found: cant map task: %s ", linedata)
+            self.log.error("No task found: can't map task: %s ", linedata)
             return
 
         if self._batch:
@@ -864,11 +864,11 @@ class WorkflowLoader(BaseLoader):
             job_inst.subwf_id = subwf_id
         except orm.exc.MultipleResultsFound:
             self.log.error(
-                "Multiple job instance results: cant map subwf: %s ", linedata
+                "Multiple job instance results: can't map subwf: %s ", linedata
             )
             return
         except orm.exc.NoResultFound:
-            self.log.error("No job instance found: cant map subwf: %s ", linedata)
+            self.log.error("No job instance found: can't map subwf: %s ", linedata)
             return
 
         if self._batch:
@@ -1167,7 +1167,7 @@ class WorkflowLoader(BaseLoader):
             except orm.exc.MultipleResultsFound as e:
                 if not quiet:
                     self.log.error(
-                        "Multple job_instance_id results for tuple %s : %s",
+                        "Multiple job_instance_id results for tuple %s : %s",
                         uniqueIdIdx,
                         e,
                     )
@@ -1230,7 +1230,7 @@ class WorkflowLoader(BaseLoader):
         @param  wfs: Workflow state object from an end event.
 
         Purges information from the lookup caches after a workflow.end
-        event has been recieved.
+        event has been received.
         """
         self.log.debug("Purging caches for: %s", wfs.wf_uuid)
 

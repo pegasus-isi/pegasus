@@ -67,7 +67,7 @@ public class RemoveDirectoryTest {
 
     @Test
     public void testGetCompleteTransformationNameReturnsString() throws Exception {
-        Method method = RemoveDirectory.class.getMethod("getCompleteTranformationName");
+        Method method = RemoveDirectory.class.getMethod("getCompleteTransformationName");
         assertThat((Object) method.getReturnType(), is((Object) String.class));
     }
 }

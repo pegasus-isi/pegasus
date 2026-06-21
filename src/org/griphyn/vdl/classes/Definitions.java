@@ -244,7 +244,7 @@ public class Definitions extends VDL implements Serializable {
 
                 // check usages against all declared and temporary variables. Also
                 // check linkage. Note that the declared variables must have a
-                // linkage. It is permissable to declare variables, but not use
+                // linkage. It is permissible to declare variables, but not use
                 // them.
                 for (Iterator i = use.keySet().iterator(); i.hasNext(); ) {
                     String name = (String) i.next();
@@ -513,7 +513,7 @@ public class Definitions extends VDL implements Serializable {
      * specified element in this Vector.
      *
      * @param d is a definition instance that originated from this list.
-     * @return true, if the first occurance of the element was deleted, false, if there was nothing
+     * @return true, if the first occurrence of the element was deleted, false, if there was nothing
      *     found to be removed.
      * @see Definition
      */
@@ -568,7 +568,7 @@ public class Definitions extends VDL implements Serializable {
      * Accessor: Sets the document default namespace.
      *
      * @param vdlns is the new namespace to use. Note that the change will <b>not</b> be propagated
-     *     to contained elememts.
+     *     to contained elements.
      * @see #getVdlns()
      */
     public void setVdlns(String vdlns) {

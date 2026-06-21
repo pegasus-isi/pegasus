@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * This file factory generates a stream of submit files in a dynamically determinable directory
  * structure. By default, a 2-level subdirectory structure is assumed, which should be able to
- * accomodate about 500k files.
+ * accommodate about 500k files.
  *
  * <pre>
  * mult=16, offset=30, fpd=254: nr=15 =&gt; l=1
@@ -40,8 +40,8 @@ import java.util.*;
 public class HashedFileFactory extends FlatFileFactory {
 
     /**
-     * Determines dynamically the number of directory levels required to accomodate a certain number
-     * of files.
+     * Determines dynamically the number of directory levels required to accommodate a certain
+     * number of files.
      *
      * <pre>
      *    levels = |log   ( tf * m + offset )|
@@ -55,11 +55,11 @@ public class HashedFileFactory extends FlatFileFactory {
      * @param filesPerDirectory is the optimal maximum number of directory entries in any directory.
      *     The value of 254 for Linux ext2, and thus ext3, is a safe bet.
      * @param offset is the number of (expected) files in the top level.
-     * @return the number of directory levels necessary to accomodate the given number of files.
+     * @return the number of directory levels necessary to accommodate the given number of files.
      */
     public static int calculateLevels(
             int totalFiles, int multiplicator, int filesPerDirectory, int offset) {
-        // total files to accomodate, including ones cropping up later
+        // total files to accommodate, including ones cropping up later
         long total = totalFiles * multiplicator + offset;
 
         // "count" the levels
@@ -94,7 +94,7 @@ public class HashedFileFactory extends FlatFileFactory {
     /**
      * Multiplicative factor to estimate the number of result leaf filenames for each virtual
      * constructor invocation. We assume that Euryale produces ~12 files per submit file. It is
-     * better to err on the larger side than makeing the multiplicator too small.
+     * better to err on the larger side than making the multiplicator too small.
      */
     protected int m_multiplicator = 16;
 
@@ -242,7 +242,7 @@ public class HashedFileFactory extends FlatFileFactory {
 
             if (parent.equals(base)) {
                 // have the relative path created by
-                // poping the stack
+                // popping the stack
                 String comp = null;
                 while (!s.isEmpty()) {
                     comp = s.pop();
@@ -357,7 +357,7 @@ public class HashedFileFactory extends FlatFileFactory {
      * before the virtual constructor is called the first time. It takes as argument the total
      * number of expected files instead of the level.
      *
-     * @param totalFiles is the total number of files to accomodate.
+     * @param totalFiles is the total number of files to accommodate.
      * @throws VTorInUseException if the virtual constructor is already in use.
      * @throws IllegalArgumentException if the argument is less than zero.
      * @see #getLevels()

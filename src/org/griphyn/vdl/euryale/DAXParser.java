@@ -331,7 +331,7 @@ public class DAXParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      * @param atts has the names and values of all the attributes
      */
     public void startElement(
@@ -376,7 +376,7 @@ public class DAXParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      */
     public void endElement(
             java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName)

@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  * tr example::keg:1.0 {
  *
  * #specify profiles that apply for all the sites for the transformation
- * #in each site entry the profile can be overriden
+ * #in each site entry the profile can be overridden
  *
  * profile env "APP_HOME" "/tmp/myscratch"
  * profile env "JAVA_HOME" "/opt/java/1.6"
@@ -227,7 +227,7 @@ public class TransformationCatalogTextParser {
     }
 
     /**
-     * Remove potential leading and trainling quotes from a string.
+     * Remove potential leading and trailing quotes from a string.
      *
      * @param input is a string which may have leading and trailing quotes
      * @return a string that is either identical to the input, or a substring thereof.

@@ -17,7 +17,7 @@ PEGASUS_VERSION = utils.backticks("pegasus-version").strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:
-    logging.error("ERROR: worflow generator requires testname to invoke as an argument")
+    logging.error("ERROR: workflow generator requires testname to invoke as an argument")
     sys.exit(1)
 
 TEST_NAME = sys.argv[1]

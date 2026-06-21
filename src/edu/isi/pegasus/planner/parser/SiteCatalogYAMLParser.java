@@ -146,7 +146,7 @@ public class SiteCatalogYAMLParser extends YAMLParser {
     }
 
     /**
-     * Whether to laod a site or not in the <code>SiteStore</code>
+     * Whether to load a site or not in the <code>SiteStore</code>
      *
      * @param site the <code>SiteCatalogEntry</code> object.
      * @return boolean
@@ -156,7 +156,7 @@ public class SiteCatalogYAMLParser extends YAMLParser {
     }
 
     /**
-     * Remove potential leading and trainling quotes from a string.
+     * Remove potential leading and trailing quotes from a string.
      *
      * @param input is a string which may have leading and trailing quotes
      * @return a string that is either identical to the input, or a substring thereof.

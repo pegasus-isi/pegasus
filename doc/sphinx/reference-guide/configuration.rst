@@ -145,7 +145,7 @@ below
 Profiles in the Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Examples of profiles used here include the maximum exected runtime of the
+Examples of profiles used here include the maximum expected runtime of the
 job and its maximum required amount of disk space in MB. For example, these can
 be added to a job as follows:
 
@@ -205,7 +205,7 @@ itself (which would then be applied to all of its transformation sites).
 
 In the following example, the transformation ``keg`` resides on two sites
 (represented as TransformationSite objects). Profiles have been added to each
-site specificly as well as to ``keg`` itself. The environment variable, ``APP_HOME``
+site specifically as well as to ``keg`` itself. The environment variable, ``APP_HOME``
 would be applied to ``keg`` for both the ``isi`` and ``wind`` sites.
 
 .. code-block:: python
@@ -433,7 +433,7 @@ RSL specification.
     | | Since : 2.0                      |                                                               |
     | | Type :Integer                    |                                                               |
     +------------------------------------+---------------------------------------------------------------+
-    | | Property Key: globus.minmemory   | the minumum amount of memory required for this job            |
+    | | Property Key: globus.minmemory   | the minimum amount of memory required for this job            |
     | | Profile Key: minmemory           |                                                               |
     | | Scope : TC, SC, DAX, Properties  |                                                               |
     | | Since : 2.0                      |                                                               |
@@ -476,7 +476,7 @@ the globus profiles. Use one or more env profiles instead.
     | environment | use multiple env profiles instead                                            |
     +-------------+------------------------------------------------------------------------------+
     | executable  || the physical executable to be used is specified in the transformation       |
-    |             || catalog and is also dependant on the gridstart module being used. If you    |
+    |             || catalog and is also dependent on the gridstart module being used. If you    |
     |             || are launching jobs via kickstart then the executable created is the path    |
     |             || to kickstart and the application executable path appears in the arguments   |
     |             || for kickstart                                                               |
@@ -612,7 +612,7 @@ prohibited Condor commands.
     | environment | use multiple env profiles instead                                            |
     +-------------+------------------------------------------------------------------------------+
     | executable  | | the physical executable to be used is specified in the transformation      |
-    |             | | catalog and is also dependant on the gridstart module being used.          |
+    |             | | catalog and is also dependent on the gridstart module being used.          |
     |             | | If you are launching jobs via kickstart then the executable created        |
     |             | | is the path to kickstart and the application executable path appears       |
     |             | | in the arguments for kickstart                                             |
@@ -851,7 +851,7 @@ understands.
     |                                            | |   on a remote node. This information serves as the basis for      |
     |                                            | |   the monitoring and debugging capabilities provided by Pegasus.  |
     |                                            | | - **NoGridStart**                                                 |
-    |                                            | |   This explicity disables the wrapping of the jobs with           |
+    |                                            | |   This explicitly disables the wrapping of the jobs with           |
     |                                            | |   pegasus-kickstart. This is internally used by the planner to    |
     |                                            | |   launch jobs directly. If this is set, then the information      |
     |                                            | |   populated in the monitoring database is on the basis of what    |
@@ -869,7 +869,7 @@ understands.
     |                                            | |   This value if set, forces PegasusLite to not launch the job via |
     |                                            | |   Kickstart.                                                      |
     |                                            | | - **Distribute**                                                  |
-    |                                            | |   This wrapper is a HubZero specfiic wrapper that allows compute  |
+    |                                            | |   This wrapper is a HubZero specific wrapper that allows compute  |
     |                                            | |   jobs that are scheduled for a local PBS cluster to be run       |
     |                                            | |   locally on the submit host. The jobs are wrapped with a         |
     |                                            | |   distribute wrapper that is responsible for doing the qsub       |
@@ -1246,7 +1246,7 @@ properties. As a notation, the curly braces refer to the value of the
 named property. For instance, ${pegasus.home} means that the value
 depends on the value of the pegasus.home property plus any noted
 additions. You can use this notation to refer to other properties,
-though the extent of the subsitutions are limited. Usually, you want to
+though the extent of the substitutions are limited. Usually, you want to
 refer to a set of the standard system properties. Nesting is not
 allowed. Substitutions will only be done once.
 
@@ -1416,7 +1416,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     |                                             | |   If the profile is not associated then the relative directory is   |
     |                                             | |   derived from the logical transformation name associated with the  |
     |                                             | |   job. Auxillary files are placed in the base submit directory for  |
-    |                                             | |   the worklfow.   To control behavior of this                       |
+    |                                             | |   the workflow.   To control behavior of this                       |
     |                                             | |   mapper, users can specify the following pegasus profiles          |
     |                                             | |                                                                     |
     |                                             | |   **relative.submit.dir** - relative submit dir to be used fo       |
@@ -1429,7 +1429,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     |                                             | |   mapper, users can specify the following properties                |
     |                                             | |                                                                     |
     |                                             | |   **pegasus.dir.submit.mapper.hashed.levels** - the number of       |
-    |                                             | |     directory levels used to accomodate the files. Defaults to      |
+    |                                             | |     directory levels used to accommodate the files. Defaults to      |
     |                                             | |     2.                                                              |
     |                                             | |   **pegasus.dir.submit.mapper.hashed.multiplier** - the number      |
     |                                             | |     of files associated with a job in the submit directory.         |
@@ -1454,7 +1454,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     |                                             | |   properties                                                        |
     |                                             | |                                                                     |
     |                                             | |   **pegasus.dir.staging.mapper.hashed.levels** - the number of      |
-    |                                             | |   directory levels used to accomodate the files. Defaults to        |
+    |                                             | |   directory levels used to accommodate the files. Defaults to        |
     |                                             | |   2.                                                                |
     |                                             | |   **pegasus.dir.staging.mapper.hashed.multiplier**- the number      |
     |                                             | |   of files associated with a job in the submit directory.           |
@@ -1470,7 +1470,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     |                                             | |   the storage directory specified in the site catalog for the       |
     |                                             | |   output site.                                                      |
     |                                             | | - **Fixed**: Using this mapper, users can specify an externally     |
-    |                                             | |    accesible url to the storage directory in their properties       |
+    |                                             | |    accessible url to the storage directory in their properties       |
     |                                             | |    file. The following property needs to be set.                    |
     |                                             | |    **pegasus.dir.storage.mapper.fixed.url** - an externally         |
     |                                             | |    accessible URL to the storage directory on the output site       |
@@ -1491,7 +1491,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     |                                             | |    file on the output site by querying an output replica            |
     |                                             | |    catalog. The output site is one that is passed on the            |
     |                                             | |    command line. The output replica catalog can be configured       |
-    |                                             | |    by specifiing the properties with the prefix                     |
+    |                                             | |    by specifying the properties with the prefix                     |
     |                                             | |    **pegasus.dir.storage.replica**. By default, a Regex File        |
     |                                             | |    based backend is assumed unless overridden. For example          |
     |                                             | |    pegasus.dir.storage.mapper.replica       Regex|File              |
@@ -1506,7 +1506,7 @@ In rare occasions, it may also pertain to locally run compute jobs.
     | | Default : false                           | | structure ( $user/$vogroup/$label/runxxxx ) is appended.            |
     |                                             | | $storage = $base + $relative_submit_directory                       |
     |                                             | | This is the base directory that is passed to the storage mapper.    |
-    |                                             | | **Note:** To preserve backward compatibilty, setting this property  |
+    |                                             | | **Note:** To preserve backward compatibility, setting this property  |
     |                                             | | results in the Hashed mapper to be loaded unless                    |
     |                                             | | pegasus.dir.storage.mapper is explicitly specified. Before 4.3,     |
     |                                             | | this property resulted in HashedDirectory structure.                |
@@ -1765,7 +1765,7 @@ Catalog Related Properties
     |                                                    | |   an equality sign without any whitespaces. The value                          |
     |                                                    | |   may be in quoted. The LFN sentiments about quoting                           |
     |                                                    | |   apply.                                                                       |
-    |                                                    | |   In addition users can specifiy regular expression                            |
+    |                                                    | |   In addition users can specify regular expression                            |
     |                                                    | |   based LFN’s. A regular expression based entry should                         |
     |                                                    | |   be qualified with an attribute named ‘regex’. The                            |
     |                                                    | |   attribute regex when set to true identifies the                              |
@@ -1775,7 +1775,7 @@ Catalog Related Properties
     |                                                    | |   For example, consider a replica catalog as shown below.                      |
     |                                                    | |   Entry 1 refers to an entry which does not use a regular                      |
     |                                                    | |   expressions. This entry would only match a file named                        |
-    |                                                    | |   ‘f.a’, and nothing else. Entry 2 referes to an entry                         |
+    |                                                    | |   ‘f.a’, and nothing else. Entry 2 refers to an entry                         |
     |                                                    | |   which uses a regular expression. In this entry f.a                           |
     |                                                    | |   refers to files having name as f[any-character]a                             |
     |                                                    | |   i.e. faa, f.a, f0a, etc.                                                     |
@@ -1794,7 +1794,7 @@ Catalog Related Properties
     |                                                    | |   in the expression can be used to generate a PFN.                             |
     |                                                    | |   For the entry below if the file being looked up is                           |
     |                                                    | |   alpha.csv, the PFN for the file would be generated as                        |
-    |                                                    | |   file:///Volumes/data/input/csv/alpha.csv. Similary if                        |
+    |                                                    | |   file:///Volumes/data/input/csv/alpha.csv. Similarly if                        |
     |                                                    | |   the file being lookedup was alpha.csv, the PFN for the                       |
     |                                                    | |   file would be generated as                                                   |
     |                                                    | |   file:///Volumes/data/input/xml/alpha.xml i.e.                                |
@@ -2235,13 +2235,13 @@ Site Selection Properties
     |                                                | | resource.id    | | is a site handle, followed by whitespace,       | |
     |                                                | |                | | followed by a gridftp server. Typically,        | |
     |                                                | |                | | each gridftp server is enumerated once,         | |
-    |                                                | |                | | so you may have multiple occurances of          | |
+    |                                                | |                | | so you may have multiple occurrences of          | |
     |                                                | |                | | the same site. There can be multiple            | |
-    |                                                | |                | | occurances of this key.                         | |
+    |                                                | |                | | occurrences of this key.                         | |
     |                                                | +----------------+---------------------------------------------------+ |
     |                                                | | input.lfn      | | is an input LFN, optionally followed            | |
     |                                                | |                | | by a whitespace and file size. There            | |
-    |                                                | |                | | can be multiple occurances of this              | |
+    |                                                | |                | | can be multiple occurrences of this              | |
     |                                                | |                | | key,one for each input LFN required by the job. | |
     |                                                | +----------------+---------------------------------------------------+ |
     |                                                | | wf.name        | | label of the dax, as found in the DAX’s         | |
@@ -2396,7 +2396,7 @@ Data Staging Configuration Properties
     |                                                       | | ( using –staging-site option to pegasus-plan)        |
     |                                                       | | to indicate the site to use as a central             |
     |                                                       | | storage location for a workflow. The staging         |
-    |                                                       | | site is independant of the execution sites on        |
+    |                                                       | | site is independent of the execution sites on        |
     |                                                       | |  which a workflow executes. All the auxillary        |
     |                                                       | | jobs added by the planner to the executable          |
     |                                                       | | workflow ( create dir, data stagein and              |
@@ -2422,7 +2422,7 @@ Data Staging Configuration Properties
     |                                                       | | cloud environment where setting up a                 |
     |                                                       | | shared filesystem across the VM’s may be tricky.     |
     |                                                       | | On loading this property, internally the             |
-    |                                                       | | following properies are set                          |
+    |                                                       | | following properties are set                          |
     |                                                       |                                                        |
     |                                                       |                                                        |
     |                                                       | ::                                                     |
@@ -2546,7 +2546,7 @@ Transfer Configuration Properties
     +--------------------------------------------------+------------------------------------------------------------------------------+
     | | Property Key: pegasus.transfer.arguments       | | This determines the extra arguments with which the transfer                |
     | | Profile Key:transfer.arguments                 | | implementation is invoked. The transfer executable that                    |
-    | | Scope : Properties                             | | is invoked is dependant upon the transfer mode that has                    |
+    | | Scope : Properties                             | | is invoked is dependent upon the transfer mode that has                    |
     | | Since : 2.0.0                                  | | been selected. The property can be overloaded by                           |
     | | Type :String                                   | | associated the pegasus profile key transfer.arguments                      |
     | | Default : (no default)                         | | either with the site in the site catalog or the                            |
@@ -2564,7 +2564,7 @@ Transfer Configuration Properties
     +--------------------------------------------------+------------------------------------------------------------------------------+
     | | Property Key: pegasus.transfer.lite.arguments  | | This determines the extra arguments with which the                         |
     | | Profile Key: transfer.lite.arguments           | | PegasusLite transfer implementation is invoked. The                        |
-    | | Scope : Properties                             | | transfer executable that is invoked is dependant upon the                  |
+    | | Scope : Properties                             | | transfer executable that is invoked is dependent upon the                  |
     | | Since : 4.4.0                                  | | PegasusLite transfer implementation that has been                          |
     | | Type :String                                   | | selected.                                                                  |
     | | Default : (no default)                         |                                                                              |
@@ -2752,7 +2752,7 @@ Monitoring Properties
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | | Property Key: pegasus.catalog.master.url              | | This property specifies the destination for the workflow               |
     | | Profile Key: N/A                                      | | dashboard database. By default, the workflow dashboard                 |
-    | | Scope : Properties                                    | | datbase defaults to a sqlite database named workflow.db                |
+    | | Scope : Properties                                    | | database defaults to a sqlite database named workflow.db                |
     | | Since : 4.2                                           | | in the $HOME/.pegasus directory. This is database is                   |
     | | Type: String                                          | | shared for all workflows run as a particular user. Users               |
     | | Default :                                             | | can specify an alternative database by using a SQLAlchemy              |
@@ -3001,7 +3001,7 @@ Logging Properties
     |                                               |    event.pegasus.parsing.dax dax.id se18-gda-nested.dax  - STARTED          |
     |                                               |    event.pegasus.parsing.dax dax.id se18-gda-nested.dax  - FINISHED         |
     |                                               |    job.id jobGDA                                                            |
-    |                                               |    job.id jobGDA query.name getpredicted performace time 10.00              |
+    |                                               |    job.id jobGDA query.name getpredicted performance time 10.00              |
     |                                               |    event.pegasus.ranking dax.id se18-gda.dax  - FINISHED                    |
     |                                               |                                                                             |
     |                                               |                                                                             |
@@ -3132,7 +3132,7 @@ Cleanup Properties
     |                                                      | | If the scope is set to deferred, then Pegasus          |
     |                                                      | | will not disable file cleanup in case of deferred      |
     |                                                      | | planning. This is useful for scenarios where the       |
-    |                                                      | | partitions themselves are independant                  |
+    |                                                      | | partitions themselves are independent                  |
     |                                                      | | ( i.e. dont share files ). Even if the scope is        |
     |                                                      | | set to deferred, users can turn off cleanup by         |
     |                                                      | | specifying –nocleanup option to pegasus-plan.          |
@@ -3470,7 +3470,7 @@ Miscellaneous Properties
     +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key:                                   | | If this property is set to true, then the planner         |
     | |     pegasus.parser.dax.data.dependencies        | | will automatically add edges between jobs in the          |
-    | | Profile Key: N/A                                | | DAX on the basis of exisitng data dependencies            |
+    | | Profile Key: N/A                                | | DAX on the basis of existing data dependencies            |
     | | Scope : Properties                              | | between jobs. For example, if a JobA generates an         |
     | | Since : 4.4.0                                   | | output file that is listed as input for JobB, then        |
     | | Type :Boolean                                   | | the planner will automatically add an edge between        |

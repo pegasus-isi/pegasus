@@ -249,7 +249,7 @@ public class Database implements WorkCatalog {
     /**
      * Establishes a connection to the database from the properties. You can specify a
      * <tt>driver</tt> property to contain the class name of the JDBC driver for your database. This
-     * property will be removed before attempting to connect. You must speficy a <tt>url</tt>
+     * property will be removed before attempting to connect. You must specify a <tt>url</tt>
      * property to describe the connection. It will be removed before attempting to connect.
      *
      * @param props is the property table with sufficient settings to establish a link with the
@@ -310,7 +310,7 @@ public class Database implements WorkCatalog {
         return result;
     }
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /** Explicitly free resources before the garbage collection hits. */
     public void close() {
 
         if (mConnection != null) {

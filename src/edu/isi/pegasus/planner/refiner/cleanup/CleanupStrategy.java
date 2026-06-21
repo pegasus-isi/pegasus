@@ -28,7 +28,7 @@ public interface CleanupStrategy {
     public static final String VERSION = "1.1";
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates file cleanup job

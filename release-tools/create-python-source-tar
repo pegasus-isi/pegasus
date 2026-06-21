@@ -29,7 +29,7 @@ for pkg in `find packages -maxdepth 1 -type d`; do
 
     SDIST=$(basename `ls *.tar.gz` .tar.gz)
     NORM_VERSION=`ls *.tar.gz | sed 's/pegasus-wms.*-//' | sed 's/\.tar\.gz//'`
-    echo "Normalized verison is $NORM_VERSION"
+    echo "Normalized version is $NORM_VERSION"
 
     tar xzf $SDIST.tar.gz
     sed -i.bak -e s/version=read_version\(\)/version=\"${VERSION}\"/g ${SDIST}/setup.py

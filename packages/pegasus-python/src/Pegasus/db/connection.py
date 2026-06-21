@@ -558,7 +558,7 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
     else:
         raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
 
-    # Create the sqllite db url
+    # Create the sqlite db url
     dag_file_name = os.path.basename(dag_file_name)
     output_db_file = os.path.join(
         top_level_wf_params["submit_dir"],
@@ -740,7 +740,7 @@ def _backup_db(dburi):
 def _truncate_previous_backup_file(backup_file, prefix):
     """
     Truncates the previous backed up file to zero bytes to ensure
-    filesytem does not get clogged up on multiple restarts.
+    filesystem does not get clogged up on multiple restarts.
 
     :param backup_file:
     :param prefix:

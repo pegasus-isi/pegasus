@@ -98,7 +98,7 @@ public class VDLxParser {
                 Logging.instance().log("parser", 0, "will use document schema hint");
             }
         } catch (ClassNotFoundException e) {
-            Logging.instance().log("defaut", 0, "The SAXParser class was not found: " + e);
+            Logging.instance().log("default", 0, "The SAXParser class was not found: " + e);
         } catch (InstantiationException e) {
             Logging.instance()
                     .log("default", 0, "The SAXParser class could not be instantiated: " + e);

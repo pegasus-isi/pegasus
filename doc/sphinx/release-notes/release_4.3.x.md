@@ -4,7 +4,7 @@
 
 **Release Date:** March 18, 2014
 
-We are happy to annouce the release of Pegasus 4.3.2. Pegasus 4.3.2 is
+We are happy to announce the release of Pegasus 4.3.2. Pegasus 4.3.2 is
 a minor release, that has minor enhancements and fixes bugs to Pegasus
 4.3.1 release.
 
@@ -14,7 +14,7 @@ a minor release, that has minor enhancements and fixes bugs to Pegasus
    database
 
    If a  PegasusLite job failed because of an error encountered while
-   retrieving hte input files from the staging site, then no kickstart
+   retrieving the input files from the staging site, then no kickstart
    record for the main user job is generated ( as the job is never
    launched). As a result, in the database no record is populated
    indicating a failure of the job. This was fixed to ensure that
@@ -99,12 +99,12 @@ a minor release, that has minor enhancements and fixes bugs to Pegasus
 4) Error when data reuse and cleanup is enabled
 
    The planner failed in the case, where cleanup was enabled in
-   conjuction with data reuse, where jobs removed by the data reuse
+   conjunction with data reuse, where jobs removed by the data reuse
    algorithm were the ones for which output files are required by the
    user on the output site. In that case, the planner adds stageout
    jobs to stage the data from the location in the replica catalog to
    the output site. The addition of this stageout job was resulting in
-   an execption in the cleanup module. This is now fixed.
+   an exception in the cleanup module. This is now fixed.
 
    More details can be found at
     PM-739 [\#857](https://github.com/pegasus-isi/pegasus/issues/857)
@@ -148,7 +148,7 @@ postscript is associated with the job
 
    By default, each job has a postscript associated that detects an
    empty job stdout and flags it as a failure. However, if a job is
-   not asscociated with a postscript and a user/system condor_rm's the
+   not associated with a postscript and a user/system condor_rm's the
    job, the failure is not detected. This is now fixed, and a
    JOB_ABORTED event is logged in the stampede database, when a job is
    aborted.
@@ -202,7 +202,7 @@ staging in non shared filesystem deployments
 - support for output mappers, allowing users finer grained control
 over where to place the outputs on an output site
 - support for SSH based submissions on top of Condor BOSCO.
-- substantial improvements to pegasus-kickstart including abiltiy
+- substantial improvements to pegasus-kickstart including ability
 to track peak memory usage for jobs
 - improvements to pegasus-s3 and pegasus-transfer
 
@@ -272,7 +272,7 @@ to track peak memory usage for jobs
    Replica: This mapper determines the path for an output file on the
    output site by querying an output replica catalog. The output site
    is one that is passed on the command line. The output replica
-   catalog can be configured by specifiing the properties
+   catalog can be configured by specifying the properties
 
 	pegasus.dir.storage.mapper.replica       Regex|File
 	pegasus.dir.storage.mapper.replica.file  the RC file at the
@@ -281,7 +281,7 @@ to track peak memory usage for jobs
 4) Support for SSH based submissions
 
    Pegasus now exposes a ssh style to enable submission to remote
-   sites using SSH. This builds upon the Condor BOSCO funtionality
+   sites using SSH. This builds upon the Condor BOSCO functionality
    that allows for submission over ssh.
 
    Check out the bosco-shared-fs example in the share/pegasus/examples
@@ -473,7 +473,7 @@ workflows
 21) dax2dot now implements transitive reduction algorithm to reduce
 extra edges to the workflow
 
-   The dax2dot now implments a transitive reduction algorithm to
+   The dax2dot now implements a transitive reduction algorithm to
    remove extra edges from the workflow. It also has Improved handling
    of -f option. This fixes PM-721 by treating files and jobs as
    equivalent Nodes so that transitive reduction works in the case
@@ -508,7 +508,7 @@ extra edges to the workflow
    In order to do that, please set the property
    pegasus.metrics.app      application-name
 
-   Users can also associated arbitary key value pairs that can be
+   Users can also associated arbitrary key value pairs that can be
    passed to the server.
 
 	pegasus.metrics.app.attribute1 value1

@@ -266,7 +266,7 @@ public class NXDSchema extends DatabaseSchema implements XDC {
      * specified and valid.
      *
      * @param definition is the new Definition to store.
-     * @param overwrite true, if existing defitions will be overwritten by new ones with the same
+     * @param overwrite true, if existing definitions will be overwritten by new ones with the same
      *     primary (or secondary) key (-set), or false, if a new definition will be rejected on key
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
@@ -341,7 +341,7 @@ public class NXDSchema extends DatabaseSchema implements XDC {
 
     /**
      * Delete a specific Definition objects from the database. No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * "Fake" definitions are permissible, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.
@@ -1526,7 +1526,7 @@ public class NXDSchema extends DatabaseSchema implements XDC {
     }
 
     /**
-     * pass-thru to driver.
+     * pass through to driver.
      *
      * @return true, if it is feasible to cache results from the driver false, if requerying the
      *     driver is sufficiently fast (e.g. driver is in main memory, or driver does caching

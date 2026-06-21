@@ -35,7 +35,7 @@ public class FriendlyNudge extends java.lang.RuntimeException {
     /**
      * Constructs a <code>FriendlyNudge</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public FriendlyNudge(String s) {
         super(s);
@@ -46,7 +46,7 @@ public class FriendlyNudge extends java.lang.RuntimeException {
      * Constructs a <code>FriendlyNudge</code> with the specified detailed message and an exit code
      * to record.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      * @param e is the exit code to record.
      */
     public FriendlyNudge(String s, int e) {

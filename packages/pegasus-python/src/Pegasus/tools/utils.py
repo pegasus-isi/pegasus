@@ -232,7 +232,7 @@ def unquote(s):
         # passed through a database or something then it might happen
         # Latin-1 is used because it has the nice property that every
         # unicode code point <= 0xFF has the same value in latin-1
-        # We ignore anything else (i.e. >0xFF) because, tecnically, it
+        # We ignore anything else (i.e. >0xFF) because, technically, it
         # should have been removed by quote()
         s = s.encode("latin-1", "ignore")
 

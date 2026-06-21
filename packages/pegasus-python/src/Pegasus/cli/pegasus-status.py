@@ -54,7 +54,7 @@ configureLogging(level=logging.DEBUG)
     is_flag=True,
     default=False,
     show_default=True,
-    help="Show dagnames with path realtive to submit directory",
+    help="Show dagnames with path relative to submit directory",
 )
 @click.option(
     "--legend",

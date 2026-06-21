@@ -25,7 +25,7 @@ from datetime import datetime
 def format_seconds(duration, max_comp=2):
     """
     Utility for converting time to a readable format
-    @param duration :  time in seconds and miliseconds
+    @param duration :  time in seconds and milliseconds
     @param max_comp :  number of components of the returned time
     @return time in n component format
     """

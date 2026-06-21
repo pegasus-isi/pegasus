@@ -60,7 +60,7 @@ done
 sleep 1m
 
 if [ "$STATUS" = "Success" ]; then
-    echo "*** Workflow finished succesfully ***"
+    echo "*** Workflow finished successfully ***"
     exit 0
 else
     echo "*** Workflow failed ***" 1>&1

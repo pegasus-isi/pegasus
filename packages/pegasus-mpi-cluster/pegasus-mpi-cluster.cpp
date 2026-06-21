@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
         int rc = mpidag(argc, argv, comm);
         return rc;
     } catch (exception &error) {
-        // If we catch an execption here, then one of the
+        // If we catch an exception here, then one of the
         // processes has hit an unsolvable problem and we
         // need to abort the entire workflow.
         fprintf(stderr, "ABORT: %s\n", error.what());

@@ -31,7 +31,7 @@ public class MapperException extends RuntimeException {
     /**
      * Constructs a <code>MapperException</code> with the specified detailed message.
      *
-     * @param message is the detailled message.
+     * @param message is the detailed message.
      */
     public MapperException(String message) {
         super(message);
@@ -40,7 +40,7 @@ public class MapperException extends RuntimeException {
     /**
      * Constructs a <code>MapperException</code> with the specified detailed message and a cause.
      *
-     * @param message is the detailled message.
+     * @param message is the detailed message.
      * @param cause is the cause (which is saved for later retrieval by the {@link
      *     java.lang.Throwable#getCause()} method). A <code>null</code> value is permitted, and
      *     indicates that the cause is nonexistent or unknown.

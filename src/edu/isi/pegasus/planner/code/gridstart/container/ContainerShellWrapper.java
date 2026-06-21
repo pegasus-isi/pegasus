@@ -30,7 +30,7 @@ public interface ContainerShellWrapper {
     public static final String VERSION = "1.1";
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

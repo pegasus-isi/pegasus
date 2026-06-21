@@ -121,7 +121,7 @@ public class Installed extends Mapper {
         if (tcentries != null) {
             sysinfomap = mSiteStore.getSysInfos(hassite ? siteids : falseSites);
         } else {
-            // throw an execption only if cacheSites is empty
+            // throw an exception only if cacheSites is empty
             if (cacheSites.isEmpty()) {
                 throw new RuntimeException(
                         "There are no entries for the transformation \""

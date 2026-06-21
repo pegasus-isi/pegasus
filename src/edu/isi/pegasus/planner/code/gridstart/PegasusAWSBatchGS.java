@@ -56,7 +56,8 @@ public class PegasusAWSBatchGS implements GridStart {
     public static final String TRANSFER_INPUT_FILES_KEY = "TRANSFER_INPUT_FILES";
 
     /**
-     * The basename of the class that is implmenting this. Could have been determined by reflection.
+     * The basename of the class that is implementing this. Could have been determined by
+     * reflection.
      */
     public static final String CLASSNAME = "PegasusAWSBatchGS";
 
@@ -170,15 +171,15 @@ public class PegasusAWSBatchGS implements GridStart {
                 .append(File.separator)
                 .append(url.getPath())
                 .append(File.separator)
-                .append(relativeDir); // apend the job relative dir to the bucket
+                .append(relativeDir); // append the job relative dir to the bucket
         mClusteredJobS3Bucket = awsBatchBucket.toString();
         job.envVariables.construct(AWSBatch.PEGASUS_AWS_BATCH_BUCKET_KEY, mClusteredJobS3Bucket);
 
         for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); ) {
             GraphNode node = it.next();
-            Job constitutentJob = (Job) node.getContent();
+            Job constituentJob = (Job) node.getContent();
 
-            if (constitutentJob instanceof AggregatedJob) {
+            if (constituentJob instanceof AggregatedJob) {
                 // slurp in contents of it's stdin
                 throw new RuntimeException(
                         "Enabling of clustered jobs within a cluster not supported with "
@@ -186,9 +187,9 @@ public class PegasusAWSBatchGS implements GridStart {
             }
             // we need to set the relative dir of constituent jobs to
             // the clustered job itself
-            constitutentJob.setRelativeSubmitDirectory(relativeDir);
+            constituentJob.setRelativeSubmitDirectory(relativeDir);
 
-            enable = enable && this.enable(constitutentJob, isGlobusJob);
+            enable = enable && this.enable(constituentJob, isGlobusJob);
         }
 
         // set the credentials for clustered job
@@ -211,7 +212,7 @@ public class PegasusAWSBatchGS implements GridStart {
         // the aws batch job has to run at site local
         job.setSiteHandle("local");
 
-        // all the constitutent jobs are enabled.
+        // all the constituent jobs are enabled.
         // get the job aggregator to render the job
         // to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete(job);

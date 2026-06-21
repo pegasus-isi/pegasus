@@ -89,7 +89,7 @@ public class FactoryException
                 message.append(cause.getMessage());
             }
 
-            // append just one elment of stack trace for each exception
+            // append just one element of stack trace for each exception
             message.append(" at ").append(cause.getStackTrace()[0]);
 
             prev = cause;

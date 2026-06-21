@@ -308,7 +308,7 @@ def pegasus_analyzer(
         if use_files:
             analyze = analyzer.AnalyzeFiles(options)
             output = analyze.analyze_files()
-        # Run via quering the stampede database
+        # Run via querying the stampede database
         else:
             analyze = analyzer.AnalyzeDB(options)
             output = analyze.analyze_db(config_properties)

@@ -23,7 +23,7 @@ This is a minor release, that fixes some bugs and has minor enhancements.
    reimplemented for better performance.
 
 
-3) pegasus-monitord sets PEGASUS_BIN_DIR while calling out notfication
+3) pegasus-monitord sets PEGASUS_BIN_DIR while calling out notification
 scripts .
 
     PM-598 [\#716](https://github.com/pegasus-isi/pegasus/issues/716)
@@ -94,7 +94,7 @@ DB
 
 6) pegasus-analyzer warns about "exitcode not an integer!"
 
-   pegasus-analyzer throwed a warning if a long value for an exitcode
+   pegasus-analyzer threw a warning if a long value for an exitcode
    was detected.
 
      PM-584 [\#702](https://github.com/pegasus-isi/pegasus/issues/702)
@@ -159,7 +159,7 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    shared fileysystem setup . This is useful for running in cloud
    environments and allows for more dynamic placement of jobs.
    Pegasus 4.0 introduces the concept of a staging site for the
-   worklfows, that can be different from an execution site. The
+   workflows, that can be different from an execution site. The
    planner places the data on the staging site for the workflow. When
    the jobs start on the remote compute nodes, they are launched by a
    lightweight component called PegasusLite, that stages in the data
@@ -197,7 +197,7 @@ and Debian packages conform to the Filesystem Hierarchy Standard
 3) Improved Credential Handling
 
    Pegasus 4.0 has improved credential handling. The planner while
-   planning the worklfow automatically associates the jobs with the
+   planning the workflow automatically associates the jobs with the
    credentials it may require. This is done by inspecting the URL's
    for the files a job requires.
 
@@ -245,7 +245,7 @@ and Debian packages conform to the Filesystem Hierarchy Standard
    mysql) to debug the workflow. If you want it to use files in the
    submit directory , use the --files option.
 
-7) CSV formatted output files for pegasus statistcs
+7) CSV formatted output files for pegasus statistics
 
    pegasus-statistics now generates it's output in a csv formatted
    file also, in addition to the txt files it creates. This is useful,

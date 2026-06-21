@@ -246,7 +246,7 @@ public class DAXValidator extends DefaultHandler {
         // This feature only applies to schema validation.
         set("http://apache.org/xml/features/validation/unparsed-entity-checking", true);
 
-        // Report a warning when a duplicate attribute is re-declared.
+        // Report a warning when a duplicate attribute is redeclared.
         set("http://apache.org/xml/features/validation/warn-on-duplicate-attdef", true);
 
         // Report a warning if an element referenced in a content model is
