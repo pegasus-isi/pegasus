@@ -73,6 +73,21 @@ def client():
     return Client("/path")
 
 
+@pytest.fixture
+def log_records(client):
+    # client._log has propagate=False, so caplog can't capture it; attach a
+    # capturing handler and remove it on teardown to avoid leaking across tests.
+    records = []
+    handler = logging.Handler()
+    handler.emit = lambda r: records.append(r.getMessage())
+    prev_level = client._log.level
+    client._log.setLevel(logging.INFO)
+    client._log.addHandler(handler)
+    yield records
+    client._log.removeHandler(handler)
+    client._log.setLevel(prev_level)
+
+
 class TestClient:
     @pytest.mark.parametrize("log_lvl", [(logging.INFO), (logging.ERROR)])
     def test__handle_stream(self, client, caplog, log_lvl):
@@ -248,6 +263,50 @@ class TestClient:
         )
 
         assert wf_instance.braindump.user == "ryan"
+
+    def test_plan_success_does_not_echo_json(self, mocker, client, log_records):
+        # #2051 (PM-1938): on success the braindump JSON blob from the planner
+        # must NOT be echoed. Echoing is driven by streaming the planner stdout,
+        # so plan() must invoke _exec with stream_stdout=False; only the parsed,
+        # user-facing summary is logged.
+        rv = Result(
+            ["pegasus-plan"],
+            0,
+            b'{"submit_dir": "/sd", "message": "I have concretized"}',
+            b"",
+        )
+        _exec = mocker.patch.object(client, "_exec", return_value=rv)
+        mocker.patch(
+            "Pegasus.client._client.Workflow._get_braindump",
+            return_value=Braindump(user="ryan"),
+        )
+
+        client.plan(abstract_workflow="wf.yml", submit=True)
+
+        assert _exec.call_args.kwargs["stream_stdout"] is False
+        assert any("pegasus-status -l /sd" in m for m in log_records)
+
+    def test_plan_failure_surfaces_planner_stdout(self, mocker, client, log_records):
+        # #2021 (PM-1908): on failure the success path never runs, so the
+        # planner's captured stdout (e.g. submit errors) must be surfaced and
+        # the error re-raised, not masked.
+        err = PegasusClientError(
+            "FAILED",
+            Result(
+                ["pegasus-plan"],
+                1,
+                b"ERROR: Can't find address of local schedd",
+                b"stderr log",
+            ),
+        )
+        mocker.patch.object(client, "_exec", side_effect=err)
+
+        with pytest.raises(PegasusClientError):
+            client.plan(abstract_workflow="wf.yml", submit=True)
+
+        assert any(
+            "ERROR: Can't find address of local schedd" in m for m in log_records
+        )
 
     def test_plan_invalid_cluster(self, client):
         with pytest.raises(TypeError) as e:

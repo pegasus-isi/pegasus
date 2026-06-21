@@ -364,13 +364,25 @@ class Client:
 
         self._log.info("\n################\n# pegasus-plan #\n################")
 
-        # don't stream stdout from planner, as this will be json output
-        rv = self._exec(cmd, stream_stdout=True, stream_stderr=True)
+        # PM-1938 (#2051): don't stream stdout from the planner. Under --json it
+        # is the braindump JSON blob, meant for programmatic use; echoing it is
+        # confusing. It is captured and parsed below, and the user-facing summary
+        # is logged from it.
+        # PM-1908 (#2021): on failure the success path below never runs, so
+        # surface the planner's captured stdout (stderr is already streamed) to
+        # avoid masking submit errors.
+        try:
+            rv = self._exec(cmd, stream_stdout=False, stream_stderr=True)
+        except PegasusClientError as e:
+            planner_stdout = e.result.stdout.strip()
+            if planner_stdout:
+                self._log.error(planner_stdout)
+            raise
 
         json_output = rv.json
         submit_dir = json_output["submit_dir"]
 
-        # Some tools (launch-bamboo-script, ensemble-mananager) parse submit directory from
+        # Some tools (launch-bamboo-script, ensemble-manager) parse submit directory from
         # planner output. Therefore we need to log the following and retain the structure
         # of planner output.
         if submit:
