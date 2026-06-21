@@ -225,7 +225,12 @@ def clone_workflow(wf_dir, workflow):
             zip_path = os.path.join(tmp, "repo.zip")
             urllib.request.urlretrieve(zip_url, zip_path)
             with zipfile.ZipFile(zip_path) as zf:
-                zf.extractall(tmp)
+                for info in zf.infolist():
+                    path = zf.extract(info, tmp)
+                    # store st_mode (0 if not from Unix)
+                    mode = info.external_attr >> 16
+                    if mode:
+                        os.chmod(path, mode & 0o777)
             extracted = next(
                 os.path.join(tmp, d)
                 for d in os.listdir(tmp)
