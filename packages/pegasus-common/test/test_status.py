@@ -537,8 +537,8 @@ def test_show_dag_progress_just_started(mocker, capsys, status):
         """
         (No matching jobs found in Condor Q)
 
-        UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
-           0      0     0    0     0     0     0    0.0  Running sample_started.dag
+        UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME                  
+           0      0     0    0     0     0     0    0.0  Running sample_started.dag       
         Summary: 1 DAG total (Running:1)
         """
     )
