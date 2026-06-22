@@ -117,7 +117,7 @@ public interface LoggingKeys {
 
     public static String FILE_OUTPUT_NAME = "file.output.name";
     public static String FILE_OUTPUT_CONTENTS = "file.output.contents";
-    public static String FILE_PRIORTY = "file.priorty";
+    public static String FILE_PRIORTY = "file.priority";
     public static String FILE_TYPE = "file.type";
     public static String TIME_START = "time.start";
     public static String TIME_END = "time.end";
