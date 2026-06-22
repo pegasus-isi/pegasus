@@ -148,7 +148,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
             InputSource is =
                     new InputSource(
                             mDoVariableExpansion
-                                    ? new VariableExpansionReader(new FileReader(file))
+                                    ? new VariableExpansionReader(new FileReader(file), this.mProps)
                                     : new BufferedReader(new FileReader(file)));
             mParser.parse(is);
 

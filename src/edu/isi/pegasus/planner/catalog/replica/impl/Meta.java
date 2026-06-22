@@ -155,7 +155,7 @@ public class Meta implements ReplicaCatalog {
         if (replicaFile.exists()) {
             Reader reader = null;
             try {
-                reader = new VariableExpansionReader(new FileReader(filename));
+                reader = new VariableExpansionReader(new FileReader(filename), null);
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties
                 LoaderOptions loaderOptions = new LoaderOptions();

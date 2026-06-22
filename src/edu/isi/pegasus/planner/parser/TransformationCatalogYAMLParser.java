@@ -139,7 +139,7 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
             // first attempt to validate
             if (validate(f, SCHEMA_FILENAME, "transformation")) {
                 // validation succeeded. load.
-                Reader reader = new VariableExpansionReader(new FileReader(f));
+                Reader reader = new VariableExpansionReader(new FileReader(f), this.mProps);
 
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties

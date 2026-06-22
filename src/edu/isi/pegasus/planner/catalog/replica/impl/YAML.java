@@ -214,7 +214,7 @@ public class YAML implements ReplicaCatalog {
         if (replicaFile.exists() && validate(replicaFile, SCHEMA_FILE)) {
             Reader reader = null;
             try {
-                reader = new VariableExpansionReader(new FileReader(filename));
+                reader = new VariableExpansionReader(new FileReader(filename), null);
 
                 // GH-2113 set loader options correctly
                 LoaderOptions loaderOptions = new LoaderOptions();
@@ -283,7 +283,7 @@ public class YAML implements ReplicaCatalog {
         boolean validate = true;
         Reader reader = null;
         try {
-            reader = new VariableExpansionReader(new FileReader(f));
+            reader = new VariableExpansionReader(new FileReader(f), null);
         } catch (IOException ioe) {
             throw new ReplicaCatalogException(ioe);
         }

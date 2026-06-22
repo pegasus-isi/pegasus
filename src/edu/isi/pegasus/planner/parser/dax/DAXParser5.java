@@ -123,7 +123,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
     public void parse(String file) {
         Reader reader;
         try {
-            reader = new VariableExpansionReader(new FileReader(file));
+            reader = new VariableExpansionReader(new FileReader(file), this.mProps);
         } catch (IOException ioe) {
             throw new RuntimeException("Exception while reading file " + file, ioe);
         }

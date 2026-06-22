@@ -89,7 +89,7 @@ public abstract class YAMLParser {
         boolean validate = true;
         Reader reader = null;
         try {
-            reader = new VariableExpansionReader(new FileReader(f));
+            reader = new VariableExpansionReader(new FileReader(f), mProps);
         } catch (IOException ioe) {
             mLogger.log("IO Error :" + ioe.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
         }
