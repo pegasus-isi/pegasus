@@ -42,7 +42,7 @@ public class LoggingKeys {
     public static final String EVENT_ENSEMBLE_EXECUTE = "event.ensemble.workflow.execute";
 
     public static final String EVENT_PEGASUS_RANKING = "event.ranking";
-    public static final String EVENT_PEGASUS_RANKING_RETRIEVE_DAX = "event.ranking.retrive.dax";
+    public static final String EVENT_PEGASUS_RANKING_RETRIEVE_DAX = "event.ranking.retrieve.dax";
 
     public static final String EVENT_PEGASUS_REFINEMENT = "event.pegasus.refinement";
     public static final String EVENT_PEGASUS_AUTHENTICATION = "event.pegasus.authenticate";
@@ -84,7 +84,7 @@ public class LoggingKeys {
     public static final String QUERY_RESPONSE = "query.response";
     public static final String FILE_OUTPUT_NAME = "file.output.name";
     public static final String FILE_OUTPUT_CONTENTS = "file.output.contents";
-    public static final String FILE_PRIORTY = "file.priorty";
+    public static final String FILE_PRIORTY = "file.priority";
     public static final String FILE_TYPE = "file.type";
     public static final String TIME_START = "time.start";
     public static final String TIME_END = "time.end";
