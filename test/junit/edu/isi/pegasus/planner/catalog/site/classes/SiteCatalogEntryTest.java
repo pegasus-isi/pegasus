@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo.OS;
@@ -170,6 +171,126 @@ public class SiteCatalogEntryTest {
         assertThat(actualFS, is(expectedFS));
 
         testProfile(entry, "env", "PATH", "/usr/bin:/bin");
+    }
+
+    @Test
+    public void testXTagsProfilesDeserialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test =
+                "name: compute\n"
+                        + "arch: x86_64\n"
+                        + "os.type: linux\n"
+                        + "profiles:\n"
+                        + "  pegasus:\n"
+                        + "    queue: debug\n"
+                        + "x-tags:\n"
+                        + "  - name: gpu\n"
+                        + "    profiles:\n"
+                        + "      pegasus:\n"
+                        + "        queue: gpu\n"
+                        + "        glite.arguments: -C gpu\n"
+                        + "  - name: cpu\n"
+                        + "    profiles:\n"
+                        + "      pegasus:\n"
+                        + "        queue: normal\n";
+
+        SiteCatalogEntry entry = mapper.readValue(test, SiteCatalogEntry.class);
+        assertNotNull(entry);
+        assertEquals("compute", entry.getSiteHandle());
+
+        // verify two tags are present
+        assertEquals(2, entry.getTags().size());
+        assertTrue(entry.getTags().contains("gpu"));
+        assertTrue(entry.getTags().contains("cpu"));
+
+        // verify gpu tag profiles
+        List<Profile> gpuProfiles = entry.getTagProfiles("gpu").getProfiles("pegasus");
+        assertNotNull(gpuProfiles);
+        assertEquals(2, gpuProfiles.size());
+        assertTrue(
+                gpuProfiles.stream()
+                        .anyMatch(
+                                p ->
+                                        p.getProfileKey().equals("queue")
+                                                && p.getProfileValue().equals("gpu")));
+        assertTrue(
+                gpuProfiles.stream()
+                        .anyMatch(
+                                p ->
+                                        p.getProfileKey().equals("glite.arguments")
+                                                && p.getProfileValue().equals("-C gpu")));
+
+        // verify cpu tag profiles
+        List<Profile> cpuProfiles = entry.getTagProfiles("cpu").getProfiles("pegasus");
+        assertNotNull(cpuProfiles);
+        assertEquals(1, cpuProfiles.size());
+        assertEquals("queue", cpuProfiles.get(0).getProfileKey());
+        assertEquals("normal", cpuProfiles.get(0).getProfileValue());
+
+        // verify base profiles are unaffected
+        testProfile(entry, "pegasus", "queue", "debug");
+    }
+
+    @Test
+    public void testXTagsProfilesSerialization() throws IOException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        SiteCatalogEntry entry = new SiteCatalogEntry("compute");
+        entry.setArchitecture(Architecture.x86_64);
+        entry.setOS(OS.linux);
+
+        Profiles baseProfiles = new Profiles();
+        baseProfiles.addProfile(new Profile("pegasus", "queue", "debug"));
+        entry.setProfiles(baseProfiles);
+
+        Profiles gpuProfiles = new Profiles();
+        gpuProfiles.addProfile(new Profile("pegasus", "queue", "gpu"));
+        gpuProfiles.addProfile(new Profile("pegasus", "glite.arguments", "-C gpu"));
+        entry.setTagProfiles("gpu", gpuProfiles);
+
+        Profiles cpuProfiles = new Profiles();
+        cpuProfiles.addProfile(new Profile("pegasus", "queue", "normal"));
+        entry.setTagProfiles("cpu", cpuProfiles);
+
+        String yaml = mapper.writeValueAsString(entry);
+
+        // round-trip: deserialize and verify structure is preserved
+        SiteCatalogEntry deserialized = mapper.readValue(yaml, SiteCatalogEntry.class);
+        assertNotNull(deserialized);
+        assertEquals("compute", deserialized.getSiteHandle());
+
+        assertEquals(2, deserialized.getTags().size());
+        assertTrue(deserialized.getTags().contains("gpu"));
+        assertTrue(deserialized.getTags().contains("cpu"));
+
+        List<Profile> gpuActual = deserialized.getTagProfiles("gpu").getProfiles("pegasus");
+        assertNotNull(gpuActual);
+        assertEquals(2, gpuActual.size());
+        assertTrue(
+                gpuActual.stream()
+                        .anyMatch(
+                                p ->
+                                        p.getProfileKey().equals("queue")
+                                                && p.getProfileValue().equals("gpu")));
+        assertTrue(
+                gpuActual.stream()
+                        .anyMatch(
+                                p ->
+                                        p.getProfileKey().equals("glite.arguments")
+                                                && p.getProfileValue().equals("-C gpu")));
+
+        List<Profile> cpuActual = deserialized.getTagProfiles("cpu").getProfiles("pegasus");
+        assertNotNull(cpuActual);
+        assertEquals(1, cpuActual.size());
+        assertEquals("queue", cpuActual.get(0).getProfileKey());
+        assertEquals("normal", cpuActual.get(0).getProfileValue());
+
+        testProfile(deserialized, "pegasus", "queue", "debug");
     }
 
     @Test

@@ -579,7 +579,7 @@ public abstract class Abstract implements Implementation {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        xBitJob.updateProfiles(eSite.getProfiles());
+        xBitJob.updateProfiles(eSite);
 
         // the profile information from the transformation
         // catalog needs to be assimilated into the job

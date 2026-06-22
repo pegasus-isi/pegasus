@@ -158,7 +158,7 @@ public class Chain extends Basic {
         Job sub = new Job();
         // assimilate the profile information from the
         // site catalog into the job.
-        sub.updateProfiles(mSiteStore.lookup(site).getProfiles());
+        sub.updateProfiles(mSiteStore.lookup(site));
 
         // this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry =

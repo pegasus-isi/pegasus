@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -1802,6 +1803,16 @@ public class CPlanner extends Executable {
 
         /* query for the sites, and print them out */
         mLogger.log("Sites loaded are " + result.list(), LogManager.DEBUG_MESSAGE_LEVEL);
+        for (String site : result.list()) {
+            SiteCatalogEntry entry = result.lookup(site);
+            try {
+                mLogger.log(entry.toYAML(), LogManager.TRACE_MESSAGE_LEVEL);
+            } catch (JsonProcessingException ex) {
+                mLogger.log(
+                        "Unable to convert to yaml site catalog entry for site - " + site,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+        }
         return result;
     }
 
