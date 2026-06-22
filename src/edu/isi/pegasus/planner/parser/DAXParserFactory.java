@@ -66,7 +66,7 @@ public class DAXParserFactory {
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param callbackClass the dax callback class
      * @param daxFile
      * @return the DAXParser loaded.
@@ -90,7 +90,7 @@ public class DAXParserFactory {
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param cb the dax callback class
      * @param daxFile
      * @return the DAXParser loaded.
@@ -119,7 +119,7 @@ public class DAXParserFactory {
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified in the DAX file.
      *
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param c the dax callback.
      * @param daxFile the dax file to parser
      * @return the DAXParser loaded.
@@ -161,7 +161,7 @@ public class DAXParserFactory {
             // try to figure out the schema from the schema in properties
             // in case unable to determine from the dax file
             if (schemaVersion == null && daxSchema != null) {
-                // try to determin the version of dax schema
+                // try to determine the version of dax schema
                 daxSchema = new File(daxSchema).getName();
                 if (daxSchema.startsWith("dax-") && daxSchema.endsWith(".xsd")) {
                     schemaVersion =
@@ -180,7 +180,7 @@ public class DAXParserFactory {
             }
 
             // append .0 to the version number
-            // to be able to convert to numberic value
+            // to be able to convert to numeric value
             if (CondorVersion.numericValue(schemaVersion + ".0")
                     < DAXParserFactory.DAX_VERSION_3_2_0) {
                 daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
@@ -204,7 +204,7 @@ public class DAXParserFactory {
      *
      * @param classname the classname of the parser class that needs to be loaded
      * @param schemaVersion the schema version as determined from the DAX
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param c the DAX Callback to use
      * @return the DAXParser loaded.
      * @exception DAXParserFactoryException that nests any error that might occur during the
@@ -285,7 +285,7 @@ public class DAXParserFactory {
             p.setParserFeature("http://apache.org/xml/features/validation/schema", false);
             p.startParser(dax);
         } catch (RuntimeException e) {
-            // check explicity for file not found exception
+            // check explicitly for file not found exception
             if (e.getCause() != null && e.getCause() instanceof java.io.IOException) {
                 // rethrow
                 throw e;

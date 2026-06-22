@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This transfer refiner builds upon the Default Refiner. The defaul Refiner allows the transfer of
+ * This transfer refiner builds upon the Default Refiner. The default Refiner allows the transfer of
  * multiple files in a single condor job. However, it adds the stage in transfer nodes in parallel
  * leading to multiple invocation of the globus-url-copy at remote execution pools, while running
  * huge workflows. This refiner, tries to circumvent this problem by chaining up the stagein jobs
@@ -91,7 +91,7 @@ public class Chain extends Basic {
     /**
      * Adds a new relation to the workflow. In the case when the parent is a transfer job that is
      * added, the parentNew should be set only the first time a relation is added. For subsequent
-     * compute jobs that maybe dependant on this, it needs to be set to false.
+     * compute jobs that maybe dependent on this, it needs to be set to false.
      *
      * @param parent the jobname of the parent node of the edge.
      * @param child the jobname of the child node of the edge.
@@ -141,7 +141,7 @@ public class Chain extends Basic {
     }
 
     /**
-     * Determines the bundle factor for a particular site on the basis of the key associcated with
+     * Determines the bundle factor for a particular site on the basis of the key associated with
      * the underlying transfer transformation in the transformation catalog. If none specified in
      * transformation catalog then one is picked up from the site catalog. If the key is not found
      * in the site catalog too , then the global default is returned.
@@ -237,7 +237,7 @@ public class Chain extends Basic {
             mNext = 0;
             mSite = pool;
             mBundles = new ArrayList(bundle);
-            // intialize to null
+            // initialize to null
             for (int i = 0; i < bundle; i++) {
                 mBundles.add(null);
             }
@@ -303,7 +303,7 @@ public class Chain extends Basic {
      */
     private static class TransferChain {
 
-        /** The linked list that maintians the chain of names of the transfer jobs. */
+        /** The linked list that maintains the chain of names of the transfer jobs. */
         private LinkedList mChain;
 
         /** The default constructor. */

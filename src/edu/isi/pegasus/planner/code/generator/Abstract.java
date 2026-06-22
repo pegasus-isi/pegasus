@@ -62,7 +62,7 @@ public abstract class Abstract implements CodeGenerator {
     /**
      * Returns the name of the file on the basis of the metadata associated with the DAG. In case of
      * Condor dagman, it is the name of the .dag file that is written out. The basename of the .dag
-     * file is dependant on whether the basename prefix has been specified at runtime or not by
+     * file is dependent on whether the basename prefix has been specified at runtime or not by
      * command line options.
      *
      * @param dag the dag for which the .dag file has to be created.
@@ -76,7 +76,7 @@ public abstract class Abstract implements CodeGenerator {
     /**
      * Returns the name of the file on the basis of the metadata associated with the DAG. In case of
      * Condor dagman, it is the name of the .dag file that is written out. The basename of the .dag
-     * file is dependant on whether the basename prefix has been specified at runtime or not by
+     * file is dependent on whether the basename prefix has been specified at runtime or not by
      * command line options.
      *
      * @param options the options passed to the planner.
@@ -107,7 +107,7 @@ public abstract class Abstract implements CodeGenerator {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         mBag = bag;
@@ -263,7 +263,7 @@ public abstract class Abstract implements CodeGenerator {
     /**
      * Resets the Code Generator implementation.
      *
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void reset() throws CodeGeneratorException {
         mSubmitFileDir = null;
@@ -285,7 +285,7 @@ public abstract class Abstract implements CodeGenerator {
         // append the base name of the job
         sb.append(File.separatorChar).append(job.getFileFullPath(mSubmitFileDir, suffix));
 
-        // intialize the print stream to the file
+        // initialize the print stream to the file
         return new PrintWriter(new BufferedWriter(new FileWriter(sb.toString())));
     }
 }

@@ -129,7 +129,7 @@ break for users running with HTCondor 8.5.8 or higher.
 
 #### Bugs Fixed
 
-1) [PM-1132] – Hashed staging mapper doen’t work correctly with sub [\#1246](https://github.com/pegasus-isi/pegasus/issues/1246)
+1) [PM-1132] – Hashed staging mapper doesn’t work correctly with sub [\#1246](https://github.com/pegasus-isi/pegasus/issues/1246)
    dax generation jobs
 
    For large workflows with dax generation jobs, the planning broke
@@ -246,7 +246,7 @@ New features and Improvements in 4.7.0 are
    properties
 
    pegasus.dir.submit.mapper.hashed.levels         the number of
-   directory levels used to accomodate the files. Defaults to 2.
+   directory levels used to accommodate the files. Defaults to 2.
    pegasus.dir.submit.mapper.hashed.multiplier      the number of
    files associated with a job in the submit directory. defaults to    5.
 

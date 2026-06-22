@@ -982,7 +982,7 @@ int Master::run() {
         log_error("Workflow failed");
         return 1;
     } else {
-        log_info("Workflow suceeded");
+        log_info("Workflow succeeded");
         return 0;
     }
 }

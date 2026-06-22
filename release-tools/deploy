@@ -61,7 +61,7 @@ for TARGET in \
     done
 done
 
-# standard filesnames for DEBs
+# standard filenames for DEBs
 cd $TOPDIR/dist/$DOWNLOADS
 for TIMESTAMPED in $(ls *dev20*.deb >/dev/null 2>&1); do
     SIMPLE=`echo $TIMESTAMPED | sed -E 's/dev20[0-9]+/dev/'`

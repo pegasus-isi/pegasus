@@ -249,7 +249,7 @@ public class PegasusDBAdmin {
                 message.append(command).append(" failed with status ").append(status).append(" .");
                 if (backendType == DB_ADMIN_BACKEND.master) {
                     message.append(
-                                    " Pegasus was unable to update the the worflow database file"
+                                    " Pegasus was unable to update the the workflow database file"
                                             + " found at")
                             .append(
                                     " ~/.pegasus/workflow.db . If this file is corrupted, a"

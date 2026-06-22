@@ -864,7 +864,7 @@ public class Meta implements ReplicaCatalog {
             Meta metaRC = (Meta) dc.findInjectableValue("callback", null, null);
             if (metaRC == null) {
                 throw new ReplicaCatalogException(
-                        "Callback not initialized when parsing inititated");
+                        "Callback not initialized when parsing initiated");
             }
             if (!node.isArray()) {
                 throw new ReplicaCatalogException("The meta file should be array of entries");

@@ -140,7 +140,7 @@ public class ImplementationFactoryTest {
                 exception.getCause().getClass(), is(TransferImplementationFactoryException.class));
         TransferImplementationFactoryException wrapped =
                 (TransferImplementationFactoryException) exception.getCause();
-        assertThat(wrapped.getMessage(), is("Instantiating Transfer Impelmentation "));
+        assertThat(wrapped.getMessage(), is("Instantiating Transfer Implementation "));
         assertThat(wrapped.getClassname(), is(TestImplementation.class.getName()));
         assertThat(wrapped.getCause(), notNullValue());
         assertThat(wrapped.getCause().getMessage(), is("Invalid properties passed"));

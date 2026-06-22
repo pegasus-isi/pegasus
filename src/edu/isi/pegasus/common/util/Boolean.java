@@ -80,7 +80,7 @@ public class Boolean {
      * off
      * </pre>
      *
-     * Any other string representation is taken to mean the boolean value indicated by the paramater
+     * Any other string representation is taken to mean the boolean value indicated by the parameter
      * deflt.
      *
      * @param rep is the input string representing a boolean value.

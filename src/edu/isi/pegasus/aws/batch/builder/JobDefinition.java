@@ -37,7 +37,7 @@ import java.util.Map;
  *
  * <p>http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html
  *
- * <p>Sytax of JSON document parsed is below
+ * <p>Syntax of JSON document parsed is below
  *
  * <pre>
  *  {
@@ -436,7 +436,7 @@ public class JobDefinition {
                 }
               ],
         */
-        Map<String, String> paramenters = new HashMap();
+        Map<String, String> parameters = new HashMap();
         RegisterJobDefinitionRequest.Builder builder = RegisterJobDefinitionRequest.builder();
         builder.jobDefinitionName(basename + suffix);
         builder.type(JobDefinitionType.Container);

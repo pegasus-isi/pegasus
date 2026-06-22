@@ -102,7 +102,7 @@ public class ContainerShellWrapperFactory {
      * This method loads the appropriate implementing Container Shell Wrapper as specified by the
      * user at runtime.
      *
-     * @param job the job for which wrapper is requried.
+     * @param job the job for which wrapper is required.
      * @return the instance of the class implementing this interface.
      * @exception ContainerShellWrapperFactoryException that nests any error that might occur during
      *     the instantiation of the implementation.

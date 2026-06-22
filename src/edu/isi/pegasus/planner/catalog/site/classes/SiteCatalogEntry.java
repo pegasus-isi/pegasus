@@ -81,7 +81,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
     /** The System Information for the Site. */
     private SysInfo mSysInfo;
 
-    /** The profiles asscociated with the site. */
+    /** The profiles associated with the site. */
     private Profiles mProfiles;
 
     /** The handle to the head node filesystem. */
@@ -118,7 +118,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
     }
 
     /**
-     * Not implmented as yet.
+     * Not implemented as yet.
      *
      * @return UnsupportedOperationException
      */
@@ -807,7 +807,7 @@ public class SiteCatalogEntry extends AbstractSiteData {
 
             obj.setProfiles((Profiles) this.mProfiles.clone());
 
-            // associate all the tags and theri profiles
+            // associate all the tags and there profiles
             for (String name : this.mTagsProfiles.keySet()) {
                 obj.setTagProfiles(name, (Profiles) this.mTagsProfiles.get(name).clone());
             }

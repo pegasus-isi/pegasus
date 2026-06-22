@@ -58,7 +58,7 @@ Message *MPICommunicator::recv_message(double timeout) {
     log_trace("Rank %d: Receiving %d byte message of type %d from %d",
               myrank, msgsize, tag, source);
 
-    // Recieve the message
+    // Receive the message
     MPI_Recv(msg, msgsize, MPI_CHAR, source, tag, MPI_COMM_WORLD, &status);
     bytes_recvd += msgsize;
 

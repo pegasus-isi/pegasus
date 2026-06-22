@@ -100,7 +100,7 @@ public class RemoveDirectory extends Engine {
      *
      * @return the complete transformation name
      */
-    public static String getCompleteTranformationName() {
+    public static String getCompleteTransformationName() {
         return Separator.combine(
                 TRANSFORMATION_NAMESPACE, TRANSFORMATION_NAME, TRANSFORMATION_VERSION);
     }
@@ -306,7 +306,7 @@ public class RemoveDirectory extends Engine {
             GraphNode removeDirNode = entry.getKey();
             Set<GraphNode> parents = entry.getValue();
             mLogger.log(
-                    "Adding node to the worklfow " + removeDirNode.getID(),
+                    "Adding node to the workflow " + removeDirNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             for (GraphNode parent : parents) {
                 removeDirNode.addParent(parent);
@@ -330,7 +330,7 @@ public class RemoveDirectory extends Engine {
 
     /**
      * It returns the name of the remove directory job, that is to be assigned. The name takes into
-     * account the workflow name while constructing it, as that is thing that can guarentee
+     * account the workflow name while constructing it, as that is thing that can guarantee
      * uniqueness of name in case of deferred planning.
      *
      * @param dag the dag for which the cleanup DAG is being generated.
@@ -482,7 +482,7 @@ public class RemoveDirectory extends Engine {
             // should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ")
-                    .append(this.getCompleteTranformationName())
+                    .append(this.getCompleteTransformationName())
                     .append(" at site ")
                     .append(eSite);
 
@@ -617,7 +617,7 @@ public class RemoveDirectory extends Engine {
 
         mLogger.log(
                 "Creating a default TC entry for "
-                        + RemoveDirectory.getCompleteTranformationName()
+                        + RemoveDirectory.getCompleteTransformationName()
                         + " at site "
                         + site.getSiteHandle(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
@@ -627,7 +627,7 @@ public class RemoveDirectory extends Engine {
             // cannot create default TC
             mLogger.log(
                     "Unable to create a default entry for "
-                            + RemoveDirectory.getCompleteTranformationName(),
+                            + RemoveDirectory.getCompleteTransformationName(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             // set the flag back to true
             return defaultTCEntry;
@@ -678,7 +678,7 @@ public class RemoveDirectory extends Engine {
     }
 
     /**
-     * Returns the associated site that job is dependant on. This is site, whose create dir job
+     * Returns the associated site that job is dependent on. This is site, whose create dir job
      * should be a parent or an ancestor of the job.
      *
      * @param job the job for which we need the associated create dir site.

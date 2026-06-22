@@ -124,7 +124,7 @@ public class Ssh extends Abstract implements CredentialHandler {
                                     .get(Ssh.SSH_PRIVATE_KEY_VARIABLE);
         }
 
-        // try from properites file
+        // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);

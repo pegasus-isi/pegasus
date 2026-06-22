@@ -78,7 +78,7 @@ import java.util.Set;
  *   <li><b>executable:</b> Used as "In Abstract Workflow" Transformation Catalog (Optional)
  *   <li><b>transformation:</b> Used to describe compound executables. i.e. Executable depending on
  *       other executables (Optional)
- *   <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. Atleast 1
+ *   <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. At least 1
  *       required.
  *   <li><b>child:</b> The dependency section to describe dependencies between job|dax|dag elements.
  * </ol>
@@ -1059,7 +1059,7 @@ public class ADAG {
             this.writeTo(new FileWriter(daxfile), format);
         } catch (IOException ioe) {
             throw new RuntimeException(
-                    "Error encountered while writting out the abstract workflow to file " + daxfile,
+                    "Error encountered while writing out the abstract workflow to file " + daxfile,
                     ioe);
         }
     }
@@ -1183,7 +1183,7 @@ public class ADAG {
 
         // print executable
         writer.writeXMLComment(
-                "Section 4: Executables - Acts as a Transformaton Catalog (can be empty)", true);
+                "Section 4: Executables - Acts as a Transformation Catalog (can be empty)", true);
         for (Executable e : mExecutables) {
             e.toXML(writer, indent + 1);
         }
@@ -1197,7 +1197,7 @@ public class ADAG {
         }
         // print jobs, daxes and dags
         writer.writeXMLComment(
-                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1"
+                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (At least 1"
                         + " required)",
                 true);
         for (AbstractJob j : mJobs.values()) {
@@ -1393,7 +1393,7 @@ public class ADAG {
     private static ADAG Performance() {
         ADAG dax = new ADAG("test");
 
-        Executable preprocess = new Executable("pegasus", "preproces", "1.0");
+        Executable preprocess = new Executable("pegasus", "preprocess", "1.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(false);
         preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg", "local"));
@@ -1475,7 +1475,7 @@ public class ADAG {
         File fd = new File("f.d");
         dax.addFile(fd);
 
-        Executable preprocess = new Executable("pegasus", "preproces", "1.0");
+        Executable preprocess = new Executable("pegasus", "preprocess", "1.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(false);
         preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg", "local"));

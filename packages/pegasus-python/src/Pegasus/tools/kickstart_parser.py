@@ -226,7 +226,7 @@ class Parser:
         """
         This function works similarly to the parse function above,
         but does not require a keys_dict parameter as it uses a
-        built-in list of keys speficically used in the Stampede
+        built-in list of keys specifically used in the Stampede
         schema.
         """
 
@@ -1053,7 +1053,7 @@ class XMLParser(Parser):
             self._keys[name] = {}
             for attr_name in self._ks_elements[name]:
                 if attr_name in attrs:
-                    # keep consitency with 5.0 yaml based naming
+                    # keep consistency with 5.0 yaml based naming
                     self._keys[name]["cpu_" + attr_name] = attrs[attr_name]
         elif name == "data":
             # Start parsing data for stdout and stderr output

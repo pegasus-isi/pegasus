@@ -18,7 +18,7 @@ Description
 
 **pegasus-init**  is designed to be an interactive cli tool that generates example
 workflows, ready to be executed on common execution environments.
-The example workflows provided are a subset of the workflows availabe at
+The example workflows provided are a subset of the workflows available at
 PegasusHub (https://pegasushub.github.io), which are marked as examples.
 
 Some of the example workflows might overwrite the configuration **pegasus-init**

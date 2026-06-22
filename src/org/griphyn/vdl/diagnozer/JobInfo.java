@@ -43,7 +43,7 @@ class JobInfo {
     /** Error messages found in the JobID.out file */
     private ArrayList m_outFileMessages;
 
-    /** The last stage it was performing before failur */
+    /** The last stage it was performing before failure */
     private String m_lastStage;
 
     /** The Outfile Exitcodes */

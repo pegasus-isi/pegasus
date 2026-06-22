@@ -135,7 +135,7 @@ public class ImplementationFactory {
             implementation = (Implementation) dl.instantiate(argList);
         } catch (Exception e) {
             throw new TransferImplementationFactoryException(
-                    "Instantiating Transfer Impelmentation ", className, e);
+                    "Instantiating Transfer Implementation ", className, e);
         }
         return implementation;
     }

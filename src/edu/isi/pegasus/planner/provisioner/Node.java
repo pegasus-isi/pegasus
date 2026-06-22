@@ -82,7 +82,7 @@ public class Node {
     /**
      * set execution time of this task
      *
-     * @param w excution time
+     * @param w execution time
      */
     public void setWeight(long w) {
         this.weight = w;
@@ -91,7 +91,7 @@ public class Node {
     /**
      * return execution time of this task
      *
-     * @return excution time
+     * @return execution time
      */
     public long evalWeight() {
         return weight;
@@ -456,7 +456,7 @@ public class Node {
      * @param timeMap List of scheduled tasks at each time slot. i.e., Occupation diagram itself
      * @param limit maximum height of Occupation diagram. The result of redistribution should cause
      *     taller height of this limit.
-     * @param bound Lastest time this tasks can be scheduled.
+     * @param bound Latest time this tasks can be scheduled.
      * @return true if this task is redistributed.
      */
     public boolean moveRight(LinkedList[] timeMap, int limit, long bound) {

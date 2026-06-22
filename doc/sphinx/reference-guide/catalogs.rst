@@ -157,7 +157,7 @@ safe purposes in any way. Multiple concurrent instances will conflict
 with each other. The site attribute should be specified whenever
 possible. The attribute key for the site attribute is **"site".**
 
-In addition users can specifiy regular expression based LFN's. A regular
+In addition users can specify regular expression based LFN's. A regular
 expression based entry should be qualified with an attribute named
 'regex'. The attribute regex when set to true identifies the catalog
 entry as a regular expression based entry. Regular expressions should
@@ -168,8 +168,8 @@ For example, consider a replica catalog as shown below.
 Entry 1 refers to an entry which does not use a regular expressions.
 This entry would only match a file named 'f.a', and nothing else.
 
-Entry 2 referes to an entry which uses a regular expression. In this
-entry f.a referes to files having name as f<any-character>a i.e. faa,
+Entry 2 refers to an entry which uses a regular expression. In this
+entry f.a refers to files having name as f<any-character>a i.e. faa,
 f.a, f0a, etc.
 
 ::
@@ -188,7 +188,7 @@ PFN.
 
 For the entry below if the file being looked up is alpha.csv, the PFN
 for the file would be generated as
-file:///Volumes/data/input/csv/alpha.csv. Similary if the file being
+file:///Volumes/data/input/csv/alpha.csv. Similarly if the file being
 lookedup was alpha.csv, the PFN for the file would be generated as
 file:///Volumes/data/input/xml/alpha.xml i.e. The section [0], [1] will
 be replaced. Section [0] refers to the entire string i.e. alpha.csv.
@@ -419,7 +419,7 @@ located in **$HOME/rc** using the pegasus-rc-client. Replace the
    $ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
     f.a gsiftp://somehost:port/path/to/file/f.a site=local
 
-You may first want to verify that the file registeration is in the
+You may first want to verify that the file registration is in the
 replica catalog. Since we are using a File catalog we can look at the
 file **$HOME/rc** to view entries.
 
@@ -486,7 +486,7 @@ Described below are some of the entries in the site catalog.
 
    For each of the directories, you can specify access methods. Allowed
    methods are **put**, **get**, and **all** which means both put and
-   get. For each mehod, specify a URL including the protocol. For
+   get. For each method, specify a URL including the protocol. For
    example, if you want share data via http using the /var/www/staging
    directory, you can use scp://hostname/var/www for the put element and
    http://hostname/staging for the get element. Also for each shared-*
@@ -792,7 +792,7 @@ a property of the form
 **pegasus.catalog.site.sites.[sitename].profiles.[namespace].key**
 
 For example, going back to previous usecase of changing the queue
-specfiied in the site catalog, you can specify the following
+specified in the site catalog, you can specify the following
 in your properties
 
 ::
@@ -1019,7 +1019,7 @@ behavior of this implementation.
 MultiLine Text based TC (Text)
 ------------------------------
 
-The multile line text based TC is the new default TC in Pegasus. This
+The multiple line text based TC is the new default TC in Pegasus. This
 format allows you to define the transformations
 
 The file is read and cached in memory. Any modifications, as adding or
@@ -1254,7 +1254,7 @@ given below.
    $ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 
    2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
-   2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  sample.tc.text
+   2010.11.22 12:53:16.666 PST:   The output transformation catalog is in file  sample.tc.text
 
 To use the converted transformation catalog, in the properties do the
 following:

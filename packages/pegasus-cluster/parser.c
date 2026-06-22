@@ -123,7 +123,7 @@ interpretArguments( char* cmd, char*** argv )
 
     case 1: /* save char */
       if ( size+1 >= capacity ) {
-	/* need to increate buffer to accomodate longer string */
+	/* need to increase buffer to accommodate longer string */
 	size_t c = capacity << 1;
 	char* t = (char*) malloc(c);
 	memcpy( t, store, size );

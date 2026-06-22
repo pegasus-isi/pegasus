@@ -1,6 +1,6 @@
 /* This module collects I/O, memory and CPU usage info about a job and all
  * of its child processes. Each child (and grandchild) is traced using
- * ptrace. When the child is about to exit the tracing proces (kickstart)
+ * ptrace. When the child is about to exit the tracing process (kickstart)
  * looks it up in the /proc file system and determines: what the maximum
  * virtual memory size was (vmpeak), what the maximum physical memory size
  * was (rsspeak), how much time the process spent in the kernel (stime),

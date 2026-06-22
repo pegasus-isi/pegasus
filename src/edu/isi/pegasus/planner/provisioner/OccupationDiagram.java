@@ -96,7 +96,7 @@ public class OccupationDiagram {
      * Run Task placement phase of BTS algorithm
      *
      * @param print if true print debug message to stdout
-     * @return maxinum height of Occupation diagram when Task placement is done
+     * @return maximum height of Occupation diagram when Task placement is done
      */
     public int stack(boolean print) {
         while (nodes.size() > 0) {
@@ -163,7 +163,7 @@ public class OccupationDiagram {
      *
      * @param goal Redistribution loop is stop if maximum height of OD reach this goal value.
      * @param print if true print debug message to stdout
-     * @return maxinum height of Occupation diagram when Task redistribution is done
+     * @return maximum height of Occupation diagram when Task redistribution is done
      */
     public int balance(int goal, boolean print) {
         int max = 0;

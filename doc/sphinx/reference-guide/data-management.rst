@@ -538,7 +538,7 @@ HPSS (hpss://)
 
 We support retrieval of input files from a tar file in HPSS storage
 using the htar command. The naming convention to describe the tar file
-and the file to retrieve fro the tar file is as follows
+and the file to retrieve from the tar file is as follows
 
 ::
 
@@ -724,7 +724,7 @@ is just an arbitrary name with an endpoint entry. Example:
     # Refer to https://docs.aws.amazon.com/general/latest/gr/s3.html
     # for a mapping of amazon endpoints to regions.
     # It is highly recommended that you specify the amazon
-    # region key in the amazon section that is consisten with
+    # region key in the amazon section that is consistent with
     # the endpoint.
 
     [amazon]
@@ -852,7 +852,7 @@ iRods Password and Tickets
 --------------------------
 
 If a workflow is using iRods URLs, Pegasus has to be given an
-irods_environment.json file. It is a standard file, with the addtion of
+irods_environment.json file. It is a standard file, with the addition of
 an password attribute, and optionally one for the ticket strong.
 Example:
 
@@ -973,7 +973,7 @@ default .
 
    ::
 
-      pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accomodate the files. Defaults to 2.
+      pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accommodate the files. Defaults to 2.
       pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job in the submit directory. defaults to 5.
 
 ..
@@ -1008,7 +1008,7 @@ The following mappers are supported currently
    storage directory specified in the site catalog for the output site.
 
 2. **Fixed** : This mapper allows users to specify an externally
-   accesible url to the storage directory in their properties file. To
+   accessible url to the storage directory in their properties file. To
    use this mapper, the following property needs to be set.
 
    -  pegasus.dir.storage.mapper.fixed.url an externally accessible URL
@@ -1480,7 +1480,7 @@ node. If checksums are not specified, then Pegasus will compute them
 during the data transfer to the staging site, and use them.
 
 To specify checksums in replica catalog, you need to specify two
-additonal attributes with your LFN -> PFN mapping.
+additional attributes with your LFN -> PFN mapping.
 
 1. **checksum.type** The checksum type. Currently only type of sha256 is
    supported

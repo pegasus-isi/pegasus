@@ -120,7 +120,7 @@ public class VDSSysInfo {
     }
 
     /**
-     * Sets the Os of the sytem.
+     * Sets the Os of the system.
      *
      * @param os Os
      * @see Os
@@ -148,7 +148,7 @@ public class VDSSysInfo {
     }
 
     /**
-     * Returns the architecture of the sytem.
+     * Returns the architecture of the system.
      *
      * @return Arch
      * @see Arch
@@ -177,7 +177,7 @@ public class VDSSysInfo {
     }
 
     /**
-     * Retuns the glibc version of the system.
+     * Returns the glibc version of the system.
      *
      * @return String
      */

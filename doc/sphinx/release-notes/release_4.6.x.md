@@ -42,7 +42,7 @@ New features and Improvements in 4.6.2 are
 
    Pegasus now checks for cyclic dependencies that may exist in the
    DAX or are as a result of adding edges automatically based on data
-   depedencies
+   dependencies
 
 6) [PM-1116] - pass task resource requirements as environment [\#1230](https://github.com/pegasus-isi/pegasus/issues/1230)
    variables for job wrappers to pick up
@@ -437,7 +437,7 @@ pegasus-metadata to query workflow database for metadata
 3) Constraints based Cleanup Algorithm
 
    The planner now has support for a new cleanup algorithm called
-   constraint. The algoirthm adds cleanup nodes to constraint the
+   constraint. The algorithm adds cleanup nodes to constraint the
    amount of storage space used by a workflow. The nodes remove files
    no longer required during execution. The added cleanup node
    guarantees limits on disk usage. The leaf cleanup nodes are also
@@ -449,7 +449,7 @@ pegasus-metadata to query workflow database for metadata
 
    Users can now specify Pegasus profiles to indicate resource
    requirements for jobs. Pegasus will automatically, translate these
-   to the approprate condor, globus or batch system keys based on how
+   to the appropriate condor, globus or batch system keys based on how
    the job is executed.
 
    The profiles are documented in the configuration chapter at ask
@@ -562,7 +562,7 @@ pegasus-metadata to query workflow database for metadata
 14) [PM-986] - input-dir option to pegasus-plan should be a comma [\#1103](https://github.com/pegasus-isi/pegasus/issues/1103)
 separated list
 
-15) [PM-1031] - pegasus-db-admin should have an upgrade/dowgrade [\#1145](https://github.com/pegasus-isi/pegasus/issues/1145)
+15) [PM-1031] - pegasus-db-admin should have an upgrade/downgrade [\#1145](https://github.com/pegasus-isi/pegasus/issues/1145)
 option to update all databases from the dashboard database to current
 pegasus version
 
@@ -621,7 +621,7 @@ return stdout back
       commit changes Kickstart so that it catches the SIGTERM and
       passes it on to the child instead. That way the child dies, but
       not Kickstart, and Kickstart can report an invocation record
-      forthe job to provide the user with useful debugging info. This
+      for the job to provide the user with useful debugging info. This
       same logic is also applied to SIGINT and SIGQUIT.
 
 16) [PM-1018] - defaults for pegasus-plan to pick up properties and [\#1133](https://github.com/pegasus-isi/pegasus/issues/1133)
@@ -638,7 +638,7 @@ other catalogs
 
 #### Bugs Fixed
 
-1) [PM-653] - pegasus.dagman.nofity should be removed in favor of [\#771](https://github.com/pegasus-isi/pegasus/issues/771)
+1) [PM-653] - pegasus.dagman.notify should be removed in favor of [\#771](https://github.com/pegasus-isi/pegasus/issues/771)
 Pegasus level notifcaitons
 
 2) [PM-897] - kickstart is reporting misleading permission error when [\#1015](https://github.com/pegasus-isi/pegasus/issues/1015)

@@ -565,7 +565,7 @@ class TransferHandlerBase:
 
         # Introduce errors! The PEGASUS_TRANSFER_ERROR_RATE env variable can
         # be used to introduce transfer error at some rate (valid values in
-        # precent: 0-100). This is useful for testing the data integrity
+        # percent: 0-100). This is useful for testing the data integrity
         # detection and failover components of Pegasus. This only works
         # for transfer with a file:// destination.
         if (
@@ -698,7 +698,7 @@ class TransferHandlerBase:
     def _verify_read_access(self, path):
         """
         Sometimes we need to verify that a local file exists, and that we have
-        read acess. Note that because of access mechanisms on some of the file
+        read access. Note that because of access mechanisms on some of the file
         systems we have to deal with, such as CVMFS, checking POSIX permissions
         is not enough. Here we try to open() the file to make sure it works.
         """
@@ -1229,7 +1229,7 @@ class GridFtpHandler(TransferHandlerBase):
             if gsiftp_failures == 0:
                 options += " -pipeline"
 
-            # parallism
+            # parallelism
             options += " -parallel 4"
 
             # -fast should be supported by all servers today
@@ -1248,7 +1248,7 @@ class GridFtpHandler(TransferHandlerBase):
 
     def _check_similar(self, a, b):
         """
-        compares two url_pairs, and determins if they are similar enough to be
+        compares two url_pairs, and determines if they are similar enough to be
         grouped together in one transfer input file
         """
         if a.get_src_host() != b.get_src_host():
@@ -1766,7 +1766,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], mkdir_list]
 
@@ -1804,7 +1804,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], transfer_list]
 
@@ -1883,7 +1883,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], removes_list]
 
@@ -2588,7 +2588,7 @@ class GSHandler(TransferHandlerBase):
 
         env = {}
 
-        # gsutil includes its own Python - make sure we don't interfer
+        # gsutil includes its own Python - make sure we don't interfere
         env["PYTHONPATH"] = ""
 
         if "BOTO_CONFIG" in os.environ:
@@ -2869,7 +2869,7 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -2996,7 +2996,7 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3150,7 +3150,7 @@ class GSIScpHandler(TransferHandlerBase):
             logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
             return [[], mkdir_list]
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3263,7 +3263,7 @@ class GSIScpHandler(TransferHandlerBase):
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
             return [[], mkdir_list]
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3376,7 +3376,7 @@ class GSIScpHandler(TransferHandlerBase):
 
 class OSDFHandler(TransferHandlerBase):
     """
-    Uses the OSG pelican/stashcp command to trasfer from/to OSDF
+    Uses the OSG pelican/stashcp command to transfer from/to OSDF
     """
 
     _name = "OSDFHandler"
@@ -3696,8 +3696,8 @@ class SingularityHandler(TransferHandlerBase):
     """
     Use "singularity pull" to import images from Singularity Hub, Singularity Library, and Docker.
 
-    Singularity Hub and Docker compatability requires Singularity version 2.3 or greater.
-    Singularity Library compatability requires Singularity version 3.0 or greater.
+    Singularity Hub and Docker compatibility requires Singularity version 2.3 or greater.
+    Singularity Library compatibility requires Singularity version 3.0 or greater.
     """
 
     _name = "SingularityHandler"
@@ -5020,7 +5020,7 @@ def iso_prefix_formatted(n):
 
 def json_object_decoder(obj):
     """
-    utility function used by json.load() to parse some known objects into equilvalent Python objects
+    utility function used by json.load() to parse some known objects into equivalent Python objects
     """
     if "type" in obj and obj["type"] == "transfer":
         t = Transfer()
@@ -5441,7 +5441,7 @@ def main():
         "--debug",
         action="store_true",
         dest="debug",
-        help="Enables debugging ouput.",
+        help="Enables debugging output.",
     )
 
     # Parse command line options

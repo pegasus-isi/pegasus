@@ -14,7 +14,7 @@ COMPARE_OPERATORS = {
     ast.Is: operator.is_,
     ast.IsNot: operator.isnot,
     ast.In: operator.in_,
-    ast.NotIn: operator.notin_,
+    ast.NotIn: operator.notin_,  # codespell:ignore notin
 }
 
 OPERATORS = {

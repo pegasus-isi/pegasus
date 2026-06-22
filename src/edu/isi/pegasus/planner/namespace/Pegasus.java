@@ -266,7 +266,7 @@ public class Pegasus extends Namespace {
     public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
 
     /**
-     * The name of the profile key, that when associated jobs indicates wheter there should be
+     * The name of the profile key, that when associated jobs indicates whether there should be
      * nosymlinking or not.
      */
     public static final String NO_SYMLINK_KEY = "nosymlink";
@@ -417,7 +417,7 @@ public class Pegasus extends Namespace {
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
 
-    /** profile key for pegasus lite source scritp */
+    /** profile key for pegasus lite source script */
     public static final String PEGASUS_LITE_ENV_SOURCE_KEY =
             ENV.PEGASUS_LITE_ENV_SOURCE_KEY.toLowerCase();
 

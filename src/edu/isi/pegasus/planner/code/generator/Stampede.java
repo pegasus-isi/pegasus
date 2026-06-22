@@ -40,7 +40,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * A Stampede Events Code Generator that generates events in netlogger format for the exectuable
+ * A Stampede Events Code Generator that generates events in netlogger format for the executable
  * workflow. This generators generates the events about
  *
  * <pre>
@@ -86,10 +86,10 @@ public class Stampede implements CodeGenerator {
     /** The event name for task edge */
     public static final String TASK_EDGE_EVENT_NAME = "task.edge";
 
-    /** The atrribute key for parent task id. */
+    /** The attribute key for parent task id. */
     public static final String PARENT_TASK_ID_KEY = "parent.task.id";
 
-    /** The atrribute key for child task id. */
+    /** The attribute key for child task id. */
     public static final String CHILD_TASK_ID_KEY = "child.task.id";
 
     /** The event name for a job */
@@ -116,10 +116,10 @@ public class Stampede implements CodeGenerator {
     /** The event name for job edge */
     public static final String JOB_EDGE_EVENT_NAME = "job.edge";
 
-    /** The atrribute key for parent job id. */
+    /** The attribute key for parent job id. */
     public static final String PARENT_JOB_ID_KEY = "parent.job.id";
 
-    /** The atrribute key for child job id. */
+    /** The attribute key for child job id. */
     public static final String CHILD_JOB_ID_KEY = "child.job.id";
 
     /** The event name for task map event */
@@ -176,7 +176,7 @@ public class Stampede implements CodeGenerator {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         mBag = bag;
@@ -193,7 +193,7 @@ public class Stampede implements CodeGenerator {
      *
      * @param dag the concrete workflow.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
 
@@ -205,7 +205,7 @@ public class Stampede implements CodeGenerator {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
         } catch (IOException ioe) {
             throw new CodeGeneratorException(
-                    "Unable to intialize writer to stampede file " + f.getAbsolutePath(), ioe);
+                    "Unable to initialize writer to stampede file " + f.getAbsolutePath(), ioe);
         }
 
         if (generateCodeForExecutableWorkflow) {
@@ -224,7 +224,7 @@ public class Stampede implements CodeGenerator {
                 generateTaskMapEvents(writer, dag, job);
             }
 
-            // write out the edge informatiom for the workflow
+            // write out the edge information for the workflow
             for (Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ) {
                 GraphNode gn = (GraphNode) it.next();
 
@@ -249,7 +249,7 @@ public class Stampede implements CodeGenerator {
                 generateEventsForDAXTask(writer, dag, job);
             }
 
-            // write out the edge informatiom for the workflow
+            // write out the edge information for the workflow
             for (Iterator<GraphNode> it = dag.jobIterator(); it.hasNext(); ) {
                 GraphNode parent = (GraphNode) it.next();
 
@@ -480,7 +480,7 @@ public class Stampede implements CodeGenerator {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
         } catch (IOException ioe) {
             throw new CodeGeneratorException(
-                    "Unable to intialize writer to stampede file " + f.getAbsolutePath(), ioe);
+                    "Unable to initialize writer to stampede file " + f.getAbsolutePath(), ioe);
         }
         this.generateMetadataEventsForWF(workflow, writer);
         writer.close();

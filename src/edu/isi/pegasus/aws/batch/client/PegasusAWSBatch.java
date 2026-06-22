@@ -159,7 +159,7 @@ public class PegasusAWSBatch {
         mOptionParser
                 .acceptsAll(
                         asList("s", "s3"),
-                        "the S3 bucket to use for lifecycle of the client. If not specifed then a"
+                        "the S3 bucket to use for lifecycle of the client. If not specified then a"
                                 + " bucket is created based on the prefix passed")
                 .withRequiredArg()
                 .ofType(String.class);
@@ -333,7 +333,7 @@ public class PegasusAWSBatch {
             jsonMap.put(Synch.BATCH_ENTITY_TYPE.job_queue, jobQueue);
         } catch (Exception e) {
             mLogger.debug(
-                    "Ignoring e as job queue can be created based on compute environemnt ", e);
+                    "Ignoring e as job queue can be created based on compute environment ", e);
         }
 
         key = Synch.AWS_BATCH_PROPERTY_PREFIX + ".s3_bucket";
@@ -346,7 +346,7 @@ public class PegasusAWSBatch {
 
         Synch sc = new Synch();
         try {
-            sc.initialze(props, logLevel, jsonMap);
+            sc.initialize(props, logLevel, jsonMap);
 
             if (options.has("delete")) {
                 // PM-1982 better error handling
@@ -411,7 +411,7 @@ public class PegasusAWSBatch {
                 pw.close();
                 mLogger.info("Written tasks summary record  " + summary + " to " + stdout);
             } catch (IOException ex) {
-                mLogger.error("While writing out sumamry metrics to " + stdout, ex);
+                mLogger.error("While writing out summary metrics to " + stdout, ex);
                 exitcode = 3;
             } finally {
                 if (pw != null) {

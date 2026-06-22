@@ -59,13 +59,13 @@ public class Flat extends AbstractFileFactoryBasedMapper {
         String addOn = mSiteStore.getRelativeStorageDirectoryAddon();
         FileFactory factory;
 
-        // all file factories intialized with the addon component only
+        // all file factories initialized with the addon component only
         try {
             // Create a flat file factory
             factory = new VirtualFlatFileFactory(addOn); // minimum default
         } catch (IOException ioe) {
             throw new MapperException(
-                    this.getErrorMessagePrefix() + "Unable to intialize the Flat File Factor ",
+                    this.getErrorMessagePrefix() + "Unable to initialize the Flat File Factor ",
                     ioe);
         }
         return factory;

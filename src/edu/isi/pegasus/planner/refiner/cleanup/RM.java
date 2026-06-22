@@ -58,7 +58,7 @@ public class RM implements CleanupImplementation {
     public RM() {}
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      */

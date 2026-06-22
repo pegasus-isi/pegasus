@@ -88,7 +88,7 @@ public class InsertMeta extends Toolkit {
                         + linefeed
                         + linefeed
                         + "Option groups 1 and 2 are mutually exclusive. The metadata file is a"
-                        + " texual"
+                        + " textual"
                         + linefeed
                         + "file with at least three columns, the key, the type and the value(s)."
                         + linefeed);

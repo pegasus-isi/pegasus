@@ -1,5 +1,5 @@
 #
-# A sample condor config file , that has Pegasus specific paramters
+# A sample condor config file , that has Pegasus specific parameters
 # defined that you can put in HTCondor config.d directory and update
 # for your setup
 #

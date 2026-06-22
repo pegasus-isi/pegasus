@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * A Builder to get objects related to Submitting a job The JSON specification
  *
- * <p>Sytax of JSON document parsed is below
+ * <p>Syntax of JSON document parsed is below
  *
  * <pre>
  * {

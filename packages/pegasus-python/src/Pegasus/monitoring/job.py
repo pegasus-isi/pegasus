@@ -317,7 +317,7 @@ class Job:
 
     def add_integrity_metric(self, metric):
         """
-        adds an integrity metric, if a metric with the same key already exists we retrive
+        adds an integrity metric, if a metric with the same key already exists we retrieve
         existing value and add the contents of metric passed
         :param metric:
         :return:
@@ -589,7 +589,7 @@ class Job:
                 elif self._host_id != ks_hostname:
                     ks_hostaddr = my_record["hostaddr"]
                     if self._host_ip is not None:
-                        # for 4.9 backward compatibilty where PegasusLite does not record IP
+                        # for 4.9 backward compatibility where PegasusLite does not record IP
                         # we keep the kickstart reported ip address to allow for database
                         # population as host table requires an ip to be not null
                         my_record["hostaddr"] = self._host_ip

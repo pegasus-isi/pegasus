@@ -93,7 +93,7 @@ public class PegasusSubmitDAGTest {
         mLogger.logEventStart(
                 "test.code.generator.condor.PegasusSubmitDAG", "set", Integer.toString(mTestNum++));
         PegasusSubmitDAG d = new PegasusSubmitDAG();
-        d.intialize(mBag);
+        d.initialize(mBag);
         ENV envProfiles = new ENV();
         envProfiles.construct("PEGASUS_METRICS", "true");
         String actual = d.getUpdatedDAGManEnv(existing, envProfiles);

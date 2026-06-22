@@ -138,7 +138,7 @@ public abstract class Abstract implements ContainerShellWrapper {
     public Abstract() {}
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

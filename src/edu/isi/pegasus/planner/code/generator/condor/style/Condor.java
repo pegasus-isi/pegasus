@@ -147,7 +147,7 @@ public class Condor extends Abstract {
      * execution - submitting directly to the condor pool of which the submit host is a part of.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     @Override
     public void apply(Job job) throws CondorStyleException {
@@ -285,7 +285,7 @@ public class Condor extends Abstract {
             String ipFiles = job.condorVariables.getIPFilesForTransfer();
 
             // check if the job can be run in the workdir or not
-            // and whether intial dir is populated before hand or not.
+            // and whether initial dir is populated before hand or not.
             if (job.runInWorkDirectory() && !job.condorVariables.containsKey("initialdir")) {
                 // for local jobs we need initialdir
                 // instead of remote_initialdir
@@ -374,7 +374,7 @@ public class Condor extends Abstract {
                 //     set the condor request_* to the corresponding +pegasus_* variable
                 //     update the pegasus key to the condor value,
                 profiles.construct(pegasusKey, condorProfileValue);
-                // the condor value is now just a referece to the +pegasus key
+                // the condor value is now just a reference to the +pegasus key
                 classAdKeys.construct(classAdKey, pegasusClassADKey);
             }
 
@@ -462,7 +462,7 @@ public class Condor extends Abstract {
 
         if (ipFiles == null && opFiles == null) {
             if (job.getRemoteExecutable().startsWith(File.separator)) {
-                // absoluate path specified
+                // absolute path specified
                 // nothing to do other than check for transfer_executable
 
                 // check for transfer_executable and remove if set

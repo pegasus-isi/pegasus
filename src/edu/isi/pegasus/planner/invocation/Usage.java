@@ -50,7 +50,7 @@ public class Usage extends Invocation // implements Cloneable
     /** voluntary context switches. */
     private int m_nvcsw;
 
-    /** involuntary conext switches. */
+    /** involuntary context switches. */
     private int m_nivcsw;
 
     /** maximum resident set size. */

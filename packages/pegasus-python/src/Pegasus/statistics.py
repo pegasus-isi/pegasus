@@ -291,7 +291,7 @@ class PegasusStatistics:
 #   tasks/jobs/sub workflows run, how many succeeded/failed etc.
 #   In case of hierarchical workflow the calculation shows the
 #   statistics of each individual sub workflow.The file also
-#   contains a 'Total' table at the bottom which is the cummulative
+#   contains a 'Total' table at the bottom which is the cumulative
 #   of all the individual statistics details.t shows the following
 #   statistics about tasks, jobs and sub workflows.
 #

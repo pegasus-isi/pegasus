@@ -18,7 +18,7 @@ For more details, see the Pegasus STAMPEDE wiki page:
 For validation, see Makefile.
 
 Versions of the schema, at least major changes, are distinguished by the date in
-the name of the .yang file. Older versions are peridiocally migrated to the
+the name of the .yang file. Older versions are periodically migrated to the
 old/ subdir.
 
 \--

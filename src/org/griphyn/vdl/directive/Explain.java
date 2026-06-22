@@ -71,7 +71,7 @@ public class Explain extends Directive {
     }
 
     /**
-     * Sets database schema, and initialzes the internal <code>Route</code> accordingly.
+     * Sets database schema, and initializes the internal <code>Route</code> accordingly.
      *
      * @param dbs the database schema instance
      * @see org.griphyn.vdl.router.Route

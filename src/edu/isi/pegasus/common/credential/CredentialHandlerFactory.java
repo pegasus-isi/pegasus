@@ -22,9 +22,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * A factory class to load the appropriate type of Condor Style impelementations. This factory class
- * is different from other factories, in the sense that it must be instantiated first and intialized
- * first before calling out to any of the Factory methods.
+ * A factory class to load the appropriate type of Condor Style implementations. This factory class
+ * is different from other factories, in the sense that it must be instantiated first and
+ * initialized first before calling out to any of the Factory methods.
  *
  * @author Karan Vahi
  * @version $Revision$

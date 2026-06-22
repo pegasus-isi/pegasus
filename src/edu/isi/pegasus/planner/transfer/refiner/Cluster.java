@@ -307,7 +307,7 @@ public class Cluster extends Bundle {
             } /*
               else{
                   //error
-                  throw new RuntimeException( "Invalide job type specified " + jobType );
+                  throw new RuntimeException( "Invalid job type specified " + jobType );
               }*/
         }
 

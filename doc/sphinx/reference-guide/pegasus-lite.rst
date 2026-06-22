@@ -44,7 +44,7 @@ it performs the following actions:
 .. note::
 
    If you are using containers for your workflow, then Steps 3-6
-   will occur inside the container dependant on how transfers for
+   will occur inside the container dependent on how transfers for
    containers are configured.
 
 Below is a sequence diagram that illustrates how a job in an abstract
