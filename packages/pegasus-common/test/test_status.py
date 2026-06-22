@@ -529,6 +529,29 @@ def test_show_dag_progress_long(
     Pegasus.client.status.Status.get_q_values.assert_called_once_with()
 
 
+def test_show_dag_progress_just_started(mocker, capsys, status):
+    # dagman.out exists but DAGMan has not yet logged a node-status table,
+    # so the DAG state is still None. It must render as Running, not crash
+    # with "unsupported format string passed to NoneType.__format__".
+    expected_output = dedent(
+        """
+        (No matching jobs found in Condor Q)
+
+        UNREADY READY  PRE  IN_Q  POST  DONE  FAIL %DONE  STATE  DAGNAME
+           0      0     0    0     0     0     0    0.0  Running sample_started.dag
+        Summary: 1 DAG total (Running:1)
+        """
+    )
+    mocker.patch("Pegasus.client.status.Status.get_braindump")
+    mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
+    status.root_wf_name = "sample_started"
+    submit_dir = os.path.join(directory, "status_sample_files/sample_started")
+    status.fetch_status(submit_dir, long=True)
+    captured = capsys.readouterr()
+    assert captured.out == expected_output
+    Pegasus.client.status.Status.get_q_values.assert_called_once_with()
+
+
 def test_get_progress_no_dagmans_found(mocker, status):
     submit_dir = "invalid/submit/dir"
     assert status.get_progress(submit_dir) == None

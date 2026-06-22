@@ -615,7 +615,7 @@ class Status:
             for index, each_dag in enumerate(self.dag_tree_struct):
                 if not index:
                     dag_dict = values["dags"]["root"]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = values["dags"]["root"]["dagname"]
                 elif each_dag[0] == "totals":
                     dag_dict = values["totals"]
@@ -624,7 +624,7 @@ class Status:
                 else:
                     dag = Path(each_dag[0]).stem
                     dag_dict = values["dags"][dag]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = each_dag[1]
 
                 print(
@@ -644,7 +644,7 @@ class Status:
 
         dag_state_counts = {"Running": 0, "Success": 0, "Failure": 0}
         for each_dag in values["dags"]:
-            dag_state_counts[values["dags"][each_dag]["state"]] += 1
+            dag_state_counts[values["dags"][each_dag]["state"] or self.DAG_OK] += 1
 
         done = {False: "", True: "Success:{} ".format(dag_state_counts["Success"])}
         fail = {False: "", True: "Failure:{} ".format(dag_state_counts["Failure"])}
