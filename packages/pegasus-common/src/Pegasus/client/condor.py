@@ -66,7 +66,7 @@ def _handle_stream(
             break
 
 
-def _exec(cmd, stream_stdout=True, stream_stderr=False):
+def _exec(cmd, stream_stdout: bool = True, stream_stderr: bool = False):
     """Execute a command and capture its output via threaded stream handlers.
 
     :param cmd: command and arguments to execute
@@ -121,5 +121,5 @@ def _q(cmd):
     """
     if not cmd:
         raise ValueError("cmd is required")
-    rv = _exec(cmd=cmd)
+    rv = _exec(cmd=cmd, stream_stdout=False)
     return rv.json
