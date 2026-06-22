@@ -10,7 +10,7 @@ MPI version of KEG
 
       pegasus-mpi-keg [-a appname] [-t interval |-T interval] [-l logname]
                   [-P prefix] [-o fn [..]] [-i fn [..]] [-G sz] [-m memory]
-                  [-r root_memory_allocation] [-C] [-e env [..]] [-p parm [..]]
+                  [-r root_memory_allocation] [-C] [-e env [..]] [-p param [..]]
 
 
 
