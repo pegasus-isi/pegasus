@@ -41,11 +41,12 @@ public class VariableExpansionReader extends Reader {
 
     /**
      * @param reader
+     * @param properties Pegasus properties passed.
      * @throws java.io.IOException
      */
-    public VariableExpansionReader(Reader reader) throws IOException {
+    public VariableExpansionReader(Reader reader, PegasusProperties properties) throws IOException {
         mReader = new BufferedReader(reader);
-        mVariableExpander = new VariableExpander();
+        mVariableExpander = new VariableExpander(properties);
         setBufferToNextLine();
     }
 

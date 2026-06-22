@@ -13,7 +13,11 @@
  */
 package edu.isi.pegasus.common.util;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -41,10 +45,39 @@ public class VariableExpander {
     /**
      * Overloaded constructor
      *
+     * @param properties
+     */
+    public VariableExpander(PegasusProperties properties) {
+        this(properties, false);
+    }
+
+    /**
+     * Overloaded constructor
+     *
      * @param caseSensitive boolean indicating whether you want lookups to be case sensitive or not.
      */
     public VariableExpander(boolean caseSensitive) {
+        this((PegasusProperties) null, caseSensitive);
+    }
+
+    /**
+     * Overloaded constructor
+     *
+     * @param properties
+     * @param caseSensitive boolean indicating whether you want lookups to be case sensitive or not.
+     */
+    public VariableExpander(PegasusProperties properties, boolean caseSensitive) {
         mValuesMap = new HashMap(System.getenv());
+
+        // GH-2207 incorporate profiles from pegasus properties
+        if (properties != null) {
+            Namespace localENVProfiles = properties.getProfiles(Profiles.NAMESPACES.env);
+            for (Iterator it = localENVProfiles.getProfileKeyIterator(); it.hasNext(); ) {
+                String key = (String) it.next();
+                mValuesMap.put(key, (String) localENVProfiles.get(key));
+            }
+        }
+
         mExpander = new StrSubstitutor(mValuesMap, "${", "}", '\\');
         mExpander.setVariableResolver(new CaseSensitiveStrLookup(this.mValuesMap, caseSensitive));
     }
