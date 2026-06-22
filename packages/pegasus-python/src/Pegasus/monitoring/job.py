@@ -56,7 +56,7 @@ re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
-re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
+re_parse_input = re.compile(r"^\s*input\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(
