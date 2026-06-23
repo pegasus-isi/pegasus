@@ -17,6 +17,8 @@ import tempfile
 import threading
 import time
 import traceback
+from functools import cmp_to_key
+from urllib import parse as urllib
 
 from Pegasus.tools import worker_utils as utils
 
@@ -29,13 +31,6 @@ try:
     import queue
 except Exception:
     import Queue as queue
-
-try:
-    # Python 3.0 and later
-    from urllib import parse as urllib
-except ImportError:
-    # Fall back to Python 2's urllib
-    import urllib as urllib
 
 
 # see https://www.python.org/dev/peps/pep-0469/
@@ -70,7 +65,10 @@ except Exception:
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
     import base64
 
-    import urllib2
+    try:
+        from urllib import request as urllib2
+    except ImportError:
+        import urllib2
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -264,19 +262,6 @@ class Remove(TransferBase):
     def get_path(self):
         return self._target_url.path
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._target_url.proto, other._target_url.proto) != 0:
-            return cmp(self._target_url.proto, other._target_url.proto)
-        if cmp(self._target_url.host, other._target_url.host) != 0:
-            return cmp(self._target_url.host, other._target_url.host)
-        if cmp(self._target_url.path, other._target_url.path) != 0:
-            return cmp(self._target_url.path, other._target_url.path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._target_url.proto == other._target_url.proto
@@ -423,25 +408,6 @@ class Transfer(TransferBase):
     def groupable(self):
         return self.allow_grouping
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._src_urls[0].proto, other._src_urls[0].proto) != 0:
-            return cmp(self._src_urls[0].proto, other._src_urls[0].proto)
-        if cmp(self._dst_urls[0].proto, other._dst_urls[0].proto) != 0:
-            return cmp(self._dst_urls[0].proto, other._dst_urls[0].proto)
-        if cmp(self._src_urls[0].host, other._src_urls[0].host) != 0:
-            return cmp(self._src_urls[0].host, other._src_urls[0].host)
-        if cmp(self._dst_urls[0].host, other._dst_urls[0].host) != 0:
-            return cmp(self._dst_urls[0].host, other._dst_urls[0].host)
-        if cmp(self._src_urls[0].path, other._src_urls[0].path) != 0:
-            return cmp(self._src_urls[0].path, other._src_urls[0].path)
-        if cmp(self._dst_urls[0].path, other._dst_urls[0].path) != 0:
-            return cmp(self._dst_urls[0].path, other._dst_urls[0].path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._src_urls[0].proto == other._src_urls[0].proto
@@ -454,12 +420,19 @@ class Transfer(TransferBase):
 
     def __lt__(self, other):
         return (
-            self._src_urls[0].proto < other._src_urls[0].proto
-            or self._dst_urls[0].proto < other._dst_urls[0].proto
-            or self._src_urls[0].host < other._src_urls[0].host
-            or self._dst_urls[0].host < other._dst_urls[0].host
-            or self._src_urls[0].path < other._src_urls[0].path
-            or self._dst_urls[0].path < other._dst_urls[0].path
+            self._src_urls[0].proto,
+            self._dst_urls[0].proto,
+            self._src_urls[0].host,
+            self._dst_urls[0].host,
+            self._src_urls[0].path,
+            self._dst_urls[0].path,
+        ) < (
+            other._src_urls[0].proto,
+            other._dst_urls[0].proto,
+            other._src_urls[0].host,
+            other._dst_urls[0].host,
+            other._src_urls[0].path,
+            other._dst_urls[0].path,
         )
 
     def __le__(self, other):
@@ -496,7 +469,7 @@ class TransferHandlerBase:
         Creates the listed URLs - all derived classes should override this
         method
         """
-        raise RuntimeErro("do_mkdirs() is not implemented in " + self._name)
+        raise RuntimeError("do_mkdirs() is not implemented in " + self._name)
 
     def do_transfers(self, transfer_list):
         """
@@ -1365,7 +1338,7 @@ class HttpHandler(TransferHandlerBase):
                 # wget and curl might leave 0 sized files behind after failures
                 # make sure those get cleaned up
                 try:
-                    os.unlink(transfer.get_dst_path())
+                    os.unlink(t.get_dst_path())
                 except Exception:
                     pass
                 self._post_transfer_attempt(t, False, t_start)
@@ -1729,7 +1702,7 @@ class HPSSHandler(TransferHandlerBase):
         """
 
         # first sort on destination directories
-        sorted_list = sorted(full_list, cmp=self._compare_urls)
+        sorted_list = sorted(full_list, key=cmp_to_key(self._compare_urls))
 
         # chunks are created based on destination directory
         start = 0
@@ -2280,7 +2253,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], transfers_l]
 
         successful_l = []
         failed_l = []
@@ -2343,7 +2316,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], removes_l]
 
         successful_l = []
         failed_l = []
@@ -3148,7 +3121,7 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsiscp", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
-            return [[], mkdir_list]
+            return [[], transfers]
 
         # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
@@ -3261,7 +3234,7 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsissh", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
-            return [[], mkdir_list]
+            return [[], transfers_l]
 
         # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
@@ -3403,7 +3376,7 @@ class OSDFHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do OSDF mkdir because pelican/stashcp could not be found"
             )
-            return [[], transfers_l]
+            return [[], transfers]
 
         successful_l = []
         failed_l = []
@@ -3797,7 +3770,7 @@ class WebdavHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
-            return [[], mkdir_list]
+            return [[], transfers]
 
         # disable http proxies
         env_overrides = {"http_proxy": ""}
@@ -4085,7 +4058,7 @@ class Stats:
                 p = Panorama()
                 p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warning("Panorama send failure: " + e)
+                logger.warning("Panorama send failure: %s", e)
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4258,15 +4231,18 @@ class Panorama:
             payload += "  "
 
             logger.debug(payload)
+            payload_b64 = base64.b64encode(payload.encode()).decode()
             data = (
                 '{"properties":{},"routing_key":"%s","payload":"%s","payload_encoding":"base64"}'
-                % (os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+                % (os.environ["PEGASUS_WF_UUID"], payload_b64)
             )
             logger.debug(data)
-            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-            base64string = base64.encodestring(
-                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"]
-            )[:-1]
+            req = urllib2.Request(
+                os.environ["KICKSTART_MON_ENDPOINT_URL"], data.encode()
+            )
+            base64string = base64.b64encode(
+                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"].encode()
+            ).decode()
             authheader = "Basic %s" % base64string
             req.add_header("Authorization", authheader)
             try:
@@ -4533,7 +4509,7 @@ class SimilarWorkSet:
                         success_verify,
                         failed_verify,
                     ) = handler.do_transfers([t_verify])
-                    if failed_verify is []:
+                    if not failed_verify:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
                         continue
@@ -4981,6 +4957,7 @@ def stats_add(filename):
 
 
 def stats_summarize():
+    global stats_total_bytes
     if stats_total_bytes == 0:
         logger.info("Stats: no local files in the transfer set")
         return
