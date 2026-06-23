@@ -1,5 +1,9 @@
 !test/scripts
 
+# Claude Code personal/runtime settings (per-developer, not shared)
+**/.claude/settings.local.json
+.claude/worktrees/
+
 # Created by https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
 
