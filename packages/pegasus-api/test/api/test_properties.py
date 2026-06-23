@@ -218,3 +218,76 @@ def test_write_default_file(props):
         assert f.read() == "pegasus.mode = development\n\n"
 
     os.remove(EXPECTED_DEFAULT_FILE)
+
+
+def test_load_from_str_filename():
+    with NamedTemporaryFile(mode="w", suffix=".properties", delete=False) as f:
+        f.write("pegasus.mode = development\n")
+        f.write("globus.queue = main\n")
+        name = f.name
+
+    try:
+        props = Properties.load(name)
+        assert props["pegasus.mode"] == "development"
+        assert props["globus.queue"] == "main"
+    finally:
+        os.remove(name)
+
+
+def test_load_from_path():
+    with NamedTemporaryFile(mode="w", suffix=".properties", delete=False) as f:
+        f.write("pegasus.mode = development\n")
+        name = f.name
+
+    try:
+        props = Properties.load(Path(name))
+        assert props["pegasus.mode"] == "development"
+    finally:
+        os.remove(name)
+
+
+def test_load_from_file_object():
+    with NamedTemporaryFile(mode="w+", suffix=".properties") as f:
+        f.write("pegasus.mode = development\n")
+        f.write("dagman.retry = 4\n")
+        f.seek(0)
+
+        props = Properties.load(f)
+
+    assert props["pegasus.mode"] == "development"
+    assert props["dagman.retry"] == "4"
+
+
+def test_load_ignores_comments_and_blank_lines():
+    with NamedTemporaryFile(mode="w+", suffix=".properties") as f:
+        f.write("# this is a comment\n")
+        f.write("\n")
+        f.write("pegasus.mode = development\n")
+        f.seek(0)
+
+        props = Properties.load(f)
+
+    assert props["pegasus.mode"] == "development"
+
+
+def test_load_invalid_file():
+    with pytest.raises(TypeError) as e:
+        Properties.load(123)
+
+    assert "invalid file: 123" in str(e)
+
+
+def test_load_round_trip():
+    original = Properties()
+    original["pegasus.mode"] = "development"
+    original["globus.queue"] = "main"
+    original["dagman.retry"] = "4"
+
+    with NamedTemporaryFile(mode="w+", suffix=".properties") as f:
+        original.write(f)
+        f.seek(0)
+        loaded = Properties.load(f)
+
+    assert loaded["pegasus.mode"] == "development"
+    assert loaded["globus.queue"] == "main"
+    assert loaded["dagman.retry"] == "4"

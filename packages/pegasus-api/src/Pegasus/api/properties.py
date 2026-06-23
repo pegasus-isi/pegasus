@@ -339,6 +339,43 @@ class Properties:
 
         self.__setitem__(self._get_site_profile_key(site, namespace, key), value)
 
+    @classmethod
+    def load(cls, file: Union[str, Path, TextIO]) -> "Properties":
+        """Load properties from an existing Pegasus properties file.
+
+        .. code-block:: python
+
+            # Example 1
+            props = Properties.load("pegasus.properties")
+
+            # Example 2
+            with open("pegasus.properties") as f:
+                props = Properties.load(f)
+
+        :param file: path to properties file or a file-like object to read from
+        :type file: Union[str, Path, TextIO]
+        :raises TypeError: file must be of type str, Path, or file-like object
+        :return: Properties object populated from the file
+        :rtype: Properties
+        """
+        props = cls()
+
+        if isinstance(file, (str, Path)):
+            with open(file) as f:
+                content = f.read()
+        elif hasattr(file, "read"):
+            content = file.read()
+        else:
+            raise TypeError(
+                "invalid file: {}; file must be of type str, Path, or file like object".format(
+                    file
+                )
+            )
+
+        props._conf.read_string(f"[{DEFAULTSECT}]\n" + content)
+
+        return props
+
     def write(self, file: Optional[Union[str, Path, TextIO]] = None):
         """Write these properties to a file. If :code:`file` is not given, these
         properties are written to :code:`./pegasus.properties`
