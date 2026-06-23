@@ -640,17 +640,13 @@ class Client:
                 )
 
                 if stats:
-                    unready = blue(
-                        "Unready: {}".format(stats["dags"]["root"]["unready"])
-                    )
+                    unready = blue(f"Unready: {stats['dags']['root']['unready']}")
                     completed = green(
-                        "Completed: {}".format(stats["dags"]["root"]["succeeded"])
+                        f"Completed: {stats['dags']['root']['succeeded']}"
                     )
-                    queued = yellow("Queued: {}".format(stats["dags"]["root"]["ready"]))
-                    running = cyan(
-                        "Running: {}".format(stats["dags"]["root"]["queued"])
-                    )
-                    fail = red("Failed: {}".format(stats["dags"]["root"]["failed"]))
+                    queued = yellow(f"Queued: {stats['dags']['root']['ready']}")
+                    running = cyan(f"Running: {stats['dags']['root']['queued']}")
+                    fail = red(f"Failed: {stats['dags']['root']['failed']}")
 
                     stats_tuple = (
                         "("

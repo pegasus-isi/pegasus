@@ -70,7 +70,7 @@ class TestDirectory:
         with pytest.raises(ValueError) as e:
             Directory(Directory.LOCAL_SCRATCH, Path("dir"))
 
-        assert "invalid path: {}".format(Path("dir")) in str(e)
+        assert f"invalid path: {Path('dir')}" in str(e)
 
     def test_add_valid_file_server(self):
         d = Directory(Directory.LOCAL_SCRATCH, "/path")

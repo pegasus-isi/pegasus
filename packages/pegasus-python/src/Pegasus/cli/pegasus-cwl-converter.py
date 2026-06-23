@@ -318,9 +318,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
 
             try:
                 log.info(
-                    "Adding replica: site={}, lfn={}, pfn={}".format(
-                        "local", input_name, current_wf_inputs["path"]
-                    )
+                    f"Adding replica: site=local, lfn={input_name}, pfn={current_wf_inputs['path']}"
                 )
                 # TODO: what about other sites?
                 rc.add_replica("local", input_name, current_wf_inputs["path"])

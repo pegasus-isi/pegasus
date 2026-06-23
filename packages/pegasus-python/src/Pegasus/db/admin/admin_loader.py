@@ -437,17 +437,11 @@ def all_workflows_db(
     f_err.close()
 
     print("\n\nSummary:")
-    print("  Verified/{}: {}/{}".format(msg[1], counts["success"], counts["total"]))
-    print("  Failed: {}/{}".format(counts["failed"], counts["total"]))
+    print(f"  Verified/{msg[1]}: {counts['success']}/{counts['total']}")
+    print(f"  Failed: {counts['failed']}/{counts['total']}")
+    print(f"  Unable to connect: {counts['unable_to_connect']}/{counts['total']}")
     print(
-        "  Unable to connect: {}/{}".format(
-            counts["unable_to_connect"], counts["total"]
-        )
-    )
-    print(
-        "  Unable to update (active workflows): {}/{}".format(
-            counts["running"], counts["total"]
-        )
+        f"  Unable to update (active workflows): {counts['running']}/{counts['total']}"
     )
     print("\nLog files:")
     print(f"  {file_prefix}.out (Succeeded operations)")

@@ -465,9 +465,7 @@ class Site(ProfileMixin):
         """
         if not isinstance(ns, Namespace):
             raise TypeError(
-                "invalid ns: {ns}; ns should be one of {enum_str}".format(
-                    ns=ns, enum_str=", ".join(n.value for n in Namespace)
-                )
+                f"invalid ns: {ns}; ns should be one of {', '.join(n.value for n in Namespace)}"
             )
 
         if name not in self.tags:

@@ -102,18 +102,14 @@ def get_wf_status(ctx, long, jsonrv, watch, dirs, legend, noqueue, debug, submit
             os.chdir(submit_dir)
         except PermissionError:
             click.secho(
-                "{}{} directory is not readable".format(
-                    click.style("Error: ", fg="red", bold=True), submit_dir
-                )
+                f"{click.style('Error: ', fg='red', bold=True)}{submit_dir} directory is not readable"
             )
             ctx.exit(1)
 
         braindb = slurp_braindb(submit_dir)
         if not braindb:
             click.secho(
-                "{}{} is not a valid workflow submit-directory".format(
-                    click.style("Error: ", fg="red", bold=True), submit_dir
-                )
+                f"{click.style('Error: ', fg='red', bold=True)}{submit_dir} is not a valid workflow submit-directory"
             )
             ctx.exit(1)
 
@@ -139,7 +135,7 @@ def get_wf_status(ctx, long, jsonrv, watch, dirs, legend, noqueue, debug, submit
             try:
                 click.clear()
                 size = shutil.get_terminal_size().columns // 3
-                ctrlc = "{0:<{1}}".format("Press Ctrl+C to exit", size)
+                ctrlc = f"{'Press Ctrl+C to exit':<{size}}"
                 pid = "{0:^{1}}".format("(pid=" + str(os.getpid()) + ")", size)
                 clock = "{0:>{1}}".format(
                     datetime.now().strftime("%a %b-%d-%Y %H:%M:%S"), size

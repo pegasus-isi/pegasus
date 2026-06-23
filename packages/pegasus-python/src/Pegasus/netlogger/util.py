@@ -204,10 +204,10 @@ def parse_nvp(args):
 
 
 def tzstr():
-    return "{}{:02d}:{:02d}".format(
-        ("+", "-")[time.timezone > 0],
-        int(time.timezone / 3600),
-        int((time.timezone - int(time.timezone / 3600) * 3600) / 60),
+    return (
+        f"{('+', '-')[time.timezone > 0]}"
+        f"{int(time.timezone / 3600):02d}:"
+        f"{int((time.timezone - int(time.timezone / 3600) * 3600) / 60):02d}"
     )
 
 

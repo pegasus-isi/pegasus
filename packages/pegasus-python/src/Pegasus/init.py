@@ -182,9 +182,7 @@ def print_sites(sites_available):
 
     for k in sites_available:
         click.echo(
-            "{}) {}".format(
-                k, Sites.SitesAvailableDescription[sites_available[k]["member"]]
-            )
+            f"{k}) {Sites.SitesAvailableDescription[sites_available[k]['member']]}"
         )
 
     click.echo()
@@ -200,24 +198,18 @@ def print_workflows(workflows_available):
 
     for k in workflows_available:
         workflow = workflows_available[k]
-        click.echo(
-            "{}) {}/{}".format(k, workflow["organization"], workflow["repo_name"])
-        )
+        click.echo(f"{k}) {workflow['organization']}/{workflow['repo_name']}")
 
     click.echo()
     return
 
 
 def clone_workflow(wf_dir, workflow):
-    zip_url = "https://github.com/{}/{}/archive/HEAD.zip".format(
-        workflow["organization"], workflow["repo_name"]
-    )
+    zip_url = f"https://github.com/{workflow['organization']}/{workflow['repo_name']}/archive/HEAD.zip"
     dest = os.path.join(os.getcwd(), wf_dir, workflow["repo_name"])
 
     click.echo(
-        "Fetching workflow from https://github.com/{}/{}.git".format(
-            workflow["organization"], workflow["repo_name"]
-        )
+        f"Fetching workflow from https://github.com/{workflow['organization']}/{workflow['repo_name']}.git"
     )
 
     try:
@@ -271,11 +263,7 @@ def create_pegasus_properties(commands):
 
     props = Properties()
     props["pegasus.transfer.arguments"] = "-m 1"
-    commands.append(
-        'echo "{} = {}" > pegasus.properties'.format(
-            "pegasus.transfer.arguments", "-m 1"
-        )
-    )
+    commands.append('echo "pegasus.transfer.arguments = -m 1" > pegasus.properties')
 
     props.write()
 
@@ -333,9 +321,7 @@ def create_workflow(
     pegasushub_config = read_pegasushub_config(wf_dir, workflow)
 
     click.echo(
-        "Generating workflow based on {}/{}".format(
-            workflow["organization"], workflow["repo_name"]
-        )
+        f"Generating workflow based on {workflow['organization']}/{workflow['repo_name']}"
     )
     if queue_name:
         click.echo(f'This workflow will target queue "{queue_name}"')
