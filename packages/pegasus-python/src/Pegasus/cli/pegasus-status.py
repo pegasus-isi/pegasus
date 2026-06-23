@@ -137,7 +137,7 @@ def get_wf_status(ctx, long, jsonrv, watch, dirs, legend, noqueue, debug, submit
         continue_running = True
         while continue_running:
             try:
-                os.system("clear")
+                click.clear()
                 size = shutil.get_terminal_size().columns // 3
                 ctrlc = "{0:<{1}}".format("Press Ctrl+C to exit", size)
                 pid = "{0:^{1}}".format("(pid=" + str(os.getpid()) + ")", size)

@@ -242,7 +242,11 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
             halt_released = False
             if Path(config["dag"] + ".halt").exists():
                 click.echo("Found a previously halted workflow. Releasing it now.")
-                os.system("find . -name '*.dag.halt' -exec rm {} \\;")
+                for halt_file in Path(".").rglob("*.dag.halt"):
+                    try:
+                        halt_file.unlink()
+                    except OSError:
+                        pass
                 halt_released = True
 
             # After the switch from condor_submit_dag, we lost the check to see if
