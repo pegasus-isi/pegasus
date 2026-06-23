@@ -478,6 +478,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             // the physical transformation points to
             // guc or the user specified transfer mechanism
             // accessible url
+            validateStageablePFN(entry);
             fTx.addSource(entry.getResourceId(), entry.getPhysicalTransformation());
 
             // PM-1386 set bypass for executable if set
@@ -499,6 +500,29 @@ public class InterPoolEngine extends Engine implements Refiner {
         }
 
         return fTx;
+    }
+
+    /**
+     * Validates that the physical transformation (pfn) for a stageable executable is a location it
+     * can actually be staged from. The pfn must contain a directory component (a path separator),
+     * so that the planner can later derive the source directory of the executable. A bare filename
+     * such as "script.sh" (instead of an absolute path or URL) is invalid and would otherwise
+     * trigger a cryptic StringIndexOutOfBoundsException later during staging.
+     *
+     * @param entry the transformation catalog entry whose pfn is to be validated
+     * @throws RuntimeException if the pfn is invalid
+     */
+    void validateStageablePFN(TransformationCatalogEntry entry) {
+        String pfn = entry.getPhysicalTransformation();
+        if (pfn == null || !pfn.contains(File.separator)) {
+            throw new RuntimeException(
+                    "Transformation "
+                            + entry.getLogicalTransformation()
+                            + " has invalid pfn: '"
+                            + pfn
+                            + "'. The pfn for a stageable executable must be an absolute path or a"
+                            + " URL.");
+        }
     }
 
     /**
@@ -620,6 +644,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         // the physical transformation points to
                         // guc or the user specified transfer mechanism
                         // accessible url
+                        validateStageablePFN(tcEntry);
                         fTx.addSource(tcEntry.getResourceId(), tcEntry.getPhysicalTransformation());
 
                         // PM-1386 set bypass for executable if set
