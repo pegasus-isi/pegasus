@@ -4509,7 +4509,7 @@ class SimilarWorkSet:
                         success_verify,
                         failed_verify,
                     ) = handler.do_transfers([t_verify])
-                    if not failed_verify:
+                    if failed_verify:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
                         continue
