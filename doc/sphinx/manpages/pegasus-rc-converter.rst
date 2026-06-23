@@ -24,18 +24,18 @@ Description
 ===========
 
 The **pegasus-rc-converter** program parses the replica catalogs in
-given input format (File, File, Database) and generates replica catalogs
-into given output format (File, File, Database).
+given input format (File, Regex, YAML) and generates replica catalogs
+into given output format (File, Regex, YAML).
 
 
 Options
 =======
 
 **-I**; **–iformat**
-    The input format for the files . Can be [File, YAML].
+    The input format for the files . Can be [File, Regex, YAML].
 
 **-O**; **–oformat**
-    The output format of the file. Can be [File, YAML].
+    The output format of the file. Can be [File, Regex, YAML].
 
 **-i**; **–input**
     Comma separated list of input files to convert. This option
@@ -75,5 +75,5 @@ Example
 
 ::
 
-   # File to file format conversion
-   $ pegasus-rc-converter -i cc.txt -I File -o rc.yml -v
+   # File (4.9 text) to YAML (5.0) format conversion
+   $ pegasus-rc-converter -i cc.txt -I File -o rc.yml -O YAML -v
