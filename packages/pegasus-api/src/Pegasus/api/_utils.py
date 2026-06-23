@@ -43,7 +43,7 @@ def _get_class_enum_member_str(_cls, _type):
                 enums.append(name)
 
     enums.sort()
-    return _cls.__name__ + ".<{members}>".format(members=" | ".join(enums))
+    return _cls.__name__ + f".<{' | '.join(enums)}>"
 
 
 def _get_enum_str(enum_cls):
@@ -70,9 +70,7 @@ def _get_enum_str(enum_cls):
             f"invalid enum_cls: {enum_cls}; enum_cls must be a subclass of Enum"
         )
 
-    return enum_cls.__name__ + ".<{members}>".format(
-        members=" | ".join(sorted(enum_cls._member_names_))
-    )
+    return enum_cls.__name__ + f".<{' | '.join(sorted(enum_cls._member_names_))}>"
 
 
 def _chained(f):

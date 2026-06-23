@@ -2022,22 +2022,22 @@ class ConfigObj(Section):
             val = self._decode_element(self._quote(this_entry))
         else:
             val = repr(this_entry)
-        return "{}{}{}{}{}".format(
-            indent_string,
-            self._decode_element(self._quote(entry, multiline=False)),
-            self._a_to_u(" = "),
-            val,
-            self._decode_element(comment),
+        return (
+            f"{indent_string}"
+            f"{self._decode_element(self._quote(entry, multiline=False))}"
+            f"{self._a_to_u(' = ')}"
+            f"{val}"
+            f"{self._decode_element(comment)}"
         )
 
     def _write_marker(self, indent_string, depth, entry, comment):
         """Write a section marker line"""
-        return "{}{}{}{}{}".format(
-            indent_string,
-            self._a_to_u("[" * depth),
-            self._quote(self._decode_element(entry), multiline=False),
-            self._a_to_u("]" * depth),
-            self._decode_element(comment),
+        return (
+            f"{indent_string}"
+            f"{self._a_to_u('[' * depth)}"
+            f"{self._quote(self._decode_element(entry), multiline=False)}"
+            f"{self._a_to_u(']' * depth)}"
+            f"{self._decode_element(comment)}"
         )
 
     def _handle_comment(self, comment):

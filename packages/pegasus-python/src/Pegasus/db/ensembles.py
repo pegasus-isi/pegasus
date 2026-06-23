@@ -380,15 +380,15 @@ class Ensembles:
         f.write(f"-Dpegasus.dashboard.output={self.dburi} \\\n")
 
         f.write("--conf pegasus.properties \\\n")
-        f.write("--site {} \\\n".format(",".join(sites)))
+        f.write(f"--site {','.join(sites)} \\\n")
         f.write(f"--output-site {output_site} \\\n")
 
         if staging_sites is not None and len(staging_sites) > 0:
             pairs = [f"{k}={v}" for k, v in staging_sites.items()]
-            f.write("--staging-site {} \\\n".format(",".join(pairs)))
+            f.write(f"--staging-site {','.join(pairs)} \\\n")
 
         if clustering is not None and len(clustering) > 0:
-            f.write("--cluster {} \\\n".format(",".join(clustering)))
+            f.write(f"--cluster {','.join(clustering)} \\\n")
 
         if force:
             f.write("--force \\\n")
@@ -396,7 +396,7 @@ class Ensembles:
         if cleanup is not None:
             f.write(f"--cleanup {cleanup} \\\n")
 
-        f.write("--dir {} \\\n".format(os.path.join(basedir, "submit")))
+        f.write(f"--dir {os.path.join(basedir, 'submit')} \\\n")
         f.write(f"--dax {os.path.join(bundledir, dax)} \\\n")
         f.write(f"--input-dir {bundledir} \n")
 

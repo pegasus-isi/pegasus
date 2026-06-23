@@ -273,9 +273,8 @@ class Notifications:
             my_complete_env = os.environ.copy()
             my_complete_env.update(my_env)
             try:
-                my_notification = "{} - {}".format(
-                    my_env["PEGASUS_JOBID"],
-                    my_env["PEGASUS_EVENT"],
+                my_notification = (
+                    f"{my_env['PEGASUS_JOBID']} - {my_env['PEGASUS_EVENT']}"
                 )
             except KeyError:
                 logger.warning(
@@ -416,9 +415,8 @@ class Notifications:
         if len(self._pending_notifications) > 0:
             for my_action, my_env in self._pending_notifications:
                 try:
-                    my_notification = "{} - {}".format(
-                        my_env["PEGASUS_JOBID"],
-                        my_env["PEGASUS_EVENT"],
+                    my_notification = (
+                        f"{my_env['PEGASUS_JOBID']} - {my_env['PEGASUS_EVENT']}"
                     )
                 except KeyError:
                     logger.warning(

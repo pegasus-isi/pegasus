@@ -2314,9 +2314,7 @@ class Workflow:
                             my_id = int(record["id"])
                         except Exception:
                             logger.warning(
-                                "task id looks invalid, cannot convert it to int: {} skipping to next".format(
-                                    record["id"]
-                                )
+                                f"task id looks invalid, cannot convert it to int: {record['id']} skipping to next"
                             )
                             continue
                         # Add to our list

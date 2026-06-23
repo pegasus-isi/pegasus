@@ -596,13 +596,7 @@ class Job:
 
                     my_record["hostname"] = self._host_id
                     logger.trace(
-                        "For job {} preferring {} {} over kickstart reported hostname {} {}".format(
-                            self._exec_job_id,
-                            my_record["hostname"],
-                            my_record["hostaddr"],
-                            ks_hostname,
-                            ks_hostaddr,
-                        )
+                        f"For job {self._exec_job_id} preferring {my_record['hostname']} {my_record['hostaddr']} over kickstart reported hostname {ks_hostname} {ks_hostaddr}"
                     )
 
             # PM-1109 encode signal information if it exists

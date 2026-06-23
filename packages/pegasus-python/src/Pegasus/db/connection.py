@@ -482,7 +482,7 @@ def _get_jdbcrc_uri(props=None):
                 + database
             )
 
-        log.debug("Invalid JDBCRC driver: {}".format(rc_info["driver"]))
+        log.debug(f"Invalid JDBCRC driver: {rc_info['driver']}")
     return None
 
 

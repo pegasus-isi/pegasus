@@ -48,11 +48,7 @@ class WorkflowBase:
             ):
                 continue
             try:
-                retval += "\n{}* {} : {}".format(
-                    spacer * self._indent,
-                    i,
-                    eval(f"self.{i}"),
-                )
+                retval += f"\n{spacer * self._indent}* {i} : {eval(f'self.{i}')}"
             except NotImplementedError as e:
                 retval += f"\n{spacer * self._indent}* {i} : WARNING: {e}"
         return retval
