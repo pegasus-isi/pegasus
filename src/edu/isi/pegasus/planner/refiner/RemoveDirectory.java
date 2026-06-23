@@ -355,6 +355,28 @@ public class RemoveDirectory extends Engine {
     }
 
     /**
+     * Canonicalizes a url that is passed to the transfer tool for a remove operation, by
+     * normalizing its path component. This collapses redundant elements such as a trailing "/."
+     * (which results when the planner is invoked with --relative-submit-dir . ) that otherwise
+     * makes the cleanup job fail with rm: "." and ".." may not be removed (GH-1185).
+     *
+     * <p>The normalization is purely lexical (it does not resolve symbolic links), so the path is
+     * not altered beyond removing the redundant elements.
+     *
+     * @param url the url to canonicalize.
+     * @return the canonicalized url.
+     */
+    protected static String canonicalizeURL(String url) {
+        PegasusURL pegasusURL = new PegasusURL(url);
+        String path = pegasusURL.getPath();
+        if (path == null || path.isEmpty()) {
+            return url;
+        }
+        String normalized = new File(path).toPath().normalize().toString();
+        return pegasusURL.getURLPrefix() + normalized;
+    }
+
+    /**
      * It creates a remove directory job that creates a directory on the remote pool using the perl
      * executable that Gaurang wrote. It access mkdir underneath. It gets the name of the random
      * directory from the Pool handle.
@@ -520,6 +542,12 @@ public class RemoveDirectory extends Engine {
 
             int fileNum = 1;
             for (String file : urls) {
+
+                // GH-1185 canonicalize the path before passing it to the transfer
+                // tool. Otherwise a url such as <dir>/. (which happens when planning
+                // with --relative-submit-dir . ) makes the cleanup job run
+                // rm -rf <dir>/. that fails with rm: "." and ".." may not be removed
+                file = canonicalizeURL(file);
 
                 if (fileNum > 1) {
                     writer.write("  ,\n");
