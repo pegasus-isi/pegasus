@@ -3810,7 +3810,10 @@ class WebdavHandler(TransferHandlerBase):
                 url = re.sub("^webdav", "http", t.dst_url())
 
                 # might have to create dir first
-                self._create_dir(str(Path(url).parent), username, password)
+                # NB: url is a full URL (e.g. https://host/path); use
+                # os.path.dirname, not Path().parent, which would collapse the
+                # "//" in the scheme (https:// -> https:/) and corrupt the URL.
+                self._create_dir(os.path.dirname(url), username, password)
 
                 cmd = tools.full_path("curl")
                 if not logger.isEnabledFor(logging.DEBUG):
