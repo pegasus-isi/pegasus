@@ -185,7 +185,7 @@ class TestTransformationSite:
 
     def test_invalid_pfn(self):
         with pytest.raises(ValueError) as e:
-            TransformationSite("local", Path("."), False)
+            TransformationSite("local", Path(), False)
 
         assert "invalid pfn" in str(e)
 
@@ -322,9 +322,7 @@ class TestTransformation:
 
     def test_invalid_pfn(self):
         with pytest.raises(ValueError) as e:
-            Transformation(
-                "executable", site="local", pfn=Path("."), is_stageable=False
-            )
+            Transformation("executable", site="local", pfn=Path(), is_stageable=False)
 
         assert "invalid pfn" in str(e)
 

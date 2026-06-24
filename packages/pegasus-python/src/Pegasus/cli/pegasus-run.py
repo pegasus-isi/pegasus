@@ -203,7 +203,7 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
     logging.basicConfig(level=logging.ERROR - (min(verbose, 3) * 10))
 
     os.umask(0o022)
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     config = slurp_braindb(submit_dir)
     submit_dir = str(Path(submit_dir).resolve())
 
@@ -242,7 +242,7 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
             halt_released = False
             if Path(config["dag"] + ".halt").exists():
                 click.echo("Found a previously halted workflow. Releasing it now.")
-                for halt_file in Path(".").rglob("*.dag.halt"):
+                for halt_file in Path().rglob("*.dag.halt"):
                     try:
                         halt_file.unlink()
                     except OSError:

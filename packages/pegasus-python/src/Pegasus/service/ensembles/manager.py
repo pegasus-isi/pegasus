@@ -4,6 +4,7 @@ import os
 import subprocess
 import threading
 import time
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound
@@ -27,8 +28,8 @@ def pathfind(exe):
     PATH = os.getenv("PATH", "/bin:/usr/bin:/usr/local/bin")
     PATH = PATH.split(":")
     for prefix in PATH:
-        exepath = os.path.join(prefix, exe)
-        if os.path.isfile(exepath):
+        exepath = str(Path(prefix) / exe)
+        if Path(exepath).is_file():
             return exepath
     raise EMError(f"{exe} not found on PATH")
 
@@ -41,19 +42,19 @@ def get_bin(name, exe):
     HOME = os.getenv(name, emapp.config.get(name, None))
 
     if HOME is not None:
-        if not os.path.isdir(HOME):
+        if not Path(HOME).is_dir():
             raise EMError(f"{name} is not a directory: {HOME}")
-        BIN = os.path.join(HOME, "bin")
-        if not os.path.isdir(BIN):
+        BIN = str(Path(HOME) / "bin")
+        if not Path(BIN).is_dir():
             raise EMError(f"{name}/bin is not a directory: {BIN}")
-        exepath = os.path.join(BIN, exe)
+        exepath = str(Path(BIN) / exe)
 
     exepath = exepath or pathfind(exe)
 
-    if not os.path.isfile(exepath):
+    if not Path(exepath).is_file():
         raise EMError(f"{exe} not found: {exepath}")
 
-    return os.path.dirname(exepath)
+    return Path(exepath).parent
 
 
 def get_pegasus_bin():
@@ -86,7 +87,7 @@ def get_script_env():
 
 def runscript(script, cwd=None, env=None):
     # Make sure the cwd is OK
-    if cwd is not None and not os.path.isdir(cwd):
+    if cwd is not None and not Path(cwd).is_dir():
         raise EMError(f"Working directory does not exist: {cwd}")
 
     if env is None:
@@ -105,7 +106,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
     # interpreter so that we don't have to call wait() on it
 
     # Make sure the cwd is OK
-    if cwd is not None and not os.path.isdir(cwd):
+    if cwd is not None and not Path(cwd).is_dir():
         raise EMError(f"Working directory does not exist: {cwd}")
 
     if env is None:
@@ -115,7 +116,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
     # something wrong with the pidfile
     if pidfile is not None:
         try:
-            open(pidfile, "w").close()
+            Path(pidfile).open("w").close()
         except Exception:
             raise EMError(f"Unable to write pidfile: {pidfile}")
 
@@ -130,7 +131,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
             os._exit(255)
 
         if pidfile is not None:
-            f = open(pidfile, "w")
+            f = Path(pidfile).open("w")
             f.write(f"{pid2:d}\n")
             f.close()
 
@@ -156,7 +157,7 @@ class WorkflowProcessor:
         resultfile = w.get_resultfile()
         plan_command = w.get_plan_command()
 
-        if os.path.isfile(pidfile) and self.planning():
+        if Path(pidfile).is_file() and self.planning():
             raise EMError("Planner already running")
 
         # When we re-plan, we need to remove all the old
@@ -164,8 +165,8 @@ class WorkflowProcessor:
         # confused.
         files = [runfile, resultfile, pidfile]
         for f in files:
-            if os.path.isfile(f):
-                os.remove(f)
+            if Path(f).is_file():
+                Path(f).unlink()
 
         script = f"({plan_command}) 2>&1 | tee -a {logfile} | grep pegasus-run >{runfile} ; /bin/echo $? >{resultfile}"
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
@@ -174,10 +175,10 @@ class WorkflowProcessor:
         "Check pidfile to see if the planner is still running"
         pidfile = self.workflow.get_pidfile()
 
-        if not os.path.exists(pidfile):
+        if not Path(pidfile).exists():
             raise EMError("pidfile missing")
 
-        pid = int(open(pidfile).read())
+        pid = int(Path(pidfile).open().read())
 
         try:
             os.kill(pid, 0)
@@ -194,10 +195,10 @@ class WorkflowProcessor:
         "Check to see if planning was successful"
         resultfile = self.workflow.get_resultfile()
 
-        if not os.path.exists(resultfile):
+        if not Path(resultfile).exists():
             raise EMError(f"Result file not found: {resultfile}")
 
-        exitcode = int(open(resultfile).read())
+        exitcode = int(Path(resultfile).open().read())
 
         if exitcode != 0:
             return False
@@ -214,12 +215,12 @@ class WorkflowProcessor:
         "Get the workflow submitdir from the workflow log"
         logfile = self.workflow.get_runfile()
 
-        if not os.path.isfile(logfile):
+        if not Path(logfile).is_file():
             raise EMError(f"Workflow run file not found: {logfile}")
 
         submitdir = None
 
-        f = open(logfile)
+        f = Path(logfile).open()
         try:
             for line in f:
                 if line.startswith("pegasus-run"):
@@ -236,12 +237,12 @@ class WorkflowProcessor:
         "Get the workflow UUID from the braindump file"
         submitdir = self.find_submitdir()
 
-        braindump_file_path = os.path.join(submitdir, "braindump.yml")
+        braindump_file_path = str(Path(submitdir) / "braindump.yml")
 
-        if not os.path.isfile(braindump_file_path):
+        if not Path(braindump_file_path).is_file():
             raise EMError("braindump.yml not found")
 
-        with open(braindump_file_path) as f:
+        with Path(braindump_file_path).open() as f:
             bd = braindump.load(f)
 
         if bd.wf_uuid is None:
@@ -256,7 +257,7 @@ class WorkflowProcessor:
         if submitdir is None:
             raise EMError("Workflow submitdir not set")
 
-        if not os.path.isdir(submitdir):
+        if not Path(submitdir).is_dir():
             raise EMError(f"Workflow submit dir does not exist: {submitdir}")
 
         logfile = self.workflow.get_logfile()
@@ -502,9 +503,9 @@ class EnsembleProcessor:
 
     def run(self):
         edir = self.ensemble.get_localdir()
-        if not os.path.isdir(edir):
+        if not Path(edir).is_dir():
             log.info(f"Creating ensemble directory: {edir}")
-            os.makedirs(edir, 0o700)
+            Path(edir).mkdir(0o700, parents=True)
 
         log.info(f"Processing {len(self.workflows):d} ensemble workflows...")
         for w in self.workflows:

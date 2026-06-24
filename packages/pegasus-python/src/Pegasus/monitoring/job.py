@@ -21,9 +21,9 @@ This file implements the Job class for pegasus-monitord.
 import collections
 import json
 import logging
-import os
 import re
 from io import StringIO
+from pathlib import Path
 
 from Pegasus.tools import utils
 
@@ -303,7 +303,7 @@ class Job:
                 self._main_job_multiplier_factor = int(my_multiplier_factor)
             except ValueError:
                 logger.warning(
-                    f"{os.path.basename(submit_file)}: cannot convert multiplier factor: {my_multiplier_factor}"
+                    f"{Path(submit_file).name}: cannot convert multiplier factor: {my_multiplier_factor}"
                 )
                 self._main_job_multiplier_factor = None
 
@@ -394,7 +394,7 @@ class Job:
 
         # Update stat record for submit file
         try:
-            my_stats = os.stat(submit_file)
+            my_stats = Path(submit_file).stat()
         except OSError:
             # Could not stat file
             logger.error(f"stat {submit_file}")
@@ -413,7 +413,7 @@ class Job:
             parse_environment = True
 
         try:
-            SUB = open(submit_file)
+            SUB = Path(submit_file).open()
         except OSError:
             logger.error(f"unable to parse {submit_file}")
             return my_result, my_site
@@ -457,19 +457,19 @@ class Job:
                 my_input = re_parse_input.search(my_line).group(1)
                 # Remove quotes, if any
                 my_input = my_input.strip('"')
-                self._input_file = os.path.normpath(my_input)
+                self._input_file = str(Path(my_input))
             elif re_parse_output.search(my_line):
                 # Found line with output file
                 my_output = re_parse_output.search(my_line).group(1)
                 # Remove quotes, if any
                 my_output = my_output.strip('"')
-                self._output_file = os.path.normpath(my_output)
+                self._output_file = str(Path(my_output))
             elif re_parse_error.search(my_line):
                 # Found line with error file
                 my_error = re_parse_error.search(my_line).group(1)
                 # Remove quotes, if any
                 my_error = my_error.strip('"')
-                self._error_file = os.path.normpath(my_error)
+                self._error_file = str(Path(my_error))
             elif parse_environment and re_parse_environment.search(my_line):
                 self._job_dagman_out = self.extract_dagman_out_from_condor_env(my_line)
                 if self._job_dagman_out is None:
@@ -746,10 +746,10 @@ class Job:
         # Finally, read error file only
         run_dir = self._job_submit_dir
         basename = self.get_rotated_err_filename()
-        my_err_file = os.path.join(run_dir, basename)
+        my_err_file = str(Path(run_dir) / basename)
 
         try:
-            ERR = open(my_err_file)
+            ERR = Path(my_err_file).open()
             # PM-1274 parse any monitoring events such as integrity related
             # from PegasusLite .err file
             job_stderr = self.split_task_output(ERR.read())
@@ -799,10 +799,10 @@ class Job:
             basename = self._exec_job_id + ".out"
             if self._has_rotated_stdout_err_files:
                 basename += f".{self._job_output_counter:03d}"
-            out_file = os.path.join(run_dir, basename)
+            out_file = str(Path(run_dir) / basename)
 
         try:
-            OUT = open(out_file)
+            OUT = Path(out_file).open()
             job_stdout = self.split_task_output(OUT.read())
             buf = job_stdout.user_data
             if len(buf) > my_max_encoded_length:

@@ -1,6 +1,5 @@
 import getpass
 import json
-import os
 import re
 import shutil
 from pathlib import Path
@@ -1357,7 +1356,7 @@ class TestWorkflow:
         # _path should be set by the call to write
         assert wf._path == path
 
-        with open(path) as f:
+        with Path(path).open() as f:
             result = yaml.safe_load(f)
 
         workflow_schema = load_schema("wf-5.0.json")
@@ -1377,13 +1376,13 @@ class TestWorkflow:
         del result["x-pegasus"]
         assert result == expected_json
 
-        os.remove(path)
+        Path(path).unlink()
 
     def test_write_default_filename(self, wf, expected_json):
         wf.write()
-        EXPECTED_FILE = "workflow.yml"
+        EXPECTED_FILE = Path("workflow.yml")
 
-        with open(EXPECTED_FILE) as f:
+        with EXPECTED_FILE.open() as f:
             result = yaml.safe_load(f)
 
         result["jobs"] = sorted(result["jobs"], key=lambda j: j["id"])
@@ -1399,7 +1398,7 @@ class TestWorkflow:
         del result["x-pegasus"]
         assert result == expected_json
 
-        os.remove(EXPECTED_FILE)
+        EXPECTED_FILE.unlink()
 
     def test_write_wf_catalogs_included(self):
         wf = Workflow("test")
@@ -1681,7 +1680,7 @@ class TestWorkflow:
             **{"+property.key-_": "value"},
         )
 
-        os.remove(path)
+        Path(path).unlink()
 
     def test_Path_args_parsed_correctly_in_plan(self, wf, mocker):
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -1734,7 +1733,7 @@ class TestWorkflow:
             **{"pegasus.mode": "development"},
         )
 
-        os.remove(path)
+        Path(path).unlink()
 
     @pytest.mark.parametrize(
         "random_dir, expected_kwargs",
@@ -1847,7 +1846,7 @@ class TestWorkflow:
 
         Pegasus.client._client.Client.plan.assert_called_once_with(**expected_kwargs)
 
-        os.remove(path)
+        Path(path).unlink()
 
     def test_plan_workflow_not_written(self, wf, mocker):
         mocker.patch("shutil.which", return_value="/usr/bin/pegasus-version")
@@ -1892,7 +1891,7 @@ class TestWorkflow:
             verbose=0,
         )
 
-        os.remove(DEFAULT_WF_PATH)
+        Path(DEFAULT_WF_PATH).unlink()
 
     def test_plan_workflow_and_access_braindump_file(self, wf, mocker):
         # shutil.which used in _client.from_env()
@@ -1914,7 +1913,7 @@ class TestWorkflow:
             assert wf.braindump.user == "ryan"
             assert wf.braindump.submit_dir == Path("/submit_dir")
 
-            os.remove(DEFAULT_WF_PATH)
+            Path(DEFAULT_WF_PATH).unlink()
 
     def test_access_braindump_file_before_workflow_planned(self):
         with pytest.raises(PegasusError) as e:

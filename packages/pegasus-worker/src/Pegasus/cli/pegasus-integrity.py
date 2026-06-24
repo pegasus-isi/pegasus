@@ -15,6 +15,7 @@ import pprint
 import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from shlex import quote
 
 # PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
@@ -91,8 +92,8 @@ class Singleton(type):
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
-prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
+prog_dir = str(Path(sys.argv[0]).parent.resolve())
+prog_base = Path(sys.argv[0]).name  # Name of this program
 
 logger = logging.getLogger("PegasusIntegrity")
 
@@ -193,7 +194,7 @@ def read_meta_data(f):
     # don't try to load empty files
     size = 0
     try:
-        size = os.path.getsize(f)
+        size = Path(f).stat().st_size
     except Exception as err:
         logger.critical("Unable to open metadata file: " + str(err))
     if size <= 2:
@@ -251,9 +252,9 @@ def generate_sha256(fname):
         logger.error("openssl or sha256sum not found!")
         return None
 
-    # GH-2117 we cannot pass the quoted name. os.path.exists() handles
+    # GH-2117 we cannot pass the quoted name. Path.exists() handles
     # whitespaces correctly without requiring any quoting
-    if not os.path.exists(fname):
+    if not Path(fname).exists():
         logger.error("File " + fname + " does not exist")
         return None
 

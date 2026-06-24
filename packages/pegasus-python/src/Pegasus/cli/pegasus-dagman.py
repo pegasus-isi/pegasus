@@ -44,20 +44,22 @@ if peg_path:
         if p not in sys.path:
             sys.path.insert(0, p)
 
+from pathlib import Path
+
 from Pegasus.tools import utils
 
 
 def find_prog(prog, dir=[]):
     def is_prog(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+        return Path(fpath).is_file() and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(prog)
+    fpath = "" if Path(prog).parent == Path() else str(Path(prog).parent)
     if fpath:
         if is_prog(prog):
             return prog
     else:
         for path in dir + os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, prog)
+            exe_file = str(Path(path) / prog)
             if is_prog(exe_file):
                 return exe_file
     return None
@@ -117,7 +119,7 @@ def monitord_launch(monitord_bin, arguments=[]):
             logfile = "monitord.log"
             utils.rotate_log_file(logfile)
             # we have the right name of the log file
-            log = open(logfile, "a", 1)
+            log = Path(logfile).open("a", 1)
             monitord_proc = subprocess.Popen(
                 [monitord_bin, "-N", os.getenv("_CONDOR_DAGMAN_LOG")],
                 stdout=log.fileno(),
@@ -198,8 +200,8 @@ if __name__ == "__main__":
         # If copy_to_spool is set copy dagman binary to dag submit directory
         if copy_to_spool:
             old_dagman_bin = dagman_bin
-            dagman_bin = os.path.join(
-                os.getcwd(), "condor_scheduniv_exec." + os.getenv("CONDOR_ID")
+            dagman_bin = str(
+                Path.cwd() / ("condor_scheduniv_exec." + os.getenv("CONDOR_ID"))
             )
             shutil.copy2(old_dagman_bin, dagman_bin)
             logger.info(f"Copied condor_dagman from {old_dagman_bin} to {dagman_bin}")
@@ -280,5 +282,5 @@ if __name__ == "__main__":
     )
     if copy_to_spool:
         logger.info(f"Removing copied condor_dagman from submit directory {dagman_bin}")
-        os.remove(dagman_bin)
+        Path(dagman_bin).unlink()
     sys.exit(dagman.returncode & monitord.returncode)

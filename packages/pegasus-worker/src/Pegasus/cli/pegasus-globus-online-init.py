@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import os
 from argparse import ArgumentParser
+from pathlib import Path
 
 import globus_sdk
 from globus_sdk.scopes import (
@@ -16,7 +16,7 @@ except Exception:
     from ConfigParser import ConfigParser
 
 client_id = "d7382f5a-4ea3-4b69-b094-99c392fc820d"
-config_file = os.path.expanduser("~/.pegasus/globus.conf")
+config_file = Path("~/.pegasus/globus.conf").expanduser()
 
 parser = ArgumentParser(
     description="Initialize Globus OAuth Tokens - SDK Version {}".format(

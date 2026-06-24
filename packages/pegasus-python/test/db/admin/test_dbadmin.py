@@ -1,6 +1,6 @@
-import os
 import shutil
 import uuid
+from pathlib import Path
 
 import pytest
 from sqlalchemy import text
@@ -157,7 +157,7 @@ def test_connection_from_properties_file(tmp_path):
     props_filename = str(uuid.uuid4())
     dburi = "sqlite://"
 
-    with open(props_filename, "w") as f:
+    with Path(props_filename).open("w") as f:
         # JDBCRC
         f.write("pegasus.catalog.replica=JDBCRC\n")
         f.write("pegasus.catalog.replica.db.driver=SQLite\n")
@@ -211,7 +211,7 @@ def test_upper_version():
 
 @pytest.mark.parametrize("input", ["test-01.db", "test-02.db"])
 def test_dbs(input, tmp_path):
-    orig_filename = os.path.dirname(os.path.abspath(__file__)) + "/input/" + input
+    orig_filename = Path(__file__).resolve().parent / "input" / input
     filename = str(uuid.uuid4())
     shutil.copyfile(orig_filename, filename)
     dburi = f"sqlite:///{filename}"

@@ -9,6 +9,7 @@ import tempfile
 import threading
 import unittest
 from io import StringIO
+from pathlib import Path
 
 from flask import json
 from werkzeug.serving import make_server
@@ -27,7 +28,7 @@ class TestCase(unittest.TestCase):
 
     def tearDown(self):
         # Remove the temp dir
-        if os.path.isdir(self.tmpdir):
+        if Path(self.tmpdir).is_dir():
             shutil.rmtree(self.tmpdir)
 
 
@@ -36,7 +37,7 @@ class DBTestCase(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.dbfile = os.path.join(self.tmpdir, "workflow.db")
+        self.dbfile = str(Path(self.tmpdir) / "workflow.db")
         self.dburi = f"sqlite:///{self.dbfile}"
         app.config.update(SQLALCHEMY_DATABASE_URI=self.dburi)
         migrations.create()
@@ -44,7 +45,7 @@ class DBTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         migrations.drop()
-        os.remove(self.dbfile)
+        Path(self.dbfile).unlink()
         TestCase.tearDown(self)
 
 

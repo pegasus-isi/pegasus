@@ -29,13 +29,14 @@ import re
 import signal
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import globus_sdk
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
-prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
+prog_dir = str(Path(sys.argv[0]).parent.resolve())
+prog_base = Path(sys.argv[0]).name  # Name of this program
 
 logger = logging.getLogger("Pegasus")
 
@@ -180,7 +181,10 @@ def mkdir(request):
         found = False
         while (not found) and base_path != "/":
             found = True
-            base_path, dir_name = os.path.split(base_path)
+            base_path, dir_name = (
+                str(Path(base_path).parent),
+                Path(base_path).name,
+            )
             if dir_name not in ["", "/"]:
                 child_dirs.append(dir_name)
             try:

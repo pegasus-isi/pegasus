@@ -19,6 +19,7 @@ import getpass
 import logging
 import os
 import subprocess
+from pathlib import Path
 from sqlite3 import Connection as SQLite3Connection
 from stat import ST_MODE
 from urllib.parse import urlparse
@@ -178,7 +179,7 @@ def connect(
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=True,
-                    cwd=os.getcwd(),
+                    cwd=Path.cwd(),
                 ).communicate()
 
                 pids = out.decode("utf8").strip().replace(" ", ",")
@@ -187,7 +188,7 @@ def connect(
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     shell=True,
-                    cwd=os.getcwd(),
+                    cwd=Path.cwd(),
                 ).communicate()
                 if err:
                     raise ConnectionError(
@@ -313,8 +314,8 @@ def url_by_submitdir(
         top_level_prop_file = top_level_wf_params["properties"]
         # Create the full path by using the submit_dir key from braindump
         if "submit_dir" in top_level_wf_params:
-            top_level_prop_file = os.path.join(
-                top_level_wf_params["submit_dir"], top_level_prop_file
+            top_level_prop_file = str(
+                Path(top_level_wf_params["submit_dir"]) / top_level_prop_file
             )
 
     return url_by_properties(
@@ -467,7 +468,7 @@ def _get_jdbcrc_uri(props=None):
         if driver.lower() == "sqlite":
             if "sqlite:" in url:
                 return url
-            connString = os.path.join(host, "workflow.db")
+            connString = str(Path(host) / "workflow.db")
             return "sqlite:///" + connString
 
         if driver.lower() == "postgresql":
@@ -502,12 +503,12 @@ def _get_master_uri(props=None):
             f"Environment variable HOME not defined, set {PROP_DASHBOARD_OUTPUT} property to point to the Dashboard database."
         )
 
-    dir = os.path.join(homedir, ".pegasus")
+    dir = str(Path(homedir) / ".pegasus")
 
     # check for writability and create directory if required
-    if not os.path.isdir(dir):
+    if not Path(dir).is_dir():
         try:
-            os.mkdir(dir, 0o755)
+            Path(dir).mkdir(mode=0o755)
         except OSError:
             raise ConnectionError(f"Unable to create directory: {dir}")
     elif not os.access(dir, os.W_OK):
@@ -515,12 +516,12 @@ def _get_master_uri(props=None):
         return None
 
     # directory exists, touch the file and set permissions
-    filename = os.path.join(dir, "workflow.db")
+    filename = str(Path(dir) / "workflow.db")
     if not os.access(filename, os.F_OK):
         try:
             # touch the file
-            open(filename, "w").close()
-            os.chmod(filename, 0o600)
+            Path(filename).open("w").close()
+            Path(filename).chmod(0o600)
         except Exception as e:
             log.warning(f"unable to initialize MASTER db {filename}.")
             log.exception(e)
@@ -559,16 +560,17 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
         raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
 
     # Create the sqlite db url
-    dag_file_name = os.path.basename(dag_file_name)
-    output_db_file = os.path.join(
-        top_level_wf_params["submit_dir"],
-        dag_file_name[: dag_file_name.find(".dag")] + ".stampede.db",
+    dag_file_name = Path(dag_file_name).name
+    output_db_file = str(
+        Path(top_level_wf_params["submit_dir"])
+        / (dag_file_name[: dag_file_name.find(".dag")] + ".stampede.db")
     )
 
     # if path does not exist, fallback on the submit_dir if provided
-    if not os.path.exists(output_db_file) and submit_dir:
-        output_db_file = os.path.join(
-            submit_dir, dag_file_name[: dag_file_name.find(".dag")] + ".stampede.db"
+    if not Path(output_db_file).exists() and submit_dir:
+        output_db_file = str(
+            Path(submit_dir)
+            / (dag_file_name[: dag_file_name.find(".dag")] + ".stampede.db")
         )
 
     return "sqlite:///" + output_db_file
@@ -600,12 +602,12 @@ def _check_db_permissions(dburi, db_type, mask=None):
         path = urlparse(dburi).path[1:]
         if db_type:
             if db_type == DBType.MASTER or db_type == DBType.WORKFLOW:
-                os.chmod(path, 0o744)
-        elif path == os.path.expanduser("~") + "/.pegasus/workflow.db":
-            os.chmod(path, 0o744)
+                Path(path).chmod(0o744)
+        elif path == str(Path("~").expanduser() / ".pegasus" / "workflow.db"):
+            Path(path).chmod(0o744)
 
         if mask:
-            os.chmod(path, mask)
+            Path(path).chmod(mask)
 
 
 def _parse_props(dburi, props, db_type=None, connect_args=None):
@@ -696,8 +698,8 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
         return top_level_wf_params
 
     while True:
-        dir = os.path.abspath(os.path.join(os.path.abspath(dir), ".."))
-        if dir == os.path.realpath("/.."):
+        dir = Path(str(Path(Path(dir).resolve()) / "..")).resolve()
+        if dir == str(Path("/..").resolve()):
             top_level_wf_params = None
             break
 
@@ -722,9 +724,9 @@ def _backup_db(dburi):
     mask = None
     if urlparse(dburi).scheme == "sqlite":
         db_path = urlparse(dburi).path[1:]
-        if os.path.isfile(db_path):
+        if Path(db_path).is_file():
             log.info(f"Rotating sqlite db file {db_path}")
-            mask = os.stat(db_path)[ST_MODE]
+            mask = Path(db_path).stat()[ST_MODE]
             rotated_backup_file = utils.rotate_log_file(db_path)
             log.info(f"Rotated sqlite db file to {rotated_backup_file}")
 
@@ -764,5 +766,5 @@ def _truncate_previous_backup_file(backup_file, prefix):
 def _db_is_file(dburi):
     if urlparse(dburi).scheme == "sqlite":
         db_path = urlparse(dburi).path[1:]
-        return os.path.isfile(db_path)
+        return Path(db_path).is_file()
     return True

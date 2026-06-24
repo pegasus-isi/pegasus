@@ -14,8 +14,8 @@
 #  limitations under the License.
 #
 import logging
-import os
 import subprocess
+from pathlib import Path
 
 from sqlalchemy.sql import text
 
@@ -157,7 +157,7 @@ class Version(BaseVersion):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                cwd=os.getcwd(),
+                cwd=Path.cwd(),
             )
             out, err = child.communicate()
             if child.returncode != 0:

@@ -348,14 +348,14 @@ class ProfileMixin:
         # add profile(s)
         if key and value:
             if isinstance(value, Path) or type(value) is bool:
-                # convert pathlib.Path and bool to str
+                # convert Path and bool to str
                 value = str(value)
 
             self.profiles[ns].update({key: value})
         else:
             for k, v in kw.items():
                 if isinstance(v, Path) or type(v) is bool:
-                    # convert pathlib.Path, bool, to str
+                    # convert Path, bool, to str
                     kw[k] = str(v)
 
             self.profiles[ns].update(kw)

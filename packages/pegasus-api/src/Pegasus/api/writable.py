@@ -144,7 +144,7 @@ class Writable:
             path = Path(file)
             ext = path.suffix[1:].lower()
 
-            with open(file, "w") as f:
+            with path.open("w") as f:
                 if ext in Writable._FORMATS:
                     self._write(f, ext)
                 else:

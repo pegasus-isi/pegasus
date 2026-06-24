@@ -1,6 +1,6 @@
 import json
-import os
 import re
+from pathlib import Path
 
 import pytest
 import yaml
@@ -22,13 +22,10 @@ def convert_yaml_schemas_to_json():
     at the end of the test module.
     """
     # get the path of the schema file with the given name
-    path = os.path.dirname(os.path.realpath(__file__))
-    path = path.replace("packages/pegasus-api/test/api", "share/pegasus/schema/yaml")
+    path = Path(__file__).resolve().parents[4] / "share/pegasus/schema/yaml"
 
     json_schemas = {
-        os.path.join(path, filename): os.path.join(
-            path, filename.replace(".yml", ".json")
-        )
+        path / filename: path / filename.replace(".yml", ".json")
         for filename in [
             "common.yml",
             "rc-5.0.yml",
@@ -40,19 +37,19 @@ def convert_yaml_schemas_to_json():
 
     # convert each of the yml schemas to json
     for yml_filename, json_filename in json_schemas.items():
-        with open(yml_filename) as yml_file, open(json_filename, "w") as json_file:
+        with yml_filename.open() as yml_file, json_filename.open("w") as json_file:
             json_str = json.dumps(yaml.safe_load(yml_file))
 
             # for references pointing to '*.yml' files, convert them to point
             # to '.json' files instead
             json_str = re.sub(
                 r"([a-z0-9\-\.]+)(.yml)",
-                os.path.join("file://" + path, r"\1.json"),
+                "file://" + str(path / r"\1.json"),
                 json_str,
             )
 
             json_obj = json.loads(json_str)
-            json_obj["$id"] = "file://" + json_filename
+            json_obj["$id"] = "file://" + str(json_filename)
 
             json.dump(json_obj, json_file, indent=4)
 
@@ -60,7 +57,7 @@ def convert_yaml_schemas_to_json():
 
     # cleanup
     for _, json_schema in json_schemas.items():
-        os.remove(json_schema)
+        json_schema.unlink()
 
 
 @pytest.fixture(scope="function")
@@ -71,13 +68,9 @@ def load_schema():
 
     def _load_schema(name):
         # get the path of the schema file with the given name
-        path = os.path.dirname(os.path.realpath(__file__))
-        path = path.replace(
-            "packages/pegasus-api/test/api", "share/pegasus/schema/yaml"
-        )
-        path = os.path.join(path, name)
+        path = Path(__file__).resolve().parents[4] / "share/pegasus/schema/yaml" / name
 
-        with open(path) as f:
+        with path.open() as f:
             return json.load(f)
 
     return _load_schema

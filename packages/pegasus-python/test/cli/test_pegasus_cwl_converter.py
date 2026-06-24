@@ -1094,7 +1094,7 @@ def test_main(mocker):
 
         assert main(args) == 0
 
-    with open(converted_wf_file_path) as f:
+    with Path(converted_wf_file_path).open() as f:
         result = yaml.load(f)
 
         # removing file info as this is not needed for test

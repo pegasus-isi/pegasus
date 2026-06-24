@@ -136,7 +136,7 @@ def get_name(parent_id: str, _id: str) -> str:
 
 def load_wf_inputs(input_spec_file_path: str) -> dict:
     try:
-        with open(input_spec_file_path) as f:
+        with Path(input_spec_file_path).open() as f:
             wf_inputs = yaml.load(f)
 
         log.info(f"Loaded workflow inputs file: {input_spec_file_path}")
@@ -165,7 +165,7 @@ def load_tr_specs(tr_specs_file_path: str) -> dict:
     }
 
     try:
-        with open(tr_specs_file_path) as f:
+        with Path(tr_specs_file_path).open() as f:
             specs = yaml.load(f)
 
         validate(instance=specs, schema=schema)

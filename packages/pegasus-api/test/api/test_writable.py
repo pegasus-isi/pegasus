@@ -1,6 +1,5 @@
 import getpass
 import json
-import os
 from io import StringIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryFile
@@ -84,7 +83,8 @@ class Test_CustomEncoder:
 class TestWritable:
     def test_write_using_defaults(self, writable_obj, expected, mocker):
         writable_obj.write()
-        with open("container.yml") as f:
+        path = Path("container.yml")
+        with path.open() as f:
             result = yaml.safe_load(f)
 
             # TODO: check that keys in x-pegasus exist and then del x-pegasus
@@ -93,7 +93,7 @@ class TestWritable:
             expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
             assert result == expected
 
-        os.remove("container.yml")
+        path.unlink()
 
     @pytest.mark.parametrize(
         "file, _format, loader",
@@ -110,7 +110,8 @@ class TestWritable:
     )
     def test_write_using_str_input(self, writable_obj, expected, file, _format, loader):
         writable_obj.write(file, _format=_format)
-        with open(file) as f:
+        path = Path(file)
+        with path.open() as f:
             result = loader(f)
 
             # setting dates to be the same as it won't be safe to compare them
@@ -118,7 +119,7 @@ class TestWritable:
             expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
             assert result == expected
 
-        os.remove(file)
+        path.unlink()
 
     @pytest.mark.parametrize(
         "file, _format, loader",
@@ -136,7 +137,8 @@ class TestWritable:
     def test_write_using_file_input(
         self, writable_obj, expected, file, _format, loader
     ):
-        with open(file, "w+") as f:
+        path = Path(file)
+        with path.open("w+") as f:
             writable_obj.write(f, _format=_format)
             f.seek(0)
             result = loader(f)
@@ -146,7 +148,7 @@ class TestWritable:
             expected["x-pegasus"]["createdOn"] = result["x-pegasus"]["createdOn"]
             assert result == expected
 
-        os.remove(file)
+        path.unlink()
 
     def test_write_invalid_format(self, writable_obj):
         with pytest.raises(ValueError):
@@ -196,14 +198,14 @@ class TestWritable:
         assert writable_obj._path == str(Path(writable_obj._DEFAULT_FILENAME).resolve())
         assert writable_obj.path == Path(writable_obj._DEFAULT_FILENAME).resolve()
         writable_obj._path = None
-        os.remove(str(Path(writable_obj._DEFAULT_FILENAME).resolve()))
+        Path(writable_obj._DEFAULT_FILENAME).resolve().unlink()
 
     def test_set_path_given_str_filename(self, writable_obj):
         writable_obj.write("filename")
         assert writable_obj._path == str(Path("filename").resolve())
         assert writable_obj.path == Path("filename").resolve()
         writable_obj._path = None
-        os.remove("filename")
+        Path("filename").unlink()
 
     def test_set_path_given_NamedTemporaryFile(self, writable_obj):
         f = NamedTemporaryFile(mode="w")

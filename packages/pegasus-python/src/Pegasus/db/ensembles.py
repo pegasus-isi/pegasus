@@ -1,8 +1,8 @@
 import json
-import os
 import re
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
 from flask import url_for
 from sqlalchemy import delete, func, select, sql, update
@@ -111,7 +111,7 @@ class Ensemble(EnsembleBase):
     def get_localdir(self):
         u = user.get_user_by_username(self.username)
         edir = u.get_ensembles_dir()
-        return os.path.join(edir, self.name)
+        return str(Path(edir) / self.name)
 
     def get_object(self):
         return {
@@ -196,7 +196,7 @@ class EnsembleWorkflow(EnsembleBase):
         edir = self.ensemble.get_localdir()
         wf = self.name
         filename = f"{wf}.{suffix}"
-        return os.path.join(edir, filename)
+        return str(Path(edir) / filename)
 
     def get_basedir(self):
         return self.basedir
@@ -396,8 +396,8 @@ class Ensembles:
         if cleanup is not None:
             f.write(f"--cleanup {cleanup} \\\n")
 
-        f.write(f"--dir {os.path.join(basedir, 'submit')} \\\n")
-        f.write(f"--dax {os.path.join(bundledir, dax)} \\\n")
+        f.write(f"--dir {str(Path(basedir) / 'submit')} \\\n")
+        f.write(f"--dax {str(Path(bundledir) / dax)} \\\n")
         f.write(f"--input-dir {bundledir} \n")
 
         f.write("exit $?")

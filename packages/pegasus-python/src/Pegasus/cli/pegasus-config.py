@@ -4,8 +4,7 @@
 import argparse
 import os
 import sys
-from glob import glob
-from os.path import abspath, dirname, exists, join, normpath
+from pathlib import Path
 
 
 def _python_hash(**kw):
@@ -48,10 +47,10 @@ export CLASSPATH
 
 
 def _get_bin_dir(exe):
-    bin_dir = normpath(join(dirname(abspath(exe)), "bin"))
+    bin_dir = str(Path(str(Path(Path(Path(exe).resolve()).parent) / "bin")))
 
-    while not exists(bin_dir):
-        bin_dir = normpath(join(bin_dir, "..", "..", "bin"))
+    while not Path(bin_dir).exists():
+        bin_dir = str(Path(str(Path(bin_dir) / ".." / ".." / "bin")))
 
     return bin_dir
 
@@ -74,7 +73,7 @@ def _main(
     _version = "6.0.0-dev.0"
 
     bin_dir = _get_bin_dir(sys.argv[0])
-    base_dir = dirname(bin_dir)
+    base_dir = Path(bin_dir).parent
 
     lib = "@LIBDIR@"  # lib64 for 64bit RPMS
     if lib.startswith("@"):
@@ -84,24 +83,28 @@ def _main(
     if python_lib.startswith("@"):
         python_lib = "lib/pegasus/python"
 
-    conf_dir = join(base_dir, "etc")
-    share_dir = join(base_dir, "share", "pegasus")
-    java_dir = join(share_dir, "java")
-    python_dir = join(base_dir, python_lib)
-    python_externals_dir = join(base_dir, lib, "pegasus", "externals", "python")
-    schema_dir = join(share_dir, "schema")
-    r_dir = "".join(sorted(glob(join(share_dir, "r", "*.tar.gz"))))
+    conf_dir = str(Path(base_dir) / "etc")
+    share_dir = str(Path(base_dir) / "share" / "pegasus")
+    java_dir = str(Path(share_dir) / "java")
+    python_dir = str(Path(base_dir) / python_lib)
+    python_externals_dir = str(
+        Path(base_dir) / lib / "pegasus" / "externals" / "python"
+    )
+    schema_dir = str(Path(share_dir) / "schema")
+    r_dir = "".join(
+        str(path) for path in sorted((Path(share_dir) / "r").glob("*.tar.gz"))
+    )
 
     # for development - running out of a source checkout
-    test = join(base_dir, "build", "classes")
-    extra_classpath = test if exists(test) else ""
+    test = str(Path(base_dir) / "build" / "classes")
+    extra_classpath = test if Path(test).exists() else ""
 
     # in native packaging mode, some directories move
     if base_dir == "/usr":
         conf_dir = "/etc/pegasus"
 
     # classpath
-    jars = sorted(glob(join(java_dir, "*.jar")))
+    jars = [str(path) for path in sorted(Path(java_dir).glob("*.jar"))]
     if extra_classpath:
         jars.insert(0, extra_classpath)
 
@@ -110,7 +113,7 @@ def _main(
         _classpath += ":" + os.environ["CLASSPATH"]
 
     # construct aws batch classpath
-    aws_jars = sorted(glob(join(java_dir, "aws", "*.jar")))
+    aws_jars = [str(path) for path in sorted((Path(java_dir) / "aws").glob("*.jar"))]
     _classpath += ":" + ":".join(aws_jars)
 
     eol = "" if noeoln else "\n"

@@ -1,5 +1,5 @@
-import os
 import zipfile
+from pathlib import Path
 
 from Pegasus.tools import properties
 
@@ -14,7 +14,7 @@ class Bundle:
     def __init__(self, filename):
         self.filename = filename
 
-        if not os.path.isfile(filename):
+        if not Path(filename).is_file():
             raise BundleException("No such file")
 
         # Verify that the bundle is a valid zip file
@@ -51,7 +51,7 @@ class Bundle:
         if filename is None:
             return
 
-        if not self.contains(filename) and not os.path.isfile(filename):
+        if not self.contains(filename) and not Path(filename).is_file():
             raise BundleException(f"Invalid {propname}: No such file: {filename}")
 
     def verify(self):

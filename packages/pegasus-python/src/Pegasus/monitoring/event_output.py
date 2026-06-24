@@ -26,6 +26,7 @@ import ssl
 import time
 import traceback
 import urllib.parse
+from pathlib import Path
 from threading import Thread
 
 from Pegasus import json
@@ -261,9 +262,9 @@ class FileEventSink(EventSink):
     def __init__(self, path, restart=False, encoder=None, **kw):
         super().__init__()
         if restart:
-            self._output = open(path, "w", 1)
+            self._output = Path(path).open("w", 1)
         else:
-            self._output = open(path, "a", 1)
+            self._output = Path(path).open("a", 1)
         self._encoder = encoder
 
     def send(self, event, kw):

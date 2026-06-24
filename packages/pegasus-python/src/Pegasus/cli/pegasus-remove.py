@@ -42,7 +42,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         ctx.exit(1)
 
     if submit_dir:
-        cwd = os.getcwd()
+        cwd = Path.cwd()
 
         submit_dir = str(Path(submit_dir).resolve())
         try:
@@ -65,7 +65,7 @@ def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
         dag_log_file = config["dag"] + ".dagman.out"
         pattern = re.compile(r"\.([0-9\.]+) \(CONDOR_DAGMAN\) STARTING UP")
 
-        with open(dag_log_file) as fp:
+        with Path(dag_log_file).open() as fp:
             for line in fp.readlines():
                 match = pattern.search(line)
                 if match:

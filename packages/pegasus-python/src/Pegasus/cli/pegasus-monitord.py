@@ -44,6 +44,8 @@ if peg_path:
         if p not in sys.path:
             sys.path.insert(0, p)
 
+from pathlib import Path
+
 from Pegasus.db import connection
 from Pegasus.monitoring import event_output as eo
 from Pegasus.monitoring import notifications
@@ -51,7 +53,7 @@ from Pegasus.monitoring.workflow import MONITORD_RECOVER_FILE, Workflow
 from Pegasus.tools import properties, utils
 
 # Save our own basename
-prog_base = os.path.split(sys.argv[0])[1]
+prog_base = Path(sys.argv[0]).name
 
 
 utils.configureLogging()
@@ -171,7 +173,7 @@ def delete_pid_file():
     This function deletes the pid file when exiting.
     """
     try:
-        os.unlink(pid_filename)
+        Path(pid_filename).unlink()
     except OSError:
         logger.error(f"cannot delete pid file {pid_filename}")
 
@@ -421,11 +423,11 @@ if not out.endswith(".dagman.out"):
     sys.exit(1)
 
 # Turn into absolute filename
-out = os.path.abspath(out)
+out = Path(out).resolve()
 
 # Infer run directory
-run = os.path.dirname(out)
-if not os.path.isdir(run):
+run = Path(out).parent
+if not Path(run).is_dir():
     logger.critical(f"Run directory {run} does not exist")
     exit(1)
 os.chdir(run)
@@ -437,8 +439,8 @@ if "properties" in top_level_wf_params:
     top_level_prop_file = top_level_wf_params["properties"]
     # Create the full path by using the submit_dir key from braindump
     if "submit_dir" in top_level_wf_params:
-        top_level_prop_file = os.path.join(
-            top_level_wf_params["submit_dir"], top_level_prop_file
+        top_level_prop_file = str(
+            Path(top_level_wf_params["submit_dir"]) / top_level_prop_file
         )
 
 # Parse, and process properties
@@ -480,7 +482,7 @@ if options.skip_pid_check is not None:
     skip_pid_check = True
 
 # Make sure no other pegasus-monitord instances are running...
-pid_filename = os.path.join(run, "monitord.pid")
+pid_filename = str(Path(run) / "monitord.pid")
 if not skip_pid_check and utils.pid_running(pid_filename):
     logger.critical(
         "it appears that pegasus-monitord is still running on this workflow... exiting"
@@ -559,8 +561,8 @@ if options.skip_stdout is not None:
 if options.output_dir is not None:
     output_dir = options.output_dir
     try:
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        if not Path(output_dir).exists():
+            Path(output_dir).mkdir(parents=True)
     except OSError:
         logger.critical(f"cannot create directory {output_dir}. exiting...")
         sys.exit(1)
@@ -616,7 +618,7 @@ if encoding is None:
 # Check if the user-provided jsd file is an absolute path, if so, we
 # disable recursive mode
 if jsd is not None:
-    if os.path.isabs(jsd):
+    if Path(jsd).is_absolute():
         # Yes, this is an absolute path
         follow_subworkflows = False
         logger.warning(
@@ -985,7 +987,7 @@ def process_dagman_out(wf, log_line):
 
             # Make a symlink for NFS-secured files
             my_log, my_base = utils.out2log(wf._run_dir, wf._out_file)
-            if os.path.islink(my_log):
+            if Path(my_log).is_symlink():
                 logger.info(f"symlink {my_log} already exists")
             elif os.access(my_log, os.R_OK):
                 logger.info(f"{my_base} is a regular file, not touching")
@@ -996,11 +998,11 @@ def process_dagman_out(wf, log_line):
                 ):
                     if os.access(my_log, os.R_OK):
                         try:
-                            os.rename(my_log, f"{my_log}.bak")
+                            Path(my_log).rename(f"{my_log}.bak")
                         except OSError:
                             logger.warning(f"error renaming {my_log} to {my_log}.bak")
                     try:
-                        os.symlink(wf._condorlog, my_log)
+                        Path(my_log).symlink_to(wf._condorlog)
                     except OSError:
                         logger.info(f"unable to symlink {wf._condorlog}")
                     else:
@@ -1148,7 +1150,7 @@ signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
 signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 
 # Log recover mode
-if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
+if os.access(str(Path(run) / MONITORD_RECOVER_FILE), os.F_OK):
     logger.warning(
         "monitord entering it's own recovery mode. Population will start again for the workflow.."
     )
@@ -1160,7 +1162,7 @@ if no_events:
     # generating bp file or database events
     dashboard_event_sink = None
 else:
-    if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
+    if replay_mode or os.access(str(Path(run) / MONITORD_RECOVER_FILE), os.F_OK):
         restart_logging = True
 
     # PM-652 if there is sqlite db then just take a backup
@@ -1243,11 +1245,11 @@ if fast_start_mode:
 
 # Build sub-workflow retry filename
 if output_dir is None:
-    wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
+    wf_retry_fn = str(Path(run) / MONITORD_WF_RETRY_FILE)
     wf_notification_fn_prefix = run
 else:
-    wf_retry_fn = os.path.join(run, output_dir, MONITORD_WF_RETRY_FILE)
-    wf_notification_fn_prefix = os.path.join(run, output_dir)
+    wf_retry_fn = str(Path(run) / output_dir / MONITORD_WF_RETRY_FILE)
+    wf_notification_fn_prefix = str(Path(run) / output_dir)
 
 # Empty sub-workflow retry information if in replay mode
 # PM-704 in replay or restart logging case we always take a backup
@@ -1256,7 +1258,7 @@ else:
 # submit directory for the sub workflow
 if restart_logging:
     subworkflow_db_file = wf_retry_fn + ".db"
-    if os.path.isfile(subworkflow_db_file):
+    if Path(subworkflow_db_file).is_file():
         logger.info(f"Rotating sub workflow db file {subworkflow_db_file}")
         utils.rotate_log_file(subworkflow_db_file)
 
@@ -1328,7 +1330,7 @@ while len(wfs) > 0:
             # First, we test if the file is already there, in case we are running in replay mode
             if replay_mode:
                 try:
-                    f_stat = os.stat(workflow_entry.dagman_out)
+                    f_stat = Path(workflow_entry.dagman_out).stat()
                 except OSError:
                     logger.critical(
                         f"error: workflow not started, {workflow_entry.dagman_out} does not exist, dropping this workflow..."
@@ -1341,7 +1343,7 @@ while len(wfs) > 0:
                     continue
 
             try:
-                f_stat = os.stat(workflow_entry.dagman_out)
+                f_stat = Path(workflow_entry.dagman_out).stat()
             except OSError as e:
                 if errno.errorcode[e.errno] == "ENOENT":
                     # File doesn't exist yet, keep looking
@@ -1385,7 +1387,7 @@ while len(wfs) > 0:
             else:
                 # Found it, open dagman.out file
                 try:
-                    workflow_entry.DMOF = open(workflow_entry.dagman_out)
+                    workflow_entry.DMOF = Path(workflow_entry.dagman_out).open()
                     workflow_entry.dagman_out_appeared = True
                 except OSError:
                     logger.critical(f"opening {workflow_entry.dagman_out}")
@@ -1399,7 +1401,7 @@ while len(wfs) > 0:
         if workflow_entry.DMOF is not None:
             try:
                 logger.trace(f"stating file: {workflow_entry.dagman_out}")
-                f_stat = os.stat(workflow_entry.dagman_out)
+                f_stat = Path(workflow_entry.dagman_out).stat()
             except OSError:
                 # stat error
                 logger.critical(f"stat {workflow_entry.dagman_out}")
@@ -1534,10 +1536,10 @@ while len(wfs) > 0:
                             parent_jobseq = process_output[2]
                             # Only if we are not already tracking it...
                             tracking_already = False
-                            new_dagman_out = os.path.abspath(new_dagman_out)
+                            new_dagman_out = Path(new_dagman_out).resolve()
                             # Add the current run directory in case this is a relative path
-                            new_dagman_out = os.path.join(
-                                workflow_entry.run_dir, new_dagman_out
+                            new_dagman_out = str(
+                                Path(workflow_entry.run_dir) / new_dagman_out
                             )
                             if replay_mode:
                                 # Check if we started tracking this subworkflow in the past
@@ -1565,7 +1567,7 @@ while len(wfs) > 0:
                                     f"found new workflow to track: {new_dagman_out}"
                                 )
                                 # Not tracking this workflow, let's try to add it to our list
-                                new_run_dir = os.path.dirname(new_dagman_out)
+                                new_run_dir = Path(new_dagman_out).parent
                                 parent_wf_id = workflow_entry.wf._wf_uuid
                                 new_wf = Workflow(
                                     new_run_dir,
@@ -1598,17 +1600,15 @@ while len(wfs) > 0:
                             else:
                                 # Just make sure we link the workflow to its parent job,
                                 # which in this case is a job retry...
-                                if os.path.dirname(new_dagman_out) in Workflow.wf_list:
+                                if Path(new_dagman_out).parent in Workflow.wf_list:
                                     workflow_entry.wf.map_subwf(
                                         parent_jobid,
                                         parent_jobseq,
-                                        Workflow.wf_list[
-                                            os.path.dirname(new_dagman_out)
-                                        ],
+                                        Workflow.wf_list[Path(new_dagman_out).parent],
                                     )
                                 else:
                                     logger.warning(
-                                        f"cannot link job {parent_jobid}:{parent_jobseq} to its subwf because we don't have info for dir: {os.path.dirname(new_dagman_out)}"
+                                        f"cannot link job {parent_jobid}:{parent_jobseq} to its subwf because we don't have info for dir: {Path(new_dagman_out).parent}"
                                     )
 
                         if millisleep is not None:

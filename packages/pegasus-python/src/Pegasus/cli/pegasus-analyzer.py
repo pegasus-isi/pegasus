@@ -21,6 +21,8 @@ if peg_path:
         if p not in sys.path:
             sys.path.insert(0, p)
 
+from pathlib import Path
+
 import click
 
 from Pegasus import analyzer_report
@@ -269,7 +271,7 @@ def pegasus_analyzer(
             options.print_invocation = True
 
     if top_dir is not None:
-        options.top_dir = os.path.abspath(top_dir)
+        options.top_dir = Path(top_dir).resolve()
 
     if debug_job is not None:
         options.debug_job = debug_job
@@ -277,18 +279,18 @@ def pegasus_analyzer(
         options.debug_mode = True
 
     if dag_filename:
-        options.input_dir = os.path.abspath(os.path.split(dag_filename)[0])
+        options.input_dir = Path(str(Path(dag_filename).parent)).resolve()
         # Assume current directory if input dir is empty
         if input_dir is None:
-            options.input_dir = os.getcwd()
+            options.input_dir = Path.cwd()
     else:
         # Select directory where jobstate.log is located
         if input_dir:
-            options.input_dir = os.path.abspath(input_dir)
+            options.input_dir = Path(input_dir).resolve()
         elif submit_dir:
             options.input_dir = submit_dir
         else:
-            options.input_dir = os.getcwd()
+            options.input_dir = Path.cwd()
 
     if options.debug_mode == 1:
         # Enter debug mode if job name given

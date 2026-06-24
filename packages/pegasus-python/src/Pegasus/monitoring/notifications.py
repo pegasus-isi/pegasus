@@ -27,6 +27,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 from Pegasus.tools import utils
 
@@ -55,15 +56,13 @@ class Notifications:
         self._pending_notifications = []
         self._max_parallel_notifications = max_parallel_notifications
         self._notifications_timeout = notifications_timeout
-        self._notifications_fn = os.path.join(
-            notification_file_prefix, NOTIFICATION_FILE
-        )
+        self._notifications_fn = str(Path(notification_file_prefix) / NOTIFICATION_FILE)
         self._notifications_log = None
         self._notifications = {}
 
         # Open notifications' log file
         try:
-            self._notifications_log = open(self._notifications_fn, "a")
+            self._notifications_log = Path(self._notifications_fn).open("a")
         except OSError:
             logger.critical("cannot create notifications' log file... exiting...")
             sys.exit(1)
@@ -119,8 +118,8 @@ class Notifications:
 
         # Finally, clean up files...
         try:
-            os.unlink(my_out_fn)
-            os.unlink(my_err_fn)
+            Path(my_out_fn).unlink()
+            Path(my_err_fn).unlink()
         except OSError:
             # No error here...
             pass
@@ -194,7 +193,7 @@ class Notifications:
                             self._notifications_log.write("\n")
                             self._notifications_log.write("stdout:\n")
                             try:
-                                my_f = open(my_finished_out_fn)
+                                my_f = Path(my_finished_out_fn).open()
                                 for line in my_f:
                                     self._notifications_log.write(line)
                             except OSError:
@@ -206,7 +205,7 @@ class Notifications:
                             self._notifications_log.write("\n")
                             self._notifications_log.write("stderr:\n")
                             try:
-                                my_f = open(my_finished_err_fn)
+                                my_f = Path(my_finished_err_fn).open()
                                 for line in my_f:
                                     self._notifications_log.write(line)
                             except OSError:
@@ -230,13 +229,13 @@ class Notifications:
 
                     # Now, delete output and error files
                     try:
-                        os.unlink(my_finished_out_fn)
+                        Path(my_finished_out_fn).unlink()
                     except OSError:
                         logger.warning(
                             f"error deleting notification stdout file: {my_finished_out_fn}. continuing..."
                         )
                     try:
-                        os.unlink(my_finished_err_fn)
+                        Path(my_finished_err_fn).unlink()
                     except OSError:
                         logger.warning(
                             f"error deleting notification stderr file: {my_finished_err_fn}. continuing..."
@@ -305,15 +304,15 @@ class Notifications:
 
             # Open output and error files for the notification script
             try:
-                my_f_out = open(my_out_fn, "w")
-                my_f_err = open(my_err_fn, "w")
+                my_f_out = Path(my_out_fn).open("w")
+                my_f_err = Path(my_err_fn).open("w")
             except OSError:
                 logger.warning(
                     f"cannot open temp files for notification: {my_notification}... skipping..."
                 )
                 try:
-                    os.unlink(my_out_fn)
-                    os.unlink(my_err_fn)
+                    Path(my_out_fn).unlink()
+                    Path(my_err_fn).unlink()
                 except OSError:
                     # No error here...
                     pass
@@ -331,8 +330,8 @@ class Notifications:
                 try:
                     my_f_out.close()
                     my_f_err.close()
-                    os.unlink(my_out_fn)
-                    os.unlink(my_err_fn)
+                    Path(my_out_fn).unlink()
+                    Path(my_err_fn).unlink()
                 except OSError:
                     logger.warning(
                         f"found problem cleaning up notification: {my_notification}... skipping..."
@@ -347,8 +346,8 @@ class Notifications:
                 try:
                     my_f_out.close()
                     my_f_err.close()
-                    os.unlink(my_out_fn)
-                    os.unlink(my_err_fn)
+                    Path(my_out_fn).unlink()
+                    Path(my_err_fn).unlink()
                 except OSError:
                     logger.warning(
                         f"found problem cleaning up notification: {my_notification}... skipping..."
@@ -449,7 +448,7 @@ class Notifications:
 
         # Open file
         try:
-            NOTIFY = open(notify_file)
+            NOTIFY = Path(notify_file).open()
         except OSError:
             logger.warning(
                 f"cannot load notification file {notify_file}, continuing without notifications"
@@ -714,8 +713,8 @@ class Notifications:
                 # We are in some other state...
                 continue
 
-            my_output = os.path.join(wf._original_submit_dir, job._output_file)
-            my_error = os.path.join(wf._original_submit_dir, job._error_file)
+            my_output = str(Path(wf._original_submit_dir) / job._output_file)
+            my_error = str(Path(wf._original_submit_dir) / job._error_file)
             # Use the rotated file names if at the end of the job
             if k != "start":
                 my_output = my_output + f".{job._job_output_counter:03d}"
@@ -802,11 +801,11 @@ class Notifications:
 
             # Here, we always use the rotated file names as the invocation has already finished...
             my_output = (
-                os.path.join(wf._original_submit_dir, job._output_file)
+                str(Path(wf._original_submit_dir) / job._output_file)
                 + f".{job._job_output_counter:03d}"
             )
             my_error = (
-                os.path.join(wf._original_submit_dir, job._error_file)
+                str(Path(wf._original_submit_dir) / job._error_file)
                 + f".{job._job_output_counter:03d}"
             )
 

@@ -1,8 +1,8 @@
-import os
 import shutil
 import tempfile
 import unittest
 import zipfile
+from pathlib import Path
 
 from Pegasus.service.ensembles.bundle import *
 
@@ -14,7 +14,7 @@ class TestBundle(unittest.TestCase):
 
     def tearDown(self):
         self.zipfile.close()
-        os.remove(self.filename)
+        Path(self.filename).unlink()
 
     def test_invalid(self):
         self.assertRaises(BundleException, Bundle, "/nosuchfile")
@@ -103,10 +103,10 @@ class TestBundle(unittest.TestCase):
         self.zipfile.close()
         bundle = Bundle(self.filename)
         dirname = tempfile.mkdtemp()
-        filename = os.path.join(dirname, PROPERTIES_NAME)
+        filename = str(Path(dirname) / PROPERTIES_NAME)
         try:
             bundle.unpack(dirname)
-            self.assertTrue(os.path.isfile(filename))
-            self.assertEqual(open(filename).read(), "hello=world")
+            self.assertTrue(Path(filename).is_file())
+            self.assertEqual(Path(filename).open().read(), "hello=world")
         finally:
             shutil.rmtree(dirname)

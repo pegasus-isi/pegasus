@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from Pegasus.service import api, db, ensembles
 from Pegasus.service.ensembles import *
@@ -228,18 +229,18 @@ class TestEnsembleAPI(APITestCase):
         self.assertTrue("location" in r.headers, "Should have location header")
 
         # Make sure all the files were created
-        wfdir = os.path.join(
-            self.tmpdir, "userdata/scott/ensembles/myensemble/workflows/mywf"
+        wfdir = str(
+            Path(self.tmpdir) / "userdata/scott/ensembles/myensemble/workflows/mywf"
         )
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "sites.xml")))
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "dax.xml")))
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "rc.txt")))
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "tc.txt")))
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "pegasus.properties")))
-        planfile = os.path.join(wfdir, "plan.sh")
-        self.assertTrue(os.path.isfile(planfile))
+        self.assertTrue(Path(str(Path(wfdir) / "sites.xml")).is_file())
+        self.assertTrue(Path(str(Path(wfdir) / "dax.xml")).is_file())
+        self.assertTrue(Path(str(Path(wfdir) / "rc.txt")).is_file())
+        self.assertTrue(Path(str(Path(wfdir) / "tc.txt")).is_file())
+        self.assertTrue(Path(str(Path(wfdir) / "pegasus.properties")).is_file())
+        planfile = str(Path(wfdir) / "plan.sh")
+        self.assertTrue(Path(planfile).is_file())
 
-        planscript = open(planfile).read()
+        planscript = Path(planfile).open().read()
         self.assertTrue("--nocleanup" in planscript)
         self.assertTrue("--force" in planscript)
         self.assertTrue("--cluster horizontal,vertical" in planscript)
@@ -340,8 +341,8 @@ class LargeDAXTest(ClientTestCase):
         db.session.commit()
 
         # Create a 256MB file and submit it as the DAX
-        daxfile = os.path.join(self.tmpdir, "large.dax")
-        dax = open(daxfile, "w")
+        daxfile = str(Path(self.tmpdir) / "large.dax")
+        dax = Path(daxfile).open("w")
         for i in range(0, 256 * 1024):
             dax.write("x" * 1024)
         dax.close()

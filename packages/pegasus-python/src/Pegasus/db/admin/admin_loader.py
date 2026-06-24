@@ -22,6 +22,7 @@ import subprocess
 import sys
 import time
 import warnings
+from pathlib import Path
 
 from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -118,13 +119,13 @@ def get_compatible_version(version):
 
         # PM-1596 - Python codes now get PEGASUS_HOME set correctly
         if "PEGASUS_HOME" in os.environ:
-            f = os.path.join(os.environ.get("PEGASUS_HOME"), "bin/pegasus-version")
-            if os.path.isfile(f):
+            f = str(Path(os.environ.get("PEGASUS_HOME")) / "bin/pegasus-version")
+            if Path(f).is_file():
                 pegasus_version = f
 
         if not pegasus_version:
-            f = os.path.join(os.path.dirname(sys.argv[0]), "pegasus-version")
-            if os.path.isfile(f):
+            f = str(Path(Path(sys.argv[0]).parent) / "pegasus-version")
+            if Path(f).is_file():
                 pegasus_version = f
 
         if pegasus_version:
@@ -133,7 +134,7 @@ def get_compatible_version(version):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                cwd=os.getcwd(),
+                cwd=Path.cwd(),
             )
             out, err = child.communicate()
             if child.returncode != 0:
@@ -357,8 +358,8 @@ def all_workflows_db(
     """
     # log files
     file_prefix = "{}-dbadmin".format(time.strftime("%Y%m%dT%H%M%S"))
-    f_out = open(f"{file_prefix}.out", "w")
-    f_err = open(f"{file_prefix}.err", "w")
+    f_out = Path(f"{file_prefix}.out").open("w")
+    f_err = Path(f"{file_prefix}.err").open("w")
 
     data = db.execute(
         select(

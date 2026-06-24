@@ -1,15 +1,15 @@
-import os
 import sys
 import tempfile
+from pathlib import Path
 
 import pytest
 
 from Pegasus.client.analyzer import *
 from Pegasus.db import *
 
-directory = os.path.dirname(__file__)
+directory = str(Path(__file__).parent)
 pegasus_version = "5.0.1"
-prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")
+prog_base = Path(sys.argv[0]).name.replace(".py", "")
 
 
 @pytest.fixture
@@ -71,9 +71,9 @@ class TestBaseAnalyze:
         )
 
     def test_parse_submit_file(self, mocker, capsys, BaseAnalyzer):
-        submit_file = os.path.join(
-            directory,
-            "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub",
+        submit_file = str(
+            Path(directory)
+            / "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
         )
         job = Job("job-0", "running")
         job.is_subdax = True
@@ -88,13 +88,15 @@ class TestBaseAnalyze:
         assert job.transfer_input_files == "rrr"
 
     def test_parse_submit_file_open_error(self, mocker, capsys, BaseAnalyzer):
-        submit_file = os.path.join(
-            directory,
-            "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub",
+        submit_file = str(
+            Path(directory)
+            / "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
         )
         job = Job("job-0", "running")
         job.sub_file = submit_file
-        mocker.patch("builtins.open", side_effect=Exception("mocked error"))
+        mocker.patch(
+            "Pegasus.client.analyzer.Path.open", side_effect=Exception("mocked error")
+        )
         opts = Options(
             debug_mode=True,
             input_dir="pegasus/hierarchical-workflow/run0005",
@@ -102,7 +104,7 @@ class TestBaseAnalyze:
         )
         with pytest.raises(Exception) as err:
             BaseAnalyze.parse_submit_file(job, opts)
-        assert f"error opening submit file: {submit_file}" in str(err)
+        assert f"error opening submit file: {submit_file}" in str(err.value)
 
     def test_parse_submit_file_subdag_job(self, mocker, capsys, BaseAnalyzer):
         job = Job("job-0", "running")
@@ -116,9 +118,9 @@ class TestBaseAnalyze:
         assert BaseAnalyze.parse_submit_file(job, opts) is None
 
     def test_parse_submit_file_no_retries(self, mocker, capsys, BaseAnalyzer):
-        submit_file = os.path.join(
-            directory,
-            "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub",
+        submit_file = str(
+            Path(directory)
+            / "analyzer_samples_dir/sample_wf_held/Drug-Combination-Therapy-0.dag.condor.sub"
         )
         job = Job("job-0", "running")
         job.is_subdax = True
@@ -140,8 +142,8 @@ class TestBaseAnalyze:
 class TestAnalyzerOutput:
     @pytest.fixture
     def get_output(self):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_failure"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_failure"
         )
         az = AnalyzeDB(Options(input_dir=submit_dir, traverse_all=True))
         out = az.analyze_db(None)
@@ -157,7 +159,7 @@ class TestAnalyzerOutput:
         assert analyzer_output.get_failed_workflows()["wf-0"].wf_status == "failure"
 
     def test_get_all_jobs(self, Output):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/sample_wf_held")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/sample_wf_held")
         az = AnalyzeDB(Options(input_dir=submit_dir))
         out = az.analyze_db(None)
         analyzer_output = Output()
@@ -182,7 +184,7 @@ class TestAnalyzerOutput:
         assert "pegasus-plan_diamond_subworkflow" in failed_jobs
 
     def test_get_held_jobs(self, Output):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/sample_wf_held")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/sample_wf_held")
         az = AnalyzeDB(Options(input_dir=submit_dir))
         out = az.analyze_db(None)
         analyzer_output = Output()
@@ -200,7 +202,7 @@ class TestAnalyzeDB:
         mocker.patch(
             "Pegasus.db.connection.url_by_submitdir", side_effect=AnalyzerError
         )
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_success")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
 
         with pytest.raises(AnalyzerError) as err:
@@ -209,7 +211,7 @@ class TestAnalyzeDB:
 
     def test_analyze_db_no_url(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch("Pegasus.db.connection.url_by_submitdir", return_value=None)
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_success")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
 
         with pytest.raises(ValueError) as err:
@@ -220,7 +222,7 @@ class TestAnalyzeDB:
         mocker.patch(
             "Pegasus.db.workflow.stampede_statistics.StampedeStatistics.get_workflow_details"
         )
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_success")
 
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         with pytest.raises(KeyError):
@@ -231,7 +233,7 @@ class TestAnalyzeDB:
         assert expected_error in captured_error
 
     def test_simple_wf_success(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_success")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_db(None)
 
@@ -265,7 +267,7 @@ class TestAnalyzeDB:
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_simple_wf_failure(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_db(None)
 
@@ -330,7 +332,7 @@ class TestAnalyzeDB:
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_sample_wf_held(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/sample_wf_held")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/sample_wf_held")
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_db(None)
@@ -351,8 +353,8 @@ class TestAnalyzeDB:
         )
 
     def test_hierarchical_wf_traverse_all(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_success"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_success"
         )
 
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir, traverse_all=True))
@@ -408,8 +410,8 @@ class TestAnalyzeDB:
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_hierarchical_wf_failure(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_failure"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_failure"
         )
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_db(None)
@@ -493,8 +495,8 @@ class TestAnalyzeDB:
         AnalyzeDB.get_job_details.assert_called_once_with("job-instance-0", None)
 
     def test_json_mode(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_success"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_success"
         )
         analyze = AnalyzerDatabase(Options(input_dir=submit_dir, json_mode=True))
         analyzer_ouput = analyze.analyze_db(None)
@@ -529,8 +531,8 @@ class TestAnalyzeDB:
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_json_mode_traverse_subworkflows(self, mocker, capsys, AnalyzerDatabase):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_success"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_success"
         )
         analyze = AnalyzerDatabase(
             Options(input_dir=submit_dir, json_mode=True, traverse_all=True)
@@ -592,7 +594,7 @@ class TestAnalyzeFiles:
         assert AnalyzerFiles is not None
 
     def test_simple_wf_success(self, mocker, capsys, AnalyzerFiles):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_success")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_success")
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
 
@@ -626,8 +628,8 @@ class TestAnalyzeFiles:
         assert analyzer_ouput.as_dict() == expected_output
 
     def test_hierarchical_wf_success(self, mocker, capsys, AnalyzerFiles):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_success"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_success"
         )
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
@@ -642,7 +644,7 @@ class TestAnalyzeFiles:
         assert output_state == expected_state
 
     def test_simple_wf_failure(self, mocker, capsys, AnalyzerFiles):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
 
@@ -720,7 +722,7 @@ class TestAnalyzeFiles:
     def test_analyze_files_monitord_errors(
         self, mocker, capsys, AnalyzerFiles, out_dir, expected_output
     ):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         mocker.patch("Pegasus.client.analyzer.AnalyzeFiles.invoke_monitord")
         mocker.patch(
             "Pegasus.client.analyzer.AnalyzeFiles.get_jsdl_filename",
@@ -736,8 +738,8 @@ class TestAnalyzeFiles:
         assert expected_output in str(err)
 
     def test_hierarchical_wf_failure(self, mocker, capsys, AnalyzerFiles):
-        submit_dir = os.path.join(
-            directory, "analyzer_samples_dir/hierarchical_wf_failure"
+        submit_dir = str(
+            Path(directory) / "analyzer_samples_dir/hierarchical_wf_failure"
         )
         analyze = AnalyzerFiles(Options(input_dir=submit_dir))
         analyzer_ouput = analyze.analyze_files()
@@ -754,9 +756,9 @@ class TestAnalyzeFiles:
     def DISABLED_test_invoke_monitord(self, mocker, AnalyzerFiles):
         mocker.patch("Pegasus.client.analyzer.BaseAnalyze.backticks")
         temp_dir = tempfile.mkdtemp("sample_temp_dir")
-        dagman_out_file = os.path.join(
-            directory,
-            "analyzer_samples_dir/process_wf_failure/process-0.dag.dagman.out",
+        dagman_out_file = str(
+            Path(directory)
+            / "analyzer_samples_dir/process_wf_failure/process-0.dag.dagman.out"
         )
 
         cmd = (
@@ -785,19 +787,19 @@ class TestAnalyzeFiles:
 
     def test_find_file_not_found(self, mocker, AnalyzerFiles):
         analyze = AnalyzerFiles(Options())
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         with pytest.raises(Exception) as err:
             analyze.find_file(submit_dir, ".pkl")
         assert f"could not find any .pkl file in {submit_dir}" == str(err.value)
         assert AnalyzerError == err.type
 
     def test_get_jsdl_filename(self, mocker, AnalyzerFiles):
-        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        input_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         analyze = AnalyzerFiles(Options())
         assert "jobstate.log" in analyze.get_jsdl_filename(input_dir)
 
     def test_get_jsdl_filename_no_braindump(self, mocker, AnalyzerFiles):
-        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        input_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         mocker.patch("Pegasus.tools.utils.slurp_braindb", side_effect=AnalyzerError)
         analyze = AnalyzerFiles(Options())
 
@@ -808,7 +810,7 @@ class TestAnalyzeFiles:
         assert AnalyzerError == err.type
 
     def test_get_jsdl_filename_no_wf_uuid(self, mocker, AnalyzerFiles):
-        input_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
+        input_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
         mocker.patch("Pegasus.tools.utils.slurp_braindb", return_value={"job": "a"})
         analyze = AnalyzerFiles(Options())
 
@@ -819,7 +821,7 @@ class TestAnalyzeFiles:
         assert AnalyzerError == err.type
 
     def test_parse_dag_file(self, mocker, capsys, AnalyzerFiles):
-        dag_file = os.path.join(directory, "analyzer_samples_dir/sample.dag")
+        dag_file = str(Path(directory) / "analyzer_samples_dir/sample.dag")
         analyze = AnalyzerFiles(Options(input_dir="/random/dir"))
         analyze.parse_dag_file(dag_file)
         captured = capsys.readouterr()
@@ -883,8 +885,8 @@ class TestAnalyzeFiles:
         assert "could not find job job-1" in captured_error
 
     def test_dump_file(self, mocker, capsys, AnalyzerFiles):
-        file_path = os.path.join(
-            directory, "analyzer_samples_dir/process_wf_success/braindump.yml"
+        file_path = str(
+            Path(directory) / "analyzer_samples_dir/process_wf_success/braindump.yml"
         )
         analyze = AnalyzerFiles(Options())
         data = analyze.dump_file(file_path)
@@ -903,8 +905,8 @@ class TestDebugWF:
         assert "cannot access job submit file: job-0.sub" in str(err)
 
     def test_debug_workflow_no_tempdir(self, mocker, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
+        job = str(Path(submit_dir) / "00/00/ls_ID0000001.sub")
         debug = AnalyzerDebug(Options(debug_job=job))
         mocker.patch("tempfile.mkdtemp", side_effect=AnalyzerError)
 
@@ -912,11 +914,15 @@ class TestDebugWF:
             debug.debug_workflow()
         assert "could not create temporary directory!" in str(err)
 
-    def test_debug_workflow_create_debug_dir_fail(self, mocker, capsys, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
-        debug = AnalyzerDebug(Options(debug_job=job, debug_dir="a.txt"))
-        mocker.patch("os.mkdir", side_effect=AnalyzerError)
+    def test_debug_workflow_create_debug_dir_fail(
+        self, mocker, capsys, tmp_path, AnalyzerDebug
+    ):
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
+        job = str(Path(submit_dir) / "00/00/ls_ID0000001.sub")
+        debug = AnalyzerDebug(
+            Options(debug_job=job, debug_dir=str(tmp_path / "missing-debug-dir"))
+        )
+        mocker.patch("Pegasus.client.analyzer.Path.mkdir", side_effect=AnalyzerError)
 
         with pytest.raises(AnalyzerError):
             debug.debug_workflow()
@@ -925,8 +931,8 @@ class TestDebugWF:
         assert "cannot create debug directory:" in captured_error
 
     def test_debug_workflow_wf_type(mocker, capsys, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
+        job = str(Path(submit_dir) / "00/00/ls_ID0000001.sub")
         debug = AnalyzerDebug(
             Options(debug_job=job, workflow_type="OTHER", input_dir=submit_dir)
         )
@@ -936,8 +942,8 @@ class TestDebugWF:
         assert "workflow type OTHER not supported!" in str(err)
 
     def test_debug_mode_no_debug_dir(mocker, capsys, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
+        job = str(Path(submit_dir) / "00/00/ls_ID0000001.sub")
         debug = AnalyzerDebug(
             Options(debug_job=job, workflow_type="CONDOR", input_dir=submit_dir)
         )
@@ -948,8 +954,8 @@ class TestDebugWF:
         assert "finished generating job debug script!" in captured_output
 
     def test_debug_mode_with_debug_dir(mocker, capsys, AnalyzerDebug):
-        submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
-        job = os.path.join(submit_dir, "00/00/ls_ID0000001.sub")
+        submit_dir = str(Path(directory) / "analyzer_samples_dir/process_wf_failure")
+        job = str(Path(submit_dir) / "00/00/ls_ID0000001.sub")
         temp_dir = tempfile.mkdtemp("sample_temp_dir")
         debug = AnalyzerDebug(
             Options(debug_job=job, input_dir=submit_dir, debug_dir=temp_dir)

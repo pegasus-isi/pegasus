@@ -21,6 +21,7 @@ if peg_path:
         if p not in sys.path:
             sys.path.insert(0, p)
 
+
 from Pegasus import yaml
 
 COLORS = [
@@ -266,7 +267,7 @@ def parse_daxfile(fname, files=False):
     handler = DAXHandler(files)
     parser = xml.sax.make_parser()
     parser.setContentHandler(handler)
-    f = open(fname)
+    f = Path(fname).open()
     parser.parse(f)
     f.close()
     return handler.dag
@@ -279,7 +280,7 @@ def parse_xform_name(path):
     For special pegasus jobs (create_dir, etc.) set the name manually.
     """
     # Handle special cases
-    fname = os.path.basename(path)
+    fname = Path(path).name
     if fname.startswith("create_dir_"):
         return "pegasus::create_dir"
     if fname.startswith("stage_in_"):
@@ -296,8 +297,8 @@ def parse_xform_name(path):
         return "pegasus::clean_up"
 
     # Get it from the submit file
-    if os.path.isfile(path):
-        f = open(path)
+    if Path(path).is_file():
+        f = Path(path).open()
         for line in f.readlines():
             if "+pegasus_wf_xformation" in line:
                 return line.split('"')[1]
@@ -311,10 +312,10 @@ def parse_dagfile(fname):
     """
     Parse a DAG from a dagfile.
     """
-    dagdir = os.path.dirname(fname)
+    dagdir = Path(fname).parent
     dag = DAG()
     jobs = dag.nodes
-    f = open(fname)
+    f = Path(fname).open()
     for line in f.readlines():
         line = line.strip()
         if line.startswith("JOB"):
@@ -324,8 +325,8 @@ def parse_dagfile(fname):
                 raise Exception("Invalid line:", line)
             job.id = rec[1]  # Job id
             subfile = rec[2]  # submit script
-            if not os.path.isabs(subfile):
-                subfile = os.path.join(dagdir, subfile)
+            if not Path(subfile).is_absolute():
+                subfile = str(Path(dagdir) / subfile)
             job.xform = parse_xform_name(subfile)
             job.label = job.id
             jobs[job.id] = job
@@ -346,7 +347,7 @@ def parse_yamlfile(fname, include_files):
     """
     Parse a DAG from a YAML workflow file.
     """
-    with open(fname) as f:
+    with Path(fname).open() as f:
         wf = yaml.load(f)
 
     dag = DAG()
@@ -415,7 +416,7 @@ def dax_file_is_xml(fname):
     :return: boolean returning True if xml
     """
 
-    f = open(fname)
+    f = Path(fname).open()
     header = ""
     for line in f.readlines():
         header = line.strip()
@@ -557,7 +558,7 @@ class emit_dot:
         self.next_color = 0  # Keep track of next color
         self.colors = {}  # Keep track of transformation names to assign colors
 
-        self.out = open(outfile, "w")
+        self.out = Path(outfile).open("w")
         # Render the header
         self.out.write("digraph dag {\n")
         if width and height:

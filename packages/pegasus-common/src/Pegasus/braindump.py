@@ -41,7 +41,7 @@ class Braindump:
     """
 
     def __post_init__(self):
-        """Convert string path fields to :class:`pathlib.Path` and coerce ``uses_pmc`` to bool."""
+        """Convert string path fields to :class:`Path` and coerce ``uses_pmc`` to bool."""
         self.dax = Path(self.dax) if self.dax else self.dax
         self.basedir = Path(self.basedir) if self.basedir else self.basedir
         self.submit_dir = Path(self.submit_dir) if self.submit_dir else self.submit_dir

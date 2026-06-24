@@ -1,8 +1,8 @@
 import errno
-import os
 import re
 import unittest
 import uuid
+from pathlib import Path
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
@@ -65,16 +65,17 @@ class TestConnection(unittest.TestCase):
 
 def _silentremove(filename):
     try:
-        os.remove(filename)
+        Path(filename).unlink()
     except OSError as e:
         if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
             raise  # re-raise exception if a different error occurred
 
 
 def _remove(filename):
-    for f in os.listdir("."):
+    for path in Path().iterdir():
+        f = str(path)
         if re.search(filename + ".*", f):
-            os.remove(f)
+            path.unlink()
     _silentremove(filename)
 
 

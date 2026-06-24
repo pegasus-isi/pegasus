@@ -18,6 +18,7 @@ import tempfile
 import typing
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from pathlib import Path
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import DBAdminError
@@ -82,7 +83,7 @@ class AnalyzerError(Exception):
 
 
 # --- global variables ----------------------------------------------------------------
-prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
+prog_base = Path(sys.argv[0]).name.replace(".py", "")  # Name of this program
 dag_path = None  # Path of the dag fi
 indent = ""  # the corresponding indent string
 
@@ -406,17 +407,17 @@ class BaseAnalyze:
         full_path = options.input_dir
         if my_job.sub_file == "":
             # Create full path for the submit file if we already don't have the sub file set up
-            my_job.sub_file = os.path.join(options.input_dir, my_job.name + ".sub")
+            my_job.sub_file = str(Path(options.input_dir) / f"{my_job.name}.sub")
         else:
-            full_path = os.path.dirname(my_job.sub_file)
-        my_job.out_file = os.path.join(full_path, my_job.name + ".out")
-        my_job.err_file = os.path.join(full_path, my_job.name + ".err")
+            full_path = str(Path(my_job.sub_file).parent)
+        my_job.out_file = str(Path(full_path) / f"{my_job.name}.out")
+        my_job.err_file = str(Path(full_path) / f"{my_job.name}.err")
 
         # Try to access submit file
         if os.access(my_job.sub_file, os.R_OK):
             # Open submit file
             try:
-                SUB = open(my_job.sub_file)
+                SUB = Path(my_job.sub_file).open()
             except Exception:
                 # print "error opening submit file: %s" % (my_job.sub_file)
                 raise AnalyzerError(f"error opening submit file: {my_job.sub_file}")
@@ -468,9 +469,7 @@ class BaseAnalyze:
                             if sub_prop:
                                 if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                                     my_job.dagman_out = sub_prop.group(2)
-                                    my_job.dagman_out = os.path.normpath(
-                                        my_job.dagman_out
-                                    )
+                                    my_job.dagman_out = str(Path(my_job.dagman_out))
                                     if (
                                         my_job.dagman_out.find(
                                             options.workflow_base_dir
@@ -478,28 +477,31 @@ class BaseAnalyze:
                                         >= 0
                                     ):
                                         # Path to dagman_out file includes original submit_dir, let's try to change it
-                                        my_job.dagman_out = os.path.normpath(
-                                            my_job.dagman_out.replace(
-                                                (options.workflow_base_dir + os.sep),
-                                                "",
-                                                1,
+                                        my_job.dagman_out = str(
+                                            Path(
+                                                my_job.dagman_out.replace(
+                                                    (
+                                                        options.workflow_base_dir
+                                                        + os.sep
+                                                    ),
+                                                    "",
+                                                    1,
+                                                )
                                             )
                                         )
                                         # Join with current options.input_dir
-                                        my_job.dagman_out = os.path.join(
-                                            options.input_dir, my_job.dagman_out
+                                        my_job.dagman_out = str(
+                                            Path(options.input_dir) / my_job.dagman_out
                                         )
 
                                         # Now, figure out the correct directory, accounting for
                                         # replanning and rescue modes
 
                                         # Split filename into dir and base names
-                                        my_dagman_dir = os.path.dirname(
-                                            my_job.dagman_out
+                                        my_dagman_dir = str(
+                                            Path(my_job.dagman_out).parent
                                         )
-                                        my_dagman_file = os.path.basename(
-                                            my_job.dagman_out
-                                        )
+                                        my_dagman_file = Path(my_job.dagman_out).name
                                         my_retry = my_job.retries
                                         if my_retry is None:
                                             logger.warning(
@@ -511,12 +513,12 @@ class BaseAnalyze:
                                             my_dagman_dir + f".{my_retry:03d}"
                                         )
                                         # If directory doesn't exist, let's change to rescue mode
-                                        if not os.path.isdir(my_retry_dir):
+                                        if not Path(my_retry_dir).is_dir():
                                             logger.debug(
                                                 f"sub-workflow directory {my_retry_dir} does not exist, shifting to rescue mode..."
                                             )
                                             my_retry_dir = my_dagman_dir + ".000"
-                                            if not os.path.isdir(my_retry_dir):
+                                            if not Path(my_retry_dir).is_dir():
                                                 # Still not able to find it, output warning message
                                                 logger.warning(
                                                     f"sub-workflow directory {my_retry_dir} does not exist!"
@@ -524,8 +526,8 @@ class BaseAnalyze:
                                                 continue
 
                                         # Found sub-workflow directory, let's compose the final path to the new dagman.out file...
-                                        my_job.dagman_out = os.path.join(
-                                            my_retry_dir, my_dagman_file
+                                        my_job.dagman_out = str(
+                                            Path(my_retry_dir) / my_dagman_file
                                         )
 
                     # Only parse following keys if we are running in strict mode
@@ -549,8 +551,8 @@ class BaseAnalyze:
                             v = BaseAnalyze.re_collapse_condor_subs.sub("", v)
 
                             # Make sure we have an absolute path
-                            if not os.path.isabs(v):
-                                v = os.path.join(options.input_dir, v)
+                            if not Path(v).is_absolute():
+                                v = str(Path(options.input_dir) / v)
 
                             # Done! Replace out/err filenames with what we have
                             if k == "output":
@@ -572,8 +574,8 @@ class BaseAnalyze:
             SUB.close()
             # If initialdir was specified, we need to make both error and output files relative to that
             if len(my_job.initial_dir):
-                my_job.out_file = os.path.join(my_job.initial_dir, my_job.out_file)
-                my_job.err_file = os.path.join(my_job.initial_dir, my_job.err_file)
+                my_job.out_file = str(Path(my_job.initial_dir) / my_job.out_file)
+                my_job.err_file = str(Path(my_job.initial_dir) / my_job.err_file)
         else:
             # Was not able to access submit file
             # fail silently for now...
@@ -933,14 +935,14 @@ class AnalyzeFiles(BaseAnalyze):
                 # If self.options.output_dir is specified, invoke monitord with that path
                 self.invoke_monitord(f"{dag_path}.dagman.out", self.options.output_dir)
                 # jobstate.log file uses wf_uuid as prefix
-                jsdl_path = os.path.join(
-                    self.options.output_dir,
-                    self.get_jsdl_filename(self.options.input_dir),
+                jsdl_path = str(
+                    Path(self.options.output_dir)
+                    / self.get_jsdl_filename(self.options.input_dir)
                 )
             else:
                 if run_directory_writable:
                     # Run directory is writable, write monitord output to jobstate.log file
-                    jsdl_path = os.path.join(self.options.input_dir, self.jsdl_filename)
+                    jsdl_path = str(Path(self.options.input_dir) / self.jsdl_filename)
                     # Invoke monitord
                     self.invoke_monitord(f"{dag_path}.dagman.out", None)
                 else:
@@ -954,21 +956,21 @@ class AnalyzeFiles(BaseAnalyze):
         else:
             if self.options.output_dir is not None:
                 # jobstate.log file uses wf_uuid as prefix and is inside self.options.output_dir
-                jsdl_path = os.path.join(
-                    self.options.output_dir,
-                    self.get_jsdl_filename(self.options.input_dir),
+                jsdl_path = str(
+                    Path(self.options.output_dir)
+                    / self.get_jsdl_filename(self.options.input_dir)
                 )
             else:
-                jsdl_path = os.path.join(self.options.input_dir, self.jsdl_filename)
+                jsdl_path = str(Path(self.options.input_dir) / self.jsdl_filename)
 
         # Compare timestamps of jsdl_path with dagman_out_path
         try:
-            jsdl_stat = os.stat(jsdl_path)
+            jsdl_stat = Path(jsdl_path).stat()
         except Exception:
             raise AnalyzerError("could not access " + jsdl_path + ", exiting...")
 
         try:
-            dagman_out_stat = os.stat(dagman_out_path)
+            dagman_out_stat = Path(dagman_out_path).stat()
         except Exception:
             raise AnalyzerError("could not access " + dagman_out_path + ", exiting...")
 
@@ -981,11 +983,9 @@ class AnalyzeFiles(BaseAnalyze):
         # Try to parse workflow parameters from braindump.txt file
         wfparams = utils.slurp_braindb(self.options.input_dir)
         if "submit_dir" in wfparams:
-            self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
+            self.options.workflow_base_dir = str(Path(wfparams["submit_dir"]))
         elif "jsd" in wfparams:
-            self.options.workflow_base_dir = os.path.dirname(
-                os.path.normpath(wfparams["jsd"])
-            )
+            self.options.workflow_base_dir = str(Path(wfparams["jsd"]).parent)
 
         # First we learn about jobs by going through the dag file
         self.parse_dag_file(dag_path)
@@ -1077,13 +1077,13 @@ class AnalyzeFiles(BaseAnalyze):
         the function will return the first file matching the type.
         """
         try:
-            file_list = os.listdir(input_dir)
+            file_list = list(Path(input_dir).iterdir())
         except Exception:
             raise AnalyzerError("cannot read directory: " + input_dir)
 
         for file in file_list:
-            if file.endswith(file_type):
-                return os.path.join(input_dir, file)
+            if file.name.endswith(file_type):
+                return str(file)
 
         raise AnalyzerError(f"could not find any {file_type} file in {input_dir}")
 
@@ -1124,7 +1124,7 @@ class AnalyzeFiles(BaseAnalyze):
         """
         # Open dag file
         try:
-            DAG = open(dag_fn)
+            DAG = Path(dag_fn).open()
         except Exception:
             raise AnalyzerError(f"could not open dag file {dag_fn}: exiting...")
 
@@ -1149,8 +1149,8 @@ class AnalyzeFiles(BaseAnalyze):
                 if not self.has_seen(my_job[1]):
                     self.add_job(my_job[1], "UNSUBMITTED")
                     # Get submit file information from dag file
-                    self.jobs[my_job[1]].sub_file = os.path.join(
-                        self.options.input_dir, my_job[2]
+                    self.jobs[my_job[1]].sub_file = str(
+                        Path(self.options.input_dir) / my_job[2]
                     )
                     if my_job[1].startswith("pegasus-plan") or my_job[1].startswith(
                         "subdax_"
@@ -1210,7 +1210,7 @@ class AnalyzeFiles(BaseAnalyze):
         """This function parses the jobstate.log file, loading all job information."""
         # Open log file
         try:
-            JSDL = open(jobstate_fn)
+            JSDL = Path(jobstate_fn).open()
         except Exception:
             raise AnalyzerError(f"could not open file {jobstate_fn}: exiting...")
 
@@ -1395,7 +1395,7 @@ class AnalyzeFiles(BaseAnalyze):
         data = ""
         if file is not None:
             try:
-                with open(file) as file:
+                with Path(file).open() as file:
                     data = file.read().rstrip()
             except Exception:
                 logger.warning(f"*** Cannot access: {file}")
@@ -1414,7 +1414,7 @@ class DebugWF(BaseAnalyze):
         if not self.options.debug_job.endswith(".sub"):
             self.options.debug_job = self.options.debug_job + ".sub"
         # Figure out job name
-        jobname = os.path.basename(self.options.debug_job)
+        jobname = Path(self.options.debug_job).name
         jobname = jobname[0 : jobname.find(".sub")]
         # Create job class
         my_job = Job(jobname)
@@ -1435,11 +1435,11 @@ class DebugWF(BaseAnalyze):
 
         else:
             # Make sure directory specified is writable
-            self.options.debug_dir = os.path.abspath(self.options.debug_dir)
+            self.options.debug_dir = str(Path(self.options.debug_dir).resolve())
             if not os.access(self.options.debug_dir, os.F_OK):
                 # Create directory if it does not exist
                 try:
-                    os.mkdir(self.options.debug_dir)
+                    Path(self.options.debug_dir).mkdir()
                 except Exception:
                     logger.error(
                         f"cannot create debug directory: {self.options.debug_dir}"
@@ -1481,10 +1481,10 @@ class DebugWF(BaseAnalyze):
         # Create script name
         debug_script_basename = "debug_" + my_job.name + ".sh"
         debug_script_err_basename = "debug_" + my_job.name + ".err"
-        debug_script_name = os.path.join(self.options.debug_dir, debug_script_basename)
+        debug_script_name = str(Path(self.options.debug_dir) / debug_script_basename)
 
         try:
-            debug_script = open(debug_script_name, "w")
+            debug_script = Path(debug_script_name).open("w")
         except Exception:
             raise AnalyzerError(f"cannot create debug script {debug_script}")
 
@@ -1533,7 +1533,7 @@ class DebugWF(BaseAnalyze):
                     ):
                         # Add the initial dir to all files to be copied
                         # as long as they dont start with / or ${wf_submit_dir}
-                        my_file = os.path.join(my_job.initial_dir, my_file)
+                        my_file = str(Path(my_job.initial_dir) / my_file)
                     debug_script.write(f"cp {my_file} {self.options.debug_dir}\n")
 
             # Extra newline before executing the job
@@ -1548,7 +1548,7 @@ class DebugWF(BaseAnalyze):
                 # older non pegasus lite mode /sipht case?
                 debug_script.write("# Set the execute bit on the executable\n")
                 debug_script.write(
-                    f"chmod +x {os.path.join(self.options.debug_dir, my_job.executable)}\n"
+                    f"chmod +x {str(Path(self.options.debug_dir) / my_job.executable)}\n"
                 )
                 debug_script.write("\n")
             else:
@@ -1559,7 +1559,7 @@ class DebugWF(BaseAnalyze):
                 job_executable = debug_wrapper
 
             job_executable = (
-                os.path.join(self.options.debug_dir, job_executable) + my_job.arguments
+                str(Path(self.options.debug_dir) / job_executable) + my_job.arguments
             )
 
             debug_script.write(f'echo "executing job: {job_executable}"\n')
@@ -1573,7 +1573,7 @@ class DebugWF(BaseAnalyze):
             if job_pegasus_lite_wrapper is not None:
                 debug_script.write(
                     " 2> "
-                    + os.path.join(self.options.debug_dir, debug_script_err_basename)
+                    + str(Path(self.options.debug_dir) / debug_script_err_basename)
                 )
 
             debug_script.write("\n\n")
@@ -1619,7 +1619,7 @@ class DebugWF(BaseAnalyze):
 
         try:
             # Make our debug script executable
-            os.chmod(debug_script_name, 0o755)
+            Path(debug_script_name).chmod(0o755)
         except Exception:
             raise AnalyzerError(
                 f"cannot change permissions for the debug script {debug_script}"
@@ -1645,18 +1645,16 @@ class DebugWF(BaseAnalyze):
 
         if my_job.sub_file == "":
             # Create full path for the submit file if we already don't have the sub file set up
-            my_job.sub_file = os.path.join(self.options.input_dir, my_job.name + ".sub")
+            my_job.sub_file = str(Path(self.options.input_dir) / (my_job.name + ".sub"))
 
         # Create full path for the pegasus_lite_wrapped job on basis of where submit file is
-        pegasus_lite_wrapper = os.path.join(
-            os.path.dirname(my_job.sub_file), my_job.name + ".sh"
-        )
+        pegasus_lite_wrapper = str(Path(my_job.sub_file).parent / (my_job.name + ".sh"))
 
         # Try to access submit file
         if os.access(pegasus_lite_wrapper, os.R_OK):
             # Open submit file
             try:
-                SUB = open(pegasus_lite_wrapper)
+                SUB = Path(pegasus_lite_wrapper).open()
             except Exception:
                 # print "error opening submit file: %s" % (my_job.sub_file)
                 raise AnalyzerError("error opening submit file: " + my_job.sub_file)
@@ -1673,13 +1671,13 @@ class DebugWF(BaseAnalyze):
         if pegasus_lite_wrapper is None:
             return None
 
-        debug_wrapper = os.path.join(
-            self.options.debug_dir,
-            "stripped_pl_" + os.path.basename(pegasus_lite_wrapper),
+        debug_wrapper = str(
+            Path(self.options.debug_dir)
+            / ("stripped_pl_" + Path(pegasus_lite_wrapper).name)
         )
         try:
-            DEBUG_WRAPPER = open(debug_wrapper, "w")
-            WRAPPER = open(pegasus_lite_wrapper)
+            DEBUG_WRAPPER = Path(debug_wrapper).open("w")
+            WRAPPER = Path(pegasus_lite_wrapper).open()
             for line in WRAPPER:
                 if line.startswith("# stage out"):
                     # we only continue till we hit the stage out part
@@ -1717,6 +1715,6 @@ class DebugWF(BaseAnalyze):
                 WRAPPER.close()
 
         # set the x bit
-        os.chmod(debug_wrapper, 0o755)
+        Path(debug_wrapper).chmod(0o755)
 
         return debug_wrapper

@@ -1,5 +1,4 @@
 import logging
-import os
 from configparser import DEFAULTSECT
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -210,8 +209,8 @@ def test_write_default_file(props):
     props["pegasus.mode"] = "development"
     props.write()
 
-    EXPECTED_DEFAULT_FILE = "pegasus.properties"
-    with open(EXPECTED_DEFAULT_FILE) as f:
+    EXPECTED_DEFAULT_FILE = Path("pegasus.properties")
+    with EXPECTED_DEFAULT_FILE.open() as f:
         assert f.read() == "pegasus.mode = development\n\n"
 
-    os.remove(EXPECTED_DEFAULT_FILE)
+    EXPECTED_DEFAULT_FILE.unlink()

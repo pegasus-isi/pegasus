@@ -10,11 +10,11 @@ scans for user-supplied success/failure messages, and optionally generates a
 import atexit
 import datetime
 import json
-import os
 import re
 import sys
 import uuid
 from optparse import OptionParser
+from pathlib import Path
 
 SUBMIT_FILE_UPDATE_ENABLED = True
 try:
@@ -84,7 +84,7 @@ def rotate_file(outfile, errfile):
     retry = None
     for i in range(0, 1000):
         candidate = f"{outfile}.{i:03d}"
-        if not os.path.isfile(candidate):
+        if not Path(candidate).is_file():
             retry = i
             break
 
@@ -97,13 +97,13 @@ def rotate_file(outfile, errfile):
 
     # rename .out to .out.000
     newout = f"{basename}.out.{retry:03d}"
-    os.rename(outfile, newout)
+    Path(outfile).rename(newout)
 
     # rename .err to .err.000 if it exists
     newerr = None
-    if os.path.isfile(errfile):
+    if Path(errfile).is_file():
         newerr = f"{basename}.err.{retry:03d}"
-        os.rename(errfile, newerr)
+        Path(errfile).rename(newerr)
 
     return newout, newerr
 
@@ -119,10 +119,10 @@ def readfile(filename):
     :rtype: str
     """
     # If the file does not exits, return empty string
-    if filename is None or not os.path.isfile(filename):
+    if filename is None or not Path(filename).is_file():
         return ""
 
-    f = open(filename)
+    f = Path(filename).open()
     try:
         return f.read()
     finally:
@@ -357,7 +357,7 @@ def append_to_wf_metadata_log(files_metadata, logfile):
     :return:
     """
     # writing to log file (concurrency safe)
-    with open(logfile, "a", encoding="utf8") as outfile:
+    with Path(logfile).open("a", encoding="utf8") as outfile:
         for file_metadata in files_metadata:
             res = file_metadata.convert_to_rce()
             outfile.write(res + "\n")
@@ -402,7 +402,7 @@ def exitcode(
     :type generate_meta: bool
     :raises JobFailed: If the job is determined to have failed.
     """
-    if not os.path.isfile(outfile):
+    if not Path(outfile).is_file():
         raise JobFailed(f"{outfile} does not exist")
 
     errfile = get_errfile(outfile)
@@ -458,8 +458,8 @@ def exitcode(
     if generate_meta:
         files_metadata = parse_metadata_from_kickstart(outfile)
         # always generate a meta file even if it is a zero byte file
-        directory = os.path.dirname(meta_file)
-        basename = os.path.basename(meta_file)
+        directory = Path(meta_file).parent
+        basename = Path(meta_file).name
         Metadata.write_to_jsonfile(
             files_metadata, directory, basename, prefix="pegasus-exitcode"
         )
@@ -499,12 +499,12 @@ def parse_metadata_from_kickstart(outfile):
 def update_job_submit_file(outfile, retry):
     # figure out the job submit file from the .out file
     jobname, sub_file = get_sub_file(outfile)
-    if not os.path.exists(sub_file):
+    if not Path(sub_file).exists():
         raise JobFailed(f"Could not find job submit file {sub_file}")
 
     j = Job(
         name=jobname,
-        job_submit_dir=os.path.dirname(sub_file),
+        job_submit_dir=Path(sub_file).parent,
         wf_uuid=None,
         job_submit_seq=None,
     )
@@ -674,11 +674,11 @@ def _get_job_runtime(error_file):
     :return: the duration logged if a PegasusLite job, else None
     """
     runtime = None
-    if not os.path.isfile(error_file):
+    if not Path(error_file).is_file():
         return runtime
 
     # Read the file first
-    f = open(error_file)
+    f = Path(error_file).open()
     txt = f.read()
     f.close()
 
@@ -717,13 +717,13 @@ def _write_logs(log_filename):
         std_out.close()
         std_err.close()
 
-        with open(std_out.name) as sout:
+        with Path(std_out.name).open() as sout:
             log["std_out"] = sout.read()
-        with open(std_err.name) as serr:
+        with Path(std_err.name).open() as serr:
             log["std_err"] = serr.read()
 
         # writing to log file (concurrency safe)
-        with open(log_filename, "a", encoding="utf8") as outfile:
+        with Path(log_filename).open("a", encoding="utf8") as outfile:
             res = json.dumps(log, ensure_ascii=False)
             outfile.write(res + "\n")
 
@@ -843,8 +843,8 @@ def main(args):
     if options.log_filename:
         # temporary log files
         tmp_log_name = "_exit-code-" + str(uuid.uuid4())
-        tmp_log_files.append(open(tmp_log_name + ".out", "w"))
-        tmp_log_files.append(open(tmp_log_name + ".err", "w"))
+        tmp_log_files.append(Path(tmp_log_name + ".out").open("w"))
+        tmp_log_files.append(Path(tmp_log_name + ".err").open("w"))
 
     try:
         log["name"] = outfile
@@ -894,4 +894,4 @@ def remove_temporary_files():
     """
     # cleaning temporary files
     for tmp_file in tmp_log_files:
-        os.remove(tmp_file.name)
+        Path(tmp_file.name).unlink()

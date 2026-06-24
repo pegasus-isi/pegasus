@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import click
 import flask
@@ -32,9 +33,9 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
         log.info("Using non-standard URL prefix: %s", pegasus_service_url_prefix)
         app.config["APPLICATION_ROOT"] = pegasus_service_url_prefix
 
-    pegasusdir = os.path.expanduser("~/.pegasus")
-    if not os.path.isdir(pegasusdir):
-        os.makedirs(pegasusdir, mode=0o744)
+    pegasusdir = Path("~/.pegasus").expanduser()
+    if not Path(pegasusdir).is_dir():
+        Path(pegasusdir).mkdir(mode=0o744, parents=True)
 
     cert = app.config.get("CERTIFICATE", None)
     pkey = app.config.get("PRIVATE_KEY", None)
@@ -83,8 +84,8 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
 
 def _load_user_config(app):
     # Load user configuration
-    conf = os.path.expanduser("~/.pegasus/service.py")
-    if os.path.isfile(conf):
+    conf = Path("~/.pegasus/service.py").expanduser()
+    if Path(conf).is_file():
         app.config.from_pyfile(conf)
 
 

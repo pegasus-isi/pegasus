@@ -2,10 +2,11 @@
 
 import os
 import sys
+from pathlib import Path
 
 for fname in sys.argv[1:]:
-    dname = os.path.dirname(fname)
-    if not os.path.isdir(dname):
+    dname = str(Path(fname).parent)
+    if not Path(dname).is_dir():
         os.makedirs(dname)
     f = open(fname, "w")
     f.write("This is file %s\n" % fname)

@@ -7,11 +7,12 @@ _extended_summary_
 """
 
 import os
+from pathlib import Path
 
 from setuptools import setup
 
-src_dir = os.path.dirname(__file__)
-home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
+src_dir = Path(__file__).parent
+home_dir = str((src_dir / "../..").absolute())
 
 install_requires = [
     "six>=1.9.0",
@@ -24,7 +25,7 @@ install_requires = [
 # Utility function to read the README file.
 #
 def read(fname):
-    return open(os.path.join(src_dir, fname)).read()
+    return open(src_dir / fname).read()
 
 
 # TODO: Someday remove this method and replace with setuptools.find_namespace_packages
@@ -36,7 +37,7 @@ def find_namespace_packages(where):
             if pkg == where or pkg.endswith(".egg-info") or pkg == "__pycache__":
                 continue
 
-            pkgs.append(os.path.join(root, pkg).replace("/", "."))
+            pkgs.append(str(Path(root) / pkg).replace("/", "."))
     return pkgs
 
 

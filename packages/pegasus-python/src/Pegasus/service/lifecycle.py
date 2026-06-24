@@ -2,6 +2,7 @@ import logging
 import os
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 from flask import Response, abort, current_app, g, make_response, request, url_for
 
@@ -150,10 +151,10 @@ def authorization():
     # Does the user have a Pegasus home directory?
     user_pegasus_dir = user_info.get_pegasus_dir()
 
-    if not os.path.isdir(user_pegasus_dir):
+    if not Path(user_pegasus_dir).is_dir():
         log.info("User's pegasus directory does not exist. Creating one...")
         try:
-            os.makedirs(user_pegasus_dir, mode=0o744)
+            Path(user_pegasus_dir).mkdir(mode=0o744, parents=True)
         except OSError:
             log.info("Invalid Permissions: Could not create user's pegasus directory.")
             return make_response("Could not find user's Pegasus directory", 404)

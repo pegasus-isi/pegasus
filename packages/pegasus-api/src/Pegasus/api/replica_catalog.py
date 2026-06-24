@@ -265,7 +265,7 @@ class ReplicaCatalog(Writable):
         :type checksum: Optional[Dict[str, str]], optional
         :param metadata: metadata key value pairs associated with this lfn such as :code:`{"created": "Thu Jun 18 22:18:36 PDT 2020", "owner": "pegasus"}`, defaults to None
         :type metadata: Optional[Dict[str, Union[int, str, float]]], optional
-        :raises ValueError: if pfn is given as a :code:`pathlib.Path`, it must be an absolute path
+        :raises ValueError: if pfn is given as a :code:`Path`, it must be an absolute path
         :raises ValueError: an unsupported checksum type was given
         """
 
@@ -279,9 +279,7 @@ class ReplicaCatalog(Writable):
             pfn = str(pfn)
 
         if isinstance(pfn, File):
-            raise TypeError(
-                f"Invalid pfn: {pfn}, the given pfn must be a str or pathlib.Path"
-            )
+            raise TypeError(f"Invalid pfn: {pfn}, the given pfn must be a str or Path")
 
         metadata = metadata or OrderedDict()
         checksum = checksum or OrderedDict()

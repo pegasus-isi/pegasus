@@ -27,6 +27,7 @@ from Pegasus.client import analyzer
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+from pathlib import Path
 
 # Rich's default inline-code style is "bold cyan on black"; the black background
 # is invisible on dark terminals but a jarring box on light ones. Drop the
@@ -373,14 +374,14 @@ def _job_instance(
 
 
 def _subwf_files_dir(ji: analyzer.JobInstance) -> str:
-    return os.path.split(ji.subwf_dir)[0]
+    return str(Path(ji.subwf_dir).parent)
 
 
 def _subwf_db_dir(options: analyzer.Options, ji: analyzer.JobInstance) -> str:
-    my_wfdir = os.path.normpath(ji.subwf_dir)
+    my_wfdir = str(Path(ji.subwf_dir))
     if my_wfdir.find(ji.submit_dir) >= 0:
-        my_wfdir = os.path.normpath(my_wfdir.replace(ji.submit_dir + os.sep, "", 1))
-        my_wfdir = os.path.join(options.input_dir, my_wfdir)
+        my_wfdir = str(Path(my_wfdir.replace(ji.submit_dir + os.sep, "", 1)))
+        my_wfdir = str(Path(options.input_dir) / my_wfdir)
     return my_wfdir
 
 

@@ -59,13 +59,13 @@ _Loader.add_constructor(
 
 # Dumper extras
 def _represent_path(self, data: Path):
-    """Serialize a :class:`pathlib.Path` object to a YAML string scalar.
+    """Serialize a :class:`Path` object to a YAML string scalar.
 
     .. warning::
         ``Path("./aaa")`` serializes to ``"aaa"`` because ``str(Path("./aaa")) == "aaa"``.
 
     :param data: path object to serialize
-    :type data: pathlib.Path
+    :type data: Path
     """
     return self.represent_scalar("tag:yaml.org,2002:str", str(data))
 
@@ -111,7 +111,7 @@ dump = partial(_yaml.dump, Dumper=_Dumper)
 def dumps(obj: dict, Dumper=_Dumper, *args, **kwargs) -> str:
     """Serialize ``obj`` to a YAML formatted ``str``.
 
-    :class:`pathlib.Path` objects are serialized as strings and
+    :class:`Path` objects are serialized as strings and
     :class:`collections.OrderedDict` instances preserve their key order.
 
     :param obj: object to serialize

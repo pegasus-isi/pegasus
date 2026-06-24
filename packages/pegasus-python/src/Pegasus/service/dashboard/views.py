@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 from flask import g, redirect, render_template, request, send_from_directory, url_for
 from sqlalchemy.orm.exc import NoResultFound
@@ -539,7 +539,7 @@ def file_browser(username, root_wf_id, wf_id):
         details = dashboard.get_workflow_details(wf_id)
         submit_dir = details.submit_dir
 
-        if os.path.isdir(submit_dir):
+        if Path(submit_dir).is_dir():
             init_file = request.args.get("init_file", None)
             return render_template(
                 "file-browser.html",
@@ -570,19 +570,19 @@ def file_list(username, root_wf_id, wf_id, path=""):
         details = dashboard.get_workflow_details(wf_id)
         submit_dir = details.submit_dir
 
-        if os.path.isdir(submit_dir):
-            dest = os.path.join(submit_dir, path)
+        if Path(submit_dir).is_dir():
+            dest = str(Path(submit_dir) / path)
 
-            if os.path.isfile(dest):
+            if Path(dest).is_file():
                 return "", 204
 
             folders = {"dirs": [], "files": []}
 
-            for entry in os.listdir(dest):
-                if os.path.isdir(os.path.join(dest, entry)):
-                    folders["dirs"].append(os.path.normpath(os.path.join(path, entry)))
+            for entry in Path(dest).iterdir():
+                if entry.is_dir():
+                    folders["dirs"].append(str(Path(str(Path(path) / entry.name))))
                 else:
-                    folders["files"].append(os.path.normpath(os.path.join(path, entry)))
+                    folders["files"].append(str(Path(str(Path(path) / entry.name))))
 
             return serialize(folders), 200, {"Content-Type": "application/json"}
 
@@ -608,8 +608,8 @@ def file_view(username, root_wf_id, wf_id, path):
         details = dashboard.get_workflow_details(wf_id)
         submit_dir = details.submit_dir
 
-        file_path = os.path.join(submit_dir, path)
-        if not os.path.isfile(file_path):
+        file_path = str(Path(submit_dir) / path)
+        if not Path(file_path).is_file():
             return "File not found", 404
 
         return send_from_directory(submit_dir, path)

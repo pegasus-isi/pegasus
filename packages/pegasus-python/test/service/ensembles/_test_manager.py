@@ -1,6 +1,6 @@
-import os
 import sys
 import time
+from pathlib import Path
 
 from StringIO import StringIO
 
@@ -172,22 +172,22 @@ class ScriptTest(TestCase):
         em.forkscript("true")
 
         cwdfile = "/tmp/forkscript.cwd"
-        if os.path.isfile(cwdfile):
-            os.remove(cwdfile)
+        if Path(cwdfile).is_file():
+            Path(cwdfile).unlink()
         em.forkscript(f"echo $PWD > {cwdfile}", cwd="/")
         time.sleep(1)  # This just gives the script time to finish
-        cwd = open(cwdfile).read().strip()
+        cwd = Path(cwdfile).open().read().strip()
         self.assertEqual(cwd, "/")
-        os.remove(cwdfile)
+        Path(cwdfile).unlink()
 
         pidfile = "/tmp/forkscript.pid"
-        if os.path.isfile(pidfile):
-            os.remove(pidfile)
+        if Path(pidfile).is_file():
+            Path(pidfile).unlink()
         em.forkscript("true", cwd="/tmp", pidfile="/tmp/forkscript.pid")
-        self.assertTrue(os.path.isfile(pidfile))
-        pid = int(open(pidfile).read())
+        self.assertTrue(Path(pidfile).is_file())
+        pid = int(Path(pidfile).open().read())
         self.assertTrue(pid > 0)
-        os.remove(pidfile)
+        Path(pidfile).unlink()
 
         self.assertRaises(
             em.EMException, em.forkscript, "true", cwd="/some/path/not/existing"
@@ -200,12 +200,12 @@ class ScriptTest(TestCase):
         em.runscript("true")
 
         cwdfile = "/tmp/runscript.cwd"
-        if os.path.isfile(cwdfile):
-            os.remove(cwdfile)
+        if Path(cwdfile).is_file():
+            Path(cwdfile).unlink()
         em.runscript(f"echo $PWD > {cwdfile}", cwd="/")
-        cwd = open(cwdfile).read().strip()
+        cwd = Path(cwdfile).open().read().strip()
         self.assertEqual(cwd, "/")
-        os.remove(cwdfile)
+        Path(cwdfile).unlink()
 
         self.assertRaises(
             em.EMException, em.runscript, "true", cwd="/some/path/not/existing"
@@ -396,7 +396,7 @@ class WorkflowTest(UserTestCase):
         self.assertTrue(p.planning_successful(), "Planning should succeed")
 
         submitdir = p.get_submitdir()
-        self.assertTrue(os.path.isdir(submitdir), "Submit dir should exist")
+        self.assertTrue(Path(submitdir).is_dir(), "Submit dir should exist")
 
         wf_uuid = p.get_wf_uuid()
         self.assertTrue(wf_uuid is not None, "wf_uuid should exist")
@@ -444,7 +444,7 @@ class WorkflowTest(UserTestCase):
         self.assertTrue(p.planning_successful())
 
         submitdir = p.get_submitdir()
-        self.assertTrue(os.path.isdir(submitdir))
+        self.assertTrue(Path(submitdir).is_dir())
 
         wf_uuid = p.get_wf_uuid()
         self.assertTrue(wf_uuid is not None)
@@ -536,8 +536,8 @@ class WorkflowTest(UserTestCase):
             </adag>
         """
 
-        subdaxfile = os.path.join(self.tmpdir, "subdax.xml")
-        f = open(subdaxfile, "w")
+        subdaxfile = str(Path(self.tmpdir) / "subdax.xml")
+        f = Path(subdaxfile).open("w")
         f.write(subdax)
         f.close()
 

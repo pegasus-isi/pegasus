@@ -6,8 +6,8 @@ module-level lookup functions :func:`get_user_by_uid` and
 :func:`get_user_by_username`.
 """
 
-import os
 import pwd
+from pathlib import Path
 
 
 class NoSuchUser(Exception):
@@ -31,15 +31,15 @@ class User:
 
     def get_pegasus_dir(self):
         """Return the path to the user's ``~/.pegasus`` directory."""
-        return os.path.join(self.homedir, ".pegasus")
+        return str(Path(self.homedir) / ".pegasus")
 
     def get_ensembles_dir(self):
         """Return the path to the user's ``~/.pegasus/ensembles`` directory."""
-        return os.path.join(self.homedir, ".pegasus", "ensembles")
+        return str(Path(self.homedir) / ".pegasus" / "ensembles")
 
     def get_master_db(self):
         """Return the path to the user's Pegasus master SQLite database file."""
-        return os.path.join(self.homedir, ".pegasus", "workflow.db")
+        return str(Path(self.homedir) / ".pegasus" / "workflow.db")
 
     def get_master_db_url(self):
         """Return a SQLAlchemy connection URL for the user's master database."""

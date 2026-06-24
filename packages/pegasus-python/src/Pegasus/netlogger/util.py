@@ -4,7 +4,6 @@ Utility functions for NetLogger modules and command-line programs
 
 __rcsid__ = "$Id: util.py 27069 2011-02-08 20:09:10Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
-import glob
 import os
 import queue
 import re
@@ -14,6 +13,7 @@ import time
 import traceback
 from copy import copy
 from optparse import Option, OptionParser, OptionValueError, make_option
+from pathlib import Path
 
 #
 import Pegasus.netlogger
@@ -53,7 +53,7 @@ MAGICDATE_EXAMPLES = ", ".join(
     )
 )
 
-DATA_DIR = os.path.join(os.path.dirname(Pegasus.netlogger.__file__), "data")
+DATA_DIR = str(Path(Path(Pegasus.netlogger.__file__).parent) / "data")
 
 ## Exceptions
 
@@ -293,13 +293,11 @@ def mostRecentFile(dir, file_pattern, after_time=None):
     the same modification time.
 
     """
-    if not os.path.isdir(dir):
+    if not Path(dir).is_dir():
         return []
-    search_path = os.path.join(dir, file_pattern)
     # make a sortable list of filenames and modification times
     timed_files = [
-        (os.stat_result(os.stat(fname)).st_mtime, fname)
-        for fname in glob.glob(search_path)
+        (fname.stat().st_mtime, str(fname)) for fname in Path(dir).glob(file_pattern)
     ]
     # if the list is empty, stop
     if not timed_files:
@@ -397,7 +395,8 @@ def daemonize(log=None, root_log=None, close_fds=True):
 
 def _getNumberedFiles(path):
     result = []
-    for filename in glob.glob(path + ".*"):
+    for filename in Path(path).parent.glob(Path(path).name + ".*"):
+        filename = str(filename)
         try:
             name, ext = filename.rsplit(".", 1)
             n = int(ext)
@@ -553,12 +552,12 @@ class NullFile:
 
 def rm_rf(d):
     """Remove directories and their contents, recursively."""
-    for path in (os.path.join(d, f) for f in os.listdir(d)):
-        if os.path.isdir(path):
-            rm_rf(path)
+    for path in Path(d).iterdir():
+        if path.is_dir():
+            rm_rf(str(path))
         else:
-            os.unlink(path)
-    os.rmdir(d)
+            path.unlink()
+    Path(d).rmdir()
 
 
 class IncConfigObj(configobj.ConfigObj):
@@ -582,7 +581,7 @@ class IncConfigObj(configobj.ConfigObj):
             f.seek(0)  # rewind to start of file
         else:
             f = file(infile)
-        dir_ = os.path.dirname(f.name)
+        dir_ = Path(f.name).parent
         # Create list of lines that includes the included files
         lines = []
         file_lines = []  # tuple: (filename, linenum)
@@ -597,7 +596,7 @@ class IncConfigObj(configobj.ConfigObj):
                 inc_path = filter(None, m.groups()[1:])[0]
                 # open the corresponding file
                 if not inc_path[0] == "/":
-                    inc_path = os.path.join(dir_, inc_path)
+                    inc_path = str(Path(dir_) / inc_path)
                 try:
                     inc_file = file(inc_path)
                 except OSError:
@@ -795,7 +794,7 @@ def getProgFromFile(f):
     """Get program name from __file__."""
     if f.endswith(".py"):
         f = f[:-3]
-    return os.path.basename(f)
+    return Path(f).name
 
 
 # Python 2.4-friendly uuid generator

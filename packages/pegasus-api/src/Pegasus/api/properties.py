@@ -387,7 +387,7 @@ class Properties:
             file = "pegasus.properties"
 
         if isinstance(file, (str, Path)):
-            with open(file, "w") as f:
+            with Path(file).open("w") as f:
                 f.write(props)
         elif hasattr(file, "read"):
             file.write(props)

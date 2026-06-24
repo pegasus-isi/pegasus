@@ -90,7 +90,7 @@ def get_wf_status(ctx, long, jsonrv, watch, dirs, legend, noqueue, debug, submit
     """pegasus-status helps to retrieve status of a given workflow."""
 
     if not submit_dir:
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         if slurp_braindb(cwd):
             submit_dir = cwd
         else:

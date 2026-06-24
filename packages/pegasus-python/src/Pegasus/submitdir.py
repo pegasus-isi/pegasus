@@ -6,12 +6,10 @@ attach, and detach submit directories from the Pegasus master database. These
 operations are exposed via the ``pegasus-submitdir`` CLI tool.
 """
 
-import glob
 import logging
-import os
 import shutil
 import tarfile
-from os.path import expanduser
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -122,10 +120,10 @@ class WorkflowDatabase:
 
 class SubmitDir:
     def __init__(self, submitdir, raise_err=True):
-        self.submitdir = os.path.abspath(submitdir)
+        self.submitdir = Path(submitdir).resolve()
         self.submitdir_exists = True
 
-        if not os.path.isdir(submitdir):
+        if not Path(submitdir).is_dir():
             self.submitdir_exists = False
 
             if raise_err is False:
@@ -133,19 +131,19 @@ class SubmitDir:
 
             raise SubmitDirException(f"Invalid submit dir: {submitdir}")
 
-        self.braindump_file = os.path.join(self.submitdir, "braindump.yml")
-        if not os.path.isfile(self.braindump_file):
-            self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
+        self.braindump_file = str(Path(self.submitdir) / "braindump.yml")
+        if not Path(self.braindump_file).is_file():
+            self.braindump_file = str(Path(self.submitdir) / "braindump.txt")
 
         # Read the braindump file
-        self.braindump = utils.slurp_braindb(os.path.join(self.submitdir))
+        self.braindump = utils.slurp_braindb(str(Path(self.submitdir)))
 
         # Read some attributes from braindump file
         self.wf_uuid = self.braindump["wf_uuid"]
         self.root_wf_uuid = self.braindump["root_wf_uuid"]
         self.user = self.braindump["user"]
 
-        self.archname = os.path.join(self.submitdir, "archive.tar.gz")
+        self.archname = str(Path(self.submitdir) / "archive.tar.gz")
 
     def is_subworkflow(self):
         "Check to see if this workflow is a subworkflow"
@@ -153,7 +151,7 @@ class SubmitDir:
 
     def is_archived(self):
         "A submit dir is archived if the archive file exists"
-        return os.path.isfile(self.archname)
+        return Path(self.archname).is_file()
 
     def extract(self):
         "Extract files from an archived submit dir"
@@ -177,7 +175,7 @@ class SubmitDir:
         tar.close()
 
         # Remove the tar file
-        os.remove(self.archname)
+        Path(self.archname).unlink()
 
         # Commit the workflow changes
         mdbsession.commit()
@@ -203,15 +201,15 @@ class SubmitDir:
 
         # We use a temporary file so that we can determine if the archive step
         # completed successfully later
-        tmparchname = os.path.join(self.submitdir, "archive.tmp.tar.gz")
+        tmparchname = str(Path(self.submitdir) / "archive.tmp.tar.gz")
 
         # We use a lock file to determine if cleanup is complete
-        lockfile = os.path.join(self.submitdir, "archive.cleanup.lock")
+        lockfile = str(Path(self.submitdir) / "archive.cleanup.lock")
 
         # If a previous archive was partially completed, then remove the
         # temporary file that was created
-        if os.path.exists(tmparchname):
-            os.unlink(tmparchname)
+        if Path(tmparchname).exists():
+            Path(tmparchname).unlink()
 
         # Exclude the temporary archive name so we don't add it to itself
         exclude.add(tmparchname)
@@ -225,25 +223,26 @@ class SubmitDir:
         # Ignore monitord files. This is needed so that tools like pegasus-statistics
         # will consider the workflow to be complete
         for name in ["monitord.started", "monitord.done", "monitord.log"]:
-            exclude.add(os.path.join(self.submitdir, name))
+            exclude.add(str(Path(self.submitdir) / name))
 
         # Exclude stampede db
-        for db in glob.glob(os.path.join(self.submitdir, "*.stampede.db")):
-            exclude.add(db)
+        for db in Path(self.submitdir).glob("*.stampede.db"):
+            exclude.add(str(db))
 
         # Exclude properties file
-        for prop in glob.glob(os.path.join(self.submitdir, "pegasus.*.properties")):
-            exclude.add(prop)
+        for prop in Path(self.submitdir).glob("pegasus.*.properties"):
+            exclude.add(str(prop))
 
         # Visit all the files in the submit dir that we want to archive
         def visit(dirpath):
-            for name in os.listdir(dirpath):
-                filepath = os.path.join(dirpath, name)
+            for path in Path(dirpath).iterdir():
+                name = path.name
+                filepath = str(path)
 
                 if filepath not in exclude:
                     yield name, filepath
 
-        if self.is_archived() and not os.path.exists(lockfile):
+        if self.is_archived() and not Path(lockfile).exists():
             raise SubmitDirException("Submit directory already archived")
 
         if not self.is_archived():
@@ -255,10 +254,10 @@ class SubmitDir:
             tar.close()
 
             # This "commits" the archive step
-            os.rename(tmparchname, self.archname)
+            Path(tmparchname).rename(self.archname)
 
         # Touch lockfile
-        open(lockfile, "w").close()
+        Path(lockfile).open("w").close()
 
         # Remove the files and directories
         # We do this here, instead of doing it in the loop above
@@ -266,13 +265,13 @@ class SubmitDir:
         # the archive before we start removing files
         print("Removing files...")
         for name, path in visit(self.submitdir):
-            if os.path.isfile(path) or os.path.islink(path):
-                os.remove(path)
+            if Path(path).is_file() or Path(path).is_symlink():
+                Path(path).unlink()
             else:
                 shutil.rmtree(path)
 
         # This "commits" the file removal
-        os.unlink(lockfile)
+        Path(lockfile).unlink()
 
         # Commit the workflow changes
         mdbsession.commit()
@@ -281,15 +280,15 @@ class SubmitDir:
     def move(self, dest):
         "Move this submit directory to dest"
 
-        dest = os.path.abspath(dest)
+        dest = Path(dest).resolve()
 
-        if os.path.isfile(dest):
+        if Path(dest).is_file():
             raise SubmitDirException(f"Destination is a file: {dest}")
 
-        if os.path.isdir(dest):
-            if os.path.exists(os.path.join(dest, "braindump.txt")):
+        if Path(dest).is_dir():
+            if Path(str(Path(dest) / "braindump.txt")).exists():
                 raise SubmitDirException(f"Destination is a submit dir: {dest}")
-            dest = os.path.join(dest, os.path.basename(self.submitdir))
+            dest = str(Path(dest) / Path(self.submitdir).name)
 
         # Verify that we aren't trying to move a subworkflow
         if self.is_subworkflow():
@@ -349,8 +348,8 @@ class SubmitDir:
 
         # Set new paths in the braindump file
         self.braindump["submit_dir"] = dest
-        self.braindump["basedir"] = os.path.dirname(dest)
-        utils.write_braindump(os.path.join(dest, "braindump.txt"), self.braindump)
+        self.braindump["basedir"] = Path(dest).parent
+        utils.write_braindump(str(Path(dest) / "braindump.txt"), self.braindump)
 
         # Note that we do not need to update the properties file even though it
         # might contain DB URLs because it cannot contain a DB URL with the submit
@@ -534,7 +533,7 @@ class SubmitDir:
 
         else:
             # Connect to master database
-            home = expanduser("~")
+            home = Path("~").expanduser()
             mdbsession = connection.connect(
                 f"sqlite:///{home}/.pegasus/workflow.db",
                 db_type=connection.DBType.MASTER,

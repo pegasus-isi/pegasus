@@ -25,6 +25,7 @@ import socket
 import sys
 import time
 import traceback
+from pathlib import Path
 
 from Pegasus.monitoring.job import IntegrityMetric, Job
 from Pegasus.tools import kickstart_parser, utils
@@ -192,10 +193,10 @@ class Workflow:
             )
             return
 
-        dag_file = os.path.join(self._run_dir, dag_file)
+        dag_file = str(Path(self._run_dir) / dag_file)
 
         try:
-            DAG = open(dag_file)
+            DAG = Path(dag_file).open()
         except Exception:
             logger.warning(f"unable to read {dag_file}!")
         else:
@@ -208,7 +209,7 @@ class Workflow:
                     if my_match:
                         if not my_match.group(3):
                             my_jobid = my_match.group(1)
-                            my_sub = os.path.join(self._run_dir, my_match.group(2))
+                            my_sub = str(Path(self._run_dir) / my_match.group(2))
                             # Found submit file for not-DONE job
                             if my_jobid in self._job_info:
                                 # Entry already exists for this job, just collect submit file info
@@ -315,7 +316,7 @@ class Workflow:
                         if my_dir is None:
                             # SUBDAG EXTERNAL line without DIR, let's get it from the DAG path
                             if my_dag is not None:
-                                my_dir = os.path.dirname(my_dag)
+                                my_dir = Path(my_dag).parent
                         if my_jobid in self._job_info:
                             # Entry already exists for this job, just set subdag flag, and dag/dir info
                             self._job_info[my_jobid][5] = True
@@ -360,10 +361,10 @@ class Workflow:
         was found.
         """
         jobname = job._exec_job_id
-        in_file = os.path.join(job._job_submit_dir, jobname) + ".in"
+        in_file = str(Path(job._job_submit_dir) / jobname) + ".in"
 
         try:
-            IN = open(in_file)
+            IN = Path(in_file).open()
         except Exception:
             logger.warning(f"unable to read {in_file}!")
             return None
@@ -387,7 +388,7 @@ class Workflow:
                     my_task_info = tasks[my_task_id]
                 except Exception:
                     logger.warning(
-                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {os.path.join(self._run_dir, self._dag_file_name)}"
+                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {str(Path(self._run_dir) / self._dag_file_name)}"
                     )
                     continue
                 my_task_info["transformation"] = my_transformation
@@ -413,7 +414,7 @@ class Workflow:
                     my_task_info = tasks[tasks_found]
                 except Exception:
                     logger.warning(
-                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {os.path.join(self._run_dir, self._dag_file_name)}"
+                        f"cannot locate task {my_task_id:d} in dictionary... skipping this task for job: {jobname}, dag file: {str(Path(self._run_dir) / self._dag_file_name)}"
                     )
                     continue
                 my_task_info["argument-vector"] = my_argv
@@ -435,14 +436,14 @@ class Workflow:
         """
 
         if self._output_dir is None:
-            my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+            my_fn = str(Path(self._run_dir) / MONITORD_STATE_FILE)
         else:
-            my_fn = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
+            my_fn = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
             )
 
         try:
-            INPUT = open(my_fn)
+            INPUT = Path(my_fn).open()
         except Exception:
             logger.info(f"cannot open state file {my_fn}, continuing without state...")
             return
@@ -487,14 +488,14 @@ class Workflow:
         """
 
         if self._output_dir is None:
-            my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+            my_fn = str(Path(self._run_dir) / MONITORD_STATE_FILE)
         else:
-            my_fn = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
+            my_fn = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_STATE_FILE}"
             )
 
         try:
-            OUT = open(my_fn, "w")
+            OUT = Path(my_fn).open("w")
         except Exception:
             logger.error(f"cannot open state file {my_fn}")
             return
@@ -531,15 +532,15 @@ class Workflow:
         time that was processed by pegasus-monitord.
         """
         if self._output_dir is None:
-            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+            my_recover_file = str(Path(self._run_dir) / MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
+            my_recover_file = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
 
         if os.access(my_recover_file, os.F_OK):
             try:
-                RECOVER = open(my_recover_file)
+                RECOVER = Path(my_recover_file).open()
                 for line in RECOVER:
                     line = line.strip()
                     my_key, my_value = line.split(" ", 1)
@@ -566,13 +567,13 @@ class Workflow:
             return
 
         if self._output_dir is None:
-            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+            my_recover_file = str(Path(self._run_dir) / MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
+            my_recover_file = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
         try:
-            RECOVER = open(my_recover_file, "w")
+            RECOVER = Path(my_recover_file).open("w")
         except Exception:
             logger.error(f"cannot open recover file: {my_recover_file}")
             return
@@ -869,9 +870,9 @@ class Workflow:
         """
         Remove monitord.done file if it already exists.
         """
-        if os.path.isfile(os.path.join(self._run_dir, MONITORD_DONE_FILE)):
+        if Path(str(Path(self._run_dir) / MONITORD_DONE_FILE)).is_file():
             try:
-                os.remove(os.path.join(self._run_dir, MONITORD_DONE_FILE))
+                Path(str(Path(self._run_dir) / MONITORD_DONE_FILE)).unlink()
             except BaseException:
                 pass
 
@@ -1055,16 +1056,14 @@ class Workflow:
 
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
-            self._original_submit_dir = os.path.normpath(wfparams["submit_dir"])
+            self._original_submit_dir = str(Path(wfparams["submit_dir"]))
         else:
             # Use "run" if "submit_dir" not found
             if "run" in wfparams:
                 self._submit_dir = wfparams["run"]
             # Use "jsd" if "submit_dir" is not found
             if "jsd" in wfparams:
-                self._original_submit_dir = os.path.dirname(
-                    os.path.normpath(wfparams["jsd"])
-                )
+                self._original_submit_dir = Path(str(Path(wfparams["jsd"]))).parent
 
         self._fixed_addon_attrs["submit__dir"] = self._submit_dir
 
@@ -1109,13 +1108,13 @@ class Workflow:
 
         if self._output_dir is None:
             # Make sure we have an absolute path
-            self._jsd_file = os.path.join(rundir, my_jsd)
+            self._jsd_file = str(Path(rundir) / my_jsd)
         else:
-            self._jsd_file = os.path.join(
-                rundir, self._output_dir, f"{self._wf_uuid}-{my_jsd}"
+            self._jsd_file = str(
+                Path(rundir) / self._output_dir / f"{self._wf_uuid}-{my_jsd}"
             )
 
-        if not os.path.isfile(self._jsd_file):
+        if not Path(self._jsd_file).is_file():
             logger.info(f"creating new file {self._jsd_file}")
 
         try:
@@ -1127,7 +1126,7 @@ class Workflow:
                 logger.info(
                     f"Appending to existing jobstate.log replay_mode {self._replay_mode} previous_processed_line {self._previous_processed_line}"
                 )
-                self._JSDB = open(self._jsd_file, "ab", 0)
+                self._JSDB = Path(self._jsd_file).open("ab", 0)
             else:
                 # Rotate jobstate.log file, if any in case of replay
                 # mode of if we are starting from the beginning
@@ -1137,7 +1136,7 @@ class Workflow:
                 logger.info(
                     f" Rotating jobstate.log replay_mode {self._replay_mode} previous_processed_line {self._previous_processed_line}"
                 )
-                self._JSDB = open(self._jsd_file, "wb", 0)
+                self._JSDB = Path(self._jsd_file).open("wb", 0)
         except Exception:
             logger.critical(f"error creating/appending to {self._jsd_file}!")
             self._monitord_exit_code = 1
@@ -1150,7 +1149,7 @@ class Workflow:
                 self._notify_file = wfparams["notify"]
                 # Add rundir to notifications filename
                 if self._run_dir is not None:
-                    self._notify_file = os.path.join(self._run_dir, self._notify_file)
+                    self._notify_file = str(Path(self._run_dir) / self._notify_file)
                 # Read notification file
                 if (
                     self._notifications_manager.read_notification_file(
@@ -1168,10 +1167,10 @@ class Workflow:
 
         # Write monitord.started file
         if self._output_dir is None:
-            my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
+            my_start_file = str(Path(self._run_dir) / MONITORD_START_FILE)
         else:
-            my_start_file = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_START_FILE}"
+            my_start_file = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_START_FILE}"
             )
 
         my_now = int(time.time())
@@ -1179,12 +1178,12 @@ class Workflow:
 
         # Remove monitord.done file, if it is there
         if self._output_dir is None:
-            os.path.join(self._run_dir, MONITORD_DONE_FILE)
+            str(Path(self._run_dir) / MONITORD_DONE_FILE)
         else:
-            os.path.join(self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}")
+            str(Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_DONE_FILE}")
 
         try:
-            os.unlink(my_touch_file)
+            Path(my_touch_file).unlink()
         except Exception:
             pass
 
@@ -1206,12 +1205,12 @@ class Workflow:
             # Create NetLogger parser
             my_bp_parser = NLSimpleParser(parse_date=False)
             # Figure out static data filename, and create full path name
-            my_bp_file = os.path.splitext(self._dag_file_name)[0] + ".static.bp"
-            self._static_bp_file = os.path.join(self._run_dir, my_bp_file)
+            my_bp_file = Path(self._dag_file_name).with_suffix(".static.bp").name
+            self._static_bp_file = str(Path(self._run_dir) / my_bp_file)
 
             # Open static bp file
             try:
-                my_static_file = open(self._static_bp_file)
+                my_static_file = Path(self._static_bp_file).open()
             except Exception:
                 logger.critical(
                     f"cannot find static bp file {self._static_bp_file}, exiting..."
@@ -1322,10 +1321,10 @@ class Workflow:
         my_workflow_end = int(time.time())
 
         if self._output_dir is None:
-            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+            my_recover_file = str(Path(self._run_dir) / MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
+            my_recover_file = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_RECOVER_FILE}"
             )
 
         self.write_to_jobstate(
@@ -1338,20 +1337,20 @@ class Workflow:
 
         # Delete recovery file
         try:
-            os.unlink(my_recover_file)
+            Path(my_recover_file).unlink()
             logger.info(f"recovery file deleted: {my_recover_file}")
         except Exception:
             logger.warning(f"unable to remove recover file: {my_recover_file}")
 
         # Write monitord.done file
         if self._output_dir is None:
-            my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+            my_touch_name = str(Path(self._run_dir) / MONITORD_DONE_FILE)
         else:
-            my_touch_name = os.path.join(
-                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
+            my_touch_name = str(
+                Path(self._output_dir) / f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
             )
         try:
-            TOUCH = open(my_touch_name, "w")
+            TOUCH = Path(my_touch_name).open("w")
             TOUCH.write(
                 f"{utils.isodate(my_workflow_end)} {my_workflow_end - self._workflow_start:.3f}\n"
             )
@@ -1367,7 +1366,7 @@ class Workflow:
             # Attempt to copy the condor common logfile to the current directory
             if self._condorlog is not None:
                 if (
-                    os.path.isfile(self._condorlog)
+                    Path(self._condorlog).is_file()
                     and os.access(self._condorlog, os.R_OK)
                     and self._condorlog.find("/") == 0
                 ):
@@ -1379,12 +1378,12 @@ class Workflow:
                     if my_status == 0:
                         # Copy successful
                         try:
-                            os.unlink(my_log)
+                            Path(my_log).unlink()
                         except Exception:
                             logger.error(f"removing {my_log}")
                         else:
                             try:
-                                os.rename(f"{my_log}.copy", my_log)
+                                Path(f"{my_log}.copy").rename(my_log)
                             except Exception:
                                 logger.error(f"renaming {my_log}.copy to {my_log}")
                             else:
@@ -2195,7 +2194,7 @@ class Workflow:
         if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
             my_job_output_fn_base = (
-                os.path.join(my_job._job_submit_dir, my_job._exec_job_id) + ".out"
+                str(Path(my_job._job_submit_dir) / my_job._exec_job_id) + ".out"
             )
 
             # PM-793 if there is a postscript associated then a job has rotated stdout|stderr
@@ -2420,13 +2419,13 @@ class Workflow:
 
         basename = f"{job._exec_job_id}.in"
         # PM-833 the .in file should be picked up from job submit directory
-        input_file = os.path.join(job._job_submit_dir, basename)
+        input_file = str(Path(job._job_submit_dir) / basename)
         logger.info(
             f"Populating locations corresponding to succeeded registration job  {input_file} "
         )
 
         try:
-            SUB = open(input_file)
+            SUB = Path(input_file).open()
         except OSError:
             logger.error(f"unable to parse {input_file}")
             return
@@ -2479,12 +2478,12 @@ class Workflow:
         if job._has_rotated_stdout_err_files:
             error_basename += f".{job._job_output_counter:03d}"
 
-        errfile = os.path.join(self._run_dir, error_basename)
-        if errfile is None or not os.path.isfile(errfile):
+        errfile = str(Path(self._run_dir) / error_basename)
+        if errfile is None or not Path(errfile).is_file():
             return ec
 
         # Read the file first
-        f = open(errfile)
+        f = Path(errfile).open()
         txt = f.read()
         f.close()
 
@@ -2860,7 +2859,7 @@ class Workflow:
             return None
 
         # return the directory component of the path
-        return os.path.dirname(submit_file)
+        return Path(submit_file).parent
 
     def parse_job_sub_file(self, jobid, job_submit_seq):
         """
@@ -2904,9 +2903,11 @@ class Workflow:
         try:
             if my_job._input_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._input_file = os.path.normpath(
-                    my_job._input_file.replace(
-                        (self._original_submit_dir + os.sep), "", 1
+                my_job._input_file = str(
+                    Path(
+                        my_job._input_file.replace(
+                            (self._original_submit_dir + os.sep), "", 1
+                        )
                     )
                 )
         except Exception:
@@ -2915,9 +2916,11 @@ class Workflow:
         try:
             if my_job._output_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._output_file = os.path.normpath(
-                    my_job._output_file.replace(
-                        (self._original_submit_dir + os.sep), "", 1
+                my_job._output_file = str(
+                    Path(
+                        my_job._output_file.replace(
+                            (self._original_submit_dir + os.sep), "", 1
+                        )
                     )
                 )
         except Exception:
@@ -2927,9 +2930,11 @@ class Workflow:
         try:
             if my_job._error_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._error_file = os.path.normpath(
-                    my_job._error_file.replace(
-                        (self._original_submit_dir + os.sep), "", 1
+                my_job._error_file = str(
+                    Path(
+                        my_job._error_file.replace(
+                            (self._original_submit_dir + os.sep), "", 1
+                        )
                     )
                 )
         except Exception:
@@ -2986,24 +2991,24 @@ class Workflow:
             return None
 
         # Got it!
-        my_dagman_out = os.path.normpath(my_dagman_out)
+        my_dagman_out = str(Path(my_dagman_out))
 
         if my_dagman_out.find(self._original_submit_dir) >= 0:
             # Path to new dagman.out file includes original submit_dir, let's try to change it
-            my_dagman_out = os.path.normpath(
-                my_dagman_out.replace((self._original_submit_dir + os.sep), "", 1)
+            my_dagman_out = str(
+                Path(my_dagman_out.replace((self._original_submit_dir + os.sep), "", 1))
             )
             # Join with current run directory
-            my_dagman_out = os.path.join(self._run_dir, my_dagman_out)
+            my_dagman_out = str(Path(self._run_dir) / my_dagman_out)
 
         #        try:
-        #            my_dagman_out = os.path.relpath(my_dagman_out, self._original_submit_dir)
+        #            my_dagman_out = Path(my_dagman_out).relative_to(self._original_submit_dir)
         #        except Exception:
         #            pass
 
         # Split filename into dir and base names
-        my_dagman_dir = os.path.dirname(my_dagman_out)
-        my_dagman_file = os.path.basename(my_dagman_out)
+        my_dagman_dir = Path(my_dagman_out).parent
+        my_dagman_file = Path(my_dagman_out).name
 
         if wf_retries is None:
             logger.warning(
@@ -3036,13 +3041,13 @@ class Workflow:
         my_retry_dir = my_dagman_dir + f".{my_retry:03d}"
 
         # If directory doesn't exist, let's change to rescue mode
-        if not os.path.isdir(my_retry_dir):
+        if not Path(my_retry_dir).is_dir():
             logger.debug(
                 f"sub-workflow directory {my_retry_dir} does not exist, shifting to rescue mode..."
             )
             my_retry_dir = my_dagman_dir + ".000"
 
-            if not os.path.isdir(my_retry_dir):
+            if not Path(my_retry_dir).is_dir():
                 # Still not able to find it, output warning message
                 logger.warning(
                     f"sub-workflow directory {my_retry_dir} does not exist! Skipping this sub-workflow..."
@@ -3050,7 +3055,7 @@ class Workflow:
                 return None
 
         # Found sub-workflow directory, let's compose the final path to the new dagman.out file...
-        return os.path.join(my_retry_dir, my_dagman_file)
+        return str(Path(my_retry_dir) / my_dagman_file)
 
     def set_dagman_version(self, major, minor, patch):
         """

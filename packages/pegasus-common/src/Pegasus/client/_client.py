@@ -6,7 +6,6 @@ import subprocess
 import threading
 import time
 from functools import partial
-from os import path
 from pathlib import Path
 from typing import BinaryIO
 
@@ -47,7 +46,7 @@ def from_env(pegasus_home: str = None):
         if not pegasus_version_path:
             raise ValueError("PEGASUS_HOME not found")
 
-        pegasus_home = path.dirname(path.dirname(pegasus_version_path))
+        pegasus_home = str(Path(pegasus_version_path).parent.parent)
 
     return Client(pegasus_home)
 
@@ -267,15 +266,15 @@ class Client:
 
         self._pegasus_home = pegasus_home
 
-        base = path.normpath(path.join(pegasus_home, "bin"))
+        base = Path(pegasus_home) / "bin"
 
-        self._plan = path.join(base, "pegasus-plan")
-        self._run = path.join(base, "pegasus-run")
-        self._status = path.join(base, "pegasus-status")
-        self._remove = path.join(base, "pegasus-remove")
-        self._analyzer = path.join(base, "pegasus-analyzer")
-        self._statistics = path.join(base, "pegasus-statistics")
-        self._graph = path.join(base, "pegasus-graphviz")
+        self._plan = str(base / "pegasus-plan")
+        self._run = str(base / "pegasus-run")
+        self._status = str(base / "pegasus-status")
+        self._remove = str(base / "pegasus-remove")
+        self._analyzer = str(base / "pegasus-analyzer")
+        self._statistics = str(base / "pegasus-statistics")
+        self._graph = str(base / "pegasus-graphviz")
         self._retrieve_status = status.Status()
 
     def plan(
@@ -1005,11 +1004,14 @@ class Workflow:
         :rtype: Braindump
         :raises WorkflowInstanceError: if the braindump file is not found
         """
+        braindump_path = Path(submit_dir) / "braindump.yml"
         try:
-            with (Path(submit_dir) / "braindump.yml").open("r") as f:
+            with braindump_path.open("r") as f:
                 bd = braindump.load(f)
         except FileNotFoundError:
-            raise WorkflowInstanceError(f"Unable to load braindump file: {path}")
+            raise WorkflowInstanceError(
+                f"Unable to load braindump file: {braindump_path}"
+            )
 
         return bd
 

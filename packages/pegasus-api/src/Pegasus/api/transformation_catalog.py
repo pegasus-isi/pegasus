@@ -195,7 +195,7 @@ class TransformationSite(ProfileMixin, MetadataMixin):
         :type container: Optional[Union[Container, str]], optional
         :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
-        :raises ValueError: pfn must be given as an absolute path when :code:`pathlib.Path` is used
+        :raises ValueError: pfn must be given as an absolute path when :code:`Path` is used
         :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 
@@ -379,7 +379,7 @@ class Transformation(ProfileMixin, HookMixin, MetadataMixin):
         :raises TypeError: arch must be one of :py:class:`~Pegasus.api.site_catalog.Arch`
         :raises TypeError: os_type must be one of :py:class:`~Pegasus.api.site_catalog.OS`
         :raises ValueError: fields: namespace, name, and field must not contain any :code:`:` (colons)
-        :raises ValueError: pfn must be given as an absolute path when :code:`pathlib.Path` is used
+        :raises ValueError: pfn must be given as an absolute path when :code:`Path` is used
         :raises ValueError: :code:`bypass_staging=True` can only be used when :code:`is_stageable=True`
         """
 

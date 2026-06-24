@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import re
 import subprocess
 from pathlib import Path
@@ -198,14 +197,14 @@ def analyze(workflow):
     yield f"Plan command is: {w.plan_command}\n"
 
     logfile = w.get_logfile()
-    if os.path.isfile(logfile):
+    if Path(logfile).is_file():
         yield "Workflow log:\n"
-        for line in open(w.get_logfile(), "rb"):
+        for line in Path(w.get_logfile()).open("rb"):
             yield f"LOG: {line.decode()}"
     else:
         yield "No workflow log available\n"
 
-    if w.submitdir is None or not os.path.isdir(w.submitdir):
+    if w.submitdir is None or not Path(w.submitdir).is_dir():
         yield "No submit directory available\n"
     else:
         yield "pegasus-analyzer output is:\n"

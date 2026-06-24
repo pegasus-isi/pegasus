@@ -20,9 +20,9 @@ This file implements the metadata related classes for pegasus-monitord.
 # Import Python modules
 import json
 import logging
-import os
 import tempfile
 from io import StringIO
+from pathlib import Path
 
 __author__ = "Karan Vahi <vahi@isi.edu>"
 
@@ -65,9 +65,9 @@ class Metadata:
             )
             jsonify(metadata_list, temp_file)
             logger.debug("Written out metadata to %s", temp_file.name)
-            os.chmod(temp_file.name, 0o644)
+            Path(temp_file.name).chmod(0o644)
             # rename the file to the name to assure atomicity
-            os.rename(temp_file.name, os.path.join(directory, name))
+            Path(temp_file.name).rename(str(Path(directory) / name))
 
         except Exception as e:
             # Error sending this event... disable the sink from now on...

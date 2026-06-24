@@ -419,7 +419,7 @@ class Status:
             # if the directory is a sub-workflow directory
             else:
                 dag_dict = wf_name
-                submit = os.path.relpath(os.path.dirname(dagman_file), submit_dir)
+                submit = str(Path(dagman_file).parent.relative_to(submit_dir))
                 if self.show_dirs:
                     dag_name = f"{submit}/{wf_name}.dag"
                 else:
@@ -491,7 +491,7 @@ class Status:
         :type dag_dict: str
         """
         # parsing the dagman.out file
-        with open(dagman_file) as f:
+        with Path(dagman_file).open() as f:
             for line in f:
                 dag_status_line = re.match(
                     r"\d\d/\d\d/\d\d\ \d\d:\d\d:\d\d DAG status", line
@@ -577,7 +577,7 @@ class Status:
         ):
             for file in files:
                 if file.endswith(".dag.dagman.out"):
-                    dagmans.append(os.path.join(root, file))
+                    dagmans.append(str(Path(root) / file))
 
         return dagmans
 
@@ -743,7 +743,7 @@ class Status:
 
         new_path_dict = nested_dict()
         for path in paths:
-            parts = path.split("/")
+            parts = (str(Path(path).parent), Path(path).name)
             if parts:
                 sub_dict = new_path_dict
                 for key in parts[:]:

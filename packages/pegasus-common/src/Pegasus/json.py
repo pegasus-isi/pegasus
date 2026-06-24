@@ -26,7 +26,7 @@ class _CustomJSONEncoder(_json.JSONEncoder):
     """JSON encoder extended with Pegasus-specific type handling.
 
     Supports serialization of :class:`uuid.UUID`, :class:`enum.Enum`,
-    :class:`pathlib.Path`, SQLAlchemy model instances, and objects that
+    :class:`Path`, SQLAlchemy model instances, and objects that
     implement ``__html__()``, ``__json__()``, or ``__table__`` (SQLAlchemy).
     """
 

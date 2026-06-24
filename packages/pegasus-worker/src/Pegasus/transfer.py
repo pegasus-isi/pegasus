@@ -69,6 +69,7 @@ if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
         from urllib import request as urllib2
     except ImportError:
         import urllib2
+from pathlib import Path
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -174,7 +175,7 @@ class PegasusURL:
         return f"{self.proto}://{self.host}{urllib.quote(self.path)}"
 
     def get_url_dirname(self):
-        dn = os.path.dirname(self.path)
+        dn = str(Path(self.path).parent)
         return f"{self.proto}://{self.host}{dn}"
 
 
@@ -615,24 +616,24 @@ class TransferHandlerBase:
                 return False
             if a.get_dst_host() != b.get_dst_host():
                 return False
-            if os.path.dirname(a.get_src_path()) != os.path.dirname(b.get_src_path()):
+            if str(Path(a.get_src_path()).parent) != str(Path(b.get_src_path()).parent):
                 return False
-            if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
+            if str(Path(a.get_dst_path()).parent) != str(Path(b.get_dst_path()).parent):
                 return False
             if a.generate_checksum != b.generate_checksum:
                 return False
 
             # also check that we are not renaming the files
-            if os.path.basename(a.get_src_path()) != os.path.basename(a.get_dst_path()):
+            if Path(a.get_src_path()).name != Path(a.get_dst_path()).name:
                 return False
-            if os.path.basename(b.get_src_path()) != os.path.basename(b.get_dst_path()):
+            if Path(b.get_src_path()).name != Path(b.get_dst_path()).name:
                 return False
 
             return True
         elif isinstance(a, Remove) and isinstance(b, Remove):
             if a.get_host() != b.get_host():
                 return False
-            if os.path.dirname(a.get_path()) != os.path.dirname(b.get_path()):
+            if str(Path(a.get_path()).parent) != str(Path(b.get_path()).parent):
                 return False
             return True
         return False
@@ -675,7 +676,7 @@ class TransferHandlerBase:
         systems we have to deal with, such as CVMFS, checking POSIX permissions
         is not enough. Here we try to open() the file to make sure it works.
         """
-        if not os.path.exists(path):
+        if not Path(path).exists():
             return False
 
         # for non-zero sized files, try to read a little bit at the beginning
@@ -730,7 +731,7 @@ class FileHandler(TransferHandlerBase):
         failed_l = []
         for t in transfers:
             t_start = time.time()
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             # src has to exist and be readable
             if not verify_local_file(t.get_src_path()):
@@ -740,7 +741,7 @@ class FileHandler(TransferHandlerBase):
 
             self._pre_transfer_attempt(t)
 
-            if os.path.exists(t.get_src_path()) and os.path.exists(t.get_dst_path()):
+            if Path(t.get_src_path()).exists() and Path(t.get_dst_path()).exists():
                 # make sure src and target are not the same file - have to
                 # compare at the inode level as paths can differ
                 src_inode = os.stat(t.get_src_path())[stat.ST_INO]
@@ -1074,7 +1075,7 @@ class GridFtpHandler(TransferHandlerBase):
         # for transfer to file://, run a normal mkdir command instead of
         # having g-u-c use -create-dest
         if transfers[0].get_dst_proto() == "file":
-            prepare_local_dir(os.path.dirname(transfers[0].get_dst_path()))
+            prepare_local_dir(str(Path(transfers[0].get_dst_path()).parent))
             # override the create_dest flag as the directory now exists
             create_dest = False
 
@@ -1228,9 +1229,9 @@ class GridFtpHandler(TransferHandlerBase):
             return False
         if a.get_dst_host() != b.get_dst_host():
             return False
-        if os.path.dirname(a.get_src_path()) != os.path.dirname(b.get_src_path()):
+        if str(Path(a.get_src_path()).parent) != str(Path(b.get_src_path()).parent):
             return False
-        if os.path.dirname(a.get_dst_path()) != os.path.dirname(b.get_dst_path()):
+        if str(Path(a.get_dst_path()).parent) != str(Path(b.get_dst_path()).parent):
             return False
         return True
 
@@ -1293,7 +1294,7 @@ class HttpHandler(TransferHandlerBase):
 
             self._pre_transfer_attempt(t)
 
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             # try wget first, then curl
             if tools.full_path("wget") is not None:
@@ -1392,13 +1393,13 @@ class HPSSHandler(TransferHandlerBase):
         user_defined_cred = (
             os.environ["HPSS_CREDENTIAL"] if "HPSS_CREDENTIAL" in os.environ else None
         )
-        default_cred = os.path.join(os.environ["HOME"], ".netrc")
+        default_cred = str(Path(os.environ["HOME"]) / ".netrc")
 
         if user_defined_cred:
             # user defined credential exists and is a file
             check_cred_fs_permissions(user_defined_cred)
 
-            if os.path.exists(default_cred):
+            if Path(default_cred).exists():
                 # first check if they are not the same file
                 src_inode = os.stat(user_defined_cred)[stat.ST_INO]
                 dst_inode = os.stat(default_cred)[stat.ST_INO]
@@ -1426,7 +1427,7 @@ class HPSSHandler(TransferHandlerBase):
         Checks to make sure a given credential exists and is protected
         by the file system permissions.
         """
-        if not os.path.exists(path):
+        if not Path(path).exists():
             raise Exception("HPSS Credential file %s does not exist" % (path))
         if (os.stat(path).st_mode & 0o777) != 0o600:
             logger.warning("%s found to have weak permissions. chmod to 0600." % (path))
@@ -1559,7 +1560,7 @@ class HPSSHandler(TransferHandlerBase):
         # todo enable checksum verification -Hverify=crc
 
         try:
-            prepare_local_dir(os.path.dirname(destination_dir))
+            prepare_local_dir(str(Path(destination_dir).parent))
             logger.debug("Executing command " + cmd)
             tc = utils.TimedCommand(cmd, cwd=destination_dir)
             tc.run()
@@ -1575,10 +1576,10 @@ class HPSSHandler(TransferHandlerBase):
                 # check if file has to be moved after untarring
                 if t.lfn in files_to_move:
                     # mv src_file to t.lfn
-                    src_file = os.path.join(destination_dir, files_to_move[t.lfn])
-                    dst_file = os.path.join(destination_dir, t.lfn)
+                    src_file = str(Path(destination_dir) / files_to_move[t.lfn])
+                    dst_file = str(Path(destination_dir) / t.lfn)
                     # account for deep LFN
-                    prepare_local_dir(os.path.dirname(dst_file))
+                    prepare_local_dir(str(Path(dst_file).parent))
                     try:
                         os.rename(src_file, dst_file)
                     except Exception as err:
@@ -1632,15 +1633,15 @@ class HPSSHandler(TransferHandlerBase):
 
         # tar file should be the first component of the path
         tar = url
-        parent = os.path.dirname(tar)
+        parent = str(Path(tar).parent)
         while parent:
             if parent == "/":
                 break
             tar = parent
-            parent = os.path.dirname(tar)
+            parent = str(Path(tar).parent)
 
         # remove leading / if any
-        tar = os.path.basename(tar)
+        tar = Path(tar).name
 
         if not tar.endswith(".tar"):
             logger.error("Unable to determine HPSS tar from URL %s", url)
@@ -1801,7 +1802,7 @@ class IRodsHandler(TransferHandlerBase):
 
             if t.get_dst_proto() == "file":
                 # irods->file
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                prepare_local_dir(str(Path(t.get_dst_path()).parent))
                 cmd = "iget -v -f -T -K -N 4"
                 if len(t.get_src_host()) > 0 and t.attempts <= 1:
                     cmd += " -R " + t.get_src_host()
@@ -1816,7 +1817,7 @@ class IRodsHandler(TransferHandlerBase):
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
                     continue
-                cmd = "imkdir -p '" + os.path.dirname(t.get_dst_path()) + "'"
+                cmd = "imkdir -p '" + str(Path(t.get_dst_path()).parent) + "'"
                 try:
                     tc = utils.TimedCommand(
                         cmd, env_overrides=env, timeout_secs=10 * 60
@@ -1943,7 +1944,7 @@ class IRodsHandler(TransferHandlerBase):
             if ticket is not None:
                 env["IRODS_TICKET"] = ticket
 
-            if os.path.exists(env["IRODS_AUTHENTICATION_FILE"]):
+            if Path(env["IRODS_AUTHENTICATION_FILE"]).exists():
                 # no need to log in again
                 return env
 
@@ -2059,7 +2060,7 @@ class S3Handler(TransferHandlerBase):
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                prepare_local_dir(str(Path(t.get_dst_path()).parent))
                 cmd = tools.full_path("pegasus-s3") + " get '{}' '{}'".format(
                     t.src_url(),
                     t.get_dst_path(),
@@ -2198,7 +2199,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], mkdir_l]
 
-        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+        if not Path(str(Path("~/.pegasus/globus.conf").expanduser())).is_file():
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
             return [[], mkdir_l]
 
@@ -2251,7 +2252,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], transfers_l]
 
-        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+        if not Path(str(Path("~/.pegasus/globus.conf").expanduser())).is_file():
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
             return [[], transfers_l]
 
@@ -2314,7 +2315,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
             logger.error("Unable to locate pegasus-globus-online in the $PATH")
             return [[], removes_l]
 
-        if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
+        if not Path(str(Path("~/.pegasus/globus.conf").expanduser())).is_file():
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
             return [[], removes_l]
 
@@ -2370,7 +2371,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
         logger.info("Parsing globus config file for OAuth credentials")
 
         config = configparser.ConfigParser()
-        config.read(os.path.expanduser("~/.pegasus/globus.conf"))
+        config.read(str(Path("~/.pegasus/globus.conf").expanduser()))
 
         cred_details = {
             "client_id": None,
@@ -2497,7 +2498,7 @@ class GSHandler(TransferHandlerBase):
                 cmd = f"gsutil -q cp '{t.src_url()}' '{t.dst_url()}'"
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                prepare_local_dir(str(Path(t.get_dst_path()).parent))
                 cmd = f"gsutil -q cp '{t.src_url()}' '{t.get_dst_path()}'"
             else:
                 # this is a 'put'
@@ -2688,7 +2689,7 @@ class GFALHandler(TransferHandlerBase):
             t_start = time.time()
 
             if t.get_dst_proto() == "file":
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             if t.get_src_proto() == "file":
                 # src has to exist and be readable
@@ -2754,7 +2755,7 @@ class GFALHandler(TransferHandlerBase):
     def _gfal_validate_cred(self, env_overrides):
         fname = env_overrides["X509_USER_PROXY"]
 
-        if not (os.path.exists(fname)):
+        if not (Path(fname).exists()):
             raise RuntimeError(
                 "X509 proxy file "
                 + fname
@@ -2871,7 +2872,7 @@ class ScpHandler(TransferHandlerBase):
                         cmd += " -i " + os.environ["SSH_PRIVATE_KEY"]
 
                     cmd += " -P " + self._extract_port(t_base.get_src_host())
-                    prepare_local_dir(os.path.dirname(t_base.get_dst_path()))
+                    prepare_local_dir(str(Path(t_base.get_dst_path()).parent))
                     # scp wants escaped remote paths, even with quotes
                     for t in t_group:
                         src_path = re.sub(" ", "\\ ", t.get_src_path())
@@ -2883,7 +2884,7 @@ class ScpHandler(TransferHandlerBase):
                             + "'"
                         )
                     if len(t_group) > 1:
-                        cmd += " '" + os.path.dirname(t_base.get_dst_path()) + "/'"
+                        cmd += " '" + str(Path(t_base.get_dst_path()).parent) + "/'"
                     else:
                         cmd += " '" + t_base.get_dst_path() + "'"
                 else:
@@ -2912,13 +2913,13 @@ class ScpHandler(TransferHandlerBase):
                         "scp://"
                         + self._extract_hostname(t_base.get_dst_host())
                         + ":"
-                        + os.path.dirname(t_base.get_dst_path())
+                        + str(Path(t_base.get_dst_path()).parent)
                     )
                     if not mkdir_key in remote_dirs_created:
                         self._prepare_scp_dir(
                             t_base.get_dst_site_label(),
                             t_base.get_dst_host(),
-                            os.path.dirname(t_base.get_dst_path()),
+                            str(Path(t_base.get_dst_path()).parent),
                         )
                         remote_dirs_created[mkdir_key] = True
 
@@ -2934,7 +2935,7 @@ class ScpHandler(TransferHandlerBase):
                             " '"
                             + self._extract_hostname(t_base.get_dst_host())
                             + ":"
-                            + os.path.dirname(dst_path)
+                            + str(Path(dst_path).parent)
                             + "/'"
                         )
                     else:
@@ -3144,7 +3145,7 @@ class GSIScpHandler(TransferHandlerBase):
                 if t_base.get_dst_proto() == "file":
                     # scp -> file
                     cmd += " -P " + self._extract_port(t_base.get_src_host())
-                    prepare_local_dir(os.path.dirname(t_base.get_dst_path()))
+                    prepare_local_dir(str(Path(t_base.get_dst_path()).parent))
                     # scp wants escaped remote paths, even with quotes
                     for t in t_group:
                         src_path = re.sub(" ", "\\ ", t.get_src_path())
@@ -3156,7 +3157,7 @@ class GSIScpHandler(TransferHandlerBase):
                             + "'"
                         )
                     if len(t_group) > 1:
-                        cmd += " '" + os.path.dirname(t_base.get_dst_path()) + "/'"
+                        cmd += " '" + str(Path(t_base.get_dst_path()).parent) + "/'"
                     else:
                         cmd += " '" + t_base.get_dst_path() + "'"
                 else:
@@ -3172,13 +3173,13 @@ class GSIScpHandler(TransferHandlerBase):
                         "scp://"
                         + self._extract_hostname(t_base.get_dst_host())
                         + ":"
-                        + os.path.dirname(t_base.get_dst_path())
+                        + str(Path(t_base.get_dst_path()).parent)
                     )
                     if not mkdir_key in remote_dirs_created:
                         self._prepare_scp_dir(
                             t_base.get_dst_site_label(),
                             t_base.get_dst_host(),
-                            os.path.dirname(t_base.get_dst_path()),
+                            str(Path(t_base.get_dst_path()).parent),
                         )
                         remote_dirs_created[mkdir_key] = True
 
@@ -3194,7 +3195,7 @@ class GSIScpHandler(TransferHandlerBase):
                             " '"
                             + self._extract_hostname(t_base.get_dst_host())
                             + ":"
-                            + os.path.dirname(dst_path)
+                            + str(Path(dst_path).parent)
                             + "/'"
                         )
                     else:
@@ -3438,7 +3439,7 @@ class OSDFHandler(TransferHandlerBase):
             else:
                 # read
 
-                local_dir = os.path.dirname(t.get_dst_path())
+                local_dir = str(Path(t.get_dst_path()).parent)
                 prepare_local_dir(local_dir)
                 cmd = f"{base_cmd} '{t.src_url()}' '{t.get_dst_path()}'"
 
@@ -3515,10 +3516,10 @@ class SymlinkHandler(TransferHandlerBase):
             self._pre_transfer_attempt(t)
             t_start = time.time()
 
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             # we do not allow dangling symlinks
-            if t.verify_symlink_source and not os.path.exists(t.get_src_path()):
+            if t.verify_symlink_source and not Path(t.get_src_path()).exists():
                 logger.warning(
                     "Symlink source (%s) does not exist" % (t.get_src_path())
                 )
@@ -3526,7 +3527,7 @@ class SymlinkHandler(TransferHandlerBase):
                 failed_l.append(t)
                 continue
 
-            if os.path.exists(t.get_src_path()) and os.path.exists(t.get_dst_path()):
+            if Path(t.get_src_path()).exists() and Path(t.get_dst_path()).exists():
                 # make sure src and target are not the same file - have to
                 # compare at the inode level as paths can differ
                 src_inode = os.stat(t.get_src_path())[stat.ST_INO]
@@ -3590,10 +3591,10 @@ class MovetoHandler(TransferHandlerBase):
             t_start = time.time()
 
             print(t.get_dst_path())
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             # we do not allow dangling symlinks
-            if not os.path.exists(t.get_src_path()):
+            if not Path(t.get_src_path()).exists():
                 logger.warning("Moveto source (%s) does not exist" % (t.get_src_path()))
                 self._post_transfer_attempt(t, False, t_start)
                 failed_l.append(t)
@@ -3642,7 +3643,7 @@ class DockerHandler(TransferHandlerBase):
             src_path = t.src_url()
             src_path = re.sub("^docker:/+", "", src_path)
 
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
             cmd = "{} pull '{}' && {} save -o '{}' '{}'".format(
                 tools.full_path("docker"),
                 src_path,
@@ -3706,7 +3707,7 @@ class SingularityHandler(TransferHandlerBase):
 
             target_name = hashlib.sha224(t.get_dst_path().encode("utf-8")).hexdigest()
 
-            prepare_local_dir(os.path.dirname(t.get_dst_path()))
+            prepare_local_dir(str(Path(t.get_dst_path()).parent))
 
             cmd = "{} pull --allow-unauthenticated '{}' '{}' && mv {}* '{}'".format(
                 singularity_exec,
@@ -3784,7 +3785,7 @@ class WebdavHandler(TransferHandlerBase):
 
             if t.get_dst_proto() == "file":
                 # webdav -> file
-                prepare_local_dir(os.path.dirname(t.get_dst_path()))
+                prepare_local_dir(str(Path(t.get_dst_path()).parent))
                 url = re.sub("^webdav", "http", t.src_url())
                 cmd = tools.full_path("curl")
                 if not logger.isEnabledFor(logging.DEBUG):
@@ -3809,7 +3810,7 @@ class WebdavHandler(TransferHandlerBase):
                 url = re.sub("^webdav", "http", t.dst_url())
 
                 # might have to create dir first
-                self._create_dir(os.path.dirname(url), username, password)
+                self._create_dir(str(Path(url).parent), username, password)
 
                 cmd = tools.full_path("curl")
                 if not logger.isEnabledFor(logging.DEBUG):
@@ -3847,7 +3848,7 @@ class WebdavHandler(TransferHandlerBase):
                 continue
 
             # also make sure the file was actually downloaded
-            if t.get_dst_proto() == "file" and not os.path.exists(t.get_dst_path()):
+            if t.get_dst_proto() == "file" and not Path(t.get_dst_path()).exists():
                 logger.error(
                     "Expected local file is missing - marking transfer as failed"
                 )
@@ -3855,7 +3856,10 @@ class WebdavHandler(TransferHandlerBase):
                 continue
 
             # also make sure the file was actually downloaded
-            if t.get_dst_proto() == "file" and os.path.getsize(t.get_dst_path()) == 0:
+            if (
+                t.get_dst_proto() == "file"
+                and Path(t.get_dst_path()).stat().st_size == 0
+            ):
                 logger.error("Downloaded file is 0 bytes - marking transfer as failed")
                 failed_l.append(t)
                 continue
@@ -3968,7 +3972,7 @@ class WebdavHandler(TransferHandlerBase):
         return True
 
     def _split_path(self, path):
-        head, tail = os.path.split(path)
+        head, tail = (str(Path(path).parent), Path(path).name)
         return (
             self._split_path(head) + [tail] if head and head != path else [head or tail]
         )
@@ -4677,8 +4681,8 @@ class Alarm(Exception):
 
 # --- global variables ----------------------------------------------------------------
 
-prog_dir = os.path.realpath(os.path.join(os.path.dirname(sys.argv[0])))
-prog_base = os.path.split(sys.argv[0])[1]  # Name of this program
+prog_dir = str(Path(sys.argv[0]).parent.resolve())
+prog_base = Path(sys.argv[0]).name  # Name of this program
 
 logger = logging.getLogger("Pegasus")
 
@@ -4810,7 +4814,7 @@ def env_setup():
         path_entries.append("/usr/sbin")
 
     # fink on macos x
-    if os.path.exists("/sw/bin") and not ("/sw/bin" in path_entries):
+    if Path("/sw/bin").exists() and not ("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
 
     # PYTHONHOME can cause problems when we call out to other tools
@@ -4853,7 +4857,7 @@ def check_cred_fs_permissions(path):
     permissions. If left too open (for example after a transfer over GASS,
     chmod it to be readable only by us.
     """
-    if not os.path.exists(path):
+    if not Path(path).exists():
         raise Exception("Credential file %s does not exist" % (path))
     if (os.stat(path).st_mode & 0o777) != 0o600:
         logger.warning("%s found to have weak permissions. chmod to 0600." % (path))
@@ -4866,7 +4870,7 @@ def load_credentials():
     """
     if "PEGASUS_CREDENTIALS" in os.environ:
         logger.debug("Loading credentials from " + os.environ["PEGASUS_CREDENTIALS"])
-        if not os.path.isfile(os.environ["PEGASUS_CREDENTIALS"]):
+        if not Path(os.environ["PEGASUS_CREDENTIALS"]).is_file():
             raise RuntimeError(
                 "Credentials file does not exist: " + os.environ["PEGASUS_CREDENTIALS"]
             )
@@ -4892,7 +4896,7 @@ def verify_local_file(path):
     """
     makes sure a local file exists and is readable
     """
-    if not (os.path.exists(path)):
+    if not (Path(path).exists()):
         logger.error("Expected local file does not exist: " + path)
         return False
 
@@ -4911,13 +4915,13 @@ def prepare_local_dir(path):
     """
     makes sure a local path exists before putting files into it
     """
-    if not (os.path.exists(path)):
+    if not (Path(path).exists()):
         logger.debug("Creating local directory " + path)
         try:
             os.makedirs(path, 0o0755)
         except OSError as err:
             # if dir already exists, ignore the error
-            if not (os.path.isdir(path)):
+            if not (Path(path).is_dir()):
                 raise RuntimeError(err)
 
 

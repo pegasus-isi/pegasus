@@ -1,6 +1,7 @@
 import os
 import time
 import unittest
+from pathlib import Path
 
 from Pegasus.tools import utils
 
@@ -230,8 +231,8 @@ class TestEpochDate(unittest.TestCase):
 
 class TestFindExec(unittest.TestCase):
     def setUp(self):
-        self.test_dir = os.path.abspath(os.path.dirname(__file__))
-        self.cwd = os.getcwd()
+        self.test_dir = Path(Path(__file__).parent).resolve()
+        self.cwd = Path.cwd()
         os.chdir(self.test_dir)
 
     def tearDown(self):

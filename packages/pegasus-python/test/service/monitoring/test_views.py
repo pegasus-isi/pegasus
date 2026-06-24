@@ -1,5 +1,5 @@
 import getpass
-import os
+from pathlib import Path
 
 import pytest
 from flask import g
@@ -15,9 +15,11 @@ class NoAuthFlaskTestCase:
 
     @staticmethod
     def pre_callable():
-        directory = os.path.dirname(__file__)
-        db = os.path.join(
-            directory, "../../resources/monitoring-db/", "monitoring-rest-api-master.db"
+        directory = Path(__file__).parent
+        db = str(
+            Path(directory)
+            / "../../resources/monitoring-db/"
+            / "monitoring-rest-api-master.db"
         )
         g.master_db_url = f"sqlite:///{db}"
         g.stampede_db_url = f"sqlite:///{db}"

@@ -12,6 +12,7 @@ import sys
 import time
 import traceback
 import types
+from pathlib import Path
 
 from Pegasus.netlogger import nlapi
 from Pegasus.netlogger.nlapi import Level
@@ -99,10 +100,10 @@ def _modlist(path):
     """
     if path == "/":
         return []
-    head, tail = os.path.split(path)
+    head, tail = (str(Path(path).parent), Path(path).name)
     # ignore python extensions
     if tail.endswith(".py") or tail.endswith(".pyc"):
-        tail = os.path.splitext(tail)[0]
+        tail = Path(tail).stem
     # stop if at top of source tree
     if tail in ("netlogger", "scripts"):
         return []
@@ -335,7 +336,7 @@ def profile(func):
 
     if func.__module__ == "__main__":
         f = func.__globals__["__file__"] or "unknown"
-        event = f"{os.path.splitext(os.path.basename(f))[0]}"
+        event = f"{Path(f).stem}"
         log = _logger("script")
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:
@@ -367,7 +368,7 @@ def profile_result(func):
 
     if func.__module__ == "__main__":
         f = func.__globals__["__file__"] or "unknown"
-        event = f"{os.path.splitext(os.path.basename(f))[0]}"
+        event = f"{Path(f).stem}"
         log = _logger("script")
         log.set_meta(file=f, pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
     else:

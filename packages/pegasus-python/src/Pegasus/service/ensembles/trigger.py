@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import threading
 import time
-from glob import glob
 from pathlib import Path
 
 from Pegasus import user
@@ -345,7 +344,7 @@ class FilePatternTrigger(TriggerThread):
             processed_dir = parent_dir / "processed"
             processed_dir.mkdir(parents=False, exist_ok=True)
 
-            for match in glob(pattern):
+            for match in Path(pattern).parent.glob(Path(pattern).name):
                 # move file into processed dir and add that path
                 f = Path(match).resolve()
                 dst = processed_dir / f.name

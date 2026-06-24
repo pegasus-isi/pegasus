@@ -6,6 +6,7 @@ import tempfile
 import time
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import click
 
@@ -19,27 +20,25 @@ update_config_timeout = 24 * 60 * 60
 PEGASUS_HOME = os.getenv("PEGASUS_HOME")
 
 #### Default data path ####
-pegasushub_data_path = os.path.expanduser("~/.pegasus/pegasushub")
+pegasushub_data_path = Path("~/.pegasus/pegasushub").expanduser()
 
 #### Pegasus major_minor_version ####
 pegasus_major_minor_version = (
-    subprocess.check_output(
-        [os.path.join(PEGASUS_HOME, "bin", "pegasus-version"), "-m"]
-    )
+    subprocess.check_output([str(Path(PEGASUS_HOME) / "bin" / "pegasus-version"), "-m"])
     .strip()
     .decode("utf-8")
 )
 
 #### Url to Sites.py on pegasushub and Sites.py location ####
 pegasushub_site_catalogs_url = f"https://raw.githubusercontent.com/pegasushub/pegasus-site-catalogs/{pegasus_major_minor_version}/Sites.py"
-wf_sites = os.path.join(pegasushub_data_path, f"{pegasus_major_minor_version}/Sites.py")
+wf_sites = str(Path(pegasushub_data_path) / f"{pegasus_major_minor_version}/Sites.py")
 
 
 def update_site_catalogs(wf_sites):
-    if not os.path.isfile(wf_sites):
-        os.makedirs(wf_sites[: wf_sites.rfind("/")], exist_ok=True)
+    if not Path(wf_sites).is_file():
+        Path(wf_sites[: wf_sites.rfind("/")]).mkdir(exist_ok=True, parents=True)
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
-    elif int(os.path.getmtime(wf_sites)) < time.time() - update_config_timeout:
+    elif int(Path(wf_sites).stat().st_mtime) < time.time() - update_config_timeout:
         urllib.request.urlretrieve(pegasushub_site_catalogs_url, wf_sites)
 
 
@@ -48,16 +47,17 @@ pegasushub_workflows_url = "https://raw.githubusercontent.com/pegasushub/pegasus
 
 
 def update_workflow_list(wf_gallery):
-    if not os.path.isfile(wf_gallery):
-        os.makedirs(wf_gallery[: wf_gallery.rfind("/")], exist_ok=True)
+    if not Path(wf_gallery).is_file():
+        Path(wf_gallery[: wf_gallery.rfind("/")]).mkdir(exist_ok=True, parents=True)
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
-    elif int(os.path.getmtime(wf_gallery)) < time.time() - update_config_timeout:
+    elif int(Path(wf_gallery).stat().st_mtime) < time.time() - update_config_timeout:
         urllib.request.urlretrieve(pegasushub_workflows_url, wf_gallery)
 
 
 #### Update Site Catalogs and load Sites ####
 update_site_catalogs(wf_sites)
-sys.path.insert(0, os.path.join(pegasushub_data_path, pegasus_major_minor_version))
+sys.path.insert(0, str(Path(pegasushub_data_path) / pegasus_major_minor_version))
+
 import Sites  # noqa: E402
 
 
@@ -87,7 +87,7 @@ def console_select_site(wf_dir):
 
     # default base directories for scratch and storage space
     # rooted in the wf dir where the example is created
-    default_shared_scratch = os.path.join(os.getcwd(), wf_dir)
+    default_shared_scratch = str(Path(Path.cwd()) / wf_dir)
     default_shared_storage = default_shared_scratch
 
     #### Select Site ####
@@ -206,7 +206,7 @@ def print_workflows(workflows_available):
 
 def clone_workflow(wf_dir, workflow):
     zip_url = f"https://github.com/{workflow['organization']}/{workflow['repo_name']}/archive/HEAD.zip"
-    dest = os.path.join(os.getcwd(), wf_dir, workflow["repo_name"])
+    dest = str(Path(Path.cwd()) / wf_dir / workflow["repo_name"])
 
     click.echo(
         f"Fetching workflow from https://github.com/{workflow['organization']}/{workflow['repo_name']}.git"
@@ -214,7 +214,7 @@ def clone_workflow(wf_dir, workflow):
 
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            zip_path = os.path.join(tmp, "repo.zip")
+            zip_path = str(Path(tmp) / "repo.zip")
             urllib.request.urlretrieve(zip_url, zip_path)
             with zipfile.ZipFile(zip_path) as zf:
                 for info in zf.infolist():
@@ -222,12 +222,8 @@ def clone_workflow(wf_dir, workflow):
                     # store st_mode (0 if not from Unix)
                     mode = info.external_attr >> 16
                     if mode:
-                        os.chmod(path, mode & 0o777)
-            extracted = next(
-                os.path.join(tmp, d)
-                for d in os.listdir(tmp)
-                if os.path.isdir(os.path.join(tmp, d))
-            )
+                        Path(path).chmod(mode & 0o777)
+            extracted = next(str(path) for path in Path(tmp).iterdir() if path.is_dir())
             shutil.move(extracted, dest)
     except Exception:
         click.echo("This repository doesn't exist in this location or it's private.")
@@ -239,9 +235,9 @@ def read_pegasushub_config(wf_dir, workflow):
     config = None
 
     config = yaml.load(
-        open(
-            os.path.join(os.getcwd(), wf_dir, workflow["repo_name"], ".pegasushub.yml")
-        )
+        Path(
+            str(Path(Path.cwd()) / wf_dir / workflow["repo_name"] / ".pegasushub.yml")
+        ).open()
     )
 
     if config:
@@ -281,11 +277,11 @@ pegasus-plan --conf pegasus.properties \\
     --force \\
     {workflow_file}"""
 
-    with open("plan.sh", "w+") as g:
+    with Path("plan.sh").open("w+") as g:
         g.write(plan_script)
         g.write("\n")
 
-    os.chmod("plan.sh", 0o775)
+    Path("plan.sh").chmod(0o775)
 
     return
 
@@ -295,11 +291,11 @@ def create_generate_script(commands):
         os.getenv("PYTHONPATH"), "\n".join(commands)
     )
 
-    with open("generate.sh", "w+") as g:
+    with Path("generate.sh").open("w+") as g:
         g.write(generate_script)
         g.write("\n")
 
-    os.chmod("generate.sh", 0o775)
+    Path("generate.sh").chmod(0o775)
 
     return
 
@@ -342,7 +338,7 @@ def create_workflow(
 Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/reference-guide/data-management.html#credentials-management"""
             )
 
-    old_dir = os.getcwd()
+    old_dir = Path.cwd()
     os.chdir(wf_dir)
 
     exec_site = Sites.MySite(
@@ -373,7 +369,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     for pre_script in pre_scripts:
         exec_script = pegasushub_config["scripts"][pre_script]
         if not exec_script.startswith("/"):
-            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+            exec_script = str(Path("./") / workflow["repo_name"] / exec_script)
         subprocess.run(exec_script, shell=True)
         commands.append(exec_script)
 
@@ -382,14 +378,14 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     for script in scripts:
         exec_script = pegasushub_config["scripts"][script]
         if not exec_script.startswith("/"):
-            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+            exec_script = str(Path("./") / workflow["repo_name"] / exec_script)
         subprocess.run(exec_script, shell=True)
         commands.append(exec_script)
 
     commands.append("#### Executing Workflow Generator ####")
     exec_script = pegasushub_config["scripts"]["generator"]
     if not exec_script.startswith("/"):
-        exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+        exec_script = str(Path("./") / workflow["repo_name"] / exec_script)
     generate_workflow_cmd = " ".join(
         [exec_script, "-s", "-e", exec_site.exec_site_name, "-o", "workflow.yml"]
     )
@@ -401,7 +397,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
     for post_script in post_scripts:
         exec_script = pegasushub_config["scripts"][post_script]
         if not exec_script.startswith("/"):
-            exec_script = os.path.join("./", workflow["repo_name"], exec_script)
+            exec_script = str(Path("./") / workflow["repo_name"] / exec_script)
         subprocess.run(exec_script, shell=True)
         commands.append(exec_script)
 
@@ -435,7 +431,7 @@ Please refer to Pegasus Documentation https://pegasus.isi.edu/documentation/refe
 
 
 def read_workflows(wf_gallery, site):
-    data = yaml.load(open(wf_gallery))
+    data = yaml.load(Path(wf_gallery).open())
     workflows_available = [
         x
         for x in data
@@ -461,7 +457,7 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 @click.option(
     "-w",
     "--workflow-gallery",
-    default=os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"),
+    default=Path("~/.pegasus/pegasushub/workflows.yml").expanduser(),
     type=click.Path(),
     show_default=True,
     help="Workflow Gallery File.",
@@ -480,12 +476,12 @@ def main(directory, workflow_gallery):
     may alter the workflow and catalogs generated by Pegasus Init.
     """
 
-    if os.path.isfile(directory) or os.path.isdir(directory):
+    if Path(directory).is_file() or Path(directory).is_dir():
         click.echo("The given directory name already exists")
         click.echo("Exiting...")
         exit()
 
-    if workflow_gallery == os.path.expanduser("~/.pegasus/pegasushub/workflows.yml"):
+    if workflow_gallery == Path("~/.pegasus/pegasushub/workflows.yml").expanduser():
         update_workflow_list(workflow_gallery)
 
     (

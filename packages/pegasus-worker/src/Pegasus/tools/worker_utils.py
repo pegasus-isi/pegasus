@@ -24,6 +24,7 @@ import sys
 import tempfile
 import threading
 import time
+from pathlib import Path
 
 # Module variables
 logger = logging.getLogger("Pegasus")
@@ -276,7 +277,7 @@ class Tools:
                 full_path = None
                 for entry in path_entries:
                     full_path = entry + "/" + executable
-                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                    if Path(full_path).is_file() and os.access(full_path, os.X_OK):
                         break
                     full_path = None
 

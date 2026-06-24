@@ -11,6 +11,7 @@ import re
 import sys
 import traceback
 from enum import Enum
+from pathlib import Path
 from pprint import pprint
 from xml.parsers import expat
 
@@ -73,7 +74,7 @@ class Parser:
         This function opens a kickstart output file.
         """
         try:
-            self._fh = open(self._kickstart_output_file)
+            self._fh = Path(self._kickstart_output_file).open()
         except Exception:
             # Error opening file
             self._fh = None

@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import time
+from pathlib import Path
 from urllib import parse as urlparse
 
 import requests
@@ -188,18 +189,18 @@ class CreateCommand(EnsembleClientCommand):
 
 def pathfind(command):
     def isexe(fn):
-        return os.path.isfile(fn) and os.access(fn, os.X_OK)
+        return Path(fn).is_file() and os.access(fn, os.X_OK)
 
-    path, exe = os.path.split(command)
+    path = "" if Path(command).parent == Path() else str(Path(command).parent)
 
     if path:
         if isexe(command):
-            return os.path.abspath(command)
+            return Path(command).resolve()
         return None
 
     # Search PATH
     for path in os.environ["PATH"].split(os.pathsep):
-        fn = os.path.join(path, command)
+        fn = str(Path(path) / command)
         if isexe(fn):
             return fn
 
@@ -247,7 +248,7 @@ class SubmitCommand(EnsembleClientCommand):
         data = {
             "name": workflow,
             "priority": o.priority,
-            "basedir": os.getcwd(),
+            "basedir": Path.cwd(),
             "plan_command": command,
         }
 

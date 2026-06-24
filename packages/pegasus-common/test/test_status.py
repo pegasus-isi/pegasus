@@ -1,5 +1,5 @@
-import os
 from collections import defaultdict
+from pathlib import Path
 from textwrap import dedent
 
 import pytest
@@ -7,7 +7,7 @@ import pytest
 import Pegasus
 from Pegasus.client.status import Status
 
-directory = os.path.dirname(__file__)
+directory = str(Path(__file__).parent)
 
 
 @pytest.fixture
@@ -293,7 +293,7 @@ def test_fetch_status_json(
 ):
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
-    submit_dir = os.path.join(directory, samples_dir)
+    submit_dir = str(Path(directory) / samples_dir)
     status.root_wf_name = pegasus_wf_name_from_bd
     assert status.fetch_status(submit_dir, json=True) == expected_dict
     status.get_q_values.assert_called_once_with()
@@ -402,7 +402,7 @@ def test_show_dag_progress(
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
     status.root_wf_name = wf_name_from_bd
-    submit_dir = os.path.join(directory, samples_dir)
+    submit_dir = str(Path(directory) / samples_dir)
     status.fetch_status(submit_dir)
     captured = capsys.readouterr()
     assert captured.out == expected_output
@@ -428,7 +428,7 @@ def test_show_dag_progress_with_legend(mocker, capsys, status):
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
     status.root_wf_name = wf_name_from_bd
-    submit_dir = os.path.join(directory, samples_dir)
+    submit_dir = str(Path(directory) / samples_dir)
     status.fetch_status(submit_dir, legend=True, long=True)
     captured = capsys.readouterr()
     assert captured.out == expected_output
@@ -521,7 +521,7 @@ def test_show_dag_progress_long(
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
     status.root_wf_name = wf_name_from_bd
-    submit_dir = os.path.join(directory, samples_dir)
+    submit_dir = str(Path(directory) / samples_dir)
     status.fetch_status(submit_dir, long=True, dirs=dirs_option)
     captured = capsys.readouterr()
     print(captured.out)
@@ -545,7 +545,7 @@ def test_show_dag_progress_just_started(mocker, capsys, status):
     mocker.patch("Pegasus.client.status.Status.get_braindump")
     mocker.patch("Pegasus.client.status.Status.get_q_values", return_value=None)
     status.root_wf_name = "sample_started"
-    submit_dir = os.path.join(directory, "status_sample_files/sample_started")
+    submit_dir = str(Path(directory) / "status_sample_files/sample_started")
     status.fetch_status(submit_dir, long=True)
     captured = capsys.readouterr()
     assert captured.out == expected_output
@@ -703,7 +703,7 @@ def q_hierarchical_values():
             "JobStatus": 2,
             "EnteredCurrentStatus": 0,
             "pegasus_wf_xformation": "condor::dagman",
-            "Iwd": os.path.join(directory, "status_sample_files/sample1"),
+            "Iwd": str(Path(directory) / "status_sample_files/sample1"),
             "pegasus_wf_dag_job_id": "job1",
             "pegasus_wf_uuid": "uuid-0",
             "pegasus_root_wf_uuid": "uuid-0",
@@ -799,7 +799,7 @@ def test_get_time(mocker, status):
 
 
 def test_valid_braindump_dir(mocker, status):
-    submit_dir = os.path.join(directory, "status_sample_files/sample1")
+    submit_dir = str(Path(directory) / "status_sample_files/sample1")
     status.get_braindump(submit_dir)
     assert status.root_wf_uuid == "d943d68b-ffc6-4154-8b82-9d8be4dbd683"
     assert status.root_wf_name == "Drug-Combination-Therapy-0"

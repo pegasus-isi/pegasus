@@ -599,7 +599,7 @@ class SubWorkflow(AbstractJob):
         :type relative_dir: Optional[Union[str, Path]]
         :param relative_submit_dir: the relative submit directory where to generate the concrete workflow. Overrides relative_dir, defaults to None
         :type relative_submit_dir: Optional[Union[str, Path]]
-        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
+        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`Path`, then that will be used as the basename of the directory that is to be created, defaults to False
         :type random_dir: Union[bool, str, Path], optional
         :param inherited_rc_files: comma separated list of replica files, defaults to None
         :type inherited_rc_files: Optional[List[Union[str, Path]]]
@@ -1117,7 +1117,7 @@ class Workflow(Writable, HookMixin, ProfileMixin, MetadataMixin):
         :type dir: Optional[Union[str, Path]]
         :param relative_dir: the relative directory to the base directory where to generate the concrete workflow, defaults to None
         :type relative_dir: Optional[Union[str, Path]]
-        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`pathlib.Path`, then that will be used as the basename of the directory that is to be created, defaults to False
+        :param random_dir: if set to :code:`True`, a random timestamp based name will be used for the execution directory that is created by the create dir jobs; else if a path is given as a :code:`str` or :code:`Path`, then that will be used as the basename of the directory that is to be created, defaults to False
         :type random_dir: Union[bool, str, Path], optional
         :param relative_submit_dir: the relative submit directory where to generate the concrete workflow. Overrides relative_dir, defaults to None
         :type relative_submit_dir: Optional[Union[str, Path]]

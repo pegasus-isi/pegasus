@@ -29,6 +29,7 @@ import stat
 import sys
 from argparse import ArgumentParser
 from configparser import ConfigParser
+from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
 from Pegasus.tools.worker_utils import logger
@@ -267,16 +268,18 @@ def get_path_for_key(bucket, searchkey, key, output):
 
     # If output ends with a /, then we need to add a name onto it
     if output.endswith("/"):
-        name = bucket if searchkey == "" else os.path.basename(searchkey)
-        output = os.path.join(output, name)
+        name = bucket if searchkey == "" else Path(searchkey).name
+        output = str(Path(output) / name)
 
     if searchkey == key:
         # If they are the same, then return the new output path
         return output
     else:
         # Otherwise we need to compute the relative path and add it
-        relpath = os.path.relpath(key, searchkey)
-        return os.path.join(output, relpath)
+        relpath = (
+            key if searchkey == "" else str(PurePosixPath(key).relative_to(searchkey))
+        )
+        return str(Path(output) / relpath)
 
 
 DEFAULT_CREDENTIAL_PATH = "~/.pegasus/credentials.conf"
@@ -308,14 +311,14 @@ def get_config(options):
         cfg = S3CFG
     else:
         # New default
-        new_default = os.path.expanduser(DEFAULT_CREDENTIAL_PATH)
-        if os.path.isfile(new_default):
+        new_default = str(Path(DEFAULT_CREDENTIAL_PATH).expanduser())
+        if Path(new_default).is_file():
             cfg = new_default
         else:
             # If the new default doesn't exist, try the old default
-            cfg = os.path.expanduser(OLD_DEFAULT_CREDENTIAL_PATH)
+            cfg = str(Path(OLD_DEFAULT_CREDENTIAL_PATH).expanduser())
 
-    if not os.path.isfile(cfg):
+    if not Path(cfg).is_file():
         raise Exception("Config file not found")
 
     log.info("Found config file: %s" % cfg)
@@ -927,12 +930,12 @@ def get_key_for_path(path, infile, outkey):
         raise Exception(f"file '{infile}' is not relative to '{path}'")
 
     if outkey.endswith("/"):
-        name = os.path.basename(path)
+        name = Path(path).name
         outkey = outkey + name
 
-    relpath = os.path.relpath(infile, path)
+    relpath = str(PurePosixPath(infile).relative_to(path))
     if relpath != ".":
-        return os.path.join(outkey, relpath)
+        return str(Path(outkey) / relpath)
     else:
         return outkey
 
@@ -946,10 +949,10 @@ def put(args):
     path = fix_file(args.file)
     url = args.url
 
-    if not os.path.exists(path):
+    if not Path(path).exists():
         raise Exception(f"No such file or directory: {path}")
 
-    if os.path.isdir(path):
+    if Path(path).is_dir():
         raise Exception("FILE: %s is a directory. FILE must be a file." % path)
 
     log.info(f"Attempting to upload {path}")
@@ -959,7 +962,7 @@ def put(args):
     if uri.bucket is None:
         raise Exception("URL for put must have a bucket: %s" % url)
     if uri.key is None:
-        uri.key = os.path.basename(path)
+        uri.key = Path(path).name
 
     config = get_config(args)
 
@@ -1037,7 +1040,7 @@ def get(args):
     if args.file:
         output = fix_file(args.file)
     else:
-        output = os.path.basename(uri.key.rstrip("/"))
+        output = Path(uri.key.rstrip("/")).name
 
     log.info("Downloading %s" % uri)
 

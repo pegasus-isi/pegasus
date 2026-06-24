@@ -16,6 +16,7 @@ import re
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 ##
 #  Copyright 2007-2010 University Of Southern California
@@ -61,7 +62,7 @@ else:
 system["os.name"] = os.uname()[0]
 system["os.version"] = os.uname()[2]
 system["os.arch"] = os.uname()[4]
-system["user.dir"] = os.getcwd()
+system["user.dir"] = Path.cwd()
 if "HOME" in os.environ:
     system["user.home"] = os.environ["HOME"]
 else:
@@ -140,7 +141,7 @@ def parse_properties(my_file, hashref={}):
     my_save = ""
 
     if isinstance(my_file, str):
-        my_file = open(my_file)
+        my_file = Path(my_file).open()
 
     logger.debug(f"# parsing properties in {my_file}...")
 
@@ -241,7 +242,7 @@ class Properties:
 
         # First, try config_file, highest priority
         if config_file is not None:
-            if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
+            if Path(config_file).is_file() and os.access(config_file, os.R_OK):
                 logger.debug(f"processing properties file {config_file}...")
                 my_config.update(parse_properties(config_file))
                 my_already_loaded = True
@@ -252,7 +253,7 @@ class Properties:
 
         # Second, try rundir_propfile
         if not my_already_loaded and rundir_propfile is not None:
-            if os.path.isfile(rundir_propfile) and os.access(rundir_propfile, os.R_OK):
+            if Path(rundir_propfile).is_file() and os.access(rundir_propfile, os.R_OK):
                 logger.debug(f"processing properties file {rundir_propfile}... ")
                 my_config.update(parse_properties(rundir_propfile))
                 my_already_loaded = True
@@ -264,8 +265,8 @@ class Properties:
         # look for $(HOME)/.pegasusrc
         if not my_already_loaded:
             if "user.home" in system:
-                my_user_propfile = os.path.join(system["user.home"], ".pegasusrc")
-                if os.path.isfile(my_user_propfile) and os.access(
+                my_user_propfile = str(Path(system["user.home"]) / ".pegasusrc")
+                if Path(my_user_propfile).is_file() and os.access(
                     my_user_propfile, os.R_OK
                 ):
                     logger.debug(f"processing properties file {my_user_propfile}... ")
@@ -278,10 +279,10 @@ class Properties:
         # Last chance, look for $(HOME)/.pegasus/pegasus.conf
         if not my_already_loaded:
             if "user.home" in system:
-                my_user_propfile = os.path.join(
-                    system["user.home"], ".pegasus", "pegasus.conf"
+                my_user_propfile = str(
+                    Path(system["user.home"]) / ".pegasus" / "pegasus.conf"
                 )
-                if os.path.isfile(my_user_propfile) and os.access(
+                if Path(my_user_propfile).is_file() and os.access(
                     my_user_propfile, os.R_OK
                 ):
                     logger.debug(f"processing properties file {my_user_propfile}... ")
@@ -380,7 +381,7 @@ class Properties:
             my_file = sys.stdout
         else:
             try:
-                my_file = open(fn, "w")
+                my_file = Path(fn).open("w")
             except Exception:
                 logger.warning(f"error opening {fn} !")
                 return None

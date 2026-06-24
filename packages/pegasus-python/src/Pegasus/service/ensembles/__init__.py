@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from flask import Flask
 
@@ -8,8 +8,8 @@ emapp = Flask(__name__)
 emapp.config.from_object("Pegasus.service.defaults")
 
 # Load user configuration
-conf = os.path.expanduser("~/.pegasus/service.py")
-if os.path.isfile(conf):
+conf = Path("~/.pegasus/service.py").expanduser()
+if Path(conf).is_file():
     emapp.config.from_pyfile(conf)
 del conf
 

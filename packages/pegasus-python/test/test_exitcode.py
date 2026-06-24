@@ -1,12 +1,12 @@
 """Test Pegasus exitcode."""
 
-import os
 import unittest
+from pathlib import Path
 
 from Pegasus import exitcode
 from Pegasus.exitcode import JobFailed
 
-dirname = os.path.abspath(os.path.dirname(__file__))
+dirname = Path(Path(__file__).parent).resolve()
 
 
 class ExitcodeTestCase(unittest.TestCase):
@@ -62,7 +62,7 @@ class ExitcodeTestCase(unittest.TestCase):
 
     def test_exitcode(self):
         def ec(filename, **args):
-            path = os.path.join(dirname, "exitcode", filename)
+            path = str(Path(dirname) / "exitcode" / filename)
             exitcode.exitcode(path, rename=False, **args)
 
         # new yaml format
@@ -165,13 +165,13 @@ class ExitcodeTestCase(unittest.TestCase):
         ec("empty.out", dagman_job_status=0, check_invocations=False)
 
     def test_rename_noerrfile(self):
-        inf = os.path.join(dirname, "exitcode", "ok.out")
-        outf = os.path.join(dirname, "exitcode", "ok.out.000")
+        inf = str(Path(dirname) / "exitcode" / "ok.out")
+        outf = str(Path(dirname) / "exitcode" / "ok.out.000")
         exitcode.exitcode(inf, rename=True)
-        exists = os.path.isfile(outf)
+        exists = Path(outf).is_file()
         self.assertTrue(exists)
         if exists:
-            os.rename(outf, inf)
+            Path(outf).rename(inf)
 
 
 if __name__ == "__main__":

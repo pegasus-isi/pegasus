@@ -20,6 +20,7 @@
 import os
 import re
 import sys
+from pathlib import Path
 from warnings import warn
 
 INTP_VER = sys.version_info[:2]
@@ -1258,8 +1259,8 @@ class ConfigObj(Section):
     def _load(self, infile, configspec):
         if isinstance(infile, str):
             self.filename = infile
-            if os.path.isfile(infile):
-                h = open(infile, "rb")
+            if Path(infile).is_file():
+                h = Path(infile).open("rb")
                 infile = h.read() or []
                 h.close()
             elif self.file_error:
@@ -1270,7 +1271,7 @@ class ConfigObj(Section):
                 if self.create_empty:
                     # this is a good test that the filename specified
                     # isn't impossible - like on a non-existent device
-                    h = open(infile, "w")
+                    h = Path(infile).open("w")
                     h.write("")
                     h.close()
                 infile = []
@@ -2146,7 +2147,7 @@ class ConfigObj(Section):
         if outfile is not None:
             outfile.write(output)
         else:
-            h = open(self.filename, "wb")
+            h = Path(self.filename).open("wb")
             h.write(output)
             h.close()
         return None

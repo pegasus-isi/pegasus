@@ -301,17 +301,17 @@ def create_directory(dir_name, delete_if_exists=False):
     @param delete_if_exists specifies whether to delete the directory if it exists
     """
     if delete_if_exists:
-        if os.path.isdir(dir_name):
+        if Path(dir_name).is_dir():
             logger.warning("Deleting existing directory. Deleting... " + dir_name)
             try:
                 shutil.rmtree(dir_name)
             except Exception:
                 logger.error("Unable to remove existing directory." + dir_name)
                 sys.exit(1)
-    if not os.path.isdir(dir_name):
+    if not Path(dir_name).is_dir():
         logger.info("Creating directory... " + dir_name)
         try:
-            os.mkdir(dir_name)
+            Path(dir_name).mkdir()
         except OSError:
             logger.error("Unable to create directory." + dir_name)
             sys.exit(1)
@@ -328,14 +328,14 @@ def find_exec(program, curdir=False, otherdirs=[]):
     my_path = os.getenv("PATH", "/bin:/usr/bin")
 
     for my_dir in my_path.split(":") + otherdirs:
-        my_file = os.path.join(os.path.expanduser(my_dir), program)
+        my_file = str(Path(Path(my_dir).expanduser()) / program)
         # Test if file is 'executable'
         if os.access(my_file, os.X_OK):
             # Found it!
             return my_file
 
     if curdir:
-        my_file = os.path.join(os.getcwd(), program)
+        my_file = str(Path(Path.cwd()) / program)
         # Test if file is 'executable'
         if os.access(my_file, os.X_OK):
             # Yes!
@@ -348,7 +348,7 @@ def find_exec(program, curdir=False, otherdirs=[]):
 # TODO: Remove, only used in pegasus-submitdir
 def write_braindump(filename, items):
     "This simply writes a dict to the file specified in braindump format"
-    f = open(filename, "w")
+    f = Path(filename).open("w")
     for k in items:
         f.write(f"{k} {items[k]}\n")
     f.close()
@@ -358,7 +358,7 @@ def write_braindump(filename, items):
 def read_braindump(filename):
     "This simply reads a braindump dict from the file specified"
     items = {}
-    f = open(filename)
+    f = Path(filename).open()
     for line in f:
         k, v = line.strip().split(" ", 1)
         k = k.strip()
@@ -377,12 +377,12 @@ def _slurp_braindb(run, brain_alternate=None):
     my_config = {}
 
     if brain_alternate is None:
-        my_braindb = os.path.join(run, "braindump.txt")
+        my_braindb = str(Path(run) / "braindump.txt")
     else:
-        my_braindb = os.path.join(run, brain_alternate)
+        my_braindb = str(Path(run) / brain_alternate)
 
     try:
-        my_file = open(my_braindb)
+        my_file = Path(my_braindb).open()
     except OSError:
         # Error opening file
         return my_config
@@ -505,14 +505,14 @@ def out2log(rundir, outfile):
     """
 
     # Get the basename
-    my_base = os.path.basename(outfile)
+    my_base = Path(outfile).name
     # NEW: Account for rescue DAGs
     my_base = my_base[: my_base.find(".dagman.out")]
     my_base = re_remove_extensions.sub("", my_base)
     # Add .log extension
     my_base = my_base + ".log"
     # Create path
-    my_log = os.path.join(rundir, my_base)
+    my_log = str(Path(rundir) / my_base)
 
     return my_log, my_base
 
@@ -523,7 +523,7 @@ def write_pid_file(pid_filename, ts=int(time.time())):
     the current pid and timestamp.
     """
     try:
-        PIDFILE = open(pid_filename, "w")
+        PIDFILE = Path(pid_filename).open("w")
         PIDFILE.write(f"pid {os.getpid()}\n")
         PIDFILE.write(f"timestamp {isodate(ts)}\n")
     except OSError:
@@ -543,7 +543,7 @@ def pid_running(filename):
     if os.access(filename, os.F_OK):
         try:
             # Open pid file
-            PIDFILE = open(filename)
+            PIDFILE = Path(filename).open()
 
             # Look for pid line
             for line in PIDFILE:
@@ -601,8 +601,8 @@ def monitoring_running(run_dir):
     that pegasus-monitord is still running, or false if it has
     finished (or perhaps it was never started).
     """
-    start_file = os.path.join(run_dir, "monitord.started")
-    done_file = os.path.join(run_dir, "monitord.done")
+    start_file = str(Path(run_dir) / "monitord.started")
+    done_file = str(Path(run_dir) / "monitord.done")
 
     # If monitord finished, it is not running anymore
     if os.access(done_file, os.F_OK):
@@ -627,9 +627,9 @@ def loading_completed(run_dir):
     if monitoring_running(run_dir) is True:
         return False
 
-    start_file = os.path.join(run_dir, "monitord.started")
-    done_file = os.path.join(run_dir, "monitord.done")
-    log_file = os.path.join(run_dir, "monitord.log")
+    start_file = str(Path(run_dir) / "monitord.started")
+    done_file = str(Path(run_dir) / "monitord.done")
+    log_file = str(Path(run_dir) / "monitord.log")
 
     # Both started and done files need to exist...
     if (not os.access(start_file, os.F_OK)) or (not os.access(done_file, os.F_OK)):
@@ -638,7 +638,7 @@ def loading_completed(run_dir):
     # Check monitord.log for loading errors...
     if os.access(log_file, os.F_OK):
         try:
-            LOG = open(log_file)
+            LOG = Path(log_file).open()
             for line in LOG:
                 if line.find("NL-LOAD-ERROR -->") > 0:
                     # Found loading error... event processing was not completed
@@ -695,7 +695,7 @@ def rotate_log_file(source_file):
 
     # Now that we have source_file and dest_file, try to rotate the logs
     try:
-        os.rename(source_file, dest_file)
+        Path(source_file).rename(dest_file)
     except OSError:
         logger.error(f"cannot rename {source_file} to {dest_file}")
         sys.exit(1)
@@ -760,7 +760,7 @@ def truncate_file(source_file):
         return False
 
     try:
-        with open(source_file, "w") as fp:
+        with Path(source_file).open("w") as fp:
             fp.truncate(0)
     except Exception:
         logger.error("Unable to truncate file %s", source_file)
@@ -789,7 +789,7 @@ def make_boolean(value):
 @contextmanager
 def write_table(f, fields, headers=None, widths=None, encoding=None):
     """."""
-    with open(f, "w", encoding=encoding) as writer:
+    with Path(f).open("w", encoding=encoding) as writer:
         if widths is None:
             widths = [len(_) for _ in fields]
 
@@ -829,7 +829,7 @@ def write_table(f, fields, headers=None, widths=None, encoding=None):
 @contextmanager
 def write_csv(f, fields, headers=None, dialect=csv.excel, encoding=None):
     """."""
-    with open(f, "w", encoding=encoding) as csvfile:
+    with Path(f).open("w", encoding=encoding) as csvfile:
         writer = csv.DictWriter(
             csvfile, dialect=dialect, fieldnames=fields, extrasaction="ignore"
         )
@@ -857,13 +857,13 @@ def pegasus_version():
     # is calling out to pegasus-version really the best way to do this?
     pegasus_version = None
     if "PEGASUS_HOME" in os.environ:
-        f = os.path.join(os.environ.get("PEGASUS_HOME"), "bin/pegasus-version")
-        if os.path.isfile(f):
+        f = str(Path(os.environ.get("PEGASUS_HOME")) / "bin/pegasus-version")
+        if Path(f).is_file():
             pegasus_version = f
 
     if not pegasus_version:
-        f = os.path.join(os.path.dirname(sys.argv[0]), "pegasus-version")
-        if os.path.isfile(f):
+        f = str(Path(Path(sys.argv[0]).parent) / "pegasus-version")
+        if Path(f).is_file():
             pegasus_version = f
 
     if pegasus_version:
@@ -872,7 +872,7 @@ def pegasus_version():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
-            cwd=os.getcwd(),
+            cwd=Path.cwd(),
         )
         out, err = child.communicate()
         if child.returncode != 0:
