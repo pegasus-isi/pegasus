@@ -469,7 +469,9 @@ class BaseAnalyze:
                             if sub_prop:
                                 if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                                     my_job.dagman_out = sub_prop.group(2)
-                                    my_job.dagman_out = str(Path(my_job.dagman_out))
+                                    my_job.dagman_out = os.path.normpath(
+                                        my_job.dagman_out
+                                    )
                                     if (
                                         my_job.dagman_out.find(
                                             options.workflow_base_dir
@@ -477,16 +479,11 @@ class BaseAnalyze:
                                         >= 0
                                     ):
                                         # Path to dagman_out file includes original submit_dir, let's try to change it
-                                        my_job.dagman_out = str(
-                                            Path(
-                                                my_job.dagman_out.replace(
-                                                    (
-                                                        options.workflow_base_dir
-                                                        + os.sep
-                                                    ),
-                                                    "",
-                                                    1,
-                                                )
+                                        my_job.dagman_out = os.path.normpath(
+                                            my_job.dagman_out.replace(
+                                                (options.workflow_base_dir + os.sep),
+                                                "",
+                                                1,
                                             )
                                         )
                                         # Join with current options.input_dir
@@ -983,9 +980,11 @@ class AnalyzeFiles(BaseAnalyze):
         # Try to parse workflow parameters from braindump.txt file
         wfparams = utils.slurp_braindb(self.options.input_dir)
         if "submit_dir" in wfparams:
-            self.options.workflow_base_dir = str(Path(wfparams["submit_dir"]))
+            self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
         elif "jsd" in wfparams:
-            self.options.workflow_base_dir = str(Path(wfparams["jsd"]).parent)
+            self.options.workflow_base_dir = str(
+                Path(os.path.normpath(wfparams["jsd"])).parent
+            )
 
         # First we learn about jobs by going through the dag file
         self.parse_dag_file(dag_path)

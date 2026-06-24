@@ -21,6 +21,7 @@ This file implements the Job class for pegasus-monitord.
 import collections
 import json
 import logging
+import os
 import re
 from io import StringIO
 from pathlib import Path
@@ -457,19 +458,19 @@ class Job:
                 my_input = re_parse_input.search(my_line).group(1)
                 # Remove quotes, if any
                 my_input = my_input.strip('"')
-                self._input_file = str(Path(my_input))
+                self._input_file = os.path.normpath(my_input)
             elif re_parse_output.search(my_line):
                 # Found line with output file
                 my_output = re_parse_output.search(my_line).group(1)
                 # Remove quotes, if any
                 my_output = my_output.strip('"')
-                self._output_file = str(Path(my_output))
+                self._output_file = os.path.normpath(my_output)
             elif re_parse_error.search(my_line):
                 # Found line with error file
                 my_error = re_parse_error.search(my_line).group(1)
                 # Remove quotes, if any
                 my_error = my_error.strip('"')
-                self._error_file = str(Path(my_error))
+                self._error_file = os.path.normpath(my_error)
             elif parse_environment and re_parse_environment.search(my_line):
                 self._job_dagman_out = self.extract_dagman_out_from_condor_env(my_line)
                 if self._job_dagman_out is None:

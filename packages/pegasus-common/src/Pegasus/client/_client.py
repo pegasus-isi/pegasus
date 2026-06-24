@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -266,7 +267,7 @@ class Client:
 
         self._pegasus_home = pegasus_home
 
-        base = Path(pegasus_home) / "bin"
+        base = Path(os.path.normpath(Path(pegasus_home) / "bin"))
 
         self._plan = str(base / "pegasus-plan")
         self._run = str(base / "pegasus-run")

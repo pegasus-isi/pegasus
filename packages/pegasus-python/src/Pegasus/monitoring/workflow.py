@@ -1056,14 +1056,16 @@ class Workflow:
 
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
-            self._original_submit_dir = str(Path(wfparams["submit_dir"]))
+            self._original_submit_dir = os.path.normpath(wfparams["submit_dir"])
         else:
             # Use "run" if "submit_dir" not found
             if "run" in wfparams:
                 self._submit_dir = wfparams["run"]
             # Use "jsd" if "submit_dir" is not found
             if "jsd" in wfparams:
-                self._original_submit_dir = Path(str(Path(wfparams["jsd"]))).parent
+                self._original_submit_dir = str(
+                    Path(os.path.normpath(wfparams["jsd"])).parent
+                )
 
         self._fixed_addon_attrs["submit__dir"] = self._submit_dir
 
@@ -2903,11 +2905,9 @@ class Workflow:
         try:
             if my_job._input_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._input_file = str(
-                    Path(
-                        my_job._input_file.replace(
-                            (self._original_submit_dir + os.sep), "", 1
-                        )
+                my_job._input_file = os.path.normpath(
+                    my_job._input_file.replace(
+                        (self._original_submit_dir + os.sep), "", 1
                     )
                 )
         except Exception:
@@ -2916,11 +2916,9 @@ class Workflow:
         try:
             if my_job._output_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._output_file = str(
-                    Path(
-                        my_job._output_file.replace(
-                            (self._original_submit_dir + os.sep), "", 1
-                        )
+                my_job._output_file = os.path.normpath(
+                    my_job._output_file.replace(
+                        (self._original_submit_dir + os.sep), "", 1
                     )
                 )
         except Exception:
@@ -2930,11 +2928,9 @@ class Workflow:
         try:
             if my_job._error_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
-                my_job._error_file = str(
-                    Path(
-                        my_job._error_file.replace(
-                            (self._original_submit_dir + os.sep), "", 1
-                        )
+                my_job._error_file = os.path.normpath(
+                    my_job._error_file.replace(
+                        (self._original_submit_dir + os.sep), "", 1
                     )
                 )
         except Exception:
@@ -2991,12 +2987,12 @@ class Workflow:
             return None
 
         # Got it!
-        my_dagman_out = str(Path(my_dagman_out))
+        my_dagman_out = os.path.normpath(my_dagman_out)
 
         if my_dagman_out.find(self._original_submit_dir) >= 0:
             # Path to new dagman.out file includes original submit_dir, let's try to change it
-            my_dagman_out = str(
-                Path(my_dagman_out.replace((self._original_submit_dir + os.sep), "", 1))
+            my_dagman_out = os.path.normpath(
+                my_dagman_out.replace((self._original_submit_dir + os.sep), "", 1)
             )
             # Join with current run directory
             my_dagman_out = str(Path(self._run_dir) / my_dagman_out)

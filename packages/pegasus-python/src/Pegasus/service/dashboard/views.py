@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 from flask import g, redirect, render_template, request, send_from_directory, url_for
@@ -580,9 +581,9 @@ def file_list(username, root_wf_id, wf_id, path=""):
 
             for entry in Path(dest).iterdir():
                 if entry.is_dir():
-                    folders["dirs"].append(str(Path(str(Path(path) / entry.name))))
+                    folders["dirs"].append(os.path.normpath(Path(path) / entry.name))
                 else:
-                    folders["files"].append(str(Path(str(Path(path) / entry.name))))
+                    folders["files"].append(os.path.normpath(Path(path) / entry.name))
 
             return serialize(folders), 200, {"Content-Type": "application/json"}
 

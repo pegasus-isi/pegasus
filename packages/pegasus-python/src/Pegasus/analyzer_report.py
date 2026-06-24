@@ -378,9 +378,9 @@ def _subwf_files_dir(ji: analyzer.JobInstance) -> str:
 
 
 def _subwf_db_dir(options: analyzer.Options, ji: analyzer.JobInstance) -> str:
-    my_wfdir = str(Path(ji.subwf_dir))
+    my_wfdir = os.path.normpath(ji.subwf_dir)
     if my_wfdir.find(ji.submit_dir) >= 0:
-        my_wfdir = str(Path(my_wfdir.replace(ji.submit_dir + os.sep, "", 1)))
+        my_wfdir = os.path.normpath(my_wfdir.replace(ji.submit_dir + os.sep, "", 1))
         my_wfdir = str(Path(options.input_dir) / my_wfdir)
     return my_wfdir
 
