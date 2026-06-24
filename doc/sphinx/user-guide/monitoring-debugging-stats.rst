@@ -1261,7 +1261,7 @@ notification script is starts:
    for human readability).
 
 -  ``PEGASUS_SUBMIT_DIR``: The submit directory for the workflow (usually
-   the value from "submit_dir" in the braindump.txt file)
+   the value from "submit_dir" in the braindump.yml file)
 
 -  ``PEGASUS_STDOUT``: For workflow notifications, this will correspond to
    the dagman.out file for that workflow. For job and invocation

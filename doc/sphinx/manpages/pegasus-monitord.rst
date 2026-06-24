@@ -77,8 +77,8 @@ Options
 **--conf** *properties_file*
    is an alternative file containing properties in the *key=value*
    format, and allows users to override values read from the
-   *braindump.txt* file. This option has precedence over the properties
-   file specified in the *braindump.txt* file. Please note that these
+   *braindump.yml* file. This option has precedence over the properties
+   file specified in the *braindump.yml* file. Please note that these
    properties will apply not only to the main workflow, but also to all
    sub-workflows found.
 
@@ -233,7 +233,7 @@ will launch **pegasus-monitord** in replay mode. In this case, if a
 *jobstate.log* file already exists, it will be rotated and a new file
 will be created. If a *diamond-0.stampede.db* SQLite database already
 exists, **pegasus-monitord** will purge all references to the workflow
-id specified in the *braindump.txt* file, including all sub-workflows
+id specified in the *braindump.yml* file, including all sub-workflows
 associated with that workflow id.
 
 ::

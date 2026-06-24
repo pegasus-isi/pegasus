@@ -203,7 +203,7 @@ public class Metrics {
             throw new IOException("NULL Metrics passed");
         }
 
-        // create a writer to the braindump.txt in the directory.
+        // create a writer to the metrics file in the directory.
         File f = metrics.getMetricsFileLocationInSubmitDirectory();
 
         if (f == null) {
