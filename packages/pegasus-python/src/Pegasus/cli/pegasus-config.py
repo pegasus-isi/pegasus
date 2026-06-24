@@ -47,10 +47,10 @@ export CLASSPATH
 
 
 def _get_bin_dir(exe):
-    bin_dir = str(Path(str(Path(Path(Path(exe).resolve()).parent) / "bin")))
+    bin_dir = os.path.normpath(Path(exe).resolve().parent / "bin")
 
     while not Path(bin_dir).exists():
-        bin_dir = str(Path(str(Path(bin_dir) / ".." / ".." / "bin")))
+        bin_dir = os.path.normpath(Path(bin_dir) / ".." / ".." / "bin")
 
     return bin_dir
 
