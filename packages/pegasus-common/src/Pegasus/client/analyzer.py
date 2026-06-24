@@ -978,7 +978,7 @@ class AnalyzeFiles(BaseAnalyze):
                 "jobstate.log older than the dagman.out file, workflow logs may not be up to date..."
             )
 
-        # Try to parse workflow parameters from braindump.txt file
+        # Try to parse workflow parameters from braindump.yml file
         wfparams = utils.slurp_braindb(self.options.input_dir)
         if "submit_dir" in wfparams:
             self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
@@ -1111,12 +1111,12 @@ class AnalyzeFiles(BaseAnalyze):
         try:
             my_wf_params = utils.slurp_braindb(input_dir)
         except Exception:
-            raise AnalyzerError("cannot read braindump.txt file... exiting...")
+            raise AnalyzerError("cannot read braindump.yml file... exiting...")
 
         if "wf_uuid" in my_wf_params:
             return my_wf_params["wf_uuid"] + "-" + self.jsdl_filename
 
-        raise AnalyzerError("braindump.txt does not contain wf_uuid... exiting...")
+        raise AnalyzerError("braindump.yml does not contain wf_uuid... exiting...")
 
     def parse_dag_file(self, dag_fn) -> None:
         """This function walks through the dag file, learning about

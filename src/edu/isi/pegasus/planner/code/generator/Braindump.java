@@ -381,12 +381,12 @@ public class Braindump {
     }
 
     /**
-     * Writes out the braindump.txt file for a workflow in the submit directory. The braindump.txt
+     * Writes out the braindump.yml file for a workflow in the submit directory. The braindump.yml
      * file is used for passing to the tailstatd daemon that monitors the state of execution of the
      * workflow.
      *
      * @param entries the Map containing the entries going into the braindump file.
-     * @return the absolute path to the braindump file.txt written in the directory.
+     * @return the absolute path to the braindump.yml file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
     protected File writeOutBraindumpFile(Map<String, String> entries) throws IOException {

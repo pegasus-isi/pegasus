@@ -50,7 +50,6 @@ re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
 # Module variables
 MAXLOGFILE = 1000  # For log rotation, check files from .000 to .999
 jobbase = "jobstate.log"  # Default name for jobstate.log file
-brainbase = "braindump.txt"  # Default name for workflow information file
 
 logger = logging.getLogger(__name__)
 
@@ -345,76 +344,12 @@ def find_exec(program, curdir=False, otherdirs=[]):
     return None
 
 
-# TODO: Remove, only used in pegasus-submitdir
-def write_braindump(filename, items):
-    "This simply writes a dict to the file specified in braindump format"
-    f = open(filename, "w")
-    for k in items:
-        f.write(f"{k} {items[k]}\n")
-    f.close()
-
-
-# TODO: Remove, only used in pegasus-submitdir
-def read_braindump(filename):
-    "This simply reads a braindump dict from the file specified"
-    items = {}
-    f = open(filename)
-    for line in f:
-        k, v = line.strip().split(" ", 1)
-        k = k.strip()
-        v = v.strip()
-        items[k] = v
-    f.close()
-    return items
-
-
-def _slurp_braindb(run, brain_alternate=None):
-    """
-    Reads extra configuration from braindump database
-    Param: run is the run directory
-    Returns: Dictionary with the configuration, empty if error
-    """
-    my_config = {}
-
-    if brain_alternate is None:
-        my_braindb = os.path.join(run, "braindump.txt")
-    else:
-        my_braindb = os.path.join(run, brain_alternate)
-
-    try:
-        my_file = open(my_braindb)
-    except OSError:
-        # Error opening file
-        return my_config
-
-    for line in my_file:
-        # Remove \r and/or \n from the end of the line
-        line = line.rstrip("\r\n")
-        # Split the line into a key and a value
-        k, v = line.split(" ", 1)
-
-        if k == "run" and v != run and run != ".":
-            logger.warning(f"run directory mismatch, using {run}")
-            my_config[k] = run
-        else:
-            # Remove leading and trailing whitespaces from value
-            v = v.strip()
-            my_config[k] = v
-
-    # Close file
-    my_file.close()
-
-    # Done!
-    logger.debug(f"# slurped {my_braindb}")
-    return my_config
-
-
 def slurp_braindb(run_dir, brain_alternate=None):
     """
     Load the braindump file from *run_dir* and return its contents as a ``dict``.
 
-    Prefers ``braindump.yml`` (YAML). Falls back to the legacy ``braindump.txt``
-    format for pre-5.0 workflows.
+    Reads the ``braindump.yml`` (YAML) file written by the planner. Returns an
+    empty ``dict`` if the file does not exist.
 
     :param run_dir: Path to the workflow submit directory.
     :type run_dir: str
@@ -432,20 +367,14 @@ def slurp_braindb(run_dir, brain_alternate=None):
     )
 
     if bdump.exists() is False:
-        # TODO: Remove this except block one backwards compatibility for
-        # 4.9 is not needed.
-        cfg = _slurp_braindb(run_dir, brain_alternate)
-    else:
-        if bdump.is_file() is False:
-            raise TypeError(f"{bdump.resolve()} is not a valid file")
+        return {}
 
-        with bdump.open("r") as fp:
-            cfg = braindump.load(fp)
-            cfg = {
-                k: str(v) if isinstance(v, Path) else v for k, v in asdict(cfg).items()
-            }
+    if bdump.is_file() is False:
+        raise TypeError(f"{bdump.resolve()} is not a valid file")
 
-    return cfg
+    with bdump.open("r") as fp:
+        cfg = braindump.load(fp)
+        return {k: str(v) if isinstance(v, Path) else v for k, v in asdict(cfg).items()}
 
 
 def raw_to_regular(exitcode):

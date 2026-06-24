@@ -69,7 +69,7 @@ public class PBS extends Abstract {
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         Collection result = new ArrayList(1);
 
-        // create a writer to the braindump.txt in the directory.
+        // create a writer to the PBS file in the directory.
         File f = new File(this.getPathtoPBSFile(dag));
 
         try {
