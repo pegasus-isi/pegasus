@@ -17,6 +17,7 @@ if peg_path:
 
 import click
 
+from Pegasus.client import condor
 from Pegasus.tools.utils import slurp_braindb
 
 log = logging.getLogger("pegasus-run")
@@ -137,6 +138,27 @@ def grid_check():
     log.debug(f"# grid proxy has {time_left:d} s left")
 
 
+def dagman_running(root_wf_uuid: "str | None") -> bool:
+    """True if a Condor job for this workflow is still in the queue.
+
+    A workflow that was halted and fully drained has no DAGMan in the queue;
+    one merely paused (released while still running) does. ``monitord.pid`` is
+    not a reliable signal -- monitord can linger while shutting down after the
+    DAGMan has already exited.
+
+    :param root_wf_uuid: root workflow UUID from the braindump, used to scope
+        the ``condor_q`` query to this workflow
+    :type root_wf_uuid: str or None
+    :return: True if a DAGMan job for this workflow is in the Condor queue
+    :rtype: bool
+    """
+    if not root_wf_uuid:
+        return False
+    expression = f'pegasus_root_wf_uuid == "{root_wf_uuid}"'
+    cmd = ["condor_q", "-constraint", expression, "-json"]
+    return bool(condor._q(cmd))
+
+
 def exec_dag(dag_sub_file, condor_log):
     """Execute `condor_submit` on dagman.condor.sub."""
     # PM-797 move away from using pegasus-submit-dag
@@ -253,7 +275,14 @@ def pegasus_run(ctx, grid=False, json=False, verbose=0, submit_dir=None):
             # a workflow is already running. This replaces those checks.
             if Path("monitord.pid").exists():
                 if halt_released:
-                    ctx.exit(0)
+                    # GH-2217: monitord.pid existing does not mean DAGMan is
+                    # alive -- a halted workflow drains and DAGMan exits while
+                    # monitord lingers during shutdown. Only a live DAGMan
+                    # resumes on its own once the .halt file is gone; if it has
+                    # already exited, fall through and resubmit from the rescue
+                    # DAG.
+                    if dagman_running(config.get("root_wf_uuid")):
+                        ctx.exit(0)
                 else:
                     click.secho(
                         click.style("Error: ", fg="red", bold=True)
