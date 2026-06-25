@@ -1418,7 +1418,7 @@ class Workflow:
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
                     my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
-                    my_status, my_output = self.get_status_output(my_cmd)
+                    my_status, my_output = subprocess.getstatusoutput(my_cmd)
 
                     if my_status == 0:
                         # Copy successful
@@ -1448,13 +1448,6 @@ class Workflow:
 
         # Not found, return None
         return None
-
-    def get_status_output(cmd):
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        stdout, stderr = p.communicate()
-        return p.returncode, stdout
 
     def find_job_submit_seq(self, jobid, sched_id=None):
         """
