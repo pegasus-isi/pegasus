@@ -21,8 +21,8 @@ This file implements the Workflow class for pegasus-monitord.
 import logging
 import os
 import re
+import shutil
 import socket
-import subprocess
 import sys
 import time
 import traceback
@@ -1376,11 +1376,8 @@ class Workflow:
                 ):
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
-                    my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
-                    my_status, my_output = self.get_status_output(my_cmd)
-
-                    if my_status == 0:
-                        # Copy successful
+                    try:
+                        shutil.copy2(self._condorlog, f"{my_log}.copy")
                         try:
                             os.unlink(my_log)
                         except Exception:
@@ -1392,8 +1389,15 @@ class Workflow:
                                 logger.error(f"renaming {my_log}.copy to {my_log}")
                             else:
                                 logger.info(f"copied common log to {self._run_dir}")
-                    else:
-                        logger.info(f"{my_cmd}: {my_status:d}:{my_output}")
+                    except Exception as e:
+                        logger.info(
+                            logger.info(
+                                "failed copying %s to %s.copy: %s",
+                                self._condorlog,
+                                my_log,
+                                e,
+                            )
+                        )
 
     def find_jobid(self, jobid):
         """
@@ -1407,13 +1411,6 @@ class Workflow:
 
         # Not found, return None
         return None
-
-    def get_status_output(cmd):
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        stdout, stderr = p.communicate()
-        return p.returncode, stdout
 
     def find_job_submit_seq(self, jobid, sched_id=None):
         """
