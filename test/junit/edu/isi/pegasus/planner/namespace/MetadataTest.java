@@ -54,7 +54,7 @@ public class MetadataTest {
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
         // metadata serialization can only be tested by being enclosed in a ReplicaLocation
-        // object as we don't have writeStartObject in the serializer implementatio of Metadata
+        // object as we don't have writeStartObject in the serializer implementation of Metadata
         ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN("test");
 
@@ -73,7 +73,7 @@ public class MetadataTest {
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
         // metadata serialization can only be tested by being enclosed in a ReplicaLocation
-        // object as we don't have writeStartObject in the serializer implementatio of Metadata
+        // object as we don't have writeStartObject in the serializer implementation of Metadata
         ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN("test");
 
@@ -101,7 +101,7 @@ public class MetadataTest {
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
         // metadata serialization can only be tested by being enclosed in a ReplicaLocation
-        // object as we don't have writeStartObject in the serializer implementatio of Metadata
+        // object as we don't have writeStartObject in the serializer implementation of Metadata
         ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN("test");
 
@@ -125,7 +125,7 @@ public class MetadataTest {
         mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
 
         // metadata serialization can only be tested by being enclosed in a ReplicaLocation
-        // object as we don't have writeStartObject in the serializer implementatio of Metadata
+        // object as we don't have writeStartObject in the serializer implementation of Metadata
         ReplicaLocation rl = new ReplicaLocation();
         rl.setLFN("test");
 

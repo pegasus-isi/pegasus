@@ -50,7 +50,7 @@ function jobDistributionTooltipFormat() {
   tip += "<b>" + this.point.name + "</b><br/>";
 
   tip += "Total Count: " + this.point.count.total + "<br/>";
-  tip += "Succeded Count: " + this.point.count.success + "<br/>";
+  tip += "Succeeded Count: " + this.point.count.success + "<br/>";
   tip += "Failed Count: " + this.point.count.failure + "<br/>";
 
   tip += "Min Runtime: " + this.point.time.min + "<br/>";
@@ -427,6 +427,6 @@ function activateEventHandler(e) {
   } else if (id == "gantt-chart") {
     getGanttChart(target.attr("href"), container);
   } else {
-    alert("Invalid accordian option " + id);
+    alert("Invalid accordion option " + id);
   }
 }

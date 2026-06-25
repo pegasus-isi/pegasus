@@ -820,7 +820,7 @@ public class DAX2DAG implements Callback {
         for (Iterator i = m_sft.iterator(); i.hasNext(); ) {
             StringBuffer line = new StringBuffer((String) i.next());
 
-            // substitute all @@var@@ occurances in this line
+            // substitute all @@var@@ occurrences in this line
             // FIXME: Need to introduce string quoting and escape rules eventually
             for (int p1 = line.indexOf("@@"); p1 != -1; p1 = line.indexOf("@@")) {
                 int p2 = line.indexOf("@@", p1 + 2) + 2;
@@ -862,7 +862,7 @@ public class DAX2DAG implements Callback {
         for (Iterator i = m_cft.iterator(); i.hasNext(); ) {
             StringBuffer line = new StringBuffer((String) i.next());
 
-            // substitute all @@var@@ occurances in this line
+            // substitute all @@var@@ occurrences in this line
             // FIXME: Need to introduce string quoting and escape rules eventually
             for (int p1 = line.indexOf("@@"); p1 != -1; p1 = line.indexOf("@@")) {
                 int p2 = line.indexOf("@@", p1 + 2) + 2;

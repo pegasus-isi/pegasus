@@ -15,6 +15,7 @@ from os.path import expanduser
 
 from sqlalchemy import select
 
+from Pegasus import braindump
 from Pegasus.command import CompoundCommand, LoggingCommand
 from Pegasus.db import connection
 from Pegasus.db.schema import (
@@ -134,8 +135,6 @@ class SubmitDir:
             raise SubmitDirException(f"Invalid submit dir: {submitdir}")
 
         self.braindump_file = os.path.join(self.submitdir, "braindump.yml")
-        if not os.path.isfile(self.braindump_file):
-            self.braindump_file = os.path.join(self.submitdir, "braindump.txt")
 
         # Read the braindump file
         self.braindump = utils.slurp_braindb(os.path.join(self.submitdir))
@@ -287,7 +286,7 @@ class SubmitDir:
             raise SubmitDirException(f"Destination is a file: {dest}")
 
         if os.path.isdir(dest):
-            if os.path.exists(os.path.join(dest, "braindump.txt")):
+            if os.path.exists(os.path.join(dest, "braindump.yml")):
                 raise SubmitDirException(f"Destination is a submit dir: {dest}")
             dest = os.path.join(dest, os.path.basename(self.submitdir))
 
@@ -350,7 +349,8 @@ class SubmitDir:
         # Set new paths in the braindump file
         self.braindump["submit_dir"] = dest
         self.braindump["basedir"] = os.path.dirname(dest)
-        utils.write_braindump(os.path.join(dest, "braindump.txt"), self.braindump)
+        with open(os.path.join(dest, "braindump.yml"), "w") as f:
+            braindump.dump(braindump.Braindump(**self.braindump), f)
 
         # Note that we do not need to update the properties file even though it
         # might contain DB URLs because it cannot contain a DB URL with the submit

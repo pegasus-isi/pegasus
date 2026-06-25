@@ -204,7 +204,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
     }
 
     /**
-     * Retuns the DAXCallback for the parser
+     * Returns the DAXCallback for the parser
      *
      * @return the callback
      */
@@ -375,7 +375,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
 
     /**
      * A convenience method that tries to determine the version of the dax schema by reading ahead
-     * in the DAX file, and searching for the version attribue in the file.
+     * in the DAX file, and searching for the version attribute in the file.
      *
      * @param file the name of the dax file.
      */
@@ -875,7 +875,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
             name.append(mJobPrefix);
         }
 
-        // append the name and id recevied from dax
+        // append the name and id received from dax
         name.append(jobName);
         name.append("_");
         name.append(jobId);
@@ -1101,7 +1101,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
         mWholeCommandString = mWholeCommandString.concat(new String(mTextContent));
 
         mWholeCommandString = this.ignoreWhitespace(mWholeCommandString);
-        // adding the commmand string
+        // adding the command string
         mCurrentJobSubInfo.strargs = new String(mWholeCommandString);
 
         // resetting mWholeCommandString
@@ -1228,7 +1228,7 @@ public class DAXParser2 extends XMLParser implements DAXParser {
 
     /**
      * Helps the load database to locate the DAX XML schema, if available. Please note that the
-     * schema location URL in the instance document is only a hint, and may be overriden by the
+     * schema location URL in the instance document is only a hint, and may be overridden by the
      * findings of this method.
      *
      * @return a location pointing to a definition document of the XML schema that can read VDLx.

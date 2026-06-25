@@ -17,7 +17,7 @@ package org.griphyn.vdl.classes;
 /**
  * This exception is thrown if the matching between the linkage of a declared variable and the
  * combined linkage of a used variable in a transformation have incompatible values. An example for
- * such an incompatability is having declared a variable of type input, but using it as ouput. The
+ * such an incompatibility is having declared a variable of type input, but using it as output. The
  * exception will also be thrown, if multiple usages of a bound variable use incompatible linkages,
  * e.g. the same variable is used with linkage NONE in one instance, and with any other linkage in
  * the same transformation at another place.
@@ -40,7 +40,7 @@ public class IncompatibleLinkageException extends java.lang.RuntimeException {
     /**
      * Constructs a <code>IncompatibleLinkageException</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public IncompatibleLinkageException(String s) {
         super(s);

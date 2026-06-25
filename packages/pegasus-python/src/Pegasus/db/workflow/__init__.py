@@ -48,11 +48,7 @@ class WorkflowBase:
             ):
                 continue
             try:
-                retval += "\n{}* {} : {}".format(
-                    spacer * self._indent,
-                    i,
-                    eval(f"self.{i}"),
-                )
+                retval += f"\n{spacer * self._indent}* {i} : {eval(f'self.{i}')}"
             except NotImplementedError as e:
                 retval += f"\n{spacer * self._indent}* {i} : WARNING: {e}"
         return retval
@@ -318,7 +314,7 @@ class Workflow(WorkflowBase):
         as an integer value.
 
         @rtype:     integer
-        @return:    Number of sucessfully executed jobs
+        @return:    Number of successfully executed jobs
         """
         raise NotImplementedError("successful_jobs not yet implemented")
 
@@ -579,7 +575,7 @@ class Job(WorkflowBase):
         """
         Return the job cluster duration from the
         storage backend as a float or None if this value
-        is not assocaited with the current job.  Not all j
+        is not associated with the current job.  Not all j
         will have this value.
 
         @rtype:     float (from db)
@@ -605,7 +601,7 @@ class Job(WorkflowBase):
     def is_restart(self):
         """
         Return a boolean flag indicating whether or not this
-        curent job is a "restart".  This value will be derived
+        current job is a "restart".  This value will be derived
         from backend information as appropriate.
 
         @rtype:     boolean
@@ -618,7 +614,7 @@ class Job(WorkflowBase):
     def is_success(self):
         """
         Return a boolean flag indicating whether or not this
-        curent job was successful.  This value will be derived
+        current job was successful.  This value will be derived
         from backend information as appropriate.
 
         @rtype:     boolean
@@ -630,7 +626,7 @@ class Job(WorkflowBase):
     def is_failure(self):
         """
         Return a boolean flag indicating whether or not this
-        curent job has failed.  This value will be derived
+        current job has failed.  This value will be derived
         from backend information as appropriate.
 
         @rtype:     boolean
@@ -1011,7 +1007,7 @@ class Task(WorkflowBase):
 class Discovery:
     def __init__(self, connectionInfo=None):
         """
-        Initialization method.  The manditory argument connectionInfo
+        Initialization method.  The mandatory argument connectionInfo
         will be defined as appropriate in a subclass (string, dict, etc),
         and connect to the appropriate back end.
         """
@@ -1032,7 +1028,7 @@ class Discovery:
         were submitted within a certain timeframe.  The startTime
         arg should represent the time floor and endTime the time
         ceiling.  If both args are supplied return workflows
-        that were exectued between the two.  If only one
+        that were executed between the two.  If only one
         arg is supplied, use that one as the appropriate
         floor or ceiling.
 

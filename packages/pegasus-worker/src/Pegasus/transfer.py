@@ -17,6 +17,8 @@ import tempfile
 import threading
 import time
 import traceback
+from functools import cmp_to_key
+from urllib import parse as urllib
 
 from Pegasus.tools import worker_utils as utils
 
@@ -29,13 +31,6 @@ try:
     import queue
 except Exception:
     import Queue as queue
-
-try:
-    # Python 3.0 and later
-    from urllib import parse as urllib
-except ImportError:
-    # Fall back to Python 2's urllib
-    import urllib as urllib
 
 
 # see https://www.python.org/dev/peps/pep-0469/
@@ -70,7 +65,10 @@ except Exception:
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
     import base64
 
-    import urllib2
+    try:
+        from urllib import request as urllib2
+    except ImportError:
+        import urllib2
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -264,19 +262,6 @@ class Remove(TransferBase):
     def get_path(self):
         return self._target_url.path
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._target_url.proto, other._target_url.proto) != 0:
-            return cmp(self._target_url.proto, other._target_url.proto)
-        if cmp(self._target_url.host, other._target_url.host) != 0:
-            return cmp(self._target_url.host, other._target_url.host)
-        if cmp(self._target_url.path, other._target_url.path) != 0:
-            return cmp(self._target_url.path, other._target_url.path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._target_url.proto == other._target_url.proto
@@ -423,25 +408,6 @@ class Transfer(TransferBase):
     def groupable(self):
         return self.allow_grouping
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._src_urls[0].proto, other._src_urls[0].proto) != 0:
-            return cmp(self._src_urls[0].proto, other._src_urls[0].proto)
-        if cmp(self._dst_urls[0].proto, other._dst_urls[0].proto) != 0:
-            return cmp(self._dst_urls[0].proto, other._dst_urls[0].proto)
-        if cmp(self._src_urls[0].host, other._src_urls[0].host) != 0:
-            return cmp(self._src_urls[0].host, other._src_urls[0].host)
-        if cmp(self._dst_urls[0].host, other._dst_urls[0].host) != 0:
-            return cmp(self._dst_urls[0].host, other._dst_urls[0].host)
-        if cmp(self._src_urls[0].path, other._src_urls[0].path) != 0:
-            return cmp(self._src_urls[0].path, other._src_urls[0].path)
-        if cmp(self._dst_urls[0].path, other._dst_urls[0].path) != 0:
-            return cmp(self._dst_urls[0].path, other._dst_urls[0].path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._src_urls[0].proto == other._src_urls[0].proto
@@ -454,12 +420,19 @@ class Transfer(TransferBase):
 
     def __lt__(self, other):
         return (
-            self._src_urls[0].proto < other._src_urls[0].proto
-            or self._dst_urls[0].proto < other._dst_urls[0].proto
-            or self._src_urls[0].host < other._src_urls[0].host
-            or self._dst_urls[0].host < other._dst_urls[0].host
-            or self._src_urls[0].path < other._src_urls[0].path
-            or self._dst_urls[0].path < other._dst_urls[0].path
+            self._src_urls[0].proto,
+            self._dst_urls[0].proto,
+            self._src_urls[0].host,
+            self._dst_urls[0].host,
+            self._src_urls[0].path,
+            self._dst_urls[0].path,
+        ) < (
+            other._src_urls[0].proto,
+            other._dst_urls[0].proto,
+            other._src_urls[0].host,
+            other._dst_urls[0].host,
+            other._src_urls[0].path,
+            other._dst_urls[0].path,
         )
 
     def __le__(self, other):
@@ -496,7 +469,7 @@ class TransferHandlerBase:
         Creates the listed URLs - all derived classes should override this
         method
         """
-        raise RuntimeErro("do_mkdirs() is not implemented in " + self._name)
+        raise RuntimeError("do_mkdirs() is not implemented in " + self._name)
 
     def do_transfers(self, transfer_list):
         """
@@ -565,7 +538,7 @@ class TransferHandlerBase:
 
         # Introduce errors! The PEGASUS_TRANSFER_ERROR_RATE env variable can
         # be used to introduce transfer error at some rate (valid values in
-        # precent: 0-100). This is useful for testing the data integrity
+        # percent: 0-100). This is useful for testing the data integrity
         # detection and failover components of Pegasus. This only works
         # for transfer with a file:// destination.
         if (
@@ -698,7 +671,7 @@ class TransferHandlerBase:
     def _verify_read_access(self, path):
         """
         Sometimes we need to verify that a local file exists, and that we have
-        read acess. Note that because of access mechanisms on some of the file
+        read access. Note that because of access mechanisms on some of the file
         systems we have to deal with, such as CVMFS, checking POSIX permissions
         is not enough. Here we try to open() the file to make sure it works.
         """
@@ -1229,7 +1202,7 @@ class GridFtpHandler(TransferHandlerBase):
             if gsiftp_failures == 0:
                 options += " -pipeline"
 
-            # parallism
+            # parallelism
             options += " -parallel 4"
 
             # -fast should be supported by all servers today
@@ -1248,7 +1221,7 @@ class GridFtpHandler(TransferHandlerBase):
 
     def _check_similar(self, a, b):
         """
-        compares two url_pairs, and determins if they are similar enough to be
+        compares two url_pairs, and determines if they are similar enough to be
         grouped together in one transfer input file
         """
         if a.get_src_host() != b.get_src_host():
@@ -1365,7 +1338,7 @@ class HttpHandler(TransferHandlerBase):
                 # wget and curl might leave 0 sized files behind after failures
                 # make sure those get cleaned up
                 try:
-                    os.unlink(transfer.get_dst_path())
+                    os.unlink(t.get_dst_path())
                 except Exception:
                     pass
                 self._post_transfer_attempt(t, False, t_start)
@@ -1729,7 +1702,7 @@ class HPSSHandler(TransferHandlerBase):
         """
 
         # first sort on destination directories
-        sorted_list = sorted(full_list, cmp=self._compare_urls)
+        sorted_list = sorted(full_list, key=cmp_to_key(self._compare_urls))
 
         # chunks are created based on destination directory
         start = 0
@@ -1766,7 +1739,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], mkdir_list]
 
@@ -1804,7 +1777,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], transfer_list]
 
@@ -1883,7 +1856,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], removes_list]
 
@@ -2280,7 +2253,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], transfers_l]
 
         successful_l = []
         failed_l = []
@@ -2343,7 +2316,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], removes_l]
 
         successful_l = []
         failed_l = []
@@ -2588,7 +2561,7 @@ class GSHandler(TransferHandlerBase):
 
         env = {}
 
-        # gsutil includes its own Python - make sure we don't interfer
+        # gsutil includes its own Python - make sure we don't interfere
         env["PYTHONPATH"] = ""
 
         if "BOTO_CONFIG" in os.environ:
@@ -2869,7 +2842,7 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -2996,7 +2969,7 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3148,9 +3121,9 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsiscp", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
-            return [[], mkdir_list]
+            return [[], transfers]
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3261,9 +3234,9 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsissh", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
-            return [[], mkdir_list]
+            return [[], transfers_l]
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
@@ -3376,7 +3349,7 @@ class GSIScpHandler(TransferHandlerBase):
 
 class OSDFHandler(TransferHandlerBase):
     """
-    Uses the OSG pelican/stashcp command to trasfer from/to OSDF
+    Uses the OSG pelican/stashcp command to transfer from/to OSDF
     """
 
     _name = "OSDFHandler"
@@ -3403,7 +3376,7 @@ class OSDFHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do OSDF mkdir because pelican/stashcp could not be found"
             )
-            return [[], transfers_l]
+            return [[], transfers]
 
         successful_l = []
         failed_l = []
@@ -3696,8 +3669,8 @@ class SingularityHandler(TransferHandlerBase):
     """
     Use "singularity pull" to import images from Singularity Hub, Singularity Library, and Docker.
 
-    Singularity Hub and Docker compatability requires Singularity version 2.3 or greater.
-    Singularity Library compatability requires Singularity version 3.0 or greater.
+    Singularity Hub and Docker compatibility requires Singularity version 2.3 or greater.
+    Singularity Library compatibility requires Singularity version 3.0 or greater.
     """
 
     _name = "SingularityHandler"
@@ -3797,7 +3770,7 @@ class WebdavHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
-            return [[], mkdir_list]
+            return [[], transfers]
 
         # disable http proxies
         env_overrides = {"http_proxy": ""}
@@ -4085,7 +4058,7 @@ class Stats:
                 p = Panorama()
                 p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warning("Panorama send failure: " + e)
+                logger.warning("Panorama send failure: %s", e)
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4258,15 +4231,18 @@ class Panorama:
             payload += "  "
 
             logger.debug(payload)
+            payload_b64 = base64.b64encode(payload.encode()).decode()
             data = (
                 '{"properties":{},"routing_key":"%s","payload":"%s","payload_encoding":"base64"}'
-                % (os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+                % (os.environ["PEGASUS_WF_UUID"], payload_b64)
             )
             logger.debug(data)
-            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-            base64string = base64.encodestring(
-                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"]
-            )[:-1]
+            req = urllib2.Request(
+                os.environ["KICKSTART_MON_ENDPOINT_URL"], data.encode()
+            )
+            base64string = base64.b64encode(
+                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"].encode()
+            ).decode()
             authheader = "Basic %s" % base64string
             req.add_header("Authorization", authheader)
             try:
@@ -4533,7 +4509,7 @@ class SimilarWorkSet:
                         success_verify,
                         failed_verify,
                     ) = handler.do_transfers([t_verify])
-                    if failed_verify is []:
+                    if failed_verify:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
                         continue
@@ -4981,6 +4957,7 @@ def stats_add(filename):
 
 
 def stats_summarize():
+    global stats_total_bytes
     if stats_total_bytes == 0:
         logger.info("Stats: no local files in the transfer set")
         return
@@ -5020,7 +4997,7 @@ def iso_prefix_formatted(n):
 
 def json_object_decoder(obj):
     """
-    utility function used by json.load() to parse some known objects into equilvalent Python objects
+    utility function used by json.load() to parse some known objects into equivalent Python objects
     """
     if "type" in obj and obj["type"] == "transfer":
         t = Transfer()
@@ -5441,7 +5418,7 @@ def main():
         "--debug",
         action="store_true",
         dest="debug",
-        help="Enables debugging ouput.",
+        help="Enables debugging output.",
     )
 
     # Parse command line options

@@ -94,7 +94,9 @@ public class PlannerOptions extends Data implements Cloneable {
      */
     private boolean mSubmit;
 
-    /** The force option to make a build dag from scratch. Leads to no reduction of dag occuring. */
+    /**
+     * The force option to make a build dag from scratch. Leads to no reduction of dag occurring.
+     */
     private boolean mForce;
 
     /** An enum tracking what type of cleanup needs to be done. */
@@ -155,7 +157,7 @@ public class PlannerOptions extends Data implements Cloneable {
     /** A boolean storing whether to sanitize paths or not */
     private boolean mSanitizePath;
 
-    /** The numer of rescue's to try before replanning. */
+    /** The number of rescue's to try before replanning. */
     private int mNumOfRescueTries;
 
     /**
@@ -371,7 +373,7 @@ public class PlannerOptions extends Data implements Cloneable {
         mLoggingLevel++;
     }
 
-    /** Deccrements the logging level by 1. */
+    /** Decrements the logging level by 1. */
     public void decrementLogging() {
         mLoggingLevel--;
     }
@@ -1072,7 +1074,7 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Sets the VDS properties specifed by the user at the command line.
+     * Sets the VDS properties specified by the user at the command line.
      *
      * @param properties List of <code>NameValue</code> objects.
      */
@@ -1190,7 +1192,7 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * Convers the staging site mappings to comma separated list of executionsite=stagingsite
+     * Covers the staging site mappings to comma separated list of executionsite=stagingsite
      * mappings
      *
      * @return mappings as string
@@ -1588,7 +1590,7 @@ public class PlannerOptions extends Data implements Cloneable {
     /**
      * Generates a Set by parsing a comma separated string.
      *
-     * @param str the comma separted String.
+     * @param str the comma separated String.
      * @return Set containing the parsed values, in case of a null string an empty set is returned.
      */
     private Set generateSet(String str) {
@@ -1607,7 +1609,7 @@ public class PlannerOptions extends Data implements Cloneable {
     }
 
     /**
-     * A small utility method that santizes the url, converting it from relative to absolute. In
+     * A small utility method that sanitizes the url, converting it from relative to absolute. In
      * case the path is relative, it uses the System property user.dir to get the current working
      * directory, from where the planner is being run.
      *

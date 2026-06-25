@@ -177,7 +177,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        txJob.updateProfiles(ePool.getProfiles());
+        txJob.updateProfiles(ePool);
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391
@@ -216,11 +216,11 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
     }
 
     /**
-     * Determines the correct site to be asscociated with the transfer job, to ensure cleanup
+     * Determines the correct site to be associated with the transfer job, to ensure cleanup
      * algorithms work correctly
      *
      * @param job the associated compute job for which transfer job is being constructed
-     * @param files the files to be transfered
+     * @param files the files to be transferred
      * @param jobClass type of transfer job
      * @return
      */
@@ -368,7 +368,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
     /**
      * Prepares the stdin for the transfer job. Usually involves writing out a text file that Condor
      * transfers to the remote end. Additionally, it associates credentials with the job that are
-     * requried to for the transfers.
+     * required to for the transfers.
      *
      * @param name the name of the transfer job.
      * @param files Collection of <code>FileTransfer</code> objects containing the information about

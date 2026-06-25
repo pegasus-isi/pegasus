@@ -28,7 +28,7 @@ echo "Running Rosetta.py"
 export PYTHONPATH=$(pegasus-config --python)
 python3.12 Rosetta.py 2>&1 | tee plan.out
 
-WORK_DIR=`cat plan.out | grep submit_dir | awk '{print $NF}' | sed -e 's/[",]//g'`
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 echo "Looks like the workflow directory is: $WORK_DIR"
 cd $WORK_DIR
 
@@ -39,7 +39,7 @@ echo "Checking workflow files..."
 # check the cache to make sure it only has the expected URLS
 (cat rosetta-0.cache | grep -v "file-based replica catalog" | grep -v " http://" | grep -v "^rosetta.exe" >$TOP_DIR/cache.urls) || /bin/true
 if [ -s $TOP_DIR/cache.urls ]; then
-    echo "Fatal: Unexected URLs found in rosetta-0.cache:"
+    echo "Fatal: Unexpected URLs found in rosetta-0.cache:"
     cat $TOP_DIR/cache.urls
     exit 1
 fi

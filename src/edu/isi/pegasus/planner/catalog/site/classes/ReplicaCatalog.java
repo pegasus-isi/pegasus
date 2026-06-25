@@ -46,7 +46,7 @@ public class ReplicaCatalog extends AbstractSiteData {
     /** Set of alias names to be used for lookup. */
     protected Set<String> mAliases;
 
-    /** The default constrcutor. */
+    /** The default constructor. */
     public ReplicaCatalog() {
         this("", "");
     }

@@ -5,7 +5,7 @@ pegasus.dir.storage.deep=false
 
 pegasus.condor.logs.symlink = false
 
-# worker package transfer is not set explicity
+# worker package transfer is not set explicitly
 # instead pegasus should transfer it only for
 # site condorpool
 # pegasus.transfer.worker.package true

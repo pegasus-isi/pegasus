@@ -204,10 +204,10 @@ def parse_nvp(args):
 
 
 def tzstr():
-    return "{}{:02d}:{:02d}".format(
-        ("+", "-")[time.timezone > 0],
-        int(time.timezone / 3600),
-        int((time.timezone - int(time.timezone / 3600) * 3600) / 60),
+    return (
+        f"{('+', '-')[time.timezone > 0]}"
+        f"{int(time.timezone / 3600):02d}:"
+        f"{int((time.timezone - int(time.timezone / 3600) * 3600) / 60):02d}"
     )
 
 
@@ -458,8 +458,8 @@ class ThrottleTimer:
         """Create timer.
 
         'run_ratio' is the desired ratio of the time between calls to the
-          time sleeping in ths timer.
-        'min_sleep_sec' is the mininum size of the argument to time.sleep(),
+          time sleeping in the timer.
+        'min_sleep_sec' is the minimum size of the argument to time.sleep(),
           before throttle() will actually call it. This attempts to minimize
           the inaccuracy encountered with very small sleep times.
         """

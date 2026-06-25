@@ -32,12 +32,13 @@ from Pegasus.tools.utils import slurp_braindb
 @click.argument(
     "submit-dir",
     required=False,
+    default=".",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
 def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
     """pegasus-remove helps you remove an entire workflow."""
     if not submit_dir and not dag_id:
-        print("You must provide either a dag_id or dagdirectory to remove a workflow.")
+        print("You must provide either a dag_id or dag-directory to remove a workflow.")
         ctx.exit(1)
 
     if submit_dir:

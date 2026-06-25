@@ -31,13 +31,13 @@ public class CompoundTransformation {
     /** The namespace of the compound transformation. */
     protected String mNamespace;
 
-    /** The name of the tranformation. */
+    /** The name of the transformation. */
     protected String mName;
 
     /** The version */
     protected String mVersion;
 
-    /** The list of dependant executables */
+    /** The list of dependent executables */
     protected List<PegasusFile> mUses;
 
     /** All the notifications associated with the job */
@@ -96,7 +96,7 @@ public class CompoundTransformation {
     }
 
     /**
-     * Adds a dependant file.
+     * Adds a dependent file.
      *
      * @param pf
      */
@@ -105,16 +105,16 @@ public class CompoundTransformation {
     }
 
     /**
-     * Returns the List of dependant files
+     * Returns the List of dependent files
      *
-     * @return List of Dependant Files
+     * @return List of Dependent Files
      */
     public List<PegasusFile> getDependantFiles() {
         return this.mUses;
     }
 
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      *
      * @param invoke the invoke object containing the notification
      */

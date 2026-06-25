@@ -20,7 +20,7 @@
       <pfn url="file:///Volumes/Work/lfs1/work/pegasus-features/PM-902/f.a" site="local"/>
    </file>
 
-<!-- Section 4: Executables - Acts as a Transformaton Catalog (can be empty) -->
+<!-- Section 4: Executables - Acts as a Transformation Catalog (can be empty) -->
 
    <executable namespace="pegasus" name="preprocess" version="4.0" installed="true" arch="x86" os="linux">
       <metadata key="size">2048</metadata>
@@ -36,7 +36,7 @@
 <!-- Section 5: Transformations - Aggregates executables and Files (can be empty) -->
 
 
-<!-- Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required) -->
+<!-- Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (At least 1 required) -->
 
    <job id="j1" namespace="pegasus" name="preprocess" version="4.0">
       <!-- <argument></argument> -->

@@ -81,8 +81,8 @@ public class StageOut extends Abstract {
      * @param bag bag of initialization objects
      * @param transferRefiner the transfer refiner being used
      */
-    public void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
-        super.initalize(dag, bag, transferRefiner);
+    public void initialize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
+        super.initialize(dag, bag, transferRefiner);
         mOutputMapper = OutputMapperFactory.loadInstance(dag, bag);
 
         // PM-1608 load a mapper if required
@@ -137,7 +137,7 @@ public class StageOut extends Abstract {
         props.setProperty(key, "File");
         // set path to output mapper
         props.setProperty(key + ".file", mapFile);
-        // disable execption thrown by mapper
+        // disable exception thrown by mapper
         props.setProperty(key + "." + Replica.DISABLE_EXCEPTIONS_KEY, "true");
 
         PegasusBag b = new PegasusBag();
@@ -285,7 +285,7 @@ public class StageOut extends Abstract {
         }
 
         // GH-2141 if the destination URL is an OSDF URL
-        // explicilty turn cleanup off
+        // explicitly turn cleanup off
         boolean doCleanup = true;
         if (stagingSiteURLPrefix.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
             doCleanup = false;

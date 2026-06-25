@@ -627,13 +627,13 @@ Query clauses are rudimentary and must follow some rules.
 
 -  Supported functions **like**, **ilike**.
 
--  Comparision clauses must have the form <FIELDNAME> SPACE <COMPARATOR>
+-  Comparison clauses must have the form <FIELDNAME> SPACE <COMPARATOR>
    SPACE <STRING LITERAL OR INTEGER LITERAL OR FLOAT LITERAL>
 
 -  <FIELDNAME> must be prefixed with resource query prefix Example:
    **r.wf_id** is valid, but **wf_id** is not.
 
--  <FIELDNAMES> which can be used in a query caluse depends on the
+-  <FIELDNAMES> which can be used in a query clause depends on the
    resource being queries. Example: For endpoint
    /api/v1/user/user-a/root/1/**workflow**/1/**job**/2/**state** query
    clause can only contain fields from the :ref:`Job State <resource-job-state>` resource.

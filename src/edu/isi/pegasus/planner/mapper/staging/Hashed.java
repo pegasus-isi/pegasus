@@ -81,7 +81,7 @@ public class Hashed extends Abstract {
         // create hashed, and levelled directories
         try {
             // we are interested in relative paths only
-            // the intial path is determined from the site catalog entries
+            // the initial path is determined from the site catalog entries
             HashedFileFactory creator = new VirtualHashedFileFactory(".");
 
             int multiplicator = Hashed.DEFAULT_MULTIPLICATOR_FACTOR;

@@ -13,7 +13,6 @@ python3.12 -m venv $VIRTUAL_ENV_DIR
 
 source cwl_venv/bin/activate
 
-# pip install pegasus-wms[cwl]
 pip install "cwl-utils==0.11" "jsonschema==3.2.0" "PyYaml"
 
 echo

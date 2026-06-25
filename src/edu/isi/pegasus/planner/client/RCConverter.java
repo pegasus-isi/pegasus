@@ -404,8 +404,8 @@ public class RCConverter extends Executable {
         text.append(
                 "\n"
                     + " pegasus-rc-converter - Parses the replica catalogs in given input format ("
-                    + " File ,File ,Database ) and generates replica catalog into given output"
-                    + " format ( File ,File ,Database )");
+                    + " File, Regex, YAML ) and generates replica catalog into given output format"
+                    + " ( File, Regex, YAML )");
         text.append("\n ");
         text.append(
                 "\n"
@@ -422,8 +422,13 @@ public class RCConverter extends Executable {
         text.append("\n Mandatory Options ");
         text.append("\n");
         text.append(
-                "\n -I |--iformat        the input format for the files . Can be [File, YAML] ");
-        text.append("\n -O |--oformat        the output format of the file. Can be [File, YAML] ");
+                "\n"
+                    + " -I |--iformat        the input format for the files . Can be [File, Regex,"
+                    + " YAML] ");
+        text.append(
+                "\n"
+                    + " -O |--oformat        the output format of the file. Can be [File, Regex,"
+                    + " YAML] ");
         text.append(
                 "\n"
                     + " -i |--input          comma separated list of input files to convert.This"
@@ -457,8 +462,8 @@ public class RCConverter extends Executable {
         text.append("\n");
         text.append("\n");
         text.append("\n Example Usage ");
-        text.append("\n File to file format conversion :- ");
-        text.append("  pegasus-rc-converter  -i cc.txt -I File -o rc.yml -v");
+        text.append("\n File (4.9 text) to YAML (5.0) format conversion :- ");
+        text.append("  pegasus-rc-converter  -i cc.txt -I File -o rc.yml -O YAML -v");
 
         System.out.println(text.toString());
     }

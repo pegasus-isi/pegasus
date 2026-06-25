@@ -44,7 +44,7 @@ public class PreferNamespace implements Arbiter {
 
     /**
      * The interface method of the arbitration determines the most likely derivation to chose by
-     * chosing the first within the same namespace. The cwns is the only element from the
+     * choosing the first within the same namespace. The cwns is the only element from the
      * environment used to determine the likely candidate.
      *
      * @param dvlist is a set of candidates

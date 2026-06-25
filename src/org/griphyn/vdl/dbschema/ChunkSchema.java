@@ -278,7 +278,7 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
      * specified and valid.
      *
      * @param definition is the new Definition to store.
-     * @param overwrite true, if existing defitions will be overwritten by new ones with the same
+     * @param overwrite true, if existing definitions will be overwritten by new ones with the same
      *     primary (or secondary) key (-set), or false, if a new definition will be rejected on key
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
@@ -353,7 +353,7 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
             return false;
         }
 
-        // add ID explicitely from sequence to insertion -- -1 is autoinc
+        // add ID explicitly from sequence to insertion -- -1 is autoinc
         Logging.instance().log("xaction", 1, "START save definition");
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.definition");
         int i = 1;
@@ -510,7 +510,7 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
     //
 
     /**
-     * Obtains the primary key id for a given definition."Fake" definitions are permissable. This is
+     * Obtains the primary key id for a given definition."Fake" definitions are permissible. This is
      * an internal helper function.
      *
      * @param d is a definition specification.
@@ -599,7 +599,7 @@ public class ChunkSchema extends DatabaseSchema implements VDC {
 
     /**
      * Delete a specific Definition objects from the database. No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * "Fake" definitions are permissible, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.

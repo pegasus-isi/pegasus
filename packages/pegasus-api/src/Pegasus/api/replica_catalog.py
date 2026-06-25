@@ -232,7 +232,7 @@ class ReplicaCatalog(Writable):
         metadata: dict[str, int | str | float] | None = None,
     ):
         """
-        add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Optional[Dict[str, str]] = None, metadata: Optiona[Dict[str, Union[int, str, float]]] = None)
+        add_replica(self, site: str, lfn: Union[str, File], pfn: Union[str, Path], checksum: Optional[Dict[str, str]] = None, metadata: Optional[Dict[str, Union[int, str, float]]] = None)
         Add an entry to this replica catalog.
 
             .. code-block:: python

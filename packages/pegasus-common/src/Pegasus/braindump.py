@@ -80,7 +80,7 @@ class Braindump:
     #: The workflow name constructed by pegasus when planning
     pegasus_wf_name: str | None = field(default=None)
 
-    #: The timestamp when planning occured
+    #: The timestamp when planning occurred
     timestamp: str | None = field(default=None)
 
     #: The base submit directory

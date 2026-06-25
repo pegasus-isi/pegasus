@@ -187,7 +187,7 @@ and reference guide for all command line tools.
 
 3) Updated pegasus-statistics and plots
 
-   pegasus-statistics and pegasus-plots have been updated to retrive
+   pegasus-statistics and pegasus-plots have been updated to retrieve
    all information from the runtime stampede database. pegasus plots
    now generates plots using protoviz and generates charts showing
    invocation breakdown, workflow gantt chart, host over time chart
@@ -294,7 +294,7 @@ Catalog
 
    Grid Gateways are associated with a site in a Site Catalog to
    designate the jobmanagers associated with a grid site. However, in
-   the case where jobs were submitted in a pure condor enviornment or
+   the case where jobs were submitted in a pure condor environment or
    on a local sites ( where jobs are not submitted via jobmanagers),
    Pegasus still required users to associate dummy grid gateways with
    the site.  This is no longer required . The Grid Gateways need to
@@ -317,7 +317,7 @@ Catalog
 
     pegasus-sc-client now relies only on one backend ( OSGMM ) to
     generate a site catalog for OSG. VORS and MyOSG are no longer
-    suppored by OSG.
+    supported by OSG.
 
 ### Pegasus 3.0.3
 
@@ -406,7 +406,7 @@ enhancements.
 
    The pegasus-monitord daemon is launched by pegasus-run while
    submitting the workflow, and by default parses the condor logs for
-   the workflows and populates them in a sqllite DB in the workflow
+   the workflows and populates them in a sqlite DB in the workflow
    submit directory.
 
    pegasus.monitord.events - A Boolean Property indicating whether to
@@ -467,10 +467,10 @@ release and some  enhancements.
 
 2) pegasus-plots improvements
 
-   The worklfow gantt chart produced by pegasus-plots now has better
+   The workflow gantt chart produced by pegasus-plots now has better
    legend placement. The legends are placed below the x axis so that
    they dont interfere with the chart in the plotting area. Also the
-   gantt chart generated now uses a fixed pallete of colors to assign
+   gantt chart generated now uses a fixed palette of colors to assign
    colors to the different compute jobs in the workflows. Earlier,
    random colors were assigned to the compute jobs.
 
@@ -486,7 +486,7 @@ release and some  enhancements.
 
 
 2) Metrics displayed by pegasus-statistics were not clear as to what
-   the worfklow execution time was, as two metrics with similar meaning
+   the workflow execution time was, as two metrics with similar meaning
    were displayed ( Workflow Execution Time and Workflow Walltime ). The
    metrics names have been changed and the meaning of the metrics are
    explained in detail in both the output of pegasus-statistics and in
@@ -494,7 +494,7 @@ release and some  enhancements.
    http://pegasus.isi.edu/wms/docs/3.0/monitoring_debugging_stats.php#id2841404
 
    Additional clarifications have been made to as how the metrics
-   calculations happen on hierarchal worklfows.
+   calculations happen on hierarchal workflows.
 
 3) pegasus-transfer when in file copy mode complained if the
    destination file already existed. This is now fixed .
@@ -609,7 +609,7 @@ http://pegasus.isi.edu/wms/docs/3.0/index.php
 6) New tools called pegasus-statistics and pegasus-plots
 
    There are new tools called pegasus-statistics and pegasus-plots that
-   can be used to generate statistics and plots about a worklfow run.
+   can be used to generate statistics and plots about a workflow run.
 
    The tools are documented in Monitoring and Debugging Chapter
    http://pegasus.isi.edu/wms/docs/3.0/monitoring_debugging_stats.php#id3083376

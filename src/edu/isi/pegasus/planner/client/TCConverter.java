@@ -507,7 +507,7 @@ public class TCConverter extends Executable {
                 LogManager.CONSOLE_MESSAGE_LEVEL);
         if (filename != null) {
             mLogger.log(
-                    "The output transfomation catalog is in file  "
+                    "The output transformation catalog is in file  "
                             + new java.io.File(filename).getAbsolutePath(),
                     LogManager.CONSOLE_MESSAGE_LEVEL);
         }

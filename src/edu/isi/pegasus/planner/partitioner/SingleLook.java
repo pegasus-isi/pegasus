@@ -116,7 +116,7 @@ public class SingleLook extends DAXWriter {
 
         mPartADAG = new ADAG(0, index, mPartitionName);
 
-        // get the job information for the jobs in the partiton.
+        // get the job information for the jobs in the partition.
         it = mNodeSet.iterator();
         while (it.hasNext()) {
             String id = (String) it.next();

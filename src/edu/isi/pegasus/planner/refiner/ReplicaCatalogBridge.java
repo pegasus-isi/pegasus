@@ -199,7 +199,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
     }
 
     /**
-     * Intialises the refiner.
+     * Initialises the refiner.
      *
      * @param dag the workflow that is being worked on.
      * @param bag the bag of Pegasus initialization objects
@@ -217,7 +217,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
     }
 
     /**
-     * Intialises the refiner.
+     * Initialises the refiner.
      *
      * @param dag the workflow that is being worked on.
      * @param properties the properties passed to the planner.
@@ -251,7 +251,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
             mReplicaCatalog = null;
             if (mSearchFiles != null && !mSearchFiles.isEmpty()) {
 
-                // need to clone before setting any read only properites
+                // need to clone before setting any read only properties
                 PegasusProperties props = (PegasusProperties) properties.clone();
 
                 // set the read only property for the file based rc
@@ -634,7 +634,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        newJob.updateProfiles(mSiteStore.lookup(newJob.getSiteHandle()).getProfiles());
+        newJob.updateProfiles(mSiteStore.lookup(newJob.getSiteHandle()));
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391
@@ -832,7 +832,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @param dir the directory where .in file should be written to
      * @param files Collection of <code>FileTransfer</code>objects containing the information about
      *     source and destURLs. The destination URLs would be our PFNs.
-     * @return String corresponding to the path of the the file containig the mappings in the
+     * @return String corresponding to the path of the the file containing the mappings in the
      *     appropriate format.
      */
     private String generateMappingsFile(String regJob, File dir, Collection files) {
@@ -909,7 +909,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      */
     private void loadInheritedReplicaStore(Set files) {
         mLogger.log(
-                "Loading Inhertied ReplicaFiles files: " + files, LogManager.DEBUG_MESSAGE_LEVEL);
+                "Loading Inherited ReplicaFiles files: " + files, LogManager.DEBUG_MESSAGE_LEVEL);
         this.mInheritedReplicaStore = this.getReplicaStoreFromFiles(files);
     }
 
@@ -947,7 +947,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
 
             File metaCacheFile = new File(file + ".meta");
             if (metaCacheFile.exists()) {
-                // PM-1257 rerieve metatadata from cache.meta file that can include
+                // PM-1257 rerieve metadata from cache.meta file that can include
                 // checksum data and merge in cache map
                 Map<String, Collection<ReplicaCatalogEntry>> metadataCacheMap =
                         lookupFromCacheFile(file + ".meta", mSearchFiles);
@@ -1165,7 +1165,7 @@ public class ReplicaCatalogBridge extends Engine // for the time being.
      * @return path to the local proxy
      */
     private String getPathToLocalProxy() {
-        // load and intialize the CredentialHandler Factory
+        // load and initialize the CredentialHandler Factory
         CredentialHandlerFactory factory = new CredentialHandlerFactory();
         factory.initialize(mBag);
         CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);

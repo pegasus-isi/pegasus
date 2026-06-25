@@ -278,7 +278,7 @@ public class CondorGenerator extends Abstract {
      * Initializes the Code Generator implementation. Initializes the various writers.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
 
@@ -298,7 +298,7 @@ public class CondorGenerator extends Abstract {
             mAppName = mProps.getProperty(PegasusProperties.PEGASUS_APP_METRICS_PREFIX + ".name");
         }
 
-        // instantiate and intialize the style factory
+        // instantiate and initialize the style factory
         mStyleFactory.initialize(bag);
 
         // determine the condor version
@@ -318,7 +318,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param dag the concrete workflow.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         if (mInitializeGridStart) {
@@ -598,7 +598,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param dag the dag of which the job is a part of.
      * @param job the <code>Job</code> object holding the information about that particular job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
         String dagname = dag.getLabel();
@@ -615,7 +615,7 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
 
-        // intialize the print stream to the file
+        // initialize the print stream to the file
         PrintWriter writer = null;
         try {
             writer = getWriter(job, SUBMIT_FILE_SUFFIX);
@@ -708,7 +708,7 @@ public class CondorGenerator extends Abstract {
     /**
      * Resets the Code Generator implementation.
      *
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void reset() throws CodeGeneratorException {
         super.reset();
@@ -863,7 +863,7 @@ public class CondorGenerator extends Abstract {
         // set the arguments for the job
         job.setArguments(sb.toString());
 
-        // the environment need to be propogated for exitcode to be picked up
+        // the environment need to be propagated for exitcode to be picked up
         job.condorVariables.construct("getenv", "TRUE");
 
         job.condorVariables.construct("remove_kill_sig", "SIGUSR1");
@@ -912,7 +912,7 @@ public class CondorGenerator extends Abstract {
     }
 
     /**
-     * Returns a tranformation catalog entry object constructed from the environment
+     * Returns a transformation catalog entry object constructed from the environment
      *
      * <p>An entry is constructed if either of the following environment variables are defined 1)
      * CONDOR_HOME 2) CONDOR_LOCATION
@@ -939,7 +939,7 @@ public class CondorGenerator extends Abstract {
     }
 
     /**
-     * Returns a tranformation catalog entry object constructed from the environment
+     * Returns a transformation catalog entry object constructed from the environment
      *
      * <p>An entry is constructed if either of the following environment variables are defined 1)
      * CONDOR_HOME 2) CONDOR_LOCATION
@@ -987,7 +987,7 @@ public class CondorGenerator extends Abstract {
     }
 
     /**
-     * A covenience method to construct the basename.
+     * A convenience method to construct the basename.
      *
      * @param prefix the first half of basename
      * @param suffix the latter half of basename
@@ -1004,7 +1004,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param dag the dag file to be written out to
      * @param workflow the workflow
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected void initializeDagFileWriter(File dag, ADag workflow) throws CodeGeneratorException {
 
@@ -1036,7 +1036,7 @@ public class CondorGenerator extends Abstract {
         StringBuilder result = new StringBuilder();
         String newLine = System.getProperty("line.separator", "\r\n");
 
-        // replace deprecated category names wit updated names
+        // replace deprecated category names with updated names
         Map<String, String> deprecatedCategoryToNew = Transfer.deprecatedDAGManCategoryNames();
         Properties toAdd = new Properties();
         for (Iterator it = dagman.keySet().iterator(); it.hasNext(); ) {
@@ -1109,7 +1109,7 @@ public class CondorGenerator extends Abstract {
      * @param dagFile the dag file created
      * @param filename basename of dot file to be written .
      * @return
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected boolean writeDOTFile(ADag dag, File dagFile, String filename)
             throws CodeGeneratorException {
@@ -1140,9 +1140,9 @@ public class CondorGenerator extends Abstract {
      * @param file the dax or dag file to.
      * @param outputFile
      * @param isAbstract whether the wf is abstract/dax or not.
-     * @param withFiles boolean indicating whether files should be vizualized
+     * @param withFiles boolean indicating whether files should be visualized
      * @return
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected boolean visualize(
             ADag dag, File file, File outputFile, boolean isAbstract, boolean withFiles)
@@ -1213,7 +1213,7 @@ public class CondorGenerator extends Abstract {
             }
             args.append(" ").append(dagFileName);
             mLogger.log(
-                    "Executing command to vizualize wf: pegasus-graphviz" + " " + args.toString(),
+                    "Executing command to visualize wf: pegasus-graphviz" + " " + args.toString(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             if (c.execute("pegasus-graphviz", args.toString()) == 0) {
                 mLogger.log(
@@ -1246,7 +1246,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param filename basename of medatadata file to be written .
      * @param dag the <code>ADag</code> object.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     /**
      * Writes out the metadata file, containing the metadata associated with the jobs in the submit
@@ -1254,7 +1254,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param filename basename of medatadata file to be written .
      * @param dag the <code>ADag</code> object.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected void writeMetadataFile(String filename, ADag dag) throws CodeGeneratorException {
         // initialize file handler
@@ -1290,7 +1290,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param filename basename of dot file to be written .
      * @param dag the <code>ADag</code> object.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected void writeJobMapFile(String filename, ADag dag) throws CodeGeneratorException {
         // initialize file handler
@@ -1354,7 +1354,7 @@ public class CondorGenerator extends Abstract {
      */
     protected void writeOutDAGManSubmitFile(ADag dag, File dagFile) throws CodeGeneratorException {
         PegasusSubmitDAG psd = new PegasusSubmitDAG();
-        psd.intialize(mBag);
+        psd.initialize(mBag);
         psd.generateCode(dag, dagFile);
     }
 
@@ -1366,7 +1366,7 @@ public class CondorGenerator extends Abstract {
      */
     protected void condorDagCheck(ADag dag, File dagFile) throws CodeGeneratorException {
         PegasusSubmitDAG psd = new PegasusSubmitDAG();
-        psd.intialize(mBag);
+        psd.initialize(mBag);
         int status = psd.condorDagCheck(dag, dagFile);
     }
 
@@ -1501,7 +1501,7 @@ public class CondorGenerator extends Abstract {
 
     /**
      * Returns the basename of the file, that contains the output of the dagman while running the
-     * dag generated for the workflow. The basename of the .out file is dependant on whether the
+     * dag generated for the workflow. The basename of the .out file is dependent on whether the
      * basename prefix has been specified at runtime or not by command line options.
      *
      * @param dag the DAG containing the concrete workflow
@@ -1530,7 +1530,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param filename Filename of the dag to be written of type String.
      * @param dag the concrete dag that is empty.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected void concreteDagEmpty(String filename, ADag dag) throws CodeGeneratorException {
         StringBuffer sb = new StringBuffer();
@@ -1743,7 +1743,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param job the job on which the style needs to be applied.
      * @param writer the PrintWriter stream to the submit file for the job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     protected void applyStyle(Job job, PrintWriter writer) throws CodeGeneratorException {
 
@@ -1892,7 +1892,7 @@ public class CondorGenerator extends Abstract {
      *     host in any way.
      * @return A possibly empty string which contains things that need to be added to the
      *     "globusrsl" clause. The return value is only of interest for isGlobusJob==true calls.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     private String gridstart(PrintWriter writer, Job job, boolean isGlobusJob)
             throws CodeGeneratorException {

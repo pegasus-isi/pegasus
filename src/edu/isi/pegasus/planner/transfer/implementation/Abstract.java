@@ -181,7 +181,7 @@ public abstract class Abstract implements Implementation {
      * @param computeJob the computeJob for which the files are being staged.
      * @param txJob the transfer job that is staging the files.
      * @param execFiles the executable files that are being staged.
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     protected boolean addSetXBitJobs(Job computeJob, Job txJob, Collection execFiles) {
 
@@ -195,7 +195,7 @@ public abstract class Abstract implements Implementation {
      * @param txJobName the name of the transfer job that is staging the files.
      * @param execFiles the executable files that are being staged.
      * @param transferClass the class of transfer job
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     public boolean addSetXBitJobs(
             Job computeJob, String txJobName, Collection execFiles, int transferClass) {
@@ -265,7 +265,7 @@ public abstract class Abstract implements Implementation {
      * @param execFiles the executable files that are being staged.
      * @param transferClass the class of transfer job
      * @param xbitIndex index to be used for creating the name of XBitJob.
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     public boolean addSetXBitJobs(
             Job computeJob,
@@ -579,7 +579,7 @@ public abstract class Abstract implements Implementation {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        xBitJob.updateProfiles(eSite.getProfiles());
+        xBitJob.updateProfiles(eSite);
 
         // the profile information from the transformation
         // catalog needs to be assimilated into the job

@@ -100,7 +100,7 @@ after it has finished.
    **Warning**
 
    For large workflows with many jobs, please note that
-   ``pegasus-status`` will take time to compile tthe state from all workflow
+   ``pegasus-status`` will take time to compile the state from all workflow
    files. This typically affects the initial run, and sub-sequent runs
    are faster due to the file system's buffer cache. However, on a
    low-RAM machine, thrashing is a possibility.
@@ -1171,7 +1171,7 @@ determine what hooks need to be handled and when.
 2. INVOCATION JOB_IDENTIFIER INV.ID NOTIFICATION_CONDITION ACTION
 
    The INVOCATION lines are only generated for clustered jobs, to
-   specifiy the finer grained notifications for each constitutent
+   specify the finer grained notifications for each constituent
    job/invocation .
 
    -  JOB IDENTIFIER is the job identifier in the executable workflow (
@@ -1261,7 +1261,7 @@ notification script is starts:
    for human readability).
 
 -  ``PEGASUS_SUBMIT_DIR``: The submit directory for the workflow (usually
-   the value from "submit_dir" in the braindump.txt file)
+   the value from "submit_dir" in the braindump.yml file)
 
 -  ``PEGASUS_STDOUT``: For workflow notifications, this will correspond to
    the dagman.out file for that workflow. For job and invocation

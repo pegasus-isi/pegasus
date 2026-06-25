@@ -16,7 +16,7 @@ namespaces = true
 [project]
 
 name = "pegasus-wms.api"
-version = "5.2.0-dev.0"
+version = "6.0.0-dev.0"
 authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 description = "Pegasus Workflow Management System Python API"

@@ -56,7 +56,7 @@ re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r"^\s*environment\s*=\s*(.*)")
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
-re_parse_input = re.compile(r"^\s*intput\s*=\s*(\S+)")
+re_parse_input = re.compile(r"^\s*input\s*=\s*(\S+)")
 re_parse_output = re.compile(r"^\s*output\s*=\s*(\S+)")
 re_parse_error = re.compile(r"^\s*error\s*=\s*(\S+)")
 re_parse_pegasuslite_hostname = re.compile(
@@ -317,7 +317,7 @@ class Job:
 
     def add_integrity_metric(self, metric):
         """
-        adds an integrity metric, if a metric with the same key already exists we retrive
+        adds an integrity metric, if a metric with the same key already exists we retrieve
         existing value and add the contents of metric passed
         :param metric:
         :return:
@@ -589,20 +589,14 @@ class Job:
                 elif self._host_id != ks_hostname:
                     ks_hostaddr = my_record["hostaddr"]
                     if self._host_ip is not None:
-                        # for 4.9 backward compatibilty where PegasusLite does not record IP
+                        # for 4.9 backward compatibility where PegasusLite does not record IP
                         # we keep the kickstart reported ip address to allow for database
                         # population as host table requires an ip to be not null
                         my_record["hostaddr"] = self._host_ip
 
                     my_record["hostname"] = self._host_id
                     logger.trace(
-                        "For job {} preferring {} {} over kickstart reported hostname {} {}".format(
-                            self._exec_job_id,
-                            my_record["hostname"],
-                            my_record["hostaddr"],
-                            ks_hostname,
-                            ks_hostaddr,
-                        )
+                        f"For job {self._exec_job_id} preferring {my_record['hostname']} {my_record['hostaddr']} over kickstart reported hostname {ks_hostname} {ks_hostaddr}"
                     )
 
             # PM-1109 encode signal information if it exists

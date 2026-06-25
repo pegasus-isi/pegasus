@@ -98,7 +98,7 @@ public class Aspen implements Estimator {
                             + ASPEN_MODELS_PATH_ENV_VARIABLE);
         }
 
-        // construct the environement variables for invoking client
+        // construct the environment variables for invoking client
         // we inherit all in current environment and ASPENPATH
         Map<String, String> envs = System.getenv();
         mEnvVariables = new String[envs.keySet().size() + 1];

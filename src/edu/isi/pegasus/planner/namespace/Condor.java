@@ -73,7 +73,7 @@ public class Condor extends Namespace {
     public static final String REMOTE_UNIVERSE_KEY = "remote_universe";
 
     /**
-     * The name of the key that denotes the File System Domain. Is actually propogated to the
+     * The name of the key that denotes the File System Domain. Is actually propagated to the
      * expression for the Requirements Key.
      *
      * @see #REQUIREMENTS_KEY
@@ -156,13 +156,13 @@ public class Condor extends Namespace {
     public static final String X509USERPROXY_KEY = "x509userproxy";
 
     // new condor keys starting 7.8.0
-    /** The Condor Key designating the numnber of cpu's to request. */
+    /** The Condor Key designating the number of cpu's to request. */
     public static final String REQUEST_CPUS_KEY = "request_cpus";
 
-    /** The Condor Key designating the numnber of gpu's to request. */
+    /** The Condor Key designating the number of gpu's to request. */
     public static final String REQUEST_GPUS_KEY = "request_gpus";
 
-    /** The Condor Key designating the what tpye of cpu's to request. */
+    /** The Condor Key designating the what type of cpu's to request. */
     public static final String REQUIRE_GPUS_KEY = "require_gpus";
 
     /** The Condor Key designating the amount of memory to request. */
@@ -568,9 +568,9 @@ public class Condor extends Namespace {
      *                    to stage in the kickstart. Pegasus sets it to false by default
      *                    for arch start stuff on the local pool, unless the user
      *                    overrides it.
-     * environment	- not supported, use env namespace fpr this
+     * environment	- not supported, use env namespace for this
      * executable       - not supported, this is got from the transformation catalog
-     * FileSystemDomain - supported, but is propogated to the classad expression
+     * FileSystemDomain - supported, but is propagated to the classad expression
      *                    for requirements.
      * globusscheduler  - not supported, Pegasus determines this on the basis of
      *                    it's planning strategy

@@ -48,7 +48,7 @@ public class RoundRobin extends AbstractPerJob {
     }
 
     /**
-     * Returns a brief description of the site selection techinque implemented by this class.
+     * Returns a brief description of the site selection technique implemented by this class.
      *
      * @return String
      */

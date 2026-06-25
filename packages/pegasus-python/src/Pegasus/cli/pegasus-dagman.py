@@ -262,7 +262,7 @@ if __name__ == "__main__":
             t = time.time()
             if t - monitord_shutdown_time > MONITORD_KILL_TIME:
                 logger.info(
-                    f"monitord shudown time expired. Sending SIGINT to process {monitord.pid:d}"
+                    f"monitord shutdown time expired. Sending SIGINT to process {monitord.pid:d}"
                 )
                 os.kill(monitord.pid, signal.SIGINT)
 

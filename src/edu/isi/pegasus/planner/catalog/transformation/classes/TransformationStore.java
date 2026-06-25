@@ -71,7 +71,7 @@ public class TransformationStore {
         initialize();
     }
 
-    /** Intializes the store. */
+    /** initializes the store. */
     private void initialize() {
         mTCStore = new TreeMap<String, Map<String, List<TransformationCatalogEntry>>>();
         this.setVersion(DEFAULT_TRANSFORMATION_CATALOG_VERSION);
@@ -105,7 +105,7 @@ public class TransformationStore {
 
     /**
      * Adds an entry into the store. If the entry already exists i.e entry for a site and
-     * corresponding PFN exists it's overriden.
+     * corresponding PFN exists it's overridden.
      *
      * @param entry the transformation catalog object.
      */
@@ -208,7 +208,7 @@ public class TransformationStore {
     /**
      * Returns List of TransformationCatalogEntry objects for a transformation on a particular site
      * and a type. If the site parameter passed is null, then all entries are returned corresponding
-     * to a tranformation. If type is null, then all entries associated with a site are returned.
+     * to a transformation. If type is null, then all entries associated with a site are returned.
      *
      * @param completeName the complete name of the transformation
      * @param site the site on which to search for entries. null means all
@@ -240,7 +240,7 @@ public class TransformationStore {
     /**
      * Returns List of TransformationCatalogEntry objects for a transformation on a particular site.
      * If the site parameter passed is null, then all entries are returned corresponding to a
-     * tranformation.
+     * transformation.
      *
      * @param completeName the complete name of the transformation
      * @param site the site on which to search for entries. null means all sites

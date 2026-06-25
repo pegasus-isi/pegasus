@@ -205,7 +205,7 @@ are defined below.
    This is the directory created on the worker nodes per job usually by
    the job wrapper that launches the job.
 
-You can specifiy the data configuration to use either in
+You can specify the data configuration to use either in
 
 1. properties - Specify the global property
    :ref:`pegasus.data.configuration <data-conf-props>`.

@@ -119,7 +119,7 @@ public class Transformation extends Definition // thus implements VDL
     }
 
     /**
-     * Standard ctor: This will name a transformation with the complete tripel necessary to access
+     * Standard ctor: This will name a transformation with the complete triple necessary to access
      * it correctly (w/o guessing).
      *
      * @param name is the name of the transformation in the current namespace and version context.

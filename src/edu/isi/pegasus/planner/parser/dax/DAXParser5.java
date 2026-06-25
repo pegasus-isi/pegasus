@@ -168,7 +168,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
                 throws IOException, JsonProcessingException {
             Callback c = (Callback) dc.findInjectableValue("callback", null, null);
             if (c == null) {
-                throw new RuntimeException("Callback not initialized when parsing inititated");
+                throw new RuntimeException("Callback not initialized when parsing initiated");
             }
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);

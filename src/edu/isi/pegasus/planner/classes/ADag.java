@@ -524,7 +524,7 @@ public class ADag extends Data implements Graph {
     public void checkForCorruption() {
         Set<GraphNode> s = Collections.newSetFromMap(new IdentityHashMap());
 
-        // put all the nodes in the idendity backed set
+        // put all the nodes in the identity backed set
         for (Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ) {
             s.add(it.next());
         }
@@ -740,7 +740,7 @@ public class ADag extends Data implements Graph {
      * Returns the name of the file on the basis of the metadata associated with the DAG.In case of
      * Condor dagman, it is the name of the .dag file that is written out.
      *
-     * <p>The basename of the .dag file is dependant on whether the basename prefix has been
+     * <p>The basename of the .dag file is dependent on whether the basename prefix has been
      * specified at runtime or not by command line options.
      *
      * @param options the planner options
@@ -754,7 +754,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the name of the file on the basis of the metadata associated with the DAG. In case of
      * Condor dagman, it is the name of the .dag file that is written out. The basename of the .dag
-     * file is dependant on whether the basename prefix has been specified at runtime or not by
+     * file is dependent on whether the basename prefix has been specified at runtime or not by
      * command line options.
      *
      * @param options the options passed to the planner.
@@ -1000,7 +1000,7 @@ public class ADag extends Data implements Graph {
     }
 
     /**
-     * Adds a single root node to the Graph. All the exisitng roots of the Graph become children of
+     * Adds a single root node to the Graph. All the existing roots of the Graph become children of
      * the root.
      *
      * @param root the <code>GraphNode</code> to be added as a root.
@@ -1077,7 +1077,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the root nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the root nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the root nodes.
      */
     public List<GraphNode> getRoots() {
         return this.mGraphImplementor.getRoots();
@@ -1086,7 +1086,7 @@ public class ADag extends Data implements Graph {
     /**
      * Returns the leaf nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the leaf nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the leaf nodes.
      */
     public List<GraphNode> getLeaves() {
         return this.mGraphImplementor.getLeaves();

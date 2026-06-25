@@ -84,7 +84,7 @@ public class HourGlass extends AbstractStrategy {
     public static final String DERIVATION_VERSION = "1.0";
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates create dir job
@@ -97,7 +97,7 @@ public class HourGlass extends AbstractStrategy {
      * It modifies the concrete dag passed in the constructor and adds the create random directory
      * nodes to it at the root level. These directory nodes have a common child that acts as a
      * concatenating job and ensures that Condor does not start staging in the data before the
-     * directories have been added. The root nodes in the unmodified dag are now chidren of this
+     * directories have been added. The root nodes in the unmodified dag are now children of this
      * concatenating dummy job.
      *
      * @param dag the workflow to which the nodes have to be added.

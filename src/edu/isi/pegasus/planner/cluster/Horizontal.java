@@ -113,7 +113,7 @@ public class Horizontal
     }
 
     /**
-     * Initializes the Clusterer impelementation
+     * Initializes the Clusterer implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.
@@ -139,11 +139,11 @@ public class Horizontal
     }
 
     /**
-     * Determine the clusters for a partition. The partition is assumed to contain independant jobs,
+     * Determine the clusters for a partition. The partition is assumed to contain independent jobs,
      * and multiple clusters maybe created for the partition. Internally the jobs are grouped
      * according to transformation name and then according to the execution site. Each group (having
      * same transformation name and scheduled on same site), is then clustered. The number of
-     * clustered jobs created for each group is dependant on the following Pegasus profiles that can
+     * clustered jobs created for each group is dependent on the following Pegasus profiles that can
      * be associated with the jobs.
      *
      * <pre>
@@ -459,7 +459,7 @@ public class Horizontal
             }
         }
 
-        // explicity free the map
+        // explicitly free the map
         tempMap = null;
     }
 
@@ -772,7 +772,7 @@ public class Horizontal
      * ends up overriding the collapse key, and the bundle value is used to generate the collapse
      * values.
      *
-     * @param pool the pool where the chunking up is occuring
+     * @param pool the pool where the chunking up is occurring
      * @param job the <code>Job</code> object containing the job that is to be chunked up together.
      * @param size the number of jobs that refer to the same logical transformation and are
      *     scheduled on the same execution pool.

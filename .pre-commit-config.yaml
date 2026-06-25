@@ -70,7 +70,7 @@ repos:
 
   - hooks:
       - id: mdformat
-        exclude: "^(.github/|LICENSE.md|doc/sphinx/release-notes)"
+        exclude: "^(.github/|.claude/|.agents/|LICENSE.md|doc/sphinx/release-notes)"
         additional_dependencies:
           - mdformat-gfm
           - mdformat-ruff

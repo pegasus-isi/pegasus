@@ -170,7 +170,7 @@ public class Dagman extends Namespace {
     protected String mNamespace;
 
     /**
-     * The default constructor. We always initialize the map, as the map is guarenteed to store at
+     * The default constructor. We always initialize the map, as the map is guaranteed to store at
      * least the postscript value for a job.
      */
     public Dagman() {

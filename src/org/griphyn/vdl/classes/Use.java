@@ -38,7 +38,7 @@ import java.util.*;
  */
 public class Use extends Leaf implements Cloneable, Serializable {
     /**
-     * The linkage type when refering to an argument that contains a filename. Legal values range
+     * The linkage type when referring to an argument that contains a filename. Legal values range
      * from <code>LFN#NONE</code> to <code>LFN#INOUT</code>. The initial value is used to flag the
      * non-initialized state.
      *

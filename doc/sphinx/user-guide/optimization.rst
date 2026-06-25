@@ -79,7 +79,7 @@ Generating Clustered Executable Workflow
 
 The clustering of a workflow is activated by passing the
 ``--cluster`` | ``-C`` option to :ref:`pegasus-plan <cli-pegasus-plan>`. The clustering
-granularity of a particular logical transformation on a particular site is dependant
+granularity of a particular logical transformation on a particular site is dependent
 upon the clustering techniques being used. The executable that is used
 for running the clustered job on a particular site is determined as
 explained in section 7.
@@ -1355,8 +1355,8 @@ catalogued in your properties.
 
 Catalogs defined inline in the abstract workflow are not inherited by a
 sub-workflow. The only exception to this is the replica catalog that is
-inherited one level ( if in a worklfow W you have a replica catalog
-inlined, the worklfows corresponding to the pegasusWorkflow jobs defined
+inherited one level ( if in a workflow W you have a replica catalog
+inlined, the workflows corresponding to the pegasusWorkflow jobs defined
 in W will have access to replica catalog defined in W).
 
 
@@ -1604,7 +1604,7 @@ File Dependencies between pegasusWorkflow and Compute Jobs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If in the same workflow W, you have a *pegasusWorkflow* job (Job D) and
-a dependant compute job (Job C), where job C requires as input an
+a dependent compute job (Job C), where job C requires as input an
 output file that is created when the sub workflow corresponding to
 Job D is run; then the planner will ensure that when the sub workflow
 corresponding to Job D runs, it also transfers that file to the
@@ -1792,7 +1792,7 @@ following default values with the transfer and cleanup jobs.
 See :ref:`Job Throttling <job-throttling>` for details on how to set these
 values.
 
-Information on how to control manully the maxinum number of stagein and
+Information on how to control manually the maximum number of stagein and
 stageout jobs can be found in the :ref:`Data Movement Nodes <data-movement-nodes>` section.
 
 To control the number of threads pegasus-transfer can use in
@@ -1955,7 +1955,7 @@ following property in your properties file.
    Data Stagein Job             pegasus_transfer.stagein
    Data Stageout Job            pegasus_transfer.stageout
    Inter Site Data Transfer Job pegasus_transfer.inter
-   Worker Pacakge Staging Job   pegasus_transfer.worker
+   Worker Package Staging Job   pegasus_transfer.worker
    Create Directory Job         pegasus_auxillary.createdir
    Data Cleanup Job             pegasus_auxillary.cleanup
    Replica Registration Job     pegasus_auxillary.registration
@@ -1976,7 +1976,7 @@ Increase Memory Requirements for Retries
 ========================================
 
 *Issue:* Setting memory limits for codes with varying amounts of memory
-requirments can be challenging. Some codes do not use much RAM most of
+requirements can be challenging. Some codes do not use much RAM most of
 the time, but once in a while require more RAM due to for example
 initial condition and hitting a particular spot in the algorithm.
 
@@ -2019,7 +2019,7 @@ from 1 to **MAX_SLOT_TYPES** (defined above).
 
 
 Slots can also be partitioned to accommodate actual needs by accepted
-jobs. A partitionable slot is always unclaimed and dynamically splitted
+jobs. A partitionable slot is always unclaimed and dynamically split
 when jobs are started. Slot partitioning can be enable as follows:
 
 ::

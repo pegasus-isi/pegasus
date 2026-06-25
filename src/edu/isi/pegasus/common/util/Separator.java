@@ -294,7 +294,7 @@ public class Separator {
     /**
      * Splits a fully-qualified identifier into its components. Please note that you must check the
      * length of the result. If it contains three elements, it is a regular FQDN. If it contains
-     * four results, it is a tranformation reference range. Note though, if the version portion is
+     * four results, it is a transformation reference range. Note though, if the version portion is
      * not specified, a 3 argument string will always be returned, even if the context requires a 4
      * argument string.
      *

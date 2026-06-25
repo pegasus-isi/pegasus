@@ -170,7 +170,7 @@ public class AbstractTest {
 
     @Test
     public void testGetCompleteTransformationNameUsesPegasusNamespace() {
-        assertThat(Abstract.getCompleteTranformationName("seqexec"), is("pegasus::seqexec"));
+        assertThat(Abstract.getCompleteTransformationName("seqexec"), is("pegasus::seqexec"));
     }
 
     @Test

@@ -233,7 +233,7 @@ public class PegasusConfiguration {
         }
 
         // PM-1702 set PATH and PYTHONPATH for local site to what the planner
-        // sees only if a user has not set it explicilty
+        // sees only if a user has not set it explicitly
         SiteCatalogEntry localSiteEntry = store.lookup("local");
         List<String> envVariables = Arrays.asList("PATH", "PYTHONPATH");
         for (String envVariable : envVariables) {
@@ -648,7 +648,7 @@ public class PegasusConfiguration {
     }
 
     /**
-     * Returns the deperecated value message
+     * Returns the deprecated value message
      *
      * @param property the property
      * @param deprecatedValue the deprecated value
@@ -737,7 +737,7 @@ public class PegasusConfiguration {
         // condorpool compute sites share a filesystem with the submit host
         site.addProfile(new Profile(Profile.VDS, Pegasus.LOCAL_VISIBLE_KEY, "true"));
 
-        // requirements expression to pin it to a matchine
+        // requirements expression to pin it to a machine
         String requirements = this.getCondorPoolRequirements();
         if (requirements != null) {
             site.addProfile(new Profile(Profile.CONDOR, Condor.REQUIREMENTS_KEY, requirements));

@@ -17,6 +17,12 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -80,6 +86,19 @@ public abstract class AbstractSiteData extends SiteData {
 
         }
         return writer.toString();
+    }
+
+    /**
+     * Returns a YAML representation of the object
+     *
+     * @return String
+     */
+    public String toYAML() throws JsonProcessingException {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        return mapper.writeValueAsString(this);
     }
 
     /**

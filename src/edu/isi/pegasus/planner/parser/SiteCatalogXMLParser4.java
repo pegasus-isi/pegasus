@@ -463,7 +463,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
     }
 
     /**
-     * Whether to laod a site or not in the <code>SiteStore</code>
+     * Whether to load a site or not in the <code>SiteStore</code>
      *
      * @param site the <code>SiteCatalogEntry</code> object.
      * @return boolean
@@ -513,7 +513,7 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
             // d directory
             case 'd':
                 // directory appears in the site element.
-                // can be multiple directorys
+                // can be multiple directories
                 if (child instanceof Directory && parent instanceof SiteCatalogEntry) {
                     SiteCatalogEntry site = (SiteCatalogEntry) parent;
                     Directory d = (Directory) child;

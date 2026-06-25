@@ -14,7 +14,7 @@ import os
 import pprint
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from shlex import quote
 
 # PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
@@ -281,7 +281,7 @@ def iso8601(ts):
     :return: ISO 8601 formatted string (e.g. ``"2024-01-15T12:34:56"``)
     :rtype: str
     """
-    dt = datetime.utcfromtimestamp(ts)
+    dt = datetime.fromtimestamp(ts, timezone.utc)
     return dt.isoformat()
 
 

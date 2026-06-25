@@ -23,7 +23,7 @@ tar xzf pegasus-doc-*.tar.gz -C docs
 
 DOWNLOADS=pegasus/$VERSION
 mkdir -p $DOWNLOADS
-mv pegasus-5*.tar.gz $DOWNLOADS/
+mv pegasus-$VERSION.tar.gz $DOWNLOADS/
 mv pegasus-binary-*.tar.gz $DOWNLOADS/
 mv pegasus-worker-*.tar.gz $DOWNLOADS/
 mv pegasus-doc-*.tar.gz $DOWNLOADS/
@@ -61,7 +61,7 @@ for TARGET in \
     done
 done
 
-# standard filesnames for DEBs
+# standard filenames for DEBs
 cd $TOPDIR/dist/$DOWNLOADS
 for TIMESTAMPED in $(ls *dev20*.deb >/dev/null 2>&1); do
     SIMPLE=`echo $TIMESTAMPED | sed -E 's/dev20[0-9]+/dev/'`

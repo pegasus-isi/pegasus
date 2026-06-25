@@ -85,7 +85,7 @@ public class Log4j extends LogManager {
                 Appender a = (Appender) e.nextElement();
                 if (a instanceof ConsoleAppender) {
                     // set the layout of the console appender
-                    // this can be overriden by the log4j.properties file
+                    // this can be overridden by the log4j.properties file
                     a.setLayout(new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
                 }
             }
@@ -104,7 +104,7 @@ public class Log4j extends LogManager {
         builder.add(console);
         builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
         LoggerContext ctx = Configurator.initialize(builder.build());
-        // IMPORTANT: root logger can only be retrieved once configurator is initalized
+        // IMPORTANT: root logger can only be retrieved once configurator is initialized
         mRoot = org.apache.logging.log4j.LogManager.getRootLogger();
     }
 
