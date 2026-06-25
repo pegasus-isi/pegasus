@@ -143,6 +143,15 @@ class BlockingPlugin(MonitordEventPlugin):
         self.handled.append(event)
 
 
+class StopRecordingBlockingPlugin(BlockingPlugin):
+    def __init__(self):
+        super().__init__()
+        self.stopped = False
+
+    def stop(self):
+        self.stopped = True
+
+
 class GatedRecordingPlugin(MonitordEventPlugin):
     """
     Blocks inside the FIRST handle_event until released, then records every
@@ -164,6 +173,17 @@ class GatedRecordingPlugin(MonitordEventPlugin):
         # snapshot at record time; by now a missing copy upstream would
         # already have let the producer's mutation bleed into ``kw``.
         self.events.append((event, dict(kw)))
+
+
+class CountingStartPlugin(MonitordEventPlugin):
+    started = 0
+    stopped = 0
+
+    def start(self, props=None):
+        type(self).started += 1
+
+    def stop(self):
+        type(self).stopped += 1
 
 
 # --------------------------------------------------------------------------- #
@@ -224,6 +244,25 @@ def test_entry_point_discovery_error_is_graceful(monkeypatch):
     monkeypatch.setattr(importlib.metadata, "entry_points", _raise)
     mgr = MonitordPluginManager(_props({"pegasus.monitord.plugins.x.enabled": "true"}))
     assert mgr.discover_and_start() == 0
+
+
+def test_invalid_worker_config_skips_plugin_before_start(monkeypatch):
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+    _patch_entry_points(monkeypatch, {"badcfg": CountingStartPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.badcfg.enabled": "true",
+            "pegasus.monitord.plugins.badcfg.queue_size": "not-an-int",
+        }
+    )
+
+    mgr = MonitordPluginManager(props)
+
+    assert mgr.discover_and_start() == 0
+    assert mgr._workers == []
+    assert CountingStartPlugin.started == 0
+    assert CountingStartPlugin.stopped == 0
 
 
 # --------------------------------------------------------------------------- #
@@ -320,6 +359,30 @@ def test_send_never_blocks_and_drops_when_full(monkeypatch):
     mgr.stop_all()
 
 
+def test_stop_is_skipped_when_worker_misses_join_timeout(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slow": StopRecordingBlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.join_timeout": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.block", {})
+    assert plugin.entered.wait(timeout=2)
+
+    mgr.stop_all()
+
+    assert worker._thread.is_alive()
+    assert plugin.stopped is False
+    plugin.release.set()
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
 # --------------------------------------------------------------------------- #
 # payload isolation — the queued payload must be snapshotted at submit time
 # --------------------------------------------------------------------------- #
@@ -404,6 +467,40 @@ def test_plugin_host_event_sink_qualifies_event_names(monkeypatch):
 # attach mechanism — injected plugins:// endpoint flows through the real
 # create_wf_event_sink() + MultiplexEventSink machinery
 # --------------------------------------------------------------------------- #
+
+
+def test_plugin_endpoint_injection_preserves_existing_user_endpoint():
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    user_key = (
+        "pegasus.catalog.workflow."
+        f"{eo.PLUGIN_HOST_ENDPOINT_BASE}.url"
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.rec.enabled": "true",
+            user_key: "file:///tmp/user-owned.bp",
+        }
+    )
+
+    injected_key = eo.ensure_monitord_plugin_endpoint(props)
+
+    assert props.property(user_key) == "file:///tmp/user-owned.bp"
+    assert injected_key == (
+        "pegasus.catalog.workflow."
+        f"{eo.PLUGIN_HOST_ENDPOINT_BASE}_1.url"
+    )
+    assert props.property(injected_key) == eo.PLUGIN_HOST_URL
+
+
+def test_replay_purge_detection_survives_plugin_multiplex():
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    db_sink = object.__new__(eo.DBEventSink)
+    db_sink._namespace = eo.STAMPEDE_NS
+    mux = object.__new__(eo.MultiplexEventSink)
+    mux._endpoints = {"default": db_sink}
+
+    assert eo.should_purge_workflow_database(True, mux) is True
+    assert eo.should_purge_workflow_database(False, mux) is False
 
 
 def test_factory_attaches_plugin_host_via_multiplex(monkeypatch, tmp_path):

@@ -223,7 +223,8 @@ you need (all default to no-ops):
 
        def stop(self):
            # Called once after all events are processed and the worker
-           # thread has been joined.
+           # thread has been joined. If the join timeout expires, Pegasus
+           # skips stop() rather than racing cleanup against handle_event().
            self.out.close()
 
 Register it in your package's metadata (``pyproject.toml``):
@@ -268,7 +269,9 @@ entry-point name:
    (drop-on-overflow, counted and logged), workers are daemon threads,
    and shutdown joins are bounded by ``join_timeout``. A plugin that
    raises, wedges, or falls behind is isolated and logged; it never
-   blocks, grows, or kills monitord.
+   blocks, grows, or kills monitord. If the worker does not exit within
+   ``join_timeout``, ``stop()`` is skipped for that plugin because
+   ``handle_event()`` may still be running.
 
 -  A single monitord may process a root workflow and its sub-workflows;
    demultiplex on the ``xwf__id`` / ``root__xwf__id`` payload keys if

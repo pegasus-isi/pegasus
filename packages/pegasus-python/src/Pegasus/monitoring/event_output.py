@@ -55,6 +55,43 @@ except Exception:
 STAMPEDE_NS = "stampede."
 DASHBOARD_NS = "dashboard."
 
+PLUGIN_HOST_URL = "plugins://"
+PLUGIN_HOST_ENDPOINT_BASE = "__monitord_plugins"
+PLUGIN_HOST_ENDPOINT_PREFIX = "pegasus.catalog.workflow."
+
+
+def has_monitord_plugin_config(props):
+    """
+    Return True when the full Pegasus properties include monitord plugin config.
+    """
+    return bool(props and props.propertyset("pegasus.monitord.plugins.", False))
+
+
+def ensure_monitord_plugin_endpoint(props):
+    """
+    Inject a reserved workflow-catalog endpoint for the in-process plugin host.
+
+    User-defined multiplex endpoints live in the same
+    ``pegasus.catalog.workflow.<name>.url`` namespace, so avoid overwriting an
+    existing endpoint by probing a small reserved-name sequence.
+    """
+    if not has_monitord_plugin_config(props):
+        return None
+
+    for i in range(100):
+        endpoint_name = PLUGIN_HOST_ENDPOINT_BASE
+        if i:
+            endpoint_name = f"{endpoint_name}_{i}"
+        key = f"{PLUGIN_HOST_ENDPOINT_PREFIX}{endpoint_name}.url"
+        current = props.property(key)
+        if current == PLUGIN_HOST_URL:
+            return key
+        if current is None:
+            props.property(key, PLUGIN_HOST_URL)
+            return key
+
+    raise RuntimeError("could not reserve a monitord plugin endpoint name")
+
 
 def purge_wf_uuid_from_database(rundir, output_db):
     """
@@ -290,8 +327,8 @@ class PluginHostEventSink(EventSink):
     database writer. ``send`` only enqueues -- it never blocks and never raises.
 
     Attached to monitord's fan-out via the ``plugins://`` URL scheme, which is
-    injected as an extra ``pegasus.catalog.workflow.plugins.url`` endpoint when
-    any ``pegasus.monitord.plugins.*`` property is present.
+    injected as a reserved extra ``pegasus.catalog.workflow.*.url`` endpoint
+    when any ``pegasus.monitord.plugins.*`` property is present.
 
     Plugin config lives under ``pegasus.monitord.plugins.*``, which the
     multiplex machinery strips from the per-endpoint ``props`` it hands each
@@ -594,6 +631,9 @@ class MultiplexEventSink(EventSink):
         except Exception:
             pass
 
+    def endpoint(self, key):
+        return self._endpoints.get(key)
+
     def flush(self):
         "Clients call this to flush events to the sink"
         for key in self._endpoints:
@@ -740,6 +780,25 @@ def create_wf_event_sink(
     log.info(f"output type={_type} namespace={prefix} name={_name}")
 
     return sink
+
+
+def is_workflow_db_event_sink(sink):
+    """
+    Return True when a sink, including a multiplex wrapper, contains the primary
+    workflow DB sink.
+    """
+    if isinstance(sink, DBEventSink):
+        return sink._namespace == STAMPEDE_NS
+    if isinstance(sink, MultiplexEventSink):
+        return is_workflow_db_event_sink(sink.endpoint("default"))
+    return False
+
+
+def should_purge_workflow_database(restart_logging, sink):
+    """
+    Replay/recovery purge is needed only when restarting a workflow DB sink.
+    """
+    return restart_logging and is_workflow_db_event_sink(sink)
 
 
 def multiplex(dest, prefix, props=None):

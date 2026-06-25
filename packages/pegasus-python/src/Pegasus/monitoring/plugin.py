@@ -120,7 +120,9 @@ class MonitordEventPlugin:
     def stop(self):
         """
         Called once after all events have been processed and this plugin's
-        background thread has been joined.
+        background thread has been joined. If the worker does not exit within
+        ``join_timeout``, Pegasus skips ``stop()`` rather than racing cleanup
+        against a still-running ``handle_event()``.
         """
 
 
@@ -265,7 +267,7 @@ class _PluginWorker:
         has elapsed.
         """
         if not self._thread.is_alive():
-            return
+            return True
         try:
             # FIFO sentinel: the worker drains everything ahead of it first.
             self._queue.put(self._SENTINEL, timeout=self._join_timeout)
@@ -281,6 +283,8 @@ class _PluginWorker:
                 self._name,
                 self._join_timeout,
             )
+            return False
+        return True
 
 
 class MonitordPluginManager:
@@ -307,42 +311,29 @@ class MonitordPluginManager:
         the others or monitord itself.
         """
         for name, cls in self._iter_enabled_plugin_classes():
+            plugin = None
+            worker = None
             try:
+                queue_size, join_timeout, tick_interval = self._worker_config(name)
                 plugin = cls()
-            except Exception:
-                self._log.error(
-                    "failed to instantiate plugin %r; skipping\n%s",
-                    name,
-                    traceback.format_exc(),
-                )
-                continue
-            try:
                 plugin.start(self._props)
+                worker = _PluginWorker(
+                    name,
+                    plugin,
+                    queue_size=queue_size,
+                    join_timeout=join_timeout,
+                    tick_interval=tick_interval,
+                )
+                worker.start()
+                self._workers.append((name, plugin, worker))
+                self._log.info("started monitord event plugin %r", name)
             except Exception:
                 self._log.error(
-                    "plugin %r start() failed; skipping\n%s",
+                    "failed to start plugin %r; skipping\n%s",
                     name,
                     traceback.format_exc(),
                 )
-                continue
-            worker = _PluginWorker(
-                name,
-                plugin,
-                queue_size=self._int_prop(
-                    f"pegasus.monitord.plugins.{name}.queue_size", DEFAULT_QUEUE_SIZE
-                ),
-                join_timeout=self._float_prop(
-                    f"pegasus.monitord.plugins.{name}.join_timeout",
-                    DEFAULT_JOIN_TIMEOUT,
-                ),
-                tick_interval=self._float_prop(
-                    f"pegasus.monitord.plugins.{name}.tick_interval",
-                    DEFAULT_TICK_INTERVAL,
-                ),
-            )
-            worker.start()
-            self._workers.append((name, plugin, worker))
-            self._log.info("started monitord event plugin %r", name)
+                self._cleanup_failed_start(name, plugin, worker)
         return len(self._workers)
 
     def dispatch(self, event, kw):
@@ -359,14 +350,21 @@ class MonitordPluginManager:
         thread has been joined.
         """
         for name, plugin, worker in self._workers:
+            worker_exited = False
             try:
-                worker.close()
+                worker_exited = worker.close()
             except Exception:
                 self._log.error(
                     "error closing worker for plugin %r\n%s",
                     name,
                     traceback.format_exc(),
                 )
+            if not worker_exited:
+                self._log.warning(
+                    "skipping plugin %r stop() because its worker is still running",
+                    name,
+                )
+                continue
             try:
                 plugin.stop()
             except Exception:
@@ -378,6 +376,26 @@ class MonitordPluginManager:
     # ------------------------------------------------------------------ #
     # discovery / configuration helpers
     # ------------------------------------------------------------------ #
+
+    def _cleanup_failed_start(self, name, plugin, worker):
+        if worker is not None:
+            try:
+                worker.close()
+            except Exception:
+                self._log.error(
+                    "error closing partially-started worker for plugin %r\n%s",
+                    name,
+                    traceback.format_exc(),
+                )
+        if plugin is not None:
+            try:
+                plugin.stop()
+            except Exception:
+                self._log.error(
+                    "plugin %r stop() failed during startup cleanup\n%s",
+                    name,
+                    traceback.format_exc(),
+                )
 
     def _iter_enabled_plugin_classes(self):
         for name, ep in self._discover_entry_points():
@@ -399,6 +417,24 @@ class MonitordPluginManager:
                 )
                 continue
             yield name, cls
+
+    def _worker_config(self, name):
+        queue_size = self._int_prop(
+            f"pegasus.monitord.plugins.{name}.queue_size", DEFAULT_QUEUE_SIZE
+        )
+        join_timeout = self._float_prop(
+            f"pegasus.monitord.plugins.{name}.join_timeout",
+            DEFAULT_JOIN_TIMEOUT,
+        )
+        tick_interval = self._float_prop(
+            f"pegasus.monitord.plugins.{name}.tick_interval",
+            DEFAULT_TICK_INTERVAL,
+        )
+        if join_timeout < 0:
+            raise ValueError(
+                f"pegasus.monitord.plugins.{name}.join_timeout must be >= 0"
+            )
+        return queue_size, join_timeout, tick_interval
 
     def _discover_entry_points(self):
         """
