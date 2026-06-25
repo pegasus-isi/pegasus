@@ -22,6 +22,7 @@ import logging
 import os
 import re
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -1179,9 +1180,11 @@ class Workflow:
 
         # Remove monitord.done file, if it is there
         if self._output_dir is None:
-            os.path.join(self._run_dir, MONITORD_DONE_FILE)
+            my_touch_file = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
-            os.path.join(self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}")
+            my_touch_file = os.path.join(
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
+            )
 
         try:
             os.unlink(my_touch_file)
@@ -1374,7 +1377,7 @@ class Workflow:
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
                     my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
-                    my_status, my_output = commands.getstatusoutput(my_cmd)
+                    my_status, my_output = self.get_status_output(my_cmd)
 
                     if my_status == 0:
                         # Copy successful
@@ -1404,6 +1407,13 @@ class Workflow:
 
         # Not found, return None
         return None
+
+    def get_status_output(cmd):
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+        stdout, stderr = p.communicate()
+        return p.returncode, stdout
 
     def find_job_submit_seq(self, jobid, sched_id=None):
         """
