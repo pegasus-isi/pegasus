@@ -32,6 +32,7 @@ from Pegasus.tools.utils import slurp_braindb
 @click.argument(
     "submit-dir",
     required=False,
+    default=".",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
 def pegasus_remove(ctx, dag_id=None, verbose=False, submit_dir=None):
