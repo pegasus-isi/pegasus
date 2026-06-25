@@ -194,6 +194,7 @@ class HelpCmd(click.Command):
 @click.argument(
     "submit-dir",
     required=False,
+    default=".",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
 @click.option(
