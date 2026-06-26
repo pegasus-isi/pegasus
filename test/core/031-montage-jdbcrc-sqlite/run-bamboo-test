@@ -8,7 +8,7 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3

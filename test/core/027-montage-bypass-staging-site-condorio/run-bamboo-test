@@ -7,7 +7,7 @@ TOP_DIR=`pwd`
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
@@ -47,7 +47,7 @@ pegasus-plan \
         | tee $TOP_DIR/plan.out
 
 
-WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'` 
+WORK_DIR=`cat $TOP_DIR/plan.out | grep pegasus-run | sed -E 's/.*pegasus-run[ ]+//'`
 if [ "x$WORK_DIR" = "x" ]; then
     echo "Unable to determine work directory from the planner output"
     exit 1
