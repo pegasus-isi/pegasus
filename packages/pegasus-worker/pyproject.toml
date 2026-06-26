@@ -51,7 +51,6 @@ build-backend = "setuptools.build_meta"
 #   "Topic :: Utilities",
 # ]
 # dependencies = [
-#   "six>=1.9.0",
 #   "boto3>1.12",
 #   "globus-sdk>=3.23.0,<4;python_version>='3.7'",
 # ]
