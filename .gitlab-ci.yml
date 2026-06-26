@@ -93,6 +93,11 @@ Python:
         path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
     paths:
     - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-${PACKAGE}/src
+      - packages/pegasus-${PACKAGE}/test
   tags:
   - ${ARCH}
   - docker
@@ -114,6 +119,11 @@ Java:
       junit: build/tests/classes/junitreport/*.xml
     paths:
     - build/tests/classes/junitreport/*.xml
+  rules:
+  - changes:
+      paths:
+        - src
+        - test/junit
   tags:
   - ${ARCH}
   - docker
@@ -129,6 +139,11 @@ C:
   image: pegasus/buildenv:rhel_9
   script:
   - ant test-kickstart test-transfer
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-kickstart
+      - packages/pegasus-transfer
   tags:
   - ${ARCH}
   - docker
@@ -325,10 +340,6 @@ Docs:
   image: pegasus/buildenv:rhel_9
   before_script:
   - env
-  #- set -ex
-  #- yum install -y epel-release
-  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
-  #- pip3 install tox
   script:
   - ant dist-doc
   artifacts:
@@ -339,14 +350,6 @@ Docs:
   - docker
 
 # Deploy packages
-
-# Deploy Python:
-#   stage: deploy
-#   image: pegasus/buildenv:rhel_8
-#   dependencies:
-#   - 'Python'
-#   script:
-#   - find packages -type d
 
 Binaries:
   stage: deploy
@@ -408,8 +411,6 @@ Release:
       password = ${TEST_PYPI_TOKEN}
     EOT
   script:
-  # TODO: See how version names, like beta etc. work with PyPI and Pegasus build scripts. 5.0.0dev becomes 5.0.0dev0 for Python source distribution packages.
-
   # Publish to PyPI
   - |
     twine upload \
