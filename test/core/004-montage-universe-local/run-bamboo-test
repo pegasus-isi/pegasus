@@ -20,7 +20,7 @@ RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/work/$RUN_ID
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3

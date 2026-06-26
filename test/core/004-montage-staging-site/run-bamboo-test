@@ -7,7 +7,7 @@ TOP_DIR=`pwd`
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 echo
