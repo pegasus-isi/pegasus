@@ -143,7 +143,9 @@ C:
   - changes:
       paths:
       - packages/pegasus-kickstart
-      - packages/pegasus-transfer
+      # pegasus-transfer
+      - packages/pegasus-worker/src
+      - packages/pegasus-worker/test
   tags:
   - ${ARCH}
   - docker
