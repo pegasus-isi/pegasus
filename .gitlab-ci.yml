@@ -120,8 +120,8 @@ Python Worker:
   rules:
   - changes:
       paths:
-        - src
-        - test/junit
+      - packages/pegasus-${PACKAGE}/src
+      - packages/pegasus-${PACKAGE}/test
   tags:
   - ${ARCH}
   - docker
@@ -143,6 +143,11 @@ Java:
       junit: build/tests/classes/junitreport/*.xml
     paths:
     - build/tests/classes/junitreport/*.xml
+  rules:
+  - changes:
+      paths:
+        - src
+        - test/junit
   tags:
   - ${ARCH}
   - docker
