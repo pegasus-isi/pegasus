@@ -2531,7 +2531,7 @@ class GSHandler(TransferHandlerBase):
                 tc.run()
             except RuntimeError as err:
                 # file not found is success
-                if "No URLs matched" not in tc.get_outerr():
+                if "following URLs matched no objects or files" not in tc.get_outerr():
                     logger.error(err)
                     failed_l.append(t)
                     continue
