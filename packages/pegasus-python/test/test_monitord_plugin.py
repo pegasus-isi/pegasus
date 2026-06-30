@@ -186,6 +186,24 @@ class CountingStartPlugin(MonitordEventPlugin):
         type(self).stopped += 1
 
 
+class IdentityRecordingPlugin(MonitordEventPlugin):
+    """
+    Records the *raw* payload object handed to handle_event (not a snapshot) and
+    mutates it in place. Two of these let a test prove each plugin receives its
+    own isolated copy: the recorded objects must be distinct, and one plugin's
+    in-place mutation must not bleed into another plugin's view.
+    """
+
+    def __init__(self):
+        self.received = []
+        self.handled = threading.Event()
+
+    def handle_event(self, event, kw):
+        self.received.append(kw)
+        kw["touched_by"] = id(self)  # mutate our own payload in place
+        self.handled.set()
+
+
 # --------------------------------------------------------------------------- #
 # base class
 # --------------------------------------------------------------------------- #
@@ -438,6 +456,57 @@ def test_payload_is_snapshotted_before_async_mutation(monkeypatch):
     assert seen is not payload
 
 
+def test_each_plugin_gets_an_isolated_payload_copy(monkeypatch):
+    """
+    Cross-plugin isolation (#2194 review, "sharper edge with >=2 plugins").
+
+    dispatch() hands the SAME producer dict to every worker's submit(); the
+    per-worker ``dict(kw)`` snapshot is the only thing that gives each plugin its
+    own object. With two plugins enabled, each must receive a distinct copy --
+    neither the producer's dict nor each other's -- so one plugin mutating its
+    payload inside handle_event cannot corrupt another plugin's view (or race two
+    worker threads on a single shared dict). Without the snapshot both workers
+    queue the same object and this fails deterministically.
+    """
+    _patch_entry_points(
+        monkeypatch, {"a": IdentityRecordingPlugin, "b": IdentityRecordingPlugin}
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.a.enabled": "true",
+            "pegasus.monitord.plugins.b.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    assert len(mgr._workers) == 2
+    plugin_a = mgr._workers[0][1]
+    plugin_b = mgr._workers[1][1]
+
+    # One producer dict, fanned out to both workers by dispatch().
+    producer = {"xwf__id": "abc", "key": "k1", "value": "v1"}
+    mgr.dispatch("stampede.rc.meta", producer)
+
+    assert plugin_a.handled.wait(timeout=2)
+    assert plugin_b.handled.wait(timeout=2)
+    mgr.stop_all()
+
+    seen_a = plugin_a.received[0]
+    seen_b = plugin_b.received[0]
+
+    # Each plugin got its own object: not the producer's, and not each other's.
+    assert seen_a is not producer
+    assert seen_b is not producer
+    assert seen_a is not seen_b
+
+    # One plugin's in-place mutation stays confined to its own copy.
+    assert seen_a["touched_by"] == id(plugin_a)
+    assert seen_b["touched_by"] == id(plugin_b)
+
+    # The producer's own dict is untouched by either worker.
+    assert "touched_by" not in producer
+
+
 # --------------------------------------------------------------------------- #
 # host sink (event_output) — prepends the namespace and passes raw payload
 # --------------------------------------------------------------------------- #
@@ -471,10 +540,7 @@ def test_plugin_host_event_sink_qualifies_event_names(monkeypatch):
 
 def test_plugin_endpoint_injection_preserves_existing_user_endpoint():
     eo = pytest.importorskip("Pegasus.monitoring.event_output")
-    user_key = (
-        "pegasus.catalog.workflow."
-        f"{eo.PLUGIN_HOST_ENDPOINT_BASE}.url"
-    )
+    user_key = f"pegasus.catalog.workflow.{eo.PLUGIN_HOST_ENDPOINT_BASE}.url"
     props = _props(
         {
             "pegasus.monitord.plugins.rec.enabled": "true",
@@ -486,8 +552,7 @@ def test_plugin_endpoint_injection_preserves_existing_user_endpoint():
 
     assert props.property(user_key) == "file:///tmp/user-owned.bp"
     assert injected_key == (
-        "pegasus.catalog.workflow."
-        f"{eo.PLUGIN_HOST_ENDPOINT_BASE}_1.url"
+        f"pegasus.catalog.workflow.{eo.PLUGIN_HOST_ENDPOINT_BASE}_1.url"
     )
     assert props.property(injected_key) == eo.PLUGIN_HOST_URL
 
