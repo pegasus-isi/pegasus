@@ -204,7 +204,8 @@ you need (all default to no-ops):
    class MyPlugin(MonitordEventPlugin):
 
        def start(self, props=None):
-           # Called once, on monitord's main thread, before events flow.
+           # Called once during monitord startup, before events flow.
+           # Pegasus bounds this hook with start_timeout.
            # Read your config from pegasus.monitord.plugins.<name>.* keys:
            cfg = props.propertyset("pegasus.monitord.plugins.myplugin.", remove=True)
            self.out = open(cfg.get("output", "events.jsonl"), "a", 1)
@@ -222,9 +223,8 @@ you need (all default to no-ops):
            pass
 
        def stop(self):
-           # Called once after all events are processed and the worker
-           # thread has been joined. If the join timeout expires, Pegasus
-           # skips stop() rather than racing cleanup against handle_event().
+           # Called once after all events are processed and the worker thread
+           # has been joined. Pegasus bounds this hook with join_timeout.
            self.out.close()
 
 Register it in your package's metadata (``pyproject.toml``):
@@ -244,26 +244,31 @@ entry-point name:
    pegasus.monitord.plugins.myplugin.enabled        true
    # optional host-level tuning:
    pegasus.monitord.plugins.myplugin.queue_size     10000   # bounded event queue (default 10000)
+   pegasus.monitord.plugins.myplugin.start_timeout  10.0    # startup bound, seconds (default: join_timeout)
    pegasus.monitord.plugins.myplugin.join_timeout   10.0    # shutdown join bound, seconds (default 10)
    pegasus.monitord.plugins.myplugin.tick_interval  5       # >0 enables tick() (default 0 = no ticks)
    # any other key in the namespace is yours, via props.propertyset(...)
 
 **Threading and delivery contract.**
 
--  ``start()`` and ``stop()`` run on monitord's main thread, once each;
-   ``handle_event()`` and ``tick()`` run on the plugin's own dedicated
-   thread, so they never race each other and shared plugin state needs
-   no locking. ``start()`` must not block — it runs synchronously inside
-   monitord startup.
+-  ``start()`` runs once during monitord startup in a bounded helper
+   thread. If it does not return within ``start_timeout``, Pegasus logs,
+   skips that plugin, and continues startup. Python cannot forcibly kill
+   the helper thread, so Pegasus attempts bounded ``stop()`` cleanup if a
+   timed-out ``start()`` returns later. ``handle_event()`` and ``tick()``
+   run on the plugin's own dedicated thread, so they never race each
+   other and shared plugin state needs no locking. ``stop()`` runs once
+   after the worker exits, in a bounded helper thread.
 
 -  Events are delivered to a single plugin **in order**; different
    plugins (and monitord's own database writer) run concurrently. Do not
    assume an event has been committed to the stampede database by the
    time you observe it.
 
--  Each plugin receives its **own snapshot** of the event payload, taken
-   at enqueue time — producer-side reuse of payload dicts and other
-   plugins' mutations cannot tear it.
+-  Each plugin receives its **own deep snapshot** of the event payload,
+   taken at enqueue time — producer-side reuse of payload dicts and
+   other plugins' mutations cannot tear it, including nested composite
+   event values.
 
 -  Delivery is **best-effort**: the queue is bounded
    (drop-on-overflow, counted and logged), workers are daemon threads,
@@ -271,7 +276,8 @@ entry-point name:
    raises, wedges, or falls behind is isolated and logged; it never
    blocks, grows, or kills monitord. If the worker does not exit within
    ``join_timeout``, ``stop()`` is skipped for that plugin because
-   ``handle_event()`` may still be running.
+   ``handle_event()`` may still be running. If ``stop()`` itself does
+   not return within ``join_timeout``, Pegasus logs and continues exit.
 
 -  A single monitord may process a root workflow and its sub-workflows;
    demultiplex on the ``xwf__id`` / ``root__xwf__id`` payload keys if

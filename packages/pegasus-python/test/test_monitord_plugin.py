@@ -115,6 +115,27 @@ class StartFailsPlugin(MonitordEventPlugin):
         self.stopped = True
 
 
+class BlockingStartPlugin(MonitordEventPlugin):
+    instances = []
+
+    def __init__(self):
+        self.start_entered = threading.Event()
+        self.release_start = threading.Event()
+        self.stop_entered = threading.Event()
+        self.started = False
+        self.stopped = False
+        type(self).instances.append(self)
+
+    def start(self, props=None):
+        self.start_entered.set()
+        self.release_start.wait(timeout=5)
+        self.started = True
+
+    def stop(self):
+        self.stop_entered.set()
+        self.stopped = True
+
+
 class FlakyHandlePlugin(MonitordEventPlugin):
     """Raises on a designated event, records the rest."""
 
@@ -149,6 +170,18 @@ class StopRecordingBlockingPlugin(BlockingPlugin):
         self.stopped = False
 
     def stop(self):
+        self.stopped = True
+
+
+class BlockingStopPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.stop_entered = threading.Event()
+        self.release_stop = threading.Event()
+        self.stopped = False
+
+    def stop(self):
+        self.stop_entered.set()
+        self.release_stop.wait(timeout=5)
         self.stopped = True
 
 
@@ -204,6 +237,23 @@ class IdentityRecordingPlugin(MonitordEventPlugin):
         self.handled.set()
 
 
+class NestedMutatingPlugin(MonitordEventPlugin):
+    """
+    Mutates nested payload values in place. This guards composite-event style
+    payloads where values can be lists/dicts, not only scalar fields.
+    """
+
+    def __init__(self):
+        self.received = []
+        self.handled = threading.Event()
+
+    def handle_event(self, event, kw):
+        self.received.append(kw)
+        kw["invocations"][0]["user"] = id(self)
+        kw["multipart"]["attempts"].append(id(self))
+        self.handled.set()
+
+
 # --------------------------------------------------------------------------- #
 # base class
 # --------------------------------------------------------------------------- #
@@ -253,6 +303,40 @@ def test_start_failure_does_not_abort_other_plugins(monkeypatch):
     assert mgr.discover_and_start() == 1
     assert isinstance(mgr._workers[0][1], RecordingPlugin)
     mgr.stop_all()
+
+
+def test_start_timeout_skips_plugin_and_late_cleans_up(monkeypatch):
+    BlockingStartPlugin.instances = []
+    _patch_entry_points(
+        monkeypatch, {"slowstart": BlockingStartPlugin, "good": RecordingPlugin}
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slowstart.enabled": "true",
+            "pegasus.monitord.plugins.slowstart.start_timeout": "0.01",
+            "pegasus.monitord.plugins.good.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+
+    start = time.monotonic()
+    assert mgr.discover_and_start() == 1
+    elapsed = time.monotonic() - start
+
+    assert elapsed < 1.0, f"discover_and_start blocked for {elapsed:.2f}s"
+    assert len(BlockingStartPlugin.instances) == 1
+    slow = BlockingStartPlugin.instances[0]
+    assert slow.start_entered.wait(timeout=1)
+    assert slow.started is False
+    assert isinstance(mgr._workers[0][1], RecordingPlugin)
+
+    slow.release_start.set()
+    assert _wait_for(lambda: slow.started is True)
+    assert _wait_for(lambda: slow.stop_entered.is_set())
+    assert slow.stopped is True
+
+    mgr.stop_all()
+    assert mgr._workers == []
 
 
 def test_entry_point_discovery_error_is_graceful(monkeypatch):
@@ -401,6 +485,30 @@ def test_stop_is_skipped_when_worker_misses_join_timeout(monkeypatch):
     assert _wait_for(lambda: not worker._thread.is_alive())
 
 
+def test_stop_is_bounded_when_plugin_stop_blocks(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slowstop": BlockingStopPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slowstop.enabled": "true",
+            "pegasus.monitord.plugins.slowstop.join_timeout": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    start = time.monotonic()
+    mgr.stop_all()
+    elapsed = time.monotonic() - start
+
+    assert elapsed < 1.0, f"stop_all blocked for {elapsed:.2f}s"
+    assert plugin.stop_entered.wait(timeout=1)
+    assert plugin.stopped is False
+
+    plugin.release_stop.set()
+    assert _wait_for(lambda: plugin.stopped is True)
+
+
 # --------------------------------------------------------------------------- #
 # payload isolation — the queued payload must be snapshotted at submit time
 # --------------------------------------------------------------------------- #
@@ -416,8 +524,8 @@ def test_payload_is_snapshotted_before_async_mutation(monkeypatch):
     and wf.plan adds ``db_url`` after dispatch. The plugin worker reads the
     payload asynchronously, so without a snapshot it can observe those later
     mutations -- torn/incorrect data, or a corrupted dict if two plugins share
-    one object. ``_PluginWorker.submit`` must copy the payload with ``dict(kw)``
-    at enqueue time so each worker gets a stable, isolated view.
+    one object. ``_PluginWorker.submit`` must deepcopy the payload at enqueue
+    time so each worker gets a stable, isolated view.
 
     The worker is pinned inside the first handle_event so the mutation below is
     guaranteed to happen *before* the worker dequeues the event under test;
@@ -461,12 +569,12 @@ def test_each_plugin_gets_an_isolated_payload_copy(monkeypatch):
     Cross-plugin isolation (#2194 review, "sharper edge with >=2 plugins").
 
     dispatch() hands the SAME producer dict to every worker's submit(); the
-    per-worker ``dict(kw)`` snapshot is the only thing that gives each plugin its
-    own object. With two plugins enabled, each must receive a distinct copy --
-    neither the producer's dict nor each other's -- so one plugin mutating its
-    payload inside handle_event cannot corrupt another plugin's view (or race two
-    worker threads on a single shared dict). Without the snapshot both workers
-    queue the same object and this fails deterministically.
+    per-worker snapshot is the only thing that gives each plugin its own object.
+    With two plugins enabled, each must receive a distinct copy -- neither the
+    producer's dict nor each other's -- so one plugin mutating its payload inside
+    handle_event cannot corrupt another plugin's view (or race two worker threads
+    on a single shared dict). Without the snapshot both workers queue the same
+    object and this fails deterministically.
     """
     _patch_entry_points(
         monkeypatch, {"a": IdentityRecordingPlugin, "b": IdentityRecordingPlugin}
@@ -505,6 +613,58 @@ def test_each_plugin_gets_an_isolated_payload_copy(monkeypatch):
 
     # The producer's own dict is untouched by either worker.
     assert "touched_by" not in producer
+
+
+def test_nested_payload_values_are_isolated_per_plugin(monkeypatch):
+    """
+    Composite job events can contain nested mutable values such as invocation
+    lists and multipart records. The worker snapshot must isolate those nested
+    objects too, not only the top-level payload dict.
+    """
+    _patch_entry_points(
+        monkeypatch, {"a": NestedMutatingPlugin, "b": NestedMutatingPlugin}
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.a.enabled": "true",
+            "pegasus.monitord.plugins.b.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin_a = mgr._workers[0][1]
+    plugin_b = mgr._workers[1][1]
+
+    producer = {
+        "xwf__id": "abc",
+        "invocations": [{"user": "alice"}],
+        "multipart": {"attempts": []},
+    }
+    mgr.dispatch("stampede.job_inst.composite", producer)
+
+    assert plugin_a.handled.wait(timeout=2)
+    assert plugin_b.handled.wait(timeout=2)
+    mgr.stop_all()
+
+    seen_a = plugin_a.received[0]
+    seen_b = plugin_b.received[0]
+
+    assert seen_a is not producer
+    assert seen_b is not producer
+    assert seen_a is not seen_b
+    assert seen_a["invocations"] is not producer["invocations"]
+    assert seen_b["invocations"] is not producer["invocations"]
+    assert seen_a["multipart"] is not seen_b["multipart"]
+
+    assert seen_a["invocations"][0]["user"] == id(plugin_a)
+    assert seen_b["invocations"][0]["user"] == id(plugin_b)
+    assert seen_a["multipart"]["attempts"] == [id(plugin_a)]
+    assert seen_b["multipart"]["attempts"] == [id(plugin_b)]
+    assert producer == {
+        "xwf__id": "abc",
+        "invocations": [{"user": "alice"}],
+        "multipart": {"attempts": []},
+    }
 
 
 # --------------------------------------------------------------------------- #

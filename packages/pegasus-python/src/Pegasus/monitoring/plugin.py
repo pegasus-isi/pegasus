@@ -30,11 +30,12 @@ lives in :mod:`Pegasus.monitoring.event_output` as ``PluginHostEventSink``.
 #  limitations under the License.
 ##
 
+import copy
 import logging
 import queue
 import time
 import traceback
-from threading import Thread
+from threading import Event, Lock, Thread
 
 from Pegasus.tools import utils
 
@@ -59,8 +60,9 @@ class MonitordEventPlugin:
 
     Threading contract:
 
-    * :meth:`start` and :meth:`stop` are called once each, on monitord's main
-      thread, around the lifetime of the event stream.
+    * :meth:`start` is called once before events flow, in a bounded helper
+      thread during monitord startup. :meth:`stop` is called once after the
+      event worker exits, also in a bounded helper thread.
     * :meth:`handle_event` is called once per event on this plugin's *own*
       dedicated background thread. Events are delivered to a single plugin in
       order, but different plugins (and monitord's own database writer) run
@@ -84,6 +86,11 @@ class MonitordEventPlugin:
                 cfg = props.propertyset(
                     "pegasus.monitord.plugins.myplugin.", remove=True
                 )
+
+        If this hook does not return within ``start_timeout``, Pegasus skips
+        the plugin and continues startup. Python cannot forcibly kill the
+        helper thread, so Pegasus attempts bounded ``stop()`` cleanup if a
+        timed-out ``start()`` returns later.
         """
 
     def handle_event(self, event, kw):
@@ -122,7 +129,8 @@ class MonitordEventPlugin:
         Called once after all events have been processed and this plugin's
         background thread has been joined. If the worker does not exit within
         ``join_timeout``, Pegasus skips ``stop()`` rather than racing cleanup
-        against a still-running ``handle_event()``.
+        against a still-running ``handle_event()``. If ``stop()`` itself does
+        not return within ``join_timeout``, Pegasus logs and continues exit.
         """
 
 
@@ -171,20 +179,33 @@ class _PluginWorker:
         a full queue drops the event (counted), and a dead worker is a no-op.
         This guarantees monitord's parse loop is never stalled by a plugin.
 
-        The payload is snapshotted with ``dict(kw)`` before it is queued. The
-        worker thread reads the payload asynchronously, while monitord's main
-        thread keeps -- and in places reuses/mutates -- the original dict (e.g.
-        the per-LFN ``rc.meta`` loop in ``workflow.py`` overwrites ``key``/
-        ``value`` and re-sends the same dict; ``wf.plan`` adds ``db_url`` after
-        the event is dispatched). A per-worker copy gives each plugin its own
-        isolated, stable payload and removes that cross-thread data race. A
-        shallow copy suffices because every value monitord produces is an
-        immutable scalar (str/int/float/bool/None).
+        The payload is snapshotted with ``copy.deepcopy(kw)`` before it is
+        queued. The worker thread reads the payload asynchronously, while
+        monitord's main thread keeps -- and in places reuses/mutates -- the
+        original dict (e.g. the per-LFN ``rc.meta`` loop in ``workflow.py``
+        overwrites ``key``/``value`` and re-sends the same dict; ``wf.plan``
+        adds ``db_url`` after the event is dispatched). A per-worker copy gives
+        each plugin its own isolated, stable payload and removes that
+        cross-thread data race, including nested mutable values in composite
+        events.
         """
         if not self._thread.is_alive():
             return
         try:
-            self._queue.put_nowait((event, dict(kw)))
+            payload = copy.deepcopy(kw)
+        except Exception:
+            self._dropped += 1
+            if self._dropped == 1 or self._dropped % 1000 == 0:
+                self._log.error(
+                    "plugin %r could not snapshot event %s; dropped %d event(s) so far\n%s",
+                    self._name,
+                    event,
+                    self._dropped,
+                    traceback.format_exc(),
+                )
+            return
+        try:
+            self._queue.put_nowait((event, payload))
         except queue.Full:
             self._dropped += 1
             if self._dropped == 1 or self._dropped % 1000 == 0:
@@ -313,10 +334,18 @@ class MonitordPluginManager:
         for name, cls in self._iter_enabled_plugin_classes():
             plugin = None
             worker = None
+            join_timeout = DEFAULT_JOIN_TIMEOUT
             try:
-                queue_size, join_timeout, tick_interval = self._worker_config(name)
+                (
+                    queue_size,
+                    start_timeout,
+                    join_timeout,
+                    tick_interval,
+                ) = self._worker_config(name)
                 plugin = cls()
-                plugin.start(self._props)
+                if not self._start_plugin(name, plugin, start_timeout):
+                    plugin = None
+                    continue
                 worker = _PluginWorker(
                     name,
                     plugin,
@@ -333,7 +362,7 @@ class MonitordPluginManager:
                     name,
                     traceback.format_exc(),
                 )
-                self._cleanup_failed_start(name, plugin, worker)
+                self._cleanup_failed_start(name, plugin, worker, join_timeout)
         return len(self._workers)
 
     def dispatch(self, event, kw):
@@ -345,9 +374,9 @@ class MonitordPluginManager:
 
     def stop_all(self):
         """
-        Drain and join every plugin worker, then call each plugin's ``stop()``.
-        Ordering matches the contract: ``stop()`` runs after the plugin's
-        thread has been joined.
+        Drain and join every plugin worker, then call each plugin's ``stop()``
+        in a bounded helper thread. Ordering matches the contract: ``stop()``
+        starts only after the plugin's event thread has been joined.
         """
         for name, plugin, worker in self._workers:
             worker_exited = False
@@ -365,19 +394,14 @@ class MonitordPluginManager:
                     name,
                 )
                 continue
-            try:
-                plugin.stop()
-            except Exception:
-                self._log.error(
-                    "plugin %r stop() failed\n%s", name, traceback.format_exc()
-                )
+            self._stop_plugin(name, plugin, worker._join_timeout)
         self._workers = []
 
     # ------------------------------------------------------------------ #
     # discovery / configuration helpers
     # ------------------------------------------------------------------ #
 
-    def _cleanup_failed_start(self, name, plugin, worker):
+    def _cleanup_failed_start(self, name, plugin, worker, join_timeout):
         if worker is not None:
             try:
                 worker.close()
@@ -388,14 +412,112 @@ class MonitordPluginManager:
                     traceback.format_exc(),
                 )
         if plugin is not None:
+            self._stop_plugin(name, plugin, join_timeout, "startup cleanup")
+
+    def _start_plugin(self, name, plugin, timeout):
+        """
+        Run plugin.start() with a bounded wait. Timed-out plugins are skipped.
+        """
+        done = Event()
+        timed_out = Event()
+        cleanup_lock = Lock()
+        cleanup_started = []
+        result = {"ok": False, "traceback": None}
+
+        def cleanup_after_timeout():
+            with cleanup_lock:
+                if cleanup_started:
+                    return
+                cleanup_started.append(True)
+            if result["traceback"]:
+                self._log.error(
+                    "plugin %r start() failed after startup timeout\n%s",
+                    name,
+                    result["traceback"],
+                )
+                context = "late startup failure cleanup"
+            else:
+                self._log.warning(
+                    "plugin %r start() returned after startup timeout; running stop() cleanup",
+                    name,
+                )
+                context = "late startup cleanup"
+            self._stop_plugin(name, plugin, timeout, context)
+
+        def start_target():
+            try:
+                plugin.start(self._props)
+            except Exception:
+                result["traceback"] = traceback.format_exc()
+            else:
+                result["ok"] = True
+            finally:
+                done.set()
+                if timed_out.is_set():
+                    cleanup_after_timeout()
+
+        start_thread = Thread(
+            target=start_target,
+            name=f"monitord-plugin-{name}-start",
+            daemon=True,
+        )
+        start_thread.start()
+        start_thread.join(timeout=timeout)
+        if start_thread.is_alive():
+            timed_out.set()
+            self._log.warning(
+                "plugin %r start() did not return within %.1fs; skipping it",
+                name,
+                timeout,
+            )
+            if done.is_set():
+                cleanup_after_timeout()
+            return False
+        if result["traceback"]:
+            self._log.error(
+                "failed to start plugin %r; skipping\n%s",
+                name,
+                result["traceback"],
+            )
+            self._stop_plugin(name, plugin, timeout, "startup failure cleanup")
+            return False
+        return True
+
+    def _stop_plugin(self, name, plugin, timeout, context="shutdown"):
+        """
+        Run plugin.stop() with the same bound used for worker shutdown.
+        """
+        done = []
+
+        def stop_target():
             try:
                 plugin.stop()
             except Exception:
                 self._log.error(
-                    "plugin %r stop() failed during startup cleanup\n%s",
+                    "plugin %r stop() failed during %s\n%s",
                     name,
+                    context,
                     traceback.format_exc(),
                 )
+            finally:
+                done.append(True)
+
+        stop_thread = Thread(
+            target=stop_target,
+            name=f"monitord-plugin-{name}-stop",
+            daemon=True,
+        )
+        stop_thread.start()
+        stop_thread.join(timeout=timeout)
+        if stop_thread.is_alive():
+            self._log.warning(
+                "plugin %r stop() did not return within %.1fs during %s; abandoning it",
+                name,
+                timeout,
+                context,
+            )
+            return False
+        return bool(done)
 
     def _iter_enabled_plugin_classes(self):
         for name, ep in self._discover_entry_points():
@@ -426,15 +548,23 @@ class MonitordPluginManager:
             f"pegasus.monitord.plugins.{name}.join_timeout",
             DEFAULT_JOIN_TIMEOUT,
         )
+        start_timeout = self._float_prop(
+            f"pegasus.monitord.plugins.{name}.start_timeout",
+            join_timeout,
+        )
         tick_interval = self._float_prop(
             f"pegasus.monitord.plugins.{name}.tick_interval",
             DEFAULT_TICK_INTERVAL,
         )
+        if start_timeout < 0:
+            raise ValueError(
+                f"pegasus.monitord.plugins.{name}.start_timeout must be >= 0"
+            )
         if join_timeout < 0:
             raise ValueError(
                 f"pegasus.monitord.plugins.{name}.join_timeout must be >= 0"
             )
-        return queue_size, join_timeout, tick_interval
+        return queue_size, start_timeout, join_timeout, tick_interval
 
     def _discover_entry_points(self):
         """
