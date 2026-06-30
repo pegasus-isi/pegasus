@@ -123,9 +123,6 @@ ignore = ["F403", "F405"]
 "src/Pegasus/cli/**" = ["E402", "LOG015"]
 "src/Pegasus/netlogger/**" = ["F821", "E741", "F811"]
 "test/**" = ["S101", "D101", "D103", "D104"]
-# BUGS
-"src/Pegasus/cli/pegasus-analyzer.py" = ["F823", "F841"]
-"src/Pegasus/monitoring/workflow.py" = ["F821"]
 
 [tool.ruff.lint.pydocstyle]
 

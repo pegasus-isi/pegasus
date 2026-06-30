@@ -21,6 +21,7 @@ This file implements the Workflow class for pegasus-monitord.
 import logging
 import os
 import re
+import shutil
 import socket
 import sys
 import time
@@ -1179,9 +1180,11 @@ class Workflow:
 
         # Remove monitord.done file, if it is there
         if self._output_dir is None:
-            os.path.join(self._run_dir, MONITORD_DONE_FILE)
+            my_touch_file = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
-            os.path.join(self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}")
+            my_touch_file = os.path.join(
+                self._output_dir, f"{self._wf_uuid}-{MONITORD_DONE_FILE}"
+            )
 
         try:
             os.unlink(my_touch_file)
@@ -1373,11 +1376,8 @@ class Workflow:
                 ):
                     # Copy common condor log to local directory
                     my_log = utils.out2log(self._run_dir, self._out_file)[0]
-                    my_cmd = f"/bin/cp -p {self._condorlog} {my_log}.copy"
-                    my_status, my_output = commands.getstatusoutput(my_cmd)
-
-                    if my_status == 0:
-                        # Copy successful
+                    try:
+                        shutil.copy2(self._condorlog, f"{my_log}.copy")
                         try:
                             os.unlink(my_log)
                         except Exception:
@@ -1389,8 +1389,15 @@ class Workflow:
                                 logger.error(f"renaming {my_log}.copy to {my_log}")
                             else:
                                 logger.info(f"copied common log to {self._run_dir}")
-                    else:
-                        logger.info(f"{my_cmd}: {my_status:d}:{my_output}")
+                    except Exception as e:
+                        logger.info(
+                            logger.info(
+                                "failed copying %s to %s.copy: %s",
+                                self._condorlog,
+                                my_log,
+                                e,
+                            )
+                        )
 
     def find_jobid(self, jobid):
         """
