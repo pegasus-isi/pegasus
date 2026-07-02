@@ -96,7 +96,8 @@ endif()
 # The Java planner and Python tools look these up via pegasus.home.sharedstatedir
 # which maps to Pegasus/data/ in the installed wheel.
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/sh/"
-        DESTINATION "${_data_base}/sh")
+        DESTINATION "${_data_base}/sh"
+        USE_SOURCE_PERMISSIONS)
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/notification/"
         DESTINATION "${_data_base}/notification")
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/htcondor/"
@@ -210,22 +211,28 @@ if(PEGASUS_BUILD_WORKER)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
     set(_worker_tarball "pegasus-worker-${PEGASUS_VERSION}-${PEGASUS_PLATFORM}.tar.gz")
+    set(_worker_pkg_name "pegasus-${PEGASUS_VERSION}")
     set(_worker_staging "${CMAKE_BINARY_DIR}/worker_staging")
+    set(_worker_payload "${_worker_staging}/${_worker_pkg_name}")
 
+    # PegasusLite (share/pegasus/sh/pegasus-lite-common.sh) requires the
+    # worker tarball to contain a single top-level directory so it can be
+    # renamed per-system after extraction; tarring "." directly would leave
+    # payload files at the tarball root and break that logic.
     add_custom_target(build_worker_tarball ALL
         COMMENT "Building worker package tarball"
         COMMAND ${CMAKE_COMMAND} -E rm -rf "${_worker_staging}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_staging}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_payload}"
         COMMAND "${Python3_EXECUTABLE}" -m pip install
-                --no-deps --target "${_worker_staging}"
+                --no-deps --target "${_worker_payload}"
                 "${CMAKE_SOURCE_DIR}/packages/pegasus-worker"
         COMMAND "${Python3_EXECUTABLE}" -m pip install
-                --target "${_worker_staging}"
+                --target "${_worker_payload}"
                 "boto3>1.12" "globus-sdk>=3.23.0,<4"
-        COMMAND find "${_worker_staging}" -name "__pycache__" -type d -exec rm -rf {} +
-        COMMAND find "${_worker_staging}" -name "*.dist-info" -type d -exec rm -rf {} +
+        COMMAND find "${_worker_payload}" -name "__pycache__" -type d -exec rm -rf {} +
+        COMMAND find "${_worker_payload}" -name "*.dist-info" -type d -exec rm -rf {} +
         COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
-                "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" .
+                "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         VERBATIM)
 

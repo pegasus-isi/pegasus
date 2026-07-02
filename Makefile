@@ -85,6 +85,7 @@ build-worker:
 	$(CMAKE) --build $(BUILD_DIR) --target build_worker_tarball
 	mkdir -p $(WORKER_DATA)
 	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
+	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz dist/
 
 # Build a .deb package using Docker (requires Docker).
 # debtest.Dockerfile is built and run with the source tree mounted.
