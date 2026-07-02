@@ -5,6 +5,7 @@ its host sink (Pegasus.monitoring.event_output.PluginHostEventSink).
 
 import importlib.metadata
 import logging
+import queue
 import threading
 import time
 
@@ -14,6 +15,7 @@ from Pegasus.monitoring.plugin import (
     MONITORD_PLUGIN_ENTRY_POINT_GROUP,
     MonitordEventPlugin,
     MonitordPluginManager,
+    enabled_plugin_names,
 )
 from Pegasus.tools import properties
 
@@ -898,3 +900,646 @@ def test_stop_all_drains_and_joins_ticking_plugin(monkeypatch):
     ticks_at_stop = len(plugin.ticks)
     time.sleep(0.2)
     assert len(plugin.ticks) == ticks_at_stop
+
+
+# --------------------------------------------------------------------------- #
+# enabled-names parsing + host activation gate
+# --------------------------------------------------------------------------- #
+
+
+def test_enabled_plugin_names_parsing():
+    assert enabled_plugin_names(None) == set()
+    props = _props(
+        {
+            "pegasus.monitord.plugins.a.enabled": "true",
+            "pegasus.monitord.plugins.b.enabled": "TRUE",
+            "pegasus.monitord.plugins.c.enabled": "on",
+            "pegasus.monitord.plugins.d.enabled": "yes",
+            "pegasus.monitord.plugins.e.enabled": "1",
+            "pegasus.monitord.plugins.f.enabled": "false",
+            "pegasus.monitord.plugins.g.enabled": "off",
+            "pegasus.monitord.plugins.h.enabled": "no",
+            "pegasus.monitord.plugins.i.enabled": "0",
+            "pegasus.monitord.plugins.j.queue_size": "5",
+            # unconventional dotted name still round-trips
+            "pegasus.monitord.plugins.foo.bar.enabled": "true",
+            # a bare .enabled names no plugin and is ignored
+            "pegasus.monitord.plugins.enabled": "true",
+        }
+    )
+    assert enabled_plugin_names(props) == {"a", "b", "c", "d", "e", "foo.bar"}
+
+
+def test_gate_requires_truthy_enabled():
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    assert not eo.has_monitord_plugin_config(None)
+    assert not eo.has_monitord_plugin_config(_props())
+    assert not eo.has_monitord_plugin_config(
+        _props({"pegasus.monitord.plugins.rec.enabled": "false"})
+    )
+    assert not eo.has_monitord_plugin_config(
+        _props({"pegasus.monitord.plugins.rec.queue_size": "5"})
+    )
+    assert not eo.has_monitord_plugin_config(
+        _props({"pegasus.monitord.plugins.enabled": "true"})
+    )
+    assert eo.has_monitord_plugin_config(
+        _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    )
+    assert eo.has_monitord_plugin_config(
+        _props({"pegasus.monitord.plugins.rec.enabled": "on"})
+    )
+
+
+def test_endpoint_not_injected_when_plugins_disabled():
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    props = _props(
+        {
+            "pegasus.monitord.plugins.rec.enabled": "false",
+            "pegasus.monitord.plugins.rec.queue_size": "5",
+        }
+    )
+    assert eo.ensure_monitord_plugin_endpoint(props) is None
+    injected_key = f"pegasus.catalog.workflow.{eo.PLUGIN_HOST_ENDPOINT_BASE}.url"
+    assert props.property(injected_key) is None
+
+
+def test_factory_disabled_plugins_is_plain_sink(tmp_path):
+    """Leftover plugin config with everything disabled must not flip the sink
+    topology to a multiplex (the regression this gate exists for)."""
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    props = _props(
+        {
+            "pegasus.monitord.plugins.rec.enabled": "false",
+            "pegasus.monitord.plugins.rec.queue_size": "5",
+        }
+    )
+    assert eo.ensure_monitord_plugin_endpoint(props) is None
+    dest = str(tmp_path / "monitord.bp")
+    sink = eo.create_wf_event_sink(
+        dest, db_type=eo.connection.DBType.WORKFLOW, enc="json", props=props
+    )
+    assert isinstance(sink, eo.FileEventSink)
+    assert not isinstance(sink, eo.MultiplexEventSink)
+    sink.close()
+
+
+# --------------------------------------------------------------------------- #
+# enabled-but-unregistered warning
+# --------------------------------------------------------------------------- #
+
+
+def test_warns_on_enabled_but_unregistered_plugin(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.rec.enabled": "true",
+            "pegasus.monitord.plugins.ghost.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    with caplog.at_level(logging.WARNING):
+        assert mgr.discover_and_start() == 1
+    unmatched = [r for r in caplog.records if "entry-point group" in r.getMessage()]
+    assert len(unmatched) == 1
+    assert "'ghost'" in unmatched[0].getMessage()
+    assert not any("'rec'" in r.getMessage() for r in unmatched)
+    mgr.stop_all()
+
+
+def test_no_warning_when_all_enabled_names_registered(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    with caplog.at_level(logging.WARNING):
+        assert mgr.discover_and_start() == 1
+    assert not [r for r in caplog.records if "entry-point group" in r.getMessage()]
+    mgr.stop_all()
+
+
+def test_disabled_unregistered_name_does_not_warn(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.ghost.enabled": "false",
+            "pegasus.monitord.plugins.ghost.queue_size": "5",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    with caplog.at_level(logging.WARNING):
+        assert mgr.discover_and_start() == 0
+    assert not [r for r in caplog.records if "entry-point group" in r.getMessage()]
+
+
+# --------------------------------------------------------------------------- #
+# dropped/filtered totals at close
+# --------------------------------------------------------------------------- #
+
+
+def test_dropped_total_summary_logged_at_close(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    # pin the worker, then overflow the queue so some events drop
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+    for i in range(1, 6):
+        mgr.dispatch(f"stampede.e{i}", {})
+    total = worker._dropped
+    assert total >= 1
+
+    plugin.release.set()
+    with caplog.at_level(logging.WARNING):
+        mgr.stop_all()
+
+    summaries = [r for r in caplog.records if "in total" in r.getMessage()]
+    assert len(summaries) == 1
+    msg = summaries[0].getMessage()
+    assert f"dropped {total} event(s) in total" in msg
+    assert "'slow'" in msg
+
+
+def test_no_dropped_summary_when_nothing_dropped(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    mgr.dispatch("stampede.e0", {})
+    mgr.dispatch("stampede.e1", {})
+    assert _wait_for(lambda: len(plugin.events) == 2)
+    with caplog.at_level(logging.INFO):
+        mgr.stop_all()
+    assert not [r for r in caplog.records if "in total" in r.getMessage()]
+    assert not [r for r in caplog.records if "filtered" in r.getMessage()]
+
+
+def test_dropped_summary_when_worker_abandoned(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "1",
+            "pegasus.monitord.plugins.slow.join_timeout": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+    mgr.dispatch("stampede.e1", {})  # fills the queue
+    mgr.dispatch("stampede.e2", {})  # dropped
+    assert worker._dropped == 1
+
+    with caplog.at_level(logging.WARNING):
+        mgr.stop_all()
+
+    messages = [r.getMessage() for r in caplog.records]
+    # the summary fires even when the worker misses the join timeout
+    assert any("did not exit" in m for m in messages)
+    assert any("in total" in m for m in messages)
+
+    # cleanup: unblock the worker and shut its thread down for real (the
+    # sentinel put in close() failed against the full queue)
+    plugin.release.set()
+    worker._queue.put(worker._SENTINEL)
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
+# --------------------------------------------------------------------------- #
+# event filtering — skip the deepcopy+enqueue for uninteresting events
+# --------------------------------------------------------------------------- #
+
+
+class DeepcopyProbe:
+    """Payload value that records deepcopy calls -- proves filtering skips
+    the snapshot itself, not just delivery."""
+
+    def __init__(self):
+        self.copies = 0
+
+    def __deepcopy__(self, memo):
+        self.copies += 1
+        return self  # identity is fine; only the call count matters
+
+
+class FilteredRecordingPlugin(RecordingPlugin):
+    event_filter = ("stampede.job_inst.",)
+
+
+class TickOnlyPlugin(TickingPlugin):
+    event_filter = ()
+
+
+def test_event_filter_class_attribute_filters_events(monkeypatch):
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.filt.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    # filtered events first; the matching event last acts as the fence --
+    # per-worker FIFO means anything enqueued before it would arrive first
+    mgr.dispatch("stampede.task.info", {"n": "1"})
+    mgr.dispatch("stampede.job.edge", {"n": "2"})
+    mgr.dispatch("stampede.xwf.end", {"n": "3"})
+    mgr.dispatch("stampede.job_inst.main.end", {"n": "4"})
+
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    mgr.stop_all()
+    assert plugin.events == [("stampede.job_inst.main.end", {"n": "4"})]
+
+
+def test_event_filter_skips_deepcopy_and_enqueue(monkeypatch):
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.filt.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    worker = mgr._workers[0][2]
+
+    probe = DeepcopyProbe()
+    mgr.dispatch("stampede.task.info", {"probe": probe})
+    assert probe.copies == 0  # rejected before the payload snapshot
+    assert worker._queue.qsize() == 0  # and never enqueued
+    assert worker._filtered == 1
+
+    mgr.dispatch("stampede.job_inst.main.end", {"probe": probe})
+    assert probe.copies == 1
+    mgr.stop_all()
+
+
+def test_events_property_overrides_class_filter(monkeypatch):
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.filt.enabled": "true",
+            "pegasus.monitord.plugins.filt.events": "stampede.task.",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    mgr.dispatch("stampede.job_inst.main.end", {"n": "1"})  # class filter says yes
+    mgr.dispatch("stampede.task.info", {"n": "2"})  # property replaces it
+
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    mgr.stop_all()
+    assert plugin.events == [("stampede.task.info", {"n": "2"})]
+
+
+def test_events_property_star_delivers_everything(monkeypatch):
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.filt.enabled": "true",
+            "pegasus.monitord.plugins.filt.events": "*",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    mgr.dispatch("stampede.task.info", {"n": "1"})
+    mgr.dispatch("stampede.job_inst.main.end", {"n": "2"})
+
+    assert _wait_for(lambda: len(plugin.events) == 2)
+    mgr.stop_all()
+    assert [e for e, _kw in plugin.events] == [
+        "stampede.task.info",
+        "stampede.job_inst.main.end",
+    ]
+
+
+def test_empty_events_property_skips_plugin_before_start(monkeypatch):
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+    _patch_entry_points(monkeypatch, {"badcfg": CountingStartPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.badcfg.enabled": "true",
+            "pegasus.monitord.plugins.badcfg.events": " , ",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 0
+    assert mgr._workers == []
+    assert CountingStartPlugin.started == 0
+
+
+def test_empty_tuple_event_filter_delivers_no_events_but_ticks(monkeypatch):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        TickOnlyPlugin,
+        {"pegasus.monitord.plugins.tk.tick_interval": "0.05"},
+    )
+    mgr.dispatch("stampede.e0", {})
+    mgr.dispatch("stampede.xwf.end", {})
+    assert _wait_for(lambda: len(plugin.ticks) >= 2)
+    mgr.stop_all()
+    assert plugin.events == []
+    assert worker._filtered == 2
+
+
+def test_filtered_events_are_not_counted_as_dropped(monkeypatch):
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.filt.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    worker = mgr._workers[0][2]
+
+    for i in range(3):
+        mgr.dispatch("stampede.task.info", {"n": str(i)})
+
+    assert worker._filtered == 3
+    assert worker._dropped == 0
+    mgr.stop_all()
+
+
+def test_filter_matches_fully_qualified_names_through_sink(monkeypatch):
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    _patch_entry_points(monkeypatch, {"filt": FilteredRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.filt.enabled": "true"})
+    sink = eo.PluginHostEventSink("plugins://", props=props)
+    plugin = sink._manager._workers[0][1]
+
+    # the sink qualifies names before dispatch, so patterns match the
+    # "stampede."-prefixed form
+    sink.send("task.info", {"n": "1"})
+    sink.send("job_inst.main.end", {"n": "2"})
+
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    sink.close()
+    assert plugin.events == [("stampede.job_inst.main.end", {"n": "2"})]
+
+
+# --------------------------------------------------------------------------- #
+# overflow policy — drop-newest (default) vs drop-oldest
+# --------------------------------------------------------------------------- #
+
+
+def test_drop_oldest_keeps_newest_under_overflow(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "2",
+            "pegasus.monitord.plugins.slow.overflow_policy": "drop-oldest",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+
+    start = time.monotonic()
+    for i in range(1, 6):
+        mgr.dispatch(f"stampede.e{i}", {})
+    elapsed = time.monotonic() - start
+    assert elapsed < 1.0, f"dispatch blocked for {elapsed:.2f}s"
+
+    plugin.release.set()
+    mgr.stop_all()
+
+    # oldest queued events (e1..e3) were evicted; the freshest two survive
+    assert plugin.handled == ["stampede.e0", "stampede.e4", "stampede.e5"]
+    assert worker._dropped == 3
+
+
+def test_drop_newest_is_the_default_policy(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+    for i in range(1, 6):
+        mgr.dispatch(f"stampede.e{i}", {})
+
+    plugin.release.set()
+    mgr.stop_all()
+
+    # the first two queued events survive; the late arrivals were dropped
+    assert plugin.handled == ["stampede.e0", "stampede.e1", "stampede.e2"]
+    assert worker._dropped == 3
+
+
+def test_invalid_overflow_policy_skips_plugin_before_start(monkeypatch):
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+    _patch_entry_points(monkeypatch, {"badcfg": CountingStartPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.badcfg.enabled": "true",
+            "pegasus.monitord.plugins.badcfg.overflow_policy": "drop-random",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 0
+    assert mgr._workers == []
+    assert CountingStartPlugin.started == 0
+
+
+def test_drop_oldest_never_evicts_shutdown_sentinel(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "1",
+            "pegasus.monitord.plugins.slow.overflow_policy": "drop-oldest",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    # worker dequeues e0 and blocks inside handle_event; queue is now empty
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+    assert _wait_for(lambda: worker._queue.qsize() == 0)
+
+    # simulate the forbidden race: sentinel already queued while submitting
+    worker._queue.put_nowait(worker._SENTINEL)
+    worker.submit("stampede.e1", {})
+
+    # the sentinel survived; the NEW event was dropped instead
+    assert worker._dropped == 1
+    assert worker._queue.qsize() == 1
+
+    plugin.release.set()
+    assert _wait_for(lambda: not worker._thread.is_alive())
+    assert plugin.handled == ["stampede.e0"]
+    mgr.stop_all()
+
+
+def test_drop_oldest_empty_race_falls_back_without_blocking(monkeypatch):
+    _patch_entry_points(monkeypatch, {"slow": BlockingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slow.enabled": "true",
+            "pegasus.monitord.plugins.slow.queue_size": "1",
+            "pegasus.monitord.plugins.slow.overflow_policy": "drop-oldest",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.e0", {})
+    assert plugin.entered.wait(timeout=2)
+    mgr.dispatch("stampede.e1", {})  # fills the queue
+
+    # stub the eviction read to report an empty queue while it is still
+    # full: the bounded fall-through must drop the new event -- no loop,
+    # no block, no exception. The worker loop uses get(), not get_nowait(),
+    # so it is unaffected.
+    def _raise_empty():
+        raise queue.Empty
+
+    monkeypatch.setattr(worker._queue, "get_nowait", _raise_empty)
+    start = time.monotonic()
+    worker.submit("stampede.e2", {})
+    elapsed = time.monotonic() - start
+    assert elapsed < 1.0, f"submit blocked for {elapsed:.2f}s"
+    assert worker._dropped == 1
+
+    monkeypatch.undo()
+    plugin.release.set()
+    mgr.stop_all()
+
+
+# --------------------------------------------------------------------------- #
+# restart flag — replay/recovery re-emits the stream from the beginning
+# --------------------------------------------------------------------------- #
+
+
+class RestartAwarePlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.started_with = "UNSET"
+        self.restart_seen = "UNSET"
+
+    def start(self, props=None, restart=False):
+        self.started_with = props
+        self.restart_seen = restart
+
+
+class KwargsStartPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.start_kwargs = None
+
+    def start(self, props=None, **kwargs):
+        self.start_kwargs = kwargs
+
+
+def test_base_class_start_accepts_restart():
+    MonitordEventPlugin().start(None, restart=True)  # must not raise
+
+
+def test_old_style_start_signature_still_works_under_restart(monkeypatch):
+    # RecordingPlugin keeps the historical one-argument signature
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    mgr = MonitordPluginManager(props, restart=True)
+    assert mgr.discover_and_start() == 1
+    plugin = mgr._workers[0][1]
+    assert plugin.started_with is props
+
+    mgr.dispatch("stampede.e0", {"n": "1"})
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    mgr.stop_all()
+    assert plugin.stopped is True
+
+
+def test_new_style_start_receives_restart_true(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ra": RestartAwarePlugin})
+    props = _props({"pegasus.monitord.plugins.ra.enabled": "true"})
+    mgr = MonitordPluginManager(props, restart=True)
+    assert mgr.discover_and_start() == 1
+    plugin = mgr._workers[0][1]
+    assert plugin.restart_seen is True
+    assert plugin.started_with is props
+    mgr.stop_all()
+
+
+def test_restart_defaults_to_false(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ra": RestartAwarePlugin})
+    props = _props({"pegasus.monitord.plugins.ra.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 1
+    assert mgr._workers[0][1].restart_seen is False
+    mgr.stop_all()
+
+
+def test_var_kwargs_start_receives_restart(monkeypatch):
+    _patch_entry_points(monkeypatch, {"kw": KwargsStartPlugin})
+    props = _props({"pegasus.monitord.plugins.kw.enabled": "true"})
+    mgr = MonitordPluginManager(props, restart=True)
+    assert mgr.discover_and_start() == 1
+    assert mgr._workers[0][1].start_kwargs == {"restart": True}
+    mgr.stop_all()
+
+
+def test_plugin_host_event_sink_forwards_restart(monkeypatch):
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    _patch_entry_points(monkeypatch, {"ra": RestartAwarePlugin})
+    props = _props({"pegasus.monitord.plugins.ra.enabled": "true"})
+
+    sink = eo.PluginHostEventSink("plugins://", props=props, restart=True)
+    assert sink._manager._workers[0][1].restart_seen is True
+    sink.close()
+
+    sink = eo.PluginHostEventSink("plugins://", props=props)
+    assert sink._manager._workers[0][1].restart_seen is False
+    sink.close()
+
+
+def test_factory_threads_restart_through_multiplex_to_plugins(monkeypatch, tmp_path):
+    eo = pytest.importorskip("Pegasus.monitoring.event_output")
+    _patch_entry_points(monkeypatch, {"ra": RestartAwarePlugin})
+    props = _props(
+        {
+            "pegasus.catalog.workflow.plugins.url": "plugins://",
+            "pegasus.monitord.plugins.ra.enabled": "true",
+        }
+    )
+    dest = str(tmp_path / "monitord.bp")
+    # the exact production kwarg fan-out: create_wf_event_sink ->
+    # MultiplexEventSink(**kw) -> per-endpoint create -> PluginHostEventSink
+    sink = eo.create_wf_event_sink(
+        dest,
+        db_type=eo.connection.DBType.WORKFLOW,
+        enc="json",
+        props=props,
+        restart=True,
+        monitord_props=props,
+    )
+    assert isinstance(sink, eo.MultiplexEventSink)
+    host = sink._endpoints["plugins"]
+    assert isinstance(host, eo.PluginHostEventSink)
+    assert host._manager._workers[0][1].restart_seen is True
+    sink.close()

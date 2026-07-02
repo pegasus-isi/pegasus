@@ -32,7 +32,7 @@ from Pegasus import json
 from Pegasus.db import connection, expunge
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db.workflow_loader import WorkflowLoader
-from Pegasus.monitoring.plugin import MonitordPluginManager
+from Pegasus.monitoring.plugin import MonitordPluginManager, enabled_plugin_names
 from Pegasus.netlogger import nlapi
 from Pegasus.tools import properties, utils
 
@@ -62,9 +62,12 @@ PLUGIN_HOST_ENDPOINT_PREFIX = "pegasus.catalog.workflow."
 
 def has_monitord_plugin_config(props):
     """
-    Return True when the full Pegasus properties include monitord plugin config.
+    Return True when the full Pegasus properties enable at least one monitord
+    plugin (a truthy ``pegasus.monitord.plugins.<name>.enabled``). Leftover
+    plugin configuration with every plugin disabled must not flip monitord's
+    sink topology to a multiplex.
     """
-    return bool(props and props.propertyset("pegasus.monitord.plugins.", False))
+    return bool(props and enabled_plugin_names(props))
 
 
 def ensure_monitord_plugin_endpoint(props):
@@ -328,7 +331,8 @@ class PluginHostEventSink(EventSink):
 
     Attached to monitord's fan-out via the ``plugins://`` URL scheme, which is
     injected as a reserved extra ``pegasus.catalog.workflow.*.url`` endpoint
-    when any ``pegasus.monitord.plugins.*`` property is present.
+    when at least one plugin is enabled via
+    ``pegasus.monitord.plugins.<name>.enabled``.
 
     Plugin config lives under ``pegasus.monitord.plugins.*``, which the
     multiplex machinery strips from the per-endpoint ``props`` it hands each
@@ -336,12 +340,18 @@ class PluginHostEventSink(EventSink):
     as ``monitord_props`` (alongside the ``restart``/``backup`` kwargs already
     fanned out to every sink); we use it when present and fall back to ``props``
     otherwise.
+
+    The ``restart`` kwarg monitord fans out to every sink (True in
+    replay/recovery, when the whole event stream is re-emitted;
+    ``FileEventSink`` truncates on it) is forwarded to each plugin's
+    ``start()``.
     """
 
-    def __init__(self, dest, props=None, monitord_props=None, **kw):
+    def __init__(self, dest, props=None, monitord_props=None, restart=False, **kw):
         super().__init__()
         self._manager = MonitordPluginManager(
-            monitord_props if monitord_props is not None else props
+            monitord_props if monitord_props is not None else props,
+            restart=restart,
         )
         started = self._manager.discover_and_start()
         self._log.info("plugin host event sink started %d plugin(s)", started)

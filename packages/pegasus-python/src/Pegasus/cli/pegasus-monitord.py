@@ -1177,8 +1177,8 @@ else:
     # Enable monitord event plugins by injecting a reserved synthetic multiplex
     # endpoint, so the existing fan-out machinery drives the plugin host sink
     # alongside the database sink. Only fires when at least one
-    # pegasus.monitord.plugins.* property is present (otherwise no behavior
-    # change).
+    # pegasus.monitord.plugins.<name>.enabled property is true (otherwise no
+    # behavior change).
     plugin_endpoint = eo.ensure_monitord_plugin_endpoint(props)
     if plugin_endpoint is not None:
         logger.info(

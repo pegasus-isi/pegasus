@@ -30,7 +30,9 @@ lives in :mod:`Pegasus.monitoring.event_output` as ``PluginHostEventSink``.
 #  limitations under the License.
 ##
 
+import collections
 import copy
+import inspect
 import logging
 import queue
 import time
@@ -44,10 +46,52 @@ log = logging.getLogger(__name__)
 # Entry-point group third-party packages register their plugins under.
 MONITORD_PLUGIN_ENTRY_POINT_GROUP = "pegasus.monitord.plugins"
 
+# Property namespace all plugin configuration lives under.
+MONITORD_PLUGIN_PROPERTY_PREFIX = "pegasus.monitord.plugins."
+
+_ENABLED_SUFFIX = ".enabled"
+
 # Per-plugin defaults (overridable via pegasus.monitord.plugins.<name>.*).
 DEFAULT_QUEUE_SIZE = 10000
 DEFAULT_JOIN_TIMEOUT = 10.0
 DEFAULT_TICK_INTERVAL = 0.0  # 0 = no ticks; the worker blocks exactly as before
+
+# Queue-overflow policies (pegasus.monitord.plugins.<name>.overflow_policy).
+OVERFLOW_DROP_NEWEST = "drop-newest"
+OVERFLOW_DROP_OLDEST = "drop-oldest"
+DEFAULT_OVERFLOW_POLICY = OVERFLOW_DROP_NEWEST
+
+# Distinct from None, which could in principle be a queued value.
+_NOTHING = object()
+
+_WorkerConfig = collections.namedtuple(
+    "_WorkerConfig",
+    "queue_size start_timeout join_timeout tick_interval events overflow_policy",
+)
+
+
+def enabled_plugin_names(props):
+    """
+    Return the set of plugin names with a truthy
+    ``pegasus.monitord.plugins.<name>.enabled`` property.
+
+    The name is everything between the namespace prefix and the *final*
+    ``.enabled`` suffix -- the exact inverse of the per-name lookup in
+    :meth:`MonitordPluginManager._is_enabled` -- so an (unconventional)
+    dotted entry-point name still round-trips. A bare
+    ``pegasus.monitord.plugins.enabled`` key names no plugin and is ignored.
+    """
+    if props is None:
+        return set()
+    names = set()
+    subset = props.propertyset(MONITORD_PLUGIN_PROPERTY_PREFIX, True)
+    for key, val in subset.items():
+        if not key.endswith(_ENABLED_SUFFIX):
+            continue
+        name = key[: -len(_ENABLED_SUFFIX)]
+        if name and utils.make_boolean(val):
+            names.add(name)
+    return names
 
 
 class MonitordEventPlugin:
@@ -75,7 +119,14 @@ class MonitordEventPlugin:
     present on every event payload.
     """
 
-    def start(self, props=None):
+    #: Optional event filter: ``None`` (default) delivers every event; a
+    #: string or tuple of strings is matched as *prefixes* against the
+    #: fully-qualified event name (e.g. ``"stampede.job_inst."``). An empty
+    #: tuple delivers no events (tick-only plugins). Operators can override
+    #: it with the ``pegasus.monitord.plugins.<name>.events`` property.
+    event_filter = None
+
+    def start(self, props=None, restart=False):
         """
         Called once, before any events flow.
 
@@ -86,6 +137,22 @@ class MonitordEventPlugin:
                 cfg = props.propertyset(
                     "pegasus.monitord.plugins.myplugin.", remove=True
                 )
+
+        :param restart: ``True`` when monitord is re-emitting the entire
+            event stream from the beginning of ``dagman.out`` -- either a
+            user-requested replay (``pegasus-monitord -r``) or monitord's own
+            recovery after an unclean shutdown. Every event a previous run
+            may already have delivered to this plugin will be delivered
+            again; truncate or deduplicate durable output the way monitord's
+            own sinks do (the stampede DB rows are purged, ``jobstate.log``
+            is rotated, the file sink truncates instead of appending).
+            ``False`` on a normal first run.
+
+        Backward compatibility: overrides may keep the historical
+        one-argument signature ``start(self, props=None)``; the host passes
+        ``restart`` only when the override names it or accepts ``**kwargs``.
+        Accepting ``**kwargs`` is recommended so future context keywords do
+        not require another signature change.
 
         If this hook does not return within ``start_timeout``, Pegasus skips
         the plugin and continues startup. Python cannot forcibly kill the
@@ -156,16 +223,21 @@ class _PluginWorker:
         queue_size=DEFAULT_QUEUE_SIZE,
         join_timeout=DEFAULT_JOIN_TIMEOUT,
         tick_interval=DEFAULT_TICK_INTERVAL,
+        event_filter=None,
+        overflow_policy=DEFAULT_OVERFLOW_POLICY,
     ):
         self._name = name
         self._plugin = plugin
         self._log = logging.getLogger(f"{__name__}._PluginWorker.{name}")
         self._join_timeout = join_timeout
         self._tick_interval = tick_interval
+        self._event_filter = event_filter
+        self._overflow_policy = overflow_policy
         # queue_size <= 0 means unbounded (matches queue.Queue default)
         maxsize = queue_size if queue_size and queue_size > 0 else 0
         self._queue = queue.Queue(maxsize=maxsize)
         self._dropped = 0
+        self._filtered = 0
         self._thread = Thread(
             target=self._run, name=f"monitord-plugin-{name}", daemon=True
         )
@@ -173,11 +245,21 @@ class _PluginWorker:
     def start(self):
         self._thread.start()
 
+    def _record_drop(self):
+        """Count one lost event; True when this drop should be logged
+        (the 1st and every 1000th, matching the established cadence)."""
+        self._dropped += 1
+        return self._dropped == 1 or self._dropped % 1000 == 0
+
     def submit(self, event, kw):
         """
         Enqueue an event for the plugin thread. Never blocks and never raises:
-        a full queue drops the event (counted), and a dead worker is a no-op.
+        a full queue drops an event (counted), and a dead worker is a no-op.
         This guarantees monitord's parse loop is never stalled by a plugin.
+
+        Events rejected by the plugin's event filter are skipped *before* the
+        payload snapshot below -- that is the entire point of filtering; they
+        are counted separately and are not drops.
 
         The payload is snapshotted with ``copy.deepcopy(kw)`` before it is
         queued. The worker thread reads the payload asynchronously, while
@@ -188,14 +270,23 @@ class _PluginWorker:
         each plugin its own isolated, stable payload and removes that
         cross-thread data race, including nested mutable values in composite
         events.
+
+        On overflow, which event is lost depends on ``overflow_policy``:
+        ``drop-newest`` (default) drops the event being submitted;
+        ``drop-oldest`` evicts the oldest queued event so a live-monitoring
+        plugin keeps the freshest state. Either way exactly one event is
+        lost per overflow.
         """
+        flt = self._event_filter
+        if flt is not None and not event.startswith(flt):
+            self._filtered += 1
+            return
         if not self._thread.is_alive():
             return
         try:
             payload = copy.deepcopy(kw)
         except Exception:
-            self._dropped += 1
-            if self._dropped == 1 or self._dropped % 1000 == 0:
+            if self._record_drop():
                 self._log.error(
                     "plugin %r could not snapshot event %s; dropped %d event(s) so far\n%s",
                     self._name,
@@ -204,16 +295,57 @@ class _PluginWorker:
                     traceback.format_exc(),
                 )
             return
+        item = (event, payload)
         try:
-            self._queue.put_nowait((event, payload))
+            self._queue.put_nowait(item)
+            return
         except queue.Full:
-            self._dropped += 1
-            if self._dropped == 1 or self._dropped % 1000 == 0:
-                self._log.warning(
-                    "plugin %r queue full; dropped %d event(s) so far",
-                    self._name,
-                    self._dropped,
-                )
+            pass
+        if self._overflow_policy == OVERFLOW_DROP_OLDEST:
+            # Single-producer invariant: only monitord's main thread ever
+            # put()s here (dispatch via the sink's send, and the shutdown
+            # sentinel in close() strictly after the last send). The worker
+            # only get()s. So the slot freed below cannot be stolen -- one
+            # bounded retry, never a loop, never a block.
+            evicted = _NOTHING
+            try:
+                evicted = self._queue.get_nowait()
+            except queue.Empty:
+                pass  # worker drained concurrently; a slot is free anyway
+            else:
+                self._queue.task_done()  # keep unfinished-task count balanced
+            if evicted is self._SENTINEL:
+                # Defensive only: unreachable under the invariant above. The
+                # shutdown sentinel is sacred -- requeue it, drop the NEW
+                # event instead (falls through to the accounting below).
+                try:
+                    self._queue.put_nowait(evicted)
+                except queue.Full:  # pragma: no cover - single producer
+                    self._log.error(
+                        "plugin %r shutdown sentinel lost under overflow",
+                        self._name,
+                    )
+            else:
+                try:
+                    self._queue.put_nowait(item)
+                except queue.Full:  # pragma: no cover - single producer
+                    pass  # fall through: count the new event as dropped
+                else:
+                    if evicted is _NOTHING:
+                        return  # drain freed a slot; nothing was lost
+                    if self._record_drop():
+                        self._log.warning(
+                            "plugin %r queue full; dropped oldest event(s), %d so far",
+                            self._name,
+                            self._dropped,
+                        )
+                    return
+        if self._record_drop():
+            self._log.warning(
+                "plugin %r queue full; dropped %d event(s) so far",
+                self._name,
+                self._dropped,
+            )
 
     def _handle(self, event, kw):
         try:
@@ -285,8 +417,25 @@ class _PluginWorker:
         """
         Drain queued events, then stop and join the worker thread (bounded by
         ``join_timeout``). Returns once the thread has exited or the timeout
-        has elapsed.
+        has elapsed. Logs a final total if any events were dropped.
         """
+        # _dropped/_filtered are written only by submit() and read only here;
+        # both run on monitord's main thread (dispatch via the sink's send,
+        # close via the atexit sink close), so no lock is needed and the
+        # totals are final.
+        if self._dropped:
+            self._log.warning(
+                "plugin %r dropped %d event(s) in total "
+                "(queue overflow or payload snapshot failure)",
+                self._name,
+                self._dropped,
+            )
+        if self._filtered:
+            self._log.info(
+                "plugin %r filtered %d event(s) by its event filter",
+                self._name,
+                self._filtered,
+            )
         if not self._thread.is_alive():
             return True
         try:
@@ -318,8 +467,9 @@ class MonitordPluginManager:
     them all down on shutdown.
     """
 
-    def __init__(self, props=None):
+    def __init__(self, props=None, restart=False):
         self._props = props
+        self._restart = bool(restart)
         self._log = logging.getLogger(f"{__name__}.MonitordPluginManager")
         # list of (name, plugin, worker)
         self._workers = []
@@ -329,29 +479,34 @@ class MonitordPluginManager:
         Discover, start, and spin up a worker thread for each enabled plugin.
         Returns the number of plugins started. A plugin that fails to load,
         instantiate, or ``start()`` is logged and skipped -- it never aborts
-        the others or monitord itself.
+        the others or monitord itself. A name that is enabled in properties
+        but not registered under the entry-point group is logged as a warning
+        and skipped.
         """
-        for name, cls in self._iter_enabled_plugin_classes():
+        entry_points = self._discover_entry_points()
+        self._warn_unmatched_enabled_names(entry_points)
+        for name, cls in self._iter_enabled_plugin_classes(entry_points):
             plugin = None
             worker = None
             join_timeout = DEFAULT_JOIN_TIMEOUT
             try:
-                (
-                    queue_size,
-                    start_timeout,
-                    join_timeout,
-                    tick_interval,
-                ) = self._worker_config(name)
+                cfg = self._worker_config(name)
+                join_timeout = cfg.join_timeout
                 plugin = cls()
-                if not self._start_plugin(name, plugin, start_timeout):
+                if not self._start_plugin(name, plugin, cfg.start_timeout):
                     plugin = None
                     continue
+                # read from the instance after start() so plugins may derive
+                # their filter dynamically (e.g. from props) in start()
+                event_filter = self._compile_event_filter(name, cfg.events, plugin)
                 worker = _PluginWorker(
                     name,
                     plugin,
-                    queue_size=queue_size,
-                    join_timeout=join_timeout,
-                    tick_interval=tick_interval,
+                    queue_size=cfg.queue_size,
+                    join_timeout=cfg.join_timeout,
+                    tick_interval=cfg.tick_interval,
+                    event_filter=event_filter,
+                    overflow_policy=cfg.overflow_policy,
                 )
                 worker.start()
                 self._workers.append((name, plugin, worker))
@@ -401,6 +556,24 @@ class MonitordPluginManager:
     # discovery / configuration helpers
     # ------------------------------------------------------------------ #
 
+    def _warn_unmatched_enabled_names(self, entry_points):
+        """
+        Warn for every plugin name that is enabled in properties but has no
+        matching entry point -- otherwise the only signal is the host's
+        "started 0 plugin(s)" INFO line.
+        """
+        registered = {name for name, _ep in entry_points}
+        for name in sorted(enabled_plugin_names(self._props)):
+            if name not in registered:
+                self._log.warning(
+                    "pegasus.monitord.plugins.%s.enabled is set, but no plugin "
+                    "named %r is registered under the %r entry-point group; "
+                    "is the plugin's package installed in monitord's environment?",
+                    name,
+                    name,
+                    MONITORD_PLUGIN_ENTRY_POINT_GROUP,
+                )
+
     def _cleanup_failed_start(self, name, plugin, worker, join_timeout):
         if worker is not None:
             try:
@@ -423,6 +596,7 @@ class MonitordPluginManager:
         cleanup_lock = Lock()
         cleanup_started = []
         result = {"ok": False, "traceback": None}
+        start_kwargs = self._start_kwargs(plugin)
 
         def cleanup_after_timeout():
             with cleanup_lock:
@@ -446,7 +620,7 @@ class MonitordPluginManager:
 
         def start_target():
             try:
-                plugin.start(self._props)
+                plugin.start(self._props, **start_kwargs)
             except Exception:
                 result["traceback"] = traceback.format_exc()
             else:
@@ -482,6 +656,23 @@ class MonitordPluginManager:
             self._stop_plugin(name, plugin, timeout, "startup failure cleanup")
             return False
         return True
+
+    def _start_kwargs(self, plugin):
+        """
+        Keyword arguments beyond ``props`` that this plugin's ``start()``
+        accepts. Old-style overrides -- ``start(self, props=None)`` -- get an
+        empty dict, so pre-existing third-party plugins are called exactly as
+        before the ``restart`` keyword existed.
+        """
+        extras = {"restart": self._restart}
+        try:
+            params = inspect.signature(plugin.start).parameters.values()
+        except (TypeError, ValueError):
+            return {}
+        if any(p.kind is p.VAR_KEYWORD for p in params):
+            return extras
+        accepted = {p.name for p in params}
+        return {key: val for key, val in extras.items() if key in accepted}
 
     def _stop_plugin(self, name, plugin, timeout, context="shutdown"):
         """
@@ -519,8 +710,8 @@ class MonitordPluginManager:
             return False
         return bool(done)
 
-    def _iter_enabled_plugin_classes(self):
-        for name, ep in self._discover_entry_points():
+    def _iter_enabled_plugin_classes(self, entry_points):
+        for name, ep in entry_points:
             if not self._is_enabled(name):
                 self._log.debug(
                     "monitord plugin %r is registered but not enabled "
@@ -564,7 +755,65 @@ class MonitordPluginManager:
             raise ValueError(
                 f"pegasus.monitord.plugins.{name}.join_timeout must be >= 0"
             )
-        return queue_size, start_timeout, join_timeout, tick_interval
+        events = None
+        raw = self._raw_prop(f"pegasus.monitord.plugins.{name}.events", None)
+        if raw is not None:
+            events = tuple(p.strip() for p in str(raw).split(",") if p.strip())
+            if not events:
+                raise ValueError(
+                    f"pegasus.monitord.plugins.{name}.events must name at "
+                    f"least one event prefix (use '*' for all events)"
+                )
+        policy = str(
+            self._raw_prop(
+                f"pegasus.monitord.plugins.{name}.overflow_policy",
+                DEFAULT_OVERFLOW_POLICY,
+            )
+        )
+        policy = policy.strip().lower()
+        if policy not in (OVERFLOW_DROP_NEWEST, OVERFLOW_DROP_OLDEST):
+            raise ValueError(
+                f"pegasus.monitord.plugins.{name}.overflow_policy must be "
+                f"{OVERFLOW_DROP_NEWEST!r} or {OVERFLOW_DROP_OLDEST!r}"
+            )
+        return _WorkerConfig(
+            queue_size=queue_size,
+            start_timeout=start_timeout,
+            join_timeout=join_timeout,
+            tick_interval=tick_interval,
+            events=events,
+            overflow_policy=policy,
+        )
+
+    def _compile_event_filter(self, name, prop_patterns, plugin):
+        """
+        Resolve the effective filter: the ``.events`` property replaces the
+        plugin's declared ``event_filter``; ``None`` means deliver everything.
+        Read from the *instance* after ``start()`` so plugins may derive it
+        dynamically (e.g. from props) in ``start()``.
+        """
+        patterns = prop_patterns
+        if patterns is None:
+            declared = getattr(plugin, "event_filter", None)
+            if declared is None:
+                return None
+            if isinstance(declared, str):
+                declared = (declared,)
+            patterns = tuple(str(p) for p in declared)
+        if "*" in patterns:
+            return None
+        for p in patterns:
+            # hard-coded literal: importing STAMPEDE_NS from event_output
+            # would be circular (event_output imports this module)
+            if not p.startswith("stampede."):
+                self._log.warning(
+                    "plugin %r event filter pattern %r does not start with "
+                    "'stampede.'; plugins see fully-qualified event names, "
+                    "so this pattern will match nothing",
+                    name,
+                    p,
+                )
+        return patterns
 
     def _discover_entry_points(self):
         """
