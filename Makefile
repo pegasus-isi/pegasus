@@ -1,6 +1,7 @@
 PYTHON      ?= python3
 CMAKE       ?= cmake
 BUILD_DIR   ?= _cmake_build
+DIST_DIR    ?= dist
 WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
 
 # Java tooling — override via JAVA_HOME or explicit variable
@@ -28,7 +29,7 @@ SED_I   := sed -i
 endif
 
 _DOC_BUILD := doc/sphinx/_build
-_DOC_OUT   := dist/doc
+_DOC_OUT   := $(DIST_DIR)/doc
 
 # Derive tox environment name from the active Python (e.g. py313)
 PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
@@ -43,7 +44,6 @@ _JUNIT_REPORT_DIR  := test-reports/junit
         doc doc-sphinx doc-java doc-schemas doc-dist help
 
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
-# --wheel skips the sdist step, which would fail on absolute symlinks in _build_venv/.
 build: build-worker
 	$(PYTHON) -m build
 
@@ -75,15 +75,18 @@ build-java:
 # Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz)
 # and stage it into the Python source tree so that `make build` includes it
 # in the wheel as Pegasus/data/worker-packages/<tarball>.
+# PEGASUS_BUILD_C must be ON: the tarball bundles pegasus-kickstart,
+# pegasus-cluster, pegasus-keg, and libinterpose.so alongside the Python
+# payload so it is self-contained on remote execution nodes.
 # Slow: runs pip install for external deps.
 build-worker:
 	$(CMAKE) -B $(BUILD_DIR) -S . \
 	    -DCMAKE_BUILD_TYPE=Release \
-	    -DPEGASUS_BUILD_C=OFF \
+	    -DPEGASUS_BUILD_C=ON \
 	    -DPEGASUS_BUILD_JAVA=OFF \
 	    -DPEGASUS_BUILD_WORKER=ON
 	$(CMAKE) --build $(BUILD_DIR) --target build_worker_tarball
-	mkdir -p $(WORKER_DATA)
+	mkdir -p $(WORKER_DATA) dist
 	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
 	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz dist/
 
@@ -139,7 +142,7 @@ clean-doc:
 
 # Remove all artifacts: cmake build dir, wheel output, egg-info, caches, docs, test reports, etc.
 clean: clean-test clean-doc
-	rm -rf $(BUILD_DIR) dist/ test-reports/
+	rm -rf $(BUILD_DIR) $(DIST_DIR)/ test-reports/
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true
@@ -195,7 +198,7 @@ doc: doc-sphinx doc-java doc-schemas
 
 # Package documentation into a tarball: dist/pegasus-doc-VERSION.tar.gz
 doc-dist: doc
-	tar czf dist/pegasus-doc-$(VERSION).tar.gz -C $(_DOC_OUT) .
+	tar czf $(DIST_DIR)/pegasus-doc-$(VERSION).tar.gz -C $(_DOC_OUT) .
 
 # Run all tests (Python + Java + C).
 # Java tests require: make build-java

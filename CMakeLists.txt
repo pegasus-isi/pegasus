@@ -214,6 +214,28 @@ if(PEGASUS_BUILD_WORKER)
     set(_worker_pkg_name "pegasus-${PEGASUS_VERSION}")
     set(_worker_staging "${CMAKE_BINARY_DIR}/worker_staging")
     set(_worker_payload "${_worker_staging}/${_worker_pkg_name}")
+    set(_worker_bin "${_worker_payload}/bin")
+
+    # CLI tools bundled with packages/pegasus-worker as standalone scripts
+    # under Pegasus/cli/ (not console_scripts entry points, since the worker
+    # tarball has to run on remote nodes without a `pip install` of Pegasus
+    # itself). Each gets a bin/<tool> wrapper generated from
+    # release-tools/pegasus-worker-python-wrapper, mirroring how the old ant
+    # `dist-worker` target used release-tools/update-python-tools.
+    set(_worker_wrapper_template "${CMAKE_SOURCE_DIR}/release-tools/pegasus-worker-python-wrapper")
+    set(_worker_cli_tools
+        pegasus-transfer
+        pegasus-s3
+        pegasus-integrity
+        pegasus-checkpoint
+        pegasus-globus-online
+        pegasus-globus-online-init)
+
+    set(_worker_wrapper_commands)
+    foreach(_tool ${_worker_cli_tools})
+        list(APPEND _worker_wrapper_commands
+            COMMAND sh -c "sed 's/%%BASE_NAME%%/${_tool}/' '${_worker_wrapper_template}' > '${_worker_bin}/${_tool}' && chmod 755 '${_worker_bin}/${_tool}'")
+    endforeach()
 
     # PegasusLite (share/pegasus/sh/pegasus-lite-common.sh) requires the
     # worker tarball to contain a single top-level directory so it can be
@@ -231,10 +253,44 @@ if(PEGASUS_BUILD_WORKER)
                 "boto3>1.12" "globus-sdk>=3.23.0,<4"
         COMMAND find "${_worker_payload}" -name "__pycache__" -type d -exec rm -rf {} +
         COMMAND find "${_worker_payload}" -name "*.dist-info" -type d -exec rm -rf {} +
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_bin}"
+        ${_worker_wrapper_commands}
         COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
                 "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         VERBATIM)
+
+    # Bundle the compiled execution wrappers (pegasus-kickstart, pegasus-cluster,
+    # pegasus-keg) so the worker package is self-contained on remote nodes,
+    # matching the old ant dist-worker target (which depended on compile-c).
+    if(PEGASUS_BUILD_C)
+        add_dependencies(build_worker_tarball pegasus-kickstart pegasus-cluster pegasus-keg)
+        foreach(_c_tool pegasus-kickstart pegasus-cluster pegasus-keg)
+            add_custom_command(TARGET build_worker_tarball POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        "$<TARGET_FILE:${_c_tool}>" "${_worker_bin}/"
+                COMMAND chmod 755 "${_worker_bin}/${_c_tool}"
+                COMMENT "Staging ${_c_tool} into worker package")
+        endforeach()
+
+        # kickstart looks for libinterpose.so at ../lib/pegasus/ relative to
+        # its own bin/ dir (see packages/pegasus-kickstart/mysystem.c).
+        if(TARGET interpose)
+            add_custom_command(TARGET build_worker_tarball POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_payload}/lib/pegasus"
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        "$<TARGET_FILE:interpose>" "${_worker_payload}/lib/pegasus/"
+                COMMENT "Staging libinterpose.so into worker package")
+        endif()
+
+        # Re-tar now that the C binaries have been added on top of the
+        # Python payload staged by the target's own build step above.
+        add_custom_command(TARGET build_worker_tarball POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
+                    "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
+            COMMENT "Re-packing worker package tarball with C binaries"
+            VERBATIM)
+    endif()
 
     install(FILES "${CMAKE_BINARY_DIR}/${_worker_tarball}"
             DESTINATION "${WORKER_DEST}")

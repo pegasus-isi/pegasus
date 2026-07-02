@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import importlib
 import logging
 import logging.handlers
 import os
@@ -20,8 +19,7 @@ if peg_path:
         if p not in sys.path:
             sys.path.insert(0, p)
 
-ptransfer_module = importlib.import_module("Pegasus.cli.pegasus-transfer")
-pegasus_transfer = ptransfer_module.pegasus_transfer
+from Pegasus.transfer import pegasus_transfer
 
 log = logging.getLogger("pegasus-checkpoint")
 
