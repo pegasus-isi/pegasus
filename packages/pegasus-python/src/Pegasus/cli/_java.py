@@ -160,22 +160,22 @@ def compute_heap_args():
 def get_pegasus_data_dir():
     """Get the path to Pegasus package data directory.
 
-    Uses importlib.resources for installed packages, falls back to
-    filesystem-relative path for development installs.
+    Pegasus is a namespace package, and under an editable install its
+    __path__ spans both the live source tree and the CMake-installed
+    site-packages copy. Only the latter has compiled Java JARs and the
+    worker tarball.
     """
-    try:
-        try:
-            from importlib.resources import files
-        except (ImportError, AttributeError):
-            from importlib_resources import files
+    import Pegasus
 
-        data_dir = files("Pegasus.data")
-        # Convert to a path if possible
-        data_path = Path(str(data_dir))
-        if data_path.is_dir():
-            return data_path
-    except (ImportError, TypeError, ModuleNotFoundError):
-        pass
+    candidates = [Path(root) / "data" for root in Pegasus.__path__]
+
+    for candidate in candidates:
+        if candidate.is_dir() and any((candidate / "java").glob("*.jar")):
+            return candidate
+
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
 
     # Fallback: look relative to this file's location
     # In development: packages/pegasus-python/src/Pegasus/cli/_java.py

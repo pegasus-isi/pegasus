@@ -109,6 +109,8 @@ cwl = ["cwl-utils>=0.11", "jsonschema>=3.2"]
 [tool.scikit-build]
 cmake.version = ">=3.20"
 cmake.build-type = "Release"
+build-dir = "_cmake_build"
+editable.rebuild = true
 
 # Python package location — pegasus-python is the main package; pegasus-common
 # and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
