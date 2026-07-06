@@ -43,6 +43,6 @@ help:
 		| grep -v "UserWarning: Container node skipped: type=document" \
 		| grep -v "document isn't included in any toctree" \
 		| grep -v "Package longtable Warning" \
-		| grep -v "resetting \$HOME value" \
+		| grep -v "resetting \$$HOME value" \
 		> warn.log || true
 	@if [ -s warn.log ]; then echo "Documentation build contained warnings, which we do not allow. Summary (more above):"; cat warn.log; exit 1; fi

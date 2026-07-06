@@ -364,28 +364,18 @@ Docs:
   image: pegasus/buildenv:rhel_9
   before_script:
   - env
-  #- set -ex
-  #- yum install -y epel-release
-  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
-  #- pip3 install tox
   script:
   - ant dist-doc
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
+    - doc/sphinx/build.log
+    - doc/sphinx/warn.log
   dependencies: []
   tags:
   - docker
 
 # Deploy packages
-
-# Deploy Python:
-#   stage: deploy
-#   image: pegasus/buildenv:rhel_8
-#   dependencies:
-#   - 'Python'
-#   script:
-#   - find packages -type d
 
 Binaries:
   stage: deploy
