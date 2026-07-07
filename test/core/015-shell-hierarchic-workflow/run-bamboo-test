@@ -50,24 +50,24 @@ EOF
 
 cat > $DAX <<EOF
 pegasus: "5.0"
-  name: main
+name: main
 
-  replicaCatalog:
-    replicas:
+replicaCatalog:
+  replicas:
+    - lfn: dax
+      pfns:
+        - pfn: "file://$TOPDIR/inner.dax"
+          site: "local"
+
+jobs:
+  - type: pegasusWorkflow
+    id: daxid
+    file: dax
+    arguments: ["-vvv"]
+    uses:
       - lfn: dax
-        pfns:
-          - pfn: "file://$TOPDIR/inner.dax"
-            site: "local"
-
-  jobs:
-    - type: pegasusWorkflow
-      id: daxid
-      file: dax
-      arguments: ["-vvv"]
-      uses:
-        - lfn: dax
-          type: input
-          forPlanning: true
+        type: input
+        forPlanning: true
 EOF
 
 set -x
