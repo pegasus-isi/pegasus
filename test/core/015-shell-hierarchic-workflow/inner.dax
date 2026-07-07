@@ -27,15 +27,6 @@ transformationCatalog:
           os.release: rhel
           os.version: "7"
 
-jobDependencies:
-  - id: ID0000001
-    children: [ID0000002, ID0000003, ID0000004, ID0000005]
-  - id: ID0000006
-    children: [ID0000007, ID0000008, ID0000009, ID0000010]
-  - id: ID0000011
-    children: [ID0000012, ID0000013, ID0000014, ID0000015]
-  - id: ID0000016
-    children: [ID0000017, ID0000018, ID0000019, ID0000020]
 
 jobs:
   - type: job
@@ -257,3 +248,13 @@ jobs:
     profiles:
       pegasus:
         runtime: "8"
+
+jobDependencies:
+  - id: ID0000001
+    children: [ID0000002, ID0000003, ID0000004, ID0000005]
+  - id: ID0000006
+    children: [ID0000007, ID0000008, ID0000009, ID0000010]
+  - id: ID0000011
+    children: [ID0000012, ID0000013, ID0000014, ID0000015]
+  - id: ID0000016
+    children: [ID0000017, ID0000018, ID0000019, ID0000020]
