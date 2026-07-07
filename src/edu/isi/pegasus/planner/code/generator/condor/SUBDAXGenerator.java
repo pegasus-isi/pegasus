@@ -989,7 +989,9 @@ public class SUBDAXGenerator {
         job.setArguments(sb.toString());
 
         // match the env of DAGMan (GH-2221)
-        job.condorVariables.construct("getenv", "CONDOR_CONFIG,_CONDOR_*,PATH,PYTHONPATH,PERL*,PEGASUS_*,TZ,HOME,USER,LANG,LC_ALL,ASAN_OPTIONS,LSAN_OPTIONS,BEARER_TOKEN,BEARER_TOKEN_FILE,XDG_RUNTIME_DIR");
+        job.condorVariables.construct(
+                "getenv",
+                "CONDOR_CONFIG,_CONDOR_*,PATH,PYTHONPATH,PERL*,PEGASUS_*,TZ,HOME,USER,LANG,LC_ALL,ASAN_OPTIONS,LSAN_OPTIONS,BEARER_TOKEN,BEARER_TOKEN_FILE,XDG_RUNTIME_DIR");
 
         job.condorVariables.construct("remove_kill_sig", "SIGUSR1");
 
