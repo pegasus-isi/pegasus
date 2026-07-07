@@ -1,40 +1,63 @@
 #!/bin/bash
 
-set -e
-
-TOPDIR=`pwd`
-
-# pegasus-version is required to ensure uniqueness for the submit dir
-# if 2 pipelines for different branches run in gitlab at same time
-PEGASUS_VERSION=`pegasus-version`
-
-# determine TEST_NAME to setup the submit dir on the
-# shared filesystem. LIGO test setup requires the submit
+# LIGO test setup requires the submit
 # dir to be on a shared filesystem visible to the condorpool
 # nodes, since the site catalog is constructed w.r.t it.
-if [ X${testdir} = "X" ]; then
-    testdir=`dirname  $0`
+
+set -e
+
+START_DIR=$(pwd)
+TEST_DIR=/scitech/shared/scratch2-90-days/bamboo/$(uuidgen)
+
+# Conda/Python versions
+if [ "x$1" = "x" ]; then
+    echo "Please specify a Conda version to use (example: py311_26.3.2-2)"
+    exit 1
 fi
-TESTDIR=$(cd $testdir && pwd)
-TEST_NAME=`basename $TESTDIR`
+CONDA_VERSION=$1
+shift
 
-LAUNCHDIR=/scitech/shared/scratch2-90-days/${PEGASUS_VERSION}/${TEST_NAME}
-mkdir -p ${LAUNCHDIR}
-cd ${LAUNCHDIR}
+mkdir -p $TEST_DIR
+cd $TEST_DIR
 
-echo "TEST ${TEST_NAME} will be launched from ${LAUNCHDIR}"
+# create a conda environment like LIGO is using
+wget -nv -O conda_setup.sh https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh
+bash conda_setup.sh -b -p $TEST_DIR/conda-env
+rm -f conda_setup.sh
+. $TEST_DIR/conda-env/bin/activate
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r 
+conda install fftw --yes
+conda install anaconda::mkl --yes
+pip3 install --upgrade pip
+pip3 install --upgrade pip setuptools
 
-rm -rf ./pycbc
-git clone --depth 1 https://github.com/gwastro/pycbc
+# install the pegasus python dependencies
+#pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+
+# install pycbc
+git clone https://github.com/gwastro/pycbc.git
+cd pycbc
+pip3 install pylib-fftw3
+pip3 install -r requirements.txt
+pip3 install -r companion.txt
+pip3 install  .
 
 echo
 echo
-
-cd pycbc/examples/search/
+env
+echo
+echo
 
 # we are using mixed environment from our conda env
-export PYTHONPATH=`pegasus-config --python`:`pegasus-config --python-externals`
-source /scitech/shared/projects/LIGO/test-wf/env/bin/activate
+export PYTHONPATH=$(pegasus-config --python)
+export PEGASUS_UPDATE_PYTHONPATH=0
 
+# run workflow
+cd examples/search/
 chmod +x ./master.sh
 ./master.sh
+
+rm -rf $TEST_DIR
+
+
