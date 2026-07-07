@@ -127,7 +127,7 @@ for i in range(3):
 
         wf.add_jobs(world_job)
 
-wf.plan(sites=["local"], dir="work/submit", output_sites=["local"], cleanup="leaf")
+wf.plan(sites=["local"], dir="submit", output_sites=["local"], cleanup="leaf")
 
 # --- Test ---------------------------------------------------------------------
 # Test that the appropriate jobs have been removed during the planning process.

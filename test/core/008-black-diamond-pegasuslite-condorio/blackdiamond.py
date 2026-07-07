@@ -46,10 +46,10 @@ local_site.add_directories(
         )
     ),
     Directory(
-        directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "work/scratch"
+        directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "shared-scratch"
     ).add_file_servers(
         FileServer(
-            url="file://" + str(TOP_DIR / "work/scratch"), operation_type=Operation.ALL
+            url="file://" + str(TOP_DIR / "shared-scratch"), operation_type=Operation.ALL
         )
     ),
 )

@@ -13,7 +13,6 @@ TOPDIR=`pwd`
 
 #A output directory
 mkdir -p outputs
-mkdir -p work
 
 # build the dax generator
 PYTHONPATH=$(pegasus-config --python) $testdir/dax-generator.py
@@ -40,12 +39,12 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "$TOPDIR/work/local/shared-scratch"
+    path: "$TOPDIR/local/shared-scratch"
     sharedFileSystem: false
     fileServers:
      -
       operation: "all"
-      url: "file://$TOPDIR/work/local/shared-scratch"
+      url: "file://$TOPDIR/local/shared-scratch"
    -
     type: "sharedStorage"
     path: "$TOPDIR/outputs"
