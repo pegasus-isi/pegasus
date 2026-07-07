@@ -1,0 +1,34 @@
+pegasus: "5.0"
+sites:
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/work"
+    fileServers:
+     -
+      operation: "all"
+      url: "/Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/work"
+   -
+    type: "sharedStorage"
+    path: "/Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/work"
+    fileServers:
+     -
+      operation: "all"
+      url: "/Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/work"
+  grids:
+   -
+    type: "gt5"
+    contact: "localhost/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "compute"
+   -
+    type: "gt5"
+    contact: "localhost/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "auxillary"

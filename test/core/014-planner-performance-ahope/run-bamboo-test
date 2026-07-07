@@ -38,7 +38,7 @@ START_TS=`/bin/date +'%s'`
     --conf pegasusrc \
     --sites local \
     -o local \
-    --dir ./dags \
+    --dir submit \
     --cleanup none \
     --force \
     weekly_ahope.dax \

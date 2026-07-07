@@ -147,7 +147,7 @@ analyze_job = (
 wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
 
 wf.plan(
-    dir="work/dags",
+    dir="submit",
     sites=["condorpool"],
     output_sites=["local"],
     cleanup="leaf",

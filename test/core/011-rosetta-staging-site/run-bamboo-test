@@ -121,7 +121,7 @@ echo
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --sites eclair \
     --staging-site staging \
     --output-sites local \

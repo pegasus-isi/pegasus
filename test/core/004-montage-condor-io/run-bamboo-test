@@ -23,7 +23,7 @@ PYTHONPATH=$(pegasus-config --python) \
 cp ../pegasus.properties .
 
 pegasus-plan \
-        --dir work \
+        --dir submit \
         --output-sites local \
         --cluster horizontal \
         --submit \

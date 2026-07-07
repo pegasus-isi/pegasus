@@ -71,7 +71,7 @@ END
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --sites local \
     --cleanup leaf \
     --cluster label \

@@ -79,7 +79,7 @@ pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
     --staging-site local \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --submit \

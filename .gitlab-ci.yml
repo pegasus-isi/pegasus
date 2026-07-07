@@ -616,6 +616,10 @@ Workflow Tests:
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
   - ./test/scripts/${EXEC} ${TESTNAME}
+  artifacts:
+    when: on_failure
+    paths:
+    - test/core/${TESTNAME}/submit
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:

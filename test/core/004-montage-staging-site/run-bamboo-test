@@ -91,7 +91,7 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --sites CCG \
     --staging-site CCGData \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --cluster horizontal \

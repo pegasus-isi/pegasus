@@ -93,7 +93,7 @@ cp ../pegasus.properties .
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --dir work \
+    --dir submit \
     --sites CCG \
     --output-sites CCG \
     --cleanup leaf \
