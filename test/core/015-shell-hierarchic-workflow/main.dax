@@ -1,19 +1,19 @@
 pegasus: "5.0"
-  name: main
+name: main
 
-  replicaCatalog:
-    replicas:
+replicaCatalog:
+  replicas:
+    - lfn: dax
+      pfns:
+        - pfn: "file:///Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/inner.dax"
+          site: "local"
+
+jobs:
+  - type: pegasusWorkflow
+    id: daxid
+    file: dax
+    arguments: ["-vvv"]
+    uses:
       - lfn: dax
-        pfns:
-          - pfn: "file:///Volumes/data/workspace/pegasus/pegasus/test/core/015-shell-hierarchic-workflow/inner.dax"
-            site: "local"
-
-  jobs:
-    - type: pegasusWorkflow
-      id: daxid
-      file: dax
-      arguments: ["-vvv"]
-      uses:
-        - lfn: dax
-          type: input
-          forPlanning: true
+        type: input
+        forPlanning: true
