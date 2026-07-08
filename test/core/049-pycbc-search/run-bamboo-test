@@ -43,12 +43,6 @@ pip3 install -r requirements.txt
 pip3 install -r companion.txt
 pip3 install  .
 
-echo
-echo
-env
-echo
-echo
-
 # we are using mixed environment from our conda env
 export PYTHONPATH=$(pegasus-config --python)
 export PEGASUS_UPDATE_PYTHONPATH=0
