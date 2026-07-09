@@ -52,4 +52,3 @@ cd examples/search/
 chmod +x ./master.sh
 ./master.sh
 
-rm -rf $TEST_DIR
