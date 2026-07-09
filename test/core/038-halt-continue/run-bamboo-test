@@ -112,7 +112,7 @@ MAX_TS=`echo "$START_TS + $TIMEOUT * 60" | bc`
 
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
+while [ ! -e monitord.done ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
@@ -125,6 +125,7 @@ while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
     update_status
     show_state
 done
+rm -f monitord.done
 
 echo
 echo `date`": Workflow halted! Trying to restart..."
@@ -134,7 +135,7 @@ pegasus-run
 sleep 30s
 update_status
 show_state
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
+while [ ! -e monitord.done ] ; do
     NOW=`date +'%s'`
     if [ $NOW -gt $MAX_TS ]; then
         echo "Reached TIMEOUT of $TIMEOUT minutes. Calling pegasus-remove" 1>&2
