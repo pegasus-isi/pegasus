@@ -51,4 +51,3 @@ export PEGASUS_UPDATE_PYTHONPATH=0
 cd examples/search/
 chmod +x ./master.sh
 ./master.sh
-
