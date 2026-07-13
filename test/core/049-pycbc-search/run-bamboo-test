@@ -52,4 +52,8 @@ cd examples/search/
 chmod +x ./master.sh
 ./master.sh
 
+# clean up conda env, but leave the workflow dirs as gitlab wants to check them
+cd $TEST_DIR
+rm -rf conda-env
+
 
