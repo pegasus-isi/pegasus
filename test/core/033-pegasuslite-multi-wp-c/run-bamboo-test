@@ -67,7 +67,7 @@ sites:
       data.configuration: "sharedfs"
       glite.arguments: "--cpus-per-task=1"
       memory: "1024"
-      project: "scavenge"
+      project: "eclair"
       queue: "scavenge"
       runtime: "600"
       ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
