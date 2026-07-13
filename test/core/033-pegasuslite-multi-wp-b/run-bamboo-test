@@ -58,7 +58,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">ssh</profile>
         <profile namespace="pegasus" key="change.dir">true</profile>
         <profile namespace="pegasus" key="queue">scavenge</profile>
-        <profile namespace="pegasus" key="project">scavenge</profile>
+        <profile namespace="pegasus" key="project">eclair</profile>
         <profile namespace="pegasus" key="runtime">600</profile>
         <profile namespace="pegasus" key="glite.arguments">--cpus-per-task=1</profile>
         <profile namespace="pegasus" key="memory">1024</profile>

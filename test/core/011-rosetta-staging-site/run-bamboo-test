@@ -67,7 +67,7 @@ sites:
       style: ssh
       #
       queue: scavenge
-      project: scavenge
+      project: eclair
       runtime: 1800
       glite.arguments: --cpus-per-task=1
       memory: 2048
