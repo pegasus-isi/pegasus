@@ -26,7 +26,7 @@ bash conda_setup.sh -b -p $TEST_DIR/conda-env
 rm -f conda_setup.sh
 . $TEST_DIR/conda-env/bin/activate
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r 
 conda install fftw --yes
 conda install anaconda::mkl --yes
 pip3 install --upgrade pip
@@ -51,3 +51,9 @@ export PEGASUS_UPDATE_PYTHONPATH=0
 cd examples/search/
 chmod +x ./master.sh
 ./master.sh
+
+# clean up conda env, but leave the workflow dirs as gitlab wants to check them
+cd $TEST_DIR
+rm -rf conda-env
+
+
