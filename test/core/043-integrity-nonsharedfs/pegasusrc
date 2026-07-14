@@ -6,9 +6,3 @@ pegasus.catalog.replica  File
 pegasus.catalog.replica.file ./conf/rc.data
 
 pegasus.integrity.checking = full
-
-
-
-
-
-

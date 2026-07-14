@@ -16,13 +16,16 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.parser.DAXParser;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.DAX2CoG;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class generates CoG XML from a DAX.

@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the MPIExec aggregator class. */

@@ -17,9 +17,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the CatalogType abstract class, exercised through the concrete File and Executable

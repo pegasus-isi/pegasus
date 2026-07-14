@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A site selector than ends up doing grouping jobs together on the basis of an identifier specifed
+ * A site selector than ends up doing grouping jobs together on the basis of an identifier specified
  * in the dax for the jobs, and schedules them on to the same site. Currently, the identifier is key
  * <code>group</code> in the pegasus profile namespace. All the jobs that do not have a group
  * associated with them are put in one default group and end up being scheduled on the same pool. A

@@ -16,8 +16,10 @@ package edu.isi.pegasus.planner.dax;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 
 /**
@@ -44,6 +46,7 @@ public class Invoke {
 
     /** WHen to Invoke */
     protected WHEN mWhen;
+
     /** What to invoke */
     protected String mWhat;
 
@@ -55,6 +58,7 @@ public class Invoke {
     public Invoke(Invoke i) {
         this(WHEN.valueOf(i.getWhen()), i.getWhat());
     }
+
     /**
      * Crete a new Invoke object
      *

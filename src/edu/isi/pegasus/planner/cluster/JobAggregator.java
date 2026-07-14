@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.cluster;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public interface JobAggregator {
     public static final String VERSION = "1.5";
 
     /**
-     * Initializes the JobAggregator impelementation
+     * Initializes the JobAggregator implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.

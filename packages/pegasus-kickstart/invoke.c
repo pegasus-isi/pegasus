@@ -28,7 +28,7 @@ static int append_arg(char* data, char*** arg, size_t* index, size_t* capacity) 
      *          capacity (IO): capacity (extend) of vector
      * returns: 0 means ok, -1 means error, see errno
      * warning: Always creates a strdup of data
-     */ 
+     */
 
     if (*index >= *capacity) {
         *capacity <<= 1;
@@ -60,7 +60,7 @@ static char* merge(char* s1, char* s2) {
      * paramtr: s1 (IN): first string, may be NULL
      *          s2 (IN): second string, must not be NULL
      * returns: merge of strings into newly allocated area.
-     *          NULL, if the allocation failed. 
+     *          NULL, if the allocation failed.
      */
     char *temp;
     if (s1 == NULL) {
@@ -140,7 +140,7 @@ int expand_arg(const char* fn, char*** arg, size_t* index, size_t* capacity, int
             while (len > 0 && (line[len-1] == '\r' || line[len-1] == '\n')) {
                 line[len-1] = 0;
                 len--;
-            } 
+            }
         }
 
         /* final assembly of argument */
@@ -181,4 +181,3 @@ int expand_arg(const char* fn, char*** arg, size_t* index, size_t* capacity, int
     fclose(f);
     return 0;
 }
-

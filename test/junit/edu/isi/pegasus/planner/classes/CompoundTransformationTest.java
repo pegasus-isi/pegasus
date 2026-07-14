@@ -18,11 +18,15 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.dax.Invoke;
-import java.util.Collection;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class CompoundTransformationTest {
 
     // -----------------------------------------------------------------------

@@ -16,11 +16,7 @@ package edu.isi.pegasus.common.logging.logger;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -29,6 +25,12 @@ import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * A Log4j implementation of the LogManager interface. Using this allows us us log messages using
@@ -83,7 +85,7 @@ public class Log4j extends LogManager {
                 Appender a = (Appender) e.nextElement();
                 if (a instanceof ConsoleAppender) {
                     // set the layout of the console appender
-                    // this can be overriden by the log4j.properties file
+                    // this can be overridden by the log4j.properties file
                     a.setLayout(new PatternLayout("%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1}] %m%n"));
                 }
             }
@@ -102,7 +104,7 @@ public class Log4j extends LogManager {
         builder.add(console);
         builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("stdout")));
         LoggerContext ctx = Configurator.initialize(builder.build());
-        // IMPORTANT: root logger can only be retrieved once configurator is initalized
+        // IMPORTANT: root logger can only be retrieved once configurator is initialized
         mRoot = org.apache.logging.log4j.LogManager.getRootLogger();
     }
 

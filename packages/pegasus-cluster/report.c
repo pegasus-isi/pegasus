@@ -247,11 +247,11 @@ static int mytrylock(int fd) {
  * paramtr: progress (IN): file descriptor open for writing
  *          time (IN): time to report (no millisecond resolution)
  *          duration (IN): duration with millisecond resolution
- *          status (IN): return value from wait() family 
+ *          status (IN): return value from wait() family
  *          argv (IN): NULL-delimited argument vector of app
  *          use (IN): resource usage from wait4() call
  *          special (IN): set for setup/cleanup jobs.
- *          taskid (IN): task number from input file. 
+ *          taskid (IN): task number from input file.
  * returns: number of bytes written onto "progress"
  */
 ssize_t report(int progress, double time, double duration, int status,
@@ -329,4 +329,3 @@ ssize_t report(int progress, double time, double duration, int status,
     errno = save;
     return wsize;
 }
-

@@ -91,7 +91,7 @@ public interface Callback {
 
     /**
      * Callback when a transformation catalog entry is encountered in the DAX from Section 2:
-     * Executables that list entries in a Transformaton Catalog
+     * Executables that list entries in a Transformation Catalog
      *
      * @param tce the transformation catalog entry object.
      */

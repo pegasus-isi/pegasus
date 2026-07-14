@@ -23,13 +23,41 @@ if [ "x$PEGASUS_PYTHON" = "x" ]; then
     # PATH must be visible to which
     export PATH
 
-    # first look in the PATH
     I=0
-    eval PEXE_LIST$I="$(which python3 2>/dev/null)"
-    I=$((I+1))
-    # has to be last to find user defined environments
-    eval PEXE_LIST$I="/usr/bin/python3"
-    I=$((I+1))
+
+    # conda env override
+    if [ "X$CONDA_PYTHON_EXE" != "X" ]; then
+        eval PEXE_LIST$I="$CONDA_PYTHON_EXE"
+        I=$((I+1))
+    fi
+
+    # pegasus-python is an alternatives pointer to the Python we want
+    # but only if there is no Conda/venv
+    if [ "X${VIRTUAL_ENV}${CONDA_PYTHON_EXE}" = "X" ]; then
+        eval PEXE_LIST$I="$(which pegasus-python 2>/dev/null)"
+        I=$((I+1))
+    fi
+
+    # look in the PATH for specific versions (3.17 down to 3.10)
+    for v in {17..10}; do
+        # Try to find the specific version in the user's current PATH
+        if TARGET_PATH=$(which "python3.$v" 2>/dev/null); then
+            eval PEXE_LIST$I="\$TARGET_PATH"
+            I=$((I+1))
+        fi
+    done
+
+    # Next, catch a generic python3 from the PATH if no specific versions matched
+    if TARGET_PATH=$(which python3 2>/dev/null); then
+        eval PEXE_LIST$I="\$TARGET_PATH"
+        I=$((I+1))
+    fi
+
+    # Has to be last to find user defined environments / system fallbacks
+    if [ -x "/usr/bin/python3" ]; then
+        eval PEXE_LIST$I="/usr/bin/python3"
+        I=$((I+1))
+    fi
 
     # Look for a python in the give list
     for i in `seq $I`; do
@@ -70,20 +98,15 @@ fi
 
 # Pegasus should never update the PYTHONPATH as it will affect user tools. Instead, set an
 # internal PEGASUS_PYTHONPATH which the tools can use if needed.
-if [ "x$PEGASUS_UPDATE_PYTHONPATH" != "x0" ]; then
-    NEW_PEGASUS_PYTHONPATH="$PEGASUS_HOME/@LIBDIR@/pegasus/python:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python"
-    # only prepend if it not already there
-    if ! $(echo "X$PEGASUS_PYTHONPATH" | grep -q "^X$NEW_PEGASUS_PYTHONPATH"); then
-        PEGASUS_PYTHONPATH="${NEW_PEGASUS_PYTHONPATH}"
-        export PEGASUS_PYTHONPATH
-    fi
-    # let the tools know we have a valid PYTHONPATH
-    PEGASUS_PYTHONPATH_SET=1
-    export PEGASUS_PYTHONPATH_SET
-else
-    # make sure we carry the setting forward
-    export PEGASUS_UPDATE_PYTHONPATH
+NEW_PEGASUS_PYTHONPATH="$PEGASUS_HOME/@LIBDIR@/pegasus/python:$PEGASUS_HOME/@LIBDIR@/pegasus/externals/python"
+# only prepend if it not already there
+if ! $(echo "X$PEGASUS_PYTHONPATH" | grep -q "^X$NEW_PEGASUS_PYTHONPATH"); then
+    PEGASUS_PYTHONPATH="${NEW_PEGASUS_PYTHONPATH}"
+    export PEGASUS_PYTHONPATH
 fi
+# let the tools know we have a valid PYTHONPATH
+PEGASUS_PYTHONPATH_SET=1
+export PEGASUS_PYTHONPATH_SET
 
 # Build a full path to our real Python tool (we used to depend on pegasus-config
 # here, but as that has a dependency on perl, we are shortcutting it)
@@ -91,4 +114,3 @@ TOOL_PATH="$PEGASUS_HOME/@PYTHON_LIBDIR@/Pegasus/cli/$BASE_NAME.py"
 
 # now execute
 exec "$PEGASUS_PYTHON" "$TOOL_PATH" "$@"
-

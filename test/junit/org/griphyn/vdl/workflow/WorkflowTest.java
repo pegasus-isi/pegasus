@@ -13,7 +13,9 @@
  */
 package org.griphyn.vdl.workflow;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class WorkflowTest {
     /*
     @Test

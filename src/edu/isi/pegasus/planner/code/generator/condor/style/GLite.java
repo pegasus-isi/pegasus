@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.util.Map;
 
 /**
@@ -211,7 +212,7 @@ public class GLite extends Abstract {
      *
      * @param job the job
      * @return the grid_resource entry
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     private String constructGridResourceFromGridGateway(Job job) throws CondorStyleException {
         StringBuilder gridResource = new StringBuilder();
@@ -265,7 +266,7 @@ public class GLite extends Abstract {
      * existing profiles for the site so far.
      *
      * @param site the site catalog entry object
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(SiteCatalogEntry site) throws CondorStyleException {
         Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
@@ -321,7 +322,7 @@ public class GLite extends Abstract {
      * Applies the gLite style to the job.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
 
@@ -342,7 +343,7 @@ public class GLite extends Abstract {
         }
 
         // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
-        // variable for grid universe jobs, we explicity set the variable to .
+        // variable for grid universe jobs, we explicitly set the variable to .
         // in order for kickstart to read in the lof files correctly.
         // GH-2173 BUT, we only do set $_CONDOR_SCRATCH_DIR for the sharedfs
         // case where PegasusLite is not used to launch the jobs
@@ -359,7 +360,8 @@ public class GLite extends Abstract {
         if (!supportedBatchSystem(batchSystem)) {
             // if it is not one of the support types, log a warning but use PBS.
             mLogger.log(
-                    "Glite mode supports only pbs, sge, slurm, flux, moab or cobalt submission. Will use PBS style attributes for job "
+                    "Glite mode supports only pbs, sge, slurm, flux, moab or cobalt submission."
+                            + " Will use PBS style attributes for job "
                             + job.getID()
                             + " with grid resource "
                             + gridResource,
@@ -371,7 +373,9 @@ public class GLite extends Abstract {
             // PM-1739 the approach in PM-1539 is no longer supported.
             // Point user to do the right thing
             throw new CondorStyleException(
-                    "Malformed gridResource specified. Please use style panda to enable Panda submissions. Also please specify this information as a grid gateway for site "
+                    "Malformed gridResource specified. Please use style panda to enable Panda"
+                        + " submissions. Also please specify this information as a grid gateway for"
+                        + " site "
                             + job.getSiteHandle());
         }
 
@@ -450,14 +454,14 @@ public class GLite extends Abstract {
          * as condor file transfer mechanism does not work
          * Special handling for the JPL cluster */
         if (job.getSiteHandle().equals("local") && job instanceof TransferJob) {
-            /* remove the change dir requirments for the
+            /* remove the change dir requirements for the
              * third party transfer on local host */
             job.condorVariables.removeKey(GLite.CONDOR_REMOTE_DIRECTORY_KEY);
         }
 
         /* similar handling for registration jobs */
         if (job.getSiteHandle().equals("local") && job.getJobType() == Job.REPLICA_REG_JOB) {
-            /* remove the change dir requirments for the
+            /* remove the change dir requirements for the
              * third party transfer on local host */
             job.condorVariables.removeKey(GLite.CONDOR_REMOTE_DIRECTORY_KEY);
         }
@@ -895,7 +899,8 @@ public class GLite extends Abstract {
                                             cores,
                                             nodes,
                                             existing,
-                                            "do not satisfy cores = nodes * ppn. Please specify only two of (nodes, cores, ppn)."));
+                                            "do not satisfy cores = nodes * ppn. Please specify"
+                                                    + " only two of (nodes, cores, ppn)."));
                         }
                     } else {
                         job.globusRSL.construct(Globus.XCOUNT_KEY, Integer.toString(ppn));
@@ -951,7 +956,8 @@ public class GLite extends Abstract {
                     job.globusRSL.construct(Globus.COUNT_KEY, Integer.toString(nodes * ppn));
                 } else if (nodesSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for SGE submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for SGE submission for"
+                                    + " job "
                                     + job.getID());
                 }
                 // default case nothing specified
@@ -977,7 +983,8 @@ public class GLite extends Abstract {
                     job.globusRSL.construct(Globus.COUNT_KEY, Integer.toString(nodes * ppn));
                 } else if (nodesSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for SLURM submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for SLURM submission"
+                                    + " for job "
                                     + job.getID());
                 }
                 // default case nothing specified
@@ -996,13 +1003,14 @@ public class GLite extends Abstract {
             } else {
                 // we need to attempt to arrive at a value or specify a default value
                 if (coresSet && ppnSet) {
-                    // set nodes to div, we don't handle the case where cores/ppn is not divisable
+                    // set nodes to div, we don't handle the case where cores/ppn is not divisible
                     int cores = Integer.parseInt((String) job.globusRSL.get(Globus.COUNT_KEY));
                     int ppn = Integer.parseInt((String) job.globusRSL.get(Globus.XCOUNT_KEY));
                     job.globusRSL.construct(Globus.HOST_COUNT_KEY, Integer.toString(cores / ppn));
                 } else if (coresSet || ppnSet) {
                     throw new CondorStyleException(
-                            "Either cores or ( nodes and ppn) need to be set for LSF submission for job "
+                            "Either cores or ( nodes and ppn) need to be set for LSF submission for"
+                                    + " job "
                                     + job.getID());
                 }
                 // default case nothing specified

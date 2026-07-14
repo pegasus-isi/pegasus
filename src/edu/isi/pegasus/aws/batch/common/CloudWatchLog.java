@@ -16,15 +16,11 @@ package edu.isi.pegasus.aws.batch.common;
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
 import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.impl.Synch;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Iterator;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.AttemptDetail;
@@ -37,6 +33,13 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DeleteLogStreamRespo
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsResponse;
 import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Iterator;
 
 /**
  * A class to retrieve the cloud watch logs
@@ -70,7 +73,7 @@ public class CloudWatchLog {
      * @param logLevel the logging level
      * @param logGroup the cloud watch log group
      */
-    public void initialze(Region awsRegion, Level logLevel, String logGroup) {
+    public void initialize(Region awsRegion, Level logLevel, String logGroup) {
         // "405596411149";
         mLogger = org.apache.logging.log4j.LogManager.getLogger(Synch.class.getName());
         Configurator.setLevel(Synch.class.getName(), logLevel);
@@ -88,6 +91,7 @@ public class CloudWatchLog {
     public Tuple<File, File> retrieve(AWSJob j) {
         return this.retrieve(j.getAWSJobID(), j.getTaskSummary());
     }
+
     /**
      * Retrieves a cloud watch log for an AWS Job
      *
@@ -142,7 +146,7 @@ public class CloudWatchLog {
         File stderrFile = null;
         Tuple<File, File> result = null;
         try {
-            // initally we flush to stdout file until switch over
+            // initially we flush to stdout file until switch over
             boolean notSwitched = true;
             stdoutFile = new File(jobName + ".out");
             stderrFile = new File(jobName + ".err");
@@ -232,7 +236,7 @@ public class CloudWatchLog {
      * @return
      */
     private Tuple<String, String> determineLog(JobDetail jobDetail) {
-        // go through the attemps and get last attempt
+        // go through the attempts and get last attempt
         AttemptDetail detail = null;
         StringBuilder logStreamName =
                 new StringBuilder(); // karan-batch-synch-test-job-definition/default/e6b3eb37-46d3-4aa5-9208-e80eec481550

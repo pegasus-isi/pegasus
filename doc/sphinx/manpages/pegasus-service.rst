@@ -37,6 +37,3 @@ Configuration
 
 The authentication/authorization settings can be specified in the
 configuration file.
-
-
-

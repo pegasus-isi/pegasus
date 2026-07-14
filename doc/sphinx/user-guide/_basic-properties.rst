@@ -16,7 +16,7 @@ properties. As a notation, the curly braces refer to the value of the
 named property. For instance, ${pegasus.home} means that the value
 depends on the value of the pegasus.home property plus any noted
 additions. You can use this notation to refer to other properties,
-though the extent of the subsitutions are limited. Usually, you want to
+though the extent of the substitutions are limited. Usually, you want to
 refer to a set of the standard system properties. Nesting is not
 allowed. Substitutions will only be done once.
 
@@ -177,7 +177,7 @@ Catalog Related Properties
     |                                                    | |   an equality sign without any whitespaces. The value                          |
     |                                                    | |   may be in quoted. The LFN sentiments about quoting                           |
     |                                                    | |   apply.                                                                       |
-    |                                                    | |   In addition users can specifiy regular expression                            |
+    |                                                    | |   In addition users can specify regular expression                            |
     |                                                    | |   based LFN’s. A regular expression based entry should                         |
     |                                                    | |   be qualified with an attribute named ‘regex’. The                            |
     |                                                    | |   attribute regex when set to true identifies the                              |
@@ -187,7 +187,7 @@ Catalog Related Properties
     |                                                    | |   For example, consider a replica catalog as shown below.                      |
     |                                                    | |   Entry 1 refers to an entry which does not use a regular                      |
     |                                                    | |   expressions. This entry would only match a file named                        |
-    |                                                    | |   ‘f.a’, and nothing else. Entry 2 referes to an entry                         |
+    |                                                    | |   ‘f.a’, and nothing else. Entry 2 refers to an entry                         |
     |                                                    | |   which uses a regular expression. In this entry f.a                           |
     |                                                    | |   refers to files having name as f[any-character]a                             |
     |                                                    | |   i.e. faa, f.a, f0a, etc.                                                     |
@@ -206,7 +206,7 @@ Catalog Related Properties
     |                                                    | |   in the expression can be used to generate a PFN.                             |
     |                                                    | |   For the entry below if the file being looked up is                           |
     |                                                    | |   alpha.csv, the PFN for the file would be generated as                        |
-    |                                                    | |   file:///Volumes/data/input/csv/alpha.csv. Similary if                        |
+    |                                                    | |   file:///Volumes/data/input/csv/alpha.csv. Similarly if                        |
     |                                                    | |   the file being lookedup was alpha.csv, the PFN for the                       |
     |                                                    | |   file would be generated as                                                   |
     |                                                    | |   file:///Volumes/data/input/xml/alpha.xml i.e.                                |
@@ -429,7 +429,7 @@ Data Staging Configuration Properties
     |                                                       | | ( using –staging-site option to pegasus-plan)        |
     |                                                       | | to indicate the site to use as a central             |
     |                                                       | | storage location for a workflow. The staging         |
-    |                                                       | | site is independant of the execution sites on        |
+    |                                                       | | site is independent of the execution sites on        |
     |                                                       | |  which a workflow executes. All the auxillary        |
     |                                                       | | jobs added by the planner to the executable          |
     |                                                       | | workflow ( create dir, data stagein and              |
@@ -455,7 +455,7 @@ Data Staging Configuration Properties
     |                                                       | | cloud environment where setting up a                 |
     |                                                       | | shared filesystem across the VM’s may be tricky.     |
     |                                                       | | On loading this property, internally the             |
-    |                                                       | | following properies are set                          |
+    |                                                       | | following properties are set                          |
     |                                                       |                                                        |
     |                                                       |                                                        |
     |                                                       | ::                                                     |

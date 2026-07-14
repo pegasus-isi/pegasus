@@ -21,13 +21,17 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class AbstractTest {
 
     @Test
@@ -56,7 +60,7 @@ public class AbstractTest {
 
         Method initializeMethod =
                 Abstract.class.getDeclaredMethod(
-                        "initalize",
+                        "initialize",
                         edu.isi.pegasus.planner.classes.ADag.class,
                         edu.isi.pegasus.planner.classes.PegasusBag.class,
                         edu.isi.pegasus.planner.transfer.Refiner.class);

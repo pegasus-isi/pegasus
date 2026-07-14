@@ -1,5 +1,4 @@
-"""
-Workflow status monitoring via HTCondor queue and DAGMan log parsing.
+"""Workflow status monitoring via HTCondor queue and DAGMan log parsing.
 
 Provides :class:`Status`, which queries ``condor_q`` for live job state and
 parses ``*.dag.dagman.out`` files for per-DAG progress counters.
@@ -12,7 +11,6 @@ import shutil
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Union
 
 from Pegasus import braindump
 from Pegasus.client import condor
@@ -29,7 +27,7 @@ class Status:
     printed to the terminal or returned as a structured dictionary.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize status keys, job-state constants, and the empty status output structure.
 
         The ``status_output`` dictionary uses the following keys:
@@ -122,7 +120,6 @@ class Status:
             "ClusterId",
             "pegasus_site",
             "JobPrio",
-            "ClusterId",
             "UserLog",
             "HoldReason",
             "JobStatusName",
@@ -150,7 +147,7 @@ class Status:
         legend: bool = False,
         noqueue: bool = False,
         debug: bool = False,
-    ) -> Union[Dict, None]:
+    ) -> dict | None:
         """Fetch and optionally display workflow status.
 
         When ``json=True``, returns a structured dictionary instead of printing.
@@ -191,17 +188,16 @@ class Status:
                 self.get_condor_q_dict(self.rv_condor_q)
             return self.status_output
 
+        if debug and not noqueue:
+            self.show_debug_info()
+        if self.rv_condor_q:
+            self.show_condor_jobs(self.rv_condor_q, long, legend)
+        elif not noqueue:
+            print("\n(No matching jobs found in Condor Q)")
+        if self.submit_dir_entered and rv_progress:
+            self.show_job_progress(rv_progress, long, legend)
         else:
-            if debug and not noqueue:
-                self.show_debug_info()
-            if self.rv_condor_q:
-                self.show_condor_jobs(self.rv_condor_q, long, legend)
-            elif not noqueue:
-                print("\n(No matching jobs found in Condor Q)")
-            if self.submit_dir_entered and rv_progress:
-                self.show_job_progress(rv_progress, long, legend)
-            else:
-                print()
+            print()
 
         return None
 
@@ -219,27 +215,27 @@ class Status:
                 bd = braindump.load(f)
                 self.root_wf_uuid = bd.root_wf_uuid
                 self.root_wf_name = bd.pegasus_wf_name
-        except:
+        except Exception:
             raise FileNotFoundError(
                 "Unable to load braindump file, invalid submit directory!"
             )
         return bd
 
-    def show_debug_info(self):
+    def show_debug_info(self) -> None:
         """Print the ``condor_q`` command that was used to query the HTCondor queue."""
         print("condor_q command used to retrieve jobs in Condor Q :")
-        print("{} {}".format(shutil.which("condor_q"), " ".join(self.q_cmd[1:])))
+        print(f"{shutil.which('condor_q')} {' '.join(self.q_cmd[1:])}")
 
     def get_q_values(self):
-        """Internal method to retrieve Condor Q jobs"""
+        """Internal method to retrieve Condor Q jobs."""
         if self.submit_dir_entered:
-            expression = r"" 'pegasus_root_wf_uuid == "{}"' "".format(self.root_wf_uuid)
+            expression = f'pegasus_root_wf_uuid == "{self.root_wf_uuid}"'
             self.q_cmd = ["condor_q", "-constraint", expression, "-json"]
         else:
             self.q_cmd = ["condor_q", "-json"]
         return condor._q(self.q_cmd)
 
-    def get_condor_q_dict(self, condor_jobs: list):
+    def get_condor_q_dict(self, condor_jobs: list) -> None:
         """Process the raw ``condor_q`` job list and store it under ``status_output['condor_jobs']``.
 
         Jobs are grouped by workflow UUID. Each entry includes a subset of
@@ -264,9 +260,8 @@ class Status:
             self.status_output["condor_jobs"][wf_uuid]["DAG_NAME"] = dag_name
             self.status_output["condor_jobs"][wf_uuid]["DAG_CONDOR_JOBS"] = job_list
 
-    def show_condor_jobs(self, condor_jobs: list, long: bool, legend: bool):
-        """Internal method to display the Condor Q jobs and attributes"""
-
+    def show_condor_jobs(self, condor_jobs: list, long: bool, legend: bool) -> None:
+        """Internal method to display the Condor Q jobs and attributes."""
         long_val = int(long)
         column_descr = {
             "id": ["", ": Condor cluster ID "],
@@ -277,8 +272,8 @@ class Status:
         }
 
         if long:
-            idcol = "{:^8}".format("ID")
-            st = "{:^15}".format("SITE")
+            idcol = f"{'ID':^8}"
+            st = f"{'SITE':^15}"
         else:
             idcol = ""
             st = ""
@@ -296,7 +291,7 @@ class Status:
                 )
             )
 
-        print("\n{}{}{:5}{:^11}{:25}".format(idcol, st, "STAT", "IN_STATE", "JOB"))
+        print(f"\n{idcol}{st}{'STAT':5}{'IN_STATE':^11}{'JOB':25}".rstrip())
 
         job_counts = {
             self.JS_IDLE: 0,
@@ -318,7 +313,7 @@ class Status:
                 )
                 root_wf_uuids.add(job["pegasus_root_wf_uuid"])
 
-        def print_q(wf_uuid, prefix: str = ""):
+        def print_q(wf_uuid, prefix: str = "") -> None:
             space = "  "
             bar = "\u2503 "
             t = "\u2523\u2501"
@@ -326,12 +321,12 @@ class Status:
             jobs_list = d[wf_uuid]
             pointers = [t] * (len(jobs_list) - 1) + [L]
 
-            for pointer, job in zip(pointers, jobs_list):
+            for pointer, job in zip(pointers, jobs_list, strict=False):
                 status = self.job_status_codes[job["JobStatus"]]
 
                 if long:
-                    jobid = "{:^8}".format(job["ClusterId"])
-                    site = "{:^15}".format(job["pegasus_site"])
+                    jobid = f"{job['ClusterId']:^8}"
+                    site = f"{job['pegasus_site']:^15}"
                 else:
                     jobid = ""
                     site = ""
@@ -340,14 +335,14 @@ class Status:
                 in_state = self.get_time(int(time.time() - job["EnteredCurrentStatus"]))
 
                 if job["pegasus_wf_xformation"] == "pegasus::dagman":
-                    job_name = "{} ({})".format(job["pegasus_wf_name"], job["Iwd"])
+                    job_name = f"{job['pegasus_wf_name']} ({job['Iwd']})"
                 else:
                     job_name = prefix + pointer + job["pegasus_wf_dag_job_id"]
 
-                print(f"{jobid}{site}{status:^5}{in_state:^11}{job_name:25}")
+                print(f"{jobid}{site}{status:^5}{in_state:^11}{job_name:25}".rstrip())
                 if status == "Held":
                     screen_size = shutil.get_terminal_size().columns
-                    print("{}{}..".format(L, job["HoldReason"][: screen_size - 5]))
+                    print(f"{L}{job['HoldReason'][: screen_size - 5]}..")
 
                 if job["pegasus_wf_xformation"] == "condor::dagman":
                     extension = bar if pointer == t else space
@@ -362,10 +357,10 @@ class Status:
             for each_root_wf in root_wf_uuids:
                 print_q(each_root_wf)
 
-        idle = {False: "", True: "I:{} ".format(job_counts["Idle"])}
-        run = {False: "", True: "R:{} ".format(job_counts["Run"])}
-        held = {False: "", True: "H:{} ".format(job_counts["Held"])}
-        rem = {False: "", True: "X:{}".format(job_counts["Del"])}
+        idle = {False: "", True: f"I:{job_counts['Idle']} "}
+        run = {False: "", True: f"R:{job_counts['Run']} "}
+        held = {False: "", True: f"H:{job_counts['Held']} "}
+        rem = {False: "", True: f"X:{job_counts['Del']}"}
         total_jobs = len(condor_jobs)
         s = {False: "", True: "s"}
 
@@ -380,7 +375,7 @@ class Status:
         print(summary_line[:-1].rstrip(" ") + ")")
 
     def get_time(self, time) -> str:
-        """Internal method to get time elapsed for a job in dd:hh:mm:ss format"""
+        """Internal method to get time elapsed for a job in dd:hh:mm:ss format."""
         day = f"{time // (24 * 3600):0=2d}"
         time = time % (24 * 3600)
         hour = f"{time // 3600:0=2d}"
@@ -394,9 +389,8 @@ class Status:
                 val += each + ":"
         return f"{val}{minutes}:{seconds}"
 
-    def get_progress(self, submit_dir: str) -> Dict:
-        """Internal method to get workflow progress by parsing dagman.out file"""
-
+    def get_progress(self, submit_dir: str) -> dict:
+        """Internal method to get workflow progress by parsing dagman.out file."""
         dagman_list = self.get_all_dagmans(Path(submit_dir))
         # if wrong submit_dir is given or no dagman files found
         if not dagman_list:
@@ -482,7 +476,7 @@ class Status:
 
         return self.status_output
 
-    def parse_dagman_file(self, dagman_file, dag_name, dag_dict):
+    def parse_dagman_file(self, dagman_file, dag_name, dag_dict) -> None:
         """Parse a ``*.dag.dagman.out`` file and update ``status_output['dags'][dag_dict]``.
 
         Reads DAG status, node counts, and per-state job counts from the
@@ -532,7 +526,7 @@ class Status:
                         self.K_SUCCEEDED: int(temp_values[2]),
                         self.K_FAILED: int(temp_values[8]),
                         self.K_PERCENT_DONE: float(
-                            f"{(int(temp_values[2])/int(total_nodes))*100:.2f}"
+                            f"{(int(temp_values[2]) / int(total_nodes)) * 100:.2f}"
                         ),
                         self.K_TOTAL: int(total_nodes),
                         self.K_DAGNAME: dag_name,
@@ -540,47 +534,45 @@ class Status:
 
                     # Non-zero exitcode shows Failure
                     if dag_status:
-                        self.status_output["dags"][dag_dict][
-                            self.K_DAGSTATE
-                        ] = self.DAG_FAIL
+                        self.status_output["dags"][dag_dict][self.K_DAGSTATE] = (
+                            self.DAG_FAIL
+                        )
 
                     # Else Zero exitcode shows DAG_OK status
                     else:
-
                         # Check for Success DAG status
                         if (
                             self.status_output["dags"][dag_dict][self.K_PERCENT_DONE]
                             == 100.0
                         ):
-                            self.status_output["dags"][dag_dict][
-                                self.K_DAGSTATE
-                            ] = self.DAG_DONE
+                            self.status_output["dags"][dag_dict][self.K_DAGSTATE] = (
+                                self.DAG_DONE
+                            )
 
                         # Else it's Running DAG status
                         else:
-                            self.status_output["dags"][dag_dict][
-                                self.K_DAGSTATE
-                            ] = self.DAG_OK
+                            self.status_output["dags"][dag_dict][self.K_DAGSTATE] = (
+                                self.DAG_OK
+                            )
 
                 if exit_status_line:
                     exit_status = int(line.split()[-1])
                     if exit_status:
-                        self.status_output["dags"][dag_dict][
-                            self.K_DAGSTATE
-                        ] = self.DAG_FAIL
+                        self.status_output["dags"][dag_dict][self.K_DAGSTATE] = (
+                            self.DAG_FAIL
+                        )
                     else:
-                        self.status_output["dags"][dag_dict][
-                            self.K_DAGSTATE
-                        ] = self.DAG_DONE
+                        self.status_output["dags"][dag_dict][self.K_DAGSTATE] = (
+                            self.DAG_DONE
+                        )
 
-    def get_all_dagmans(self, submit_dir: str) -> List:
-        """
-        Internal method which receives a submit directory
-        :return List: .dagman.out files with absolute paths
+    def get_all_dagmans(self, submit_dir: str) -> list:
+        """Internal method which receives a submit directory
+        :return List: .dagman.out files with absolute paths.
         """
         dagmans = []
         # Traversing the dirs and sub-dirs in DFS manner
-        for root, directories, files in os.walk(
+        for root, _directories, files in os.walk(
             submit_dir, topdown=True, followlinks=False
         ):
             for file in files:
@@ -589,9 +581,8 @@ class Status:
 
         return dagmans
 
-    def show_job_progress(self, values: dict, long: bool, legend: bool):
-        """Internal method to display workflow progress"""
-
+    def show_job_progress(self, values: dict, long: bool, legend: bool) -> None:
+        """Internal method to display workflow progress."""
         long_val = int(long)
 
         column_descr = {
@@ -608,16 +599,16 @@ class Status:
         }
 
         column_names = {  # Long = False          ,     Long = True
-            "unready": ["{:^8}".format("UNREADY"), "{:^7}".format("UNREADY")],
-            "ready": ["{:^8}".format("READY"), "{:^7}".format("READY")],
-            "pre": ["{:^6}".format("PRE"), "{:^5}".format("PRE")],
-            "queued": ["{:^8}".format("QUEUED"), "{:^6}".format("IN_Q")],
-            "post": ["{:^8}".format("POST"), "{:^6}".format("POST")],
-            "completed": ["{:^9}".format("SUCCESS"), "{:^6}".format("DONE")],
-            "failed": ["{:^9}".format("FAILURE"), "{:^6}".format("FAIL")],
-            "percent_done": ["{:^8}".format("%DONE"), "{:^6}".format("%DONE")],
-            "state": ["", "{:^8}".format("STATE")],
-            "dagname": ["", "{:25}".format("DAGNAME")],
+            "unready": [f"{'UNREADY':^8}", f"{'UNREADY':^7}"],
+            "ready": [f"{'READY':^8}", f"{'READY':^7}"],
+            "pre": [f"{'PRE':^6}", f"{'PRE':^5}"],
+            "queued": [f"{'QUEUED':^8}", f"{'IN_Q':^6}"],
+            "post": [f"{'POST':^8}", f"{'POST':^6}"],
+            "completed": [f"{'SUCCESS':^9}", f"{'DONE':^6}"],
+            "failed": [f"{'FAILURE':^9}", f"{'FAIL':^6}"],
+            "percent_done": [f"{'%DONE':^8}", f"{'%DONE':^6}"],
+            "state": ["", f"{'STATE':^8}"],
+            "dagname": ["", f"{'DAGNAME':25}"],
         }
 
         if legend:
@@ -638,7 +629,7 @@ class Status:
                     column_descr["state"][long_val],
                     column_names["dagname"][long_val].strip(),
                     column_descr["dagname"][long_val],
-                )
+                ).rstrip()
             )
 
         print(
@@ -653,7 +644,7 @@ class Status:
                 column_names["percent_done"][long_val],
                 column_names["state"][long_val],
                 column_names["dagname"][long_val],
-            )
+            ).rstrip()
         )
 
         if long_val == 0:
@@ -668,19 +659,18 @@ class Status:
                     dag_totals["succeeded"],
                     dag_totals["failed"],
                     dag_totals["percent_done"],
-                )
+                ).rstrip()
             )
 
         else:
-
             if self.is_hierarchical:
-                total_name = "TOTALS({} jobs)".format(values["totals"]["total"])
+                total_name = f"TOTALS({values['totals']['total']} jobs)"
                 self.dag_tree_struct.append(("totals", total_name))
 
             for index, each_dag in enumerate(self.dag_tree_struct):
                 if not index:
                     dag_dict = values["dags"]["root"]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = values["dags"]["root"]["dagname"]
                 elif each_dag[0] == "totals":
                     dag_dict = values["totals"]
@@ -689,31 +679,20 @@ class Status:
                 else:
                     dag = Path(each_dag[0]).stem
                     dag_dict = values["dags"][dag]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = each_dag[1]
 
                 print(
-                    "{:^7}{:^7}{:^5}{:^6}{:^6}{:^6}{:^6}{:^6}{:^8}{:25}".format(
-                        dag_dict[self.K_UNREADY],
-                        dag_dict[self.K_READY],
-                        dag_dict[self.K_PRE],
-                        dag_dict[self.K_QUEUED],
-                        dag_dict[self.K_POST],
-                        dag_dict[self.K_SUCCEEDED],
-                        dag_dict[self.K_FAILED],
-                        dag_dict[self.K_PERCENT_DONE],
-                        state,
-                        name,
-                    )
+                    f"{dag_dict[self.K_UNREADY]:^7}{dag_dict[self.K_READY]:^7}{dag_dict[self.K_PRE]:^5}{dag_dict[self.K_QUEUED]:^6}{dag_dict[self.K_POST]:^6}{dag_dict[self.K_SUCCEEDED]:^6}{dag_dict[self.K_FAILED]:^6}{dag_dict[self.K_PERCENT_DONE]:^6}{state:^8}{name:25}".rstrip()
                 )
 
         dag_state_counts = {"Running": 0, "Success": 0, "Failure": 0}
         for each_dag in values["dags"]:
-            dag_state_counts[values["dags"][each_dag]["state"]] += 1
+            dag_state_counts[values["dags"][each_dag]["state"] or self.DAG_OK] += 1
 
-        done = {False: "", True: "Success:{} ".format(dag_state_counts["Success"])}
-        fail = {False: "", True: "Failure:{} ".format(dag_state_counts["Failure"])}
-        run = {False: "", True: "Running:{}".format(dag_state_counts["Running"])}
+        done = {False: "", True: f"Success:{dag_state_counts['Success']} "}
+        fail = {False: "", True: f"Failure:{dag_state_counts['Failure']} "}
+        run = {False: "", True: f"Running:{dag_state_counts['Running']}"}
         total_dags = len(values["dags"])
         s = {False: "", True: "s"}
 
@@ -739,7 +718,7 @@ class Status:
         root_dir_name = submit_dir.rstrip("/").split("/")[-1]
         dags = [each_path[each_path.find(root_dir_name) :] for each_path in dagman_list]
         root_dag_name = self.status_output["dags"]["root"]["dagname"]
-        levels_dict = {1: (root_dag_name + "/")}
+        {1: (root_dag_name + "/")}
         curr_hr = [root_dag_name]
         paths = []
 
@@ -789,12 +768,9 @@ class Status:
         t = "\u251c\u2500"
         L = "\u2514\u2500"
         pointers = [t] * (len(paths) - 1) + [L]
-        for pointer, path in zip(pointers, paths):
+        for pointer, path in zip(pointers, paths, strict=False):
             wf = Path(path).stem
-            if wf == self.root_wf_name:
-                k = "root"
-            else:
-                k = wf
+            k = "root" if wf == self.root_wf_name else wf
             name = self.status_output["dags"][k]["dagname"]
             yield (path, prefix + pointer + name)
             if isinstance(paths[path], dict):

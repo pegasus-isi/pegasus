@@ -274,8 +274,7 @@ def stdout(username, root_wf_id, wf_id, job_id, job_instance_id):
 
     if text.stdout_text is None:
         return "No stdout for workflow " + wf_id + " job-id " + job_id
-    else:
-        return "<pre>%s</pre>" % utils.unquote(text.stdout_text)
+    return f"<pre>{utils.unquote(text.stdout_text)}</pre>"
 
 
 @blueprint.route(
@@ -291,8 +290,7 @@ def stderr(username, root_wf_id, wf_id, job_id, job_instance_id):
 
     if text.stderr_text is None:
         return "No Standard error for workflow " + wf_id + " job-id " + job_id
-    else:
-        return "<pre>%s</pre>" % utils.unquote(text.stderr_text)
+    return f"<pre>{utils.unquote(text.stderr_text)}</pre>"
 
 
 @blueprint.route(
@@ -549,13 +547,12 @@ def file_browser(username, root_wf_id, wf_id):
                 wf_id=wf_id,
                 init_file=init_file,
             )
-        else:
-            raise ServiceError(
-                ErrorResponse(
-                    "SUBMIT_DIR_NOT_FOUND",
-                    "%r is not a valid directory" % str(submit_dir),
-                )
+        raise ServiceError(
+            ErrorResponse(
+                "SUBMIT_DIR_NOT_FOUND",
+                f"{str(submit_dir)!r} is not a valid directory",
             )
+        )
 
     except NoResultFound:
         return render_template("error/workflow/workflow_details_missing.html")
@@ -589,13 +586,12 @@ def file_list(username, root_wf_id, wf_id, path=""):
 
             return serialize(folders), 200, {"Content-Type": "application/json"}
 
-        else:
-            raise ServiceError(
-                ErrorResponse(
-                    "SUBMIT_DIR_NOT_FOUND",
-                    "%r is not a valid directory" % str(submit_dir),
-                )
+        raise ServiceError(
+            ErrorResponse(
+                "SUBMIT_DIR_NOT_FOUND",
+                f"{str(submit_dir)!r} is not a valid directory",
             )
+        )
 
     except NoResultFound:
         return render_template("error/workflow/workflow_details_missing.html")
@@ -666,9 +662,9 @@ def __get_datatables_args():
 
     i = 0
     while True:
-        if request.args.get("columns[%d][data]" % i):
+        if request.args.get(f"columns[{i:d}][data]"):
             table_args["column-count"] += 1
-            table_args["mDataProp_%d" % i] = request.args.get("columns[%d][data]" % i)
+            table_args[f"mDataProp_{i:d}"] = request.args.get(f"columns[{i:d}][data]")
         else:
             break
 
@@ -676,38 +672,38 @@ def __get_datatables_args():
         # Column Search
         #
 
-        if request.args.get("columns[%d][searchable]" % i):
-            table_args["bSearchable_%d" % i] = request.args.get(
-                "columns[%d][searchable]" % i
+        if request.args.get(f"columns[{i:d}][searchable]"):
+            table_args[f"bSearchable_{i:d}"] = request.args.get(
+                f"columns[{i:d}][searchable]"
             )
 
-        if request.args.get("columns[%d][search][value]" % i):
-            table_args["sSearch_%d" % i] = request.args.get(
-                "columns[%d][search][value]" % i
+        if request.args.get(f"columns[{i:d}][search][value]"):
+            table_args[f"sSearch_{i:d}"] = request.args.get(
+                f"columns[{i:d}][search][value]"
             )
 
-        if request.args.get("columns[%d][search][regex]" % i):
-            table_args["bRegex_%d" % i] = request.args.get(
-                "columns[%d][search][regex]" % i
+        if request.args.get(f"columns[{i:d}][search][regex]"):
+            table_args[f"bRegex_{i:d}"] = request.args.get(
+                f"columns[{i:d}][search][regex]"
             )
 
         #
         # Column Sort
         #
 
-        if request.args.get("columns[%d][orderable]" % i):
-            table_args["bSortable_%d" % i] = request.args.get(
-                "columns[%d][orderable]" % i
+        if request.args.get(f"columns[{i:d}][orderable]"):
+            table_args[f"bSortable_{i:d}"] = request.args.get(
+                f"columns[{i:d}][orderable]"
             )
 
-        if request.args.get("order[%d][column]" % i):
+        if request.args.get(f"order[{i:d}][column]"):
             table_args["sort-col-count"] += 1
-            table_args["iSortCol_%d" % i] = int(
-                request.args.get("order[%d][column]" % i)
+            table_args[f"iSortCol_{i:d}"] = int(
+                request.args.get(f"order[{i:d}][column]")
             )
 
-        if request.args.get("order[%d][dir]" % i):
-            table_args["sSortDir_%d" % i] = request.args.get("order[%d][dir]" % i)
+        if request.args.get(f"order[{i:d}][dir]"):
+            table_args[f"sSortDir_{i:d}"] = request.args.get(f"order[{i:d}][dir]")
 
         i += 1
 
@@ -746,8 +742,7 @@ def error_response(error):
             400,
             {"Content-Type": "application/json"},
         )
-    else:
-        return render_template("error/error_response.html", error=error.message)
+    return render_template("error/error_response.html", error=error.message)
 
 
 @blueprint.errorhandler(Exception)

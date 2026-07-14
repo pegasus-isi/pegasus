@@ -17,6 +17,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.io.File;
 import java.util.Properties;
 
@@ -61,7 +62,7 @@ public interface StagingMapper extends Mapper {
     public File getRelativeDirectory(String site, String lfn);
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param job

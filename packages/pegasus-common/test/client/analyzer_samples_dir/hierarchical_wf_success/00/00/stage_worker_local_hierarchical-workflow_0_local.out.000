@@ -149,7 +149,7 @@
         2023-03-04 01:01:18,181    INFO:  Stats: Total 1 transfers, 8.4 MB transferred in 2 seconds. Rate: 3.8 MB/s (30.2 Mb/s)
         2023-03-04 01:01:18,182    INFO:         Between sites pegasus->local : 1 transfers, 8.4 MB transferred in 2 seconds. Rate: 3.8 MB/s (30.2 Mb/s)
         2023-03-04 01:01:18,182    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_186926/ks.err.1smF63
       descriptor: 4

@@ -113,7 +113,7 @@ public class CreateDirectory extends Engine {
     }
 
     /**
-     * A pratically nothing constructor !
+     * A practically nothing constructor !
      *
      * @param bag bag of initialization objects
      */
@@ -125,7 +125,7 @@ public class CreateDirectory extends Engine {
      * It modifies the concrete dag passed in the constructor and adds the create random directory
      * nodes to it at the root level. These directory nodes have a common child that acts as a
      * concatenating job and ensures that Condor does not start staging in the data before the
-     * directories have been added. The root nodes in the unmodified dag are now chidren of this
+     * directories have been added. The root nodes in the unmodified dag are now children of this
      * concatenating dummy job.
      *
      * @param dag the workflow to which nodes have to be added

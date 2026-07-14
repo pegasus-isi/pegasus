@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.common;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.classes.Notifications;
@@ -27,6 +28,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

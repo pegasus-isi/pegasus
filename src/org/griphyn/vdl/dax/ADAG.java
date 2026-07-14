@@ -16,10 +16,12 @@
 package org.griphyn.vdl.dax;
 
 import edu.isi.pegasus.common.util.Currently;
+
+import org.griphyn.vdl.classes.LFN;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
-import org.griphyn.vdl.classes.LFN;
 
 /**
  * This class is the container for an abstract DAG description. It consists of three parts. <br>
@@ -535,8 +537,8 @@ public class ADAG extends DAX implements Cloneable {
     }
 
     /**
-     * Acessor: Sets a new zero-based index for this document. The index is used in conjunction with
-     * the total number of documents count.
+     * Accessor: Sets a new zero-based index for this document. The index is used in conjunction
+     * with the total number of documents count.
      *
      * @param index is the new zero-based index of this element.
      * @see #getIndex()
@@ -546,7 +548,7 @@ public class ADAG extends DAX implements Cloneable {
     }
 
     /**
-     * Acessor: Sets a new optional name for this document.
+     * Accessor: Sets a new optional name for this document.
      *
      * @param name is the new name.
      * @see #getName()
@@ -556,7 +558,7 @@ public class ADAG extends DAX implements Cloneable {
     }
 
     /**
-     * Acessor: Sets a new total document count in this document. The count is used in conjunction
+     * Accessor: Sets a new total document count in this document. The count is used in conjunction
      * with the zero-based document index.
      *
      * @param size is the new total document count.
@@ -567,10 +569,10 @@ public class ADAG extends DAX implements Cloneable {
     }
 
     /**
-     * Acessor: Sets a new version number for this document. The version number is taken by the
+     * Accessor: Sets a new version number for this document. The version number is taken by the
      * abstract planner to support a range of valid DAX documents.
      *
-     * @param version is the new version number as string composed of two integers separted by a
+     * @param version is the new version number as string composed of two integers separated by a
      *     period.
      * @see #getVersion()
      * @since 1.7

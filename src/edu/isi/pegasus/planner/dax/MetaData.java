@@ -16,8 +16,10 @@ package edu.isi.pegasus.planner.dax;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 
 /**
@@ -31,8 +33,10 @@ public class MetaData {
 
     /** Metadata Key */
     protected String mKey;
+
     /** Metadata type */
     protected String mType;
+
     /** Metadata value */
     protected String mValue;
 
@@ -70,7 +74,7 @@ public class MetaData {
     }
 
     /**
-     * Create a copy of this Metdata Object
+     * Create a copy of this Metadata Object
      *
      * @return clone of the object
      */
@@ -99,7 +103,7 @@ public class MetaData {
     }
 
     /**
-     * Get the type of the metdata object
+     * Get the type of the metadata object
      *
      * @return the type
      */
@@ -108,7 +112,7 @@ public class MetaData {
     }
 
     /**
-     * Get the value of the metdata object
+     * Get the value of the metadata object
      *
      * @return the value
      */

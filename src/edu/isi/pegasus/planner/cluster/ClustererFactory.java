@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.partitioner.Partitioner;
 import edu.isi.pegasus.planner.partitioner.PartitionerFactory;
 import edu.isi.pegasus.planner.partitioner.PartitionerFactoryException;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +81,7 @@ public class ClustererFactory {
             throw new ClustererFactoryException("No Clustering Technique Specified ");
         }
 
-        // PM-1839 check if a user has specfied a particular partitioner to load
+        // PM-1839 check if a user has specified a particular partitioner to load
         // If not, then load a default one
         Object partitionerClass = properties.getClustererPartitioner(clusterer);
         if (partitionerClass == null) {

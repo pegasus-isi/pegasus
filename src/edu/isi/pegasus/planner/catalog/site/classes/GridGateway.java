@@ -30,8 +30,10 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -553,7 +555,7 @@ class GridGatewayDeserializer extends SiteDataJsonDeserializer<GridGateway> {
                     gateway.setTotalNodes(node.get(key).asText());
                     break;
 
-                    // defined in schema but we don't do anything about it
+                // defined in schema but we don't do anything about it
                 case FREE_MEM:
                 case TOTAL_MEM:
                 case MAX_COUNT:

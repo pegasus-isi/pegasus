@@ -7,6 +7,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.LinkedList;
 import java.util.List;
 

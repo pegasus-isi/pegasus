@@ -213,7 +213,7 @@ public class Separator {
                 case 5: // Vi+S
                     result[1] = save.toString();
                     save = new StringBuffer();
-                    // NO break on purpose
+                // NO break on purpose
                 case 1: // S
                     save.append(ch);
                     break;
@@ -294,7 +294,7 @@ public class Separator {
     /**
      * Splits a fully-qualified identifier into its components. Please note that you must check the
      * length of the result. If it contains three elements, it is a regular FQDN. If it contains
-     * four results, it is a tranformation reference range. Note though, if the version portion is
+     * four results, it is a transformation reference range. Note though, if the version portion is
      * not specified, a 3 argument string will always be returned, even if the context requires a 4
      * argument string.
      *
@@ -344,7 +344,7 @@ public class Separator {
                 case 8:
                     if (save.length() > 0) name = save.toString();
                     save = new StringBuffer();
-                    // NO break on purpose
+                // NO break on purpose
                 case 1: // save
                     save.append(ch);
                     break;
@@ -358,14 +358,14 @@ public class Separator {
                     break;
                 case 5: // save(version), 4args
                     is4args = true;
-                    // NO break on purpose
+                // NO break on purpose
                 case 4: // save(version)
                     if (save.length() > 0) version = save.toString();
                     save = new StringBuffer();
                     break;
                 case 7: // save(max), 4args
                     is4args = true;
-                    // NO break on purpose
+                // NO break on purpose
                 case 6: // save(max)
                     if (save.length() > 0) max = save.toString();
                     save = new StringBuffer();

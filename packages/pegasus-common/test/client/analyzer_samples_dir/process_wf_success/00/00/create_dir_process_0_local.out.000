@@ -140,11 +140,11 @@
         2023-03-03 22:23:48,967    INFO:  LD_LIBRARY_PATH=
         2023-03-03 22:23:49,014    INFO:  --------------------------------------------------------------------------------
         2023-03-03 22:23:49,015    INFO:  Starting transfers - attempt 1
-        2023-03-03 22:23:51,017    INFO:  /bin/mkdir -p '/home/mzalam/processwf/scratch/mzalam/pegasus/process/run0001' 
+        2023-03-03 22:23:51,017    INFO:  /bin/mkdir -p '/home/mzalam/processwf/scratch/mzalam/pegasus/process/run0001'
         2023-03-03 22:23:51,028    INFO:  --------------------------------------------------------------------------------
         2023-03-03 22:23:51,028    INFO:  Stats: no local files in the transfer set
         2023-03-03 22:23:51,028    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_133047/ks.err.3zuWBA
       descriptor: 4

@@ -14,11 +14,12 @@
  */
 package org.griphyn.vdl.diagnozer;
 
+import org.griphyn.vdl.directive.*;
+import org.griphyn.vdl.toolkit.FriendlyNudge;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-import org.griphyn.vdl.directive.*;
-import org.griphyn.vdl.toolkit.FriendlyNudge;
 
 /**
  * Inspects various files in a run directory to help diagnoze an error.
@@ -427,7 +428,7 @@ public class Diagnozer {
                                         subDir.getPath()
                                                 + ".err."
                                                 + currentRetry
-                                                + " doestn't exites");
+                                                + " doesn't exites");
                             }
                             ParseOut(outFile, ID.toUpperCase().trim(), currentRetry);
                             ParseError(errFile, ID.toUpperCase().trim(), currentRetry);
@@ -547,8 +548,8 @@ public class Diagnozer {
             Matcher dataM = data.matcher(line.trim());
             Matcher endM=endData.matcher(line.trim());
             if ( dataM.matches() ) {
-                String dataS=dataM.group(1);
-                //System.out.println(dataS);
+                String data=dataM.group(1);
+                //System.out.println(data);
                 do{
             	//System.out.println(line);
             	((JobInfo)((JobInfos) m_jobRecord.get(jobid)).getJobInfo(currentRetry))

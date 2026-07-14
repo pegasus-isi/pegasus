@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -16,7 +15,6 @@
 #
 __author__ = "Rafael Ferreira da Silva"
 
-DB_VERSION = 1
 
 import logging
 
@@ -26,6 +24,7 @@ from sqlalchemy.sql import text
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 
+DB_VERSION = 1
 log = logging.getLogger(__name__)
 
 
@@ -34,7 +33,7 @@ class Version(BaseVersion):
         super().__init__(connection)
 
     def update(self, force=False):
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         try:
             self.db.execute(text("SELECT site FROM rc_lfn LIMIT 0,1"))
             return
@@ -71,7 +70,7 @@ class Version(BaseVersion):
                 self.db.execute(text("ALTER TABLE rc_lfn RENAME TO rc_lfn_old"))
                 self.db.execute(text("ALTER TABLE rc_lfn_new RENAME TO rc_lfn"))
 
-            log.debug("    Droping old table...")
+            log.debug("    Dropping old table...")
             self.db.execute(text("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr"))
             self.db.execute(text("DROP TABLE rc_lfn_old"))
             log.debug("  Data schema successfully updated.")
@@ -104,14 +103,13 @@ class Version(BaseVersion):
                 if data[0] > 0:
                     self.db.rollback()
                     raise DBAdminError(
-                        "attribute pool failed to be removed. There are still %d entries."
-                        % data[0]
+                        f"attribute pool failed to be removed. There are still {data[0]:d} entries."
                     )
 
             updated = self.db.execute(
                 text("SELECT COUNT(id) FROM rc_lfn WHERE site IS NOT NULL")
             ).first()
-            log.debug("  Updated %d entries in the database." % updated)
+            log.debug(f"  Updated {updated:d} entries in the database.")
             self.db.commit()
 
         except (OperationalError, ProgrammingError):
@@ -163,7 +161,7 @@ class Version(BaseVersion):
             self.db.execute(
                 text("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
             )
-            log.debug("    Droping old table...")
+            log.debug("    Dropping old table...")
             self.db.execute(text("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr"))
             self.db.execute(text("DROP TABLE rc_lfn_old"))
             self.db.execute(

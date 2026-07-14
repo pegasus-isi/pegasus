@@ -31,7 +31,7 @@ import org.griphyn.vdl.classes.*;
 public interface FinalizerHandler {
     /**
      * This method adds the given top-level VDL element to whatever storage is implemented
-     * underneath. Please note that the Defintions class will not be maintained by the parser for
+     * underneath. Please note that the Definitions class will not be maintained by the parser for
      * memory efficiency reasons!
      *
      * @param d is the VDL that is ready to be stored.

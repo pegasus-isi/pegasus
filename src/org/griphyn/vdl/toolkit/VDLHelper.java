@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.toolkit;
 
+import org.griphyn.vdl.directive.*;
+import org.griphyn.vdl.parser.*;
+
 import java.io.*;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.*;
-import org.griphyn.vdl.directive.*;
-import org.griphyn.vdl.parser.*;
 
 /**
  * This class encapsulates common helper functions for VDL parsing.

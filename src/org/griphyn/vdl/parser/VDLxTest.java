@@ -15,9 +15,10 @@
 
 package org.griphyn.vdl.parser;
 
-import java.io.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
 
 /**
  * This class is used to test the <code>VDLxParser</code> class and the input file index. It parses

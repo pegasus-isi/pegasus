@@ -17,12 +17,12 @@ using std::vector;
 // Give the host script 60 seconds to exit
 #define HOST_SCRIPT_TIMEOUT 60
 
-// Give processes in the host script's process 
+// Give processes in the host script's process
 // group 5 seconds after SIGTERM before sending SIGKILL
 #define HOST_SCRIPT_GRACE_PERIOD 5
 
 class Forward {
-public: 
+public:
     virtual ~Forward() {};
     virtual const char *data() = 0;
     virtual size_t size() = 0;
@@ -91,8 +91,8 @@ public:
 
     bool per_task_stdio;
 
-    Worker(Communicator *comm, const string &dagfile, const string &host_script, 
-            unsigned host_memory = 0, cpu_t host_cpus = 0, 
+    Worker(Communicator *comm, const string &dagfile, const string &host_script,
+            unsigned host_memory = 0, cpu_t host_cpus = 0,
             bool strict_limits = false, bool per_task_stdio=false);
     ~Worker();
     int run();

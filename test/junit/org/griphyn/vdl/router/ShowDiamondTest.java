@@ -17,18 +17,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.StringWriter;
 import org.griphyn.vdl.classes.Definitions;
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dbschema.InMemorySchema;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** @author Rajiv Mayani */
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StringWriter;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ShowDiamondTest {
 
     @Test

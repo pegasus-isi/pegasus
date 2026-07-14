@@ -3,4 +3,3 @@ pegasus.catalog.site YAML
 
 pegasus.catalog.transformation.file ./transformations.yml
 pegasus.catalog.transformation YAML
-

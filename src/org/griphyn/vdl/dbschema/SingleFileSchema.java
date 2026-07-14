@@ -15,16 +15,18 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.sql.SQLException;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbdriver.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.FileHelper;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.sql.SQLException;
 
 /**
  * This is a class that falls back not on a real database backend, but rather on an existing
@@ -67,8 +69,13 @@ public class SingleFileSchema extends InMemorySchema {
      * @throws java.io.IOException Exception
      */
     public SingleFileSchema(String hyphen_d)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         super(); // call minimalistic c'tor, no driver loading!
         ChimeraProperties props = ChimeraProperties.instance();
         // Start a new set of definitions

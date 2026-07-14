@@ -143,8 +143,8 @@
       group: div23
       data_truncated: false
       data: |
-        2023.03.04 01:06:33.959 PST:   Database version: '5.0.5' (sqlite:////home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/hierarchical-workflow-0.replicas.db) 
-        
+        2023.03.04 01:06:33.959 PST:   Database version: '5.0.5' (sqlite:////home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0001/hierarchical-workflow-0.replicas.db)
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190913/ks.err.6bQfcy
       descriptor: 4
@@ -165,7 +165,7 @@
       data: |
         #Successfully worked on    : 1 lines.
         #Worked on total number of : 1 lines.
-        
+
     metadata:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190913/ks.meta.070olh
       descriptor: 5

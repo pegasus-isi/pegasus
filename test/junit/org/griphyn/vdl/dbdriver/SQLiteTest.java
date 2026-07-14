@@ -15,7 +15,9 @@ package org.griphyn.vdl.dbdriver;
 
 // import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class SQLiteTest {
 
     /*

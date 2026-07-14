@@ -19,12 +19,14 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.griphyn.vdl.euryale.FileFactory;
+import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.griphyn.vdl.euryale.FileFactory;
-import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 
 /**
  * Maps the output files in a Hashed Directory structure on the output site.
@@ -69,7 +71,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
     public FileFactory instantiateFileFactory(PegasusBag bag, ADag workflow) {
         FileFactory factory;
 
-        // all file factories intialized with the addon component only
+        // all file factories initialized with the addon component only
         try {
 
             String addOn = mSiteStore.getRelativeStorageDirectoryAddon();
@@ -94,7 +96,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
             ((VirtualDecimalHashedFileFactory) factory).setMultiplicator(1);
         } catch (IOException ioe) {
             throw new MapperException(
-                    this.getErrorMessagePrefix() + "Unable to intialize the Flat File Factor ",
+                    this.getErrorMessagePrefix() + "Unable to initialize the Flat File Factor ",
                     ioe);
         }
         return factory;
@@ -193,7 +195,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
     /** Resets the internal cache. */
     private void resetLFNAddOnCache() {
         // this is also relying on the fact that registration URL's (for which existing = true)
-        // are retrieved in conjuction with the PUT urls on the stageout site.
+        // are retrieved in conjunction with the PUT urls on the stageout site.
         mSiteLFNAddOnMap = new HashMap();
         if (mOutputSites != null) {
             // add a default lfn to add on map for the site

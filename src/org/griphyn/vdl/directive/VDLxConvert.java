@@ -15,11 +15,12 @@
 
 package org.griphyn.vdl.directive;
 
-import java.io.*;
-import java.util.MissingResourceException;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.xml.sax.InputSource;
+
+import java.io.*;
+import java.util.MissingResourceException;
 
 /**
  * This class uses the <code>VDLxParser</code> to parse VDL XML specification and output VDL textual

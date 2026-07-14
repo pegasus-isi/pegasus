@@ -174,10 +174,10 @@
       data: |
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                          Dload  Upload   Total   Spent    Left  Speed
-        
+
           0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
         100   313  100   313    0     0  62600      0 --:--:-- --:--:-- --:--:-- 62600
-        
+
     metadata:
       temporary_name: /home/mzalam/wf/condor/local/execute/dir_382044/ks.meta.Xn37C2
       descriptor: 5

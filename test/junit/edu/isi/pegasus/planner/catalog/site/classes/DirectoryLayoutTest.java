@@ -19,10 +19,11 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for DirectoryLayout via LocalDirectory (concrete subclass).

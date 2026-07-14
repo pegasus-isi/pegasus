@@ -9,7 +9,7 @@
 03/05/23 09:10:11 ** Log last touched time unavailable (No such file or directory)
 03/05/23 09:10:11 ******************************************************
 03/05/23 09:10:11 Using config source: /home/mzalam/wf/condor/etc/condor_config
-03/05/23 09:10:11 Using local config sources: 
+03/05/23 09:10:11 Using local config sources:
 03/05/23 09:10:11    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 03/05/23 09:10:11 config Macros = 63, Sorted = 62, StringBytes = 1921, TablesBytes = 2316
 03/05/23 09:10:11 CLASSAD_CACHING is ENABLED
@@ -53,8 +53,8 @@
 03/05/23 09:10:11 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 03/05/23 09:10:11 DAGMAN_MAX_JOB_HOLDS setting: 100
 03/05/23 09:10:11 DAGMAN_HOLD_CLAIM_TIME setting: 20
-03/05/23 09:10:11 ALL_DEBUG setting: 
-03/05/23 09:10:11 DAGMAN_DEBUG setting: 
+03/05/23 09:10:11 ALL_DEBUG setting:
+03/05/23 09:10:11 DAGMAN_DEBUG setting:
 03/05/23 09:10:11 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 03/05/23 09:10:11 DAGMAN_REMOVE_NODE_JOBS setting: True
 03/05/23 09:10:11 DAGMAN will adjust edges after parsing
@@ -244,7 +244,7 @@
 03/05/23 09:12:12       Node Name: chebi_drug_loader_ID0000001
 03/05/23 09:12:12            Noop: false
 03/05/23 09:12:12          NodeID: 2
-03/05/23 09:12:12     Node Status: STATUS_ERROR    
+03/05/23 09:12:12     Node Status: STATUS_ERROR
 03/05/23 09:12:12 Node return val: 1
 03/05/23 09:12:12           Error: Job failed due to DAGMAN error -1002 and POST Script failed with status 1
 03/05/23 09:12:12 Job Submit File: 00/00/chebi_drug_loader_ID0000001.sub

@@ -20,12 +20,14 @@ package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 
 /**
  * An abstract base class that XML Parsers can use if they use stack internally to store the
@@ -113,7 +115,7 @@ public abstract class StackBasedXMLParser extends XMLParser {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      * @param atts has the names and values of all the attributes
      */
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
@@ -151,7 +153,7 @@ public abstract class StackBasedXMLParser extends XMLParser {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {

@@ -8097,7 +8097,7 @@ transformationCatalog:
     version: '1.0'
     sites:
     - name: condorpool
-      pfn: file:///grid/app/nees/opensees/bin/OpenSees
+      pfn: file:///grid/app/needs/opensees/bin/OpenSees
       type: installed
       arch: x86_64
       os.type: linux
@@ -8106,7 +8106,7 @@ transformationCatalog:
     version: '1.0'
     sites:
     - name: condorpool
-      pfn: file:///grid/app/nees/bin/octave-3.2.4.sh
+      pfn: file:///grid/app/needs/bin/octave-3.2.4.sh
       type: installed
       arch: x86_64
       os.type: linux

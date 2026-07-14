@@ -526,4 +526,3 @@ int main(int argc, char* argv[], char* envp[]) {
     fflush(stdout); /* just in case */
     exit(exitstatus);
 }
-

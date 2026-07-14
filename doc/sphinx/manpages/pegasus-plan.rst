@@ -611,5 +611,3 @@ See Also
 
 pegasus-run(1), pegasus-status(1), pegasus-remove(1),
 pegasus-rc-client(1), pegasus-analyzer(1)
-
-

@@ -125,6 +125,7 @@ public class SysInfo implements Cloneable {
         mOSVersion = "";
         mGlibc = "";
     }
+
     /**
      * This constructor takes the system information in the format arch::os:osversion:glibc
      *
@@ -138,14 +139,19 @@ public class SysInfo implements Cloneable {
                     mArchitecture = Architecture.valueOf(s1[0].trim());
                 } else {
                     throw new IllegalStateException(
-                            "Error: Illegal Architecture defined. Please specify one of the predefined types \n [x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64, ppc64le, aarch64]");
+                            "Error: Illegal Architecture defined. Please specify one of the"
+                                    + " predefined types \n"
+                                    + " [x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64,"
+                                    + " ppc64le, aarch64]");
                 }
                 String s2[] = s1[1].split(":", 3);
                 if (isValidOS(s2[0].trim())) {
                     mOS = OS.valueOf(s2[0].trim());
                 } else {
                     throw new IllegalStateException(
-                            "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, MACOSX, WINDOWS]");
+                            "Error: Illegal Operating System defined. Please specify one of the"
+                                    + " predefined types \n"
+                                    + " [LINUX, SUNOS, AIX, MACOSX, WINDOWS]");
                 }
                 for (int i = 1; i < s2.length; i++) {
                     if (i == 1) {
@@ -166,6 +172,7 @@ public class SysInfo implements Cloneable {
             mGlibc = "";
         }
     }
+
     /**
      * Checks if the architecture is a valid supported architecture
      *
@@ -178,6 +185,7 @@ public class SysInfo implements Cloneable {
         }
         return false;
     }
+
     /**
      * Checks if the operating system is a valid supported operating system
      *

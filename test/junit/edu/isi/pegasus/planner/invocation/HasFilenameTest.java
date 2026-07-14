@@ -16,9 +16,10 @@ package edu.isi.pegasus.planner.invocation;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
 
 /** Tests for HasFilename interface structure. */
 public class HasFilenameTest {

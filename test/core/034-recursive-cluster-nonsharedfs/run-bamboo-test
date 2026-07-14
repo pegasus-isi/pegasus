@@ -89,12 +89,8 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --staging-site local \
-    --dir work/dags \
+    --dir submit \
     --output-sites local \
     --cluster label,horizontal \
     -vvvv \
     --submit blackdiamond.dax | tee plan.out
-
-
-
-

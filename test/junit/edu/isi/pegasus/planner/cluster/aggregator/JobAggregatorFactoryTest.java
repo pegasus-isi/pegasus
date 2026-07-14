@@ -22,8 +22,10 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 /** Tests for the JobAggregatorFactory class constants and structure. */
 public class JobAggregatorFactoryTest {

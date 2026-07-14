@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.util.Logging;
+
+import java.util.*;
 
 /**
  * @author Jens-S. Vöckler

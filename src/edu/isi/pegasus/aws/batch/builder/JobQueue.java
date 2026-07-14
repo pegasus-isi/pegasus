@@ -8,6 +8,11 @@ package edu.isi.pegasus.aws.batch.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import software.amazon.awssdk.services.batch.model.ComputeEnvironmentOrder;
+import software.amazon.awssdk.services.batch.model.CreateJobQueueRequest;
+import software.amazon.awssdk.services.batch.model.JQState;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,9 +21,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import software.amazon.awssdk.services.batch.model.ComputeEnvironmentOrder;
-import software.amazon.awssdk.services.batch.model.CreateJobQueueRequest;
-import software.amazon.awssdk.services.batch.model.JQState;
 
 /**
  * A Builder to get objects related to Job Queue The JSON specification can be found in the AWS

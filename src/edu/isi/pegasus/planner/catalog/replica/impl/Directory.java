@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -571,8 +572,8 @@ public class Directory implements ReplicaCatalog {
 
     /**
      * Inserts a new mapping into the replica catalog. This is a convenience function exposing the
-     * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be contructed,
-     * and passed to the appropriate insert function.
+     * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be
+     * constructed, and passed to the appropriate insert function.
      *
      * @param lfn is the logical directory under which to book the entry.
      * @param pfn is the physical directory associated with it.

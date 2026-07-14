@@ -24,9 +24,11 @@ import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for CondorGenerator class. */
 public class CondorGeneratorTest {

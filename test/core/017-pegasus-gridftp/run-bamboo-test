@@ -8,7 +8,7 @@ function run_test
     cmd=$1
 
     echo "Test command: $cmd"
-    
+
     $cmd
     rc=$?
     if [ $rc -ne 0 ]; then
@@ -46,4 +46,3 @@ run_test "pegasus-gridftp rm -r -f gsiftp://bamboo.isi.edu/tmp/${TEMPNAME}"
 rm -f pegasus-gridftp-test-*
 
 exit 0
-

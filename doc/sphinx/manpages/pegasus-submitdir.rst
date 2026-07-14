@@ -93,5 +93,3 @@ Global Options
 
 **-h**; \ **--help**
    Prints a usage summary with all the available command-line options.
-
-

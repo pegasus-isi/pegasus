@@ -362,7 +362,7 @@ def main():
     )
 
     # Parse command line options
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     setup_logger(options.debug)
 
     if not options.file:

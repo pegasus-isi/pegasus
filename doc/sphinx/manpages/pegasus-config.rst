@@ -85,4 +85,3 @@ To set the same path inside Python:
 
    config = subprocess.Popen("pegasus-config --python-dump", stdout=subprocess.PIPE, shell=True).communicate()[0]
    exec config
-

@@ -9,7 +9,7 @@
 09/15/22 15:26:34 ** Log last touched time unavailable (No such file or directory)
 09/15/22 15:26:34 ******************************************************
 09/15/22 15:26:34 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:26:34 Using local config sources: 
+09/15/22 15:26:34 Using local config sources:
 09/15/22 15:26:34    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:26:34 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:26:34 CLASSAD_CACHING is ENABLED
@@ -55,8 +55,8 @@
 09/15/22 15:26:34 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:26:34 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:26:34 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:26:34 ALL_DEBUG setting: 
-09/15/22 15:26:34 DAGMAN_DEBUG setting: 
+09/15/22 15:26:34 ALL_DEBUG setting:
+09/15/22 15:26:34 DAGMAN_DEBUG setting:
 09/15/22 15:26:34 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:26:34 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:26:34 DAGMAN will adjust edges after parsing
@@ -77,9 +77,9 @@
 09/15/22 15:26:34 argv[14] == "0"
 09/15/22 15:26:34 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:26:34 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:26:34 
+09/15/22 15:26:34
 Unrecognized argument: -Condorlog
-09/15/22 15:26:34 
+09/15/22 15:26:34
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -128,7 +128,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:26:44 ** Log last touched 9/15 15:26:34
 09/15/22 15:26:44 ******************************************************
 09/15/22 15:26:44 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:26:44 Using local config sources: 
+09/15/22 15:26:44 Using local config sources:
 09/15/22 15:26:44    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:26:44 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:26:44 CLASSAD_CACHING is ENABLED
@@ -174,8 +174,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:26:44 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:26:44 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:26:44 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:26:44 ALL_DEBUG setting: 
-09/15/22 15:26:44 DAGMAN_DEBUG setting: 
+09/15/22 15:26:44 ALL_DEBUG setting:
+09/15/22 15:26:44 DAGMAN_DEBUG setting:
 09/15/22 15:26:44 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:26:44 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:26:44 DAGMAN will adjust edges after parsing
@@ -196,9 +196,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:26:44 argv[14] == "0"
 09/15/22 15:26:44 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:26:44 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:26:44 
+09/15/22 15:26:44
 Unrecognized argument: -Condorlog
-09/15/22 15:26:44 
+09/15/22 15:26:44
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -247,7 +247,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:07 ** Log last touched 9/15 15:26:44
 09/15/22 15:33:07 ******************************************************
 09/15/22 15:33:07 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:33:07 Using local config sources: 
+09/15/22 15:33:07 Using local config sources:
 09/15/22 15:33:07    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:33:07 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:33:07 CLASSAD_CACHING is ENABLED
@@ -293,8 +293,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:07 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:33:07 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:33:07 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:33:07 ALL_DEBUG setting: 
-09/15/22 15:33:07 DAGMAN_DEBUG setting: 
+09/15/22 15:33:07 ALL_DEBUG setting:
+09/15/22 15:33:07 DAGMAN_DEBUG setting:
 09/15/22 15:33:07 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:33:07 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:33:07 DAGMAN will adjust edges after parsing
@@ -315,9 +315,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:07 argv[14] == "0"
 09/15/22 15:33:07 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:33:07 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:33:07 
+09/15/22 15:33:07
 Unrecognized argument: -Condorlog
-09/15/22 15:33:07 
+09/15/22 15:33:07
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -366,7 +366,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:17 ** Log last touched 9/15 15:33:07
 09/15/22 15:33:17 ******************************************************
 09/15/22 15:33:17 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:33:17 Using local config sources: 
+09/15/22 15:33:17 Using local config sources:
 09/15/22 15:33:17    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:33:17 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:33:17 CLASSAD_CACHING is ENABLED
@@ -412,8 +412,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:17 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:33:17 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:33:17 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:33:17 ALL_DEBUG setting: 
-09/15/22 15:33:17 DAGMAN_DEBUG setting: 
+09/15/22 15:33:17 ALL_DEBUG setting:
+09/15/22 15:33:17 DAGMAN_DEBUG setting:
 09/15/22 15:33:17 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:33:17 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:33:17 DAGMAN will adjust edges after parsing
@@ -434,9 +434,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:33:17 argv[14] == "0"
 09/15/22 15:33:17 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:33:17 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:33:17 
+09/15/22 15:33:17
 Unrecognized argument: -Condorlog
-09/15/22 15:33:17 
+09/15/22 15:33:17
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -485,7 +485,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:11 ** Log last touched 9/15 15:33:17
 09/15/22 15:38:11 ******************************************************
 09/15/22 15:38:11 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:38:11 Using local config sources: 
+09/15/22 15:38:11 Using local config sources:
 09/15/22 15:38:11    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:38:11 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:38:11 CLASSAD_CACHING is ENABLED
@@ -531,8 +531,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:11 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:38:11 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:38:11 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:38:11 ALL_DEBUG setting: 
-09/15/22 15:38:11 DAGMAN_DEBUG setting: 
+09/15/22 15:38:11 ALL_DEBUG setting:
+09/15/22 15:38:11 DAGMAN_DEBUG setting:
 09/15/22 15:38:11 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:38:11 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:38:11 DAGMAN will adjust edges after parsing
@@ -553,9 +553,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:11 argv[14] == "0"
 09/15/22 15:38:11 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:38:11 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:38:11 
+09/15/22 15:38:11
 Unrecognized argument: -Condorlog
-09/15/22 15:38:11 
+09/15/22 15:38:11
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -604,7 +604,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:25 ** Log last touched 9/15 15:38:11
 09/15/22 15:38:25 ******************************************************
 09/15/22 15:38:25 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:38:25 Using local config sources: 
+09/15/22 15:38:25 Using local config sources:
 09/15/22 15:38:25    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:38:25 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:38:25 CLASSAD_CACHING is ENABLED
@@ -650,8 +650,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:25 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:38:25 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:38:25 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:38:25 ALL_DEBUG setting: 
-09/15/22 15:38:25 DAGMAN_DEBUG setting: 
+09/15/22 15:38:25 ALL_DEBUG setting:
+09/15/22 15:38:25 DAGMAN_DEBUG setting:
 09/15/22 15:38:25 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:38:25 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:38:25 DAGMAN will adjust edges after parsing
@@ -672,9 +672,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:25 argv[14] == "0"
 09/15/22 15:38:25 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:38:25 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:38:25 
+09/15/22 15:38:25
 Unrecognized argument: -Condorlog
-09/15/22 15:38:25 
+09/15/22 15:38:25
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -723,7 +723,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:57 ** Log last touched 9/15 15:38:25
 09/15/22 15:38:57 ******************************************************
 09/15/22 15:38:57 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:38:57 Using local config sources: 
+09/15/22 15:38:57 Using local config sources:
 09/15/22 15:38:57    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:38:57 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:38:57 CLASSAD_CACHING is ENABLED
@@ -769,8 +769,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:57 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:38:57 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:38:57 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:38:57 ALL_DEBUG setting: 
-09/15/22 15:38:57 DAGMAN_DEBUG setting: 
+09/15/22 15:38:57 ALL_DEBUG setting:
+09/15/22 15:38:57 DAGMAN_DEBUG setting:
 09/15/22 15:38:57 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:38:57 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:38:57 DAGMAN will adjust edges after parsing
@@ -791,9 +791,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:38:57 argv[14] == "0"
 09/15/22 15:38:57 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:38:57 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:38:57 
+09/15/22 15:38:57
 Unrecognized argument: -Condorlog
-09/15/22 15:38:57 
+09/15/22 15:38:57
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>
@@ -842,7 +842,7 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:39:12 ** Log last touched 9/15 15:38:57
 09/15/22 15:39:12 ******************************************************
 09/15/22 15:39:12 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:39:12 Using local config sources: 
+09/15/22 15:39:12 Using local config sources:
 09/15/22 15:39:12    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:39:12 config Macros = 63, Sorted = 62, StringBytes = 1936, TablesBytes = 2316
 09/15/22 15:39:12 CLASSAD_CACHING is ENABLED
@@ -888,8 +888,8 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:39:12 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:39:12 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:39:12 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:39:12 ALL_DEBUG setting: 
-09/15/22 15:39:12 DAGMAN_DEBUG setting: 
+09/15/22 15:39:12 ALL_DEBUG setting:
+09/15/22 15:39:12 DAGMAN_DEBUG setting:
 09/15/22 15:39:12 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:39:12 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:39:12 DAGMAN will adjust edges after parsing
@@ -910,9 +910,9 @@ Usage: condor_dagman -f -t -l .
 09/15/22 15:39:12 argv[14] == "0"
 09/15/22 15:39:12 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
 09/15/22 15:39:12 Can't open directory "/etc/condor/passwords.d" as PRIV_ROOT, errno: 13 (Permission denied)
-09/15/22 15:39:12 
+09/15/22 15:39:12
 Unrecognized argument: -Condorlog
-09/15/22 15:39:12 
+09/15/22 15:39:12
 Usage: condor_dagman -f -t -l .
 		-Lockfile <NAME.dag.lock>
 		-Dag <NAME.dag>

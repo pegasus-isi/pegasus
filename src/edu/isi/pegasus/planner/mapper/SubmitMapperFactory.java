@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.mapper;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.util.Properties;
 

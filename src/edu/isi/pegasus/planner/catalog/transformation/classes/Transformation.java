@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.TextNode;
+
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntryJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -29,6 +30,7 @@ import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;

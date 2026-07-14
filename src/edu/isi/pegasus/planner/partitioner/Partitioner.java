@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Map;
 
 /**
@@ -68,7 +69,7 @@ public abstract class Partitioner {
     }
 
     /**
-     * The main function that ends up traversing the graph structure corrsponding to the dax and
+     * The main function that ends up traversing the graph structure corresponding to the dax and
      * creates the smaller dax files(one dax file per partition) and the .pdax file that illustrates
      * the partition graph. It is recommended that the implementing classes use the already
      * initialized handles to the DAXWriter and PDAXWriter interfaces to write out the xml files.

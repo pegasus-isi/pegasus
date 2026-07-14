@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,9 +63,10 @@ public abstract class AbstractPerJob extends Abstract {
             } else {
                 if (job instanceof DataFlowJob) {
                     // PM-1205 datalfows are clustered jobs
-                    // we map the constitutent jobs not the datalfow job itself.
-                    for (Iterator consIT = ((DataFlowJob) job).nodeIterator(); consIT.hasNext(); ) {
-                        GraphNode n = (GraphNode) consIT.next();
+                    // we map the constituent jobs not the datalfow job itself.
+                    for (Iterator consist = ((DataFlowJob) job).nodeIterator();
+                            consist.hasNext(); ) {
+                        GraphNode n = (GraphNode) consist.next();
                         Job j = (Job) n.getContent();
                         mapJob(j, sites);
                     }

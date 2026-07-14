@@ -14,7 +14,7 @@ Basic Usage::
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
 
-from typing import Dict, TextIO
+from typing import TextIO
 
 __all__ = (
     "load",
@@ -24,7 +24,7 @@ __all__ = (
 )
 
 
-def load(fp: TextIO, *args, **kwargs) -> Dict:
+def load(fp: TextIO, *args, **kwargs) -> dict:
     """
     Deserialize ``fp`` (a ``.read()``-supporting file-like object containing a Kickstart document) to a Python object.
 
@@ -35,7 +35,7 @@ def load(fp: TextIO, *args, **kwargs) -> Dict:
     """
 
 
-def loads(s: str, *args, **kwargs) -> Dict:
+def loads(s: str, *args, **kwargs) -> dict:
     """
     Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance containing a Kickstart document) to a Python object.
 
@@ -46,7 +46,7 @@ def loads(s: str, *args, **kwargs) -> Dict:
     """
 
 
-def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
+def dump(obj: dict, fp: TextIO, *args, **kwargs) -> None:
     """
     Serialize ``obj`` as a Kickstart formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
@@ -58,7 +58,7 @@ def dump(obj: Dict, fp: TextIO, *args, **kwargs) -> None:
     """
 
 
-def dumps(obj: Dict, *args, **kwargs) -> str:
+def dumps(obj: dict, *args, **kwargs) -> str:
     """
     Serialize ``obj`` to a Kickstart formatted ``str``.
 

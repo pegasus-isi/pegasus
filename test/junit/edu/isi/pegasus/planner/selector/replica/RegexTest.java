@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the Regex replica selector class structure. */

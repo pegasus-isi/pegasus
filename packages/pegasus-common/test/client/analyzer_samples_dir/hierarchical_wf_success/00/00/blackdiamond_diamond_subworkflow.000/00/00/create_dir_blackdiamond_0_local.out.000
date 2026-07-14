@@ -140,11 +140,11 @@
         2023-03-04 01:02:29,248    INFO:  LD_LIBRARY_PATH=
         2023-03-04 01:02:29,298    INFO:  --------------------------------------------------------------------------------
         2023-03-04 01:02:29,298    INFO:  Starting transfers - attempt 1
-        2023-03-04 01:02:31,301    INFO:  /bin/mkdir -p '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow' 
+        2023-03-04 01:02:31,301    INFO:  /bin/mkdir -p '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001/00/00/./blackdiamond_diamond_subworkflow'
         2023-03-04 01:02:31,310    INFO:  --------------------------------------------------------------------------------
         2023-03-04 01:02:31,310    INFO:  Stats: no local files in the transfer set
         2023-03-04 01:02:31,310    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_187920/ks.err.DCmtvN
       descriptor: 4

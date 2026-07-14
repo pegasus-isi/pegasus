@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Properties;
 
 /**

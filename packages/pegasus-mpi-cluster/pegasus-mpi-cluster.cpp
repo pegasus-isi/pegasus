@@ -359,7 +359,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     }
 
     // Everything is pretty deterministic up until the processes reach
-    // this point. Once we get here the different processes can diverge 
+    // this point. Once we get here the different processes can diverge
     // in their behavior for many reasons (file systems issues, bad nodes,
     // etc.), so be careful how failures are handled after this point
     // and make sure MPI_Abort is called when something bad happens.
@@ -409,7 +409,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         return master.run();
     } else {
 
-        Worker worker(&comm, dagfile, host_script, host_memory, host_cpus, 
+        Worker worker(&comm, dagfile, host_script, host_memory, host_cpus,
                 strict_limits, per_task_stdio);
 
         return worker.run();
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
         int rc = mpidag(argc, argv, comm);
         return rc;
     } catch (exception &error) {
-        // If we catch an execption here, then one of the
+        // If we catch an exception here, then one of the
         // processes has hit an unsolvable problem and we
         // need to abort the entire workflow.
         fprintf(stderr, "ABORT: %s\n", error.what());
@@ -453,4 +453,3 @@ int main(int argc, char *argv[]) {
         comm.abort(1);
     }
 }
-

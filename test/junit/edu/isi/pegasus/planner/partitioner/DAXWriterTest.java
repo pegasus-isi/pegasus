@@ -18,13 +18,17 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.File;
-import java.lang.reflect.Modifier;
-import java.nio.file.Files;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.File;
+import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class DAXWriterTest {
 
     @Test

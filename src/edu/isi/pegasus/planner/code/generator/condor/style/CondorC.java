@@ -48,6 +48,7 @@ public class CondorC extends Condor {
      */
     public static final String REMOTE_SHOULD_TRANSFER_FILES_KEY =
             edu.isi.pegasus.planner.namespace.Condor.REMOTE_SHOULD_TRANSFER_FILES_KEY;
+
     /** The name of key that designates when to transfer output. */
     public static final String WHEN_TO_TRANSFER_OUTPUT_KEY =
             edu.isi.pegasus.planner.namespace.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
@@ -76,7 +77,7 @@ public class CondorC extends Condor {
      * Applies the CondorC style to the job.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
         // lets apply the Condor style first and then make
@@ -143,7 +144,7 @@ public class CondorC extends Condor {
      *
      * @param job the job
      * @return the grid_resource entry
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     protected String constructGridResource(Job job) throws CondorStyleException {
         StringBuffer gridResource = new StringBuffer();

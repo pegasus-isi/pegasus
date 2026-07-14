@@ -464,4 +464,3 @@ Exhaustive list of features, improvements and bug fixes can be found below
     	      	it in RC raises an exception, unlike in older versions
 
 33) [PM-1317] - Pegasus plan fails on container task clustering [\#1431](https://github.com/pegasus-isi/pegasus/issues/1431)
-

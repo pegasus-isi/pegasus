@@ -9,4 +9,3 @@ if [ $1 == "fail" ]; then
 fi
 
 exit 0
-

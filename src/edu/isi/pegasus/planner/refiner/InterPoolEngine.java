@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.selector.SiteSelector;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -138,7 +139,7 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Returns the bag of intialization objects.
+     * Returns the bag of initialization objects.
      *
      * @return PegasusBag
      */
@@ -197,9 +198,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                 dflow.setJobAggregator(decaf);
 
                 // PM-1205 datalfows are clustered jobs
-                // we map the constitutent jobs not the datalfow job itself.
-                for (Iterator consIT = dflow.nodeIterator(); consIT.hasNext(); ) {
-                    GraphNode n = (GraphNode) consIT.next();
+                // we map the constituent jobs not the datalfow job itself.
+                for (Iterator consist = dflow.nodeIterator(); consist.hasNext(); ) {
+                    GraphNode n = (GraphNode) consist.next();
                     Job j = (Job) n.getContent();
                     incorporateSiteMapping(j, sites);
                 }
@@ -260,7 +261,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         incorporateProfiles(job, entry);
 
         // PM-810 assign data configuration for the job if
-        // not already incorporated from profiles and properites
+        // not already incorporated from profiles and properties
         if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
             job.setDataConfiguration(PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE);
         }
@@ -303,9 +304,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                 "For job " + job.getName() + " updating profiles from site " + job.getSiteHandle(),
                 LogManager.TRACE_MESSAGE_LEVEL);
 
-        // the profile information from the pool catalog needs to be
+        // the profile information from the site catalog needs to be
         // assimilated into the job.
-        job.updateProfiles(mSiteStore.lookup(siteHandle).getProfiles());
+        job.updateProfiles(mSiteStore.lookup(siteHandle));
 
         /* PM-810
         TransformationCatalogEntry tcEntry = lookupTC( job );
@@ -328,7 +329,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         job.updateProfiles(mProps);
 
         /* PM-810
-        //handle dependant executables
+        //handle dependent executables
         handleFileTransfersForDependantExecutables( job );
         if( fTx != null ){
             //add the main executable back as input
@@ -419,7 +420,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             job.addInputFile(pf);
         }
 
-        // handle dependant executables
+        // handle dependent executables
         handleFileTransfersForDependantExecutables(job);
 
         // PM-1195 check if any container transfers need to be done
@@ -477,6 +478,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             // the physical transformation points to
             // guc or the user specified transfer mechanism
             // accessible url
+            validateStageablePFN(entry);
             fTx.addSource(entry.getResourceId(), entry.getPhysicalTransformation());
 
             // PM-1386 set bypass for executable if set
@@ -498,6 +500,29 @@ public class InterPoolEngine extends Engine implements Refiner {
         }
 
         return fTx;
+    }
+
+    /**
+     * Validates that the physical transformation (pfn) for a stageable executable is a location it
+     * can actually be staged from. The pfn must contain a directory component (a path separator),
+     * so that the planner can later derive the source directory of the executable. A bare filename
+     * such as "script.sh" (instead of an absolute path or URL) is invalid and would otherwise
+     * trigger a cryptic StringIndexOutOfBoundsException later during staging.
+     *
+     * @param entry the transformation catalog entry whose pfn is to be validated
+     * @throws RuntimeException if the pfn is invalid
+     */
+    void validateStageablePFN(TransformationCatalogEntry entry) {
+        String pfn = entry.getPhysicalTransformation();
+        if (pfn == null || !pfn.contains(File.separator)) {
+            throw new RuntimeException(
+                    "Transformation "
+                            + entry.getLogicalTransformation()
+                            + " has invalid pfn: '"
+                            + pfn
+                            + "'. The pfn for a stageable executable must be an absolute path or a"
+                            + " URL.");
+        }
     }
 
     /**
@@ -531,7 +556,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             if (c.getType() == Container.TYPE.docker || c.getType() == Container.TYPE.shifter) {
                 // log a warning
                 mLogger.log(
-                        "Specification of checksums in transformation catalog are not currently supported for container "
+                        "Specification of checksums in transformation catalog are not currently"
+                                + " supported for container "
                                 + c,
                         LogManager.WARNING_MESSAGE_LEVEL);
             } else {
@@ -556,7 +582,7 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Handles the dependant executables that need to be staged.
+     * Handles the dependent executables that need to be staged.
      *
      * @param job Job
      */
@@ -618,6 +644,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         // the physical transformation points to
                         // guc or the user specified transfer mechanism
                         // accessible url
+                        validateStageablePFN(tcEntry);
                         fTx.addSource(tcEntry.getResourceId(), tcEntry.getPhysicalTransformation());
 
                         // PM-1386 set bypass for executable if set
@@ -629,7 +656,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         // the executable is going to be staged
                         // job.executable = externalStagedPath;
                         mLogger.log(
-                                "Dependant Executable "
+                                "Dependent Executable "
                                         + input.getLFN()
                                         + " being staged from "
                                         + fTx.getSourceURL(),
@@ -637,10 +664,10 @@ public class InterPoolEngine extends Engine implements Refiner {
                     }
                 }
                 it.remove();
-            } // end of if file is exectuable
+            } // end of if file is executable
         }
 
-        // add all the dependant executable FileTransfers back as input files
+        // add all the dependent executable FileTransfers back as input files
         for (Iterator it = dependantExecutables.iterator(); it.hasNext(); ) {
             FileTransfer file = (FileTransfer) it.next();
             job.addInputFile(file);
@@ -699,7 +726,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             contains = n.containsKey(key);
             if (contains) {
                 mLogger.log(
-                        "Hints namespace is deprecated. Please use selector namespace instead. Found key "
+                        "Hints namespace is deprecated. Please use selector namespace instead."
+                                + " Found key "
                                 + key
                                 + " for job "
                                 + job.getID(),

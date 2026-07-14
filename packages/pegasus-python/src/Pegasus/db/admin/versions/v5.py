@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -35,7 +34,7 @@ class Version(BaseVersion):
 
     def update(self, force=False):
         "Fixes malfunction past migrations and clean the database"
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
 
         # check and fix foreign key for master_workflowstate table
         with warnings.catch_warnings():
@@ -93,6 +92,6 @@ class Version(BaseVersion):
         :return:
         """
         try:
-            self.db.execute(text("DROP TABLE %s" % table_name))
+            self.db.execute(text(f"DROP TABLE {table_name}"))
         except Exception:
             pass

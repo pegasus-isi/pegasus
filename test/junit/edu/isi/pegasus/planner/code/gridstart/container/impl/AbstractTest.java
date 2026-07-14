@@ -22,10 +22,12 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract container shell wrapper class. */
 public class AbstractTest {

@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -120,7 +121,7 @@ public class Restricted extends Default {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
@@ -183,7 +184,8 @@ public class Restricted extends Default {
             // none were associated with the preference pool.
             // replica not selected
             throw new RuntimeException(
-                    "Unable to select a Physical Filename (PFN) for the file with logical filename (LFN) as "
+                    "Unable to select a Physical Filename (PFN) for the file with logical filename"
+                            + " (LFN) as "
                             + lfn);
         }
 
@@ -220,7 +222,7 @@ public class Restricted extends Default {
     }
 
     /**
-     * Returns a boolean indicating whether a source site is to be preffered for staging to a
+     * Returns a boolean indicating whether a source site is to be preferred for staging to a
      * destination site
      *
      * @param source the source site.

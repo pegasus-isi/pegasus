@@ -43,7 +43,7 @@ def sort_parse(clause):
     try:
         n = ast.parse(clause.strip(",") + ",", mode="eval").body
     except SyntaxError as e:
-        raise InvalidSortError("Invalid sort: %s" % e)
+        raise InvalidSortError(f"Invalid sort: {e}")
 
     if not isinstance(n, ast.Tuple):
         raise InvalidSortError("Invalid condition: must evaluate to a boolean value")
@@ -88,7 +88,7 @@ class _SortEvaluator(ast.NodeVisitor):
 
     def generic_visit(self, n):
         raise InvalidSortError(
-            "Invalid sort clause at Line <%d>, Col <%d>" % (n.lineno, n.col_offset)
+            f"Invalid sort clause at Line <{n.lineno:d}>, Col <{n.col_offset:d}>"
         )
 
 
@@ -96,9 +96,9 @@ def _main():
     import sys
 
     logging.basicConfig(level=logging.DEBUG)
-    logging.debug("Expression <%s>", sys.argv[1])
+    print(f"Expression <{sys.argv[1]}>")
     result = sort_parse(sys.argv[1])
-    logging.debug("Evaluation Result <%s>", result)
+    print(f"Evaluation Result <{result}>")
 
 
 if __name__ == "__main__":

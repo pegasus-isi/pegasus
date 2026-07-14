@@ -63,11 +63,11 @@ def compute_stampede_db_url():
     cache_key = _get_cache_key(m_wf_id)
 
     if cache.get(cache_key):
-        log.debug("Cache Hit: compute_stampede_db_url %s" % cache_key)
+        log.debug(f"Cache Hit: compute_stampede_db_url {cache_key}")
         root_workflow = cache.get(cache_key)
 
     else:
-        log.debug("Cache Miss: compute_stampede_db_url %s" % cache_key)
+        log.debug(f"Cache Miss: compute_stampede_db_url {cache_key}")
         queries = MasterWorkflowQueries(g.master_db_url)
         root_workflow = queries.get_root_workflow(m_wf_id)
         queries.close()
@@ -87,12 +87,10 @@ def get_query_args():
     def to_int(q_arg, value):
         try:
             return int(value)
-        except ValueError as e:
+        except ValueError:
             log.exception(f"Query Argument {q_arg} = {value} is not a valid int")
             e = ValueError(
-                "Expecting integer for argument {}, found {!r}".format(
-                    q_arg, str(value)
-                )
+                f"Expecting integer for argument {q_arg}, found {str(value)!r}"
             )
             e.codes = ("INVALID_QUERY_ARGUMENT", 400)
             raise e from None
@@ -106,18 +104,13 @@ def get_query_args():
         if value in {"1", "true"}:
             return True
 
-        elif value in {"0", "false"}:
+        if value in {"0", "false"}:
             return False
 
-        else:
-            log.exception(f"Query Argument {q_arg} = {value} is not a valid boolean")
-            e = ValueError(
-                "Expecting boolean for argument {}, found {!r}".format(
-                    q_arg, str(value)
-                )
-            )
-            e.codes = ("INVALID_QUERY_ARGUMENT", 400)
-            raise e
+        log.exception(f"Query Argument {q_arg} = {value} is not a valid boolean")
+        e = ValueError(f"Expecting boolean for argument {q_arg}, found {str(value)!r}")
+        e.codes = ("INVALID_QUERY_ARGUMENT", 400)
+        raise e
 
     query_args = OrderedDict(
         [

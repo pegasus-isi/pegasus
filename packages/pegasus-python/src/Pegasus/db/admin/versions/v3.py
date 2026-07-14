@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -17,7 +16,6 @@
 __author__ = "Gideon Juve"
 __author__ = "Rafael Ferreira da Silva"
 
-DB_VERSION = 3
 
 import logging
 
@@ -27,6 +25,7 @@ from sqlalchemy.sql import text
 from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 
+DB_VERSION = 3
 log = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class Version(BaseVersion):
 
     def update(self, force=False):
         "Add plan_command field to ensemble_workflow table"
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         try:
             self.db.execute(
                 text(

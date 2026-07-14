@@ -98,7 +98,7 @@ def ExclusiveLock(fd, timeout=120):
     # try / sleep to grab the lock, no equivalent of polling.
     # Why hello, thundering herd.
 
-    # An alternate would be to block on the lock, and use signals to interupt.
+    # An alternate would be to block on the lock, and use signals to interrupt.
     # This would mess up Gratia's flawed use of signals already, and not be
     # able to report on who has the lock.  I don't like indefinite waits!
     max_time = 30

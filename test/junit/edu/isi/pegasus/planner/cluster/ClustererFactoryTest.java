@@ -24,10 +24,12 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.Partitioner;
 import edu.isi.pegasus.planner.partitioner.Whole;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 /** Tests for ClustererFactory constants and structural validation. */
 public class ClustererFactoryTest {

@@ -21,13 +21,17 @@ import edu.isi.pegasus.planner.cluster.Clusterer;
 import edu.isi.pegasus.planner.cluster.ClustererException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ClustererCallbackTest {
 
     @Test

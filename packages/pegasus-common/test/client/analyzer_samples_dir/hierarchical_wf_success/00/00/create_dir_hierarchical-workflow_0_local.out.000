@@ -140,11 +140,11 @@
         2023-03-04 01:01:15,928    INFO:  LD_LIBRARY_PATH=
         2023-03-04 01:01:15,978    INFO:  --------------------------------------------------------------------------------
         2023-03-04 01:01:15,979    INFO:  Starting transfers - attempt 1
-        2023-03-04 01:01:17,981    INFO:  /bin/mkdir -p '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001' 
+        2023-03-04 01:01:17,981    INFO:  /bin/mkdir -p '/home/mzalam/hierar/hierarichal-sample-wf/work/local-site/scratch/mzalam/pegasus/hierarchical-workflow/run0001'
         2023-03-04 01:01:17,991    INFO:  --------------------------------------------------------------------------------
         2023-03-04 01:01:17,991    INFO:  Stats: no local files in the transfer set
         2023-03-04 01:01:17,991    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_186925/ks.err.ZAIi1J
       descriptor: 4

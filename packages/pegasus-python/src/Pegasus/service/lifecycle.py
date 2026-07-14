@@ -21,7 +21,7 @@ def _get_request_uuid():
 
     :return: first section of uuid generated using uuid.uuid4
     """
-    uid = "%s" % uuid.uuid4()
+    uid = f"{uuid.uuid4()}"
     return uid.split("-")[0]
 
 
@@ -44,13 +44,13 @@ def _is_user_an_admin(username):
 
     if admin_users is None or admin_users is False or admin_users == "":
         return False
-    elif admin_users == "*":
+    if admin_users == "*":
         return True
-    elif hasattr(admin_users, "__iter__"):
+    if hasattr(admin_users, "__iter__"):
         return username in admin_users
-    else:
-        log.error("Invalid configuration: ADMIN_USERS is invalid.")
-        abort(500)
+    log.error("Invalid configuration: ADMIN_USERS is invalid.")
+    abort(500)
+    return None
 
 
 def before_request():
@@ -67,7 +67,7 @@ def is_xhr():
 def authenticate():
     # Static files do not need to be authenticated.
     if (request.script_root + request.path).startswith(url_for("static", filename="")):
-        return
+        return None
 
     #
     # Authentication
@@ -91,7 +91,7 @@ def authenticate():
     try:
         g.user = auth.get_user()
     except user.NoSuchUser:
-        log.error("No such user: %s" % username)
+        log.error(f"No such user: {username}")
         return _basic_auth_response()
 
     log.info("Authenticated user %s", g.user.username)
@@ -100,12 +100,13 @@ def authenticate():
     # the logged in user?
     if "username" not in g:
         g.username = g.user.username
+    return None
 
 
 def authorization():
     # Static files do not need to be authorized.
     if (request.script_root + request.path).startswith(url_for("static", filename="")):
-        return
+        return None
 
     # Root user is off limits.
     if g.username == "root":
@@ -115,26 +116,21 @@ def authorization():
         # then return 403 FORBIDDEN
         if g.user.username == "root":
             return _basic_auth_response()
-        else:
-            abort(403)
+        abort(403)
 
     user_info = g.user
 
     if g.username != g.user.username:
         # Is user (g.user.username) allowed to view user (g.username) runs?
         if not _is_user_an_admin(g.user.username):
-            log.error(
-                "User {} is accessing user {}'s runs".format(
-                    g.user.username, g.username
-                )
-            )
+            log.error(f"User {g.user.username} is accessing user {g.username}'s runs")
             abort(403)
 
         # Is user a valid system user?
         try:
             user_info = user.get_user_by_username(g.username)
         except user.NoSuchUser:
-            log.error("User %s is not a valid user" % g.username)
+            log.error(f"User {g.username} is not a valid user")
             abort(400)
 
     if current_app.config["PROCESS_SWITCHING"]:
@@ -166,6 +162,7 @@ def authorization():
     # For testing master_db_url would be pre-populated, so let's not overwrite it here.
     if "master_db_url" not in g:
         g.master_db_url = user_info.get_master_db_url()
+    return None
 
 
 def teardown_request(response):

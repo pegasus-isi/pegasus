@@ -32,17 +32,21 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.xml.sax.helpers.AttributesImpl;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.xml.sax.helpers.AttributesImpl;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class DAXParser2Test {
 
     @Test
@@ -74,7 +78,8 @@ public class DAXParser2Test {
 
         assertThat(
                 parser.extractVersionFromSchema(
-                        "https://pegasus.isi.edu/schema/DAX https://pegasus.isi.edu/schema/dax-2.0.xsd"),
+                        "https://pegasus.isi.edu/schema/DAX"
+                                + " https://pegasus.isi.edu/schema/dax-2.0.xsd"),
                 is("2.0"));
         assertThat(
                 parser.extractVersionFromSchema(
@@ -93,15 +98,16 @@ public class DAXParser2Test {
         Files.write(
                 dax,
                 ("<?xml version=\"1.0\"?>\n"
-                                + "<adag xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                                + "xsi:schemaLocation=\"https://pegasus.isi.edu/schema/DAX https://pegasus.isi.edu/schema/dax-2.2.xsd\" "
-                                + "name=\"wf\"/>")
+                                + "<adag xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+                                + " xsi:schemaLocation=\"https://pegasus.isi.edu/schema/DAX"
+                                + " https://pegasus.isi.edu/schema/dax-2.2.xsd\" name=\"wf\"/>")
                         .getBytes());
 
         assertThat(
                 parser.getSchemaOfDocument(dax.toString()),
                 is(
-                        "https://pegasus.isi.edu/schema/DAX https://pegasus.isi.edu/schema/dax-2.2.xsd"));
+                        "https://pegasus.isi.edu/schema/DAX"
+                                + " https://pegasus.isi.edu/schema/dax-2.2.xsd"));
         assertThat(parser.getVersionOfDAX(dax.toString()), is("2.2"));
     }
 

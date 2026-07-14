@@ -18,10 +18,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.XMLWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.StringWriter;
+import java.util.Arrays;
 
 /** Tests for the Transformation class. */
 public class TransformationTest {

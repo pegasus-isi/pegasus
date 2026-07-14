@@ -153,7 +153,7 @@ static size_t fread_untraced(void *ptr, size_t size, size_t nmemb, FILE *stream)
 static int fclose_untraced(FILE *fp);
 static int dup_untraced(int fd);
 
-/* The gettid() system call first appeared on Linux in kernel 2.4.11. 
+/* The gettid() system call first appeared on Linux in kernel 2.4.11.
  * Library support was added in glibc 2.30. */
 #if !defined(_GNU_SOURCE) || !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 30)
 static pid_t gettid(void) {
@@ -337,7 +337,7 @@ static void ensure_descriptor(int fd) {
 static Descriptor *get_descriptor(int fd) {
     debug("get_descriptor %d", fd);
 
-    /* Sometimes we try to access a descriptor before the 
+    /* Sometimes we try to access a descriptor before the
      * constructor has been called where the descriptor array
      * is allocated. That can happen, for example, if another library
      * constructor calls an interposed function in its constructor and
@@ -532,7 +532,7 @@ static void read_io() {
     char iofile[] = "/proc/self/io";
 
     /* This proc file was added in Linux 2.6.20. It won't be
-     * there on older kernels, or on kernels without task IO 
+     * there on older kernels, or on kernels without task IO
      * accounting. If it is missing, just bail out.
      */
     if (access(iofile, F_OK) < 0) {
@@ -2223,4 +2223,3 @@ void _exit(int rc) {
     /* unreachable */
     abort();
 }
-

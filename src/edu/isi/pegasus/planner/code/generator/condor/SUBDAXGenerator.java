@@ -47,6 +47,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -312,14 +313,16 @@ public class SUBDAXGenerator {
                 error.append("DAX file for subworkflow does not exist ")
                         .append(dax)
                         .append(
-                                " . Either set the --basename option to subworkflow or make sure dax exists");
+                                " . Either set the --basename option to subworkflow or make sure"
+                                        + " dax exists");
                 throw new RuntimeException(error.toString());
             }
             label = options.getBasenamePrefix();
             index = "0";
             labelBasedDir = label;
             mLogger.log(
-                    "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
+                    "DAX File for subworkflow does not exist. Set label value to the basename"
+                            + " option passed ",
                     LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
@@ -393,13 +396,13 @@ public class SUBDAXGenerator {
             ((DAXJob) job).closeOutputMapper();
         }
 
-        // we propogate force-replan  if set in outer level workflow
+        // we propagate force-replan  if set in outer level workflow
         // to the sub workflow
         if (mPegasusPlanOptions.getForceReplan()) {
             options.setForceReplan(true);
         }
 
-        // we propogate the rescue option also
+        // we propagate the rescue option also
         if (mPegasusPlanOptions.getNumberOfRescueTries()
                 != PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES) {
             // user specified a value.
@@ -429,7 +432,7 @@ public class SUBDAXGenerator {
         // file generated when planning DAXA to DAXJobB
         // PM-1766 instead of the workflow cache file, we now pass the cache
         // file created specifically for the sub workflow job to ensure only
-        // those files that have a depedency are passed to the sub workflow
+        // those files that have a dependency are passed to the sub workflow
         String wfCacheFile = ((DAXJob) job).getInputWorkflowCacheFile();
         if (wfCacheFile != null) {
             cacheFiles.add(wfCacheFile);
@@ -619,7 +622,7 @@ public class SUBDAXGenerator {
             insertExecutionSitesClassAd(job, options.getExecutionSites());
 
             if (wfCacheFile != null) {
-                // GH-2179 need to propogate the input workflow cache file
+                // GH-2179 need to propagate the input workflow cache file
                 dagJob.setInputWorkflowCacheFile(wfCacheFile);
             }
 
@@ -867,7 +870,8 @@ public class SUBDAXGenerator {
             if (entries == null) {
                 mLogger.log(
                         Separator.combine(job.namespace, job.logicalName, job.version)
-                                + "  not catalogued in the Transformation Catalog. Trying to construct from the Site Catalog",
+                                + "  not catalogued in the Transformation Catalog. Trying to"
+                                + " construct from the Site Catalog",
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 entry = defaultTCEntry("local");
             } else {
@@ -887,7 +891,8 @@ public class SUBDAXGenerator {
             */
             if (entry == null) {
                 mLogger.log(
-                        "DAGMan not catalogued in the Transformation Catalog or the Site Catalog. Trying to construct from the environment",
+                        "DAGMan not catalogued in the Transformation Catalog or the Site Catalog."
+                                + " Trying to construct from the environment",
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 entry = constructTCEntryFromEnvironment();
             }
@@ -900,7 +905,8 @@ public class SUBDAXGenerator {
             throw new RuntimeException(
                     "Unable to construct entry for  "
                             + job.getCompleteTCName()
-                            + " from the Transformation Catalog, Site Catalog or the Environment for site "
+                            + " from the Transformation Catalog, Site Catalog or the Environment"
+                            + " for site "
                             + job.getSiteHandle());
         }
 
@@ -957,7 +963,7 @@ public class SUBDAXGenerator {
         // zero value of --rescue option to pegasus-plan
         // Karan June 27, 2007
         mLogger.log(
-                "Number of Resuce retries " + mPegasusPlanOptions.getNumberOfRescueTries(),
+                "Number of Rescue retries " + mPegasusPlanOptions.getNumberOfRescueTries(),
                 LogManager.DEBUG_MESSAGE_LEVEL);
         if (mCondorVersion >= CondorVersion.v_7_1_0
                 || mPegasusPlanOptions.getNumberOfRescueTries() > 0) {
@@ -988,8 +994,10 @@ public class SUBDAXGenerator {
         // set the arguments for the job
         job.setArguments(sb.toString());
 
-        // the environment need to be propogated for exitcode to be picked up
-        job.condorVariables.construct("getenv", "TRUE");
+        // match the env of DAGMan (GH-2221)
+        job.condorVariables.construct(
+                "getenv",
+                "CONDOR_CONFIG,_CONDOR_*,PATH,PYTHONPATH,PERL*,PEGASUS_*,TZ,HOME,USER,LANG,LC_ALL,ASAN_OPTIONS,LSAN_OPTIONS,BEARER_TOKEN,BEARER_TOKEN_FILE,XDG_RUNTIME_DIR");
 
         job.condorVariables.construct("remove_kill_sig", "SIGUSR1");
 
@@ -1139,7 +1147,7 @@ public class SUBDAXGenerator {
 
     /**
      * Constructs the basename to the cache file that is to be used to log the transient files. The
-     * basename is dependant on whether the basename prefix has been specified at runtime or not.
+     * basename is dependent on whether the basename prefix has been specified at runtime or not.
      *
      * @param options the options for the sub workflow.
      * @param label the label for the workflow.
@@ -1151,7 +1159,7 @@ public class SUBDAXGenerator {
     }
 
     /**
-     * Constructs the basename to a workflow file that. The basename is dependant on whether the
+     * Constructs the basename to a workflow file that. The basename is dependent on whether the
      * basename prefix has been specified at runtime or not.
      *
      * @param options the options for the sub workflow.
@@ -1171,7 +1179,7 @@ public class SUBDAXGenerator {
         return sb.toString();
     }
 
-    /* Constructs the basename prefix for a workflow file.  This is dependant
+    /* Constructs the basename prefix for a workflow file.  This is dependent
      * on whether the  basename prefix has been specified in options or not.
      *
      * @param options   the options for the sub workflow.
@@ -1244,7 +1252,7 @@ public class SUBDAXGenerator {
     }
 
     /**
-     * Returns a tranformation catalog entry object constructed from the path environment variable
+     * Returns a transformation catalog entry object constructed from the path environment variable
      *
      * @param env the environment profiles.
      * @return the entry constructed else null if environment variables not defined.
@@ -1270,7 +1278,7 @@ public class SUBDAXGenerator {
     }
 
     /**
-     * Returns a tranformation catalog entry object constructed from the environment
+     * Returns a transformation catalog entry object constructed from the environment
      *
      * <p>An entry is constructed if either of the following environment variables are defined 1)
      * CONDOR_HOME 2) CONDOR_LOCATION
@@ -1382,7 +1390,7 @@ public class SUBDAXGenerator {
         // of a deferred planning run
         options.setPartOfDeferredRun(true);
 
-        // in case of deferred planning cleanup wont work
+        // in case of deferred planning cleanup won't work
         // explicitly turn it off if the file cleanup scope if fullahead
         if (mCleanupScope.equals(PegasusProperties.CLEANUP_SCOPE.fullahead)) {
             options.setCleanup(PlannerOptions.CLEANUP_OPTIONS.none);

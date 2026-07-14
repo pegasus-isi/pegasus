@@ -2,7 +2,7 @@
 2023-03-04 11:57:15: Executing on host workflow.isi.edu IP=128.9.46.53
 
 ########################[Pegasus Lite] Setting up workdir ########################
-2023-03-04 11:57:15: Checking /tmp for potential use as work space... 
+2023-03-04 11:57:15: Checking /tmp for potential use as work space...
 2023-03-04 11:57:15:   Workdir is /tmp/pegasus.AK65dbzWn - 35G available
 2023-03-04 11:57:15: Changing cwd to /tmp/pegasus.AK65dbzWn
 Can't open ./.chirp.config file

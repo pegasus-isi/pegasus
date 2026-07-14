@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJob;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Collection;
@@ -117,7 +118,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
                     .append(txJob.getSiteHandle());
             error.append(" . ")
                     .append(
-                            "Either add an entry in the TC or make sure that PEGASUS_HOME is set as an env profile in the site catalog for site ")
+                            "Either add an entry in the TC or make sure that PEGASUS_HOME is set as"
+                                    + " an env profile in the site catalog for site ")
                     .append(txJob.getSiteHandle())
                     .append(" . ");
             mLogger.log(error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
@@ -175,7 +177,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        txJob.updateProfiles(ePool.getProfiles());
+        txJob.updateProfiles(ePool);
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391
@@ -214,11 +216,11 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
     }
 
     /**
-     * Determines the correct site to be asscociated with the transfer job, to ensure cleanup
+     * Determines the correct site to be associated with the transfer job, to ensure cleanup
      * algorithms work correctly
      *
      * @param job the associated compute job for which transfer job is being constructed
-     * @param files the files to be transfered
+     * @param files the files to be transferred
      * @param jobClass type of transfer job
      * @return
      */
@@ -288,7 +290,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         if (envs == null) {
             // cannot create default TC
             mLogger.log(
-                    "Unable to create a default entry for as could not construct necessary environment "
+                    "Unable to create a default entry for as could not construct necessary"
+                            + " environment "
                             + Separator.combine(namespace, name, version),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             // set the flag back to true
@@ -365,7 +368,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
     /**
      * Prepares the stdin for the transfer job. Usually involves writing out a text file that Condor
      * transfers to the remote end. Additionally, it associates credentials with the job that are
-     * requried to for the transfers.
+     * required to for the transfers.
      *
      * @param name the name of the transfer job.
      * @param files Collection of <code>FileTransfer</code> objects containing the information about

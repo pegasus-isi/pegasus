@@ -6,7 +6,7 @@ Group:             m-geol
 Name:              kickstart
 Queue:             scec
 Shared Access:     no
-Nodes:             hpc0607 
+Nodes:             hpc0607
 TMPDIR:            /tmp/3638699.hpc-pbs.usc.edu
 End PBS Prologue Wed Jun  4 10:24:48 PDT 2008
 ----------------------------------------

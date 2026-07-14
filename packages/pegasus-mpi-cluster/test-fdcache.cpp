@@ -89,7 +89,7 @@ void test_pop() {
     cache.push(e1);
     cache.push(e2);
     cache.push(e3);
-    
+
     FDEntry *pe1 = cache.pop();
     if (cache.size() != 2) {
         myfailure("cache size should be 2");
@@ -109,7 +109,7 @@ void test_pop() {
     if (e2->prev != e3) {
         myfailure("e2->prev should be e3");
     }
-    
+
     FDEntry *pe2 = cache.pop();
     if (cache.size() != 1) {
         myfailure("size should be 1");
@@ -143,16 +143,16 @@ void test_pop() {
     if (cache.last != NULL) {
         myfailure("last should be NULL");
     }
-    
+
     FDEntry *null = cache.pop();
     if (null != NULL) {
         myfailure("Pop of empty list failed");
     }
-    
+
     delete e1;
     delete e2;
     delete e3;
-    
+
     cache.close();
 }
 
@@ -188,27 +188,27 @@ void test_access() {
     cache.push(e2);
     cache.push(e3);
     // Order should now be e3->e2->e1
-    
+
     cache.access(e1);
     // Order should now be e1->e3->e2
-    if (cache.first != e1 || 
+    if (cache.first != e1 ||
         e1->next != e3 || e1->prev != NULL ||
         e3->next != e2 || e3->prev != e1 ||
         e2->next != NULL || e2->prev != e3 ||
         cache.last != e2) {
         myfailure("access e1 failed");
     }
-    
+
     cache.access(e3);
     // Order should now be e3->e1->e2
-    if (cache.first != e3 || 
+    if (cache.first != e3 ||
         e3->next != e1 || e3->prev != NULL ||
         e1->next != e2 || e1->prev != e3 ||
         e2->next != NULL || e2->prev != e1 ||
         cache.last != e2) {
         myfailure("access e3 failed");
     }
-    
+
     cache.access(e3);
     // Order should remain the same
     if (cache.first != e3 || cache.last != e2 ||
@@ -217,18 +217,18 @@ void test_access() {
         e2->next != NULL || e2->prev != e1) {
         myfailure("access e3 #2 failed");
     }
-    
+
     if (cache.pop() != e2) {
         myfailure("pop should return e2");
     }
-    
+
     // Order should be e3->e1
     if (cache.first != e3 || cache.last != e1 ||
         e3->prev != NULL || e3->next != e1 ||
         e1->prev != e3 || e1->next != NULL) {
         myfailure("pop failed");
     }
-    
+
     cache.access(e1);
     //Order should be e1->e3 now
     if (cache.first != e1 || cache.last != e3 ||
@@ -236,9 +236,9 @@ void test_access() {
         e3->prev != e1 || e3->next != NULL) {
         myfailure("access e1 #2 failed");
     }
-    
+
     delete e2;
-    
+
     cache.close();
 }
 
@@ -303,4 +303,3 @@ int main(int argc, char **argv) {
         return 1;
     }
 }
-

@@ -24,13 +24,15 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Braindump code generator class constants and structure. */
 public class BraindumpTest {

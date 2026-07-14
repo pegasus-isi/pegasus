@@ -232,7 +232,7 @@ class DBEventSink(EventSink):
                 backup=backup,
             )
         else:
-            raise ValueError("Unknown namespace specified '%s'" % (namespace))
+            raise ValueError(f"Unknown namespace specified '{namespace}'")
 
         super().__init__()
 
@@ -650,15 +650,7 @@ class AMQPEventSink(EventSink):
         while not self._stopping:
             try:
                 self._log.info(
-                    "Connecting to host: %s:%s virtual host: %s exchange: %s with user: %s ssl: %s"
-                    % (
-                        self._params.host,
-                        self._params.port,
-                        self._params.virtual_host,
-                        self._exch,
-                        self._params.credentials.username,
-                        self._params.ssl_options is not None,
-                    )
+                    f"Connecting to host: {self._params.host}:{self._params.port} virtual host: {self._params.virtual_host} exchange: {self._exch} with user: {self._params.credentials.username} ssl: {self._params.ssl_options is not None}"
                 )
 
                 self._conn = amqp.BlockingConnection(self._params)
@@ -689,19 +681,17 @@ class AMQPEventSink(EventSink):
             # Do not recover if connection was closed by broker
             except amqp.exceptions.ConnectionClosedByBroker as err:
                 self._log.error(
-                    "Connection to %s:%s was closed by Broker - Not Recovering"
-                    % (self._params.host, self._params.port)
+                    f"Connection to {self._params.host}:{self._params.port} was closed by Broker - Not Recovering"
                 )
-                self._log.error("Broker closed connection with: %s, stopping..." % err)
+                self._log.error(f"Broker closed connection with: {err}, stopping...")
                 self._conn = None
                 break
             # Do not recover on channel errors
             except amqp.exceptions.AMQPChannelError as err:
                 self._log.error(
-                    "Channel error at %s:%s - Not Recovering"
-                    % (self._params.host, self._params.port)
+                    f"Channel error at {self._params.host}:{self._params.port} - Not Recovering"
                 )
-                self._log.error("Channel error: %s, stopping..." % err)
+                self._log.error(f"Channel error: {err}, stopping...")
                 self._conn = None
                 break
             # Recover on all other connection errors if reconnect attempts is less than 5
@@ -709,17 +699,14 @@ class AMQPEventSink(EventSink):
                 reconnect_attempts += 1
                 if reconnect_attempts > 5:
                     self._log.info(
-                        "Connection to %s:%s was closed - Not Recovering"
-                        % (self._params.host, self._params.port)
+                        f"Connection to {self._params.host}:{self._params.port} was closed - Not Recovering"
                     )
                     break
-                else:
-                    self._log.info(
-                        "Connection to %s:%s was closed - Will try to recover the connection"
-                        % (self._params.host, self._params.port)
-                    )
-                    time.sleep((2**reconnect_attempts) * 10)
-                    continue
+                self._log.info(
+                    f"Connection to {self._params.host}:{self._params.port} was closed - Will try to recover the connection"
+                )
+                time.sleep((2**reconnect_attempts) * 10)
+                continue
 
         if self._conn is not None:
             self._log.trace("connection - close.start")
@@ -742,8 +729,7 @@ class AMQPEventSink(EventSink):
                     self._handle_all_events = True
                     self._log.debug("Events Handled: All")
                     return
-                else:
-                    event_regexes.add(re.compile(exp))
+                event_regexes.add(re.compile(exp))
 
         # go through each regex and match against accepted events once
         for regex in event_regexes:
@@ -773,7 +759,7 @@ class AMQPEventSink(EventSink):
 
     def close(self):
         if self._worker_thread.is_alive():
-            self._log.trace("Waiting for queue to emtpy.")
+            self._log.trace("Waiting for queue to empty.")
             self._msg_queue.join()  # wait for queue to empty if worker is alive
         self._stopping = True
         self._log.trace("Waiting for publisher thread to exit.")
@@ -811,8 +797,7 @@ class MultiplexEventSink(EventSink):
 
                 except Exception:
                     self._log.error(
-                        "[multiplex event sender] Unable to connect to endpoint %s with props %s . Disabling"
-                        % (sink_name, endpoint_props)
+                        f"[multiplex event sender] Unable to connect to endpoint {sink_name} with props {endpoint_props} . Disabling"
                     )
                     self._log.error(traceback.format_exc())
 
@@ -825,8 +810,7 @@ class MultiplexEventSink(EventSink):
             except Exception:
                 self._log.error(traceback.format_exc())
                 self._log.error(
-                    "[multiplex event sender] error sending event. Disabling endpoint %s"
-                    % key
+                    f"[multiplex event sender] error sending event. Disabling endpoint {key}"
                 )
                 self.close_sink(sink)
                 remove_endpoints.append(key)
@@ -837,7 +821,7 @@ class MultiplexEventSink(EventSink):
 
     def close(self):
         for key in self._endpoints:
-            self._log.debug("[multiplex event sender] Closing endpoint %s" % key)
+            self._log.debug(f"[multiplex event sender] Closing endpoint {key}")
             self.close_sink(self._endpoints[key])
 
     def close_sink(self, sink):
@@ -849,7 +833,7 @@ class MultiplexEventSink(EventSink):
     def flush(self):
         "Clients call this to flush events to the sink"
         for key in self._endpoints:
-            self._log.debug("[multiplex event sender] Flushing endpoint %s" % key)
+            self._log.debug(f"[multiplex event sender] Flushing endpoint {key}")
             self._endpoints[key].flush()
 
 
@@ -901,7 +885,7 @@ def create_wf_event_sink(
     if not multiplexed and multiplex(dest, prefix, props):
         sink_props.property("default.url", dest)
         # any properties that don't have a . , remap to default.propname
-        for key in sink_props.keyset():
+        for key in list(sink_props.keyset()):
             if key.find(".") == -1:
                 sink_props.property("default." + key, sink_props.property(key))
                 del sink_props[key]
@@ -910,7 +894,7 @@ def create_wf_event_sink(
 
     url = OutputURL(dest)
 
-    log.info("Connecting workflow event sink to %s" % dest)
+    log.info(f"Connecting workflow event sink to {dest}")
 
     # Pick an encoder
 
@@ -928,7 +912,7 @@ def create_wf_event_sink(
         elif enc_name == "json":
             encfn = json_encode
         else:
-            raise ValueError("Unknown encoding '%s'" % (enc_name))
+            raise ValueError(f"Unknown encoding '{enc_name}'")
         return encfn
 
     # Branch on scheme

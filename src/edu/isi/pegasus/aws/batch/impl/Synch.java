@@ -23,6 +23,27 @@ import edu.isi.pegasus.aws.batch.classes.Tuple;
 import edu.isi.pegasus.aws.batch.common.AWSJobstateWriter;
 import edu.isi.pegasus.aws.batch.common.CloudWatchLog;
 import edu.isi.pegasus.aws.batch.common.PegasusAWSBatchException;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.batch.*;
+import software.amazon.awssdk.services.batch.model.*;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.sync.RequestBody;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,26 +67,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.batch.*;
-import software.amazon.awssdk.services.batch.model.*;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
-import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.sync.RequestBody;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class Synch {
 
     /** The ARN prefix identifier */
@@ -77,7 +82,7 @@ public class Synch {
     /** Exitcode to exit with in case of one or more user tasks failing */
     public static final int TASK_FAILURE_EXITCODE = 1;
 
-    /** Exitcode to exit with in case AWS Batch related issues or internal errrors */
+    /** Exitcode to exit with in case AWS Batch related issues or internal errors */
     public static final int NON_TASK_FAILURE_EXITCODE = 2;
 
     /** The max jobs that can be passed for certain batch api calls, such as describeJobs etc */
@@ -182,7 +187,7 @@ public class Synch {
      * @param jsonFileMap
      * @throws IOException
      */
-    public void initialze(
+    public void initialize(
             Properties properties, Level level, EnumMap<BATCH_ENTITY_TYPE, String> jsonFileMap)
             throws IOException {
         // "405596411149";
@@ -199,7 +204,7 @@ public class Synch {
         mS3BucketKeyPrefix = "";
 
         mJobstateWriter = new AWSJobstateWriter();
-        mJobstateWriter.initialze(new File("."), mPrefix, mLogger);
+        mJobstateWriter.initialize(new File("."), mPrefix, mLogger);
 
         mJobMap = new HashMap();
         mRunMetrics = new LinkedHashMap<String, Integer>();
@@ -210,9 +215,9 @@ public class Synch {
     }
 
     /**
-     * Does the setup of the various associated entitites for AWS Batch to accept jobs.
+     * Does the setup of the various associated entities for AWS Batch to accept jobs.
      *
-     * @param entities entitites to be setup
+     * @param entities entities to be setup
      * @param allRequired whether all entities should be present
      * @throws PegasusAWSBatchException in case of errors while setting up the entities.
      */
@@ -346,7 +351,7 @@ public class Synch {
                 if (this.createS3Bucket(mS3Bucket)) {
                     mLogger.info("Created S3 bucket " + mS3Bucket);
                 } else {
-                    // bucket already exists. we wont delete it
+                    // bucket already exists. we won't delete it
                     mLogger.info("Using existing S3 bucket that is already owned " + mS3Bucket);
                     delete = false;
                 }
@@ -396,7 +401,7 @@ public class Synch {
     }
 
     /**
-     * Removes the various entitites required for submitting jobs to AWSBatch such as - job queue -
+     * Removes the various entities required for submitting jobs to AWSBatch such as - job queue -
      * job definition - compute environment
      *
      * @param entities
@@ -638,7 +643,7 @@ public class Synch {
         Set<String> doneJobs = new HashSet();
         BatchClient batchClient = BatchClient.builder().region(mAWSRegion).build();
         CloudWatchLog cwl = new CloudWatchLog();
-        cwl.initialze(mAWSRegion, mLogger.getLevel(), CLOUD_WATCH_BATCH_LOG_GROUP);
+        cwl.initialize(mAWSRegion, mLogger.getLevel(), CLOUD_WATCH_BATCH_LOG_GROUP);
         while (true) {
             // go through unprocessed jobs that have been submitted
             // in another thread
@@ -725,7 +730,7 @@ public class Synch {
                                                             + jobDetail.jobId());
                                             Tuple<File, File> log = cwl.retrieve(j);
                                             mLogger.debug(
-                                                    "Logs retreived for "
+                                                    "Logs retrieved for "
                                                             + jobDetail.jobId()
                                                             + " to "
                                                             + log);
@@ -742,7 +747,7 @@ public class Synch {
                                                     "Querying for failed job details " + jobId);
                                             Tuple<File, File> log = cwl.retrieve(j);
                                             mLogger.debug(
-                                                    "Logs retreived for " + jobId + " to " + log);
+                                                    "Logs retrieved for " + jobId + " to " + log);
                                         }
                                         break;
 
@@ -825,7 +830,8 @@ public class Synch {
             mExitCode = NON_TASK_FAILURE_EXITCODE;
         } catch (ExecutionException e) {
             mLogger.error(
-                    "Execution exception encountered while waiting for monitoring thread to complete ",
+                    "Execution exception encountered while waiting for monitoring thread to"
+                            + " complete ",
                     e);
             mExitCode = NON_TASK_FAILURE_EXITCODE;
         }
@@ -896,8 +902,9 @@ public class Synch {
             // example  remotehost-20241105220118703492-job-definition:2
             if (!arn.contains(":")) {
                 throw new PegasusAWSBatchException(
-                        "Malformed arn for job definition passed. Should be of form name:revision . "
-                                + "Please make sure revision number is included in the job definition passed "
+                        "Malformed arn for job definition passed. Should be of form name:revision ."
+                            + " Please make sure revision number is included in the job definition"
+                            + " passed "
                                 + arn);
             }
         }
@@ -947,7 +954,7 @@ public class Synch {
     }
 
     /**
-     * Creates a AWSJob Definiton corresponding to the description in the JSON file conforming to
+     * Creates a AWSJob Definition corresponding to the description in the JSON file conforming to
      * AWS Batch HTTP specification
      *
      * @param json the file
@@ -1106,7 +1113,7 @@ public class Synch {
             if (listObjectsV2Response.contents() != null) {
                 // detelete the files in the bucket
                 for (S3Object s3Object : listObjectsV2Response.contents()) {
-                    mLogger.debug("Deleteing file " + s3Object.key() + " from bucket " + name);
+                    mLogger.debug("Deleting file " + s3Object.key() + " from bucket " + name);
                     s3Client.deleteObject(
                             DeleteObjectRequest.builder().bucket(name).key(s3Object.key()).build());
                 }
@@ -1139,6 +1146,7 @@ public class Synch {
             this.mCommonFilesToS3.add(new File(f).getName());
         }
     }
+
     /**
      * Transfers the input files to the specified bucket
      *
@@ -1337,7 +1345,8 @@ public class Synch {
             }
         } else {
             mLogger.error(
-                    "Compute Environment was not deleted as it was not disabled after following number of retries "
+                    "Compute Environment was not deleted as it was not disabled after following"
+                            + " number of retries "
                             + max_disable_retries);
             return deleted;
         }
@@ -1474,6 +1483,7 @@ public class Synch {
 
         return isFile;
     }
+
     /**
      * Retrieves a property from the object. If not exists throws a runtime exception
      *
@@ -1628,7 +1638,9 @@ public class Synch {
                 .build();
     }
 
-    /** @param args the command line arguments */
+    /**
+     * @param args the command line arguments
+     */
     public static void main(String[] args) throws IOException {
 
         // log group: aws/batch/job job defn:
@@ -1645,7 +1657,7 @@ public class Synch {
         props.setProperty("aws.account", "merge");
         EnumMap<Synch.BATCH_ENTITY_TYPE, String> jsonMap =
                 new EnumMap<Synch.BATCH_ENTITY_TYPE, String>(Synch.BATCH_ENTITY_TYPE.class);
-        sc.initialze(props, Level.DEBUG, jsonMap);
+        sc.initialize(props, Level.DEBUG, jsonMap);
         AWSJob j1 = new AWSJob();
         j1.setID("pegasus-test-job-1");
         AWSJob j2 = new AWSJob();
@@ -1662,7 +1674,7 @@ public class Synch {
         props.setProperty( Synch.AWS_PROPERTY_PREFIX + ".account", "405596411149" );
         props.setProperty( Synch.AWS_BATCH_PROPERTY_PREFIX + ".prefix", "karan-batch-synch-test-1" );
         EnumMap<Synch.BATCH_ENTITY_TYPE,String> jsonMap = new EnumMap<Synch.BATCH_ENTITY_TYPE,String>( Synch.BATCH_ENTITY_TYPE.class);
-        sc.initialze( props, Level.DEBUG, jsonMap );
+        sc.initialize( props, Level.DEBUG, jsonMap );
 
 
         sc.monitor();

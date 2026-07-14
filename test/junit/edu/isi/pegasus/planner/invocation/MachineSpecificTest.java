@@ -19,10 +19,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
-import org.junit.jupiter.api.Test;
 
 /** Tests for MachineSpecific invocation class. */
 public class MachineSpecificTest {

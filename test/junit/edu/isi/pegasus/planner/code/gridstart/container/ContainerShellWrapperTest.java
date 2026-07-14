@@ -25,8 +25,10 @@ import edu.isi.pegasus.planner.code.gridstart.container.impl.Docker;
 import edu.isi.pegasus.planner.code.gridstart.container.impl.None;
 import edu.isi.pegasus.planner.code.gridstart.container.impl.Shifter;
 import edu.isi.pegasus.planner.code.gridstart.container.impl.Singularity;
-import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 /** Tests for the ContainerShellWrapper interface. */
 public class ContainerShellWrapperTest {

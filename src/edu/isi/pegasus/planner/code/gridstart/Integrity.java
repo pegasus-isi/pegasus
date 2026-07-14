@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -36,7 +37,7 @@ import java.util.List;
  */
 public class Integrity {
 
-    /** Basename for our pegasus integrity check tool in the worker pacakge. */
+    /** Basename for our pegasus integrity check tool in the worker package. */
     public static final String PEGASUS_INTEGRITY_CHECK_TOOL_BASENAME = "pegasus-integrity";
 
     /** The stdin file descriptor keyword */
@@ -133,7 +134,7 @@ public class Integrity {
         if (empty && isCompute) {
             // PM-1252 only for compute jobs we have this short circuit
             mLogger.log(
-                    "No meta file to transfer, as no input files assocaited with job "
+                    "No meta file to transfer, as no input files associated with job "
                             + job.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return true;

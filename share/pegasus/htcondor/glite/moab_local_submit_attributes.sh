@@ -45,4 +45,3 @@ fi
 if [ -n "${EXTRA_ARGUMENTS}" ]; then
     echo "#MSUB $(strip_quotes "$EXTRA_ARGUMENTS")"
 fi
-

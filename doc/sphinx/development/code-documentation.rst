@@ -13,5 +13,5 @@ Code Documentation
 Java
 ====
 
-The Java interfaces are described in the 
+The Java interfaces are described in the
 `Javadocs <../javadoc/index.html>`__ .

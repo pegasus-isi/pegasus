@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -45,7 +46,8 @@ public class Local implements ReplicaSelector {
 
     /** Sanity Check Error Message. */
     public static final String SANITY_CHECK_ERROR_MESSAGE_PREFIX =
-            "Local Replica Selector selects only local file URL's. Set transfers to run on submit host.";
+            "Local Replica Selector selects only local file URL's. Set transfers to run on submit"
+                    + " host.";
 
     /** The handle to the logging object that is used to log the various debug messages. */
     protected LogManager mLogger;
@@ -70,7 +72,7 @@ public class Local implements ReplicaSelector {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
@@ -151,7 +153,7 @@ public class Local implements ReplicaSelector {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.

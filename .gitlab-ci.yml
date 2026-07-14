@@ -33,20 +33,13 @@ pre-job:
 Lint:
   <<: *retry-and-timeout
   stage: lint
-  parallel:
-    matrix:
-    - LANGUAGE:
-      - python
-      - java
-  image: python:3.6
+  image: python:3.14
   before_script:
-  - env
-  - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
+  - pip install pre-commit
   - apt update
-  - DEBIAN_FRONTEND=noninteractive apt install -y ant python3-pip
+  - DEBIAN_FRONTEND=noninteractive apt install -y openjdk-25-jdk-headless
   script:
-  - export bamboo_buildKey='value-irrelevant'
-  - ant code-format-${LANGUAGE}
+  - pre-commit run --show-diff-on-failure --color=always --all-files
   tags:
   - docker
 
@@ -60,20 +53,51 @@ Python:
     - ARCH:
       - x86_64
       - arm64
-      PYTHON_VERSION:
-      - '3.6'
-      - '3.7'
-      - '3.8'
-      - '3.9'
-      - '3.10'
-      - '3.11'
-      - '3.12'
-      - '3.13'
-      - '3.14'
       PACKAGE:
       - common
       - api
       - python
+      - worker
+  image: python:3.14
+  before_script:
+  - env
+  - export USER=nobody
+  - pip3 install --upgrade pip setuptools
+  - pip3 install tox-uv
+  script:
+  - cd packages/pegasus-${PACKAGE}; tox
+  coverage: '/Total coverage: \d+\.\d+%/'
+  artifacts:
+    when: always
+    reports:
+      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
+    paths:
+    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-${PACKAGE}/src
+      - packages/pegasus-${PACKAGE}/test
+  tags:
+  - ${ARCH}
+  - docker
+
+# Only for Python versions not supported by uv
+Python Worker:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+      PYTHON_VERSION:
+      - '3.6'
+      - '3.7'
+      PACKAGE:
       - worker
   image: python:${PYTHON_VERSION}
   before_script:
@@ -93,6 +117,11 @@ Python:
         path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
     paths:
     - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-${PACKAGE}/src
+      - packages/pegasus-${PACKAGE}/test
   tags:
   - ${ARCH}
   - docker
@@ -114,6 +143,11 @@ Java:
       junit: build/tests/classes/junitreport/*.xml
     paths:
     - build/tests/classes/junitreport/*.xml
+  rules:
+  - changes:
+      paths:
+        - src
+        - test/junit
   tags:
   - ${ARCH}
   - docker
@@ -129,6 +163,13 @@ C:
   image: pegasus/buildenv:rhel_9
   script:
   - ant test-kickstart test-transfer
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-kickstart
+      # pegasus-transfer
+      - packages/pegasus-worker/src
+      - packages/pegasus-worker/test
   tags:
   - ${ARCH}
   - docker
@@ -228,6 +269,7 @@ SUSE:
     matrix:
     - ARCH:
       - x86_64
+      - arm64
       OS:
       - suse_15
   image: pegasus/buildenv:${OS}
@@ -322,28 +364,18 @@ Docs:
   image: pegasus/buildenv:rhel_9
   before_script:
   - env
-  #- set -ex
-  #- yum install -y epel-release
-  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
-  #- pip3 install tox
   script:
   - ant dist-doc
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
+    - doc/sphinx/build.log
+    - doc/sphinx/warn.log
   dependencies: []
   tags:
   - docker
 
 # Deploy packages
-
-# Deploy Python:
-#   stage: deploy
-#   image: pegasus/buildenv:rhel_8
-#   dependencies:
-#   - 'Python'
-#   script:
-#   - find packages -type d
 
 Binaries:
   stage: deploy
@@ -405,8 +437,6 @@ Release:
       password = ${TEST_PYPI_TOKEN}
     EOT
   script:
-  # TODO: See how version names, like beta etc. work with PyPI and Pegasus build scripts. 5.0.0dev becomes 5.0.0dev0 for Python source distribution packages.
-
   # Publish to PyPI
   - |
     twine upload \
@@ -562,7 +592,8 @@ Workflow Tests:
       - 047-cwl-docker-black-diamond
       - 048-black-deep-condorio
       - 048-black-deep-condorio-local
-      - 049-pycbc-search
+      - 049-pycbc-search py311_26.3.2-2
+      - 049-pycbc-search py313_26.3.2-2
       - 050-singularity-container-universe nonsharedfs
       - 050-singularity-container-universe nonsharedfs-shared
       - 050-singularity-container-universe nonsharedfs-symlink
@@ -586,6 +617,10 @@ Workflow Tests:
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
   - ./test/scripts/${EXEC} ${TESTNAME}
+  artifacts:
+    when: on_failure
+    paths:
+    - test/core/${TESTNAME}/submit
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:

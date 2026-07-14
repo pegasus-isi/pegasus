@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.cluster;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.partitioner.Partition;
+
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public interface Clusterer {
     public static final String VERSION = "1.1";
 
     /**
-     * Initializes the Clusterer impelementation
+     * Initializes the Clusterer implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.

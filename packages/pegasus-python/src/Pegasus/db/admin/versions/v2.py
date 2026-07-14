@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -16,7 +15,6 @@
 #
 __author__ = "Rafael Ferreira da Silva"
 
-DB_VERSION = 2
 
 import logging
 
@@ -28,6 +26,7 @@ from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 from Pegasus.db.schema import *
 
+DB_VERSION = 2
 log = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class Version(BaseVersion):
         super().__init__(connection)
 
     def update(self, force=False):
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         try:
             res = (
                 self.db.execute(select(EnsembleWorkflow.id).limit(1)).scalars().first()
@@ -116,15 +115,13 @@ class Version(BaseVersion):
                 raise DBAdminError(
                     "Table master_workflowstate already exists and is not empty."
                 )
-            else:
-                self._execute("DROP TABLE master_workflowstate")
+            self._execute("DROP TABLE master_workflowstate")
         if data is not None:
             if data[0] > 0:
                 raise DBAdminError(
                     "Table master_workflow already exists and is not empty."
                 )
-            else:
-                self._execute("DROP TABLE master_workflow")
+            self._execute("DROP TABLE master_workflow")
 
         self._execute("ALTER TABLE workflowstate RENAME TO master_workflowstate")
         self._execute("DROP INDEX UNIQUE_WORKFLOWSTATE")

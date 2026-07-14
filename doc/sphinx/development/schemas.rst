@@ -431,8 +431,8 @@ transformation catalog.
 
 The *type* attribute indicates whether it is a
 
-* job: compute job in the worflow
-* pegasusWorklfow: an abstract workflow embedded as a node in the workflow.
+* job: compute job in the workflow
+* pegasusWorkflow: an abstract workflow embedded as a node in the workflow.
 * condorWorkflow: a condor dag workflow embedded as a node in the workflow.
 
 The *argument* array element contains the complete command-line that is needed
@@ -724,5 +724,3 @@ terms of the local machine. Please note that
    data products in the replica catalog, especially in larger scenarios.
 
 -  The **jobDependencies** elements define the control flow between the jobs.
-
-

@@ -9,7 +9,7 @@
 08/04/22 12:07:24 ** Log last touched time unavailable (No such file or directory)
 08/04/22 12:07:24 ******************************************************
 08/04/22 12:07:24 Using config source: /etc/condor/condor_config
-08/04/22 12:07:24 Using local config sources: 
+08/04/22 12:07:24 Using local config sources:
 08/04/22 12:07:24    /etc/condor/config.d/00-htcondor-9.0.config
 08/04/22 12:07:24    /etc/condor/config.d/10-isi-main.conf
 08/04/22 12:07:24    /etc/condor/config.d/20-machine-specifics.conf
@@ -59,8 +59,8 @@
 08/04/22 12:07:24 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 08/04/22 12:07:24 DAGMAN_MAX_JOB_HOLDS setting: 100
 08/04/22 12:07:24 DAGMAN_HOLD_CLAIM_TIME setting: 20
-08/04/22 12:07:24 ALL_DEBUG setting: 
-08/04/22 12:07:24 DAGMAN_DEBUG setting: 
+08/04/22 12:07:24 ALL_DEBUG setting:
+08/04/22 12:07:24 DAGMAN_DEBUG setting:
 08/04/22 12:07:24 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 08/04/22 12:07:24 DAGMAN_REMOVE_NODE_JOBS setting: True
 08/04/22 12:07:24 DAGMAN will adjust edges after parsing

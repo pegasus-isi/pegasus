@@ -29,11 +29,13 @@ import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.UniqueMerge;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A Planner specific namespace. It defines profiles that are used to fine tune Pegasus behaviour on
@@ -264,7 +266,7 @@ public class Pegasus extends Namespace {
     public static final String TRANSFER_SLS_THREADS_KEY = "transfer.lite.threads";
 
     /**
-     * The name of the profile key, that when associated jobs indicates wheter there should be
+     * The name of the profile key, that when associated jobs indicates whether there should be
      * nosymlinking or not.
      */
     public static final String NO_SYMLINK_KEY = "nosymlink";
@@ -286,6 +288,12 @@ public class Pegasus extends Namespace {
      * protypical.
      */
     public static final String TYPE_KEY = "type";
+
+    /**
+     * The name of the key that denotes the tag associated with the job. TAGS are user assigned and
+     * can be any value.
+     */
+    public static final String TAG_KEY = "tag";
 
     /**
      * The style indicating that the submit files are to be generated for a vanilla condor
@@ -409,7 +417,7 @@ public class Pegasus extends Namespace {
     /** Profile key to determine condor quoting for a job. */
     public static final String CONDOR_QUOTE_ARGUMENTS_KEY = "condor.arguments.quote";
 
-    /** profile key for pegasus lite source scritp */
+    /** profile key for pegasus lite source script */
     public static final String PEGASUS_LITE_ENV_SOURCE_KEY =
             ENV.PEGASUS_LITE_ENV_SOURCE_KEY.toLowerCase();
 
@@ -733,7 +741,8 @@ public class Pegasus extends Namespace {
                         || (key.compareTo(TRANSFER_THREADS_KEY) == 0)
                         || (key.compareTo(TRANSFER_SLS_ARGUMENTS_KEY) == 0)
                         || (key.compareTo(TRANSFER_SLS_THREADS_KEY) == 0)
-                        || (key.compareTo(TYPE_KEY) == 0)) {
+                        || (key.compareTo(TYPE_KEY) == 0)
+                        || (key.compareTo(TAG_KEY) == 0)) {
                     res = VALID_KEY;
                 } else {
                     res = UNKNOWN_KEY;

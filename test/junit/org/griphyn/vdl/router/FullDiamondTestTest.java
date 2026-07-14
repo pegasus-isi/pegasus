@@ -22,7 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 
 // import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class FullDiamondTestTest {
     @BeforeAll
     public static void setUpClass() {}

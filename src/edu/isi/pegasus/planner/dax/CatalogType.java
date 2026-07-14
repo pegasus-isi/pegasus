@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.dax;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.XMLWriter;
+
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;

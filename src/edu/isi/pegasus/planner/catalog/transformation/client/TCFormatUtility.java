@@ -2,6 +2,7 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -16,6 +17,7 @@ import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Executable.ARCH;
 import edu.isi.pegasus.planner.dax.Executable.OS;
 import edu.isi.pegasus.planner.dax.PFN;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -507,7 +509,7 @@ public class TCFormatUtility {
      * This method extracts and builds the meta data information.
      *
      * @param profiles - List of profiles..
-     * @return Map<String, Object> - Simple key value inforamtion of meta.
+     * @return Map<String, Object> - Simple key value information of meta.
      */
     private static Map<String, Object> buildMeta(List<Profile> profiles) {
         Map<String, Object> metaMap = new HashMap<String, Object>();

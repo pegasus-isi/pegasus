@@ -17,9 +17,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
 
 /** Tests for LoggingKeys constants. */
 public class LoggingKeysTest {
@@ -125,7 +126,8 @@ public class LoggingKeysTest {
         assertThat(LoggingKeys.EVENT_ENSEMBLE_WG, is("event.ensemble.wings"));
         assertThat(LoggingKeys.EVENT_ENSEMBLE_EXECUTE, is("event.ensemble.workflow.execute"));
         assertThat(LoggingKeys.EVENT_PEGASUS_RANKING, is("event.ranking"));
-        assertThat(LoggingKeys.EVENT_PEGASUS_RANKING_RETRIEVE_DAX, is("event.ranking.retrive.dax"));
+        assertThat(
+                LoggingKeys.EVENT_PEGASUS_RANKING_RETRIEVE_DAX, is("event.ranking.retrieve.dax"));
         assertThat(LoggingKeys.EVENT_WORKFLOW_JOB_STATUS, is("event.workflow.job.status"));
     }
 
@@ -135,7 +137,7 @@ public class LoggingKeysTest {
         assertThat(LoggingKeys.QUERY_RESPONSE, is("query.response"));
         assertThat(LoggingKeys.FILE_OUTPUT_NAME, is("file.output.name"));
         assertThat(LoggingKeys.FILE_OUTPUT_CONTENTS, is("file.output.contents"));
-        assertThat(LoggingKeys.FILE_PRIORTY, is("file.priorty"));
+        assertThat(LoggingKeys.FILE_PRIORTY, is("file.priority"));
         assertThat(LoggingKeys.FILE_TYPE, is("file.type"));
         assertThat(LoggingKeys.JOB_EXITTCODE, is("job.exittcode"));
         assertThat(LoggingKeys.JOB_ARGUMENTS, is("job.arguments"));

@@ -14,8 +14,8 @@ Once you have Docker running, download and start the tutorial container using th
 
     docker run --privileged --rm -p 9999:8888 pegasus/tutorial:|release|
 
-Decide on an unused port on your computer for Jupyter to run on. In the command above, we picked **9999**. 
-Leave the second port specification (8888) alone, as it specifies what the 
+Decide on an unused port on your computer for Jupyter to run on. In the command above, we picked **9999**.
+Leave the second port specification (8888) alone, as it specifies what the
 inside port number is. For example, if you want to run Jupyter on port 5000 on your machine, use 5000:8888.
 
 Once the container has started, use your favorite web browser and go to http://localhost:9999. The password is: **scitech**
@@ -28,4 +28,3 @@ Once logged in, you should see a listing similar to:
 Please access the notebooks in order. Start with *01-Introduction-API*, and once that is complete, run *02-Debugging* and so on.
 
 It is important that each step in a workbook is `Run` in order. The best way to ensure this is to start at the top and hit the `Run` button to advance to the next step.
-

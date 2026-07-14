@@ -10,10 +10,10 @@ private:
     unsigned long bytes_sent;
     unsigned long bytes_recvd;
     virtual int wait_for_message(MPI_Status &status, double timeout);
-    
+
 public:
     bool sleep_on_recv;
-    
+
     MPICommunicator(int *argc, char ***argv);
     virtual ~MPICommunicator();
     virtual void send_message(Message *message, int dest);
@@ -28,4 +28,3 @@ public:
 };
 
 #endif /* MPICOMM_H */
-

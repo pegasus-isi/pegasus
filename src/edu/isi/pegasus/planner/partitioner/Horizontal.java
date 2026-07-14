@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -169,7 +170,7 @@ public class Horizontal extends BFS {
                 .append(name)
                 .append(" at level ")
                 .append(level)
-                .append(" wth collapse factor ")
+                .append(" with collapse factor ")
                 .append(cFactor[0])
                 .append(",")
                 .append(cFactor[1]);

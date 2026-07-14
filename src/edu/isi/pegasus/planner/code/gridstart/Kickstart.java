@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.transfer.SLS;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -93,7 +94,8 @@ public class Kickstart implements GridStart {
     public static final String KICKSTART_INPUT_SUFFIX = "arg";
 
     /**
-     * The basename of the class that is implmenting this. Could have been determined by reflection.
+     * The basename of the class that is implementing this. Could have been determined by
+     * reflection.
      */
     public static final String CLASSNAME = "Kickstart";
 
@@ -126,6 +128,7 @@ public class Kickstart implements GridStart {
 
     /** Handle to the site catalog store. */
     private SiteStore mSiteStore;
+
     // private PoolInfoProvider mSiteHandle;
 
     /** Handle to Transformation Catalog. */
@@ -265,7 +268,7 @@ public class Kickstart implements GridStart {
 
     /**
      * Enables a constituentJob to run on the grid. This also determines how the stdin,stderr and
-     * stdout of the constituentJob are to be propogated. To grid enable a constituentJob, the
+     * stdout of the constituentJob are to be propagated. To grid enable a constituentJob, the
      * constituentJob may need to be wrapped into another constituentJob, that actually launches the
      * constituentJob. It usually results in the constituentJob description passed being modified
      * modified.
@@ -284,7 +287,7 @@ public class Kickstart implements GridStart {
 
     /**
      * Enables a constituentJob to run on the grid. This also determines how the stdin,stderr and
-     * stdout of the constituentJob are to be propogated. To grid enable a constituentJob, the
+     * stdout of the constituentJob are to be propagated. To grid enable a constituentJob, the
      * constituentJob may need to be wrapped into another constituentJob, that actually launches the
      * constituentJob. It usually results in the constituentJob description passed being modified
      * modified.
@@ -332,11 +335,12 @@ public class Kickstart implements GridStart {
                     // sanity check first to ensure the aggreagtors are not mixed
                     StringBuilder error = new StringBuilder();
                     error.append(
-                                    "Recursive Clustering does not support different job aggregators. Job Aggregator for clustered job ")
+                                    "Recursive Clustering does not support different job"
+                                            + " aggregators. Job Aggregator for clustered job ")
                             .append(job.getID())
                             .append(" ")
                             .append(aggregator.getClass())
-                            .append(" does not match with constitutent job ")
+                            .append(" does not match with constituent job ")
                             .append(constituentJob.getID())
                             .append(" ")
                             .append(constituentClusteredJob.getJobAggregator().getClass());
@@ -367,7 +371,7 @@ public class Kickstart implements GridStart {
             // always pass isGlobus true as always
             // interested only in executable strargs
             // due to the fact that seqexec does not allow for setting environment
-            // per constitutent constituentJob, we cannot set the postscript removal option
+            // per constituent constituentJob, we cannot set the postscript removal option
             this.enable(constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob);
 
             // PM-1021 add any of the lof files (and any other) that maybe transferred via condor io
@@ -377,7 +381,7 @@ public class Kickstart implements GridStart {
             // System.out.println( constituentJob.condorVariables );
         }
 
-        // all the constitutent jobs are enabled.
+        // all the constituent jobs are enabled.
         // get the job aggregator to render the job
         // to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete(job);
@@ -452,7 +456,7 @@ public class Kickstart implements GridStart {
 
         // the executable path and arguments are put
         // in the Condor namespace and not printed to the
-        // file so that they can be overriden if desired
+        // file so that they can be overridden if desired
         // later through profiles and key transfer_executable
         String gridStartPath = handleTransferOfExecutable(job, getKickstartPath(site));
 
@@ -579,7 +583,7 @@ public class Kickstart implements GridStart {
 
         // check if the constituentJob type indicates staging of executable
         // The -X functionality is handled by the setup jobs that
-        // are added as childern to the stage in jobs, unless they are
+        // are added as children to the stage in jobs, unless they are
         // disabled and users set a property to set the xbit
         // Karan November 22, 2005
         if (mSetXBit && job.userExecutablesStagedForJob()) {
@@ -888,7 +892,8 @@ public class Kickstart implements GridStart {
                     // we know there was no path determined from site catalog.
                     error.append(" . ")
                             .append(
-                                    "Make sure PEGASUS_HOME is set as an env profile in the site catalog for site ")
+                                    "Make sure PEGASUS_HOME is set as an env profile in the site"
+                                            + " catalog for site ")
                             .append(job.getSiteHandle());
                 }
 
@@ -1461,7 +1466,7 @@ public class Kickstart implements GridStart {
         if (max == Long.MAX_VALUE) {
             // means user never specified a maxwalltime
             // or a malformed value
-            // we don't determnine the -K parameter
+            // we don't determine the -K parameter
             return sb.toString();
         }
 
@@ -1544,7 +1549,7 @@ public class Kickstart implements GridStart {
                             + job.getID()
                             + " with maxwalltime in seconds as "
                             + maxwalltime
-                            + " as not enought time for checkpoint to happen "
+                            + " as not enough time for checkpoint to happen "
                             + minDiff,
                     LogManager.DEBUG_MESSAGE_LEVEL);
             time = Long.MAX_VALUE;

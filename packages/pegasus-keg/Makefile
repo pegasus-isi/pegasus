@@ -117,4 +117,3 @@ clean-mpi:
 
 distclean-mpi: clean-mpi
 	$(RM) pegasus-mpi-keg
-

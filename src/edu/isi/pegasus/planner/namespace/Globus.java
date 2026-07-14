@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
 import edu.isi.pegasus.planner.namespace.aggregator.MAX;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 import edu.isi.pegasus.planner.namespace.aggregator.Update;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;

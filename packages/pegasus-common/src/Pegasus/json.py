@@ -1,5 +1,4 @@
-"""
-Abstract :mod:`json` with Pegasus specific defaults.
+"""Abstract :mod:`json` with Pegasus specific defaults.
 
 .. moduleauthor:: Rajiv Mayani <mayani@isi.edu>
 """
@@ -8,10 +7,10 @@ import io
 import json as _json
 import logging
 import uuid
+from collections.abc import Iterator
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Iterator, List, Optional
 
 __all__ = (
     "load",
@@ -34,22 +33,19 @@ class _CustomJSONEncoder(_json.JSONEncoder):
     def default(self, o):
         if isinstance(o, uuid.UUID):
             return str(o)
-        elif isinstance(o, Enum):
+        if isinstance(o, Enum):
             return o.name
-        elif isinstance(o, Path):
+        if isinstance(o, Path):
             # Serializing Python `Path` objects to `str`
             # NOTE: Path("./aaa") serializes to "aaa"
             return str(o)
-        elif hasattr(o, "__html__"):
+        if hasattr(o, "__html__"):
             return o.__html__()
-        elif hasattr(o, "__json__"):
+        if hasattr(o, "__json__"):
             return o.__json__()
-        elif hasattr(o, "__table__"):
-            return {k: getattr(o, k) for k in o.__table__.columns.keys()}
-        else:
-            logging.getLogger(__name__).warning(
-                "Don't know how to handle type %s" % type(o)
-            )
+        if hasattr(o, "__table__"):
+            return {k: getattr(o, k) for k in o.__table__.columns}
+        logging.getLogger(__name__).warning(f"Don't know how to handle type {type(o)}")
 
         return _json.JSONEncoder.default(self, o)
 
@@ -61,8 +57,7 @@ loads = _json.loads
 
 
 def load_all(s, *args, **kwargs) -> Iterator:
-    """
-    Deserialize newline-delimited JSON (NDJSON) from ``s`` to an iterator of Python objects.
+    """Deserialize newline-delimited JSON (NDJSON) from ``s`` to an iterator of Python objects.
 
     Each non-empty line of ``s`` is parsed as a separate JSON document.
 
@@ -89,9 +84,8 @@ dump = partial(_json.dump, cls=_CustomJSONEncoder)
 dumps = partial(_json.dumps, cls=_CustomJSONEncoder)
 
 
-def dump_all(objs: List, fp=None, *args, **kwargs) -> Optional[str]:
-    """
-    Serialize a list of objects to newline-delimited JSON (NDJSON).
+def dump_all(objs: list, fp=None, *args, **kwargs) -> str | None:
+    """Serialize a list of objects to newline-delimited JSON (NDJSON).
 
     Each object is serialized as a compact JSON line (no pretty-printing).
     If ``fp`` is ``None``, the NDJSON string is returned; otherwise the

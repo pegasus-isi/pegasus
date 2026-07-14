@@ -14,11 +14,12 @@
 package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.util.Escape;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This Class hold informations about profiles associated with a tc.
+ * This Class hold information about profiles associated with a tc.
  *
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu

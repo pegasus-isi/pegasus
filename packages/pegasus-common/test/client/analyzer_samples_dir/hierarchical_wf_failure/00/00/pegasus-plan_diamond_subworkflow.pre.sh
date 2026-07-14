@@ -7,7 +7,7 @@ pegasus_lite_enforce_strict_wp_check="false"
 pegasus_lite_version_allow_wp_auto_download="false"
 pegasus_lite_log_file="pegasus-plan_diamond_subworkflow.pre.err"
 
- # set for pegasus-plan invocation 
+ # set for pegasus-plan invocation
 export PEGASUS_HOME="/home/mzalam/pegasus-5.0.5"
 
 . pegasus-lite-common.sh
@@ -42,4 +42,3 @@ set -e
 # clear the trap, and exit cleanly
 trap - EXIT
 pegasus_lite_final_exit
-

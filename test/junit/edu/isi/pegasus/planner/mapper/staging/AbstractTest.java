@@ -24,10 +24,12 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract staging mapper class structure. */
 public class AbstractTest {
@@ -133,7 +135,8 @@ public class AbstractTest {
         org.hamcrest.MatcherAssert.assertThat(
                 e.getMessage()
                         .contains(
-                                "File Server not specified for shared-scratch filesystem for site: missing-site"),
+                                "File Server not specified for shared-scratch filesystem for site:"
+                                        + " missing-site"),
                 org.hamcrest.Matchers.is(true));
     }
 

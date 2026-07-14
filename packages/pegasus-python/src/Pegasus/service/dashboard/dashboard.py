@@ -212,7 +212,6 @@ class Dashboard:
             content = []
 
             for job in workflow.get_job_statistics():
-
                 kickstart = "0" if job.kickstart is None else float(job.kickstart)
                 multiplier_factor = (
                     "0" if job.multiplier_factor is None else int(job.multiplier_factor)
@@ -312,9 +311,8 @@ class Dashboard:
                 self.__get_wf_db_url(), False
             )
             workflow.initialize(root_wf_id=self._wf_id)
-            gantt_chart = workflow.get_job_states()
+            return workflow.get_job_states()
 
-            return gantt_chart
         finally:
             Dashboard.close(workflow)
 
@@ -357,9 +355,7 @@ class Dashboard:
             workflow_plots.set_time_filter("hour")
             workflow_plots.set_transformation_filter(exclude=["condor::dagman"])
 
-            dist = workflow_plots.get_transformation_statistics()
-
-            return dist
+            return workflow_plots.get_transformation_statistics()
 
         finally:
             Dashboard.close(workflow)
@@ -416,9 +412,7 @@ class Dashboard:
                 self.__get_wf_db_url(), wf_id=wf_id, wf_uuid=wf_uuid
             )
 
-            details = self._get_workflow_details(workflow)
-
-            return details
+            return self._get_workflow_details(workflow)
 
         finally:
             Dashboard.close(workflow)
@@ -503,8 +497,7 @@ class Dashboard:
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_details = workflow.get_job_information(job_id, job_instance_id)
-            return job_details
+            return workflow.get_job_information(job_id, job_instance_id)
         except NoResultFound:
             return None
         finally:
@@ -516,8 +509,7 @@ class Dashboard:
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_instances = workflow.get_job_instances(job_id)
-            return job_instances
+            return workflow.get_job_instances(job_id)
         except NoResultFound:
             return None
         finally:
@@ -529,8 +521,7 @@ class Dashboard:
         """
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            job_states = workflow.get_job_states(job_id, job_instance_id)
-            return job_states
+            return workflow.get_job_states(job_id, job_instance_id)
         finally:
             Dashboard.close(workflow)
 
@@ -577,53 +568,43 @@ class Dashboard:
     def get_sub_workflows(self, wf_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id=wf_id)
-            sub_workflows = workflow.get_sub_workflows()
-            return sub_workflows
+            return workflow.get_sub_workflows()
         finally:
             Dashboard.close(workflow)
 
     def get_stdout(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stdout = workflow.get_stdout(job_id, job_instance_id)
-            return stdout
+            return workflow.get_stdout(job_id, job_instance_id)
         finally:
             Dashboard.close(workflow)
 
     def get_successful_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            successful_invocations = workflow.get_successful_job_invocations(
-                job_id, job_instance_id
-            )
-            return successful_invocations
+            return workflow.get_successful_job_invocations(job_id, job_instance_id)
         finally:
             Dashboard.close(workflow)
 
     def get_failed_job_invocation(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            failed_invocations = workflow.get_failed_job_invocations(
-                job_id, job_instance_id
-            )
-            return failed_invocations
+            return workflow.get_failed_job_invocations(job_id, job_instance_id)
         finally:
             Dashboard.close(workflow)
 
     def get_stderr(self, wf_id, job_id, job_instance_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            stderr = workflow.get_stderr(job_id, job_instance_id)
-            return stderr
+            return workflow.get_stderr(job_id, job_instance_id)
         finally:
             Dashboard.close(workflow)
 
     def get_invocation_information(self, wf_id, job_id, job_instance_id, invocation_id):
         try:
             workflow = queries.WorkflowInfo(self.__get_wf_db_url(), wf_id)
-            invocation = workflow.get_invocation_information(
+            return workflow.get_invocation_information(
                 job_id, job_instance_id, invocation_id
             )
-            return invocation
         finally:
             Dashboard.close(workflow)

@@ -14,8 +14,9 @@
  */
 package edu.isi.pegasus.planner.invocation;
 
-import java.io.Serializable;
 import org.griphyn.vdl.Chimera;
+
+import java.io.Serializable;
 
 /**
  * This abstract class defines a common base for all invocation record related Java objects. Since

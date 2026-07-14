@@ -36,7 +36,7 @@ system it was compiled for and when, use the long or full mode:
 ::
 
    $ pegasus-version -f
-   5.0.0-x86_64_rhel_7-20201111222004Z-60da39ac7c5cdf07862eb4d9311824132e4972b1 
+   5.0.0-x86_64_rhel_7-20201111222004Z-60da39ac7c5cdf07862eb4d9311824132e4972b1
 
 
 
@@ -101,6 +101,3 @@ Example
 
    $ pegasus-version -f
    3.1.0cvs-x86_64_cent_5.6-20110706191019Z
-
-
-

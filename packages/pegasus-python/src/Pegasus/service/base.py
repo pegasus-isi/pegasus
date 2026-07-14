@@ -98,7 +98,7 @@ class BaseResource:
     @property
     def prefixed_fields(self):
         if self._prefixed_fields is None:
-            self._prefixed_fields = {field for field in self.fields}
+            self._prefixed_fields = set(self.fields)
             self._prefixed_fields |= {f"{self.prefix}.{field}" for field in self.fields}
 
         return self._prefixed_fields
@@ -149,8 +149,7 @@ class BooleanConverter(BaseConverter):
         if value in {"1", "0", "true", "false"}:
             return bool(value)
 
-        else:
-            raise ServiceError("Expecting boolean found %s" % value)
+        raise ServiceError(f"Expecting boolean found {value}")
 
     def to_url(self, value):
         return "true" if value else "false"
@@ -173,12 +172,12 @@ class OrderedSet(set):
         self.__data[element] = True
 
     def clear(self):
-        """ Remove all elements from this set. """
+        """Remove all elements from this set."""
         self.__data.clear()
 
     def values(self):
         """Return a list of elements in insertion order."""
-        return [key for key in self.__data]
+        return list(self.__data)
 
     def remove(self, element):
         """
@@ -189,13 +188,13 @@ class OrderedSet(set):
         del self.__data[element]
 
     def __contains__(self, element):
-        """ x.__contains__(y) <==> y in x. """
+        """x.__contains__(y) <==> y in x."""
         return element in self.__data
 
     def __iter__(self):
-        """ x.__iter__() <==> iter(x) """
+        """x.__iter__() <==> iter(x)"""
         yield from self.__data
 
     def __len__(self):
-        """ x.__len__() <==> len(x) """
+        """x.__len__() <==> len(x)"""
         return len(self.__data)

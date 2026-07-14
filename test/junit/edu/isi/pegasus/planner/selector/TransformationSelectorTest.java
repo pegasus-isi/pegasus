@@ -21,10 +21,12 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.selector.transformation.Installed;
 import edu.isi.pegasus.planner.selector.transformation.Staged;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the TransformationSelector abstract class. */
 public class TransformationSelectorTest {

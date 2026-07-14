@@ -19,11 +19,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class SiteCatalogXMLParserTest {
 
     @Test

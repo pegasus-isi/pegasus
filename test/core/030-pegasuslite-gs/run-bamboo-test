@@ -23,46 +23,81 @@ echo "Hello world!" >f.a
 cat /dev/null >rc.data
 
 # site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory type="shared-scratch" path="$TOP_DIR/scratch">
-            <file-server operation="all" url="file://$TOP_DIR/scratch"/>
-        </directory>
-        <directory type="local-storage" path="$TOP_DIR/outputs">
-            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
-        </directory>
-    </site>
-    <site  handle="condor_pool" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME">$REMOTE_PEGASUS_HOME</profile>
-    </site>
-    <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/pegasus-wms-test-030/scratch">
-            <file-server operation="all" url="gs://pegasus-wms-test-030/scratch"/>
-        </directory>
-        <directory type="local-storage" path="/pegasus-wms/outputs">
-            <file-server operation="all" url="gs://pegasus-wms/outputs"/>
-        </directory>
-        <profile namespace="pegasus" key="BOTO_CONFIG" >$HOME/.boto.service</profile>
-        <profile namespace="pegasus" key="GOOGLE_PKCS12" >$HOME/gstorage/pegasus-wms-b4bcec935cba.json</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condor_pool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    env:
+      PEGASUS_HOME: "$REMOTE_PEGASUS_HOME"
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "staging_site"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "localStorage"
+    path: "/pegasus-wms/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "gs://pegasus-wms/outputs"
+   -
+    type: "sharedScratch"
+    path: "/pegasus-wms-test-030/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "gs://pegasus-wms-test-030/scratch"
+  profiles:
+    pegasus:
+      boto_config: "$HOME/.boto.service"
+      google_pkcs12: "$HOME/gstorage/pegasus-wms-b4bcec935cba.json"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOP_DIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOP_DIR/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/scratch"
 EOF
 
 echo
 echo
 echo "The site catalog is:"
-cat sites.xml
+cat sites.yml
 
 echo
 echo
 echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --sites condor_pool \
     --staging-site staging_site \
     --output-sites local \
@@ -76,5 +111,3 @@ echo
 echo
 echo "Starting the workflow..."
 pegasus-run $WORK_DIR
-
-

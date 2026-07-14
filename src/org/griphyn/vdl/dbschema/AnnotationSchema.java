@@ -16,16 +16,18 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.common.util.Separator;
-import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.util.*;
+
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.router.Cache;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.util.*;
 
 /**
  * This class provides basic functionalities to interact with the backend database, such as
@@ -101,8 +103,13 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * @throws java.io.IOException Exception
      */
     public AnnotationSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, VDC.PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with default schema c'tor");
@@ -190,18 +197,21 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
                         //	" SELECT distinct name FROM lfn_i WHERE did=? UNION " +
                         //	" SELECT distinct name FROM lfn_o WHERE did=? UNION " +
                         //	" SELECT distinct name FROM lfn_b WHERE did=? )" );
-                        "SELECT a.id FROM anno_lfn a, anno_lfn_i i WHERE i.name=a.name AND a.id=? UNION "
-                        + "SELECT a.id FROM anno_lfn a, anno_lfn_o o WHERE o.name=a.name AND a.id=? UNION "
-                        + "SELECT a.id FROM anno_lfn a, anno_lfn_b b WHERE b.name=a.name AND a.id=?");
+                        "SELECT a.id FROM anno_lfn a, anno_lfn_i i WHERE i.name=a.name AND a.id=?"
+                        + " UNION SELECT a.id FROM anno_lfn a, anno_lfn_o o WHERE o.name=a.name AND"
+                        + " a.id=? UNION SELECT a.id FROM anno_lfn a, anno_lfn_b b WHERE"
+                        + " b.name=a.name AND a.id=?");
 
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.xml.id", "SELECT xml FROM anno_definition WHERE id=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.xml",
-                "SELECT id,xml FROM anno_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id,xml FROM anno_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.id",
-                "SELECT id FROM anno_definition WHERE type=? AND name=? AND namespace=? AND version=?");
+                "SELECT id FROM anno_definition WHERE type=? AND name=? AND namespace=? AND"
+                        + " version=?");
 
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.delete.xml", "DELETE FROM anno_definition WHERE id=?");
@@ -269,11 +279,11 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.select.anno_call2", "SELECT id,mkey FROM anno_call WHERE did=? and pos=?");
 
-        // udpates, take one
+        // updates, take one
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.update.anno_tr", "UPDATE anno_tr SET did=? WHERE did=?");
         this.m_dbdriver.insertPreparedStatement(
-                "stmt.udpate.anno_dv", "UPDATE anno_dv SET did=? WHERE did=?");
+                "stmt.update.anno_dv", "UPDATE anno_dv SET did=? WHERE did=?");
         this.m_dbdriver.insertPreparedStatement(
                 "stmt.update.anno_targ", "UPDATE anno_targ SET did=? WHERE did=?");
         this.m_dbdriver.insertPreparedStatement(
@@ -409,7 +419,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
      * the definition.
      *
      * @param definition is the new Definition to store.
-     * @param overwrite true, if existing defitions will be overwritten by new ones with the same
+     * @param overwrite true, if existing definitions will be overwritten by new ones with the same
      *     primary (or secondary) key (-set), or false, if a new definition will be rejected on key
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
@@ -471,7 +481,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
                 return false;
             }
 
-            // add ID explicitely from sequence to insertion
+            // add ID explicitly from sequence to insertion
             Logging.instance().log("xaction", 1, "START save definition");
             int i = 1;
             longOrNull(ps, i++, id);
@@ -503,7 +513,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
 
         } else {
             // UPDATE
-            Logging.instance().log("xaction", 1, "START udpate definition");
+            Logging.instance().log("xaction", 1, "START update definition");
             int i = 1;
             String xml = definition.toXML((String) null, (String) null);
             ps.setCharacterStream(i++, new StringReader(xml), xml.length());
@@ -658,7 +668,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     //
 
     /**
-     * Obtains the primary key id for a given definition."Fake" definitions are NOT permissable.
+     * Obtains the primary key id for a given definition."Fake" definitions are NOT permissible.
      * This is an internal helper function.
      *
      * @param namespace is the specific namespace, null will be mapped to ""
@@ -694,7 +704,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     }
 
     /**
-     * Obtains the primary key id for a given definition."Fake" definitions are permissable. This is
+     * Obtains the primary key id for a given definition."Fake" definitions are permissible. This is
      * an internal helper function.
      *
      * @param d is a definition specification.
@@ -933,7 +943,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
 
     /**
      * Delete a specific Definition objects from the database. No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * "Fake" definitions are permissible, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.
@@ -1000,7 +1010,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             }
         }
 
-        // remove all affected annoations by walking through them
+        // remove all affected annotations by walking through them
         // yuk, this is probably extremely expensive
         for (Iterator i = idlist.iterator(); i.hasNext(); ) {
             long id = ((Long) i.next()).longValue();
@@ -1101,7 +1111,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             switch (link) {
                 case LFN.NONE:
                     throw new RuntimeException("The linkage \"none\" is not permitted");
-                    // break;
+                // break;
                 case LFN.INPUT:
                     ps = this.m_dbdriver.getPreparedStatement("stmt.select.lfn_i");
                     break;
@@ -2124,7 +2134,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
     private Tuple loadAnnotationFinal(long id, String key) throws SQLException {
         Tuple result = null;
         if (id != -1) {
-            // order by likelyhood
+            // order by likelihood
             result = loadAnnotationString(id, key);
             if (result == null) result = loadAnnotationInteger(id, key);
             if (result == null) result = loadAnnotationFloat(id, key);
@@ -2562,7 +2572,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
 
     /**
      * A not very generic method to search annotation (and anything) in the database. Selects any
-     * rows in one or more colums from one or more tables restricted by some condition, possibly
+     * rows in one or more columns from one or more tables restricted by some condition, possibly
      * ordered.
      *
      * <p>WARNING: This is a method for internal use only.
@@ -2614,7 +2624,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             }
         }
 
-        // remove all affected annoations by walking through them
+        // remove all affected annotations by walking through them
         // yuk, this is probably extremely expensive
         for (Iterator i = idlist.iterator(); i.hasNext(); ) {
             long id = ((Long) i.next()).longValue();
@@ -2716,7 +2726,7 @@ public class AnnotationSchema extends DatabaseSchema implements Advanced, Annota
             switch (link) {
                 case LFN.NONE:
                     throw new RuntimeException("The linkage \"none\" is not permitted");
-                    // break;
+                // break;
                 case LFN.INPUT:
                     ps = this.m_dbdriver.getPreparedStatement("stmt.select.lfn_i.name.ex");
                     break;

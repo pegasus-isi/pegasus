@@ -20,8 +20,7 @@ def dec_to_float(dec):
     """
     if dec:
         return float(dec)
-    else:
-        return None
+    return None
 
 
 def time_to_date_str(ts, fmt="%Y-%m-%d Hour %H"):
@@ -85,7 +84,6 @@ def time_to_str(time):
         num_units += 1
 
     if time >= HOUR:
-
         temp_time = time // HOUR
 
         if temp_time > 1:
@@ -97,7 +95,6 @@ def time_to_str(time):
         num_units += 1
 
     if time >= MIN and num_units < max_units:
-
         temp_time = time // MIN
 
         if temp_time > 1:
@@ -109,7 +106,6 @@ def time_to_str(time):
         num_units += 1
 
     if time > 0 and num_units < max_units:
-
         if time > 1:
             str_time += str(time) + " secs "
         else:

@@ -38,7 +38,7 @@ public class TestTPT {
         // System.out.println("Hostname is " + Utility.getHostName(url));
         System.out.println("Hostname is " + u.getHost());
         try {
-            System.out.println("Java hostanme is " + new java.net.URL(url).getHost());
+            System.out.println("Java hostname is " + new java.net.URL(url).getHost());
         } catch (Exception e) {
         }
 

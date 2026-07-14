@@ -16,12 +16,13 @@ package edu.isi.pegasus.planner.selector.transformation;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * This implemenation of the TCSelector selects a random TransformationCatalogEntry from a List of
+ * This implementation of the TCSelector selects a random TransformationCatalogEntry from a List of
  * entries.
  *
  * @author Gaurang Mehta

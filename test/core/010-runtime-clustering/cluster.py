@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import argparse
 import configparser
 import logging
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             sites=[execution_site],
             staging_sites={execution_site: staging_site},
             output_sites=[output_site],
-            dir="work/submit",
+            dir="submit",
             cleanup="leaf",
             cluster=["horizontal"],
             verbose=3,

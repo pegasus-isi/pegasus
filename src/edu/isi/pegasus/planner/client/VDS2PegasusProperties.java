@@ -16,8 +16,10 @@ package edu.isi.pegasus.planner.client;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.FactoryException;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -608,18 +610,22 @@ public class VDS2PegasusProperties extends Executable {
                 "\n $Id$ "
                         + "\n "
                         + getGVDSVersion()
-                        + "\n properties-converter - A tool that converts the VDS properties file to "
-                        + "\n                         the corresponding Pegasus properties file "
-                        + "\n Usage: properties-converter [-Dprop  [..]] --input <input file> "
-                        + "\n        [--output output directory] [--conf <path to property file>]  [--help] "
                         + "\n"
-                        + "\n Mandatory Options "
-                        + "\n --input              the path to the VDS properties file."
-                        + "\n Other Options  "
-                        + "\n -o |--output        the output directory where to generate the pegasus property file."
-                        + "\n -c |--conf          path to  property file"
-                        + "\n -h |--help          generates this help."
-                        + "\n ";
+                        + " properties-converter - A tool that converts the VDS properties file to"
+                        + " \n"
+                        + "                         the corresponding Pegasus properties file \n"
+                        + " Usage: properties-converter [-Dprop  [..]] --input <input file> \n"
+                        + "        [--output output directory] [--conf <path to property file>] "
+                        + " [--help] \n"
+                        + "\n"
+                        + " Mandatory Options \n"
+                        + " --input              the path to the VDS properties file.\n"
+                        + " Other Options  \n"
+                        + " -o |--output        the output directory where to generate the pegasus"
+                        + " property file.\n"
+                        + " -c |--conf          path to  property file\n"
+                        + " -h |--help          generates this help.\n"
+                        + " ";
 
         System.out.println(text);
         // mLogger.log(text,LogManager.INFO_MESSAGE_LEVEL);

@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.parser.SiteCatalogYAMLParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;

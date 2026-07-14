@@ -17,6 +17,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -146,7 +147,7 @@ public class ClassADSGenerator {
     }
 
     /**
-     * Maps a Pegasus resource profile key to a corressponding Pegasus Classad variable
+     * Maps a Pegasus resource profile key to a corresponding Pegasus Classad variable
      *
      * @param profileKey
      * @return
@@ -263,7 +264,7 @@ public class ClassADSGenerator {
 
         // get the job classads
 
-        // the tranformation name
+        // the transformation name
         writer.println(
                 generateClassAdAttributeWithDoubleQuotes(
                         ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName()));
@@ -477,7 +478,7 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
-     * @return the classad attriubute.
+     * @return the classad attribute.
      */
     private static String generateClassAdAttribute(String name, String value) {
         return generateClassAdAttribute(name, value, false);
@@ -489,7 +490,7 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
-     * @return the classad attriubute.
+     * @return the classad attribute.
      */
     private static String generateClassAdAttribute(String name, int value) {
         StringBuilder sb = new StringBuilder(10);
@@ -506,7 +507,7 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
-     * @return the classad attriubute.
+     * @return the classad attribute.
      */
     private static String generateClassAdAttributeWithNoQuotes(String name, String value) {
         StringBuilder sb = new StringBuilder(10);
@@ -522,7 +523,7 @@ public class ClassADSGenerator {
      *
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
-     * @return the classad attriubute.
+     * @return the classad attribute.
      */
     private static String generateClassAdAttributeWithDoubleQuotes(String name, String value) {
         StringBuilder sb = new StringBuilder(10);
@@ -541,7 +542,7 @@ public class ClassADSGenerator {
      * @param name the attribute name.
      * @param value the value/expression making the classad attribute.
      * @param newLine boolean denoting whether to add a new line character at start or not.
-     * @return the classad attriubute.
+     * @return the classad attribute.
      */
     private static String generateClassAdAttribute(String name, String value, boolean newLine) {
 

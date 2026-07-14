@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -38,7 +37,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         try:
             log.debug("Renaming integrity_metrics table...")
             if self.db.get_bind().driver == "mysqldb":
@@ -59,7 +58,7 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         """"""
-        log.info("Downgrading from version %s" % DB_VERSION)
+        log.info(f"Downgrading from version {DB_VERSION}")
         try:
             log.debug("Renaming integrity table...")
             if self.db.get_bind().driver == "mysqldb":

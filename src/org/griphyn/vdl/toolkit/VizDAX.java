@@ -16,11 +16,14 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.directive.Display;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class generates GraphViz dot format from a DAX

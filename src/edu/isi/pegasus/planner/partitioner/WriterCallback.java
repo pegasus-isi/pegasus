@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.partitioner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;

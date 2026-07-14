@@ -10,4 +10,3 @@ for var in sys.argv[1:]:
     fd = int(fd)
     os.write(fd, bytes("Variable %s is fd %d\n" % (var,fd), 'utf-8'))
     os.close(fd)
-

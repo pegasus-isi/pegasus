@@ -42,7 +42,7 @@ public class Docker extends AbstractContainer {
     private static final String ROOT_PATH_VARIABLE_KEY = "root_path";
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag @param dag
      */

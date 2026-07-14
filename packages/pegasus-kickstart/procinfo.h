@@ -26,7 +26,7 @@ typedef struct _SockInfo {
     char *address;          /* Address of peer */
     int port;               /* Port number on peer */
     uint64_t bsend;         /* bytes sent on socket */
-    uint64_t brecv;         /* bytes recieved on socket */
+    uint64_t brecv;         /* bytes received on socket */
     uint64_t nsend;         /* Number of send ops */
     uint64_t nrecv;         /* Number of recv ops */
     struct _SockInfo *next;

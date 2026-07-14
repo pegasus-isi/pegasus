@@ -14,6 +14,7 @@
 package edu.isi.pegasus.common.util;
 
 import com.google.common.base.Charsets;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;

@@ -24,19 +24,19 @@
 #include "report.h"
 #include "mysystem.h"
 
-extern int debug; 
-extern int progress; 
-extern char* application; 
+extern int debug;
+extern int progress;
+extern char* application;
 
 int
 save_signals( Signals* save )
 {
-  struct sigaction ignore; 
-  sigset_t childmask; 
+  struct sigaction ignore;
+  sigset_t childmask;
 
-  ignore.sa_handler = SIG_IGN; 
+  ignore.sa_handler = SIG_IGN;
   sigemptyset( &ignore.sa_mask );
-  ignore.sa_flags = 0; 
+  ignore.sa_flags = 0;
 
   if ( sigaction( SIGINT, &ignore, &(save->intr) ) < 0 )
     return -1;
@@ -48,23 +48,23 @@ save_signals( Signals* save )
   if ( sigprocmask( SIG_BLOCK, &childmask, &(save->mask) ) < 0 )
     return -1;
 
-  return 0; 
+  return 0;
 }
 
 int
 restore_signals( Signals* save )
 {
-  int result = 0; 
+  int result = 0;
 
   /* count errors on these, but use them all */
   if ( sigaction( SIGINT, &(save->intr), NULL ) < 0 )
     result++;
   if ( sigaction( SIGQUIT, &(save->quit), NULL ) < 0 )
-    result++; 
+    result++;
   if ( sigprocmask( SIG_SETMASK, &(save->mask), NULL ) < 0 )
-    result++; 
+    result++;
 
-  return result; 
+  return result;
 }
 
 void
@@ -77,21 +77,21 @@ start_child( char* argv[], char* envp[], Signals* save )
  */
 {
   int null = open( "/dev/null", O_RDONLY );
-  if ( null != -1 ) { 
+  if ( null != -1 ) {
     if ( dup2( null, STDIN_FILENO ) == -1 && debug )
       showerr( "%s: dup2 stdin: %d: %s\n",
 	       application, errno, strerror(errno) );
   } else {
-    if ( debug ) 
-      showerr( "%s: open /dev/null: %d: %s\n", 
+    if ( debug )
+      showerr( "%s: open /dev/null: %d: %s\n",
 	       application, errno, strerror(errno) );
   }
 
   /* undo signal handlers */
-  if ( save ) restore_signals( save ); 
+  if ( save ) restore_signals( save );
 
   execve( argv[0], (char* const*) argv, envp );
-  showerr( "%s: exec %s: %d: %s\n", 
+  showerr( "%s: exec %s: %d: %s\n",
 	   application, argv[0], errno, strerror(errno) );
   _exit(127); /* never reached unless error */
 }
@@ -104,28 +104,28 @@ mysystem( char* argv[], char* envp[], const char* special )
  * paramtr: argv (IN): NULL terminated argument vector
  *          envp (IN): NULL terminated environment vector
  *          special (IN): set for setup/cleanup jobs
- * returns: exit status from wait() family 
+ * returns: exit status from wait() family
  */
 {
   char date[32];
   struct rusage usage;
-  Signals save; 
+  Signals save;
   pid_t child;
   time_t when, then;
   double diff, start = now(&when);
   int saverr = 0;
   int status = -1;
 
-  save_signals( &save ); 
+  save_signals( &save );
   if ( (child=fork()) < 0 ) {
     /* no more process table space */
     return -1;
   } else if ( child == (pid_t) 0 ) {
     /* child */
-    start_child( argv, envp, &save ); 
+    start_child( argv, envp, &save );
   } else {
     /* parent */
-    
+
     /* wait for child */
     while ( wait4( child, &status, 0, &usage ) < 0 ) {
       if ( errno != EINTR ) {
@@ -133,29 +133,29 @@ mysystem( char* argv[], char* envp[], const char* special )
 	break;
       }
     }
-    
+
     /* remember why/how we did exit */
     saverr = errno;
-    
+
     /* sanity check */
     if ( kill( child, 0 ) == 0 )
-      showerr( "Warning: job %d (%s) is still running!\n", 
+      showerr( "Warning: job %d (%s) is still running!\n",
 	       child, argv[0] );
   }
 
   /* ignore errors on these, too. */
-  restore_signals( &save ); 
+  restore_signals( &save );
 
   /* 20110419 PM-364: new requirement */
   diff = now(&then) - start;
   showout( "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
 	   "pid=%d, app=\"%s\"]\n",
-	   special ? special : "(unknown)", 
+	   special ? special : "(unknown)",
 	   iso2date( start, date, sizeof(date) ),
-	   diff, 
+	   diff,
 	   status,
-	   child, 
-	   argv[ find_application(argv) ] ); 
+	   child,
+	   argv[ find_application(argv) ] );
 
   /* progress report finish */
   if ( progress != -1 ) {

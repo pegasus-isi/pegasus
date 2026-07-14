@@ -17,20 +17,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
 import software.amazon.awssdk.services.batch.model.CEState;
 import software.amazon.awssdk.services.batch.model.CEType;
 import software.amazon.awssdk.services.batch.model.CRType;
 import software.amazon.awssdk.services.batch.model.CreateComputeEnvironmentRequest;
 
-/** @author Rajiv Mayani */
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ComputeEnvironmentTest {
 
     @TempDir File tempDir;
@@ -95,19 +99,11 @@ public class ComputeEnvironmentTest {
     public void testCreateComputeEnvironmentRequestFromHTTPSpecComputeResources()
             throws IOException {
         String json =
-                "{"
-                        + "\"type\": \"MANAGED\","
-                        + "\"computeResources\": {"
-                        + "  \"type\": \"EC2\","
-                        + "  \"minvCpus\": 0,"
-                        + "  \"maxvCpus\": 8,"
-                        + "  \"desiredvCpus\": 2,"
-                        + "  \"instanceTypes\": [\"optimal\"],"
-                        + "  \"subnets\": [\"subnet-abc\", \"subnet-def\"],"
-                        + "  \"securityGroupIds\": [\"sg-abc\"],"
-                        + "  \"instanceRole\": \"arn:aws:iam::111:instance-profile/ecsInstanceRole\""
-                        + "}"
-                        + "}";
+                "{\"type\": \"MANAGED\",\"computeResources\": {  \"type\": \"EC2\",  \"minvCpus\":"
+                        + " 0,  \"maxvCpus\": 8,  \"desiredvCpus\": 2,  \"instanceTypes\":"
+                        + " [\"optimal\"],  \"subnets\": [\"subnet-abc\", \"subnet-def\"], "
+                        + " \"securityGroupIds\": [\"sg-abc\"],  \"instanceRole\":"
+                        + " \"arn:aws:iam::111:instance-profile/ecsInstanceRole\"}}";
         File f = writeToTempFile("ce-http-cr.json", json);
         CreateComputeEnvironmentRequest req =
                 ce.createComputeEnvironmentRequestFromHTTPSpec(f, "test");
@@ -124,17 +120,11 @@ public class ComputeEnvironmentTest {
     @Test
     public void testCreateComputeEnvironmentRequestFromHTTPSpecWithTags() throws IOException {
         String json =
-                "{"
-                        + "\"type\": \"MANAGED\","
-                        + "\"computeResources\": {"
-                        + "  \"type\": \"EC2\","
-                        + "  \"instanceTypes\": [\"optimal\"],"
-                        + "  \"subnets\": [\"subnet-abc\"],"
-                        + "  \"securityGroupIds\": [\"sg-abc\"],"
-                        + "  \"instanceRole\": \"arn:aws:iam::111:instance-profile/ecsInstanceRole\","
-                        + "  \"tags\": {\"Project\": \"Pegasus\", \"Env\": \"test\"}"
-                        + "}"
-                        + "}";
+                "{\"type\": \"MANAGED\",\"computeResources\": {  \"type\": \"EC2\", "
+                        + " \"instanceTypes\": [\"optimal\"],  \"subnets\": [\"subnet-abc\"], "
+                        + " \"securityGroupIds\": [\"sg-abc\"],  \"instanceRole\":"
+                        + " \"arn:aws:iam::111:instance-profile/ecsInstanceRole\",  \"tags\":"
+                        + " {\"Project\": \"Pegasus\", \"Env\": \"test\"}}}";
         File f = writeToTempFile("ce-http-tags.json", json);
         CreateComputeEnvironmentRequest req =
                 ce.createComputeEnvironmentRequestFromHTTPSpec(f, "test");
@@ -153,12 +143,10 @@ public class ComputeEnvironmentTest {
     @Test
     public void testCreateComputeEnvironmentRequestBatchSpecReturnsList() throws IOException {
         String json =
-                "{"
-                        + "\"CreateComputeEnvironment\": ["
-                        + "  {\"input\": {\"type\": \"MANAGED\", \"computeEnvironmentName\": \"ce-1\", \"state\": \"ENABLED\"}},"
-                        + "  {\"input\": {\"type\": \"MANAGED\", \"computeEnvironmentName\": \"ce-2\", \"state\": \"DISABLED\"}}"
-                        + "]"
-                        + "}";
+                "{\"CreateComputeEnvironment\": [  {\"input\": {\"type\": \"MANAGED\","
+                    + " \"computeEnvironmentName\": \"ce-1\", \"state\": \"ENABLED\"}}, "
+                    + " {\"input\": {\"type\": \"MANAGED\", \"computeEnvironmentName\": \"ce-2\","
+                    + " \"state\": \"DISABLED\"}}]}";
         File f = writeToTempFile("ce-batch.json", json);
         List<CreateComputeEnvironmentRequest> reqs = ce.createComputeEnvironmentRequest(f, "test");
         assertThat(reqs, hasSize(2));
@@ -167,11 +155,8 @@ public class ComputeEnvironmentTest {
     @Test
     public void testCreateComputeEnvironmentRequestBatchSpecNames() throws IOException {
         String json =
-                "{"
-                        + "\"CreateComputeEnvironment\": ["
-                        + "  {\"input\": {\"type\": \"MANAGED\", \"computeEnvironmentName\": \"ce-1\", \"state\": \"ENABLED\"}}"
-                        + "]"
-                        + "}";
+                "{\"CreateComputeEnvironment\": [  {\"input\": {\"type\": \"MANAGED\","
+                        + " \"computeEnvironmentName\": \"ce-1\", \"state\": \"ENABLED\"}}]}";
         File f = writeToTempFile("ce-batch-name.json", json);
         List<CreateComputeEnvironmentRequest> reqs = ce.createComputeEnvironmentRequest(f, "test");
         assertThat(reqs.get(0).computeEnvironmentName(), is("ce-1"));

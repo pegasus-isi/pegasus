@@ -16,8 +16,9 @@ package edu.isi.pegasus.planner.invocation;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Modifier;
 
 /** Tests for JobStatus abstract class structure. */
 public class JobStatusTest {

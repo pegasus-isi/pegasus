@@ -31,11 +31,11 @@ extern int find_application(char* argv[]);
  * paramtr: progress (IN): file description open for writing
  *          start (IN): start time (no millisecond resolution)
  *          duration (IN): duration with millisecond resolution
- *          status (IN): return value from wait() family 
+ *          status (IN): return value from wait() family
  *          argv (IN): NULL-delimited argument vector of app
  *          use (IN): resource usage from wait4() call
  *          special (IN): set for setup/cleanup jobs.
- *          taskid (IN): task number from input file. 
+ *          taskid (IN): task number from input file.
  * returns: number of bytes written onto "progress"
  */
 extern ssize_t report(int progress, double start, double duration,

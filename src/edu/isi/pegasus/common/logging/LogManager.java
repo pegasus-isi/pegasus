@@ -14,6 +14,9 @@
 package edu.isi.pegasus.common.logging;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.apache.logging.log4j.Level;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -21,7 +24,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.logging.log4j.Level;
 
 /**
  * The logging class that to log messages at different levels. Currently the following levels are

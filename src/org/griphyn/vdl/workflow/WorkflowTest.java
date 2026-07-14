@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.workflow;
 
-import java.io.*;
-import java.sql.SQLException;
-import java.util.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * This class is used to show-case some elementary WF table stuff.

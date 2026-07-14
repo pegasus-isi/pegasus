@@ -21,10 +21,12 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 import edu.isi.pegasus.planner.refiner.createdir.Strategy;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import org.junit.jupiter.api.Test;
 
 /** Structural tests for CreateDirectory refiner. */
 public class CreateDirectoryTest {

@@ -34,15 +34,15 @@ logname=`basename $VDS_LOG_FILE`
 logsize="`ls -l $VDS_LOG_FILE | awk '{print $5}'`"
 
 
-    
+
 if [[ $logsize -ge $maxsize ]]                                                    #rotate logs
     then
     numfiles=`ls -l $logdir | grep $logname | wc | awk '{print $1}'`
     if [[ $numfiles -ge $maxfiles ]]                                                 #total log files=5
-	then 
-	min=9999999999     
+	then
+	min=9999999999
 	for i in `ls $logdir | grep "$logname\."`; do                           #find oldest file
-		
+
 	    time=`echo $i | cut -d "." -f 3`
 	    if [[ time -le min ]]
 		then
@@ -52,7 +52,7 @@ if [[ $logsize -ge $maxsize ]]                                                  
 	rm "$VDS_LOG_FILE.$min"                                             #remove oldest file
     fi
     mv $VDS_LOG_FILE "$VDS_LOG_FILE.$prefix"                                #archive current log
-        echo > $VDS_LOG_FILE                                                    #create new log file  
+        echo > $VDS_LOG_FILE                                                    #create new log file
 fi
 
 for f in $@; do

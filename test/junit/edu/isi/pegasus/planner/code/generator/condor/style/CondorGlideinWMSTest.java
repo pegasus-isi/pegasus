@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the CondorGlideinWMS style class. */
@@ -84,8 +85,8 @@ public class CondorGlideinWMSTest {
         assertThat(
                 job.condorVariables.get("requirements"),
                 is(
-                        "(IS_MONITOR_VM == False) && (Arch != \"\") && (OpSys != \"\") && (Disk != -42)"
-                                + " && (Memory > 1) && (FileSystemDomain != \"\")"));
+                        "(IS_MONITOR_VM == False) && (Arch != \"\") && (OpSys != \"\") && (Disk !="
+                                + " -42) && (Memory > 1) && (FileSystemDomain != \"\")"));
         assertThat(job.condorVariables.get("rank"), is("DaemonStartTime"));
         assertThat(job.condorVariables.get("+WantIOProxy"), is("True"));
         assertThat(style.credentialsApplied(), is(true));

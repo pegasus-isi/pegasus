@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 """
 Test to ensure that pegasus-kickstart sends SIGTERM and then SIGKILL to a job
@@ -57,7 +57,7 @@ KILL signal is sent at (checkpoint.time + (maxwalltime-checkpoint.time)/2) minut
 .add_profiles(Namespace.PEGASUS, key="checkpoint.time", value=1)\
 .add_profiles(Namespace.PEGASUS, key="maxwalltime", value=2)
 # Kickstart args (note checkpoint.time converted to seconds)
-pegasus-kickstart \\ 
+pegasus-kickstart \\
     -n checkpoint_program.py \
     -N ID0000001 \
     -o output.txt \

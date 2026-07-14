@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -57,7 +58,7 @@ public class RM implements CleanupImplementation {
     public RM() {}
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      */
@@ -79,6 +80,7 @@ public class RM implements CleanupImplementation {
     public Job createCleanupJob(String id, List files, Job job) {
         return this.createCleanupJob(id, files, job, job.getStagingSiteHandle());
     }
+
     /**
      * Creates a cleanup job that removes the files from remote working directory.This will
      * eventually make way to it's own interface.
@@ -142,7 +144,7 @@ public class RM implements CleanupImplementation {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        cJob.updateProfiles(mSiteStore.lookup(job.getSiteHandle()).getProfiles());
+        cJob.updateProfiles(mSiteStore.lookup(job.getSiteHandle()));
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391

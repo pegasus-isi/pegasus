@@ -22,11 +22,13 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
+import org.junit.jupiter.api.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import org.junit.jupiter.api.*;
 
 /**
  * Test class to test Regex RC

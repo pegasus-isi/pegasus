@@ -53,15 +53,17 @@ import edu.isi.pegasus.planner.invocation.Temporary;
 import edu.isi.pegasus.planner.invocation.Uname;
 import edu.isi.pegasus.planner.invocation.Usage;
 import edu.isi.pegasus.planner.invocation.WorkingDir;
+
+import org.griphyn.vdl.parser.*;
+import org.griphyn.vdl.util.Logging;
+import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.*;
 import java.util.*;
-import org.griphyn.vdl.parser.*;
-import org.griphyn.vdl.util.Logging;
-import org.xml.sax.*;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML document which contains
@@ -165,7 +167,7 @@ public class InvocationParser extends DefaultHandler {
                 m_log.log("app", 2, "will use document schema hint");
             }
         } catch (ClassNotFoundException e) {
-            m_log.log("defaut", 0, "The SAXParser class was not found: " + e);
+            m_log.log("default", 0, "The SAXParser class was not found: " + e);
         } catch (InstantiationException e) {
             m_log.log("default", 0, "The SAXParser class could not be instantiated: " + e);
         } catch (IllegalAccessException e) {
@@ -322,7 +324,7 @@ public class InvocationParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      * @param atts has the names and values of all the attributes
      */
     public void startElement(
@@ -365,7 +367,7 @@ public class InvocationParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      */
     public void endElement(
             java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName)
@@ -570,9 +572,9 @@ public class InvocationParser extends DefaultHandler {
         try {
             // postcondition: string has content w/ length > 0
             switch (e.charAt(0)) {
-                    //
-                    // A
-                    //
+                //
+                // A
+                //
                 case 'a':
                     if (e.equals("arg")) {
                         ArgEntry entry = new ArgEntry();
@@ -623,9 +625,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // B
-                    //
+                //
+                // B
+                //
                 case 'b':
                     if (e.equals("boot")) {
                         Boot b = new Boot();
@@ -639,9 +641,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // C
-                    //
+                //
+                // C
+                //
                 case 'c':
                     if (e.equals("cwd")) {
                         WorkingDir cwd = new WorkingDir();
@@ -665,9 +667,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // D
-                    //
+                //
+                // D
+                //
                 case 'd':
                     if (e.equals("data")) {
                         Data data = new Data();
@@ -705,9 +707,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // E
-                    //
+                //
+                // E
+                //
                 case 'e':
                     if (e.equals("env")) {
                         EnvEntry ee = new EnvEntry();
@@ -737,9 +739,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // F
-                    //
+                //
+                // F
+                //
                 case 'f':
                     if (e.equals("file")) {
                         Regular file = new Regular();
@@ -800,9 +802,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // H
-                    //
+                //
+                // H
+                //
                 case 'h':
                     if (e.equals("hard")) {
                         return new Ignore();
@@ -811,9 +813,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // I
-                    //
+                //
+                // I
+                //
                 case 'i':
                     if (e.equals("invocation")) {
                         this.m_result = new InvocationRecord();
@@ -887,9 +889,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // L
-                    //
+                //
+                // L
+                //
                 case 'l':
                     if (e.equals("load")) {
                         Load l = new Load();
@@ -903,9 +905,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // M
-                    //
+                //
+                // M
+                //
                 case 'm':
                     if (e.equals("mainjob")) {
                         Job job = new Job(e);
@@ -930,9 +932,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // P
-                    //
+                //
+                // P
+                //
                 case 'p':
                     if (e.equals("prejob")) {
                         Job job = new Job(e);
@@ -951,9 +953,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // R
-                    //
+                //
+                // R
+                //
                 case 'r':
                     if (e.equals("regular")) {
                         JobStatusRegular regular = new JobStatusRegular();
@@ -981,9 +983,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // S
-                    //
+                //
+                // S
+                //
                 case 's':
                     if (e.equals("statcall")) {
                         StatCall statcall = new StatCall();
@@ -1128,9 +1130,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // T
-                    //
+                //
+                // T
+                //
                 case 't':
                     if (e.equals("temporary")) {
                         Temporary file = new Temporary();
@@ -1158,9 +1160,9 @@ public class InvocationParser extends DefaultHandler {
                     // unknown
                     return null;
 
-                    //
-                    // U
-                    //
+                //
+                // U
+                //
                 case 'u':
                     if (e.equals("usage")) {
                         Usage usage = new Usage();
@@ -1290,7 +1292,7 @@ public class InvocationParser extends DefaultHandler {
      * element in terms of Java objects. Usually it involves adding the object to the parent's child
      * object list.
      *
-     * @param initial is the first charactor of the parent element name
+     * @param initial is the first character of the parent element name
      * @param parent is a reference to the parent's Java object
      * @param child is the completed child object to connect to the parent
      * @return true if the element was added successfully, false, if the child does not match into
@@ -1298,9 +1300,9 @@ public class InvocationParser extends DefaultHandler {
      */
     protected boolean setElementRelation(char initial, Invocation parent, Invocation child) {
         switch (initial) {
-                //
-                // A
-                //
+            //
+            // A
+            //
             case 'a':
                 if (parent instanceof ArgVector && child instanceof ArgEntry) {
                     ArgVector args = (ArgVector) parent;
@@ -1311,9 +1313,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // C
-                //
+            //
+            // C
+            //
             case 'c':
                 if (parent instanceof Job) {
                     Job job = (Job) parent;
@@ -1334,9 +1336,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // E
-                //
+            //
+            // E
+            //
             case 'e':
                 if (parent instanceof Environment && child instanceof EnvEntry) {
                     ((Environment) parent).addEntry((EnvEntry) child);
@@ -1346,9 +1348,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // I
-                //
+            //
+            // I
+            //
             case 'i':
                 if (parent instanceof InvocationRecord) {
                     InvocationRecord invocation = (InvocationRecord) parent;
@@ -1383,9 +1385,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // mainjob
-                //
+            //
+            // mainjob
+            //
             case 'm':
                 if (parent instanceof Job) {
                     Job job = (Job) parent;
@@ -1431,9 +1433,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // P
-                //
+            //
+            // P
+            //
             case 'p':
                 if (parent instanceof Job) {
                     // both, prejob and postjob
@@ -1456,9 +1458,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // R
-                //
+            //
+            // R
+            //
             case 'r':
                 if (parent instanceof Ignore && child instanceof Ignore) {
                     // ignore
@@ -1468,9 +1470,9 @@ public class InvocationParser extends DefaultHandler {
                 // unknown
                 return false;
 
-                //
-                // S
-                //
+            //
+            // S
+            //
             case 's':
                 if (parent instanceof Status && child instanceof JobStatus) {
                     ((Status) parent).setJobStatus((JobStatus) child);

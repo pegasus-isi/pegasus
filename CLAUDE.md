@@ -67,23 +67,23 @@ C/C++ (Execution)  — Job wrappers (kickstart), clustering, test job generation
 
 Main planner: `src/edu/isi/pegasus/planner/` with these packages:
 
-| Package | Purpose |
-|---------|---------|
-| `catalog/` | Site, Replica, Transformation, Work catalogs |
-| `classes/` | Core domain models |
-| `client/` | Client-facing Java APIs |
-| `cluster/` | Job clustering/aggregation |
-| `code/` | Code generation (GridStart, submit scripts) |
-| `common/` | Shared utilities, credentials, logging |
-| `dax/` | DAX parsing and handling |
-| `estimate/` | Resource estimation |
-| `mapper/` | Output, staging, submit mapping |
-| `namespace/` | Job specification namespaces |
-| `parser/` | DAX and config parsing |
-| `partitioner/` | Workflow partitioning |
-| `refiner/` | Cleanup, directory creation refinement |
-| `selector/` | Site/replica/transformation selection |
-| `transfer/` | Data transfer management |
+| Package        | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `catalog/`     | Site, Replica, Transformation, Work catalogs |
+| `classes/`     | Core domain models                           |
+| `client/`      | Client-facing Java APIs                      |
+| `cluster/`     | Job clustering/aggregation                   |
+| `code/`        | Code generation (GridStart, submit scripts)  |
+| `common/`      | Shared utilities, credentials, logging       |
+| `dax/`         | DAX parsing and handling                     |
+| `estimate/`    | Resource estimation                          |
+| `mapper/`      | Output, staging, submit mapping              |
+| `namespace/`   | Job specification namespaces                 |
+| `parser/`      | DAX and config parsing                       |
+| `partitioner/` | Workflow partitioning                        |
+| `refiner/`     | Cleanup, directory creation refinement       |
+| `selector/`    | Site/replica/transformation selection        |
+| `transfer/`    | Data transfer management                     |
 
 Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, `org.griphyn.vdl.*`
 
@@ -91,23 +91,23 @@ Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, 
 
 Four namespace packages sharing the `Pegasus` namespace:
 
-| Package | What it provides |
-|---------|-----------------|
-| `pegasus-api/` | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs) |
-| `pegasus-common/` | Shared utilities (`braindump`, YAML/JSON handling, client utils) |
-| `pegasus-python/` | CLI tools, monitoring daemon, database layer, dashboard, statistics |
+| Package           | What it provides                                                            |
+| ----------------- | --------------------------------------------------------------------------- |
+| `pegasus-api/`    | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs)       |
+| `pegasus-common/` | Shared utilities (`braindump`, YAML/JSON handling, client utils)            |
+| `pegasus-python/` | CLI tools, monitoring daemon, database layer, dashboard, statistics         |
 | `pegasus-worker/` | Worker-side execution: data transfer (`transfer.py`, `s3.py`), worker utils |
 
 Python source lives under `packages/<pkg>/src/Pegasus/`.
 
 ### C/C++ — `packages/`
 
-| Package | Language | Purpose |
-|---------|----------|---------|
-| `pegasus-kickstart/` | C | Job execution wrapper, metadata capture, checksumming |
-| `pegasus-cluster/` | C | Groups multiple jobs into clustered execution |
-| `pegasus-keg/` | C++ | Synthetic job generator for testing |
-| `pegasus-mpi-cluster/` | C++ | MPI-based distributed job clustering |
+| Package                | Language | Purpose                                               |
+| ---------------------- | -------- | ----------------------------------------------------- |
+| `pegasus-kickstart/`   | C        | Job execution wrapper, metadata capture, checksumming |
+| `pegasus-cluster/`     | C        | Groups multiple jobs into clustered execution         |
+| `pegasus-keg/`         | C++      | Synthetic job generator for testing                   |
+| `pegasus-mpi-cluster/` | C++      | MPI-based distributed job clustering                  |
 
 ### Executables — `bin/`
 
@@ -124,6 +124,7 @@ Configuration files and examples in `etc/`:
 - `etc/yaml/` — YAML format examples (`sc.yml`, `rc.yml`, `tc.yml`, `workflow.yml`)
 
 Three catalog types:
+
 - **Site Catalog** — Defines compute resources and their configurations
 - **Replica Catalog** — Tracks physical locations of data files
 - **Transformation Catalog** — Maps logical transformations to physical executables

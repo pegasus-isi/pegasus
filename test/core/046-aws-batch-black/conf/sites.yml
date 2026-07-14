@@ -44,4 +44,3 @@ sites:
       PEGASUS_HOME: "${PEGASUS_LOCAL_BIN_DIR}/.."
     pegasus:
       clusters.num: "1"
-

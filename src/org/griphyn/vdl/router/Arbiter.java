@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.classes.Derivation;
+
+import java.util.*;
 
 /**
  * This interface defines an arbitration. If multiple derivations produce the same output file, one
@@ -28,7 +29,7 @@ import org.griphyn.vdl.classes.Derivation;
  */
 public interface Arbiter {
     /**
-     * The lone method of the arbitrarion receives some environmental information about the position
+     * The lone method of the arbitration receives some environmental information about the position
      * in the call stack. Currently, this information is of limited nature. Furthermore, it receives
      * the list of candidates. From this list, one candidate must be chosen, and returned to as the
      * chosen one.

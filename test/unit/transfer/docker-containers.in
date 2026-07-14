@@ -9,4 +9,3 @@
      { "site_label": "computesite", "url": "file://$PWD/docker-image.tar.gz" }
    ] }
 ]
-

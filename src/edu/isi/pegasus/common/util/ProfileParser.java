@@ -15,6 +15,7 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

@@ -15,6 +15,7 @@
 package org.griphyn.vdl.dbschema;
 
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
+
 import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.Date;

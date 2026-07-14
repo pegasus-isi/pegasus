@@ -143,5 +143,3 @@ Options
 **-l** *filename*; \ **--log** *filename*
    Name of the common log file in which stdout/stderr will be
    redirected.
-
-

@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 import edu.isi.pegasus.planner.classes.NameValue;
+
 import java.util.Iterator;
 import java.util.Stack;
 
@@ -48,7 +49,7 @@ public class CycleChecker {
             return false;
         }
 
-        // sanity intialization of all nodes to white color
+        // sanity initialization of all nodes to white color
         for (Iterator it = mDAG.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             node.setColor(GraphNode.WHITE_COLOR);
@@ -83,7 +84,7 @@ public class CycleChecker {
             switch (color) {
                 case GraphNode.GRAY_COLOR:
                     mCyclicEdge = new NameValue(node.getID(), child.getID());
-                    // System.out.println( "Cycic Edge  " + mCyclicEdge.getKey() + "->" +
+                    // System.out.println( "Cyclic Edge  " + mCyclicEdge.getKey() + "->" +
                     // mCyclicEdge.getValue());
                     return true;
                 case GraphNode.WHITE_COLOR:

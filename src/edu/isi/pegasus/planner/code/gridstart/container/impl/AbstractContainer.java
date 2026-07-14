@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -87,7 +88,7 @@ public abstract class AbstractContainer extends Abstract {
     public abstract String getContainerWorkingDirectory();
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

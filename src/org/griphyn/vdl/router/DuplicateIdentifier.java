@@ -34,7 +34,7 @@ public class DuplicateIdentifier extends java.lang.RuntimeException {
     /**
      * Constructs a <code>DuplicateIdentifier</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public DuplicateIdentifier(String s) {
         super(s);

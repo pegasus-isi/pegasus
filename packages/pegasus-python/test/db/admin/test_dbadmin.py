@@ -61,7 +61,8 @@ def test_parse_pegasus_version(input, expected):
 
 
 @pytest.mark.parametrize(
-    "input", [0, 1, 4.5, "1.2.3", "a.b.c", "4.3.a", "4.3", "4"],
+    "input",
+    [0, 1, 4.5, "1.2.3", "a.b.c", "4.3.a", "4.3", "4"],
 )
 def test_parse_pegasus_version_fail(input):
     with pytest.raises(DBAdminError):
@@ -162,9 +163,9 @@ def test_connection_from_properties_file(tmp_path):
         f.write("pegasus.catalog.replica.db.driver=SQLite\n")
         f.write("pegasus.catalog.replica.db.url=jdbc:sqlite::memory:\n")
         # MASTER
-        f.write("pegasus.dashboard.output=%s\n" % dburi)
+        f.write(f"pegasus.dashboard.output={dburi}\n")
         # WORKFLOW
-        f.write("pegasus.monitord.output=%s\n" % dburi)
+        f.write(f"pegasus.monitord.output={dburi}\n")
 
     db = connection.connect_by_properties(
         props_filename, connection.DBType.JDBCRC, create=True, verbose=False
@@ -213,7 +214,7 @@ def test_dbs(input, tmp_path):
     orig_filename = os.path.dirname(os.path.abspath(__file__)) + "/input/" + input
     filename = str(uuid.uuid4())
     shutil.copyfile(orig_filename, filename)
-    dburi = "sqlite:///%s" % filename
+    dburi = f"sqlite:///{filename}"
 
     db = connection.connect(dburi, create=False, schema_check=False, verbose=False)
     with pytest.raises(DBAdminError):

@@ -16,11 +16,14 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.directive.Derive;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * The shell planner. This class is the command-line tool for generating shell scripts from a DAX.
@@ -51,7 +54,8 @@ public class Planner extends Toolkit {
                         + linefeed
                         + " -v|--verbose      increases the verbosity level."
                         + linefeed
-                        + " -o|--output dir   directory where scripts are created, defaults to test."
+                        + " -o|--output dir   directory where scripts are created, defaults to"
+                        + " test."
                         + linefeed
                         + " -b|--build        enters build mode, default is make mode."
                         + linefeed

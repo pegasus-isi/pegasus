@@ -42,7 +42,7 @@ int finiFileInfo(ProcInfo *c);
 
 #define handle_none 0
 
-// TODO Implement all of these handlers 
+// TODO Implement all of these handlers
 //int handle_open(ProcInfo *c);
 //int handle_openat(ProcInfo *c);
 //int handle_creat(ProcInfo *c);

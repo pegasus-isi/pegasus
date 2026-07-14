@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dbdriver;
 
+import org.griphyn.vdl.util.*;
+
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the driver API for the Microsoft SQL Server 2000 database. Please note that
@@ -111,7 +112,7 @@ public class SQLServer2000 extends DatabaseDriver {
      * NULL into auto-increment value should use this method to return the inserted ID value via the
      * statements getGeneratedKeys(). Other JDBC drivers should treat return the parametric id.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.

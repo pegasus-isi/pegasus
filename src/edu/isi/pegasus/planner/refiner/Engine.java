@@ -73,7 +73,9 @@ public abstract class Engine {
      */
     protected SubmitMapper mSubmitDirMapper;
 
-    /** @param bag bag of initialization objects */
+    /**
+     * @param bag bag of initialization objects
+     */
     public Engine(PegasusBag bag) {
         mBag = bag;
         mLogger = bag.getLogger();

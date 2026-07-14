@@ -30,7 +30,7 @@ def pathfind(exe):
         exepath = os.path.join(prefix, exe)
         if os.path.isfile(exepath):
             return exepath
-    raise EMError("%s not found on PATH" % exe)
+    raise EMError(f"{exe} not found on PATH")
 
 
 def get_bin(name, exe):
@@ -53,9 +53,7 @@ def get_bin(name, exe):
     if not os.path.isfile(exepath):
         raise EMError(f"{exe} not found: {exepath}")
 
-    BIN = os.path.dirname(exepath)
-
-    return BIN
+    return os.path.dirname(exepath)
 
 
 def get_pegasus_bin():
@@ -89,7 +87,7 @@ def get_script_env():
 def runscript(script, cwd=None, env=None):
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
-        raise EMError("Working directory does not exist: %s" % cwd)
+        raise EMError(f"Working directory does not exist: {cwd}")
 
     if env is None:
         env = dict(os.environ)
@@ -99,7 +97,7 @@ def runscript(script, cwd=None, env=None):
     rc = p.wait()
 
     if rc != 0:
-        raise EMError("Script failed with exitcode %d" % rc)
+        raise EMError(f"Script failed with exitcode {rc:d}")
 
 
 def forkscript(script, pidfile=None, cwd=None, env=None):
@@ -108,7 +106,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
 
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
-        raise EMError("Working directory does not exist: %s" % cwd)
+        raise EMError(f"Working directory does not exist: {cwd}")
 
     if env is None:
         env = dict(os.environ)
@@ -119,7 +117,7 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
         try:
             open(pidfile, "w").close()
         except Exception:
-            raise EMError("Unable to write pidfile: %s" % pidfile)
+            raise EMError(f"Unable to write pidfile: {pidfile}")
 
     pid1 = os.fork()
     if pid1 == 0:
@@ -133,14 +131,14 @@ def forkscript(script, pidfile=None, cwd=None, env=None):
 
         if pidfile is not None:
             f = open(pidfile, "w")
-            f.write("%d\n" % pid2)
+            f.write(f"{pid2:d}\n")
             f.close()
 
         os._exit(0)
 
     pid, exitcode = os.waitpid(pid1, 0)
     if exitcode != 0:
-        raise EMError("Non-zero exitcode launching script: %d" % exitcode)
+        raise EMError(f"Non-zero exitcode launching script: {exitcode:d}")
 
 
 class WorkflowProcessor:
@@ -169,9 +167,7 @@ class WorkflowProcessor:
             if os.path.isfile(f):
                 os.remove(f)
 
-        script = "({}) 2>&1 | tee -a {} | grep pegasus-run >{} ; /bin/echo $? >{}".format(
-            plan_command, logfile, runfile, resultfile,
-        )
+        script = f"({plan_command}) 2>&1 | tee -a {logfile} | grep pegasus-run >{runfile} ; /bin/echo $? >{resultfile}"
         forkscript(script, cwd=basedir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
@@ -199,7 +195,7 @@ class WorkflowProcessor:
         resultfile = self.workflow.get_resultfile()
 
         if not os.path.exists(resultfile):
-            raise EMError("Result file not found: %s" % resultfile)
+            raise EMError(f"Result file not found: {resultfile}")
 
         exitcode = int(open(resultfile).read())
 
@@ -219,20 +215,20 @@ class WorkflowProcessor:
         logfile = self.workflow.get_runfile()
 
         if not os.path.isfile(logfile):
-            raise EMError("Workflow run file not found: %s" % logfile)
+            raise EMError(f"Workflow run file not found: {logfile}")
 
         submitdir = None
 
         f = open(logfile)
         try:
-            for l in f:
-                if l.startswith("pegasus-run"):
-                    submitdir = l.split()[1]
+            for line in f:
+                if line.startswith("pegasus-run"):
+                    submitdir = line.split()[1]
         finally:
             f.close()
 
         if submitdir is None:
-            raise EMError("No pegasus-run found in the workflow run file: %s" % logfile)
+            raise EMError(f"No pegasus-run found in the workflow run file: {logfile}")
 
         return submitdir
 
@@ -261,7 +257,7 @@ class WorkflowProcessor:
             raise EMError("Workflow submitdir not set")
 
         if not os.path.isdir(submitdir):
-            raise EMError("Workflow submit dir does not exist: %s" % submitdir)
+            raise EMError(f"Workflow submit dir does not exist: {submitdir}")
 
         logfile = self.workflow.get_logfile()
 
@@ -274,17 +270,16 @@ class WorkflowProcessor:
             raise EMError("wf_uuid is none")
 
         try:
-            w = (
+            return (
                 self.dao.session.execute(
                     select(MasterWorkflow).where(MasterWorkflow.wf_uuid == str(wf_uuid))
                 )
                 .scalars()
                 .one()
             )
-            return w
         except NoResultFound:
             name = self.workflow.name
-            log.debug("No dashboard record for workflow %s" % name)
+            log.debug(f"No dashboard record for workflow {name}")
             return None
 
     def get_dashboard_state_for_running_workflow(self):
@@ -321,7 +316,7 @@ class WorkflowProcessor:
 
         if ws is None:
             name = self.workflow.name
-            log.info("No recent workflow state records for workflow %s" % name)
+            log.info(f"No recent workflow state records for workflow {name}")
 
         return ws
 
@@ -387,7 +382,7 @@ class EnsembleProcessor:
         return self.active and self.planning < self.max_planning
 
     def plan_workflow(self, workflow):
-        log.info("Planning %s" % workflow.name)
+        log.info(f"Planning {workflow.name}")
         self.planning += 1
         workflow.set_state(EnsembleWorkflowStates.PLANNING)
         workflow.set_updated()
@@ -399,7 +394,7 @@ class EnsembleProcessor:
         try:
             p.plan()
         except Exception as e:
-            log.error("Planning failed for workflow %s" % workflow.name)
+            log.error(f"Planning failed for workflow {workflow.name}")
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
@@ -410,27 +405,27 @@ class EnsembleProcessor:
         if self.can_plan():
             self.plan_workflow(workflow)
         else:
-            log.debug("Delaying planning of workflow %s due to policy" % workflow.name)
+            log.debug(f"Delaying planning of workflow {workflow.name} due to policy")
 
     def handle_planning(self, workflow):
         p = self.Processor(self.dao, workflow)
 
         if p.planning():
-            log.info("Workflow %s is still planning" % workflow.name)
+            log.info(f"Workflow {workflow.name} is still planning")
             return
 
-        log.info("Workflow %s is no longer planning" % workflow.name)
+        log.info(f"Workflow {workflow.name} is no longer planning")
         self.planning -= 1
 
         # Planning failed
         if not p.planning_successful():
-            log.error("Planning failed for workflow %s" % workflow.name)
+            log.error(f"Planning failed for workflow {workflow.name}")
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
             self.dao.session.commit()
             return
 
-        log.info("Queueing workflow %s" % workflow.name)
+        log.info(f"Queueing workflow {workflow.name}")
 
         # Planning succeeded, get uuid and queue workflow
         workflow.set_wf_uuid(p.get_wf_uuid())
@@ -446,7 +441,7 @@ class EnsembleProcessor:
         return self.active and self.running < self.max_running
 
     def run_workflow(self, workflow):
-        log.info("Running workflow %s" % workflow.name)
+        log.info(f"Running workflow {workflow.name}")
 
         self.running += 1
         workflow.set_state(EnsembleWorkflowStates.RUNNING)
@@ -457,7 +452,7 @@ class EnsembleProcessor:
         try:
             p.run()
         except Exception as e:
-            log.debug("Running of workflow %s failed" % workflow.name)
+            log.debug(f"Running of workflow {workflow.name} failed")
             log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
@@ -468,27 +463,27 @@ class EnsembleProcessor:
         if self.can_run():
             self.run_workflow(workflow)
         else:
-            log.debug("Delaying run of workflow %s due to policy" % workflow.name)
+            log.debug(f"Delaying run of workflow {workflow.name} due to policy")
 
     def handle_running(self, workflow):
         p = self.Processor(self.dao, workflow)
 
         if p.pending():
-            log.info("Workflow %s is pending" % workflow.name)
+            log.info(f"Workflow {workflow.name} is pending")
             return
 
         if p.running():
-            log.info("Workflow %s is running" % workflow.name)
+            log.info(f"Workflow {workflow.name} is running")
             return
 
-        log.info("Workflow %s is no longer running" % workflow.name)
+        log.info(f"Workflow {workflow.name} is no longer running")
         self.running -= 1
 
         if p.running_successful():
-            log.info("Workflow %s was successful" % workflow.name)
+            log.info(f"Workflow {workflow.name} was successful")
             workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
         else:
-            log.info("Workflow %s failed" % workflow.name)
+            log.info(f"Workflow {workflow.name} failed")
             workflow.set_state(EnsembleWorkflowStates.FAILED)
 
         workflow.set_updated()
@@ -508,17 +503,16 @@ class EnsembleProcessor:
     def run(self):
         edir = self.ensemble.get_localdir()
         if not os.path.isdir(edir):
-            log.info("Creating ensemble directory: %s" % edir)
+            log.info(f"Creating ensemble directory: {edir}")
             os.makedirs(edir, 0o700)
 
-        log.info("Processing %d ensemble workflows..." % len(self.workflows))
+        log.info(f"Processing {len(self.workflows):d} ensemble workflows...")
         for w in self.workflows:
             try:
                 self.handle_workflow(w)
             except Exception as e:
                 log.error(
-                    "Processing workflow %s of ensemble %s"
-                    % (w.name, self.ensemble.name)
+                    f"Processing workflow {w.name} of ensemble {self.ensemble.name}"
                 )
                 log.exception(e)
                 self.dao.session.rollback()

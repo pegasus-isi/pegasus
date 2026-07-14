@@ -172,7 +172,7 @@
       data: |
         /bin/ls: invalid option -- 'z'
         Try '/bin/ls --help' for more information.
-        
+
     metadata:
       temporary_name: /home/mzalam/wf/condor/local/execute/dir_148321/ks.meta.R4rvso
       descriptor: 5

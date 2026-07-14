@@ -7,7 +7,9 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 
-/** @author vahi */
+/**
+ * @author vahi
+ */
 public class TestReduceEdges {
 
     public TestReduceEdges() {}

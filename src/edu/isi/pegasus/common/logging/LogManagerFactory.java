@@ -20,6 +20,7 @@ package edu.isi.pegasus.common.logging;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Properties;
 
 /**

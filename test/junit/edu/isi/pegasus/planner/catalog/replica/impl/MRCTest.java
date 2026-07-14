@@ -22,13 +22,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class MRCTest {
 
     @Test

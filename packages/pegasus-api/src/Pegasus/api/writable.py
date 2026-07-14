@@ -3,7 +3,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import TextIO
 
 from .errors import PegasusError
 
@@ -19,8 +19,7 @@ class _CustomEncoder(json.JSONEncoder):
         if hasattr(obj, "__json__"):
             if callable(obj.__json__):
                 return obj.__json__()
-            else:
-                raise TypeError(f"__json__ is not callable for {obj}")
+            raise TypeError(f"__json__ is not callable for {obj}")
 
         return json.JSONEncoder.default(self, obj)
 
@@ -57,11 +56,9 @@ class Writable:
         :return: resolved path to which this object has been written
         :rtype: Path
         """
-        if self._path == None:
+        if self._path is None:
             raise PegasusError(
-                "{}.write(filename) must be called before trying to retrieve path".format(
-                    self.__class__.__name__
-                )
+                f"{self.__class__.__name__}.write(filename) must be called before trying to retrieve path"
             )
 
         return Path(self._path)
@@ -77,9 +74,7 @@ class Writable:
         """
         if _format.lower() not in Writable._FORMATS:
             raise ValueError(
-                "invalid _ext: {_format}, extension must be one of {formats}".format(
-                    _format=_format, formats=Writable._FORMATS
-                )
+                f"invalid _ext: {_format}, extension must be one of {Writable._FORMATS}"
             )
 
         # add file info
@@ -111,9 +106,7 @@ class Writable:
                 self_as_dict, file, cls=_CustomEncoder, indent=4, ensure_ascii=False
             )
 
-    def write(
-        self, file: Optional[Union[str, Path, TextIO]] = None, _format: str = "yml"
-    ):
+    def write(self, file: str | Path | TextIO | None = None, _format: str = "yml"):
         """Serialize this class as either yaml or json and write to the given
         file. If file==None, this class will be written to a default file. The
         following classes have these defaults:

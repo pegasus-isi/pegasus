@@ -27,37 +27,63 @@ LOCALSCRATCH=/scitech/shared/scratch-90-days/bamboo/local-scratch
 mkdir -p $LOCALSCRATCH
 
 # create the site catalog
-cat > sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-<site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/outputs">
-                </file-server>
-        </directory>
-        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work">
-                </file-server>
-        </directory>
-</site>
-<site handle="condorpool" arch="x86_64" os="LINUX" >
-        <directory  path="${LOCALSCRATCH}/local-scratch" type="local-scratch" free-size="" total-size="">
-	    <file-server  operation="all" url="file://${LOCALSCRATCH}/local-scratch"/>
-        </directory>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="style" >condor</profile>
-</site>
-<site  handle="cartman-data" arch="x86" os="LINUX" osrelease="" osversion="" glibc="">
-        <directory  path="/webdav/scratch-90-days/${TESTNAME}/staging-site/scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="webdavs://workflow.isi.edu/webdav/scratch-90-days/${TESTNAME}/staging-site/scratch">
-                </file-server>
-        </directory>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu">
-        </replica-catalog>
-</site>
-</sitecatalog>
-
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "cartman-data"
+  arch: "x86"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/webdav/scratch-90-days/${TESTNAME}/staging-site/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "webdavs://workflow.isi.edu/webdav/scratch-90-days/${TESTNAME}/staging-site/scratch"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "localScratch"
+    path: "${LOCALSCRATCH}/local-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://${LOCALSCRATCH}/local-scratch"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/shared-scratch"
+   -
+    type: "sharedStorage"
+    path: "$TOPDIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
 EOF
 
 # plan and submit the  workflow
@@ -66,8 +92,7 @@ pegasus-plan \
     --sites condorpool \
     --staging-site cartman-data \
     --output-sites local \
-    --dir work \
+    --dir submit \
     --cleanup leaf \
     --submit \
     blackdiamond.dax | tee plan.out
-

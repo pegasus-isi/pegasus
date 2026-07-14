@@ -174,13 +174,13 @@ char * fmtisodate(time_t seconds, long micros) {
 
 double doubletime(struct timeval t) {
     /* purpose: convert a structured timeval into seconds with fractions.
-     * paramtr: t (IN): a timeval as retured from gettimeofday().
+     * paramtr: t (IN): a timeval as returned from gettimeofday().
      * returns: the number of seconds with microsecond fraction. */
     return (t.tv_sec + t.tv_usec / 1E6);
 }
 
 void now(struct timeval* t) {
-    /* purpose: capture a point in time with microsecond extension 
+    /* purpose: capture a point in time with microsecond extension
      * paramtr: t (OUT): where to store the captured time
      */
     int timeout = 0;
@@ -282,4 +282,3 @@ char* sizer(char* buffer, size_t capacity, size_t vsize, const void* value) {
 
     return buffer;
 }
-

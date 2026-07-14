@@ -18,10 +18,13 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class TestNamespaceTest {
 
     @Test

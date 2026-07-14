@@ -16,16 +16,19 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.sql.SQLException;
-import java.util.*;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * This class deletes definition's that match the namespace, identifier, version triple.
@@ -73,7 +76,8 @@ public class DeleteVDC extends Toolkit {
                         + linefeed
                         + " -f|--force      permits removals in batch mode, assuming wildcards."
                         + linefeed
-                        + "                 Beware, without any other options, everything will be removed!"
+                        + "                 Beware, without any other options, everything will be"
+                        + " removed!"
                         + linefeed
                         + " -c|--capture fn captures removed definitions into file fn."
                         + linefeed);

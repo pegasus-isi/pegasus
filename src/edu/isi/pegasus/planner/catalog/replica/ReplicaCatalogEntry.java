@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.util.*;
 
 /**
@@ -61,7 +62,7 @@ public class ReplicaCatalogEntry implements CatalogEntry, Cloneable {
 
     /**
      * Convenience constructor initializes the PFN. The map of attributes is initialized to be
-     * empty. Thus, no resource handle is avaiable.
+     * empty. Thus, no resource handle is available.
      *
      * @param pfn is the PFN to remember.
      */

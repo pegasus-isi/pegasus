@@ -25,10 +25,14 @@ import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.QuotedString;
 import edu.isi.pegasus.planner.parser.tokens.Token;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogReservedWord;
-import java.io.StringReader;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.io.StringReader;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class TransformationCatalogTextScannerTest {
 
     /*

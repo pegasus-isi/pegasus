@@ -18,9 +18,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.EnumSet;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the TCType enum. */
 public class TCTypeTest {

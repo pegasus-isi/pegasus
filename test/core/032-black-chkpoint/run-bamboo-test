@@ -85,7 +85,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --staging-site data \
-    --dir work \
+    --dir submit \
     --output-sites local \
     blackdiamond.yml  | tee $TOPDIR/plan.out
 

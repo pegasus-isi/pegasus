@@ -21,4 +21,3 @@ fi
 sleep 1
 
 cat $INFILE > $OUTFILE
-

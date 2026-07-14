@@ -14,12 +14,13 @@
  */
 package org.griphyn.vdl.dbschema;
 
+import org.griphyn.vdl.util.Logging;
+import org.griphyn.vdl.workflow.*;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.Logging;
-import org.griphyn.vdl.workflow.*;
 
 /**
  * This class provides basic functionalities to interact with the backend database for workflow
@@ -43,8 +44,13 @@ public class WorkflowSchema extends DatabaseSchema implements WF {
      * @throws java.io.IOException Exception
      */
     public WorkflowSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with parent schema c'tor");

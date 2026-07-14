@@ -1,0 +1,97 @@
+repos:
+
+  - hooks:
+      - id: ruff
+        args: [--fix, --target-version, py310]
+        files: ^(\.tox/|packages/pegasus-(common|api|python)/)
+        exclude: ^(\.tox/|packages/pegasus-worker/)
+      - id: ruff-format
+        args: [--target-version, py310]
+        files: ^(\.tox/|packages/pegasus-(common|api|python)/)
+        exclude: ^(\.tox/|packages/pegasus-worker/)
+    repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 0671d8ab202c4ac093b78433ae5baf74f3fc7246  # frozen: v0.15.15
+
+  - hooks:
+      - id: autoflake
+        name: autoflake (worker)
+        args:
+          - --recursive
+          - --remove-unused-variables
+          - --remove-duplicate-keys
+          - --remove-all-unused-imports
+          - --ignore-init-module-imports
+          - --in-place
+        files: packages/pegasus-worker/.*\.py$
+    repo: https://github.com/PyCQA/autoflake
+    rev: 2d3853a9f31d97783fb2e181d41cd82a6babd666  # frozen: v2.3.3
+
+  - hooks:
+      - id: pyupgrade
+        name: pyupgrade (worker)
+        args:
+          - --py3-plus
+        files: packages/pegasus-worker/.*\.py$
+    repo: https://github.com/asottile/pyupgrade
+    rev: 75992aaa40730136014f34227e0135f63fc951b4  # frozen: v3.21.2
+
+  - hooks:
+      - id: isort
+        name: isort (worker)
+        args:
+          - --profile=black
+          - --resolve-all-configs
+        files: packages/pegasus-worker/.*\.py$
+    repo: https://github.com/PyCQA/isort
+    rev: dac090ce4d9ee313d086e2e89ab1acb8c2664fa1  # frozen: 9.0.0a3
+
+  - hooks:
+      - id: black
+        name: black (worker)
+        args:
+          - --target-version
+          - py36
+        files: packages/pegasus-worker/.*\.py$
+    repo: https://github.com/psf/black
+    rev: 87928e6d6761a4a6d22250e1fee5601b3998086e  # frozen: 26.5.1
+
+  - hooks:
+      - id: pretty-format-java
+        args: [--aosp, --autofix]
+    repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # frozen: v2.16.0
+
+  # - hooks:
+  #     - id: mypy
+  #       additional_dependencies:
+  #         - types-PyYAML
+  #   repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: d2823d321df3af8f878f7ee3414dc94d037145b9  # frozen: v2.1.0
+
+  - hooks:
+      - id: mdformat
+        exclude: "^(.github/|.claude/|.agents/|LICENSE.md|doc/sphinx/release-notes)"
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-ruff
+          - ruff
+    repo: https://github.com/executablebooks/mdformat
+    rev: 2d496dbc18e31b83a1596685347ffe0b6041daf0  # frozen: 1.0.0
+
+  # - hooks:
+  #   - id: shellcheck
+  #   repo: https://github.com/shellcheck-py/shellcheck-py
+  #   rev: 745eface02aef23e168a8afb6b5737818efbea95  # frozen: v0.11.0.1
+
+  - hooks:
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      # - id: check-yaml
+    repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0

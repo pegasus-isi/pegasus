@@ -189,27 +189,27 @@ FILE *FDCache::open(string filename) {
         access(entry);
         return entry->file;
     }
-    
+
     // Create directories as needed on file creation
     if (filename.find("/") != string::npos) {
         string path = filename.substr(0, filename.rfind("/"));
         if (mkdirs(path.c_str()) < 0) {
-            log_error("Unable to create directory %s: %s", path.c_str(), 
+            log_error("Unable to create directory %s: %s", path.c_str(),
                     strerror(errno));
             return NULL;
         }
     }
-    
+
     // We always open the file for append because this may be one of many
     // records we need to write to the file
     FILE *file = fopen(filename.c_str(), "a");
     if (file == NULL) {
         return NULL;
     }
-    
+
     FDEntry *entry = new FDEntry(filename, file);
     push(entry);
-    
+
     return file;
 }
 
@@ -228,12 +228,12 @@ int FDCache::write(string filename, const char *data, int size) {
 
     int rc = fwrite(data, 1, size, file);
     if (rc != size) {
-        log_error("Error writing %d bytes to %s: %s", size, filename.c_str(), 
+        log_error("Error writing %d bytes to %s: %s", size, filename.c_str(),
                 strerror(errno));
         return -1;
     }
     if (fflush(file) != 0) {
-        log_error("fflush failed on file %s: %s", filename.c_str(), 
+        log_error("fflush failed on file %s: %s", filename.c_str(),
                 strerror(errno));
         return -1;
     }
@@ -245,7 +245,7 @@ int FDCache::write(string filename, const char *data, int size) {
     rc = fdatasync(fileno(file));
 #endif
     if (rc != 0) {
-        log_error("fsync/fdatasync failed on file %s: %s", filename.c_str(), 
+        log_error("fsync/fdatasync failed on file %s: %s", filename.c_str(),
                 strerror(errno));
         return -1;
     }
@@ -294,4 +294,3 @@ unsigned FDCache::get_nr_open_fds() {
 
     return openfds;
 }
-

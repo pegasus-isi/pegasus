@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.common.PegRandom;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;

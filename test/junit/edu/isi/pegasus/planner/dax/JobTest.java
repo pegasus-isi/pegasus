@@ -18,12 +18,16 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.XMLWriter;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class JobTest {
 
     public JobTest() {}
@@ -103,7 +107,8 @@ public class JobTest {
         String expected =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<job id=\"ID001\" name=\"test\">\n"
-                        + "   <argument>-i <file name=\"f.a\"/> <file name=\"f.b\"/> --cleanup none</argument>\n"
+                        + "   <argument>-i <file name=\"f.a\"/> <file name=\"f.b\"/> --cleanup"
+                        + " none</argument>\n"
                         + "</job>\n";
 
         // chop the xml comments

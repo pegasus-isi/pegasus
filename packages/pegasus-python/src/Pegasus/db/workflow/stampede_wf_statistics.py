@@ -87,7 +87,7 @@ class StampedeWorkflowStatistics:
         ):
             self.log.error("Some workflows were not found")
             raise ValueError("Some workflows were not found")
-        elif (
+        if (
             root_wf_id
             and root_wf_id != "*"
             and len(root_wf_id) != len(self._root_wf_id)
@@ -225,8 +225,7 @@ class StampedeWorkflowStatistics:
             sq_2 = sq_2.where(Invocation.exitcode == 0)
         else:
             sq_2 = sq_2.where(Invocation.exitcode != 0)
-        sq_2 = sq_2.group_by(sq_1.c.wf_id)
-        return sq_2
+        return sq_2.group_by(sq_1.c.wf_id)
 
     def _task_statistics_query_sum(self, success=True, pmc=False):
         s = self._base_task_statistics_query(success, pmc).subquery("tt")
@@ -586,9 +585,7 @@ class StampedeWorkflowStatistics:
 
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
-            q = q.where(
-                or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None))
-            )  # noqa: E711
+            q = q.where(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))  # noqa: E711
 
         return self.session.execute(q).first()
 
@@ -656,11 +653,23 @@ class StampedeWorkflowStatistics:
             # maxrss
             func.min(Invocation.maxrss).label("min_maxrss"),
             func.max(Invocation.maxrss).label("max_maxrss"),
-            cast(func.avg(Invocation.maxrss), Float,).label("avg_maxrss"),
+            cast(
+                func.avg(Invocation.maxrss),
+                Float,
+            ).label("avg_maxrss"),
             # avg_cpu
-            cast(func.min(Invocation.avg_cpu), Float,).label("min_avg_cpu"),
-            cast(func.max(Invocation.avg_cpu), Float,).label("max_avg_cpu"),
-            cast(func.avg(Invocation.avg_cpu), Float,).label("avg_avg_cpu"),
+            cast(
+                func.min(Invocation.avg_cpu),
+                Float,
+            ).label("min_avg_cpu"),
+            cast(
+                func.max(Invocation.avg_cpu),
+                Float,
+            ).label("max_avg_cpu"),
+            cast(
+                func.avg(Invocation.avg_cpu),
+                Float,
+            ).label("avg_avg_cpu"),
         )
         q = q.where(Workflow.wf_id == Invocation.wf_id)
         q = q.where(Invocation.job_instance_id == JobInstance.job_instance_id)
@@ -870,12 +879,11 @@ class StampedeWorkflowStatistics:
     def _get_host_filter(self):
         if self._host_filter is None:
             return None
-        elif isinstance(self._host_filter, str):
+        if isinstance(self._host_filter, str):
             return Host.hostname == self._host_filter
-        elif isinstance(self._host_filter, type([])):
+        if isinstance(self._host_filter, type([])):
             return Host.hostname.in_(self._host_filter)
-        else:
-            return None
+        return None
 
     def _get_xform_filter(self):
         if (
@@ -886,26 +894,23 @@ class StampedeWorkflowStatistics:
                 "Can't set both transform include and exclude - reset s.set_transformation_filter()"
             )
             return None
-        elif (
+        if (
             self._xform_filter["include"] is None
             and self._xform_filter["exclude"] is None
         ):
             return None
-        elif self._xform_filter["include"] is not None:
+        if self._xform_filter["include"] is not None:
             if isinstance(self._xform_filter["include"], str):
                 return Invocation.transformation == self._xform_filter["include"]
-            elif isinstance(self._xform_filter["include"], type([])):
+            if isinstance(self._xform_filter["include"], type([])):
                 return Invocation.transformation.in_(self._xform_filter["include"])
-            else:
-                return None
-        elif self._xform_filter["exclude"] is not None:
+            return None
+        if self._xform_filter["exclude"] is not None:
             if isinstance(self._xform_filter["exclude"], str):
                 return Invocation.transformation != self._xform_filter["exclude"]
-            elif isinstance(self._xform_filter["exclude"], type([])):
+            if isinstance(self._xform_filter["exclude"], type([])):
                 return not_(
                     Invocation.transformation.in_(self._xform_filter["exclude"])
                 )
-            else:
-                return None
-        else:
             return None
+        return None

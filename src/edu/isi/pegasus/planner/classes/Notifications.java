@@ -22,10 +22,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -67,7 +69,7 @@ public class Notifications extends Data {
     }
 
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      *
      * @param notification the notification object
      */
@@ -172,7 +174,7 @@ public class Notifications extends Data {
      * Convenience method at add all the notifications corresponding to a particular event
      *
      * @param when when does the event happen
-     * @param notifications the list of notificiations
+     * @param notifications the list of notifications
      */
     private void addAll(WHEN when, Collection<Invoke> invokes) {
         Collection<Invoke> c = this.mInvokeMap.get(when);

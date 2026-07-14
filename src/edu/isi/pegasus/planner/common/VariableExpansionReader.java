@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.util.VariableExpander;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;

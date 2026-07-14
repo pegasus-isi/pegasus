@@ -15,6 +15,7 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,7 +124,8 @@ public class CondorVersion {
             int y = subs.length;
             if (y > CondorVersion.MAX_NUMBER_OF_VERSION_COMPONENTS) {
                 throw new IllegalArgumentException(
-                        "Only version numbers with max two dots are accepted i.e ( MAJOR.MINOR.PATCH ) "
+                        "Only version numbers with max two dots are accepted i.e ("
+                                + " MAJOR.MINOR.PATCH ) "
                                 + version);
             }
 
@@ -296,7 +298,7 @@ public class CondorVersion {
 
         /**
          * Callback whenever a line is read from the stream by the StreamGobbler. Counts the
-         * occurences of the word that are in the line, and increments to the global counter.
+         * occurrences of the word that are in the line, and increments to the global counter.
          *
          * @param line the line that is read.
          */

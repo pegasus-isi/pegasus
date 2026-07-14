@@ -60,4 +60,3 @@ sites:
       ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
     pegasus:
       clusters.num: "1"
-

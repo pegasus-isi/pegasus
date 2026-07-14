@@ -26,7 +26,7 @@ class VDLtQuotedString implements VDLtToken {
     private String m_value;
 
     /**
-     * Contructs a new string value to pass.
+     * Constructs a new string value to pass.
      *
      * @param value is the content of the string.
      */

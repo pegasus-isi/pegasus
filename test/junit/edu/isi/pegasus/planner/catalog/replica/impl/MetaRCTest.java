@@ -22,6 +22,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+
+import org.junit.jupiter.api.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -29,7 +32,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.*;
 
 /**
  * Test class to test YAML based RC with Regex Support
@@ -59,7 +61,8 @@ public class MetaRCTest {
                         + "      \"size\": \"56\",\n"
                         + "      \"ctime\": \"2020-05-15T10:05:04-07:00\",\n"
                         + "      \"checksum.type\": \"sha256\",\n"
-                        + "      \"checksum.value\": \"a69fef1a4b597ea5e61ce403b6ef8bb5b4cd3aba19e734bf340ea00f5095c894\",\n"
+                        + "      \"checksum.value\":"
+                        + " \"a69fef1a4b597ea5e61ce403b6ef8bb5b4cd3aba19e734bf340ea00f5095c894\",\n"
                         + "      \"checksum.timing\": \"0.0\"\n"
                         + "    }\n"
                         + "  },\n"
@@ -71,7 +74,8 @@ public class MetaRCTest {
                         + "      \"size\": \"56\",\n"
                         + "      \"ctime\": \"2020-05-15T10:05:04-07:00\",\n"
                         + "      \"checksum.type\": \"sha256\",\n"
-                        + "      \"checksum.value\": \"a69fef1a4b597ea5e61ce403b6ef8bb5b4cd3aba19e734bf340ea00f5095c894\",\n"
+                        + "      \"checksum.value\":"
+                        + " \"a69fef1a4b597ea5e61ce403b6ef8bb5b4cd3aba19e734bf340ea00f5095c894\",\n"
                         + "      \"checksum.timing\": \"0.0\"\n"
                         + "    }\n"
                         + "  }\n"

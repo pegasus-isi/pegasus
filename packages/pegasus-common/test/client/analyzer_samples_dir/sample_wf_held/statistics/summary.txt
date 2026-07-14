@@ -50,9 +50,9 @@
 #   from the sub workflows as well.
 ------------------------------------------------------------------------------
 Type           Succeeded Failed  Incomplete  Total     Retries   Total+Retries
-Tasks          0         1       0           1         0         1            
-Jobs           2         1       5           8         0         3            
-Sub-Workflows  0         0       0           0         0         0            
+Tasks          0         1       0           1         0         1
+Jobs           2         1       5           8         0         3
+Sub-Workflows  0         0       0           0         0         0
 ------------------------------------------------------------------------------
 
 Workflow wall time                                       : 2 mins, 1 sec

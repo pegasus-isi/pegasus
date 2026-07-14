@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.CatalogException;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the WorkCatalogException class. */

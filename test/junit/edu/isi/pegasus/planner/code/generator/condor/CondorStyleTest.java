@@ -23,8 +23,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 /** Tests for the CondorStyle interface. */
 public class CondorStyleTest {

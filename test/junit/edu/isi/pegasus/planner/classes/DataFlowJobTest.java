@@ -19,9 +19,12 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class DataFlowJobTest {
 
     @Test

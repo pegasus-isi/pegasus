@@ -14,11 +14,13 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.io.*;
-import javax.xml.parsers.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.Logging;
 import org.xml.sax.*;
+
+import java.io.*;
+
+import javax.xml.parsers.*;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML document. The content handler
@@ -96,7 +98,7 @@ public class VDLxParser {
                 Logging.instance().log("parser", 0, "will use document schema hint");
             }
         } catch (ClassNotFoundException e) {
-            Logging.instance().log("defaut", 0, "The SAXParser class was not found: " + e);
+            Logging.instance().log("default", 0, "The SAXParser class was not found: " + e);
         } catch (InstantiationException e) {
             Logging.instance()
                     .log("default", 0, "The SAXParser class could not be instantiated: " + e);

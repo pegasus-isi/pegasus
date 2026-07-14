@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 import java.util.Properties;
 
@@ -115,7 +116,7 @@ public class Named implements SubmitMapper {
         String relative = null;
 
         switch (job.getJobType()) {
-                // for compute jobs look for the profile
+            // for compute jobs look for the profile
             case Job.COMPUTE_JOB:
                 relative = job.vdsNS.getStringValue(Pegasus.RELATIVE_SUBMIT_DIR_KEY);
                 if (relative == null) {
@@ -128,8 +129,8 @@ public class Named implements SubmitMapper {
                 }
                 break;
 
-                // all other jobs use . to indicate we generate in the base
-                // submit directory of the workflow
+            // all other jobs use . to indicate we generate in the base
+            // submit directory of the workflow
             default:
                 relative = ".";
                 break;

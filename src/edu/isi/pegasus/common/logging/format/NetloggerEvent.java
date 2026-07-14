@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.logging.format;
 import edu.isi.ikcap.workflows.util.logging.EventLogMessage;
 import edu.isi.ikcap.workflows.util.logging.LogEvent;
 import edu.isi.pegasus.common.logging.*;
+
 import java.util.Collection;
 import java.util.Map;
 

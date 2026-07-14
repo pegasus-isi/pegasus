@@ -243,7 +243,7 @@ public class CondorQuoteParser {
         test("\\\\"); // result should be \
         test("\'\"Test Input\'"); // result should be '""Test Input'
 
-        // errorneous inputs
+        // erroneous inputs
         test("\'\"Test Input\"  ");
         test(" \"\"\" ");
         test(" '''  ");

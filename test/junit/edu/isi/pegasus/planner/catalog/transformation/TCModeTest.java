@@ -18,8 +18,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 
 /** Tests for the TCMode class constants. */
 public class TCModeTest {

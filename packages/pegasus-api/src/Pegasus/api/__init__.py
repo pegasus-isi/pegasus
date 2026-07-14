@@ -1,3 +1,4 @@
+# ruff: noqa F410
 from .mixins import EventType, ExprVar, Namespace
 from .properties import Properties
 from .replica_catalog import File, ReplicaCatalog

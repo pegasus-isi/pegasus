@@ -17,10 +17,11 @@
  */
 package org.griphyn.vdl.dax;
 
+import org.griphyn.vdl.classes.LFN;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
-import org.griphyn.vdl.classes.LFN;
 
 /**
  * This class defines the DAX job in an abstract manner.

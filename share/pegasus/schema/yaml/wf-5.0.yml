@@ -155,7 +155,7 @@ properties:
   replicaCatalog:
     oneOf:
       - $ref: "rc-5.0.yml#/$defs/inlineReplicaCatalog"
-  # for future work if rc becomes reuseable
+  # for future work if rc becomes reusable
   #      - properties:
   #           $ref:
   #             type: string
@@ -164,7 +164,7 @@ properties:
   transformationCatalog:
     oneOf:
       - $ref: "tc-5.0.yml#/$defs/inlineTransformationCatalog"
-  # for future work if tc becomes reuseable
+  # for future work if tc becomes reusable
   #      - properties:
   #          $ref:
   #            type: string

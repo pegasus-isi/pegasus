@@ -17,8 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 /** Tests for the AbstractJob class, exercised via the concrete Job and DAG subclasses. */
 public class AbstractJobTest {

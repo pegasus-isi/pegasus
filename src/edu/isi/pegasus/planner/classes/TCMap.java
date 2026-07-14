@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.classes;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,7 +71,7 @@ public class TCMap {
      *
      * @param fqlfn String The transformation for which the sitemap is to be stored
      * @param sitemap Map The sitemap that is to be stored. It is a hashmap with key as the siteid
-     *     and value as a list of TranformationCatalogEntry objects
+     *     and value as a list of transformationCatalogEntry objects
      * @return boolean
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */

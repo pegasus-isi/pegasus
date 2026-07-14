@@ -103,14 +103,14 @@ class BaseLoader:
         self.log.debug("Checking connection")
         try:
             self.session.connection().closed
-        except exc.OperationalError as e:
+        except exc.OperationalError:
             try:
                 if not self.session.is_active:
                     self.session.rollback()
                 self.log.error("Lost connection - attempting reconnect")
                 time.sleep(5)
                 self.session.connection().connect()
-            except exc.OperationalError as e:
+            except exc.OperationalError:
                 self.check_connection(sub=True)
             if not sub:
                 self.log.warning("Connection re-established")

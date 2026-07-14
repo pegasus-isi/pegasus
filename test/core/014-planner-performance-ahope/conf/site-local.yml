@@ -36,4 +36,3 @@ sites:
     pegasus:
       clusters.size: "200"
       style: "condor"
-

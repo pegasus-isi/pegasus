@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.credential.impl.Proxy;
@@ -31,6 +32,14 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.globus.common.CoGProperties;
+import org.gridforum.jgss.ExtendedGSSManager;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.GSSManager;
+import org.ietf.jgss.GSSName;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,12 +49,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import org.globus.common.CoGProperties;
-import org.gridforum.jgss.ExtendedGSSManager;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
 
 /**
  * Braindump file code generator that generates a Braindump file for the executable workflow in the
@@ -222,7 +225,7 @@ public class Braindump {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         mBag = bag;
@@ -316,7 +319,7 @@ public class Braindump {
      *
      * @param dag the concrete workflow.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         try {
@@ -344,7 +347,7 @@ public class Braindump {
      * @param additionalEntries additional entries to go in the braindump file, overwriting the
      *     default entries.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag, Map<String, String> additionalEntries)
             throws CodeGeneratorException {
@@ -378,12 +381,12 @@ public class Braindump {
     }
 
     /**
-     * Writes out the braindump.txt file for a workflow in the submit directory. The braindump.txt
+     * Writes out the braindump.yml file for a workflow in the submit directory. The braindump.yml
      * file is used for passing to the tailstatd daemon that monitors the state of execution of the
      * workflow.
      *
      * @param entries the Map containing the entries going into the braindump file.
-     * @return the absolute path to the braindump file.txt written in the directory.
+     * @return the absolute path to the braindump.yml file written in the directory.
      * @throws IOException in case of error while writing out file.
      */
     protected File writeOutBraindumpFile(Map<String, String> entries) throws IOException {
@@ -423,7 +426,7 @@ public class Braindump {
      */
     protected String getGridDN() {
         String dn = null;
-        // load and intialize the CredentialHandler Factory
+        // load and initialize the CredentialHandler Factory
         CredentialHandlerFactory factory = new CredentialHandlerFactory();
         factory.initialize(mBag);
         CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);

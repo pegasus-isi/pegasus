@@ -37,7 +37,7 @@ import java.util.concurrent.locks.*;
  *
  * @author Dan Gunter dkgunter@lbl.gov
  * @author Wolfgang Hoschek whoschek@lbl.gov
- * @author Paul Groth pgroth@isi.edu
+ * @author Paul Growth pgroth@isi.edu
  */
 public class EventLogMessage {
 
@@ -299,7 +299,7 @@ public class EventLogMessage {
 
     /** Add a timestamp to the message. */
     private void addTimeStamp() {
-        // re-use or re-set whole seconds
+        // reuse or re-set whole seconds
         if (micro2 / 1000000L != micro1 / 1000000L) {
             timeStringLock.lock();
             timeString = format.format(new Date(micro2 / 1000L));

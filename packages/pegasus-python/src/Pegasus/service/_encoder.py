@@ -22,13 +22,13 @@ class PegasusJsonEncoder(JSONEncoder):
         if isinstance(o, uuid.UUID):
             return str(o)
 
-        elif isinstance(o, Decimal):
+        if isinstance(o, Decimal):
             return float(o)
 
-        elif isinstance(o, Enum):
+        if isinstance(o, Enum):
             return o.name
 
-        elif isinstance(o, PagedResponse):
+        if isinstance(o, PagedResponse):
             json_record = OrderedDict([("records", o.records)])
 
             if o.total_records or o.total_filtered:
@@ -44,7 +44,7 @@ class PegasusJsonEncoder(JSONEncoder):
 
             return json_record
 
-        elif isinstance(o, ErrorResponse):
+        if isinstance(o, ErrorResponse):
             json_record = OrderedDict([("code", o.code), ("message", o.message)])
 
             if o.errors:
@@ -52,10 +52,10 @@ class PegasusJsonEncoder(JSONEncoder):
 
             return json_record
 
-        elif hasattr(o, "__json__"):
+        if hasattr(o, "__json__"):
             return o.__json__()
 
-        elif hasattr(o, "__table__"):
+        if hasattr(o, "__table__"):
             unloaded = inspect(o).unloaded
             _v = {
                 k: getattr(o, k)

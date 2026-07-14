@@ -194,14 +194,14 @@ def route_analyze_ensemble_workflow(ensemble, workflow):
 def analyze(workflow):
     w = workflow
 
-    yield "Workflow state is %s\n" % w.state
-    yield "Plan command is: %s\n" % w.plan_command
+    yield f"Workflow state is {w.state}\n"
+    yield f"Plan command is: {w.plan_command}\n"
 
     logfile = w.get_logfile()
     if os.path.isfile(logfile):
         yield "Workflow log:\n"
-        for l in open(w.get_logfile(), "rb"):
-            yield "LOG: %s" % l.decode()
+        for line in open(w.get_logfile(), "rb"):
+            yield f"LOG: {line.decode()}"
     else:
         yield "No workflow log available\n"
 
@@ -218,10 +218,10 @@ def analyze(workflow):
         out, err = p.communicate()
         out = out.decode()
 
-        for l in out.split("\n"):
-            yield "ANALYZER: %s\n" % l
+        for line in out.split("\n"):
+            yield f"ANALYZER: {line}\n"
         rc = p.wait()
-        yield "ANALYZER: Exited with code %d\n" % rc
+        yield f"ANALYZER: Exited with code {rc:d}\n"
 
     if w.state == EnsembleWorkflowStates.PLAN_FAILED:
         yield "Planner failure detected\n"
@@ -251,7 +251,7 @@ def route_get_trigger(ensemble, trigger):
 
 {
   id: "id", <-- unique id to a request, it has been added as request.uid (use this when logging)
-  code: "UNPROCESSABLE_ENTITY", <-- capitalized versions of errors that json schema would return 
+  code: "UNPROCESSABLE_ENTITY", <-- capitalized versions of errors that json schema would return
   "message": "Err description",
   "errors": [
     {
@@ -443,11 +443,7 @@ def route_delete_trigger(ensemble, trigger):
     t_dao.update_state(ensemble_id, trigger_id, "STOPPED")
 
     return api.json_response(
-        {
-            "message": "ensemble: {}, trigger: {} marked for deletion".format(
-                ensemble, trigger
-            )
-        },
+        {"message": f"ensemble: {ensemble}, trigger: {trigger} marked for deletion"},
         status_code=202,
     )
 
@@ -466,9 +462,7 @@ def to_seconds(value: str) -> int:
     pattern = re.compile(r"\d+ *[sSmMhHdD]")
     if not pattern.fullmatch(value):
         raise ValueError(
-            "invalid interval: {}, interval must be given as '<int> <s|m|h|d>'".format(
-                value
-            )
+            f"invalid interval: {value}, interval must be given as '<int> <s|m|h|d>'"
         )
 
     num = int(value[0 : len(value) - 1])
@@ -480,9 +474,7 @@ def to_seconds(value: str) -> int:
 
     if result <= 0:
         raise ValueError(
-            "invalid interval: {}, interval must be greater than 0 seconds".format(
-                result
-            )
+            f"invalid interval: {result}, interval must be greater than 0 seconds"
         )
 
     return result

@@ -56,7 +56,7 @@ public class Pass extends VDL implements Cloneable, Serializable {
 
     /**
      * Convenience ctor: Establishes a binding with an empty value. Note that the value is still
-     * null, and must be set explicitely.
+     * null, and must be set explicitly.
      *
      * @param bind is the name of the formal argument to bind to.
      * @see #setValue(Value)
@@ -67,7 +67,7 @@ public class Pass extends VDL implements Cloneable, Serializable {
     }
 
     /**
-     * Convencience ctor: Establishes a binding with a value.
+     * Convenience ctor: Establishes a binding with a value.
      *
      * @param bind is the name of the formal argument to bind to.
      * @param value is the value to pass to a {@link Transformation}.

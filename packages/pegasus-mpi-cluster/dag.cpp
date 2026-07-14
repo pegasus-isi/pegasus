@@ -208,61 +208,61 @@ void DAG::read_dag(const string &filename) {
                     if (arg == "-m" || arg == "--request-memory") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-m/--request-memory requires N for task %s", 
+                            myfailure("-m/--request-memory requires N for task %s",
                                 name.c_str());
                         }
                         string smemory = args.front();
                         float fmemory;
                         if (sscanf(smemory.c_str(), "%f", &fmemory) != 1) {
                             myfailure(
-                                "Invalid memory requirement '%s' for task %s", 
+                                "Invalid memory requirement '%s' for task %s",
                                 smemory.c_str(), name.c_str());
                         }
                         if (fmemory < 0) {
                             myfailure(
-                                "Negative memory requirement not allowed for task %s", 
+                                "Negative memory requirement not allowed for task %s",
                                 name.c_str());
                         }
                         // We round up to the next integer
                         memory = (unsigned)ceil(fmemory);
-                        log_trace("Requested %u MB memory for task %s", 
+                        log_trace("Requested %u MB memory for task %s",
                             memory, name.c_str());
                     } else if (arg == "-c" || arg == "--request-cpus") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-c/--request-cpus requires N for task %s", 
+                            myfailure("-c/--request-cpus requires N for task %s",
                                 name.c_str());
                         }
                         string scpus = args.front();
                         float fcpus;
                         if (sscanf(scpus.c_str(), "%f", &fcpus) != 1) {
                             myfailure(
-                                "Invalid CPU requirement '%s' for task %s", 
+                                "Invalid CPU requirement '%s' for task %s",
                                 scpus.c_str(), name.c_str());
                         }
                         if (fcpus < 0) {
                             myfailure(
-                                "Negative CPU requirement not allowed for task %s", 
+                                "Negative CPU requirement not allowed for task %s",
                                 name.c_str());
                         }
                         // We round up to the next integer
                         cpus = (unsigned)ceil(fcpus);
-                        log_trace("Requested %u CPUs for task %s", 
+                        log_trace("Requested %u CPUs for task %s",
                             cpus, name.c_str());
                     } else if (arg == "-t" || arg == "--tries") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-t/--tries requires N for task %s", 
+                            myfailure("-t/--tries requires N for task %s",
                                 name.c_str());
                         }
                         string stries = args.front();
                         int itries;
                         if (sscanf(stries.c_str(), "%d", &itries) != 1) {
-                            myfailure("Invalid tries '%s' for task %s", 
+                            myfailure("Invalid tries '%s' for task %s",
                                 stries.c_str(), name.c_str());
                         }
                         if (itries < 0) {
-                            myfailure("Negative tries not allowed for task %s", 
+                            myfailure("Negative tries not allowed for task %s",
                                 name.c_str());
                         }
                         tries = itries;
@@ -270,15 +270,15 @@ void DAG::read_dag(const string &filename) {
                     } else if (arg == "-p" || arg == "--priority") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-p/--priority requires P for task %s", 
+                            myfailure("-p/--priority requires P for task %s",
                                 name.c_str());
                         }
                         string spriority = args.front();
                         if (sscanf(spriority.c_str(), "%d", &priority) != 1) {
-                            myfailure("Invalid priority '%s' for task %s", 
+                            myfailure("Invalid priority '%s' for task %s",
                                 spriority.c_str(), name.c_str());
                         }
-                        log_trace("Task %s has priority %d", 
+                        log_trace("Task %s has priority %d",
                             name.c_str(), priority);
                     } else if (arg == "-f" || arg == "--pipe-forward") {
                         args.pop_front();
@@ -315,7 +315,7 @@ void DAG::read_dag(const string &filename) {
                                 name.c_str(), srcfile.c_str(), destfile.c_str());
                         file_forwards[srcfile] = destfile;
                     } else {
-                        myfailure("Invalid argument '%s' for task %s", 
+                        myfailure("Invalid argument '%s' for task %s",
                             arg.c_str(), name.c_str());
                     }
                     args.pop_front();
@@ -435,4 +435,3 @@ void DAG::read_rescue(const string &filename) {
 
     infile.close();
 }
-

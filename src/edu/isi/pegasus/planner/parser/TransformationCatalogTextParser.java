@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.QuotedString;
 import edu.isi.pegasus.planner.parser.tokens.Token;
 import edu.isi.pegasus.planner.parser.tokens.TransformationCatalogReservedWord;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -47,7 +48,7 @@ import java.util.logging.Logger;
  * tr example::keg:1.0 {
  *
  * #specify profiles that apply for all the sites for the transformation
- * #in each site entry the profile can be overriden
+ * #in each site entry the profile can be overridden
  *
  * profile env "APP_HOME" "/tmp/myscratch"
  * profile env "JAVA_HOME" "/opt/java/1.6"
@@ -226,7 +227,7 @@ public class TransformationCatalogTextParser {
     }
 
     /**
-     * Remove potential leading and trainling quotes from a string.
+     * Remove potential leading and trailing quotes from a string.
      *
      * @param input is a string which may have leading and trailing quotes
      * @return a string that is either identical to the input, or a substring thereof.
@@ -279,7 +280,8 @@ public class TransformationCatalogTextParser {
             if (!(mLookAhead instanceof TransformationCatalogReservedWord)) {
                 throw new ScannerException(
                         mScanner.getLineNumber(),
-                        "expecting a reserved word describing a transformation attribute instead of "
+                        "expecting a reserved word describing a transformation attribute instead of"
+                                + " "
                                 + mLookAhead);
             }
 
@@ -494,7 +496,8 @@ public class TransformationCatalogTextParser {
             if (!(mLookAhead instanceof TransformationCatalogReservedWord)) {
                 throw new ScannerException(
                         mScanner.getLineNumber(),
-                        "expecting a reserved word describing a transformation attribute instead of "
+                        "expecting a reserved word describing a transformation attribute instead of"
+                                + " "
                                 + (TransformationCatalogReservedWord) mLookAhead);
             }
 

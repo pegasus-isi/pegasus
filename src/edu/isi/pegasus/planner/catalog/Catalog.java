@@ -39,7 +39,7 @@ public interface Catalog {
      */
     public boolean connect(Properties props);
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /** Explicitly free resources before the garbage collection hits. */
     public void close();
 
     /**

@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Iterator;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ import java.util.Set;
 public class Tentacles extends AbstractStrategy {
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates create dir job

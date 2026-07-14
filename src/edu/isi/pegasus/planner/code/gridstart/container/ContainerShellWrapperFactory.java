@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +48,7 @@ public class ContainerShellWrapperFactory {
 
     /** The corresponding short names for the implementations. */
     public static String[] CONTAINER_SHORT_NAMES = {"docker", "singularity", "shifter", "none"};
+
     /** The known container implementations. */
     public static String[] CONTAINER_IMPLEMENTING_CLASSES = {
         DOCKER_SHELL_WRAPPER_CLASS,
@@ -54,6 +56,7 @@ public class ContainerShellWrapperFactory {
         SHIFTER_SHELL_WRAPPER_CLASS,
         NO_SHELL_WRAPPER_CLASS
     };
+
     /**
      * A table that maps short names of <code>ContainerShellWrapper</code> implementations with the
      * implementations themselves.
@@ -62,6 +65,7 @@ public class ContainerShellWrapperFactory {
 
     /** The bag of objects used for initialization. */
     private PegasusBag mBag;
+
     /** A boolean indicating that the factory has been initialized. */
     private boolean mInitialized;
 
@@ -98,7 +102,7 @@ public class ContainerShellWrapperFactory {
      * This method loads the appropriate implementing Container Shell Wrapper as specified by the
      * user at runtime.
      *
-     * @param job the job for which wrapper is requried.
+     * @param job the job for which wrapper is required.
      * @return the instance of the class implementing this interface.
      * @exception ContainerShellWrapperFactoryException that nests any error that might occur during
      *     the instantiation of the implementation.
@@ -122,7 +126,8 @@ public class ContainerShellWrapperFactory {
                             "Condor" + ContainerShellWrapperFactory.SINGULARITY_SHELL_WRAPPER_CLASS;
                 } else {
                     throw new ContainerShellWrapperFactoryException(
-                            "Unsupported Container Shell Wrapper for container universe execution of type "
+                            "Unsupported Container Shell Wrapper for container universe execution"
+                                    + " of type "
                                     + type);
                 }
             } else {

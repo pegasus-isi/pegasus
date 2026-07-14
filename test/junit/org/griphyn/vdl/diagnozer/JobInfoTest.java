@@ -15,7 +15,9 @@ package org.griphyn.vdl.diagnozer;
 
 // import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class JobInfoTest {
 
     /*

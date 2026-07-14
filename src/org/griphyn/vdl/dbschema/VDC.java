@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.dbschema;
 
-import java.sql.*;
 import org.griphyn.vdl.classes.Definition;
+
+import java.sql.*;
 
 /**
  * This common schema interface defines the schemas in which the abstraction layers access the VDC.
@@ -59,7 +60,7 @@ public interface VDC extends Catalog {
      * Saves a Definition, that is either a Transformation or Derivation, into the backend database.
      *
      * @param definition is the new Definition to store.
-     * @param overwrite true, if existing defitions will be overwritten by new ones with the same
+     * @param overwrite true, if existing definitions will be overwritten by new ones with the same
      *     primary (or secondary) key (-set), or false, if a new definition will be rejected on key
      *     matches.
      * @return true, if the backend database was changed, or false, if the definition was not
@@ -89,7 +90,7 @@ public interface VDC extends Catalog {
 
     /**
      * Delete a specific Definition objects from the database.No wildcard matching will be done.
-     * "Fake" definitions are permissable, meaning it just has the secondary key triple.
+     * "Fake" definitions are permissible, meaning it just has the secondary key triple.
      *
      * @param definition is the definition specification to delete
      * @return true is something was deleted, false if non existent.

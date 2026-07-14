@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the CatalogEntry marker interface and its implementations. */
 public class CatalogEntryTest {

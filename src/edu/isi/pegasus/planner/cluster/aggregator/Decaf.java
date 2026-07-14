@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,6 +39,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonGeneratorFactory;
@@ -136,20 +138,20 @@ public class Decaf extends Abstract {
             // in the intermediate jobs in the cluster
             for (Iterator it = job.nodeIterator(); it.hasNext(); ) {
                 GraphNode n = (GraphNode) it.next();
-                Job constitutentJob = (Job) n.getContent();
+                Job constituentJob = (Job) n.getContent();
 
-                if (constitutentJob instanceof DataFlowJob.Link) {
+                if (constituentJob instanceof DataFlowJob.Link) {
                     // no need to add any extra args for data link jobs
                     continue;
                 }
 
-                // inject decaf specfic args
+                // inject decaf specific args
                 mLogger.log(
-                        "Associating additional decaf args with job " + constitutentJob.getID(),
+                        "Associating additional decaf args with job " + constituentJob.getID(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 String extraArgs =
                         (String)
-                                constitutentJob
+                                constituentJob
                                         .getSelectorProfiles()
                                         .get(DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
                 if (extraArgs == null) {
@@ -157,16 +159,17 @@ public class Decaf extends Abstract {
                     StringBuilder sb = new StringBuilder();
                     sb.append("No additional decaf extra arguments specified for job")
                             .append(" ")
-                            .append(constitutentJob.getID())
+                            .append(constituentJob.getID())
                             .append(". ")
                             .append(
-                                    "Additional arguments can be specified by associating a selector profile named")
+                                    "Additional arguments can be specified by associating a"
+                                            + " selector profile named")
                             .append(" ")
                             .append(Decaf.DECAF_EXTRA_ARGS_SELECTOR_PROFILE_KEY);
                     mLogger.log(sb.toString(), LogManager.WARNING_MESSAGE_LEVEL);
                 } else {
                     // prepend it
-                    constitutentJob.setArguments(extraArgs + " " + constitutentJob.getArguments());
+                    constituentJob.setArguments(extraArgs + " " + constituentJob.getArguments());
                 }
             }
         }
@@ -200,7 +203,8 @@ public class Decaf extends Abstract {
             throw new RuntimeException(
                     "Data flow job with id "
                             + job.getID()
-                            + " should be mapped to a json file in Transformation Catalog. Is mapped to "
+                            + " should be mapped to a json file in Transformation Catalog. Is"
+                            + " mapped to "
                             + name);
         }
 
@@ -314,8 +318,9 @@ public class Decaf extends Abstract {
      */
     public String getClusterExecutableBasename() {
         throw new RuntimeException(
-                "DECAF job clusterer does not create default transformation catalog entries for decaf."
-                        + " Please specify an installed executable for transformation with namespace,name - "
+                "DECAF job clusterer does not create default transformation catalog entries for"
+                        + " decaf. Please specify an installed executable for transformation with"
+                        + " namespace,name - "
                         + Decaf.TRANSFORMATION_NAMESPACE
                         + ","
                         + Decaf.TRANSFORMATION_NAME);
@@ -557,7 +562,8 @@ public class Decaf extends Abstract {
                 if (j instanceof DataFlowJob.Link) {
                     // PM-1602 skip the job in the mpirun invocation
                     mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                            "Skipping data link job for invocation by mpirun as number of cores is"
+                                    + " 0 - "
                                     + j.getLogicalID(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     continue;
@@ -621,7 +627,8 @@ public class Decaf extends Abstract {
                 if (j instanceof DataFlowJob.Link) {
                     // PM-1602 skip the job in the mpirun invocation
                     mLogger.log(
-                            "Skipping data link job for invocation by mpirun as number of cores is 0 - "
+                            "Skipping data link job for invocation by mpirun as number of cores is"
+                                    + " 0 - "
                                     + j.getLogicalID(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                     continue;
@@ -693,7 +700,7 @@ public class Decaf extends Abstract {
         int taskid = 0;
         for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
             GraphNode node = it.next();
-            Job constitutentJob = (Job) node.getContent();
+            Job constituentJob = (Job) node.getContent();
             StringBuilder sb = new StringBuilder();
             sb.append("Assigning decaf id")
                     .append(" ")
@@ -701,29 +708,29 @@ public class Decaf extends Abstract {
                     .append(" ")
                     .append("to job")
                     .append(" ")
-                    .append(constitutentJob.getID())
+                    .append(constituentJob.getID())
                     .append(" ")
                     .append("with logical id")
                     .append(" ")
-                    .append(constitutentJob.getLogicalID());
+                    .append(constituentJob.getLogicalID());
             mLogger.log(sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
 
             // each job in the cluster run on it's own proc
             // make start_proc same as taskid
-            constitutentJob.addProfile(new Profile("selector", "id", Integer.toString(taskid)));
-            constitutentJob.addProfile(
+            constituentJob.addProfile(new Profile("selector", "id", Integer.toString(taskid)));
+            constituentJob.addProfile(
                     new Profile(
-                            "selector", "pegasus_job_logical_id", constitutentJob.getLogicalID()));
-            constitutentJob.addProfile(
+                            "selector", "pegasus_job_logical_id", constituentJob.getLogicalID()));
+            constituentJob.addProfile(
                     new Profile("selector", "start_proc", Integer.toString(taskid)));
             // each job runs on a single proc
-            constitutentJob.addProfile(new Profile("selector", "nprocs", "1"));
-            constitutentJob.addProfile(new Profile("selector", "inports", "in"));
-            constitutentJob.addProfile(new Profile("selector", "outports", "out"));
+            constituentJob.addProfile(new Profile("selector", "nprocs", "1"));
+            constituentJob.addProfile(new Profile("selector", "inports", "in"));
+            constituentJob.addProfile(new Profile("selector", "outports", "out"));
             // func is tricky. just map it to job transformation id with taskid
-            constitutentJob.addProfile(
-                    new Profile("selector", "func", constitutentJob.getTXName() + taskid));
-            d.add(constitutentJob);
+            constituentJob.addProfile(
+                    new Profile("selector", "func", constituentJob.getTXName() + taskid));
+            d.add(constituentJob);
         }
 
         // also put in jobType as mpi only if a user has not specified

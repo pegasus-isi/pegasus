@@ -16,8 +16,6 @@ package edu.isi.pegasus.planner.invocation;
 
 import static edu.isi.pegasus.planner.invocation.SimpleServer.c_logger;
 
-import java.io.*;
-import java.net.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +25,9 @@ import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+
+import java.io.*;
+import java.net.*;
 
 public class SimpleServerThread extends Thread {
     private String m_remote = null;

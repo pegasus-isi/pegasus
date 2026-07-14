@@ -15,6 +15,7 @@
 package org.griphyn.vdl.classes;
 
 import edu.isi.pegasus.common.util.Separator;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
@@ -87,10 +88,13 @@ public abstract class Definition extends VDL implements Comparable, Serializable
     // AttributeGroup "DefinitionsAG"
     /** Yong's knowledgebase approach needs this. */
     private String m_description;
+
     /** Yong's knowledgebase approach needs this. */
     private String m_title;
+
     /** Yong's knowledgebase approach needs this. */
     private String m_keyword;
+
     /** Yong's knowledgebase approach needs this. */
     private String m_url;
 

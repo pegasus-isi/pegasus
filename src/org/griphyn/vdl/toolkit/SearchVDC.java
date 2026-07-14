@@ -17,15 +17,18 @@ package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.StringTokenizer;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.util.ChimeraProperties;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * This class searches definitions that match the namespace, name, version triple, then prints the
@@ -71,9 +74,11 @@ public class SearchVDC extends Toolkit {
                         + linefeed
                         + " -l|--list x|t|n    print x:VDLx, t:VDLt or just a table of n:names."
                         + linefeed
-                        + " -e|--error         if present, return failure for a combined empty result set."
+                        + " -e|--error         if present, return failure for a combined empty"
+                        + " result set."
                         + linefeed
-                        + " -E|--empty         if present and bundling, raise an error for any empty match."
+                        + " -E|--empty         if present and bundling, raise an error for any"
+                        + " empty match."
                         + linefeed
                         + " -o|--output fn     put the output into the file fn, default is stdout."
                         + linefeed
@@ -82,13 +87,16 @@ public class SearchVDC extends Toolkit {
                         + linefeed
                         + " -t|--type tr|dv|all Search only for TR or DV, default is all (both)."
                         + linefeed
-                        + " -n|--namespace ns  Search for matches with namespace ns, default wildcard."
+                        + " -n|--namespace ns  Search for matches with namespace ns, default"
+                        + " wildcard."
                         + linefeed
                         + " -i|--name id       Search for matches with name id, default wildcard."
                         + linefeed
-                        + " -v|--ver vs        Search for matches with version vs, default wildcard."
+                        + " -v|--ver vs        Search for matches with version vs, default"
+                        + " wildcard."
                         + linefeed
-                        + " -D|--def dv[,..]   Search for matches of the complete FQDI (see manpage)."
+                        + " -D|--def dv[,..]   Search for matches of the complete FQDI (see"
+                        + " manpage)."
                         + linefeed
                         + " -L|--deflist lodvs read definition FQDIs from file lodvs, one per line."
                         + linefeed
@@ -110,7 +118,8 @@ public class SearchVDC extends Toolkit {
                         + linefeed
                         + " 2  :-?  empty result detected, and escalation (-e, -E) requested."
                         + linefeed
-                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check your"
+                        + " 3  8-O  Fatal error merits a program abortion. Please carefully check"
+                        + " your"
                         + linefeed
                         + "         configuration files and setup before filing a bug report."
                         + linefeed);

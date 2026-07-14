@@ -7,6 +7,7 @@ package edu.isi.pegasus.planner.common;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
+
 import java.io.IOException;
 import java.util.Collection;
 

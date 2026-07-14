@@ -25,9 +25,11 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the OutputMapperFactory class constants and structure. */
 public class OutputMapperFactoryTest {

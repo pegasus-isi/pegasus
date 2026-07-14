@@ -17,15 +17,15 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=`pwd`/submit/$RUN_ID
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
 PYTHONPATH=$(pegasus-config --python) \
-    ./montage-workflow.py --center "275.196290 -16.171530" \
+    python3.12 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.1 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
@@ -51,11 +51,11 @@ sites:
       url: "file://$RUN_DIR/outputs"
    -
     type: "sharedScratch"
-    path: "$RUN_DIR/scratch"
+    path: "$RUN_DIR/shared-scratch"
     fileServers:
      -
       operation: "all"
-      url: "file://$RUN_DIR/scratch"
+      url: "file://$RUN_DIR/shared-scratch"
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
@@ -70,7 +70,7 @@ EOF
 cp ../pegasus.properties .
 
 pegasus-plan \
-        --dir work \
+        --dir submit \
         --relative-dir $RUN_ID \
         --sites local \
         --output-sites local \
@@ -78,4 +78,3 @@ pegasus-plan \
         --submit \
 	data/montage-workflow.yml \
         | tee $TOP_DIR/plan.out
-

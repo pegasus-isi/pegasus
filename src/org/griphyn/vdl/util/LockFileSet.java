@@ -68,7 +68,7 @@ public class LockFileSet extends Thread {
     /**
      * Adds a file name to the set of lock filenames that need to be removed on exit.
      *
-     * @param f is a File instance nameing the lock filename.
+     * @param f is a File instance naming the lock filename.
      */
     public void add(File f) {
         // Logging.instance().log( "lock", 2, "LFS add " + f.getPath() );

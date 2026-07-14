@@ -16,12 +16,15 @@ package org.griphyn.vdl.euryale;
 
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Separator;
+
 import gnu.getopt.*;
+
+import org.griphyn.vdl.dax.*;
+import org.griphyn.vdl.util.*;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-import org.griphyn.vdl.dax.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class is used to convert in streaming mode information from an abstract DAG in XML (DAX)
@@ -817,7 +820,7 @@ public class DAX2DAG implements Callback {
         for (Iterator i = m_sft.iterator(); i.hasNext(); ) {
             StringBuffer line = new StringBuffer((String) i.next());
 
-            // substitute all @@var@@ occurances in this line
+            // substitute all @@var@@ occurrences in this line
             // FIXME: Need to introduce string quoting and escape rules eventually
             for (int p1 = line.indexOf("@@"); p1 != -1; p1 = line.indexOf("@@")) {
                 int p2 = line.indexOf("@@", p1 + 2) + 2;
@@ -859,7 +862,7 @@ public class DAX2DAG implements Callback {
         for (Iterator i = m_cft.iterator(); i.hasNext(); ) {
             StringBuffer line = new StringBuffer((String) i.next());
 
-            // substitute all @@var@@ occurances in this line
+            // substitute all @@var@@ occurrences in this line
             // FIXME: Need to introduce string quoting and escape rules eventually
             for (int p1 = line.indexOf("@@"); p1 != -1; p1 = line.indexOf("@@")) {
                 int p2 = line.indexOf("@@", p1 + 2) + 2;
@@ -1112,7 +1115,8 @@ public class DAX2DAG implements Callback {
                         + linefeed
                         + "Optional arguments: "
                         + linefeed
-                        + " -d|--dir dir       directory in which to generate the file, default is \".\""
+                        + " -d|--dir dir       directory in which to generate the file, default is"
+                        + " \".\""
                         + linefeed
                         + " -w|--wfrc rcfile   workflow properties location, default is $HOME/.wfrc"
                         + linefeed
@@ -1125,7 +1129,8 @@ public class DAX2DAG implements Callback {
                         + "                    default: "
                         + m_sftFilename
                         + linefeed
-                        + " -l|--levels min    minimum number of levels in directory structure (0..3)."
+                        + " -l|--levels min    minimum number of levels in directory structure"
+                        + " (0..3)."
                         + linefeed
                         + " -V|--version       print version information and exit."
                         + linefeed
@@ -1134,9 +1139,11 @@ public class DAX2DAG implements Callback {
         System.out.println(
                 "It is recommended to always use the dir option with a sensible argument. The"
                         + linefeed
-                        + "wfrc properties usually specify the location of the pre- and post-script."
+                        + "wfrc properties usually specify the location of the pre- and"
+                        + " post-script."
                         + linefeed
-                        + "The number of subdirectory levels is automatically determined from the number"
+                        + "The number of subdirectory levels is automatically determined from the"
+                        + " number"
                         + linefeed
                         + "of jobs."
                         + linefeed);

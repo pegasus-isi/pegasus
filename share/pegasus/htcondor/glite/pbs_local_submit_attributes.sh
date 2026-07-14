@@ -20,8 +20,8 @@
 strip_quotes() {
     # purpose: strip quotes from a variable value
     # paramtr: $str: the variable that needs to be stripped of quotes
-    #         
-    #         
+    #
+    #
     # returns: stripped out value
     local str=$1
     value=`echo "$str" | sed 's/"//g'`
@@ -87,7 +87,7 @@ if [ "X${MYENV}" != "X" ] ; then
 fi
 
 # echo "# DEBUG $EXTRA_ARGUMENTS"
-# if a user passed any extra arguments set them in the end                                                                                                                                                                                   
+# if a user passed any extra arguments set them in the end
 # for example "-N testjob -l walltime=01:23:45 -l nodes=2"
 if [  "X${EXTRA_ARGUMENTS}" != "X"  ] ; then
     value=`strip_quotes "$EXTRA_ARGUMENTS"`
@@ -99,4 +99,3 @@ fi
 #echo "#PBS -l advres=TestPegasusWorkshop.898"
 #echo "#PBS -l advres=PegasusWorkshop.899"
 #echo "#PBS -A workshop"
-

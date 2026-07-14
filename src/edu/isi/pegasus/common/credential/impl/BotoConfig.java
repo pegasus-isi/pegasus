@@ -18,6 +18,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
+
 import java.io.File;
 import java.util.Map;
 
@@ -121,7 +122,7 @@ public class BotoConfig extends Abstract implements CredentialHandler {
                                     .get(BotoConfig.BOTO_CONFIG_FILE_VARIABLE);
         }
 
-        // try from properites file
+        // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);

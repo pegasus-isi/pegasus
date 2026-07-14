@@ -46,11 +46,11 @@ sites:
       url: "file://$TOPDIR/outputs"
    -
     type: "sharedScratch"
-    path: "$TOPDIR/work/shared-scratch"
+    path: "$TOPDIR/shared-scratch"
     fileServers:
      -
       operation: "all"
-      url: "file://$TOPDIR/work/shared-scratch"
+      url: "file://$TOPDIR/shared-scratch"
 
 EOF
 
@@ -59,11 +59,10 @@ pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
     --staging-site local \
-    --dir work/dags \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --submit \
     --randomdir \
     blackdiamond.dax \
     | tee plan.out
-

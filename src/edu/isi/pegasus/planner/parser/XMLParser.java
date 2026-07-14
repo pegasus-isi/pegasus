@@ -17,14 +17,16 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.io.File;
-import java.io.FileNotFoundException;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * This is the base class which all the xml parsing classes extend. It initializes the xml parser
@@ -90,7 +92,7 @@ public abstract class XMLParser extends DefaultHandler {
     protected boolean mAdjFName;
 
     /**
-     * Intialises the parser. Sets the various features. However the parsing is done in the
+     * Initialises the parser. Sets the various features. However the parsing is done in the
      * implementing class, by call mParser.parse(filename).
      *
      * @param bag the bag of objects that is useful for initialization.
@@ -107,7 +109,7 @@ public abstract class XMLParser extends DefaultHandler {
     }
 
     /**
-     * Intialises the parser. Sets the various features. However the parsing is done in the
+     * Initialises the parser. Sets the various features. However the parsing is done in the
      * implementing class, by call mParser.parse(filename).
      *
      * @param properties the properties passed at runtime.
@@ -150,8 +152,8 @@ public abstract class XMLParser extends DefaultHandler {
 
     /**
      * Helps the load database to locate the XML schema, if available. Please note that the schema
-     * location URL in the instance document is only a hint, and may be overriden by the findings of
-     * this method.
+     * location URL in the instance document is only a hint, and may be overridden by the findings
+     * of this method.
      *
      * @return a location pointing to a definition document of the XML schema that can read VDLx.
      *     Result may be null, if such a document is unknown or unspecified.
@@ -336,7 +338,7 @@ public abstract class XMLParser extends DefaultHandler {
         }
 
         // setting the handlers The class extend DefaultHandler which provides
-        // for a empty implemetnation of the four handlers
+        // for a empty implementation of the four handlers
         mParser.setContentHandler(this);
         mParser.setErrorHandler(new XMLErrorHandler());
 

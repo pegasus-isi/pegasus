@@ -20,7 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/** @author vahi */
+/**
+ * @author vahi
+ */
 public class UnitConverterTest {
 
     public UnitConverterTest() {}

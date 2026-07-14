@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
@@ -95,7 +96,7 @@ public class Fixed implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param lfn the lfn
@@ -112,7 +113,7 @@ public class Fixed implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param lfn the lfn

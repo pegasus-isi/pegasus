@@ -13,8 +13,6 @@
  */
 package edu.isi.pegasus.planner.client;
 
-import java.io.File;
-import java.io.IOException;
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
@@ -24,6 +22,9 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * This class reads to validate a DAX document. It requires at least Xerces-J 2.10.
@@ -245,7 +246,7 @@ public class DAXValidator extends DefaultHandler {
         // This feature only applies to schema validation.
         set("http://apache.org/xml/features/validation/unparsed-entity-checking", true);
 
-        // Report a warning when a duplicate attribute is re-declared.
+        // Report a warning when a duplicate attribute is redeclared.
         set("http://apache.org/xml/features/validation/warn-on-duplicate-attdef", true);
 
         // Report a warning if an element referenced in a content model is

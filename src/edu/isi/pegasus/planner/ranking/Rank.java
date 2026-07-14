@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.selector.site.heft.Algorithm;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

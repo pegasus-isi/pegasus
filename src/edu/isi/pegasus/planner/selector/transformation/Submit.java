@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.selector.transformation;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.selector.TransformationSelector;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

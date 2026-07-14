@@ -27,11 +27,15 @@ import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2CDAG;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.parser.dax.ExampleDAXCallback;
-import java.nio.file.Path;
-import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.nio.file.Path;
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class TestDAXParserTest {
 
     @Test

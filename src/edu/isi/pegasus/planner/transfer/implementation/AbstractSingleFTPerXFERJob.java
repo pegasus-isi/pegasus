@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.transfer.SingleFTPerXFERJob;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;

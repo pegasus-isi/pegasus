@@ -164,7 +164,7 @@ def _to_wf(d: dict) -> Workflow:
             dependencies = defaultdict(_JobDependency)
             for item in d.get("jobDependencies"):
                 dependencies[item["id"]] = _JobDependency(
-                    item["id"], {child for child in item["children"]}
+                    item["id"], set(item["children"])
                 )
 
             wf.dependencies = dependencies
@@ -212,7 +212,7 @@ def loads(s: str, *args, **kwargs) -> Workflow:
 
 def dump(obj: Workflow, fp: TextIO, _format="yml", *args, **kwargs) -> None:
     """
-    Serialize ``obj`` as a :py:class:`~Pegasus.api.worklfow.Workflow` formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
+    Serialize ``obj`` as a :py:class:`~Pegasus.api.workflow.Workflow` formatted stream to ``fp`` (a ``.write()``-supporting file-like object).
 
     :param obj: Workflow to serialize
     :type obj: Workflow

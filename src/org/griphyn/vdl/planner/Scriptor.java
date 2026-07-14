@@ -18,11 +18,13 @@ package org.griphyn.vdl.planner;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import java.io.*;
-import java.util.*;
+
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class generates the shell scripts from a DAX. There is a script for each job in the dag, and
@@ -106,7 +108,7 @@ public class Scriptor {
     /** holds the location where templates reside. */
     private File m_dataDir;
 
-    /** holds the mapping for permissable substitutions. */
+    /** holds the mapping for permissible substitutions. */
     private Map m_substitute = null;
 
     /** a private copy of this environment's notion of a line separator. */
@@ -120,7 +122,7 @@ public class Scriptor {
      * @param rc is the replica catalog wrapper.
      * @param sc is the site catalog wrapper, may be <code>null</code>.
      * @param tc is the transformation catalog wrapper.
-     * @param fnMap is a map containing all filesnames in the DAG.
+     * @param fnMap is a map containing all filenames in the DAG.
      * @param dataDir is the location of $PEGASUS_HOME/share from properties.
      */
     public Scriptor(
@@ -241,7 +243,7 @@ public class Scriptor {
     }
 
     /**
-     * Removes a substition.
+     * Removes a substitution.
      *
      * @param key is the template variable name to query for.
      * @return the current setting, or <code>null</code>, if the variable does not exist.
@@ -255,7 +257,7 @@ public class Scriptor {
      * Writes the control script head, including functions for file registration.
      *
      * @return the name of the control (master) script.
-     * @throws IOException if writing to the master script somehow failes.
+     * @throws IOException if writing to the master script somehow fails.
      */
     public String initializeControlScript() throws IOException {
         // control script output filename
@@ -508,7 +510,7 @@ public class Scriptor {
             String ns = p.getNamespace().trim().toLowerCase();
             String key = p.getKey().trim();
 
-            // recreate the vlaue
+            // recreate the value
             StringBuffer sb = new StringBuffer(8);
             for (Iterator j = p.iterateLeaf(); j.hasNext(); ) {
                 Leaf l = (Leaf) j.next();

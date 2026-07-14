@@ -20,5 +20,3 @@ if [ $RC = 0 ]; then
 fi
 
 exit 0
-
-

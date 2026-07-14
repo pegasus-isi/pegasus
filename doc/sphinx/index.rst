@@ -51,7 +51,7 @@ Welcome to Pegasus WMS's documentation!
     :caption: Release Notes
     :numbered:
     :maxdepth: 2
- 
+
     release-notes/release_5.1.x.md
     release-notes/release_5.0.x.md
     release-notes/release_4.9.x.md
@@ -68,7 +68,7 @@ Welcome to Pegasus WMS's documentation!
 .. toctree::
     :caption: Pegasus Development
     :maxdepth: 2
-    
+
     development/code-documentation.rst
     development/schemas.rst
 

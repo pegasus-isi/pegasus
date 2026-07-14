@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.partitioner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -107,7 +108,7 @@ public class One2One extends Partitioner {
             // get the parents of the node and write out to the pdax file.
             List partitionIDs = new java.util.ArrayList(parents.size());
             for (Iterator it1 = parents.iterator(); it1.hasNext(); ) {
-                // the jobs in the dax have same id as corresponding paritions
+                // the jobs in the dax have same id as corresponding partitions
                 partitionIDs.add(((GraphNode) it1.next()).getID());
             }
             // write out to the pdax file

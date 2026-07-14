@@ -7,9 +7,9 @@ CWL Support
 The `Common Workflow Language (CWL) <https://www.commonwl.org/>`__ is a standardized
 way of describing workflow pipelines and tools. Users with existing CWL workflows
 can use the :ref:`pegasus-cwl-converter <cli-pegasus-cwl-converter>` to convert
-their workflows from CWL into Pegasus's native format. Once converted, 
+their workflows from CWL into Pegasus's native format. Once converted,
 :ref:`pegasus-plan <cli-pegasus-plan>` can be used to plan, and submit the workflow
-for execution. 
+for execution.
 
 .. Do not want to create a subsection here, using a plain html header.
 
@@ -24,12 +24,12 @@ for execution.
 
 Consider the workflow depicted above. The *CWL* tab below illustrates what this
 workflow might look like when represented using CWL. The *Pegasus* tab illustrates
-the resulting translation from CWL to Pegasus's native format. 
+the resulting translation from CWL to Pegasus's native format.
 
 While there are inherent similarities between the two formats, this is not a one to
 one mapping. As such, some information needs to be provided to the
 :ref:`pegasus-cwl-converter <cli-pegasus-cwl-converter>` in order for the translation
-to be done correctly (see highlighted lines in the Pegasus tab). 
+to be done correctly (see highlighted lines in the Pegasus tab).
 
 
 This additional information is as follows:
@@ -75,7 +75,7 @@ This additional information is as follows:
                                 type: File
                                 outputBinding:
                                     glob: f.b1
-                            
+
                             of2:
                                 type: File
                                 outputBinding:
@@ -153,7 +153,7 @@ This additional information is as follows:
                                     prefix: -i
                                     separate: true
                                     position: 0
-                            
+
                             if2:
                                 type: File
                                 inputBinding:
@@ -163,11 +163,11 @@ This additional information is as follows:
                             of:
                                 type: File
                                 outputBinding:
-                                    glob: f.d  
+                                    glob: f.d
                     in:
                         if1: findrange1/of
                         if2: findrange2/of
-                    out: [of] 
+                    out: [of]
 
     .. tab:: Pegasus
 
@@ -308,7 +308,7 @@ information about the transformations (executables) used in the workflow.
 
 Next, we need a file that specifies where the initial input files to the workflow
 are physically located. For CWL workflows, input file specifications are typically
-specified in a separate YAML file. For the CWL workflow above, lets say that 
+specified in a separate YAML file. For the CWL workflow above, lets say that
 this file is called ``input_file_specs.yml`` and contains the following contents:
 
 .. code-block:: yaml
@@ -329,12 +329,12 @@ The converter can be invoked as:
 
     pegasus-cwl-converter workflow.cwl input.yml tr_specs.yml  pegasus_workflow.yml
 
-The resulting Pegasus workflow file ``pegasus_workflow.yml`` is depicted above in 
-the *Pegasus* tab. 
+The resulting Pegasus workflow file ``pegasus_workflow.yml`` is depicted above in
+the *Pegasus* tab.
 
 
 .. Note::
 
     :ref:`pegasus-cwl-converter <cli-pegasus-cwl-converter>` works on a subset of
-    the CWL specification. If the conversion does not work for your workflow, 
+    the CWL specification. If the conversion does not work for your workflow,
     reach out to us and we can assist you in getting your workflow up and running.

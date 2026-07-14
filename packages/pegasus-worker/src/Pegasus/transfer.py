@@ -17,6 +17,8 @@ import tempfile
 import threading
 import time
 import traceback
+from functools import cmp_to_key
+from urllib import parse as urllib
 
 from Pegasus.tools import worker_utils as utils
 
@@ -30,13 +32,6 @@ try:
 except Exception:
     import Queue as queue
 
-try:
-    # Python 3.0 and later
-    from urllib import parse as urllib
-except ImportError:
-    # Fall back to Python 2's urllib
-    import urllib as urllib
-
 
 # see https://www.python.org/dev/peps/pep-0469/
 try:
@@ -48,7 +43,6 @@ except AttributeError:
 
     def iteritems(d):
         return iter(d.items())
-
 
 else:
     # Python 2
@@ -63,7 +57,7 @@ else:
 # being created. Let's try setting the stack size to something sane
 # but not worry if the attempt fails.
 try:
-    threading.stack_size(2 * 1024 ** 2)
+    threading.stack_size(2 * 1024**2)
 except Exception:
     pass
 
@@ -71,7 +65,10 @@ except Exception:
 if "KICKSTART_MON_ENDPOINT_URL" in os.environ:
     import base64
 
-    import urllib2
+    try:
+        from urllib import request as urllib2
+    except ImportError:
+        import urllib2
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -265,19 +262,6 @@ class Remove(TransferBase):
     def get_path(self):
         return self._target_url.path
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._target_url.proto, other._target_url.proto) != 0:
-            return cmp(self._target_url.proto, other._target_url.proto)
-        if cmp(self._target_url.host, other._target_url.host) != 0:
-            return cmp(self._target_url.host, other._target_url.host)
-        if cmp(self._target_url.path, other._target_url.path) != 0:
-            return cmp(self._target_url.path, other._target_url.path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._target_url.proto == other._target_url.proto
@@ -424,25 +408,6 @@ class Transfer(TransferBase):
     def groupable(self):
         return self.allow_grouping
 
-    def __cmp__(self, other):
-        """
-        compares first on protos, then on hosts, then on paths - useful
-        for grouping similar types of transfers
-        """
-        if cmp(self._src_urls[0].proto, other._src_urls[0].proto) != 0:
-            return cmp(self._src_urls[0].proto, other._src_urls[0].proto)
-        if cmp(self._dst_urls[0].proto, other._dst_urls[0].proto) != 0:
-            return cmp(self._dst_urls[0].proto, other._dst_urls[0].proto)
-        if cmp(self._src_urls[0].host, other._src_urls[0].host) != 0:
-            return cmp(self._src_urls[0].host, other._src_urls[0].host)
-        if cmp(self._dst_urls[0].host, other._dst_urls[0].host) != 0:
-            return cmp(self._dst_urls[0].host, other._dst_urls[0].host)
-        if cmp(self._src_urls[0].path, other._src_urls[0].path) != 0:
-            return cmp(self._src_urls[0].path, other._src_urls[0].path)
-        if cmp(self._dst_urls[0].path, other._dst_urls[0].path) != 0:
-            return cmp(self._dst_urls[0].path, other._dst_urls[0].path)
-        return 0
-
     def __eq__(self, other):
         return (
             self._src_urls[0].proto == other._src_urls[0].proto
@@ -455,12 +420,19 @@ class Transfer(TransferBase):
 
     def __lt__(self, other):
         return (
-            self._src_urls[0].proto < other._src_urls[0].proto
-            or self._dst_urls[0].proto < other._dst_urls[0].proto
-            or self._src_urls[0].host < other._src_urls[0].host
-            or self._dst_urls[0].host < other._dst_urls[0].host
-            or self._src_urls[0].path < other._src_urls[0].path
-            or self._dst_urls[0].path < other._dst_urls[0].path
+            self._src_urls[0].proto,
+            self._dst_urls[0].proto,
+            self._src_urls[0].host,
+            self._dst_urls[0].host,
+            self._src_urls[0].path,
+            self._dst_urls[0].path,
+        ) < (
+            other._src_urls[0].proto,
+            other._dst_urls[0].proto,
+            other._src_urls[0].host,
+            other._dst_urls[0].host,
+            other._src_urls[0].path,
+            other._dst_urls[0].path,
         )
 
     def __le__(self, other):
@@ -497,7 +469,7 @@ class TransferHandlerBase:
         Creates the listed URLs - all derived classes should override this
         method
         """
-        raise RuntimeErro("do_mkdirs() is not implemented in " + self._name)
+        raise RuntimeError("do_mkdirs() is not implemented in " + self._name)
 
     def do_transfers(self, transfer_list):
         """
@@ -566,7 +538,7 @@ class TransferHandlerBase:
 
         # Introduce errors! The PEGASUS_TRANSFER_ERROR_RATE env variable can
         # be used to introduce transfer error at some rate (valid values in
-        # precent: 0-100). This is useful for testing the data integrity
+        # percent: 0-100). This is useful for testing the data integrity
         # detection and failover components of Pegasus. This only works
         # for transfer with a file:// destination.
         if (
@@ -616,7 +588,9 @@ class TransferHandlerBase:
 
         self.lock.acquire()
         cmd = '{} --generate-fullstat-yaml="{}={}"'.format(
-            tools.full_path("pegasus-integrity"), lfn, fname,
+            tools.full_path("pegasus-integrity"),
+            lfn,
+            fname,
         )
         try:
             tc = utils.TimedCommand(cmd)
@@ -677,7 +651,6 @@ class TransferHandlerBase:
         out_lists.append(curr_list)
 
         while len(in_list) > 0:
-
             transfer = in_list.pop()
 
             # do we need a new list based on max size?
@@ -697,7 +670,7 @@ class TransferHandlerBase:
     def _verify_read_access(self, path):
         """
         Sometimes we need to verify that a local file exists, and that we have
-        read acess. Note that because of access mechanisms on some of the file
+        read access. Note that because of access mechanisms on some of the file
         systems we have to deal with, such as CVMFS, checking POSIX permissions
         is not enough. Here we try to open() the file to make sure it works.
         """
@@ -797,7 +770,8 @@ class FileHandler(TransferHandlerBase):
                 cmd = f"ln -f -s '{t.get_src_path()}' '{t.get_dst_path()}'"
             else:
                 cmd = "/bin/cp -f -R -L '{}' '{}'".format(
-                    t.get_src_path(), t.get_dst_path(),
+                    t.get_src_path(),
+                    t.get_dst_path(),
                 )
             try:
                 tc = utils.TimedCommand(cmd)
@@ -856,7 +830,6 @@ class GridFtpHandler(TransferHandlerBase):
 
         # different tools depending on if this a sshftp or gsiftp request
         if mkdirs_l[0].get_proto() == "gsiftp":
-
             tools = utils.Tools()
 
             # prefer gfal if installed
@@ -876,7 +849,6 @@ class GridFtpHandler(TransferHandlerBase):
                 return [[], mkdirs_l]
 
             for target in mkdirs_l:
-
                 env = {}
 
                 key = "X509_USER_PROXY_" + target.get_site_label()
@@ -942,7 +914,6 @@ class GridFtpHandler(TransferHandlerBase):
         # create lists with similar (same src host/path, same dst host/path)
         # url pairs
         while len(transfers_l) > 0:
-
             similar_list = []
 
             curr = transfers_l.pop()
@@ -952,7 +923,6 @@ class GridFtpHandler(TransferHandlerBase):
             ) or (curr.get_src_proto() == "sshftp" and curr.get_dst_proto() == "sshftp")
 
             while self._check_similar(curr, prev):
-
                 similar_list.append(curr)
 
                 if len(transfers_l) == 0:
@@ -1162,7 +1132,6 @@ class GridFtpHandler(TransferHandlerBase):
 
             # only set src-cred / dst-cred if at least one is specified
             if src_cred is not None or dst_cred is not None:
-
                 if src_cred is None:
                     if "X509_USER_PROXY" in os.environ:
                         src_cred = os.environ["X509_USER_PROXY"]
@@ -1222,12 +1191,11 @@ class GridFtpHandler(TransferHandlerBase):
         # combinations, fall back to settings which will for well over for
         # example NAT
         if third_party:
-
             # pipeline is experimental so only allow this for the first attempt
             if gsiftp_failures == 0:
                 options += " -pipeline"
 
-            # parallism
+            # parallelism
             options += " -parallel 4"
 
             # -fast should be supported by all servers today
@@ -1246,7 +1214,7 @@ class GridFtpHandler(TransferHandlerBase):
 
     def _check_similar(self, a, b):
         """
-        compares two url_pairs, and determins if they are similar enough to be
+        compares two url_pairs, and determines if they are similar enough to be
         grouped together in one transfer input file
         """
         if a.get_src_host() != b.get_src_host():
@@ -1315,7 +1283,6 @@ class HttpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
-
             self._pre_transfer_attempt(t)
 
             prepare_local_dir(os.path.dirname(t.get_dst_path()))
@@ -1363,7 +1330,7 @@ class HttpHandler(TransferHandlerBase):
                 # wget and curl might leave 0 sized files behind after failures
                 # make sure those get cleaned up
                 try:
-                    os.unlink(transfer.get_dst_path())
+                    os.unlink(t.get_dst_path())
                 except Exception:
                     pass
                 self._post_transfer_attempt(t, False, t_start)
@@ -1474,14 +1441,12 @@ class HPSSHandler(TransferHandlerBase):
         # create lists with similar tar file names
         # url pairs
         while len(transfers) > 0:
-
             similar_list = []
 
             curr = transfers.pop()
             prev = curr
 
             while self._check_similar(curr, prev):
-
                 similar_list.append(curr)
 
                 if len(transfers) == 0:
@@ -1596,7 +1561,6 @@ class HPSSHandler(TransferHandlerBase):
             # htar always returns success even if a file does not exist in the archive
             # check for destination files to make sure and mark accordingly
             for t in transfers:
-
                 # check if file has to be moved after untarring
                 if t.lfn in files_to_move:
                     # mv src_file to t.lfn
@@ -1727,7 +1691,7 @@ class HPSSHandler(TransferHandlerBase):
         """
 
         # first sort on destination directories
-        sorted_list = sorted(full_list, cmp=self._compare_urls)
+        sorted_list = sorted(full_list, key=cmp_to_key(self._compare_urls))
 
         # chunks are created based on destination directory
         start = 0
@@ -1764,7 +1728,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], mkdir_list]
 
@@ -1778,7 +1742,6 @@ class IRodsHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in mkdir_list:
-
             cmd = "imkdir"
             if "IRODS_TICKET" in env:
                 cmd += " -t " + env["IRODS_TICKET"]
@@ -1802,14 +1765,13 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], transfer_list]
 
         successful_l = []
         failed_l = []
         for t in transfer_list:
-
             self._pre_transfer_attempt(t)
 
             # log in to irods
@@ -1881,7 +1843,7 @@ class IRodsHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("iget", "-h", "Version[ \t]+([\\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do irods transfers becuase iget could not be found in the current path"
+                "Unable to do irods transfers because iget could not be found in the current path"
             )
             return [[], removes_list]
 
@@ -1895,7 +1857,6 @@ class IRodsHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in removes_list:
-
             cmd = "irm -f"
             if t.get_recursive():
                 cmd += " -r"
@@ -2025,7 +1986,6 @@ class S3Handler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in mkdir_l:
-
             # extract the bucket part
             re_bucket = re.compile(r"(s3(s){0,1}://\w+@\w+/+[\w\-]+)")
             bucket = t.get_url()
@@ -2065,7 +2025,6 @@ class S3Handler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers:
-
             self._pre_transfer_attempt(t)
 
             t_start = time.time()
@@ -2078,14 +2037,16 @@ class S3Handler(TransferHandlerBase):
                 # s3 -> s3
                 env = self._s3_cred_env(t.get_src_site_label())
                 cmd = tools.full_path("pegasus-s3") + " cp -f -c '{}' '{}'".format(
-                    t.src_url(), t.dst_url(),
+                    t.src_url(),
+                    t.dst_url(),
                 )
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 env = self._s3_cred_env(t.get_src_site_label())
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
                 cmd = tools.full_path("pegasus-s3") + " get '{}' '{}'".format(
-                    t.src_url(), t.get_dst_path(),
+                    t.src_url(),
+                    t.get_dst_path(),
                 )
             else:
                 # this is a 'put'
@@ -2097,7 +2058,8 @@ class S3Handler(TransferHandlerBase):
                         continue
                 env = self._s3_cred_env(t.get_dst_site_label())
                 cmd = tools.full_path("pegasus-s3") + " put -f -b '{}' '{}'".format(
-                    t.get_src_path(), t.dst_url(),
+                    t.get_src_path(),
+                    t.dst_url(),
                 )
 
             try:
@@ -2133,7 +2095,6 @@ class S3Handler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in removes_list:
-
             fixed_url = t.get_url()
 
             # PM-790: recursive deletes are really a pattern matching. For example,
@@ -2275,7 +2236,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], transfers_l]
 
         successful_l = []
         failed_l = []
@@ -2338,7 +2299,7 @@ class GlobusOnlineHandler(TransferHandlerBase):
 
         if not os.path.isfile(os.path.expanduser("~/.pegasus/globus.conf")):
             logger.error("Unable to locate globus config file ~/.pegasus/globus.conf")
-            return [[], mkdir_l]
+            return [[], removes_l]
 
         successful_l = []
         failed_l = []
@@ -2451,19 +2412,18 @@ class GSHandler(TransferHandlerBase):
 
     def do_mkdirs(self, mkdir_l):
         tools = utils.Tools()
-        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gcloud", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do Google Storage transfers because the gsutil tool could not be found"
+                "Unable to do Google Storage transfers because the gcloud tool could not be found"
             )
             return [[], mkdir_l]
 
         successful_l = []
         failed_l = []
 
-        env = self._gsutil_env(mkdir_l[0].get_site_label())
+        env = self._gcloud_env(mkdir_l[0].get_site_label())
 
         for t in mkdir_l:
-
             # extract the bucket part
             re_bucket = re.compile(r"(gs://[\w-]+/)[/\w-]*")
             bucket = t.get_url()
@@ -2474,13 +2434,16 @@ class GSHandler(TransferHandlerBase):
                 raise RuntimeError("Unable to parse bucket: %s" % (bucket))
 
             # first ensure that the bucket exists
-            cmd = "gsutil mb %s" % (bucket)
+            cmd = "gcloud storage buckets create %s" % (bucket)
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=env)
                 tc.run()
             except RuntimeError as err:
                 # if the bucket already exists, we call it a success
-                if "already exists" not in tc.get_outerr():
+                if (
+                    "previous request to create the named bucket succeeded"
+                    not in tc.get_outerr()
+                ):
                     logger.error(err)
                     failed_l.append(t)
                     continue
@@ -2492,9 +2455,9 @@ class GSHandler(TransferHandlerBase):
     def do_transfers(self, transfers_l):
 
         tools = utils.Tools()
-        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gcloud", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do Google Storage transfers because the gsutil tool could not be found"
+                "Unable to do Google Storage transfers because the gcloud tool could not be found"
             )
             return [[], transfers_l]
 
@@ -2502,12 +2465,11 @@ class GSHandler(TransferHandlerBase):
         failed_l = []
 
         if transfers_l[0].get_src_proto() == "gs":
-            env = self._gsutil_env(transfers_l[0].get_src_site_label())
+            env = self._gcloud_env(transfers_l[0].get_src_site_label())
         else:
-            env = self._gsutil_env(transfers_l[0].get_dst_site_label())
+            env = self._gcloud_env(transfers_l[0].get_dst_site_label())
 
         for t in transfers_l:
-
             self._pre_transfer_attempt(t)
 
             t_start = time.time()
@@ -2516,11 +2478,11 @@ class GSHandler(TransferHandlerBase):
             # use cp for gs->gs transfers, and get/put when one end is a file://
             if t.get_src_proto() == "gs" and t.get_dst_proto() == "gs":
                 # gs -> gs
-                cmd = f"gsutil -q cp '{t.src_url()}' '{t.dst_url()}'"
+                cmd = f"gcloud -q storage cp '{t.src_url()}' '{t.dst_url()}'"
             elif t.get_dst_proto() == "file":
                 # this is a 'get'
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
-                cmd = f"gsutil -q cp '{t.src_url()}' '{t.get_dst_path()}'"
+                cmd = f"gcloud -q storage cp '{t.src_url()}' '{t.get_dst_path()}'"
             else:
                 # this is a 'put'
                 # src has to exist and be readable
@@ -2528,7 +2490,7 @@ class GSHandler(TransferHandlerBase):
                     failed_l.append(t)
                     self._post_transfer_attempt(t, False, t_start)
                     continue
-                cmd = f"gsutil -q cp '{t.get_src_path()}' '{t.dst_url()}'"
+                cmd = f"gcloud -q storage cp '{t.get_src_path()}' '{t.dst_url()}'"
 
             try:
                 tc = utils.TimedCommand(cmd, env_overrides=env)
@@ -2546,21 +2508,20 @@ class GSHandler(TransferHandlerBase):
 
     def do_removes(self, removes_l):
         tools = utils.Tools()
-        if tools.find("gsutil", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
+        if tools.find("gcloud", "version", r"gsutil version: ([\.0-9a-zA-Z]+)") is None:
             logger.error(
-                "Unable to do Google Storage transfers because the gsutil tool could not be found"
+                "Unable to do Google Storage transfers because the gcloud tool could not be found"
             )
             return [[], removes_l]
 
         successful_l = []
         failed_l = []
 
-        env = self._gsutil_env(removes_l[0].get_site_label())
+        env = self._gcloud_env(removes_l[0].get_site_label())
 
         for t in removes_l:
-
             # first ensure that the bucket exists
-            cmd = "gsutil rm"
+            cmd = "gcloud storage rm"
             if t.get_recursive():
                 cmd += " -r"
             cmd += " " + t.get_url()
@@ -2570,7 +2531,7 @@ class GSHandler(TransferHandlerBase):
                 tc.run()
             except RuntimeError as err:
                 # file not found is success
-                if "No URLs matched" not in tc.get_outerr():
+                if "following URLs matched no objects or files" not in tc.get_outerr():
                     logger.error(err)
                     failed_l.append(t)
                     continue
@@ -2579,11 +2540,11 @@ class GSHandler(TransferHandlerBase):
         self._clean_tmp()
         return [successful_l, failed_l]
 
-    def _gsutil_env(self, site_name):
+    def _gcloud_env(self, site_name):
 
         env = {}
 
-        # gsutil includes its own Python - make sure we don't interfer
+        # gsutil includes its own Python - make sure we don't interfere
         env["PYTHONPATH"] = ""
 
         if "BOTO_CONFIG" in os.environ:
@@ -2646,7 +2607,6 @@ class GSHandler(TransferHandlerBase):
 
 
 class GFALHandler(TransferHandlerBase):
-
     _name = "GFALHandler"
     _mkdir_cleanup_protocols = ["root", "srm", "gsidavs"]
     _protocol_map = [
@@ -2670,7 +2630,6 @@ class GFALHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in mkdir_list:
-
             cmd = "gfal-mkdir -p"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
@@ -2704,7 +2663,6 @@ class GFALHandler(TransferHandlerBase):
         failed_l = []
 
         for t in transfers_l:
-
             self._pre_transfer_attempt(t)
 
             t_start = time.time()
@@ -2723,7 +2681,8 @@ class GFALHandler(TransferHandlerBase):
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
             cmd = cmd + " '{}' '{}'".format(
-                self._gfal_url(t.src_url()), self._gfal_url(t.dst_url()),
+                self._gfal_url(t.src_url()),
+                self._gfal_url(t.dst_url()),
             )
 
             try:
@@ -2752,7 +2711,6 @@ class GFALHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in mkdir_list:
-
             cmd = "gfal-rm"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
@@ -2863,14 +2821,13 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(
             transfers, max_transfers_in_group=max_transfers_in_group
         ):
-
             for t in t_group:
                 self._pre_transfer_attempt(t)
 
@@ -2990,14 +2947,13 @@ class ScpHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(
             transfers_l, max_transfers_in_group=max_transfers_in_group
         ):
-
             t_base = t_group[0]
 
             cmd = "/usr/bin/ssh"
@@ -3142,16 +3098,15 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsiscp", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsiscp could not be found")
-            return [[], mkdir_list]
+            return [[], transfers]
 
-        # number of transfers to group depends on the maximum allowed command line lenght
+        # number of transfers to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(
             transfers, max_transfers_in_group=max_transfers_in_group
         ):
-
             for t in t_group:
                 self._pre_transfer_attempt(t)
 
@@ -3255,16 +3210,15 @@ class GSIScpHandler(TransferHandlerBase):
         tools = utils.Tools()
         if tools.find("gsissh", "-V", "(.*)") is None:
             logger.error("Unable to do gsiscp mkdir because gsissh could not be found")
-            return [[], mkdir_list]
+            return [[], transfers_l]
 
-        # number of removes to group depends on the maximum allowed command line lenght
+        # number of removes to group depends on the maximum allowed command line length
         max_transfers_in_group = max_cmd_len / 500
 
         # limit the size of the groups to keep command lines short
         for t_group in self._similar_groups(
             transfers_l, max_transfers_in_group=max_transfers_in_group
         ):
-
             t_base = t_group[0]
 
             cmd = tools.full_path("gsissh")
@@ -3370,7 +3324,7 @@ class GSIScpHandler(TransferHandlerBase):
 
 class OSDFHandler(TransferHandlerBase):
     """
-    Uses the OSG pelican/stashcp command to trasfer from/to OSDF
+    Uses the OSG pelican/stashcp command to transfer from/to OSDF
     """
 
     _name = "OSDFHandler"
@@ -3397,12 +3351,11 @@ class OSDFHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do OSDF mkdir because pelican/stashcp could not be found"
             )
-            return [[], transfers_l]
+            return [[], transfers]
 
         successful_l = []
         failed_l = []
         for t in transfers:
-
             # copy a 0-byte file to create the dir
             if tools.full_path("pelican") is not None:
                 cmd = "{} object copy".format(tools.full_path("pelican"))
@@ -3501,7 +3454,6 @@ class OSDFHandler(TransferHandlerBase):
         successful_l = []
         failed_l = []
         for t in transfers_l:
-
             if t.get_recursive():
                 # unsupported
                 continue
@@ -3690,8 +3642,8 @@ class SingularityHandler(TransferHandlerBase):
     """
     Use "singularity pull" to import images from Singularity Hub, Singularity Library, and Docker.
 
-    Singularity Hub and Docker compatability requires Singularity version 2.3 or greater.
-    Singularity Library compatability requires Singularity version 3.0 or greater.
+    Singularity Hub and Docker compatibility requires Singularity version 2.3 or greater.
+    Singularity Library compatibility requires Singularity version 3.0 or greater.
     """
 
     _name = "SingularityHandler"
@@ -3791,7 +3743,7 @@ class WebdavHandler(TransferHandlerBase):
             logger.error(
                 "Unable to do webdav transfers because curl could not be found"
             )
-            return [[], mkdir_list]
+            return [[], transfers]
 
         # disable http proxies
         env_overrides = {"http_proxy": ""}
@@ -3802,7 +3754,6 @@ class WebdavHandler(TransferHandlerBase):
             username, password = self._creds(transfers[0].get_dst_host())
 
         for t in transfers:
-
             if t.get_dst_proto() == "file":
                 # webdav -> file
                 prepare_local_dir(os.path.dirname(t.get_dst_path()))
@@ -3989,7 +3940,7 @@ class WebdavHandler(TransferHandlerBase):
         return True
 
     def _split_path(self, path):
-        (head, tail) = os.path.split(path)
+        head, tail = os.path.split(path)
         return (
             self._split_path(head) + [tail] if head and head != path else [head or tail]
         )
@@ -4079,7 +4030,7 @@ class Stats:
                 p = Panorama()
                 p.one_transfer(transfer, was_successful, t_start, t_end, bytes)
             except Exception as e:
-                logger.warning("Panorama send failure: " + e)
+                logger.warning("Panorama send failure: %s", e)
 
     def all_transfers_done(self):
         self._t_end_global = time.time()
@@ -4252,15 +4203,18 @@ class Panorama:
             payload += "  "
 
             logger.debug(payload)
+            payload_b64 = base64.b64encode(payload.encode()).decode()
             data = (
                 '{"properties":{},"routing_key":"%s","payload":"%s","payload_encoding":"base64"}'
-                % (os.environ["PEGASUS_WF_UUID"], base64.encodestring(payload))
+                % (os.environ["PEGASUS_WF_UUID"], payload_b64)
             )
             logger.debug(data)
-            req = urllib2.Request(os.environ["KICKSTART_MON_ENDPOINT_URL"], data)
-            base64string = base64.encodestring(
-                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"]
-            )[:-1]
+            req = urllib2.Request(
+                os.environ["KICKSTART_MON_ENDPOINT_URL"], data.encode()
+            )
+            base64string = base64.b64encode(
+                os.environ["KICKSTART_MON_ENDPOINT_CREDENTIALS"].encode()
+            ).decode()
             authheader = "Basic %s" % base64string
             req.add_header("Authorization", authheader)
             try:
@@ -4402,7 +4356,7 @@ class SimilarWorkSet:
         # mkdirs
         if isinstance(self._transfers[0], Mkdir):
             try:
-                (success_list, failed_list) = self._primary_handler.do_mkdirs(
+                success_list, failed_list = self._primary_handler.do_mkdirs(
                     self._transfers
                 )
             except Exception:
@@ -4418,7 +4372,7 @@ class SimilarWorkSet:
         # removes
         if isinstance(self._transfers[0], Remove):
             try:
-                (success_list, failed_list) = self._primary_handler.do_removes(
+                success_list, failed_list = self._primary_handler.do_removes(
                     self._transfers
                 )
             except Exception:
@@ -4448,7 +4402,7 @@ class SimilarWorkSet:
         if self._secondary_handler is None:
             # one handler to rule them all!
             try:
-                (success_list, failed_list) = self._primary_handler.do_transfers(
+                success_list, failed_list = self._primary_handler.do_transfers(
                     self._transfers
                 )
             except Exception:
@@ -4457,7 +4411,6 @@ class SimilarWorkSet:
 
         else:
             for transfer in self._transfers:
-
                 # break up the transfer into two, but keep a handle to the main
                 # transfer as that is the one which will have to go back to the
                 # failed queue in case of failure
@@ -4494,7 +4447,6 @@ class SimilarWorkSet:
         success_list = []
         for t in verify_list:
             if t.verify_checksum_remote:
-
                 local_name = None
                 temp_name = None
 
@@ -4523,8 +4475,11 @@ class SimilarWorkSet:
                     t_verify.lfn = t.lfn
                     t_verify.add_src(t.get_dst_site_label(), t.dst_url())
                     t_verify.add_dst("local", "file://" + temp_name)
-                    (success_verify, failed_verify,) = handler.do_transfers([t_verify])
-                    if failed_verify is []:
+                    (
+                        success_verify,
+                        failed_verify,
+                    ) = handler.do_transfers([t_verify])
+                    if failed_verify:
                         failed_list.append(t)
                         self.clean_up_temp_file(temp_name)
                         continue
@@ -4792,7 +4747,7 @@ def max_cmd_length():
     """
 
     for n in range(10, 20):
-        s = "X" * (2 ** n)
+        s = "X" * (2**n)
         cmd = "echo " + s + " >/dev/null"
         try:
             backticks(cmd)
@@ -4800,7 +4755,7 @@ def max_cmd_length():
             return (2 ** (n - 1)) / 2
 
     # we shouldn't really get here, but if we do, 2^20/2
-    return (2 ** 20) / 2
+    return (2**20) / 2
 
 
 def env_setup():
@@ -4930,7 +4885,7 @@ def prepare_local_dir(path):
         logger.debug("Creating local directory " + path)
         try:
             os.makedirs(path, 0o0755)
-        except os.error as err:
+        except OSError as err:
             # if dir already exists, ignore the error
             if not (os.path.isdir(path)):
                 raise RuntimeError(err)
@@ -4972,6 +4927,7 @@ def stats_add(filename):
 
 
 def stats_summarize():
+    global stats_total_bytes
     if stats_total_bytes == 0:
         logger.info("Stats: no local files in the transfer set")
         return
@@ -5011,7 +4967,7 @@ def iso_prefix_formatted(n):
 
 def json_object_decoder(obj):
     """
-    utility function used by json.load() to parse some known objects into equilvalent Python objects
+    utility function used by json.load() to parse some known objects into equivalent Python objects
     """
     if "type" in obj and obj["type"] == "transfer":
         t = Transfer()
@@ -5257,7 +5213,6 @@ def pegasus_transfer(
     approx_transfer_per_thread = min(approx_transfer_per_thread, 100)
 
     while not done:
-
         tset_q = queue.Queue()
 
         attempt_current = attempt_current + 1
@@ -5267,7 +5222,6 @@ def pegasus_transfer(
         # this outer loop is for trying all url pair combinations of a transfer
         # before moving on and marking it as failed
         while not ready_q.empty():
-
             # organize the transfers
             while not ready_q.empty():
                 t_main = ready_q.get()
@@ -5432,11 +5386,11 @@ def main():
         "--debug",
         action="store_true",
         dest="debug",
-        help="Enables debugging ouput.",
+        help="Enables debugging output.",
     )
 
     # Parse command line options
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     setup_logger(options.debug)
 
     # Die nicely when asked to (Ctrl+C, system shutdown)

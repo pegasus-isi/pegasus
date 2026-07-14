@@ -21,15 +21,19 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.transfer.Implementation;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class BalancedClusterTest {
 
     @Test
@@ -41,7 +45,8 @@ public class BalancedClusterTest {
         assertThat(
                 BalancedCluster.SCALING_MESSAGE_PREFIX,
                 is(
-                        "Pegasus now has a strategy for scaling transfer jobs based on size of workflow."));
+                        "Pegasus now has a strategy for scaling transfer jobs based on size of"
+                                + " workflow."));
         assertThat(
                 BalancedCluster.SCALING_MESSAGE_PROPERTY_PREFIX,
                 is("Consider removing the property"));

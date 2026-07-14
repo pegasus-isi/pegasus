@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import java.io.IOException;
 import java.io.Writer;
 
@@ -122,6 +123,7 @@ public class HeadNodeFS extends AbstractSiteData {
     public void setProfiles(Profiles profiles) {
         mProfiles = profiles;
     }
+
     /**
      * Writes out the xml description of the object.
      *

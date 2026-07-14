@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
+
 import java.io.File;
 import java.util.Map;
 
@@ -288,7 +289,8 @@ public class PegasusBag implements Bag, Cloneable {
 
             default:
                 throw new RuntimeException(
-                        " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
+                        " Wrong Pegasus Bag key. Please use one of the predefined Integer key"
+                                + " types");
         }
 
         // if object is not null , and valid == false
@@ -338,10 +340,10 @@ public class PegasusBag implements Bag, Cloneable {
             case 2:
                 return this.mReplicaFileSource;
 
-                /*
-                case 3:
-                   return this.mSCHandle;
-                */
+            /*
+            case 3:
+               return this.mSCHandle;
+            */
 
             case 4:
                 return this.mTCHandle;
@@ -378,7 +380,8 @@ public class PegasusBag implements Bag, Cloneable {
 
             default:
                 throw new RuntimeException(
-                        " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
+                        " Wrong Pegasus Bag key. Please use one of the predefined Integer key"
+                                + " types");
         }
     }
 

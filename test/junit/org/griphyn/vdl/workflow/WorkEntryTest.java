@@ -16,16 +16,19 @@ package org.griphyn.vdl.workflow;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
+import org.griphyn.vdl.dbschema.DatabaseSchema;
+import org.griphyn.vdl.dbschema.WF;
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.griphyn.vdl.dbschema.DatabaseSchema;
-import org.griphyn.vdl.dbschema.WF;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class WorkEntryTest {
 
     @Test

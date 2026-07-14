@@ -13,7 +13,7 @@ execution resources, and sometimes Pegasus is deployed on an access
 point which is separate from the execution environment. At the
 minimum, Pegasus needs to be colocated with a HTCondor install
 having the schedd subsystem enabled.
-   
+
 
 .. _hosted:
 
@@ -68,7 +68,7 @@ multiple resources associated with a single HTCondor pool, where each
 resource identifies a subset of machine (worker nodes) in the pool.
 
 When running on a HTCondor pool, the user has to decide how Pegasus
-should transfer data. Please see :ref:`Data Staging Configuration <data-staging-configuration>` 
+should transfer data. Please see :ref:`Data Staging Configuration <data-staging-configuration>`
 for the options. The
 easiest is to use **condorio** as that mode does not require any extra
 setup - HTCondor will do the transfers using the existing HTCondor
@@ -139,7 +139,7 @@ manner. This functionality is achieved using a HTCondor feature called
 **glideins** (see http://cs.wisc.edu/condor/glidein) . The startd daemon
 is the HTCondor daemon which provides the compute slots and runs the
 jobs. In the glidein case, the submit machine is usually a static
-machine and the glideins are told configued to report to that submit
+machine and the glideins are told configured to report to that submit
 machine. The glideins can be submitted to any type of resource: a GRAM
 enabled cluster, a campus cluster, a cloud environment such as Amazon
 AWS, or even another HTCondor cluster.
@@ -156,8 +156,8 @@ AWS, or even another HTCondor cluster.
 `GlideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
 is a tool and host environment used mostly on the `Open Science Grid <http://www.opensciencegrid.org/>`__.
 
-Glideins can also be created by hand or scripts. This is a useful solution for 
-example for cluster which have no external job submit mechanisms or do not 
+Glideins can also be created by hand or scripts. This is a useful solution for
+example for cluster which have no external job submit mechanisms or do not
 allow outside networking.
 
 CondorC
@@ -168,7 +168,7 @@ HTCondorC is a HTCondor specific solution for remote submission that
 does not involve setting up a GRAM on the headnode. To enable
 HTCondorC submission to a site, user needs to associate pegasus profile
 key named style with value as condorc. In case, the remote HTCondor
-pool does not have a shared filesytem between the nodes making up the
+pool does not have a shared filesystem between the nodes making up the
 pool, users should use pegasus in the HTCondorIO data configuration. In
 this mode, all the data is staged to the remote node in the HTCondor
 pool using HTCondor File transfers and is executed using PegasusLite.
@@ -240,7 +240,7 @@ HTCondor are installed on an interactive login node, where it can interact
 with the local batch scheduler using the standard command line tools such
 as `squeue`, `sbatch` etc in case of SLURM.
 
-The second scenario, *user space*, is disussed in the :ref:`hpc_userspace`
+The second scenario, *user space*, is discussed in the :ref:`hpc_userspace`
 section.
 
 The first scenario, is a system install. The system administrator
@@ -284,7 +284,7 @@ the `schedd` and enable HTCondor on a RHEL based system:
 
 ..
 
-Validate the HTCondor is running correcty by querying the queue:
+Validate the HTCondor is running correctly by querying the queue:
 
 ::
 
@@ -406,7 +406,7 @@ Setting job requirements
 
 The job requirements are constructed based on the following profiles:
 
-.. table:: Mapping of Pegasus profiles to HTCondor Remote CE Requirments and Description
+.. table:: Mapping of Pegasus profiles to HTCondor Remote CE Requirements and Description
 
     +-------------------------+--------------------------+---------------------------------------------------------------------------------+
     | Profile Key             | | Key in                 |                                                                                 |
@@ -727,7 +727,7 @@ HPC Clusters - User Install
 ===========================
 
 In this deployment model, HTCondor and Pegasus are installed on the login node as
-a binary installation within user space (typically the `$HOME` directory). 
+a binary installation within user space (typically the `$HOME` directory).
 
 * HTCondor daemons run on a per-user basis and must be launched by each user before submitting workflows.
 * This approach is ideal for environments where you do not have root/sudo access but need a functional workflow submission environment.
@@ -773,10 +773,10 @@ If the HTCondor services stop or the node is rebooted, simply run `condor_master
 
 .. note::
 
-    A common problem with user space installs is running into resource limits on 
+    A common problem with user space installs is running into resource limits on
     the login node. Some sites set "ulimits" to make sure users are not using
     up too much of the resources on the host. If HTCondor or you workflow
-    gets killed by the system, please examine the configured 
+    gets killed by the system, please examine the configured
     ulimits by running ``ulimits -a``, and discuss with your system
     administrator.
 
@@ -990,7 +990,7 @@ It will write out the value of the directory. For example
 The file is found at ``$PEGASUS_SHARE_DIR\htcondor/glite/slurm_local_submit_attributes.sh``
 
 
-Long Term SSH Connnection against 2FA Clusters (optional)
+Long Term SSH Connection against 2FA Clusters (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is an optional step and should only be considered if the
@@ -1051,11 +1051,11 @@ An example site catalog entry for a BOSCO site looks like this:
       pegasus:
         # SSH is the style to use for Bosco SSH submits.
         style: ssh
-        
+
         # Works around bug in the HTCondor GAHP, that does not
         # set the remote directory
         change.dir: 'true'
-        
+
         # Job requirements should be specified using Pegasus profiles.
         queue: default
         runtime: '300'
@@ -1119,7 +1119,7 @@ down option in the IP presets that allows you to select your IP.
     (superfacility-env) $ pip install sfapi_client
 
 The virtual environment must be at ``~/superfacility-env``. The HTCondor blahp bindings
-activate this enviornment when interacting with sfapi
+activate this environment when interacting with sfapi
 
 **3. Pegasus SFAPI BLAHP scripts**
 
@@ -2048,7 +2048,7 @@ Localhost
 
 In this configuration, Pegasus schedules the jobs to run locally on the
 submit host. Running locally is a good approach for smaller workflows,
-testing workflows, and for demonstations such as the :ref:`tutorial`. 
+testing workflows, and for demonstrations such as the :ref:`tutorial`.
 Pegasus supports two methods of local
 execution: local HTCondor pool, and shell planner. The former is
 preferred as the latter does not support all Pegasus' features (such as
@@ -2082,5 +2082,3 @@ capable of planning small workflows for local execution using a shell
 planner. Please refer to the ``share/pegasus/examples`` directory in
 your Pegasus installation, the shell planner's :ref:`documentation
 section <pegasus-plan-properties>`, or the tutorials, for details.
-
-

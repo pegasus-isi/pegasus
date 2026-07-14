@@ -42,10 +42,13 @@ public class Profile {
         ENV,
         env
     }
+
     /** Namespace of the profile */
     protected String mNamespace;
+
     /** Key of the profile */
     protected String mKey;
+
     /** Value of the profile */
     protected String mValue;
 

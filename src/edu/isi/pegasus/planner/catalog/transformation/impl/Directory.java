@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Profile;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -121,7 +122,7 @@ public class Directory extends Abstract implements TransformationCatalog {
     /** The site handle to use. */
     protected String mSiteHandle;
 
-    /** the system information to be assigned to created tranformation catalog entries */
+    /** the system information to be assigned to created transformation catalog entries */
     private SysInfo mSysInfo;
 
     /** Default constructor. */
@@ -244,7 +245,8 @@ public class Directory extends Abstract implements TransformationCatalog {
                 String pfn = this.mURLPrefix + f.getAbsolutePath();
                 if (!f.canExecute()) {
                     mLogger.log(
-                            "Skipping file to create as a transformation since the execute bit is not set "
+                            "Skipping file to create as a transformation since the execute bit is"
+                                    + " not set "
                                     + pfn,
                             LogManager.WARNING_MESSAGE_LEVEL);
                 }
@@ -524,7 +526,7 @@ public class Directory extends Abstract implements TransformationCatalog {
      * @param namespace String The namespace of the transformation to search for.
      * @param name String The name of the transformation to search for.
      * @param version String The version of the transformation to search for.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiles found.
      * @throws Exception NotImplementedException if not implemented.
      * @see edu.isi.pegasus.planner.classes.Profile
@@ -542,7 +544,7 @@ public class Directory extends Abstract implements TransformationCatalog {
      * @param type TCType The type of the transformation to search for. <br>
      *     (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
      * @throws Exception NotImplementedException if not implemented.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiless found.
      * @see edu.isi.pegasus.planner.classes.Profile
      */
@@ -775,7 +777,7 @@ public class Directory extends Abstract implements TransformationCatalog {
      * @param system the System information associated with a physical transformation.
      * @param invokes the Notifications associated with the transformation.
      * @param write boolean to commit changes to backend catalog
-     * @return boolean true if succesfully added, returns false if error and throws exception.
+     * @return boolean true if successfully added, returns false if error and throws exception.
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
@@ -902,6 +904,7 @@ public class Directory extends Abstract implements TransformationCatalog {
             throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
+
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical
      * transformation.
@@ -1043,11 +1046,13 @@ public class Directory extends Abstract implements TransformationCatalog {
 
         if (siteStore == null) {
             throw new RuntimeException(
-                    "Site Store is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+                    "Site Store is not populated. Is required to assign the system information for"
+                            + " generated transformations out of Directory backend");
         }
         if (options == null) {
             throw new RuntimeException(
-                    "Planner Options is not populated. Is required to assign the system information for generated transformations out of Directory backend");
+                    "Planner Options is not populated. Is required to assign the system information"
+                            + " for generated transformations out of Directory backend");
         }
 
         SysInfo result = null;

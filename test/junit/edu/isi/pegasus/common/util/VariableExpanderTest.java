@@ -20,12 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.util.LinkedList;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
-/** @author Karan Vahi */
+import java.util.LinkedList;
+
+/**
+ * @author Karan Vahi
+ */
 @SetEnvironmentVariable(key = "USER", value = "bamboo")
 public class VariableExpanderTest {
 

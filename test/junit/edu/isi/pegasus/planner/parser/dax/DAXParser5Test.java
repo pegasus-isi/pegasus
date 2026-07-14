@@ -17,13 +17,17 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.LinkedList;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author vahi */
+import java.io.File;
+import java.util.LinkedList;
+
+/**
+ * @author vahi
+ */
 public class DAXParser5Test {
 
     /** The properties used for this test. */

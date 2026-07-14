@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
 import edu.isi.pegasus.planner.partitioner.ClustererCallback;
 import edu.isi.pegasus.planner.partitioner.Partitioner;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -111,9 +112,9 @@ public class NodeCollapser extends Engine {
 
         // sanity check
         if (types == null) {
-            // return the orginal DAG only
+            // return the original DAG only
             mLogger.log(
-                    "No clustering actions specified. Returning orginal DAG",
+                    "No clustering actions specified. Returning original DAG",
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return dag;
         }
@@ -153,7 +154,7 @@ public class NodeCollapser extends Engine {
         // we need to build up a partitioner graph structure to do
         // the partitioning on the graph. Use the callback mechanism
         // developed for the partiotioner stuff and populate it
-        // from the exisiting graph structure
+        // from the existing graph structure
         DAX2LabelGraph d2g = new DAX2LabelGraph();
         d2g.initialize(mBag, mPOptions.getDAX());
 

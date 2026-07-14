@@ -42,7 +42,7 @@ pegasus-plan \
     --sites condorpool \
     --staging-site staging_site \
     --output-sites local \
-    --dir dags \
+    --dir submit \
     --cluster horizontal \
     --force \
     -v \

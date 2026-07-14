@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.classes;
 
-import java.io.Serializable;
 import org.griphyn.vdl.Chimera;
+
+import java.io.Serializable;
 
 /**
  * This abstract class defines a common base for all VDLx JAPI objects. Since all necessary

@@ -140,11 +140,11 @@
         2023-03-03 23:09:53,972    INFO:  LD_LIBRARY_PATH=
         2023-03-03 23:09:54,019    INFO:  --------------------------------------------------------------------------------
         2023-03-03 23:09:54,020    INFO:  Starting transfers - attempt 1
-        2023-03-03 23:09:56,022    INFO:  /bin/mkdir -p '/home/mzalam/processwf/process-workflow/scratch/mzalam/pegasus/process/run0001' 
+        2023-03-03 23:09:56,022    INFO:  /bin/mkdir -p '/home/mzalam/processwf/process-workflow/scratch/mzalam/pegasus/process/run0001'
         2023-03-03 23:09:56,031    INFO:  --------------------------------------------------------------------------------
         2023-03-03 23:09:56,031    INFO:  Stats: no local files in the transfer set
         2023-03-03 23:09:56,031    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_147915/ks.err.zwL9Js
       descriptor: 4

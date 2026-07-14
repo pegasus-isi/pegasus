@@ -47,7 +47,7 @@ def _arg_split(ctx, param, value):
     return input_levels - invalid_levels
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "-o",
     "--output",

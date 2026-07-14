@@ -15,8 +15,10 @@ package edu.isi.pegasus.common.util;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import java.io.IOException;
+
 import org.apache.logging.log4j.Level;
+
+import java.io.IOException;
 
 /**
  * A utility class that has convenience methods to execute a command and retrieve the stdout and
@@ -108,7 +110,8 @@ public class ShellCommand {
             }
 
         } catch (IOException ioe) {
-            mLogger.log("IOException while executng command ", ioe, LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log(
+                    "IOException while executing command ", ioe, LogManager.ERROR_MESSAGE_LEVEL);
         } catch (InterruptedException ie) {
             // ignore
         }

@@ -30,16 +30,20 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
+
+import org.apache.logging.log4j.Level;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.logging.log4j.Level;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class PegasusBagTest {
 
     private static final class NoOpLogManager extends LogManager {

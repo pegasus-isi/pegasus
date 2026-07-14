@@ -2,18 +2,18 @@
  { "type": "transfer",
    "id": 1,
    "src_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg" } ],
-   "dest_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/tmp/many-small-files/multimedia-volume-control.svg" } ] 
+   "dest_urls": [ { "site_label": "local", "url": "file:///opt/pegasus-transfer-testing/tmp/many-small-files/multimedia-volume-control.svg" } ]
  }
  ,
  { "type": "transfer",
    "id": 2,
    "src_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt" } ],
-   "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/c.txt" } ] 
+   "dest_urls": [ { "site_label": "AmazonS3", "url": "s3://test@amazon/pegasus-isi-transfer-tests/medium-files/c.txt" } ]
  }
  ,
  { "type": "transfer",
    "id": 3,
    "src_urls": [ { "site_label": "AmazonS3", "url": "s3s://test@amazon/pegasus-isi-transfer-tests/medium-files/b.txt" } ],
-   "dest_urls": [ { "site_label": "AmazonS3", "url": "s3s://test@amazon/pegasus-isi-transfer-tests/medium-files/d.txt" } ] 
+   "dest_urls": [ { "site_label": "AmazonS3", "url": "s3s://test@amazon/pegasus-isi-transfer-tests/medium-files/d.txt" } ]
  }
 ]

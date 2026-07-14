@@ -30,8 +30,8 @@ transform: output-file.xml
 
 # Validate XML
 validate: transform
-	$(yang2dsdl) -v output-file.xml $(schemadir)/stampede-schema.yang 
+	$(yang2dsdl) -v output-file.xml $(schemadir)/stampede-schema.yang
 
 # Clean up
 clean:
-	/bin/rm -f *.dsrl *.rng *.sch *.xml 
+	/bin/rm -f *.dsrl *.rng *.sch *.xml

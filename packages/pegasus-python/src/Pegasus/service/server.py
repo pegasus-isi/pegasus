@@ -29,7 +29,7 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
         "PEGASUS_SERVICE_URL_PREFIX", app.config.get("PEGASUS_SERVICE_URL_PREFIX", None)
     )
     if pegasus_service_url_prefix:
-        logging.info(f"Using non-standard URL prefix: {pegasus_service_url_prefix}")
+        log.info("Using non-standard URL prefix: %s", pegasus_service_url_prefix)
         app.config["APPLICATION_ROOT"] = pegasus_service_url_prefix
 
     pegasusdir = os.path.expanduser("~/.pegasus")
@@ -64,11 +64,18 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
             flask.Flask("dummy_app"), {app.config["APPLICATION_ROOT"]: app}
         )
         run_simple(
-            host, port, application, ssl_context=ssl_context, **options,
+            host,
+            port,
+            application,
+            ssl_context=ssl_context,
+            **options,
         )
     else:
         app.run(
-            host=host, port=port, ssl_context=ssl_context, **options,
+            host=host,
+            port=port,
+            ssl_context=ssl_context,
+            **options,
         )
 
     log.info("Exiting")
@@ -106,9 +113,9 @@ def create_app(config=None, env="development"):
 
     # Service Configuration
     for service in services:
-        config_method = "configure_%s" % service
+        config_method = f"configure_{service}"
         if config_method in globals():
-            globals()["configure_%s" % service](app)
+            globals()[f"configure_{service}"](app)
 
     return app
 

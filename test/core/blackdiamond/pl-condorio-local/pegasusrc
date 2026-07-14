@@ -4,5 +4,3 @@ pegasus.dir.storage.deep=false
 pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = condorio
-
-

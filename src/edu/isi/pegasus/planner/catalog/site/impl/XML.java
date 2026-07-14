@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;

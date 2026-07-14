@@ -14,8 +14,9 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.dbschema.*;
+
+import java.util.*;
 
 /**
  * This class maintains each element in the nesting of Definitions. It turned out that the caching

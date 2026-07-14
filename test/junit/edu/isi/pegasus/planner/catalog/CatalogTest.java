@@ -18,11 +18,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Catalog interface constants and structure. */
 public class CatalogTest {

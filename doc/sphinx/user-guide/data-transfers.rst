@@ -494,7 +494,7 @@ The table below illustrates all the possible variations of the property.
    ====================================== ============================
 
 The prefix for the transfer job name indicates whether the transfer job
-is to be executed locallly ( on the submit host ) or remotely ( on the
+is to be executed locally ( on the submit host ) or remotely ( on the
 compute site ). For example stage_in_local\_ in a transfer job name
 stage_in_local_isi_viz_0 indicates that the transfer job is a stage in
 transfer job that is executed locally and is used to transfer input data
@@ -865,7 +865,7 @@ When a job runs in an application container, the job encounter two (potentially 
 OS'es. The first one is the HOST OS where the job get launched by the resource manager (such
 as SLURM etc.) The other is the OS in the container, in which the job is set to run. Normally,
 by default PegasusLite scripts at runtime (both on the HOST OS and in the Container OS) will
-automatically, download an appropriate worker pacakge for the platform. However in some cases,
+automatically, download an appropriate worker package for the platform. However in some cases,
 you might want to disable this behavior. Some examples are below
 
 * The worker nodes where the job runs do not have access to the internet
@@ -938,7 +938,7 @@ Next, we discuss how to address several common application checkpointing scenari
    should respond.
 
 2. **The application is expected to run for a very long time and you would like to periodically save checkpoint files.**
-   Pegasus currently does not provide the means to asynchrounsly send checkpoint
+   Pegasus currently does not provide the means to asynchronously send checkpoint
    files back to the staging site while a job is running. As such, if your job is expected
    to run for a very long time (e.g. training a model), you can periodically save
    checkpoint files by intentionally killing the job and restarting it. To do this,

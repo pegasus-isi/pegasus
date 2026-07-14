@@ -35,7 +35,7 @@ def serialize(rv):
 def jsonify(*args, **kwargs):
     if args and kwargs:
         raise TypeError("jsonify() behavior undefined when passed both args and kwargs")
-    elif len(args) == 1:  # single args are passed directly to dumps()
+    if len(args) == 1:  # single args are passed directly to dumps()
         data = args[0]
     else:
         data = args or kwargs

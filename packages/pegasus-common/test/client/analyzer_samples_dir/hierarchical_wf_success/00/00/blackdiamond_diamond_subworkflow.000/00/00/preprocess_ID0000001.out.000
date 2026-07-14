@@ -183,7 +183,7 @@
       data: |
         output file to be generated is f.b1
         output file to be generated is f.b2
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/execute/dir_188459/ks.err.AFpQRn
       descriptor: 4

@@ -25,7 +25,7 @@
 int
 myaccess( const char* path )
 /* purpose: check a given file for being accessible and executable
- *          under the currently effective user and group id. 
+ *          under the currently effective user and group id.
  * paramtr: path (IN): current path to check
  * returns: 0 if the file is accessible, -1 for not
  */
@@ -58,7 +58,7 @@ find_executable( const char* fn )
 /* purpose: check the executable filename and correct it if necessary
  * paramtr: fn (IN): current knowledge of filename
  * returns: newly allocated fqpn of exectuble, or NULL if not found
- * globals: this will muck up the value in 'errno'. 
+ * globals: this will muck up the value in 'errno'.
  */
 {
   char* s, *path, *t = NULL;
@@ -80,12 +80,12 @@ find_executable( const char* fn )
   /* continue only if there is a PATH to check */
   if ( (s=getenv("PATH")) == NULL ) {
 #ifdef _PATH_DEFPATH
-    path = strdup(_PATH_DEFPATH); 
+    path = strdup(_PATH_DEFPATH);
 #else
     return NULL;
-#endif /* _PATH_DEFPATH */ 
+#endif /* _PATH_DEFPATH */
   } else {
-    /* yes, there is a PATH variable */ 
+    /* yes, there is a PATH variable */
     path = strdup(s);
   }
 

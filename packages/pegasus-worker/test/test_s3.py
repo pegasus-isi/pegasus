@@ -579,7 +579,11 @@ class TestRm:
         # remove file
         # pegasus-s3 rm s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            ["rm", "--force", f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
+            [
+                "rm",
+                "--force",
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+            ]
         )
         s3.rm(args)
 
@@ -662,7 +666,7 @@ class TestPut:
         s3_client.create_bucket(Bucket=BUCKET)
 
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
-        paser, args = s3.parse_args(
+        parser, args = s3.parse_args(
             [
                 "put",
                 str(test_file),
@@ -687,7 +691,11 @@ class TestPut:
 
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
         parser, args = s3.parse_args(
-            ["put", str(test_file), f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
+            [
+                "put",
+                str(test_file),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+            ]
         )
 
         with pytest.raises(Exception) as e:
@@ -741,8 +749,12 @@ class TestPut:
 
         # upload file (key that already exists in bucket)
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
-        paser, args = s3.parse_args(
-            ["put", str(test_file), f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",]
+        parser, args = s3.parse_args(
+            [
+                "put",
+                str(test_file),
+                f"s3://rynge@osgconnect/{BUCKET}/{test_file.name}",
+            ]
         )
 
         with pytest.raises(Exception) as e:

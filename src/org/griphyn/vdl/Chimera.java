@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl;
 
+import org.griphyn.vdl.util.Logging;
+
 import java.io.*;
 import java.text.*;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This abstract class defines a common base for all JAPI Chimera objects. All VDL-related classes

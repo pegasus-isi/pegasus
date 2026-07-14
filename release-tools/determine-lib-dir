@@ -18,4 +18,3 @@ if [ -e "/etc/redhat-release" ] || [ -e "/etc/SuSE-release" ]; then
 fi
 
 echo $LIB_DIR
-

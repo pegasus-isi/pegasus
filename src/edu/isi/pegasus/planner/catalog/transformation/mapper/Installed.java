@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -120,7 +121,7 @@ public class Installed extends Mapper {
         if (tcentries != null) {
             sysinfomap = mSiteStore.getSysInfos(hassite ? siteids : falseSites);
         } else {
-            // throw an execption only if cacheSites is empty
+            // throw an exception only if cacheSites is empty
             if (cacheSites.isEmpty()) {
                 throw new RuntimeException(
                         "There are no entries for the transformation \""

@@ -69,7 +69,6 @@ def _to_sc(d: dict) -> SiteCatalog:
 
             # add directories
             for _dir in s["directories"]:
-
                 dir_type = None
                 for enum_name, enum in _DirectoryType.__members__.items():
                     if _dir["type"] == enum.value:
@@ -116,6 +115,12 @@ def _to_sc(d: dict) -> SiteCatalog:
             # add profiles
             if s.get("profiles"):
                 site.profiles = defaultdict(dict, s.get("profiles"))
+
+            # add x-tags
+            if s.get("x-tags"):
+                for tag in s.get("x-tags"):
+                    tag_name = tag["name"]
+                    site.tags[tag_name] = defaultdict(dict, tag.get("profiles", {}))
 
             # add site to sc
             sc.add_sites(site)

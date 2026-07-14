@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -16,7 +15,6 @@
 #
 __author__ = "Rafael Ferreira da Silva"
 
-DB_VERSION = 0
 
 import logging
 
@@ -27,6 +25,8 @@ from Pegasus.db.admin.admin_loader import *
 from Pegasus.db.admin.versions.base_version import *
 from Pegasus.db.schema import *
 
+DB_VERSION = 0
+
 log = logging.getLogger(__name__)
 
 
@@ -35,7 +35,7 @@ class Version(BaseVersion):
         super().__init__(connection)
 
     def update(self, force=False):
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         query = "ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NULL"
         if self.db.connection().dialect.name != "sqlite":
             query += " AFTER remote_duration"
@@ -72,15 +72,13 @@ class Version(BaseVersion):
                     if rr.state in success:
                         self.db.execute(
                             text(
-                                "UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = %s"
-                                % r.job_instance_id
+                                f"UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = {r.job_instance_id}"
                             )
                         )
                     elif rr.state in failure:
                         self.db.execute(
                             text(
-                                "UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = %s"
-                                % r.job_instance_id
+                                f"UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = {r.job_instance_id}"
                             )
                         )
                     else:
@@ -91,7 +89,7 @@ class Version(BaseVersion):
         self.db.commit()
 
     def downgrade(self, force=False):
-        """ Downgrade to this version will not be allowed."""
+        """Downgrade to this version will not be allowed."""
 
     def execute(self, query):
         try:

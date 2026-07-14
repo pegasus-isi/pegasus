@@ -15,12 +15,13 @@
 
 package org.griphyn.vdl.directive;
 
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.dbschema.*;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.MissingResourceException;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.dbschema.*;
 
 /**
  * This class deletes definitions that either match certain namespace, name, version combination

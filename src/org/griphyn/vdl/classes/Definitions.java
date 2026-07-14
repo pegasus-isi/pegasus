@@ -15,9 +15,11 @@
 package org.griphyn.vdl.classes;
 
 import edu.isi.pegasus.common.util.Currently;
+
+import org.griphyn.vdl.util.*;
+
 import java.io.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the container to carry any number of <code>Transformation</code> and <code>
@@ -115,6 +117,7 @@ public class Definitions extends VDL implements Serializable {
         {2, -2, 3, -1, -1}, // newlink == OUT
         {3, -2, 3, 3, -1}
     };
+
     /**
      * Checks the linkage of a transformation between a declared, previously used and currently used
      * variable of the same name.
@@ -169,8 +172,10 @@ public class Definitions extends VDL implements Serializable {
      * @see Declare
      */
     protected void sanitizeDefinition(Definition d)
-            throws IllegalArgumentException, IncompatibleLinkageException,
-                    UndeclaredVariableException, IllegalTransformationException {
+            throws IllegalArgumentException,
+                    IncompatibleLinkageException,
+                    UndeclaredVariableException,
+                    IllegalTransformationException {
         String newline = System.getProperty("line.separator", "\r\n");
 
         // update definition with namespace and version, if necessary
@@ -239,7 +244,7 @@ public class Definitions extends VDL implements Serializable {
 
                 // check usages against all declared and temporary variables. Also
                 // check linkage. Note that the declared variables must have a
-                // linkage. It is permissable to declare variables, but not use
+                // linkage. It is permissible to declare variables, but not use
                 // them.
                 for (Iterator i = use.keySet().iterator(); i.hasNext(); ) {
                     String name = (String) i.next();
@@ -508,7 +513,7 @@ public class Definitions extends VDL implements Serializable {
      * specified element in this Vector.
      *
      * @param d is a definition instance that originated from this list.
-     * @return true, if the first occurance of the element was deleted, false, if there was nothing
+     * @return true, if the first occurrence of the element was deleted, false, if there was nothing
      *     found to be removed.
      * @see Definition
      */
@@ -563,7 +568,7 @@ public class Definitions extends VDL implements Serializable {
      * Accessor: Sets the document default namespace.
      *
      * @param vdlns is the new namespace to use. Note that the change will <b>not</b> be propagated
-     *     to contained elememts.
+     *     to contained elements.
      * @see #getVdlns()
      */
     public void setVdlns(String vdlns) {

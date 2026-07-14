@@ -7,6 +7,7 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -285,7 +286,7 @@ public class ReduceEdges {
         }
 
         // reset colors again to white
-        // sanity intialization of all nodes depth
+        // sanity initialization of all nodes depth
         for (Iterator it = workflow.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             node.setColor(GraphNode.WHITE_COLOR);
@@ -301,7 +302,7 @@ public class ReduceEdges {
     private void reset(Graph workflow) {
         int depth = -1;
 
-        // sanity intialization of all nodes depth
+        // sanity initialization of all nodes depth
         for (Iterator it = workflow.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             node.setDepth(depth);

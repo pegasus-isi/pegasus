@@ -9,14 +9,14 @@ echo
 condor_version
 
 echo
-echo 
+echo
 echo "The current test environment is:"
 echo
 
 /usr/bin/env | sort
 
 echo
-echo 
+echo
 
 if [ "x$CLASSPATH" != "x" ]; then
     echo "Please run the tests without CLASSPATH!" >&2
@@ -27,5 +27,3 @@ if [ "x$PYTHONPATH" != "x" ]; then
     echo "Please run the tests without PYTHONPATH!" >&2
     exit 1
 fi
-
-

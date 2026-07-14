@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -54,7 +55,7 @@ public abstract class AbstractStrategy implements Strategy {
     protected SiteStore mSiteStore;
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates create dir job
@@ -72,7 +73,7 @@ public abstract class AbstractStrategy implements Strategy {
 
     /**
      * It returns the name of the create directory job, that is to be assigned. The name takes into
-     * account the workflow name while constructing it, as that is thing that can guarentee
+     * account the workflow name while constructing it, as that is thing that can guarantee
      * uniqueness of name in case of deferred planning.
      *
      * @param dag the workflow to which the create dir jobs are being added.

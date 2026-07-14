@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Separator;
@@ -31,6 +32,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.TransformationCatalogYAMLParser;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -482,7 +484,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param namespace String The namespace of the transformation to search for.
      * @param name String The name of the transformation to search for.
      * @param version String The version of the transformation to search for.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiles found.
      * @throws Exception NotImplementedException if not implemented.
      * @see edu.isi.pegasus.planner.classes.Profile
@@ -500,7 +502,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param type TCType The type of the transformation to search for. <br>
      *     (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
      * @throws Exception NotImplementedException if not implemented.
-     * @return List Returns a list of Profile Objects containing profiles assocaited with the
+     * @return List Returns a list of Profile Objects containing profiles associated with the
      *     transformation. Returns <B>NULL</B> if no profiless found.
      * @see edu.isi.pegasus.planner.classes.Profile
      */
@@ -734,7 +736,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @param invokes the Notifications associated with the transformation.
      * @param containterInfo
      * @param write boolean to commit changes to backend catalog
-     * @return boolean true if succesfully added, returns false if error and throws exception.
+     * @return boolean true if successfully added, returns false if error and throws exception.
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
@@ -861,6 +863,7 @@ public class YAML extends Abstract implements TransformationCatalog {
             throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
+
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical
      * transformation.

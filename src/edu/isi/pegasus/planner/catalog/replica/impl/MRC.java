@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.catalog.replica.*;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,7 +106,7 @@ public class MRC implements ReplicaCatalog {
         return 0;
     }
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /** Explicitly free resources before the garbage collection hits. */
     public void close() {
         for (Iterator it = this.rcIterator(); it.hasNext(); ) {
             ReplicaCatalog catalog = (ReplicaCatalog) it.next();

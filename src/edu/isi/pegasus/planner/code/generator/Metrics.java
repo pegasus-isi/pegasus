@@ -19,6 +19,7 @@ import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerMetrics;
 import edu.isi.pegasus.planner.namespace.ENV;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -69,6 +70,7 @@ public class Metrics {
     /** Getting DAGMan to report to additional metrics servers.comma-separated list of URLs. */
     public static final String DAGMAN_SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE =
             "PEGASUS_USER_METRICS_SERVER";
+
     /** The timeout in seconds for sending the metrics to the server */
     public static final int METRICS_SEND_TIMEOUT = 5;
 
@@ -117,7 +119,7 @@ public class Metrics {
             }
         }
 
-        // intialize the logger defensively
+        // initialize the logger defensively
         if (bag != null) {
             mLogger = bag.getLogger();
         }
@@ -201,7 +203,7 @@ public class Metrics {
             throw new IOException("NULL Metrics passed");
         }
 
-        // create a writer to the braindump.txt in the directory.
+        // create a writer to the metrics file in the directory.
         File f = metrics.getMetricsFileLocationInSubmitDirectory();
 
         if (f == null) {
@@ -231,7 +233,7 @@ public class Metrics {
         SendMetricsResult result = sm.call();
 
         if (result.getCode() == 202) {
-            mLogger.log("Metrics succesfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Metrics successfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
         } else {
             mLogger.log(
                     "Unable to send metrics to the server " + result,
@@ -240,7 +242,7 @@ public class Metrics {
     }
 
     /**
-     * Sends the planner metrics to the metrics server asynchrnously with a timeout of 5 seconds
+     * Sends the planner metrics to the metrics server asynchronously with a timeout of 5 seconds
      *
      * @param metrics the metrics to log
      * @param url the url to send the metrics to
@@ -279,7 +281,7 @@ public class Metrics {
         if (result != null) {
             if (result.getCode() == 202) {
                 mLogger.log(
-                        "Metrics succesfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
+                        "Metrics successfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
             } else {
                 mLogger.log(
                         "Unable to send metrics to the server " + result,

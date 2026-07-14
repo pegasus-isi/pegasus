@@ -19,10 +19,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
 import edu.isi.pegasus.planner.cluster.aggregator.SeqExec;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the JobAggregator interface. Exercises known constants and verifies that concrete

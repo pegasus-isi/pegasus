@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.StagingMapper;
 import edu.isi.pegasus.planner.transfer.JobPlacer;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.io.File;
 
 /**
@@ -95,7 +96,7 @@ public abstract class Abstract {
      * @param bag bag of initialization objects
      * @param transferRefiner the transfer refiner being used
      */
-    protected void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
+    protected void initialize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
         mBag = bag;
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();

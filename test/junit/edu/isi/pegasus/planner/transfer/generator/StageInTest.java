@@ -50,16 +50,20 @@ import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class StageInTest {
 
     private PegasusBag mBag;
@@ -523,7 +527,7 @@ public class StageInTest {
             wfCache = ReplicaFactory.loadInstance("SimpleFile", mBag, props);
 
             ReplicaSelector rs = ReplicaSelectorFactory.loadInstance(mBag.getPegasusProperties());
-            si.initalize(
+            si.initialize(
                     mDAG,
                     mBag,
                     RefinerFactory.loadInstance(mDAG, mBag),
@@ -604,7 +608,7 @@ public class StageInTest {
 
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
         PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
-        si.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        si.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
 
         // In TransferEngine the data configuration is already associated at per job level
         // so set profile instead of properties

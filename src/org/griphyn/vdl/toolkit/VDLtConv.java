@@ -15,7 +15,13 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
+
+import org.griphyn.vdl.classes.*;
+import org.griphyn.vdl.directive.VDLtConvert;
+import org.griphyn.vdl.parser.*;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -25,9 +31,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import org.griphyn.vdl.classes.*;
-import org.griphyn.vdl.directive.VDLtConvert;
-import org.griphyn.vdl.parser.*;
 
 /**
  * Test calls to parse the a given filename and produce XML from it.
@@ -73,7 +76,7 @@ public class VDLtConv extends Toolkit {
                         + linefeed
                         + " -n|--vdlns ns    generates default namespace ns, default is none."
                         + linefeed
-                        + " -v|--vdlvs vs    geneartes default version vs, default is none."
+                        + " -v|--vdlvs vs    generates default version vs, default is none."
                         + linefeed);
     }
 

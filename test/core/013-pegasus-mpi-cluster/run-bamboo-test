@@ -14,7 +14,7 @@ fi
 # Extract the ctools archive
 
 # Generate dax
-PYTHONPATH=$(pegasus-config --python) python3 daxgen.py dax.yml
+PYTHONPATH=$(pegasus-config --python) python3.12 daxgen.py dax.yml
 
 export PATH=/usr/lib64/mpich/bin:$PATH
 MPIEXEC=`which mpiexec`
@@ -71,10 +71,9 @@ END
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --sites local \
     --cleanup leaf \
     --cluster label \
     --submit -v \
     dax.yml
-

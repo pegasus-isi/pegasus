@@ -25,6 +25,12 @@ import edu.isi.pegasus.planner.invocation.JobStatusSignal;
 import edu.isi.pegasus.planner.invocation.JobStatusSuspend;
 import edu.isi.pegasus.planner.invocation.Status;
 import edu.isi.pegasus.planner.parser.InvocationParser;
+
+import org.griphyn.vdl.dbschema.*;
+import org.griphyn.vdl.toolkit.FriendlyNudge;
+import org.griphyn.vdl.util.ChimeraProperties;
+import org.griphyn.vdl.util.Logging;
+
 import java.io.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,10 +38,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.MissingResourceException;
-import org.griphyn.vdl.dbschema.*;
-import org.griphyn.vdl.toolkit.FriendlyNudge;
-import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * Main objective of this class is to extract the exit status from the invocation record returned by

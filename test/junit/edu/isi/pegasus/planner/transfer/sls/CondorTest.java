@@ -38,14 +38,16 @@ import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.File;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 /**
  * Unit tests for CondorIO mode, PegasusLite transfers

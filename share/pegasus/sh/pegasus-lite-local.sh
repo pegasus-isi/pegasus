@@ -23,7 +23,7 @@
 # Author: Mats Rynge <rynge@isi.edu>
 #
 
-set -e 
+set -e
 
 check_predefined_variables() {
     #purpose: checks for variables that need to be predefined.
@@ -38,7 +38,7 @@ check_predefined_variables() {
 	echo "ERROR: _PEGASUS_WF_SUBMIT_DIR was not set" 1>&2
 	exit 1
     fi
-    
+
     path_addon="/bin:/usr/bin:/usr/local/bin:/opt/local/bin"
     if [ "X${PATH}" = "X" ]; then
 	echo "WARNING: PATH not set. Adding default values $path_addon" 1>&2
@@ -58,7 +58,7 @@ if [ "${_PEGASUS_EXECUTE_IN_INITIAL_DIR}" = "true" ];then
     dir=$_PEGASUS_INITIAL_DIR
 fi
 
-# PM-1029 prepend PATH with PEGASUS_BIN_DIR 
+# PM-1029 prepend PATH with PEGASUS_BIN_DIR
 # PM-1951 do not prepend /usr/bin as it will mess up Conda installs
 #         for example, it would pick up /usr/bin/openssl when the
 #         conda one should be used
@@ -72,16 +72,16 @@ if [ $# -lt 1 ] ; then
     echo "pegasus-lite-local requires path to executable followed by arguments";
     exit 1
 fi
-     
+
 executable=$1
 cd $dir
-shift 
+shift
 args=$@
 
 #transfer any input files if required
 if [ "X${_PEGASUS_TRANSFER_INPUT_FILES}" != "X" ]; then
     #split files on ,
-    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_INPUT_FILES" 
+    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_INPUT_FILES"
 
     for file in "${FILES[@]}";do
 	#echo "FILES NEED TO BE TRANSFERRED $file"
@@ -98,9 +98,9 @@ if [ "X${_PEGASUS_TRANSFER_INPUT_FILES}" != "X" ]; then
 	    file=$_PEGASUS_INITIAL_DIR/$file
 	    cp $file $dir
 	fi
-	
+
     done
-    
+
 fi
 
 #execute the executable with the args
@@ -112,7 +112,7 @@ else
     cat - | $executable "$@"
 fi
 
-# transfer any output files back to the Pegasus initial dir 
+# transfer any output files back to the Pegasus initial dir
 if [ "X${_PEGASUS_TRANSFER_OUTPUT_FILES}" != "X" ]; then
 
     #check for initialdir
@@ -124,13 +124,13 @@ if [ "X${_PEGASUS_TRANSFER_OUTPUT_FILES}" != "X" ]; then
     outputdir=$_PEGASUS_INITIAL_DIR
 
     #split files on ,
-    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_OUTPUT_FILES" 
+    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_OUTPUT_FILES"
 
     for file in "${FILES[@]}";do
 	#echo "FILES NEED TO BE TRANSFERRED $file"
 	cp $file $outputdir
     done
-    
+
 fi
 
 # PM-1875, PM-1877 handle output remaps for deep LFN's

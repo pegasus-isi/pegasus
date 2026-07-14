@@ -20,14 +20,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import edu.isi.ikcap.workflows.util.logging.EventLogMessage;
 import edu.isi.ikcap.workflows.util.logging.LogEvent;
 import edu.isi.pegasus.common.logging.Event;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the NetloggerEvent class. */
 public class NetloggerEventTest {

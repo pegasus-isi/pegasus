@@ -14,10 +14,11 @@
  */
 package org.griphyn.vdl.parser;
 
+import org.griphyn.vdl.classes.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.griphyn.vdl.classes.*;
 
 /**
  * Parses the input stream and generates pool configuration map as output.
@@ -186,7 +187,8 @@ public class VDLtParser {
                     if (!(m_lookAhead instanceof VDLtVBar))
                         throw new VDLtParserException(
                                 m_scanner,
-                                "The rending information is separated by a bar from the bound variable");
+                                "The rending information is separated by a bar from the bound"
+                                        + " variable");
                     m_lookAhead = m_scanner.nextToken();
 
                 } else if (m_lookAhead instanceof VDLtVBar) {
@@ -265,7 +267,7 @@ public class VDLtParser {
             if (result.getLink() != -1) {
                 if (!(m_lookAhead instanceof VDLtCloseParenthesis))
                     throw new VDLtParserException(
-                            m_scanner, "A closeing parenthesis finished the type-cast");
+                            m_scanner, "A closing parenthesis finished the type-cast");
                 m_lookAhead = m_scanner.nextToken();
             }
 
@@ -531,7 +533,7 @@ public class VDLtParser {
             // common error I frequently commit myself
             throw new VDLtParserException(m_scanner, "[] not permitted after type");
         else if (!(m_lookAhead instanceof VDLtIdentifier))
-            // otherwise erraneous
+            // otherwise erroneous
             throw new VDLtParserException(m_scanner, "expecting an identifier");
 
         id = ((VDLtIdentifier) m_lookAhead).getValue();

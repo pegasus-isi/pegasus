@@ -15,9 +15,10 @@
 
 package org.griphyn.vdl.util;
 
+import org.griphyn.vdl.dax.*;
+
 import java.io.*;
 import java.util.Iterator;
-import org.griphyn.vdl.dax.*;
 
 /**
  * Convert a dag structure into the new CoG's XML format for visualization.

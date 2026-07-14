@@ -7,14 +7,14 @@ TOP_DIR=`pwd`
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 echo
 
 cd montage-workflow-v3
 PYTHONPATH=$(pegasus-config --python) \
-    ./montage-workflow.py --center "275.196290 -16.171530" \
+    python3.12 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.5 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
@@ -93,7 +93,7 @@ cp ../pegasus.properties .
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --dir work \
+    --dir submit \
     --sites CCG \
     --output-sites CCG \
     --cleanup leaf \
@@ -101,4 +101,3 @@ pegasus-plan \
     --submit \
     data/montage-workflow.yml \
     | tee $TOP_DIR/plan.out
-

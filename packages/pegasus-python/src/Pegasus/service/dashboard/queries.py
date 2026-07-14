@@ -241,7 +241,7 @@ class MasterDatabase:
                             stmt = stmt.order_by(display_columns[i])
                         else:
                             raise ValueError(
-                                "Invalid column (%s) in work-flow listing " % i
+                                f"Invalid column ({i}) in work-flow listing "
                             )
                     else:
                         i = table_args["iSortCol_" + str(i)]
@@ -250,7 +250,7 @@ class MasterDatabase:
                             stmt = stmt.order_by(desc(display_columns[i]))
                         else:
                             raise ValueError(
-                                "Invalid column (%s) in work-flow listing " % i
+                                f"Invalid column ({i}) in work-flow listing "
                             )
 
         else:
@@ -283,9 +283,7 @@ class MasterDatabase:
                 func.count(w.wf_id).label("total"),
                 func.sum(case((ws.status == 0, 1), else_=0)).label("success"),
                 func.sum(case((ws.status != 0, 1), else_=0)).label("fail"),
-                func.sum(case((ws.status == None, 1), else_=0)).label(
-                    "others"
-                ),  # noqa: E711
+                func.sum(case((ws.status == None, 1), else_=0)).label("others"),  # noqa: E711
             )
             .where(w.wf_id == ws.wf_id)
             .where(ws.wf_id == qmax.c.wf_id)
@@ -427,9 +425,7 @@ class WorkflowInfo:
                         else_=0,
                     )
                 ).label("fail_workflow"),
-                func.sum(
-                    case((JobInstance.exitcode == None, 1), else_=0)
-                ).label(  # noqa: E711
+                func.sum(case((JobInstance.exitcode == None, 1), else_=0)).label(  # noqa: E711
                     "running"
                 ),
                 func.sum(
@@ -456,7 +452,7 @@ class WorkflowInfo:
 
         counts = self.session.execute(stmt_counts).one()
 
-        out = _JobCounts(
+        return _JobCounts(
             total=totals.total,
             total_workflow=totals.total_workflow,
             others=totals.total - (counts.success + counts.fail + counts.running),
@@ -471,8 +467,6 @@ class WorkflowInfo:
             running=counts.running,
             running_workflow=counts.running_workflow,
         )
-
-        return out
 
     def get_job_information(self, job_id, job_instance_id):
 
@@ -532,7 +526,7 @@ class WorkflowInfo:
     def _jobs_by_type(self):
         qmax = self.__get_jobs_maxjss_sq()
 
-        stmt = (
+        return (
             select(
                 Job.job_id,
                 JobInstance.job_instance_id,
@@ -545,8 +539,6 @@ class WorkflowInfo:
             .where(JobInstance.job_submit_seq == qmax.c.max_jss)
             .group_by(JobInstance.job_id)
         )
-
-        return stmt
 
     def get_failed_jobs(self, **table_args):
 
@@ -601,9 +593,7 @@ class WorkflowInfo:
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
-                        raise ValueError(
-                            "Invalid column(%s) in failed jobs listing " % i
-                        )
+                        raise ValueError(f"Invalid column({i}) in failed jobs listing ")
 
         else:
             # Default sorting order
@@ -625,7 +615,9 @@ class WorkflowInfo:
         stmt = (
             self._jobs_by_type()
             .add_columns(
-                JobInstance.local_duration, JobInstance.cluster_duration, duration,
+                JobInstance.local_duration,
+                JobInstance.cluster_duration,
+                duration,
             )
             .where(JobInstance.exitcode == 0)
             .where(JobInstance.exitcode != None)  # noqa: E711
@@ -670,7 +662,7 @@ class WorkflowInfo:
                         stmt = stmt.order_by(sort_order(display_columns[i]))
                     else:
                         raise ValueError(
-                            "Invalid column(%s) in successful jobs listing " % i
+                            f"Invalid column({i}) in successful jobs listing "
                         )
 
         else:
@@ -695,7 +687,7 @@ class WorkflowInfo:
                     else_=JobInstance.local_duration,
                 ).label("duration"),
             )
-            .where(JobInstance.exitcode == None)
+            .where(JobInstance.exitcode is None)
         )  # noqa: E711
 
         # Get Total Count. Need this to pass to jQuery Datatable.
@@ -736,9 +728,7 @@ class WorkflowInfo:
                     if i >= 0 and i < len(display_columns):
                         stmt = stmt.order_by(sort_order(display_columns[i]))
                     else:
-                        raise ValueError(
-                            "Invalid column(%s) in other jobs listing " % i
-                        )
+                        raise ValueError(f"Invalid column({i}) in other jobs listing ")
 
         else:
             # Default sorting order
@@ -869,9 +859,7 @@ class WorkflowInfo:
                     elif i >= len(display_columns) and i < 4:
                         pass
                     else:
-                        raise ValueError(
-                            "Invalid column(%s) in failed jobs listing " % i
-                        )
+                        raise ValueError(f"Invalid column({i}) in failed jobs listing ")
 
         else:
             # Default sorting order
@@ -884,14 +872,12 @@ class WorkflowInfo:
         return count, filtered, self.session.execute(stmt).all()
 
     def __get_jobs_maxjss_q(self):
-        stmt = (
+        return (
             select(Job.job_id, func.max(JobInstance.job_submit_seq).label("max_jss"))
             .where(Job.wf_id == self._wf_id)
             .where(Job.job_id == JobInstance.job_id)
             .group_by(Job.job_id)
         )
-
-        return stmt
 
     def __get_jobs_maxjss_sq(self):
         return self.__get_jobs_maxjss_q().subquery("allmaxjss")
@@ -963,9 +949,7 @@ class WorkflowInfo:
             .where(JobInstance.job_instance_id == Invocation.job_instance_id)
             .where(Invocation.exitcode == 0)
             .where(
-                or_(
-                    Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
-                )  # noqa: E711
+                or_(Invocation.abs_task_id != None, Invocation.task_submit_seq == 1)  # noqa: E711
             )
         )
 
@@ -988,9 +972,7 @@ class WorkflowInfo:
             .where(JobInstance.job_instance_id == Invocation.job_instance_id)
             .where(Invocation.exitcode != 0)
             .where(
-                or_(
-                    Invocation.abs_task_id != None, Invocation.task_submit_seq == 1
-                )  # noqa: E711
+                or_(Invocation.abs_task_id != None, Invocation.task_submit_seq == 1)  # noqa: E711
             )
         )
 

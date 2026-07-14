@@ -1,0 +1,8 @@
+08/04/22 12:07:24 ******************************************************
+08/04/22 12:07:24 ** condor_scheduniv_exec.3793.0 (CONDOR_DAGMAN) STARTING UP
+08/04/22 12:07:24 ** /usr/bin/condor_dagman
+08/04/22 12:07:24 ** $CondorVersion: 9.10.0 2022-07-14 BuildID: 596547 PackageID: 9.10.0-1 $
+08/04/22 12:07:24 ** PID = 2534233
+08/04/22 12:07:24 ******************************************************
+08/04/22 12:07:24 Using config source: /etc/condor/condor_config
+08/04/22 12:07:24 Setting up DAG: just starting, no node status reported yet

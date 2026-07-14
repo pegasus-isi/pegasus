@@ -54,7 +54,7 @@ class TestBundle(unittest.TestCase):
         self.assertEqual(p["baz"], "boo")
 
     def test_verify(self):
-        self.zipfile.writestr(PROPERTIES_NAME, "pegasus.dax.file=%s" % __file__)
+        self.zipfile.writestr(PROPERTIES_NAME, f"pegasus.dax.file={__file__}")
         self.zipfile.close()
         bundle = Bundle(self.filename)
         bundle.verify()
@@ -74,8 +74,7 @@ class TestBundle(unittest.TestCase):
     def test_bad_rc(self):
         self.zipfile.writestr(
             PROPERTIES_NAME,
-            "pegasus.dax.file=%s\npegasus.catalog.replica.file=/doesnotexits"
-            % __file__,
+            f"pegasus.dax.file={__file__}\npegasus.catalog.replica.file=/doesnotexits",
         )
         self.zipfile.close()
         bundle = Bundle(self.filename)
@@ -84,8 +83,7 @@ class TestBundle(unittest.TestCase):
     def test_bad_tc(self):
         self.zipfile.writestr(
             PROPERTIES_NAME,
-            "pegasus.dax.file=%s\npegasus.catalog.transformation.file=/doesnotexits"
-            % __file__,
+            f"pegasus.dax.file={__file__}\npegasus.catalog.transformation.file=/doesnotexits",
         )
         self.zipfile.close()
         bundle = Bundle(self.filename)
@@ -94,7 +92,7 @@ class TestBundle(unittest.TestCase):
     def test_bad_sc(self):
         self.zipfile.writestr(
             PROPERTIES_NAME,
-            "pegasus.dax.file=%s\npegasus.catalog.site.file=/doesnotexits" % __file__,
+            f"pegasus.dax.file={__file__}\npegasus.catalog.site.file=/doesnotexits",
         )
         self.zipfile.close()
         bundle = Bundle(self.filename)

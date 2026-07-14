@@ -50,7 +50,7 @@ def test_from_env_no_pegasus_home(monkeypatch):
     assert "PEGASUS_HOME not found" in str(e)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_subprocess(mocker):
     class Popen:
         def __init__(self):
@@ -68,9 +68,24 @@ def mock_subprocess(mocker):
     mocker.patch("subprocess.Popen", return_value=Popen())
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def client():
     return Client("/path")
+
+
+@pytest.fixture
+def log_records(client):
+    # client._log has propagate=False, so caplog can't capture it; attach a
+    # capturing handler and remove it on teardown to avoid leaking across tests.
+    records = []
+    handler = logging.Handler()
+    handler.emit = lambda r: records.append(r.getMessage())
+    prev_level = client._log.level
+    client._log.setLevel(logging.INFO)
+    client._log.addHandler(handler)
+    yield records
+    client._log.removeHandler(handler)
+    client._log.setLevel(prev_level)
 
 
 class TestClient:
@@ -249,6 +264,50 @@ class TestClient:
 
         assert wf_instance.braindump.user == "ryan"
 
+    def test_plan_success_does_not_echo_json(self, mocker, client, log_records):
+        # #2051 (PM-1938): on success the braindump JSON blob from the planner
+        # must NOT be echoed. Echoing is driven by streaming the planner stdout,
+        # so plan() must invoke _exec with stream_stdout=False; only the parsed,
+        # user-facing summary is logged.
+        rv = Result(
+            ["pegasus-plan"],
+            0,
+            b'{"submit_dir": "/sd", "message": "I have concretized"}',
+            b"",
+        )
+        _exec = mocker.patch.object(client, "_exec", return_value=rv)
+        mocker.patch(
+            "Pegasus.client._client.Workflow._get_braindump",
+            return_value=Braindump(user="ryan"),
+        )
+
+        client.plan(abstract_workflow="wf.yml", submit=True)
+
+        assert _exec.call_args.kwargs["stream_stdout"] is False
+        assert any("pegasus-status -l /sd" in m for m in log_records)
+
+    def test_plan_failure_surfaces_planner_stdout(self, mocker, client, log_records):
+        # #2021 (PM-1908): on failure the success path never runs, so the
+        # planner's captured stdout (e.g. submit errors) must be surfaced and
+        # the error re-raised, not masked.
+        err = PegasusClientError(
+            "FAILED",
+            Result(
+                ["pegasus-plan"],
+                1,
+                b"ERROR: Can't find address of local schedd",
+                b"stderr log",
+            ),
+        )
+        mocker.patch.object(client, "_exec", side_effect=err)
+
+        with pytest.raises(PegasusClientError):
+            client.plan(abstract_workflow="wf.yml", submit=True)
+
+        assert any(
+            "ERROR: Can't find address of local schedd" in m for m in log_records
+        )
+
     def test_plan_invalid_cluster(self, client):
         with pytest.raises(TypeError) as e:
             client.plan("wf.yml", cluster="cluster")
@@ -328,7 +387,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "pegasus_status_out, expected_dict",
+        ("pegasus_status_out", "expected_dict"),
         [
             (
                 dedent(
@@ -458,7 +517,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "status_output_str, expected_dict",
+        ("status_output_str", "expected_dict"),
         [
             (
                 dedent(
@@ -512,7 +571,8 @@ class TestClient:
                 stdout_bytes=status_output_str,
                 stderr_bytes=b"",
             ),
-        )"""
+        ).
+        """
         mocker.patch(
             "Pegasus.client.status.Status.fetch_status", return_value=expected_dict
         )
@@ -522,7 +582,7 @@ class TestClient:
         )
 
     @pytest.mark.parametrize(
-        "status_output, expected_progress_bar",
+        ("status_output", "expected_progress_bar"),
         [
             (
                 {
@@ -660,11 +720,10 @@ class TestClient:
         assert str(e.value) == "cmd is required"
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def make_result():
     def _make_result(cmd="command", exit_code=0, stdout=b"", stderr=b""):
-        r = Result(cmd, exit_code, stdout, stderr)
-        return r
+        return Result(cmd, exit_code, stdout, stderr)
 
     return _make_result
 
@@ -747,7 +806,7 @@ b: 2
 """
     )
 
-    d = [y for y in r.yaml_all]
+    d = list(r.yaml_all)
     assert isinstance(d, list)
     assert len(d) == 2
     assert d[0]["a"] == 1

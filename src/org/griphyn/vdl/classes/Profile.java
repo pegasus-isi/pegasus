@@ -30,7 +30,7 @@ import java.util.*;
  *   <dd>Virtual Data System specific material, currently empty.
  *   <dt>condor
  *   <dd>If the job runs in using the <a href="http://www.cs.wisc.edu/condor/">Condor</a> scheduler,
- *       certain items like the "universe" or "requirments" can be set. Please note that currently
+ *       certain items like the "universe" or "requirements" can be set. Please note that currently
  *       the universe is provided as a hint to the {@link Transformation} itself.
  *   <dt>dagman
  *   <dd>The job graph will usually be run by Condor DAGMan. Some issues, e.g. the number of
@@ -101,7 +101,7 @@ public class Profile extends VDL implements Serializable {
      * @param namespace is the namespace within which to operate.
      * @param key is an identifier unique within the namespace.
      * @param firstChild is the first fragment of the value. Only <code>Leaf</code>s of type <code>
-     *     Use</code> or <code>Text</code> are permissable.
+     *     Use</code> or <code>Text</code> are permissible.
      * @see Leaf
      * @see Use
      * @see Text
@@ -119,7 +119,7 @@ public class Profile extends VDL implements Serializable {
      * @param namespace is the namespace within which to operate.
      * @param key is an identifier unique within the namespace.
      * @param children is a collection of fragments for the value. Only <code>Leaf</code>s of type
-     *     <code>Filename</code> or <code>PseudoText</code> are permissable.
+     *     <code>Filename</code> or <code>PseudoText</code> are permissible.
      * @see Leaf
      * @see Use
      * @see Text
@@ -185,7 +185,7 @@ public class Profile extends VDL implements Serializable {
      * @param index is the position in the list to obtain a value from
      * @return The <code>Use</code> or <code>Text</code> at the position.
      * @throws IndexOutOfBoundsException if the index points to an element in the list that does not
-     *     contain any elments.
+     *     contain any elements.
      * @see Use
      * @see Text
      */
@@ -306,7 +306,7 @@ public class Profile extends VDL implements Serializable {
      * Accessor: Overwrites a <code>Use</code> or <code>Text</code> value fragment at a certain
      * position in the profile value fragment list.
      *
-     * @param index position to overwrite an elment in.
+     * @param index position to overwrite an element in.
      * @param vLeaf is either a <code>Use</code> or <code>Text</code> object.
      * @throws IndexOutOfBoundsException if the position pointed to is invalid.
      * @throws IllegalArgumentException if the added element is of the incorrect <code>Leaf</code>

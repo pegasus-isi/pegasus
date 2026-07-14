@@ -39,7 +39,7 @@ pegasus-plan \
     --conf ./pegasusrc \
     --sites condorpool \
     --output-sites local \
-    --dir dags \
+    --dir submit \
     --force \
     -v \
     blackdiamond.dax \
@@ -67,4 +67,3 @@ fi
 
 # now submit the workflow for execution
 pegasus-run $WORK_DIR
-

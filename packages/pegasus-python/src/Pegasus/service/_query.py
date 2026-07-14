@@ -14,7 +14,7 @@ COMPARE_OPERATORS = {
     ast.Is: operator.is_,
     ast.IsNot: operator.isnot,
     ast.In: operator.in_,
-    ast.NotIn: operator.notin_,
+    ast.NotIn: operator.notin_,  # codespell:ignore notin
 }
 
 OPERATORS = {
@@ -33,6 +33,8 @@ UNARY_OPERATORS = {
 }
 
 BUILTINS = {"None": None}
+
+ALLOWED_COLUMN_METHODS = frozenset({"like", "ilike"})
 
 
 class InvalidQueryError(Exception):
@@ -66,7 +68,8 @@ def query_parse(clause, **symbols):
         - >=
         - in
 
-    Supported Functions
+    Supported Functions (only these may be called, and only as a method on a
+    column identifier, e.g. ``user.name.like('%foo%')``)
         - like
         - ilike
 
@@ -95,17 +98,17 @@ def query_parse(clause, **symbols):
 
     .. example::
 
-        >>> str( query_parse("w.wf_id == 1") )
+        >>> str(query_parse("w.wf_id == 1"))
         'workflow.wf_id = :wf_id_1'
 
-        >>> str( query_parse("w.wf_id > 1 and w.wf_id < 5") )
+        >>> str(query_parse("w.wf_id > 1 and w.wf_id < 5"))
         'workflow.wf_id > :wf_id_1 AND workflow.wf_id < :wf_id_2'
     """
 
     try:
         n = ast.parse(clause.strip(",") + ",", mode="eval").body
     except SyntaxError as e:
-        raise InvalidQueryError("Invalid query: %s" % e)
+        raise InvalidQueryError(f"Invalid query: {e}")
 
     if not isinstance(n, ast.Tuple):
         raise InvalidQueryError("Invalid condition: must evaluate to a boolean value")
@@ -158,19 +161,14 @@ class _QueryEvaluator(ast.NodeVisitor):
     # Identifiers
     def visit_Attribute(self, n):
         self._log.info("Attribute <%s> <%s>", n.value, n.attr)
+        if n.attr.startswith("_"):
+            raise InvalidQueryError(
+                f"Invalid attribute <{n.attr}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
+            )
         value = self.visit(n.value)
         if isinstance(value, dict):
             return value[n.attr]
         return getattr(value, n.attr)
-
-    def visit_Subscript(self, n):
-        self._log.info("Subscript <%s> <%s>", n.value, n.slice)
-        value = self.visit(n.value)
-        slice = self.visit(n.slice)
-        return value[slice]
-
-    def visit_Index(self, n):
-        return self.visit(n.value)
 
     def visit_keyword(self, n):
         return {n.arg: n.value}
@@ -180,8 +178,7 @@ class _QueryEvaluator(ast.NodeVisitor):
         name = self._symbols.get(n.id, BUILTINS.get(n.id, None))
         if n.id not in self._symbols and n.id not in BUILTINS:
             raise NameError(
-                "Invalid name <%s> at Line <%d> Col "
-                "<%d>" % (n.id, n.lineno, n.col_offset)
+                f"Invalid name <{n.id}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
             )
 
         return name
@@ -211,17 +208,23 @@ class _QueryEvaluator(ast.NodeVisitor):
         return {self.visit(n) for n in n.elts}
 
     def visit_Call(self, n):
-        args = []
+        if (
+            not isinstance(n.func, ast.Attribute)
+            or n.func.attr not in ALLOWED_COLUMN_METHODS
+        ):
+            raise InvalidQueryError(
+                f"Invalid function call at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
+            )
+
         try:
             func = self.visit(n.func)
         except AttributeError:
             raise InvalidQueryError(
-                "Invalid name <%s> at Line <%d> Col <%d>"
-                % (n.func.attr, n.lineno, n.col_offset)
+                f"Invalid name <{n.func.attr}> at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
             )
 
         # Args
-        args.extend([self.visit(a) for a in n.args])
+        args = [self.visit(a) for a in n.args]
 
         # Keyword Args
         kwargs = {}
@@ -233,7 +236,7 @@ class _QueryEvaluator(ast.NodeVisitor):
     # Catch All
     def generic_visit(self, n):
         raise InvalidQueryError(
-            "Invalid query at Line <%d> Col <%d>" % (n.lineno, n.col_offset)
+            f"Invalid query at Line <{n.lineno:d}> Col <{n.col_offset:d}>"
         )
 
 
@@ -241,11 +244,11 @@ def _main():
     import sys
 
     logging.basicConfig(level=logging.DEBUG)
-    logging.debug("Expression <%s>", sys.argv[1])
+    print(f"Expression <{sys.argv[1]}>")
     from Pegasus.db.schema import Workflow
 
     result = query_parse(sys.argv[1], Workflow)
-    logging.debug("Evaluation Result <%s>", result[0])
+    print(f"Evaluation Result <{result[0]}>")
 
 
 if __name__ == "__main__":

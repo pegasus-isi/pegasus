@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.selector.site;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.List;
 
 /**

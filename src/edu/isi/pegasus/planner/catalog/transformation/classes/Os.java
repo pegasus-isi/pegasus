@@ -42,7 +42,8 @@ public class Os implements Serializable {
     public static final Os WINDOWS = new Os(_WINDOWS);
 
     public static final String err =
-            "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, WINDOWS]";
+            "Error: Illegal Operating System defined. Please specify one of the predefined types \n"
+                    + " [LINUX, SUNOS, AIX, WINDOWS]";
 
     /**
      * Returns the value of the operating system as string.

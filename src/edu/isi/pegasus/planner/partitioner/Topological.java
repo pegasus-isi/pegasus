@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

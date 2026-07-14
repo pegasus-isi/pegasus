@@ -33,4 +33,3 @@ fi
 # In all other cases, print usage
 echo "Usage: $0 [--header | --majorminor]"
 exit 1
-

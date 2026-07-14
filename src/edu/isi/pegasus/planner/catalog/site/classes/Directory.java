@@ -31,9 +31,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -139,7 +141,7 @@ public class Directory extends DirectoryLayout {
                 break;
 
             default:
-                throw new SiteCatalogException("Unkown type value " + yamlType);
+                throw new SiteCatalogException("Unknown type value " + yamlType);
         }
 
         return type;
@@ -181,7 +183,7 @@ public class Directory extends DirectoryLayout {
                 break;
 
             default:
-                throw new SiteCatalogException("Unkown type value " + yamlType);
+                throw new SiteCatalogException("Unknown type value " + yamlType);
         }
 
         return yamlType;
@@ -191,7 +193,7 @@ public class Directory extends DirectoryLayout {
     private TYPE mType;
 
     /**
-     * a boolean indicating whether there is a shared filsystem access from the worker nodes in the
+     * a boolean indicating whether there is a shared filesystem access from the worker nodes in the
      * site to this directory.
      */
     private boolean mHasSharedFileSystem;
@@ -215,8 +217,8 @@ public class Directory extends DirectoryLayout {
     }
 
     /**
-     * Returns a boolean indicating whether there is a shared filsystem access from the worker nodes
-     * in the site to this directory.
+     * Returns a boolean indicating whether there is a shared filesystem access from the worker
+     * nodes in the site to this directory.
      *
      * @param value boolean value
      */
@@ -225,8 +227,8 @@ public class Directory extends DirectoryLayout {
     }
 
     /**
-     * Returns a boolean indicating whether there is a shared filsystem access from the worker nodes
-     * in the site to this directory.
+     * Returns a boolean indicating whether there is a shared filesystem access from the worker
+     * nodes in the site to this directory.
      *
      * @return
      */
@@ -453,7 +455,7 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
                     }
                     break;
 
-                    // defined in schema but we don't do anything about it
+                // defined in schema but we don't do anything about it
                 case FREE_SIZE:
                     directory.getInternalMountPoint().setFreeSize(node.get(key).asText());
                     break;
@@ -471,6 +473,7 @@ class DirectoryDeserializer extends SiteDataJsonDeserializer<Directory> {
         return directory;
     }
 }
+
 /**
  * Custom serializer for YAML representation of Directory
  *

@@ -15,13 +15,15 @@
 package org.griphyn.vdl.dbdriver;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+
+import org.griphyn.vdl.util.ChimeraProperties;
+import org.griphyn.vdl.util.Logging;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This common database interface that defines basic functionalities for interacting with backend
@@ -81,8 +83,12 @@ public abstract class DatabaseDriver {
      */
     public static DatabaseDriver loadDriver(
             String dbDriverName, String propertyPrefix, Object[] arguments)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         Logging log = Logging.instance();
         log.log(
@@ -143,8 +149,12 @@ public abstract class DatabaseDriver {
      * @see #loadDriver( String, String, Object[] )
      */
     public static DatabaseDriver loadDriver(String propertyPrefix)
-            throws ClassNotFoundException, IOException, NoSuchMethodException,
-                    InstantiationException, IllegalAccessException, InvocationTargetException,
+            throws ClassNotFoundException,
+                    IOException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
                     SQLException {
         return loadDriver(null, propertyPrefix, new Object[0]);
     }
@@ -363,7 +373,7 @@ public abstract class DatabaseDriver {
      * NULL into auto-increment value should use this method to return the inserted ID value via the
      * statements getGeneratedKeys(). Other JDBC drivers should treat return the parametric id.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.
@@ -499,7 +509,7 @@ public abstract class DatabaseDriver {
     }
 
     /**
-     * Selects any rows in one or more colums from one or more tables restricted by some condition,
+     * Selects any rows in one or more columns from one or more tables restricted by some condition,
      * possibly ordered.
      *
      * @param select is the ordered set of column names to select, or simply a one-value list with
@@ -541,8 +551,8 @@ public abstract class DatabaseDriver {
     }
 
     /**
-     * Selects any rows in one or more colums from one or more tables restricted by some condition
-     * that allows operators. Permissable operators include =, &lt;&gt;, &gt;, &gt;=, &lt;, &lt;=,
+     * Selects any rows in one or more columns from one or more tables restricted by some condition
+     * that allows operators. permissible operators include =, &lt;&gt;, &gt;, &gt;=, &lt;, &lt;=,
      * like, etc. possibly ordered.
      *
      * @param select is the ordered set of column names to select, or simply a one-value list with
@@ -776,7 +786,7 @@ public abstract class DatabaseDriver {
     }
 
     /**
-     * Explicitely requests a prepared id to be destroyed and its resources freed. Multiple
+     * Explicitly requests a prepared id to be destroyed and its resources freed. Multiple
      * invocation for the same id are harmless.
      *
      * @param id is the place of the statement to free up.

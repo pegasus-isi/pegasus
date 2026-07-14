@@ -15,7 +15,9 @@ package edu.isi.pegasus.planner.partitioner.graph;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.planner.classes.Data;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,7 +44,7 @@ public class GraphNode extends Data {
     /** The logical name of the node as identified in the dax. */
     private String mLogicalName;
 
-    /** The depth of the node from the root or any arbitary node. */
+    /** The depth of the node from the root or any arbitrary node. */
     private int mDepth;
 
     /** The color the node is colored. */

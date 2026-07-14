@@ -17,6 +17,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.List;
 
 /**
@@ -40,7 +41,7 @@ public interface OutputMapper extends Mapper {
     public void initialize(PegasusBag bag, ADag workflow) throws MapperException;
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param lfn the lfn
@@ -55,7 +56,7 @@ public interface OutputMapper extends Mapper {
             throws MapperException;
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param lfn the lfn
@@ -73,7 +74,7 @@ public interface OutputMapper extends Mapper {
             throws MapperException;
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns all the possible equivalent
+     * Maps a LFN to a location on the filesystem of a site and returns all the possible equivalent
      * externally accessible URL corresponding to that location. For example, if a file on the
      * filesystem is accessible via multiple file servers it should return externally accessible
      * URL's from all the File Servers on the site.

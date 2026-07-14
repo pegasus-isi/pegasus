@@ -88,5 +88,3 @@ Workflows Options
 
 **-l**; \ **--long**
    Use long listing format.
-
-

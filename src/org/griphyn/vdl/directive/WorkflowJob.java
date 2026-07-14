@@ -15,8 +15,9 @@
 
 package org.griphyn.vdl.directive;
 
-import java.io.*;
 import org.griphyn.vdl.workflow.*;
+
+import java.io.*;
 
 /**
  * A <code>WorkflowJob</code> object defines the state of a job within a Workflow

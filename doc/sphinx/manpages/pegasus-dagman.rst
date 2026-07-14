@@ -40,5 +40,3 @@ See Also
 ========
 
 pegasus-run(1) pegasus-monitord(1) pegasus-submit-dag(1)
-
-

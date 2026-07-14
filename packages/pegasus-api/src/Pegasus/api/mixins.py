@@ -3,7 +3,6 @@ from collections import OrderedDict
 from enum import Enum
 from functools import partialmethod, wraps
 from pathlib import Path
-from typing import Dict, Optional, Union
 
 from ._utils import _chained, _get_enum_str
 
@@ -13,7 +12,7 @@ class MetadataMixin:
     """Derived class can have metadata assigned to it as key value pairs."""
 
     @_chained
-    def add_metadata(self, *args: Dict[str, Union[str, int, float, bool]], **kwargs):
+    def add_metadata(self, *args: dict[str, str | int | float | bool], **kwargs):
         """
         add_metadata(self, *args: Dict[str, Union[str, int, float, bool]], **kwargs)
         Add metadata key value pairs to this object
@@ -212,12 +211,8 @@ def _profiles(ns, **map_p):
     .. code-block:: python
 
         # Example
-        @_profiles(
-            Namespace.DAGMAN,
-            pre_args="PRE.ARGUMENTS"
-        )
-        def add_dagman_profile(self, pre_args: str = None):
-            ...
+        @_profiles(Namespace.DAGMAN, pre_args="PRE.ARGUMENTS")
+        def add_dagman_profile(self, pre_args: str = None): ...
 
     This way, available Profile keys will appear in an IDE and we can use kw args
     for keys that would be invalid as python variable names.
@@ -274,23 +269,20 @@ def to_mb(value: str) -> int:
 
         if unit is None:
             return amt
-        else:
-            _bytes = {
-                "mb": 1 << 20,
-                "gb": 1 << 30,
-                "tb": 1 << 40,
-                "pb": 1 << 50,
-                "eb": 1 << 60,
-                "zb": 1 << 70,
-                "yb": 1 << 80,
-            }
+        _bytes = {
+            "mb": 1 << 20,
+            "gb": 1 << 30,
+            "tb": 1 << 40,
+            "pb": 1 << 50,
+            "eb": 1 << 60,
+            "zb": 1 << 70,
+            "yb": 1 << 80,
+        }
 
-            return int((amt * _bytes[unit]) / _bytes["mb"])
+        return int((amt * _bytes[unit]) / _bytes["mb"])
     except Exception:
         raise ValueError(
-            "value: {} should be a str formatted as '<int> [MB | GB | TB | PB | EB | ZB | YB]'".format(
-                value
-            )
+            f"value: {value} should be a str formatted as '<int> [MB | GB | TB | PB | EB | ZB | YB]'"
         )
 
 
@@ -315,8 +307,8 @@ class ProfileMixin:
     def add_profiles(
         self,
         ns: Namespace,
-        key: Optional[str] = None,
-        value: Optional[Union[str, int, float, bool, Path]] = None,
+        key: str | None = None,
+        value: str | int | float | bool | Path | None = None,
         **kw,
     ):
         r"""
@@ -348,23 +340,21 @@ class ProfileMixin:
 
         if not isinstance(ns, Namespace):
             raise TypeError(
-                "invalid ns: {ns}; ns should be one of {enum_str}".format(
-                    ns=ns, enum_str=_get_enum_str(Namespace)
-                )
+                f"invalid ns: {ns}; ns should be one of {_get_enum_str(Namespace)}"
             )
 
         ns = ns.value
 
         # add profile(s)
         if key and value:
-            if isinstance(value, Path) or type(value) == bool:
+            if isinstance(value, Path) or type(value) is bool:
                 # convert pathlib.Path and bool to str
                 value = str(value)
 
             self.profiles[ns].update({key: value})
         else:
             for k, v in kw.items():
-                if isinstance(v, Path) or type(v) == bool:
+                if isinstance(v, Path) or type(v) is bool:
                     # convert pathlib.Path, bool, to str
                     kw[k] = str(v)
 
@@ -416,7 +406,7 @@ class ProfileMixin:
         :type max_time: int, optional
         :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_wall_time: int, optional
-        :param min_memory: the minumum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :param min_memory: the minimum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type min_memory: str, optional
         :param project: associates an account with a job at the remote end, defaults to None
         :type project: str, optional
@@ -569,6 +559,7 @@ class ProfileMixin:
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
         relative_submit_dir="relative.submit.dir",
+        tag="tag",
     )
     def add_pegasus_profile(
         self,
@@ -628,9 +619,10 @@ class ProfileMixin:
         container_launcher: str = None,
         container_launcher_arguments: str = None,
         label: str = None,
-        pegasus_lite_env_source: Union[str, Path] = None,
+        pegasus_lite_env_source: str | Path = None,
         SSH_PRIVATE_KEY: str = None,
-        relative_submit_dir: Union[str, Path] = None,
+        relative_submit_dir: str | Path = None,
+        tag: str = None,
     ):
         """Add Pegasus profile(s).
 
@@ -750,6 +742,8 @@ class ProfileMixin:
         :type SSH_PRIVATE_KEY: str, optional
         :param relative_submit_dir: specify the relative directory a job's submit files are written to, defaults to None
         :type relative_submit_dir: Union[str, Path], optional
+        :param tag: associates a tag with a job; the planner uses this to select matching ``x-tags`` profiles from the site catalog entry and overlay them on top of the site's base profiles, defaults to None
+        :type tag: str, optional
         """
         ...
 
@@ -763,12 +757,12 @@ class ProfileMixin:
         self,
         *,
         execution_site: str = None,
-        pfn: Union[str, Path] = None,
+        pfn: str | Path = None,
         grid_job_type: str = None,
     ):
         """Add Selector profile(s).
 
-        The Selector namespace allows users to override the beahvior of the Workflow
+        The Selector namespace allows users to override the behavior of the Workflow
         Mapper during site selection. This gives you finer grained control over
         where a job executes and what executable it refers to.
 
@@ -801,7 +795,7 @@ class ProfileMixin:
     def add_dagman_profile(
         self,
         *,
-        pre: Union[str, Path] = None,
+        pre: str | Path = None,
         pre_arguments: str = None,
         post: str = None,
         post_arguments: str = None,

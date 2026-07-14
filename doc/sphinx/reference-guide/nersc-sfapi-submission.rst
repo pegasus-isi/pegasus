@@ -478,4 +478,3 @@ Development History
 
 The capability was implemented as part of
 `Pegasus issue #2186 <https://github.com/pegasus-isi/pegasus/issues/2186>`_:
-

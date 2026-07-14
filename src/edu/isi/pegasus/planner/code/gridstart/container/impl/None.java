@@ -17,6 +17,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -29,7 +30,7 @@ import java.io.IOException;
 public class None extends Abstract {
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

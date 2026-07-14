@@ -374,7 +374,10 @@ class TestCronTrigger:
         mocker.patch(
             "subprocess.run",
             return_value=CompletedProcess(
-                None, returncode=0, stdout=b"out", stderr=b"err",
+                None,
+                returncode=0,
+                stdout=b"out",
+                stderr=b"err",
             ),
         )
 

@@ -15,6 +15,7 @@
 package edu.isi.pegasus.planner.invocation;
 
 import edu.isi.pegasus.common.util.Currently;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.net.InetAddress;
@@ -556,7 +557,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
      * @param index is the position in the list to obtain a job from
      * @return the job at that position.
      * @throws IndexOutOfBoundsException if the index points to an element in the list that does not
-     *     contain any elments.
+     *     contain any elements.
      */
     public Job getJob(int index) throws IndexOutOfBoundsException {
         // -- check bound for index
@@ -620,7 +621,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     /**
      * Accessor: Overwrites a job at a certain position.
      *
-     * @param index position to overwrite an elment in.
+     * @param index position to overwrite an element in.
      * @param job is the Job to replace with.
      * @throws IndexOutOfBoundsException if the position pointed to is invalid.
      */
@@ -667,7 +668,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
      * @param index is the position in the list to obtain a stat from
      * @return the stat at that position.
      * @throws IndexOutOfBoundsException if the index points to an element in the list that does not
-     *     contain any elments.
+     *     contain any elements.
      */
     public StatCall getStatCall(int index) throws IndexOutOfBoundsException {
         // -- check bound for index
@@ -731,7 +732,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     /**
      * Accessor: Overwrites a stat at a certain position.
      *
-     * @param index position to overwrite an elment in.
+     * @param index position to overwrite an element in.
      * @param stat is the StatCall to replace with.
      * @throws IndexOutOfBoundsException if the position pointed to is invalid.
      */
@@ -943,7 +944,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
             ((StatCall) i.next()).toXML(stream, newindent, namespace);
         }
 
-        // part 4: environment and resourcs
+        // part 4: environment and resources
         if (m_environment != null) m_environment.toXML(stream, newindent, namespace);
 
         // close tag

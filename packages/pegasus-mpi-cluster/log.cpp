@@ -42,7 +42,7 @@ static void timestr(char *dest) {
     gettimeofday(&tod, NULL);
     struct tm *t = localtime(&(tod.tv_sec));
     int ms = (int)(tod.tv_usec/1000.0);
-    sprintf(dest, "%04d-%02d-%02d %02d:%02d:%02d.%.3d %s", 
+    sprintf(dest, "%04d-%02d-%02d %02d:%02d:%02d.%.3d %s",
         t->tm_year+1900, t->tm_mon+1, t->tm_mday,
         t->tm_hour, t->tm_min, t->tm_sec, ms, t->tm_zone);
 }
@@ -52,24 +52,24 @@ void log_message(int level, const char *message, va_list args) {
     if (!log_test(level)) {
         return;
     }
-    
+
     // Just in case...
     if (logfile == NULL || fileno(logfile) == -1 || ferror(logfile) || ftell(logfile) < 0) {
         logfile = DEFAULT_LOG_FILE;
     }
-    
+
     char logformat[MAX_LOG_MESSAGE];
     if (logfile == DEFAULT_LOG_FILE) {
-        snprintf(logformat, MAX_LOG_MESSAGE, "[%s] %s\n", 
-                 loglabels[level], message);    
+        snprintf(logformat, MAX_LOG_MESSAGE, "[%s] %s\n",
+                 loglabels[level], message);
     } else {
         // If logging to a file, add the date
         char ts[128];
         timestr(ts);
-        snprintf(logformat, MAX_LOG_MESSAGE, "%s [%s] %s\n", 
+        snprintf(logformat, MAX_LOG_MESSAGE, "%s [%s] %s\n",
                  ts, loglabels[level], message);
     }
-    
+
     vfprintf(logfile, logformat, args);
 }
 

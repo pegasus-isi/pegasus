@@ -19,11 +19,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class DAX2MetadataTest {
 
     @Test

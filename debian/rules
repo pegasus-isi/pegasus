@@ -30,18 +30,18 @@ install: build
 	dh_testroot
 	dh_prep
 	dh_installdirs
-	
+
 	# /etc/pegasus
 	mkdir -p debian/pegasus/etc/pegasus
 	cp -a dist/pegasus/etc/* debian/pegasus/etc/pegasus/
-	
+
 	# /usr/bin
 	mkdir -p debian/pegasus/usr
 	cp -r dist/pegasus/bin debian/pegasus/usr/
 	strip debian/pegasus/usr/bin/pegasus-cluster
 	strip debian/pegasus/usr/bin/pegasus-keg
 	strip debian/pegasus/usr/bin/pegasus-kickstart
-	
+
 	# /usr/share/
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/share debian/pegasus/usr/
@@ -49,18 +49,18 @@ install: build
 	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
 	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
 	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
-	
+
 	# /usr/lib
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/lib debian/pegasus/usr/
-	
+
 	# remove stuff we don't need
 	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
-	
+
 	# no pyc files in debian packages
 	find debian/pegasus/ -name \*.pyc -exec rm {} \;
 	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
-	
+
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -101,5 +101,3 @@ clean:
 
 
 .PHONY: build  binary-indep binary-arch binary install clean
-
-

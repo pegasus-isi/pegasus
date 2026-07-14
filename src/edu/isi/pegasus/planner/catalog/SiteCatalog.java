@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.*;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.io.File;
 import java.util.List;
 import java.util.Set;

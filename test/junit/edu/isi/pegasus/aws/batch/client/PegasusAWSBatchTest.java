@@ -17,16 +17,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.List;
 import joptsimple.OptionSet;
+
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class PegasusAWSBatchTest {
 
     // A fresh instance is required per test because parseCommandLineOptions registers

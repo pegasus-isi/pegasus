@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
+
 import java.util.Collection;
 
 /**
@@ -131,7 +132,8 @@ public abstract class AbstractRefiner implements Refiner {
     public void addStageInXFERNodes(Job job, Collection<FileTransfer> files) {
 
         throw new UnsupportedOperationException(
-                "Refiner does not implement the function addStageInXFERNodes( SubInfo, Collection<FileTransfer>)");
+                "Refiner does not implement the function addStageInXFERNodes( SubInfo,"
+                        + " Collection<FileTransfer>)");
     }
 
     /**

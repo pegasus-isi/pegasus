@@ -27,12 +27,14 @@ import edu.isi.pegasus.planner.invocation.StatCall;
 import edu.isi.pegasus.planner.invocation.StatInfo;
 import edu.isi.pegasus.planner.invocation.Status;
 import edu.isi.pegasus.planner.invocation.Usage;
+
+import org.griphyn.vdl.util.Logging;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.Logging;
 
 /**
  * This class provides basic functionalities to interact with the backend database for invocation
@@ -56,8 +58,13 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
      * @throws java.io.IOException Exception
      */
     public InvocationSchema(String dbDriverName)
-            throws ClassNotFoundException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException, InvocationTargetException, SQLException, IOException {
+            throws ClassNotFoundException,
+                    NoSuchMethodException,
+                    InstantiationException,
+                    IllegalAccessException,
+                    InvocationTargetException,
+                    SQLException,
+                    IOException {
         // load the driver from the properties
         super(dbDriverName, PROPERTY_PREFIX);
         Logging.instance().log("dbschema", 3, "done with parent schema c'tor");
@@ -178,7 +185,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
                 throw e; // re-throw
             }
 
-            // add ID explicitely from sequence to insertion
+            // add ID explicitly from sequence to insertion
             ps = m_dbdriver.getPreparedStatement("stmt.save.uname");
             i = 1;
             longOrNull(ps, i++, result);
@@ -244,7 +251,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
                 throw e; // re-throw
             }
 
-            // add ID explicitely from sequence to insertion
+            // add ID explicitly from sequence to insertion
             Logging.instance().log("xaction", 1, "START save invocation");
             PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.ivr");
             int i = 1;
@@ -422,7 +429,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
             throw e; // re-throw
         }
 
-        // add ID explicitely from sequence to insertion
+        // add ID explicitly from sequence to insertion
         Logging.instance().log("xaction", 1, "START save rusage");
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.rusage");
         int i = 1;
@@ -476,7 +483,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
             throw e; // re-throw
         }
 
-        // add ID explicitely from sequence to insertion
+        // add ID explicitly from sequence to insertion
         Logging.instance().log("xaction", 1, "START save stat");
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement("stmt.save.stat");
         int i = 1;
@@ -556,7 +563,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.lfn");
         int i = 1;
 
-        // add foreign ID explicitely
+        // add foreign ID explicitly
         ps.setLong(i++, iid);
 
         // stat (foreign key)
@@ -602,7 +609,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.job");
         int i = 1;
 
-        // add foreign ID explicitely
+        // add foreign ID explicitly
         ps.setLong(i++, iid);
 
         // type

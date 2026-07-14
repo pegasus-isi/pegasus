@@ -10,4 +10,3 @@ for fname in sys.argv[1:]:
     f = open(fname, "w")
     f.write("This is file %s\n" % fname)
     f.close()
-

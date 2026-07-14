@@ -21,12 +21,14 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Replica output mapper class structure. */
 public class ReplicaTest {
@@ -142,7 +144,8 @@ public class ReplicaTest {
         org.hamcrest.MatcherAssert.assertThat(
                 e.getMessage()
                         .contains(
-                                "[Replica] Unable to retrieve location from Mapper Replica Backend"),
+                                "[Replica] Unable to retrieve location from Mapper Replica"
+                                        + " Backend"),
                 org.hamcrest.Matchers.is(true));
     }
 

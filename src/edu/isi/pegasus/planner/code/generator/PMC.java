@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,7 +66,7 @@ public class PMC extends Abstract {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         super.initialize(bag);
@@ -83,7 +84,7 @@ public class PMC extends Abstract {
      *
      * @param dag the concrete workflow.
      * @return handle to the PMC file generated in the submit directory.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         Collection result = new ArrayList(1);
@@ -115,7 +116,8 @@ public class PMC extends Abstract {
                         .append(") ")
                         .append(".")
                         .append(
-                                "For the PMC Code generator all jobs should be mapped to the same site. ");
+                                "For the PMC Code generator all jobs should be mapped to the same"
+                                        + " site. ");
                 throw new CodeGeneratorException(error.toString());
             }
 
@@ -140,7 +142,7 @@ public class PMC extends Abstract {
                 if (stdin.startsWith(File.separator)) {
                     kickstartPreArgs.append(stdin);
                 } else {
-                    // prepend the submit dirctory
+                    // prepend the submit directory
                     // PM-833 figure out the job submit directory
                     String jobSubmitDirectory =
                             new File(job.getFileFullPath(mSubmitFileDir, ".in")).getParent();
@@ -218,7 +220,7 @@ public class PMC extends Abstract {
      *
      * @param dag the dag of which the job is a part of.
      * @param job the <code>Job</code> object holding the information about that particular job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
         throw new CodeGeneratorException("The code generator only works on the workflow level");

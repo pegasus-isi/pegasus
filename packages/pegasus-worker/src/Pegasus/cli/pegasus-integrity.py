@@ -14,7 +14,7 @@ import os
 import pprint
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from shlex import quote
 
 # PEGASUS_PYTHONPATH is set by the pegasus-python-wrapper script
@@ -61,7 +61,6 @@ except AttributeError:
 
     def iteritems(d):
         return iter(d.items())
-
 
 else:
     # Python 2
@@ -282,7 +281,7 @@ def iso8601(ts):
     :return: ISO 8601 formatted string (e.g. ``"2024-01-15T12:34:56"``)
     :rtype: str
     """
-    dt = datetime.utcfromtimestamp(ts)
+    dt = datetime.fromtimestamp(ts, timezone.utc)
     return dt.isoformat()
 
 
@@ -304,7 +303,8 @@ def generate_yaml(lfn, pfn):
     ts_end = time.time()
 
     return "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256, ts_end - ts_start,
+        sha256,
+        ts_end - ts_start,
     )
 
 
@@ -374,7 +374,8 @@ def generate_fullstat_yaml(lfn, pfn):
         )
     )
     yaml += "      sha256: {}\n      checksum_timing: {:.3f}\n".format(
-        sha256, ts_end - ts_start,
+        sha256,
+        ts_end - ts_start,
     )
     return yaml
 
@@ -586,7 +587,7 @@ def main():
     )
 
     # Parse command line options
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     setup_logger(options.debug)
 
     # sanity checks
@@ -622,7 +623,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = generate_yaml(lfn, pfn)
             if not results:
                 myexit(1)
@@ -634,7 +635,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = generate_fullstat_yaml(lfn, pfn)
             if not results:
                 myexit(1)
@@ -675,7 +676,7 @@ def main():
             lfn = None
             pfn = f
             if "=" in f:
-                (lfn, pfn) = str.split(f, "=", 1)
+                lfn, pfn = str.split(f, "=", 1)
             results = check_integrity(pfn, lfn, meta_data, options.print_timings)
             if not results:
                 exit_code = 1

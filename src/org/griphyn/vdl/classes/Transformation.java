@@ -119,7 +119,7 @@ public class Transformation extends Definition // thus implements VDL
     }
 
     /**
-     * Standard ctor: This will name a transformation with the complete tripel necessary to access
+     * Standard ctor: This will name a transformation with the complete triple necessary to access
      * it correctly (w/o guessing).
      *
      * @param name is the name of the transformation in the current namespace and version context.
@@ -661,6 +661,7 @@ public class Transformation extends Definition // thus implements VDL
     public Iterator iterateProfile() {
         return this.m_profileList.iterator();
     }
+
     /**
      * Accessor: Provides a list iterator for the <code>Argument</code> list.
      *
@@ -967,6 +968,7 @@ public class Transformation extends Definition // thus implements VDL
             this.m_declareMap.put(d.getName(), d);
         }
     }
+
     /**
      * Accessor: Replace all declarations by a new set of declarations. This method effectively
      * exchanges all formal arguments of a job.

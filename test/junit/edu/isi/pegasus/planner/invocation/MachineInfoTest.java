@@ -20,12 +20,13 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Iterator;
-import org.junit.jupiter.api.Test;
 
 /** Tests for MachineInfo abstract class. */
 public class MachineInfoTest {

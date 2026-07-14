@@ -76,6 +76,7 @@ Uses ruff for checking and formatting. The `tox -e lint` environment runs autofl
 ### Database Pattern
 
 Pegasus uses a two-database architecture:
+
 - **Master database** — Tracks all workflows (MasterWorkflow, MasterWorkflowstate tables). Queried by the dashboard for listing.
 - **Per-workflow database** — Detailed execution data (Job, JobInstance, Invocation, etc.). URL stored in the master database.
 
@@ -84,9 +85,11 @@ The `SABase` class in `schema.py` provides `commit_to_db()` and `merge_to_db()` 
 ### Namespace Package Convention
 
 All four Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
+
 ```python
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 ```
+
 Do not remove or modify this line.
 
 ### Test Structure: `test/`
@@ -95,7 +98,7 @@ Tests mirror the source layout. The `conftest.py` provides session-scoped Flask 
 
 ## Key Constraints
 
-- SQLAlchemy pinned to >=1.3,<1.4 (not compatible with 2.x)
-- Flask pinned to >1.1,<2.3
+- SQLAlchemy pinned to >=1.3,\<1.4 (not compatible with 2.x)
+- Flask pinned to >1.1,\<2.3
 - Python 3.6+ compatibility required
 - Version is `5.1.3-dev.0`, defined in both `setup.py` and root `build.properties`

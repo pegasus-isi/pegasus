@@ -18,13 +18,16 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class HintsTest {
 
     private Hints hints;

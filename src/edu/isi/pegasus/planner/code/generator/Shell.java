@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -95,7 +96,7 @@ public class Shell extends Abstract {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
         super.initialize(bag);
@@ -118,7 +119,7 @@ public class Shell extends Abstract {
      *
      * @param dag the concrete workflow.
      * @return handle to the GRMS output file.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
         String opFileName = this.getPathToShellScript(dag);
@@ -167,7 +168,7 @@ public class Shell extends Abstract {
      *
      * @param dag the dag of which the job is a part of.
      * @param job the <code>Job</code> object holding the information about that particular job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
         mLogger.log("Generating code for job " + job.getID(), LogManager.DEBUG_MESSAGE_LEVEL);
@@ -658,7 +659,8 @@ public class Shell extends Abstract {
                     throw new CodeGeneratorException(
                             "File path "
                                     + f
-                                    + " needs to be absolute for Shell code generator to resolve for job "
+                                    + " needs to be absolute for Shell code generator to resolve"
+                                    + " for job "
                                     + job.getID());
                 }
                 value.append(",");

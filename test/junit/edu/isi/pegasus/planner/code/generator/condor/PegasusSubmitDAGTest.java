@@ -23,10 +23,13 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** @author vahi */
+/**
+ * @author vahi
+ */
 public class PegasusSubmitDAGTest {
 
     private TestSetup mTestSetup;
@@ -69,7 +72,8 @@ public class PegasusSubmitDAGTest {
     @Test
     public void testPreCondor_10_2_0() {
         String existing =
-                "environment	= _CONDOR_SCHEDD_ADDRESS_FILE=condor/spool/.schedd_address;_CONDOR_DAGMAN_LOG=blackƊiamond-0.dag.dagman.out";
+                "environment	="
+                    + " _CONDOR_SCHEDD_ADDRESS_FILE=condor/spool/.schedd_address;_CONDOR_DAGMAN_LOG=blackƊiamond-0.dag.dagman.out";
         String expected = existing + ";PEGASUS_METRICS=true;";
         this.testEnvironmentClassad(existing, expected);
     }
@@ -77,9 +81,11 @@ public class PegasusSubmitDAGTest {
     @Test
     public void testCondor_10_2_0() {
         String existing =
-                "environment	= \"_CONDOR_SCHEDD_ADDRESS_FILE=/condor/spool/.schedd_address _CONDOR_DAGMAN_LOG=diamond-0.dag.dagman.out\"";
+                "environment	= \"_CONDOR_SCHEDD_ADDRESS_FILE=/condor/spool/.schedd_address"
+                        + " _CONDOR_DAGMAN_LOG=diamond-0.dag.dagman.out\"";
         String expected =
-                "environment	= \"_CONDOR_SCHEDD_ADDRESS_FILE=/condor/spool/.schedd_address _CONDOR_DAGMAN_LOG=diamond-0.dag.dagman.out PEGASUS_METRICS=true \"";
+                "environment	= \"_CONDOR_SCHEDD_ADDRESS_FILE=/condor/spool/.schedd_address"
+                        + " _CONDOR_DAGMAN_LOG=diamond-0.dag.dagman.out PEGASUS_METRICS=true \"";
         this.testEnvironmentClassad(existing, expected);
     }
 
@@ -87,7 +93,7 @@ public class PegasusSubmitDAGTest {
         mLogger.logEventStart(
                 "test.code.generator.condor.PegasusSubmitDAG", "set", Integer.toString(mTestNum++));
         PegasusSubmitDAG d = new PegasusSubmitDAG();
-        d.intialize(mBag);
+        d.initialize(mBag);
         ENV envProfiles = new ENV();
         envProfiles.construct("PEGASUS_METRICS", "true");
         String actual = d.getUpdatedDAGManEnv(existing, envProfiles);

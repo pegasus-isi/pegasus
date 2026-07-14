@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 package edu.isi.pegasus.planner.classes;
+
 /**
  * The object of this class holds the name value pair. At present to be used for environment
  * variables. Will be used more after integration of Spitfire.
@@ -138,7 +139,7 @@ public class NameValue<K, V> extends Data implements Comparable {
                 throw new IllegalArgumentException(
                         "The key for the object "
                                 + this
-                                + " does not implment comparable interface");
+                                + " does not implement comparable interface");
             }
         } else {
             throw new ClassCastException("Object is not a NameValue");

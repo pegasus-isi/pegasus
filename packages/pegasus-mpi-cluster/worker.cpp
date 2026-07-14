@@ -80,7 +80,7 @@ void PipeForward::close() {
 void PipeForward::closeread() {
     if (this->readfd != -1) {
         if (::close(this->readfd)) {
-            log_error("Error closing read end of pipe %s: %s", 
+            log_error("Error closing read end of pipe %s: %s",
                     varname.c_str(), strerror(errno));
         }
         this->readfd = -1;
@@ -90,7 +90,7 @@ void PipeForward::closeread() {
 void PipeForward::closewrite() {
     if (this->writefd != -1) {
         if (::close(this->writefd)) {
-            log_error("Error closing write end of pipe %s: %s", 
+            log_error("Error closing write end of pipe %s: %s",
                     varname.c_str(), strerror(errno));
         }
         this->writefd = -1;
@@ -146,7 +146,7 @@ TaskHandler::~TaskHandler() {
 }
 
 int TaskHandler::open_stdio() {
-    // If per-task-stdio is not enabled, then use the global 
+    // If per-task-stdio is not enabled, then use the global
     // task stdout/stderr streams
     if (!worker->per_task_stdio) {
         task_stdout = worker->out;
@@ -154,7 +154,7 @@ int TaskHandler::open_stdio() {
         return 0;
     }
 
-    // Determine the path to the next stdout/stderr file 
+    // Determine the path to the next stdout/stderr file
     string basefile = worker->workdir + "/" + name;
     char sequence[10];
     int seqno = 0;
@@ -172,7 +172,7 @@ int TaskHandler::open_stdio() {
                 break;
             } else {
                 // There was a problem
-                log_error("Task %s: Error finding stdout file: %s", 
+                log_error("Task %s: Error finding stdout file: %s",
                         name.c_str(), strerror(errno));
                 return -1;
             }
@@ -185,7 +185,7 @@ int TaskHandler::open_stdio() {
     // Open the stdout file
     task_stdout = open(outfile.c_str(), O_WRONLY|O_CREAT, 0000644);
     if (task_stdout < 0) {
-        log_error("Task %s: Unable to open task stdout file %s: %s", 
+        log_error("Task %s: Unable to open task stdout file %s: %s",
                 name.c_str(), outfile.c_str(), strerror(errno));
         return -1;
     }
@@ -193,7 +193,7 @@ int TaskHandler::open_stdio() {
     // Open the stderr file
     task_stderr = open(errfile.c_str(), O_WRONLY|O_CREAT, 0000644);
     if (task_stderr < 0) {
-        log_error("Task %s: Unable to open task stderr file %s: %s", 
+        log_error("Task %s: Unable to open task stderr file %s: %s",
                 name.c_str(), errfile.c_str(), strerror(errno));
         return -1;
     }
@@ -235,12 +235,12 @@ void TaskHandler::child_process() {
     // the task stdout/stderr where they belong. Otherwise, we could
     // end up shipping a lot of error messages to the master process.
     if (dup2(task_stdout, STDOUT_FILENO) < 0) {
-        log_fatal("Error redirecting stdout of task %s: %s", 
+        log_fatal("Error redirecting stdout of task %s: %s",
             name.c_str(), strerror(errno));
         _exit(1);
     }
     if (dup2(task_stderr, STDERR_FILENO) < 0) {
-        log_fatal("Error redirecting stderr of task %s: %s", 
+        log_fatal("Error redirecting stderr of task %s: %s",
             name.c_str(), strerror(errno));
         _exit(1);
     }
@@ -367,7 +367,7 @@ void TaskHandler::child_process() {
 
     // Exec process
     execve(executable.c_str(), argp, environ);
-    fprintf(stderr, "Unable to exec command %s for task %s: %s\n", 
+    fprintf(stderr, "Unable to exec command %s for task %s: %s\n",
         executable.c_str(), name.c_str(), strerror(errno));
     _exit(1);
 }
@@ -376,7 +376,7 @@ void TaskHandler::child_process() {
 void TaskHandler::send_io_data() {
     for (unsigned i = 0; i < this->forwards.size(); i++) {
         Forward *f = this->forwards[i];
-        log_trace("Task %s: Forward %s got %d bytes", name.c_str(), 
+        log_trace("Task %s: Forward %s got %d bytes", name.c_str(),
                 f->destination().c_str(), f->size());
 
         // Don't bother to send the message if there is no data
@@ -395,7 +395,7 @@ void TaskHandler::delete_files() {
     for (i = file_forwards.begin(); i != file_forwards.end(); i++) {
         string srcfile = i->first;
         if (unlink(srcfile.c_str())) {
-            log_debug("Task %s: Error unlinking forwarded file %s: %s", 
+            log_debug("Task %s: Error unlinking forwarded file %s: %s",
                     name.c_str(), srcfile.c_str(), strerror(errno));
         }
     }
@@ -413,13 +413,13 @@ int TaskHandler::read_file_data() {
         if (stat(srcfile.c_str(), &st)) {
             if (errno == ENOENT) {
                 // If the file does not exist, then we just skip it. We assume that
-                // the user wants to have some tasks exit successfully without 
+                // the user wants to have some tasks exit successfully without
                 // producing any output data.
-                log_debug("Task %s: file %s does not exist", name.c_str(), 
+                log_debug("Task %s: file %s does not exist", name.c_str(),
                         srcfile.c_str());
                 continue;
             }
-            log_error("Task %s: stat failed on file %s: %s", 
+            log_error("Task %s: stat failed on file %s: %s",
                     name.c_str(), srcfile.c_str(), strerror(errno));
             return -1;
         }
@@ -440,7 +440,7 @@ int TaskHandler::read_file_data() {
         // Read the data into a buffer
         char *buff = new char[size];
         if (read_file(srcfile, buff, size) != (int)size) {
-            log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(), 
+            log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(),
                     strerror(errno));
             delete[] buff;
             return -1;
@@ -532,7 +532,7 @@ int TaskHandler::run_process() {
             // can do is log it and break out of the loop. What should happen
             // then is that we close all the pipes, which will force the child
             // to get SIGPIPE and fail.
-            log_error("poll() failed for task %s: %s", name.c_str(), 
+            log_error("poll() failed for task %s: %s", name.c_str(),
                       strerror(errno));
             poll_failure = true;
             goto after_poll_loop;
@@ -543,7 +543,7 @@ int TaskHandler::run_process() {
             int revents = fds[i].revents;
             int fd = fds[i].fd;
 
-            // This descriptor has no events 
+            // This descriptor has no events
             if (revents == 0) {
                 continue;
             }
@@ -554,7 +554,7 @@ int TaskHandler::run_process() {
                     // If this happens we have a serious problem and need the
                     // task to fail. Cause the failure by breaking out of the
                     // loop and closing the pipes.
-                    log_error("Error reading from pipe %d: %s", 
+                    log_error("Error reading from pipe %d: %s",
                               fd, strerror(errno));
                     poll_failure = true;
                     goto after_poll_loop;
@@ -591,10 +591,10 @@ int TaskHandler::run_process() {
     }
 
 after_poll_loop:
-    // Close the pipes here just in case something happens above 
-    // so that we aren't deadlocked waiting for a process that is itself 
-    // deadlocked waiting for us to read data off the pipe. Instead, 
-    // if we close the pipes here, then the task will get SIGPIPE and we 
+    // Close the pipes here just in case something happens above
+    // so that we aren't deadlocked waiting for a process that is itself
+    // deadlocked waiting for us to read data off the pipe. Instead,
+    // if we close the pipes here, then the task will get SIGPIPE and we
     // can wait on it successfully.
     for (unsigned i=0; i<pipes.size(); i++) {
         pipes[i]->close();
@@ -603,7 +603,7 @@ after_poll_loop:
     // Wait for task to complete
     int exitcode;
     if (waitpid(pid, &exitcode, 0) < 0) {
-        log_error("Failed waiting for task %s: %s", name.c_str(), 
+        log_error("Failed waiting for task %s: %s", name.c_str(),
                 strerror(errno));
         return -1;
     }
@@ -614,10 +614,10 @@ after_poll_loop:
     double runtime = elapsed();
 
     if (WIFEXITED(exitcode)) {
-        log_debug("Task %s exited with status %d (%d) in %f seconds", 
+        log_debug("Task %s exited with status %d (%d) in %f seconds",
             name.c_str(), WEXITSTATUS(exitcode), exitcode, runtime);
     } else {
-        log_debug("Task %s exited on signal %d (%d) in %f seconds", 
+        log_debug("Task %s exited on signal %d (%d) in %f seconds",
             name.c_str(), WTERMSIG(exitcode), exitcode, runtime);
     }
 
@@ -644,10 +644,10 @@ void TaskHandler::write_cluster_task() {
     iso2date(start, date, sizeof(date));
 
     char summary[2048];
-    sprintf(summary, 
+    sprintf(summary,
         "[cluster-task %sname=%s, start=\"%s\", duration=%.3f, "
         "status=%d, app=\"%s\", hostname=\"%s\", slot=%d, cpus=%u, memory=%u]\n",
-        id_string.c_str(), name.c_str(), date, elapsed(), status, app.c_str(), 
+        id_string.c_str(), name.c_str(), date, elapsed(), status, app.c_str(),
         worker->host_name.c_str(), worker->rank, cpus, memory);
 
     write(task_stdout, summary, strlen(summary));
@@ -686,15 +686,15 @@ void TaskHandler::execute() {
     delete_files();
 
     // If the task succeeded, then send the I/O back to the master.
-    // We only do this if the task succeeds because if the task 
+    // We only do this if the task succeeds because if the task
     // failed, then it might not have generated good output data.
-    // It is important that we do this before sending back the 
+    // It is important that we do this before sending back the
     // result message. If we send the result message first, or if
     // it gets processed first, then we could have a situation
     // where, when a failure occurs, a task has been marked as
     // success in the transaction log, but the I/O from the task
-    // has not been saved. The MPI standard guarantees that 
-    // messages sent from one process to another are delivered 
+    // has not been saved. The MPI standard guarantees that
+    // messages sent from one process to another are delivered
     // in the order sent.
     if (this->succeeded()) {
         send_io_data();
@@ -704,7 +704,7 @@ void TaskHandler::execute() {
 }
 
 Worker::Worker(Communicator *comm, const string &dagfile, const string &host_script,
-        unsigned int host_memory, cpu_t host_cpus, bool strict_limits, 
+        unsigned int host_memory, cpu_t host_cpus, bool strict_limits,
         bool per_task_stdio) {
     this->comm = comm;
     this->dagfile = dagfile;
@@ -712,7 +712,7 @@ Worker::Worker(Communicator *comm, const string &dagfile, const string &host_scr
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
-        // of physical memory on the host and convert it to MB. 1 MB is the 
+        // of physical memory on the host and convert it to MB. 1 MB is the
         // minimum, but that shouldn't ever happen.
         unsigned long bytes = get_host_memory();
         this->host_memory = (unsigned)ceil(bytes / (1024.0*1024.0)); // bytes -> MB
@@ -769,8 +769,8 @@ Worker::~Worker() {
 }
 
 /**
- * Launch the host script if a) this worker has host rank 0, and 
- * b) the host script is valid 
+ * Launch the host script if a) this worker has host rank 0, and
+ * b) the host script is valid
  */
 void Worker::run_host_script() {
     // Only launch it if it exists
@@ -785,11 +785,11 @@ void Worker::run_host_script() {
 
     pid_t pid = fork();
     if (pid < 0) {
-        myfailures("Worker %d: Unable to fork host script", rank); 
+        myfailures("Worker %d: Unable to fork host script", rank);
     } else if (pid == 0) {
         // Redirect stdout to stderr
         if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
-            log_fatal("Unable to redirect host script stdout to stderr: %s", 
+            log_fatal("Unable to redirect host script stdout to stderr: %s",
                 strerror(errno));
             _exit(1);
         }
@@ -797,13 +797,13 @@ void Worker::run_host_script() {
         // Create a new process group so we can kill it later if
         // it runs longer than the workflow
         if (setpgid(0, 0) < 0) {
-            log_fatal("Unable to set process group in host script: %s", 
+            log_fatal("Unable to set process group in host script: %s",
                 strerror(errno));
             _exit(1);
         }
 
         // Close any other open descriptors. This will not really close
-        // everything, but it is unlikely that we will have more than a 
+        // everything, but it is unlikely that we will have more than a
         // few descriptors open. It depends on MPI.
         for (int i=3; i<32; i++) {
             close(i);
@@ -819,13 +819,13 @@ void Worker::run_host_script() {
         _exit(1);
     } else {
 
-        // Also set process group here to avoid potential races. It is 
+        // Also set process group here to avoid potential races. It is
         // possible that we might try to call killpg() before the child
         // has a chance to run. Calling setpgid() here ensures that the
-        // child's process group will always be set before killpg() is 
+        // child's process group will always be set before killpg() is
         // called so that it doesn't fail.
         if (setpgid(pid, pid) < 0) {
-            log_error("Unable to set process group for host script: %s", 
+            log_error("Unable to set process group for host script: %s",
                 strerror(errno));
         }
 
@@ -859,17 +859,17 @@ void Worker::run_host_script() {
                 // If waitpid was interrupted, then the host script timed out
                 // Kill the host script's process group
                 killpg(pid, SIGKILL);
-                myfailure("Worker %d: Host script timed out after %d seconds", 
+                myfailure("Worker %d: Host script timed out after %d seconds",
                     rank, HOST_SCRIPT_TIMEOUT);
             } else {
                 myfailures("Worker %d: Error waiting for host script", rank);
             }
         } else {
             if (WIFEXITED(status)) {
-                log_debug("Worker %d: Host script exited with status %d (%d)", 
+                log_debug("Worker %d: Host script exited with status %d (%d)",
                     rank, WEXITSTATUS(status), status);
             } else {
-                log_debug("Worker %d: Host script exited on signal %d (%d)", 
+                log_debug("Worker %d: Host script exited on signal %d (%d)",
                     rank, WTERMSIG(status), status);
             }
 
@@ -897,18 +897,18 @@ void Worker::kill_host_script_group() {
 
     if (killpg(host_script_pgid, SIGTERM) < 0) {
         if (errno != ESRCH) {
-            log_warn("Worker %d: Unable to terminate host script process group: %s", 
+            log_warn("Worker %d: Unable to terminate host script process group: %s",
                 rank, strerror(errno));
         }
     } else {
-        // There must have been some processes in the process group, give 
+        // There must have been some processes in the process group, give
         // them a few seconds and then kill them
         if (sleep(HOST_SCRIPT_GRACE_PERIOD) != 0) {
             log_warn("Worker %d: sleep() finished prematurely", rank);
         }
         if (killpg(host_script_pgid, SIGKILL) < 0) {
             if (errno != ESRCH) {
-                log_warn("Worker %d: Unable to kill host script process group: %s", 
+                log_warn("Worker %d: Unable to kill host script process group: %s",
                     rank, strerror(errno));
             }
         } else {
@@ -974,4 +974,3 @@ int Worker::run() {
 
     return 0;
 }
-

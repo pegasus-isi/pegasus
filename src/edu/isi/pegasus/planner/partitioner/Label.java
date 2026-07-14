@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -169,7 +170,7 @@ public class Label extends Partitioner {
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
             // PM-745 set whether a single sized partition was associated with a label
-            // or not. any partition of size > 1 has to have a label assoicated.
+            // or not. any partition of size > 1 has to have a label associated.
             boolean hasAssociatedLabel = true;
             if (p.getSize() == 1) {
                 // for single sized partitions look into the last added node

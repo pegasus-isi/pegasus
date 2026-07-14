@@ -17,6 +17,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.io.File;
 
 /**
@@ -48,7 +49,7 @@ public interface GridStart {
 
     /**
      * Enables a job to run on the grid. This also determines how the stdin,stderr and stdout of the
-     * job are to be propogated. To grid enable a job, the job may need to be wrapped into another
+     * job are to be propagated. To grid enable a job, the job may need to be wrapped into another
      * job, that actually launches the job. It usually results in the job description passed being
      * modified modified.
      *
@@ -63,7 +64,7 @@ public interface GridStart {
 
     /**
      * Enables a job to run on the grid. This also determines how the stdin,stderr and stdout of the
-     * job are to be propogated. To grid enable a job, the job may need to be wrapped into another
+     * job are to be propagated. To grid enable a job, the job may need to be wrapped into another
      * job, that actually launches the job. It usually results in the job description passed being
      * modified modified.
      *

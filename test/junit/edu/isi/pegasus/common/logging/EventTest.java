@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.format.NetloggerEvent;
 import edu.isi.pegasus.common.logging.format.SimpleEvent;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.Collection;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 /** Structural tests for the Event interface via reflection. */
 public class EventTest {

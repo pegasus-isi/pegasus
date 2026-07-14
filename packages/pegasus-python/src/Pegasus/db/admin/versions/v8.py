@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -38,7 +37,7 @@ class Version(BaseVersion):
         :param force:
         :return:
         """
-        log.info("Updating to version %s" % DB_VERSION)
+        log.info(f"Updating to version {DB_VERSION}")
         try:
             log.info("Updating master_workflowstate...")
             self.db.execute(

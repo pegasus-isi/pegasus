@@ -8,6 +8,13 @@ package edu.isi.pegasus.aws.batch.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import software.amazon.awssdk.services.batch.model.CEState;
+import software.amazon.awssdk.services.batch.model.CEType;
+import software.amazon.awssdk.services.batch.model.CRType;
+import software.amazon.awssdk.services.batch.model.ComputeResource;
+import software.amazon.awssdk.services.batch.model.CreateComputeEnvironmentRequest;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,11 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import software.amazon.awssdk.services.batch.model.CEState;
-import software.amazon.awssdk.services.batch.model.CEType;
-import software.amazon.awssdk.services.batch.model.CRType;
-import software.amazon.awssdk.services.batch.model.ComputeResource;
-import software.amazon.awssdk.services.batch.model.CreateComputeEnvironmentRequest;
 
 /**
  * A Builder to get objects related to Compute Environments The JSON specification can be found in

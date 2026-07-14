@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.catalog.classes;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+
 import java.util.HashMap;
 import java.util.Map;
 

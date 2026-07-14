@@ -5,19 +5,19 @@
 
   $Id$
 
-  Copyright (c) 2003 The University of Chicago and The University of 
+  Copyright (c) 2003 The University of Chicago and The University of
   Southern California. All Rights Reserved.
 
 -->
 </head>
 <body bgcolor="white">
 
-Provides for the database driver encapsulation. 
+Provides for the database driver encapsulation.
 
 <h2>Package Specification</h2>
 
-The classes in this package provide an implementation for different 
-relational database management backend systems. The correct backend 
+The classes in this package provide an implementation for different
+relational database management backend systems. The correct backend
 system is dynamically instantiated, steered through properties.<p>
 
 <center>
@@ -37,7 +37,7 @@ Shown in black are implemented drivers. Red and black show non-working
 implementations. In red are shown projected drivers that won't work at
 all.<p>
 
-To provide an alternative implementation for an rDBMS, you need to 
+To provide an alternative implementation for an rDBMS, you need to
 extend {@link org.griphyn.vdl.dbdriver.DatabaseDriver}.
 
 <h2>Related Documentation</h2>
@@ -60,14 +60,14 @@ tc):<p>
 <dl>
  <dt><b><code>vds.db.*.driver</code></b></dt>
  <dd>This property names the class that implements
-  the {@link org.griphyn.vdl.dbdriver.DatabaseDriver} for a specific 
+  the {@link org.griphyn.vdl.dbdriver.DatabaseDriver} for a specific
   database engine. If the value is a identifier without periods, the prefix
   <code>org.griphyn.vdl.dbdrivers.</code> is assumed. Otherwise, the
   value denotes the complete Java path to the implementing class. Being
   a class name, capitalization is important.</dd>
  <dt><b><code>vds.db.*.driver.url</code></b></dt>
  <dd>The URL under which a database may be access. This URL is often
-  specific to the database itself. However, usually it contains the 
+  specific to the database itself. However, usually it contains the
   host and port (or file) to contact the rDBMS, and the name of the
   database within the rDBMS.</dd>
  <dt><b><code>vds.db.*.driver.user</code></b></dt>

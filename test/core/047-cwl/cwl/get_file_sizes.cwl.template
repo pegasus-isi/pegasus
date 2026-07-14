@@ -7,7 +7,7 @@ inputs:
         type: File
         inputBinding:
             position: 0
-    
+
     file2:
         type: File
         inputBinding:

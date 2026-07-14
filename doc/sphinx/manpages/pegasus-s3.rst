@@ -8,10 +8,10 @@ Upload, download, delete objects in Amazon S3.
    ::
 
       pegasus-s3 help
-      pegasus-s3 ls [options] URL                
+      pegasus-s3 ls [options] URL
       pegasus-s3 mkdir URL
       pegasus-s3 rm [options] URL
-      pegasus-s3 put [options] FILE URL 
+      pegasus-s3 put [options] FILE URL
       pegasus-s3 get [options] URL [FILE]
       pegasus-s3 cp [options] SRC… DEST
 
@@ -22,7 +22,7 @@ Description
 
 **pegasus-s3** is a client for the Amazon S3 object storage service and
 any other storage services that conform to the Amazon S3 API, such as
-Eucalyptus Walrus. Note that this tool is mainly used internally by 
+Eucalyptus Walrus. Note that this tool is mainly used internally by
 :ref:`cli-pegasus-transfer` and it is recommended to use Amazon's
 `AWS Command Line Interface`_.
 
@@ -66,7 +66,7 @@ rm Options
    Ignore nonexistent keys
 
 **-F**; \ **--file**
-   File containing a list of URLs to delete 
+   File containing a list of URLs to delete
 
 put Options
 -----------
@@ -120,14 +120,14 @@ operations.
    URL to create the key name (e.g. ``pegasus-s3 put foo
    s3://u@h/bucket/key`` will create a key called "key", while
    ``pegasus-s3 put foo s3://u@h/bucket/key/`` will create a key called
-   ``key/foo``. 
+   ``key/foo``.
 
 **get**
    The **get** subcommand retrieves an object from the storage service
    identified by URL and stores it in the file specified by FILE. If
    FILE is not specified, then the part of the key after the last "/" is
    used as the file name, and the result is placed in the
-   current working directory. 
+   current working directory.
 
 **cp**
    The **cp** subcommand copies keys on the server. Keys cannot be
@@ -237,7 +237,7 @@ example of an identity entry:
    secret_key = a0e3840e5baee6abb08be68e81674dca
 
 .. warning::
-  Access and secret keys should not be quoted. 
+  Access and secret keys should not be quoted.
 
 It is important to note that user names and site names used are only
 logical—they do not correspond to actual hostnames or usernames, but are
@@ -278,7 +278,7 @@ Example Configuration
 
 This is an example configuration that specifies a two sites (amazon and
 magellan) and three identities (``pegasus@amazon``,\ ``juve@magellan``,
-and ``voeckler@magellan``). 
+and ``voeckler@magellan``).
 
 ::
 
@@ -351,6 +351,3 @@ Return Value
 
 **pegasus-s3** returns a zero exist status if the operation is
 successful. A non-zero exit status is returned in case of failure.
-
-
-

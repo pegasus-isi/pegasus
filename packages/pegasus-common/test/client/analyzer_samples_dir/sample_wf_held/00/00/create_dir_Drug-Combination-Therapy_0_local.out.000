@@ -140,11 +140,11 @@
         2023-03-05 09:10:16,982    INFO:  LD_LIBRARY_PATH=
         2023-03-05 09:10:17,032    INFO:  --------------------------------------------------------------------------------
         2023-03-05 09:10:17,032    INFO:  Starting transfers - attempt 1
-        2023-03-05 09:10:19,035    INFO:  /bin/mkdir -p '/home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013' 
+        2023-03-05 09:10:19,035    INFO:  /bin/mkdir -p '/home/mzalam/covid/scratch/mzalam/pegasus/Drug-Combination-Therapy/run0013'
         2023-03-05 09:10:19,045    INFO:  --------------------------------------------------------------------------------
         2023-03-05 09:10:19,045    INFO:  Stats: no local files in the transfer set
         2023-03-05 09:10:19,045    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_760532/ks.err.THILFi
       descriptor: 4

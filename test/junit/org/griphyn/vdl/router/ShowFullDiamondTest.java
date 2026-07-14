@@ -17,13 +17,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
-import java.io.StringWriter;
 import org.griphyn.vdl.classes.Definitions;
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dbschema.InMemorySchema;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.io.StringWriter;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ShowFullDiamondTest {
 
     @Test

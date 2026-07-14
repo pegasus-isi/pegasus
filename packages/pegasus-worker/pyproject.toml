@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 # [project]
 
 # name = "pegasus-wms.worker"
-# version = "5.2.0-dev.0"
+# version = "6.0.0-dev.0"
 # authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 # maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 # description = "Pegasus Workflow Management System Python API"
@@ -51,15 +51,10 @@ build-backend = "setuptools.build_meta"
 #   "Topic :: Utilities",
 # ]
 # dependencies = [
-#   "six>=1.9.0",
 #   "boto3>1.12",
 #   "globus-sdk>=3.23.0,<4;python_version>='3.7'",
 # ]
 # keywords=["scientific workflows"]
-
-# [dependency-groups]
-
-# dev = ["ruff", "tox"]
 
 # [project.urls]
 
@@ -68,6 +63,11 @@ build-backend = "setuptools.build_meta"
 # Changes = "https://pegasus.isi.edu/blog/?category_name=Release"
 # Repository = "https://github.com/pegasus-isi/pegasus"
 # Issues = "https://github.com/pegasus-isi/pegasus/issues"
+
+
+# [dependency-groups]
+
+# dev = ["ruff", "tox"]
 
 
 [tool.isort]

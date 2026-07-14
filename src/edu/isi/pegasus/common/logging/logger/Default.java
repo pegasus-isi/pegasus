@@ -16,6 +16,7 @@ package edu.isi.pegasus.common.logging.logger;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Currently;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -393,7 +394,7 @@ public class Default extends LogManager {
      * date-timestamp generated would be 2003-06-06T14:31:27-07:00 where -07:00 denotes the timezone
      * offset of the local timezone from UTC.
      *
-     * @return the formattted timestamp;
+     * @return the formatted timestamp;
      */
     public String getTimeStamp() {
         String st = Default.mFormatter.now();

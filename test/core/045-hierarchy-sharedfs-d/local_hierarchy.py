@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import subprocess
 import sys
@@ -98,7 +98,7 @@ wf2.write("subwf2.yml")
 root_wf = Workflow("root")
 
 # we write out the replica catalog into the workflow to make sure it gets inherited
-# by the sub workflow, or specify the location to it in the propoerties file
+# by the sub workflow, or specify the location to it in the properties file
 root_wf.add_replica_catalog(rc)
 
 j1 = (

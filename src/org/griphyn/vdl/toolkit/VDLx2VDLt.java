@@ -15,11 +15,14 @@
 package org.griphyn.vdl.toolkit;
 
 import edu.isi.pegasus.common.util.Version;
+
 import gnu.getopt.*;
-import java.io.*;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.directive.VDLxConvert;
 import org.griphyn.vdl.parser.*;
+
+import java.io.*;
 
 /**
  * This class uses the <code>VDLxParser</code> to parse VDL XML specification and output VDL textual

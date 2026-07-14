@@ -10,9 +10,3 @@ pegasus.transfer.links = true
 
 # symlinked files should not be integrity checked
 pegasus.integrity.checking = nosymlink
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-pegasus.catalog.site.file=sites.xml
+pegasus.catalog.site.file=sites.yml
 
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
@@ -9,8 +9,6 @@ pegasus.transfer.bypass.input.staging = true
 
 pegasus.selector.replica Regex
 pegasus.selector.replica.regex.rank.1 root://.*
-pegasus.selector.replica.regex.rank.2 http://data.isi.edu/non-existant.*
+pegasus.selector.replica.regex.rank.2 http://data.isi.edu/non-existent.*
 pegasus.selector.replica.regex.rank.3 file://.*
 pegasus.selector.replica.regex.rank.4 http://data.isi.edu/.*
-
-

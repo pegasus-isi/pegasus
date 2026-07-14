@@ -14,7 +14,6 @@ src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
 install_requires = [
-    "six>=1.9.0",
     "boto3>1.12",
     "globus-sdk>=3.23.0,<4;python_version>='3.7'",
 ]
@@ -42,7 +41,7 @@ def find_namespace_packages(where):
 
 setup(
     name="pegasus-wms.worker",
-    version="5.2.0-dev.0",
+    version="6.0.0-dev.0",
     author="Pegasus Team",
     author_email="pegasus@isi.edu",
     description="Pegasus Workflow Management System Worker Package Tools",

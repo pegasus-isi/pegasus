@@ -37,13 +37,15 @@ res = [
             """,
             (re.VERBOSE | re.IGNORECASE),
         ),
-        lambda m: datetime.datetime.today()
-        - datetime.timedelta(
-            days=int(m.group("days") or 0),
-            seconds=int(m.group("seconds") or 0),
-            minutes=int(m.group("minutes") or 0),
-            hours=int(m.group("hours") or 0),
-            weeks=int(m.group("weeks") or 0),
+        lambda m: (
+            datetime.datetime.today()
+            - datetime.timedelta(
+                days=int(m.group("days") or 0),
+                seconds=int(m.group("seconds") or 0),
+                minutes=int(m.group("minutes") or 0),
+                hours=int(m.group("hours") or 0),
+                weeks=int(m.group("weeks") or 0),
+            )
         ),
     ),
     # Today
@@ -318,3 +320,4 @@ def magicdate(input):
         m = r.match(input.strip())
         if m:
             return f(m)
+    return None

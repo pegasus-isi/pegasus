@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.dbdriver;
 
+import org.griphyn.vdl.util.*;
+
 import java.sql.*;
 import java.util.*;
-import org.griphyn.vdl.util.*;
 
 /**
  * This class implements the driver API for the MySQL 4.* database.
@@ -157,7 +158,7 @@ public class MySQL extends DatabaseDriver {
     /**
      * Obtains the sequence value for the current statement. Sigh.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.

@@ -27,11 +27,11 @@ class Bundle:
         # Verify that the bundle does not contain any harmful paths
         for name in self.zipfile.namelist():
             if name.startswith("/") or ".." in name:
-                raise BundleException("Invalid bundle entry: %s" % name)
+                raise BundleException(f"Invalid bundle entry: {name}")
 
         # Verify that the bundle contains a manifest file
         if not self.contains(PROPERTIES_NAME):
-            raise BundleException("Bundle does not contain %s" % PROPERTIES_NAME)
+            raise BundleException(f"Bundle does not contain {PROPERTIES_NAME}")
 
         # Open the properties entry
         self.properties = properties.parse_properties(

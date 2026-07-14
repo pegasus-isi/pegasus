@@ -25,12 +25,16 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class ImplementationFactoryTest {
 
     @Test
@@ -136,7 +140,7 @@ public class ImplementationFactoryTest {
                 exception.getCause().getClass(), is(TransferImplementationFactoryException.class));
         TransferImplementationFactoryException wrapped =
                 (TransferImplementationFactoryException) exception.getCause();
-        assertThat(wrapped.getMessage(), is("Instantiating Transfer Impelmentation "));
+        assertThat(wrapped.getMessage(), is("Instantiating Transfer Implementation "));
         assertThat(wrapped.getClassname(), is(TestImplementation.class.getName()));
         assertThat(wrapped.getCause(), notNullValue());
         assertThat(wrapped.getCause().getMessage(), is("Invalid properties passed"));

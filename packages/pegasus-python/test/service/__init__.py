@@ -1,3 +1,5 @@
+# ruff:noqa: F821
+
 import base64
 import logging
 import os
@@ -35,7 +37,7 @@ class DBTestCase(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         self.dbfile = os.path.join(self.tmpdir, "workflow.db")
-        self.dburi = "sqlite:///%s" % self.dbfile
+        self.dburi = f"sqlite:///{self.dbfile}"
         app.config.update(SQLALCHEMY_DATABASE_URI=self.dburi)
         migrations.create()
 
@@ -71,7 +73,7 @@ class APITestCase(UserTestCase):
             if kwargs.get("auth", True):
                 userpass = self.username + ":" + self.password
                 uphash = base64.b64encode(userpass)
-                headers.append(("Authorization", "Basic %s" % uphash))
+                headers.append(("Authorization", f"Basic {uphash}"))
                 kwargs.update(headers=headers)
 
             if "auth" in kwargs:

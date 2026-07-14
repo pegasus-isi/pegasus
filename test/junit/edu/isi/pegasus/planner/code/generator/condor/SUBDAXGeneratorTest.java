@@ -21,9 +21,11 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the SUBDAXGenerator class constants and structure. */
 public class SUBDAXGeneratorTest {

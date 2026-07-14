@@ -18,8 +18,10 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,7 +48,7 @@ public abstract class Executable {
     /** The object holding all the properties pertaining to Pegasus. */
     protected PegasusProperties mProps;
 
-    /** It stores the verison of the Griphyn Virtual Data System software. */
+    /** It stores the version of the Griphyn Virtual Data System software. */
     protected String mVersion;
 
     /** The error message to be logged. */
@@ -141,6 +143,7 @@ public abstract class Executable {
     public static String convertException(Exception e) {
         return Executable.convertException(e, LogManager.TRACE_MESSAGE_LEVEL);
     }
+
     /**
      * Returns an error message that chains all the lower order error messages that might have been
      * thrown.
@@ -176,7 +179,7 @@ public abstract class Executable {
                     .append(": ")
                     .append(cause.getMessage());
 
-            // append just one elment of stack trace for each exception
+            // append just one element of stack trace for each exception
             message.append(" at ").append(cause.getStackTrace()[0]);
         }
         return message.toString();

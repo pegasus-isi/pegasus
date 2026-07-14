@@ -24,7 +24,9 @@ import java.util.List;
  */
 public class TestLogFormatter {
 
-    /** @param fm the LOG formatter to use. */
+    /**
+     * @param fm the LOG formatter to use.
+     */
     public void writeTestLog(LogFormatter fm) {
         fm.setProgramName("Pegasus");
 
@@ -49,13 +51,15 @@ public class TestLogFormatter {
         fm.add("Messs supplied without a key ");
         System.out.println(fm.createLogMessage());
 
-        fm.add(LoggingKeys.QUERY_NAME, "getpredicted performace").add("time", "10.00");
+        fm.add(LoggingKeys.QUERY_NAME, "getpredicted performance").add("time", "10.00");
         System.out.println(fm.createLogMessageAndReset());
 
         System.out.println(fm.getEndEventMessage());
     }
 
-    /** @param args */
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
         TestLogFormatter test = new TestLogFormatter();
         System.out.println("\n Logs in Netlogger Format");

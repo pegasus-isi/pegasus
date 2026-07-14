@@ -33,8 +33,7 @@ def getLocaltimeOffsetSec(t=None):
     # this doesn't handle DST properly
     # offs_sec = time.mktime(time.localtime(t)) - time.mktime(time.gmtime(t))
     # this does:
-    offs_sec = calendar.timegm(time.localtime(t)) - time.mktime(time.localtime(t))
-    return offs_sec
+    return calendar.timegm(time.localtime(t)) - time.mktime(time.localtime(t))
 
 
 def getLocaltimeOffsetParts(t=None):
@@ -84,7 +83,7 @@ def getLocaltimeISO(t):
     if hr == 0 and min == 0:
         s = "Z"
     else:
-        s = "%s%02d:%02d" % (("", "+", "-")[sign], hr, min)
+        s = f"{('', '+', '-')[sign]}{hr:02d}:{min:02d}"
     return s
 
 
@@ -97,7 +96,7 @@ def splitISODate(s):
     """
     m = ISO_DATE_PARTS.match(s)
     if not m:
-        raise DateFormatError("Not a partial ISO date: %s" % s)
+        raise DateFormatError(f"Not a partial ISO date: {s}")
     parts = list(m.groups())
     # Fill in missing parts with 'zero'
     for i, part in enumerate(parts[:-1]):
@@ -151,7 +150,7 @@ def parseISO(s):
     """
     # if it's too short
     if len(s) < 7:
-        raise DateFormatError("Date '%s' is too short" % s)
+        raise DateFormatError(f"Date '{s}' is too short")
     # UTC timezone?
     if s[-1] == "Z":
         tz_offs, tz_len = 0, 1
@@ -161,7 +160,7 @@ def parseISO(s):
         tz_len = 6
     # otherwise
     else:
-        raise DateFormatError("Date '%s' is missing timezone" % s)
+        raise DateFormatError(f"Date '{s}' is missing timezone")
     # split into components
     cal, clock = s.split("T")
     year, month, day = cal.split("-")
@@ -195,7 +194,7 @@ def makeISO(value, is_gmt=False, set_gmt=False):
         try:
             d = magicdate.magicdate(value)
         except Exception:
-            raise ValueError("magicdate cannot parse '%s'" % value)
+            raise ValueError(f"magicdate cannot parse '{value}'")
         partial_iso = d.isoformat()
         iso = completeISO(partial_iso, is_gmt=is_gmt, set_gmt=set_gmt)
     return iso
@@ -265,8 +264,7 @@ def utcFormatISO(sec):
     """
     tm = time.gmtime(sec)
     usec = int((sec - int(sec)) * 1e6)
-    iso_date = "%s.%06dZ" % (DATE_FMT % tm[0:6], usec)
-    return iso_date
+    return f"{DATE_FMT % tm[0:6]}.{usec:06d}Z"
 
 
 def localtimeFormatISO(sec):
@@ -277,14 +275,7 @@ def localtimeFormatISO(sec):
     tm = time.localtime(sec)
     usec = int((sec - int(sec)) * 1000000)
     hr, min, sign = getLocaltimeOffsetParts(sec)
-    iso_date = "%s.%06d%s%02d:%02d" % (
-        DATE_FMT % tm[0:6],
-        usec,
-        ("-", "+")[sign == 1],
-        hr,
-        min,
-    )
-    return iso_date
+    return f"{DATE_FMT % tm[0:6]}.{usec:06d}{('-', '+')[sign == 1]}{hr:02d}:{min:02d}"
 
 
 # Syslog-style dates (always in localtime)
@@ -313,9 +304,8 @@ def parseSyslogDate(date):
     """
     m = SYSLOG_DATE_RE.match(date)
     if m is None:
-        raise ValueError("bad syslog date '%s'" % date)
+        raise ValueError(f"bad syslog date '{date}'")
     g = m.groups()
     month = MONTHS[g[1]]
     day, hh, mm, ss, year = list(map(int, g[2:]))
-    sec = time.mktime((year, month, day, hh, mm, ss, 0, 0, -1))
-    return sec
+    return time.mktime((year, month, day, hh, mm, ss, 0, 0, -1))

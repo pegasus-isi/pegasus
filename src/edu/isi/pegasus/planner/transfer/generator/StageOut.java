@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.Refiner;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
@@ -80,8 +81,8 @@ public class StageOut extends Abstract {
      * @param bag bag of initialization objects
      * @param transferRefiner the transfer refiner being used
      */
-    public void initalize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
-        super.initalize(dag, bag, transferRefiner);
+    public void initialize(ADag dag, PegasusBag bag, Refiner transferRefiner) {
+        super.initialize(dag, bag, transferRefiner);
         mOutputMapper = OutputMapperFactory.loadInstance(dag, bag);
 
         // PM-1608 load a mapper if required
@@ -136,7 +137,7 @@ public class StageOut extends Abstract {
         props.setProperty(key, "File");
         // set path to output mapper
         props.setProperty(key + ".file", mapFile);
-        // disable execption thrown by mapper
+        // disable exception thrown by mapper
         props.setProperty(key + "." + Replica.DISABLE_EXCEPTIONS_KEY, "true");
 
         PegasusBag b = new PegasusBag();
@@ -156,6 +157,7 @@ public class StageOut extends Abstract {
                 });
         return result;
     }
+
     /**
      * This gets the file transfer objects corresponding to the location of files found in the
      * replica mechanism, and transfers it to the output site asked by the user. If the output site
@@ -195,7 +197,8 @@ public class StageOut extends Abstract {
             // sanity check
             if (rl == null) {
                 throw new RuntimeException(
-                        "Unable to find a physical filename (PFN) in the Replica Catalog for output file with logical filename (LFN) as "
+                        "Unable to find a physical filename (PFN) in the Replica Catalog for output"
+                                + " file with logical filename (LFN) as "
                                 + lfn);
             }
 
@@ -282,7 +285,7 @@ public class StageOut extends Abstract {
         }
 
         // GH-2141 if the destination URL is an OSDF URL
-        // explicilty turn cleanup off
+        // explicitly turn cleanup off
         boolean doCleanup = true;
         if (stagingSiteURLPrefix.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
             doCleanup = false;

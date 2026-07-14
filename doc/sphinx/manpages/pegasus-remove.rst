@@ -85,5 +85,3 @@ See Also
 ========
 
 pegasus-plan(1), pegasus-run(1)
-
-

@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.util.FactoryException;
+
 import org.junit.jupiter.api.Test;
 
 /** Tests for the ClustererFactoryException class. */

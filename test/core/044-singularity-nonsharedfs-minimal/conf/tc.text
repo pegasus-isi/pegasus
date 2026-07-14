@@ -1,7 +1,7 @@
 tr diamond::preprocess:4.0 {
 
 #specify profiles that apply for all the sites for the transformation
-#in each site entry the profile can be overriden
+#in each site entry the profile can be overridden
 
   profile env "APP_HOME" "/tmp/myscratch"
 
@@ -25,7 +25,7 @@ tr diamond::preprocess:4.0 {
 tr diamond::findrange:4.0 {
 
 #specify profiles that apply for all the sites for the transformation
-#in each site entry the profile can be overriden
+#in each site entry the profile can be overridden
 
   profile env "APP_HOME" "/tmp/myscratch"
 
@@ -49,7 +49,7 @@ tr diamond::findrange:4.0 {
 tr diamond::analyze:4.0 {
 
 #specify profiles that apply for all the sites for the transformation
-#in each site entry the profile can be overriden
+#in each site entry the profile can be overridden
 
   profile env "APP_HOME" "/tmp/myscratch"
 

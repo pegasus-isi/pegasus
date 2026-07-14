@@ -36,7 +36,7 @@ public class TransformationNotFoundException extends java.lang.RuntimeException 
      * Constructs a <code>TransformationNotFoundException</code> with the specified detailed
      * message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public TransformationNotFoundException(String s) {
         super(s);

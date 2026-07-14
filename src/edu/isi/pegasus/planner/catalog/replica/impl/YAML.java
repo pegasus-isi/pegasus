@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
@@ -48,6 +49,9 @@ import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidationResult;
 import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
+
+import org.yaml.snakeyaml.LoaderOptions;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -70,7 +74,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.yaml.snakeyaml.LoaderOptions;
 
 /**
  * This class implements a replica catalog on top of a simple file with regular expression based
@@ -118,7 +121,7 @@ import org.yaml.snakeyaml.LoaderOptions;
  *      pfns:
  *        - site: local
  *          pfn: input/mono/[0]
- *          # cant have checksum
+ *          # can't have checksum
  *      metadata:
  *        owner: pegasus
  *        regex: true
@@ -1176,7 +1179,7 @@ public class YAML implements ReplicaCatalog {
          *      pfns:
          *        - site: local
          *          pfn: input/mono/[0]
-         *          # cant have checksum
+         *          # can't have checksum
          *      metadata:
          *        owner: pegasus
          *        regex: true
@@ -1195,7 +1198,7 @@ public class YAML implements ReplicaCatalog {
             JsonNode node = oc.readTree(parser);
             YAML yamlRC = (YAML) dc.findInjectableValue("callback", null, null);
             if (yamlRC == null) {
-                throw new RuntimeException("Callback not initialized when parsing inititated");
+                throw new RuntimeException("Callback not initialized when parsing initiated");
             }
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();

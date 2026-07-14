@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.transfer.classes;
 
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;

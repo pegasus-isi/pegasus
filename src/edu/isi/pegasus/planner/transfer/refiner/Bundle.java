@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.classes.TransferContainer;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -690,7 +691,7 @@ public class Bundle extends Basic {
      * Returns the appropriate pool transfer for a particular site.
      *
      * @param site the site for which the PT is reqd.
-     * @param localTransfer whethe the associated transfer job runs on local site or remote.
+     * @param localTransfer whether the associated transfer job runs on local site or remote.
      * @param num the number of Stageout jobs required for that Pool.
      * @return the PoolTransfer
      */
@@ -848,7 +849,7 @@ public class Bundle extends Basic {
             mNext = 0;
             mPool = pool;
             mTXContainers = new ArrayList(number);
-            // intialize to null
+            // initialize to null
             for (int i = 0; i < number; i++) {
                 mTXContainers.add(null);
             }
@@ -1066,7 +1067,7 @@ public class Bundle extends Basic {
 
         /**
          * Determines the bundle factor for a particular site on the basis of the stage in bundle
-         * value associcated with the underlying transfer transformation in the transformation
+         * value associated with the underlying transfer transformation in the transformation
          * catalog. If the key is not found, then the default value is returned. In case of the
          * default value being null the global default is returned.
          *
@@ -1083,7 +1084,7 @@ public class Bundle extends Basic {
 
         /**
          * Determines the bundle factor for a particular site on the basis of the stage in bundle
-         * value associcated with the underlying transfer transformation in the transformation
+         * value associated with the underlying transfer transformation in the transformation
          * catalog. If the key is not found, then the default value is returned. In case of the
          * default value being null the global default is returned.
          *

@@ -17,11 +17,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+import java.io.IOException;
+import java.io.StringWriter;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class WorkerNodeScratchTest {
 
     @Test

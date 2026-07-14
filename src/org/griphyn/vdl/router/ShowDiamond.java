@@ -15,9 +15,10 @@
 
 package org.griphyn.vdl.router;
 
-import java.io.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.Logging;
+
+import java.io.*;
 
 public class ShowDiamond {
     public static void main(String[] args) throws IllegalArgumentException, IOException {

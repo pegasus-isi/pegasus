@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FactoryException;
@@ -27,8 +28,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.XML3PrintVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -94,6 +97,7 @@ public class SCClient extends Executable {
         mLogger = LogManagerFactory.loadSingletonInstance(mProps);
         mLogger.logEventStart("event.pegasus.pegasus-sc-converter", "pegasus.version", mVersion);
     }
+
     /** Loads all the properties that would be needed by the Toolkit classes */
     public void loadProperties() {}
 
@@ -200,7 +204,8 @@ public class SCClient extends Executable {
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("No enum constant")) {
                 mLogger.log(
-                        "Consider using the -e option. Conversion fails if you use variables for specifying enum values in the input site catalog.",
+                        "Consider using the -e option. Conversion fails if you use variables for"
+                                + " specifying enum values in the input site catalog.",
                         e,
                         LogManager.ERROR_MESSAGE_LEVEL);
             } else {
@@ -321,7 +326,8 @@ public class SCClient extends Executable {
                 }
             } else {
                 throw new IOException(
-                        "Invalid input format. Only input format supported in XML. The client will auto-detect if the input is in version 3 or 4.");
+                        "Invalid input format. Only input format supported in XML. The client will"
+                                + " auto-detect if the input is in version 3 or 4.");
             } // end of input format xml
         } // end of iteration through input files.
 
@@ -333,8 +339,11 @@ public class SCClient extends Executable {
         String text =
                 "\n "
                         + getGVDSVersion()
-                        + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> "
-                        + "\n        [-O <output format>] [-c <path to property file>] [-v] [-q] [-V] [-h]\n";
+                        + "\n"
+                        + " Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o"
+                        + " <output file to write> \n"
+                        + "        [-O <output format>] [-c <path to property file>] [-v] [-q] [-V]"
+                        + " [-h]\n";
 
         System.out.print(text);
     }
@@ -343,35 +352,44 @@ public class SCClient extends Executable {
         String text =
                 "\n "
                         + getGVDSVersion()
-                        + "\n pegasus-sc-converter - Parses the site catalogs in old format (XML and generates site catalog in "
-                        + "\n new format (YAML)"
-                        + "\n "
-                        + "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> "
-                        + "\n          [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose]"
-                        + "\n          [--quiet] [--Version] [--help]"
+                        + "\n"
+                        + " pegasus-sc-converter - Parses the site catalogs in old format (XML and"
+                        + " generates site catalog in \n"
+                        + " new format (YAML)\n"
+                        + " \n"
+                        + " Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input"
+                        + " files> --output <output file to write> \n"
+                        + "          [--iformat input format] [--oformat <output format>] [--conf"
+                        + " <path to property file>] [--verbose]\n"
+                        + "          [--quiet] [--Version] [--help]\n"
                         + "\n"
                         + "\n"
-                        + "\n Mandatory Options "
+                        + " Mandatory Options \n"
                         + "\n"
-                        + "\n -i |--input      comma separated list of input files to convert "
-                        + "\n -o |--output     the output file to which the output needs to be written to."
-                        + "\n"
-                        + "\n"
-                        + "\n Other Options "
-                        + "\n -O |--oformat    the output format of the file. Usually [YAML] "
-                        + "\n -c |--conf       path to  property file"
-                        + "\n -e |--expand     sets variable expansion on. Any variables in input files "
-                        + "\n                  will be expanded and their values will be written out to "
-                        + "\n                  output site catalog. "
-                        + "\n -v |--verbose    increases the verbosity of messages about what is going on"
-                        + "\n -q |--quiet      decreases the verbosity of messages about what is going on"
-                        + "\n -V |--version    displays the version of the Pegasus Workflow Planner"
-                        + "\n -h |--help       generates this help."
+                        + " -i |--input      comma separated list of input files to convert \n"
+                        + " -o |--output     the output file to which the output needs to be"
+                        + " written to.\n"
                         + "\n"
                         + "\n"
-                        + "\n Example Usage "
+                        + " Other Options \n"
+                        + " -O |--oformat    the output format of the file. Usually [YAML] \n"
+                        + " -c |--conf       path to  property file\n"
+                        + " -e |--expand     sets variable expansion on. Any variables in input"
+                        + " files \n"
+                        + "                  will be expanded and their values will be written out"
+                        + " to \n"
+                        + "                  output site catalog. \n"
+                        + " -v |--verbose    increases the verbosity of messages about what is"
+                        + " going on\n"
+                        + " -q |--quiet      decreases the verbosity of messages about what is"
+                        + " going on\n"
+                        + " -V |--version    displays the version of the Pegasus Workflow Planner\n"
+                        + " -h |--help       generates this help.\n"
                         + "\n"
-                        + "\n pegasus-sc-converter  -i sites.xml -o sites.yml  -O YAML -vvvvv\n";
+                        + "\n"
+                        + " Example Usage \n"
+                        + "\n"
+                        + " pegasus-sc-converter  -i sites.xml -o sites.yml  -O YAML -vvvvv\n";
 
         System.out.print(text);
     }

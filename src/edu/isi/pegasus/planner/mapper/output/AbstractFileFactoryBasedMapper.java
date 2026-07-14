@@ -24,6 +24,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.MapperException;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
+import org.griphyn.vdl.euryale.FileFactory;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.griphyn.vdl.euryale.FileFactory;
 
 /**
  * The abstract class that serves as the base class for the File Factory based mappers.
@@ -139,7 +141,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location. If the storage directory for the site has
      * multiple file servers associated with it, it selects one randomly and returns a URL
      * accessible from that FileServer
@@ -158,7 +160,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location.
      *
      * @param lfn the lfn
@@ -189,7 +191,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns all the possible equivalent
+     * Maps a LFN to a location on the filesystem of a site and returns all the possible equivalent
      * externally accessible URL corresponding to that location. For example, if a file on the
      * filesystem is accessible via multiple file servers it should return externally accessible
      * URL's from all the File Servers on the site.

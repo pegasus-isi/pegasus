@@ -24,10 +24,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.io.PrintStream;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Properties;
+
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +32,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** @author Rajiv Mayani */
+import java.io.PrintStream;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Properties;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class PlannerCacheTest {
 
     private PlannerCache mCache;

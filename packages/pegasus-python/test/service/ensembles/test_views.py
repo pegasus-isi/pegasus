@@ -85,7 +85,8 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.get_context(
-            f"/ensembles/{ensemble}/triggers", pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers",
+            pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == 200
@@ -129,7 +130,10 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
             "name": "test-trigger2",
             "state": "READY",
             "workflow": {"script": "/workflow.py", "args": []},
-            "args": {"interval": 10, "timeout": 20,},
+            "args": {
+                "interval": 10,
+                "timeout": 20,
+            },
             "type": "CRON",
         }
 
@@ -527,7 +531,8 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
         mocker.patch("Pegasus.db.connection.connect")
 
         rv = emapp_client.delete_context(
-            f"/ensembles/{ensemble}/triggers/{trigger}", pre_callable=self.pre_callable,
+            f"/ensembles/{ensemble}/triggers/{trigger}",
+            pre_callable=self.pre_callable,
         )
 
         assert rv.status_code == status_code

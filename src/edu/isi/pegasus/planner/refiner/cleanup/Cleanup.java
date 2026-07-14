@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -102,7 +103,7 @@ public class Cleanup implements CleanupImplementation {
      *
      * @return the complete transformation name
      */
-    public static String getCompleteTranformationName() {
+    public static String getCompleteTransformationName() {
         return Separator.combine(
                 TRANSFORMATION_NAMESPACE, TRANSFORMATION_NAME, TRANSFORMATION_VERSION);
     }
@@ -137,6 +138,7 @@ public class Cleanup implements CleanupImplementation {
     public Job createCleanupJob(String id, List files, Job job) {
         return this.createCleanupJob(id, files, job, job.getStagingSiteHandle());
     }
+
     /**
      * Creates a cleanup job that removes the files from remote working directory.This will
      * eventually make way to it's own interface.
@@ -334,7 +336,7 @@ public class Cleanup implements CleanupImplementation {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        cJob.updateProfiles(mSiteStore.lookup(eSite).getProfiles());
+        cJob.updateProfiles(mSiteStore.lookup(eSite));
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391
@@ -392,7 +394,7 @@ public class Cleanup implements CleanupImplementation {
             // should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ")
-                    .append(Cleanup.getCompleteTranformationName())
+                    .append(Cleanup.getCompleteTransformationName())
                     .append(" at site ")
                     .append(site);
 
@@ -417,7 +419,7 @@ public class Cleanup implements CleanupImplementation {
 
         mLogger.log(
                 "Creating a default TC entry for "
-                        + Cleanup.getCompleteTranformationName()
+                        + Cleanup.getCompleteTransformationName()
                         + " at site "
                         + site,
                 LogManager.DEBUG_MESSAGE_LEVEL);

@@ -225,4 +225,3 @@ Database Schema
 
 The tables are set up as part of the PEGASUS database setup. The files
 concerned with the database have a suffix *-rc.sql*.
-

@@ -13,10 +13,11 @@
  */
 package edu.isi.pegasus.common.util;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Utility class to allow for variable expansions in strings.
@@ -31,7 +32,7 @@ public class VariableExpander {
     private StrSubstitutor mExpander;
 
     /**
-     * The default constructor, which intializes the values from the System environment variables,
+     * The default constructor, which initializes the values from the System environment variables,
      * and has case sensitivity turned off.
      */
     public VariableExpander() {

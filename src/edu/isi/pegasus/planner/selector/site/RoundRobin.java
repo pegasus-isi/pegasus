@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.selector.site;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -47,7 +48,7 @@ public class RoundRobin extends AbstractPerJob {
     }
 
     /**
-     * Returns a brief description of the site selection techinque implemented by this class.
+     * Returns a brief description of the site selection technique implemented by this class.
      *
      * @return String
      */

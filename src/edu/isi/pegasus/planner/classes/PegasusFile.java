@@ -19,9 +19,11 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.common.PegasusJsonDeserializer;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Iterator;
@@ -978,7 +980,9 @@ public class PegasusFile extends Data {
                 .append("\n Size         :")
                 .append(mSize)
                 .append(
-                        "\n Transient Flags (transfer,optional,dontRegister,cleanup,integrity,bypass,plannerUse):")
+                        "\n"
+                            + " Transient Flags"
+                            + " (transfer,optional,dontRegister,cleanup,integrity,bypass,plannerUse):")
                 .append(" ( ")
                 .append(getTransferFlag())
                 .append(",");

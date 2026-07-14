@@ -160,7 +160,7 @@ class PeriodicCheckpointNotifier(threading.Thread):
 
         :param interval: interval in seconds to sleep for
         :type interval: int
-        :param notify: event to set, which will notify checkpoint worker thread to wake up and run 
+        :param notify: event to set, which will notify checkpoint worker thread to wake up and run
         :type notify: threading.Event
         """
         super().__init__(group=None, target=None, name="PeriodicCheckpointNotifier")
@@ -241,7 +241,7 @@ class CheckpointWorker(threading.Thread):
         matched = set()
 
         # n^2.. maybe can do a little better by pulling out files from files_in_cwd (using a set
-        # isntead) as we make matches so we don't try to iterate over it again
+        # instead) as we make matches so we don't try to iterate over it again
         for p in patterns:
             for f in files_in_cwd:
                 is_match = bool(p.fullmatch(f))
@@ -267,7 +267,7 @@ class CheckpointWorker(threading.Thread):
         Given a list of file/folder names in CWD, archive and compress them into a single file
         :code:`pegasus.checkpoint.tar.gz`
 
-        :param filenames: list of filenames to archive and compress 
+        :param filenames: list of filenames to archive and compress
         :type filenames: Iterable[str]
         """
         start = time.perf_counter()

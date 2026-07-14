@@ -18,11 +18,13 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.mapper.SubmitMapper;
+
+import org.griphyn.vdl.euryale.FileFactory;
+import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import org.griphyn.vdl.euryale.FileFactory;
-import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 
 /**
  * A Flat creator implementation that returns the base directory always.

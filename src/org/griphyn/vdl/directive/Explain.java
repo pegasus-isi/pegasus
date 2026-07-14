@@ -15,14 +15,16 @@
 package org.griphyn.vdl.directive;
 
 import edu.isi.pegasus.common.util.Separator;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.MissingResourceException;
+
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.router.*;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.MissingResourceException;
 
 /**
  * This class generates the DAX per the request for LFNs or DVs
@@ -69,7 +71,7 @@ public class Explain extends Directive {
     }
 
     /**
-     * Sets database schema, and initialzes the internal <code>Route</code> accordingly.
+     * Sets database schema, and initializes the internal <code>Route</code> accordingly.
      *
      * @param dbs the database schema instance
      * @see org.griphyn.vdl.router.Route

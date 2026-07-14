@@ -18,4 +18,3 @@ for FILE in `ls *.in`; do
     pegasus-transfer -f $FILE
 
 done
-

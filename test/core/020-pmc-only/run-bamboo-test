@@ -55,4 +55,3 @@ if [ $INVOCATIONS -ne 46 ]; then
     echo "Not enough invocations $INVOCATIONS in stampede database. Expected 46"
     exit 1
 fi
-

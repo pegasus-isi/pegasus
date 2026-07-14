@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import shutil
 from pathlib import Path
@@ -32,11 +32,9 @@ local_site = Site(
 )
 local_site.add_directories(
     Directory(
-        Directory.SHARED_SCRATCH, TOP_DIR / "work/local-site/scratch"
+        Directory.SHARED_SCRATCH, TOP_DIR / "local-site/scratch"
     ).add_file_servers(
-        FileServer(
-            "file://{}".format(TOP_DIR / "work/local-site/scratch"), Operation.ALL
-        )
+        FileServer("file://{}".format(TOP_DIR / "local-site/scratch"), Operation.ALL)
     ),
     Directory(Directory.LOCAL_STORAGE, TOP_DIR / "outputs/local-site").add_file_servers(
         FileServer("file://{}".format(TOP_DIR / "outputs/local-site"), Operation.ALL)
@@ -224,5 +222,5 @@ wf.add_dependency(diamond_wf_job, children=[sleep_wf_job])
 wf.add_dependency(sleep_wf_job, children=[sleep_job])
 
 wf.plan(
-    sites=["local", "CCG"], output_sites=["local"], dir="work", verbose=3, submit=True
+    sites=["local", "CCG"], output_sites=["local"], dir="submit", verbose=3, submit=True
 )

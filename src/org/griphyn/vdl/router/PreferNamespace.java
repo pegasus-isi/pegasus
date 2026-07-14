@@ -14,9 +14,10 @@
  */
 package org.griphyn.vdl.router;
 
-import java.util.*;
 import org.griphyn.vdl.classes.Derivation;
 import org.griphyn.vdl.util.Logging;
+
+import java.util.*;
 
 /**
  * This implementation of the arbitration interface prefers the first derivation within the same
@@ -43,7 +44,7 @@ public class PreferNamespace implements Arbiter {
 
     /**
      * The interface method of the arbitration determines the most likely derivation to chose by
-     * chosing the first within the same namespace. The cwns is the only element from the
+     * choosing the first within the same namespace. The cwns is the only element from the
      * environment used to determine the likely candidate.
      *
      * @param dvlist is a set of candidates

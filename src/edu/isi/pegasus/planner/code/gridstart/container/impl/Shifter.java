@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 
 /**
@@ -35,7 +36,7 @@ public class Shifter extends AbstractContainer {
     private static String WORKER_PACKAGE_SETUP_SNIPPET = null;
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

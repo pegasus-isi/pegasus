@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public interface CleanupImplementation {
     public static final String DEFAULT_CLEANUP_CATEGORY_KEY = "cleanup";
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      */

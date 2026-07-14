@@ -14,17 +14,19 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
-import javax.xml.parsers.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.util.VDLType;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import javax.xml.parsers.*;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an DAX document. This class extends
@@ -283,7 +285,7 @@ public class DAXParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      * @param atts has the names and values of all the attributes
      */
     public void startElement(
@@ -328,7 +330,7 @@ public class DAXParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      */
     public void endElement(
             java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName)

@@ -26,10 +26,12 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the CondorStyleFactory class. */
 public class CondorStyleFactoryTest {

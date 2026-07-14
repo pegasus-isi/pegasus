@@ -30,9 +30,11 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
@@ -109,7 +111,9 @@ public class FileServer extends FileServerType {
         writer.write(newLine);
     }
 
-    /** @param visitor */
+    /**
+     * @param visitor
+     */
     public void accept(SiteDataVisitor visitor) throws IOException {
         visitor.visit(this);
 
@@ -224,6 +228,7 @@ class FileServerDeserializer extends SiteDataJsonDeserializer<FileServer> {
         return fs;
     }
 }
+
 /**
  * Custom serializer for YAML representation of FileServer
  *

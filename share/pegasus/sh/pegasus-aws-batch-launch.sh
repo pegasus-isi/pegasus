@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e 
+set -e
 
 
 ##
@@ -21,7 +21,7 @@ set -e
 
 #
 # This file contains is a launcher script for launching Pegasus jobs via
-# AWS Batch, and is launched by the fetch_and_run script provided by 
+# AWS Batch, and is launched by the fetch_and_run script provided by
 # Batch
 #
 # Author: Karan Vahi <vahi@isi.edu>
@@ -48,7 +48,7 @@ Launches a script or executable in the container.
 The script:executable is pulled down from a S3 bucket
 identified by the evn variable PEGASUS_AWS_BATCH_BUCKET
 
-Required environment varialbes to be set:
+Required environment variables to be set:
 export PEGASUS_AWS_BATCH_BUCKET=s3://my-bucket
 export PEGASUS_JOB_NAME="my-job"
 
@@ -69,7 +69,7 @@ function pegasus_batch_final_exit()
 {
     rc=1
 
-    # the exit code of the lite script should reflect the exit code 
+    # the exit code of the lite script should reflect the exit code
     if [ "x$task_ec" = "x" ];then
         pegasus_batch_log "task_ec is missing - did the user task fail?"
     else
@@ -82,7 +82,7 @@ function pegasus_batch_final_exit()
     echo "PegasusAWSBatchLaunch: exitcode $rc" 1>&2
 
     # cat the stderr back to stdout
-    echo $TASK_STDERR_SEPARATOR 
+    echo $TASK_STDERR_SEPARATOR
     if (test -e  ${task_stderr_file}) ; then
 	cat ${task_stderr_file}
     fi
@@ -100,7 +100,7 @@ function setup_task_stderr()
     # Open STDERR to file for writes
     exec 2>$task_stderr_file
 
-    
+
 }
 
 start_dir=`pwd`
@@ -147,7 +147,7 @@ pegasus_batch_log "Number of args passed to pegasus-aws-batch - $# "
 script="${1}"; shift
 
 # for staged credentials, download the credentials from s3 if specified, and set
-# the credential env variable to downloaded path 
+# the credential env variable to downloaded path
 for base in X509_USER_PROXY PEGASUS_CREDENTIALS S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_PKCS12 ; do
     for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
         eval val="\$$key"

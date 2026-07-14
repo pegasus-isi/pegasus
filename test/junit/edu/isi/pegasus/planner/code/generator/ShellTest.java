@@ -27,12 +27,14 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Dagman;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Shell code generator class. */
 public class ShellTest {

@@ -121,4 +121,3 @@ YAML to Text format conversion
 ::
 
    pegasus-tc-converter  -i tc.yml -I YAML -O Text -o tc.text -v
-

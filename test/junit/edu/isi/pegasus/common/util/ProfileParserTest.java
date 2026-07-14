@@ -19,13 +19,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** @author Rajiv Mayani */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author Rajiv Mayani
+ */
 public class ProfileParserTest {
 
     // -----------------------------------------------------------------------

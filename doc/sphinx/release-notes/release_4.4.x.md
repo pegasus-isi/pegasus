@@ -4,7 +4,7 @@
 
 **Release Date:** March 16, 2015
 
-We are happy to annouce the release of Pegasus 4.4.2. Pegasus 4.4.2 is
+We are happy to announce the release of Pegasus 4.4.2. Pegasus 4.4.2 is
 a minor release, which contains minor enhancements and fixes bugs to
 Pegasus 4.4.1 release.
 
@@ -39,7 +39,7 @@ pegasus.catalog.site.file property
 
    The work directory in the job instance table of the monitoring
    database was populated by the submit directory instead of the
-   directory in wihch the job was executed. This resulted in
+   directory in which the job was executed. This resulted in
    pegasus-analyzer displaying the submit directory for the failed job
    instead of the directory in which the job actually ran on the
    remote node.
@@ -50,7 +50,7 @@ pegasus.catalog.site.file property
 2) pegasus-status showed master dag job as failure also
 
    When a job in a workflow fails, pegasus-status also includes the
-   corresonding dag job as failed. This leads to it reporting 1 more
+   corresponding dag job as failed. This leads to it reporting 1 more
    than the actual number of user compute jobs that failed. this is
    now fixed.
 
@@ -81,7 +81,7 @@ pegasus.catalog.site.file property
 6) pegasus.gridstart.arguments was not set for all clustered jobs.
 
    User provided extra arguments for kickstart invocation were not
-   passed to all the constitutent jobs making up a job cluster, in
+   passed to all the constituent jobs making up a job cluster, in
    case of job clustering.  This is now fixed.
 
    More details at  PM-823 [\#941](https://github.com/pegasus-isi/pegasus/issues/941)
@@ -108,7 +108,7 @@ pegasus.catalog.site.file property
 
 **Release Date:** December 19, 2014
 
-We are happy to annouce the release of Pegasus 4.4.1. Pegasus 4.4.1 is
+We are happy to announce the release of Pegasus 4.4.1. Pegasus 4.4.1 is
 a minor release, which contains minor enhancements and fixes bugs to
 Pegasus 4.4.0 release.
 
@@ -201,7 +201,7 @@ incorporated into pegasus builds.
 5) Round robin site selector did not do correct distribution
 
    The selector was not distributing the jobs round robin at each
-   level as it was suppposed to.
+   level as it was supposed to.
  More details at  PM-775 [\#893](https://github.com/pegasus-isi/pegasus/issues/893)
 
 6) Based on user configuration, the leaf cleanup jobs tried to delete the
@@ -225,8 +225,8 @@ dax job may require
 
     For hierarchical workflows, there maybe a case where the jobs that
     make up the workflow referred to by the subdax job may run in a
-    child directory of the scratch directory in whcih jobs of top
-    level worklfow are running. With leaf cleanup enabled, the parent
+    child directory of the scratch directory in which jobs of top
+    level workflow are running. With leaf cleanup enabled, the parent
     scratch directory maybe cleaned before the subdax job has been
     completed. Fix for this involved, putting in explicit dependencies
     between the leaf cleanup job and the subdax jobs.
@@ -421,9 +421,9 @@ New features and Improvements in 4.4.0 include
 
 11) Extra ways for user application to flag errors
 
-   CondorG does not propogate exitcodes correctly from GRAM. As a
+   CondorG does not propagate exitcodes correctly from GRAM. As a
    result, a job in a Pegasus workflow that is not launched via
-   pegasus-kickstart maynot have the right exitcode propogated from
+   pegasus-kickstart may not have the right exitcode propagated from
    user application -> GRAM -> CondorG -> Workflow.  For example, in
    Pegasus MPI jobs are never launched using
    pegasus-kickstart. Usually ways of handling this error is to have a
@@ -532,7 +532,7 @@ is passed
 5) nonascii characters in application stdout broke parsing in monitord
 
    The URL quoting logic was updated to encode unicode strings  as
-   UTF-8 before the string was passed to the quote fuction. More
+   UTF-8 before the string was passed to the quote function. More
    details at
 
      PM-757 [\#875](https://github.com/pegasus-isi/pegasus/issues/875)
@@ -546,7 +546,7 @@ stampede database
    pegasus-monitord gets 100 seconds to complete the population before
    sending a kill signal.
 
-7) Translation of values from days to years/days was borken in
+7) Translation of values from days to years/days was broken in
 pegasus-statistics
 
    This is now fixed.

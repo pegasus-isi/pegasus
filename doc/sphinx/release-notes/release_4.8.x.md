@@ -47,7 +47,7 @@ submissions
 1) [PM-1282] – pegasus.runtime doesn’t affect walltime [\#1396](https://github.com/pegasus-isi/pegasus/issues/1396)
 
 2) [PM-1287] – python3 added as a rpm dep, even though it is not a [\#1401](https://github.com/pegasus-isi/pegasus/issues/1401)
-   	       true depedency
+   	       true dependency
 
 3) [PM-1290] – Queue is not handled correctly in Glite [\#1404](https://github.com/pegasus-isi/pegasus/issues/1404)
 
@@ -188,7 +188,7 @@ Pegasus 4.8.0 Release has support for
     level https://pegasus.isi.edu/docs/4.8.0/data_transfers.php
 
 The following issues were addressed and more information can be found
-in the Pegasus Jira 
+in the Pegasus Jira
 
 #### New Features and Improvements
 
@@ -270,8 +270,8 @@ in the Pegasus Jira
 
 28) [PM-1220] – default app name for metrics server based on dax label [\#1334](https://github.com/pegasus-isi/pegasus/issues/1334)
 
-29) The documentation also lists on how to setup pyglidein ( a resouce
-    provisioner framwork) from the IceCube to provision resources for your
+29) The documentation also lists on how to setup pyglidein ( a resource
+    provisioner framework) from the IceCube to provision resources for your
     workflow. More details can be found at
     https://pegasus.isi.edu/docs/4.8.0/pyglidein.php
 
@@ -327,4 +327,3 @@ in the Pegasus Jira
     	        mode
 
 19) [PM-1218] – monitord replay against mysql with registration jobs [\#1332](https://github.com/pegasus-isi/pegasus/issues/1332)
-

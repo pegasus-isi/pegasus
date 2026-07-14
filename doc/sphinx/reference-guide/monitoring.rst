@@ -1454,7 +1454,7 @@ The events are described in detail below
                     type int32;
                     mandatory true;
                     description
-                      "count of occurences of the events of type name for the job_instance";
+                      "count of occurrences of the events of type name for the job_instance";
                   }
       }  // container stampede.job_inst.tag
 
@@ -1949,7 +1949,7 @@ Monitord, RabbitMQ, ElasticSearch Example
 The AMQP support in Monitord is still a work in progress, but even the
 current functionality provides basic support for getting the monitoring
 data into ElasticSearch. In our development environment, we use a
-RabbitMQ instance with a simple exhange/queue. The configuration
+RabbitMQ instance with a simple exchange/queue. The configuration
 required for Pegasus is:
 
 ::
@@ -2045,5 +2045,3 @@ regarding setup and usage, please visit the link referenced above.
    :width: 100.0%
 
    Data Collection/Visualization Pipeline
-
-

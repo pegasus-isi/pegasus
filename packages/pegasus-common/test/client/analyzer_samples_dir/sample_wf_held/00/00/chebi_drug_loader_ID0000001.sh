@@ -59,14 +59,14 @@ printf "\n##################### Setting the xbit for executables staged ########
 
 printf "\n#########################[Container] Launching user task #########################\n"  1>&2
 
-pegasus-kickstart  -n chebi_drug_loader -N ID0000001 -R condorpool  -s chebi_dict.pickle=chebi_dict.pickle -L Drug-Combination-Therapy -T 2023-03-05T09:10:05-08:00 ./chebi_drug_loader 
+pegasus-kickstart  -n chebi_drug_loader -N ID0000001 -R condorpool  -s chebi_dict.pickle=chebi_dict.pickle -L Drug-Combination-Therapy -T 2023-03-05T09:10:05-08:00 ./chebi_drug_loader
 set -e
 EOF2
 
 
 chmod +x chebi_drug_loader_ID0000001-cont.sh
 if ! [ $pegasus_lite_start_dir -ef . ]; then
-	cp $pegasus_lite_start_dir/pegasus-lite-common.sh . 
+	cp $pegasus_lite_start_dir/pegasus-lite-common.sh .
 fi
 
 set +e
@@ -87,4 +87,3 @@ set -e
 # clear the trap, and exit cleanly
 trap - EXIT
 pegasus_lite_final_exit
-

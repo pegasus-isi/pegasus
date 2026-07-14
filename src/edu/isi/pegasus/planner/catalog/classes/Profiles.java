@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataJsonDeserializer;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
@@ -34,6 +35,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -505,7 +507,9 @@ public class Profiles {
         return u.ordinal();
     }
 
-    /** @param args args */
+    /**
+     * @param args args
+     */
     public static void main(String[] args) {
         try {
             Profiles p = new Profiles();

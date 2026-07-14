@@ -59,7 +59,7 @@ class TestFile:
     def test_valid_file(self, lfn: str, size: int):
         assert File(lfn, size)
 
-    @pytest.mark.parametrize("lfn", [(1), (list())])
+    @pytest.mark.parametrize("lfn", [(1), ([[]])])
     def test_invalid_file(self, lfn: str):
         with pytest.raises(TypeError) as e:
             File(lfn)
@@ -100,7 +100,7 @@ class TestFile:
     def test_repr(self):
         assert repr(File("a")) == "<File a>"
 
-    def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
+    def test_tojson_with_metadata(self, convert_yaml_schemas_to_json, load_schema):
         result = File("lfn", size=2048).add_metadata(key="value").__json__()
         expected = {
             "lfn": "lfn",
@@ -113,7 +113,7 @@ class TestFile:
 
         assert result == expected
 
-    def test_tojson_forplanning_with_metdata(self):
+    def test_tojson_forplanning_with_metadata(self):
         result = (
             File("subwf_tc.yml", size=1024, for_planning=True)
             .add_metadata(creator="zaiyan")
@@ -285,7 +285,10 @@ class TestReplicaCatalog:
         )
 
         rc.add_replica(
-            "condorpool", "f.a", "/f.a", metadata={"size": 1024},
+            "condorpool",
+            "f.a",
+            "/f.a",
+            metadata={"size": 1024},
         )
 
         f_a_entry = rc.entries[("f.a", False)]
@@ -403,7 +406,10 @@ class TestReplicaCatalog:
                     "checksum": {"sha256": "123"},
                     "metadata": {"extra": "metadata", "size": 1024, "creator": "ryan"},
                 },
-                {"lfn": "f.b", "pfns": [{"site": "local", "pfn": "/f.b"}],},
+                {
+                    "lfn": "f.b",
+                    "pfns": [{"site": "local", "pfn": "/f.b"}],
+                },
                 {
                     "lfn": "*.txt",
                     "pfns": [{"site": "local", "pfn": "/path"}],

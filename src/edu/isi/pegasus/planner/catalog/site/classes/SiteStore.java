@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Job;
@@ -39,6 +40,7 @@ import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.mapper.OutputMapperFactory;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -89,7 +91,7 @@ public class SiteStore extends AbstractSiteData {
         initialize();
     }
 
-    /** The intialize method. */
+    /** The initialize method. */
     public final void initialize() {
         mStore = new HashMap<String, SiteCatalogEntry>();
         mVersion = DEFAULT_SITE_CATALOG_VERSION;
@@ -309,7 +311,7 @@ public class SiteStore extends AbstractSiteData {
      */
     public boolean removeFileServer(String handle, String url) {
         throw new UnsupportedOperationException(
-                "Method remove( String , String ) not yet implmeneted");
+                "Method remove( String , String ) not yet implemented");
     }
 
     /**
@@ -390,7 +392,7 @@ public class SiteStore extends AbstractSiteData {
             // append the random dir name to the
             // work dir constructed till now
             addon.append(File.separator);
-            // append withtout any modifications
+            // append without any modifications
             addon.append(randDir);
         }
 
@@ -588,7 +590,7 @@ public class SiteStore extends AbstractSiteData {
 
         if (mWorkDir.length() == 0 || mWorkDir.charAt(0) != '/') {
             // means you have to append the
-            // value specfied by pegasus.dir.exec
+            // value specified by pegasus.dir.exec
             File f = new File(execPool.getInternalMountPointOfWorkDirectory(), mWorkDir);
             execPoolDir = f.getAbsolutePath();
         }
@@ -604,7 +606,7 @@ public class SiteStore extends AbstractSiteData {
 
         // path takes precedence over random dir
         if (path != null) {
-            // well i can do nesting conditional return but wont
+            // well i can do nesting conditional return but won't
             return (path.length() == 0 || path.charAt(0) != '/')
                     ?
                     // append the path
@@ -802,6 +804,7 @@ public class SiteStore extends AbstractSiteData {
         }
     }
 }
+
 /**
  * Custom deserializer for YAML representation of Directory
  *

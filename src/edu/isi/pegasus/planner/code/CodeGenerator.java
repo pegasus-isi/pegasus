@@ -19,12 +19,13 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Condor;
+
 import java.io.File;
 import java.util.Collection;
 
 /**
  * The interface that allows us to plug in various code generators for writing out the concrete
- * plan. Each of Code Generators are dependant upon the underlying workflow executors being used. A
+ * plan. Each of Code Generators are dependent upon the underlying workflow executors being used. A
  * Code Generator implementation generates the concrete plan in the input format of the underlying
  * Workflow Executor.
  *
@@ -77,7 +78,7 @@ public interface CodeGenerator {
      * Initializes the Code Generator implementation.
      *
      * @param bag the bag of initialization objects.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException;
 
@@ -87,7 +88,7 @@ public interface CodeGenerator {
      *
      * @param dag the concrete workflow.
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag) throws CodeGeneratorException;
 
@@ -96,7 +97,7 @@ public interface CodeGenerator {
      *
      * @param dag the dag of which the job is a part of.
      * @param job the <code>Job</code> object holding the information about that particular job.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException;
 
@@ -113,7 +114,7 @@ public interface CodeGenerator {
     /**
      * Resets the Code Generator implementation.
      *
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public void reset() throws CodeGeneratorException;
 }

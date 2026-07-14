@@ -17,13 +17,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.apache.logging.log4j.Level;
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.logging.log4j.Level;
-import org.junit.jupiter.api.Test;
 
 /** Tests for LogManager constants and structural properties. */
 public class LogManagerTest {

@@ -19,11 +19,12 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for InvocationRecord class. */
 public class InvocationRecordTest {

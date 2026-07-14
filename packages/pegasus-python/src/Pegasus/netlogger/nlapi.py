@@ -11,6 +11,7 @@ Python logging API.
 
 Utility functions include functions to get and set the Grid Job ID.
 """
+
 __author__ = "Dan Gunter"
 __created__ = "1 April 2004"
 __rcsid__ = "$Id: nlapi.py 27037 2011-02-04 20:16:27Z dang $"
@@ -61,6 +62,7 @@ KEYVAL_SEP = "="
 # Port
 DEFAULT_PORT = 14380
 
+
 # Level
 class Level:
     NOLOG = 0
@@ -96,7 +98,7 @@ class Level:
     def getLevel(name):
         if name.isupper() and hasattr(Level, name):
             return getattr(Level, name)
-        raise ValueError("no such level name: %s" % name)
+        raise ValueError(f"no such level name: {name}")
 
 
 DATE_FMT = "%04d-%02d-%02dT%02d:%02d:%02d"
@@ -120,7 +122,7 @@ def quotestr(v):
     if not v:
         v = '""'
     elif " " in v or "\t" in v or '"' in v or "=" in v:
-        v = '"%s"' % v.replace(r'"', r"\"")
+        v = '"{}"'.format(v.replace(r'"', r"\""))
     return v
 
 
@@ -284,8 +286,8 @@ class Log:
 
         For example::
           log.setLevel(Level.WARN)
-          log.error('argh',{}) # logged
-          log.info('whatever',{}) # dropped!
+          log.error("argh", {})  # logged
+          log.info("whatever", {})  # dropped!
         """
         self._level = level
 
@@ -314,8 +316,7 @@ class Log:
         if self._level != Level.ALL and level > self._level:
             if self._logfile:
                 return None
-            else:
-                return ""
+            return ""
         if not ts:
             ts = time.time()
         buf = self.format(self._pfx + event, ts, level, kw)
@@ -324,6 +325,7 @@ class Log:
         self._logfile.write(buf)
         if self._flush:
             self.flush()
+        return None
 
     __call__ = write
 
@@ -350,11 +352,11 @@ class Log:
             elif isinstance(v, float):
                 fields.append(f"{k}={v:f}")
             elif isinstance(v, int):
-                fields.append("%s=%d" % (k, v))
+                fields.append(f"{k}={v:d}")
             else:
                 s = str(v)
                 if " " in s or "\t" in s:
-                    s = '"%s"' % s
+                    s = f'"{s}"'
                 fields.append(f"{k}={s}")
 
     def format(self, event, ts, level, kw):
@@ -365,22 +367,19 @@ class Log:
             elif isinstance(ts, datetime.datetime):
                 if self._float_time:
                     tsfloat = calendar.timegm(ts.utctimetuple()) + ts.microsecond / 1e6
-                    fields = ["ts=%.6f" % tsfloat, "event=" + event]
+                    fields = [f"ts={tsfloat:.6f}", "event=" + event]
                 else:
-                    tsstr = "%s.%06dZ" % (
-                        DATE_FMT % ts.utctimetuple()[0:6],
-                        ts.microsecond,
-                    )
+                    tsstr = f"{DATE_FMT % ts.utctimetuple()[0:6]}.{ts.microsecond:06d}Z"
                     fields = ["ts=" + tsstr, "event=" + event]
             elif self._float_time:
-                fields = ["ts=%.6f" % ts, "event=" + event]
+                fields = [f"ts={ts:.6f}", "event=" + event]
             else:
                 fields = ["ts=" + utcFormatISO(ts), "event=" + event]
             if level is not None:
                 if isinstance(level, int):
                     fields.append("level=" + Level.getName(level))
                 else:
-                    fields.append("level=%s" % level)
+                    fields.append(f"level={level}")
             if kw:
                 self._append(fields, kw)
             if event in self._meta:
@@ -415,8 +414,7 @@ class Log:
                 buf += "\n" + tbstr
         if self._newline:
             return buf + REC_SEP
-        else:
-            return buf
+        return buf
 
     def setMeta(self, event=None, **kw):
         self._meta[event] = kw
@@ -432,8 +430,7 @@ class Log:
     def __str__(self):
         if self._logfile:
             return str(self._logfile)
-        else:
-            return repr(self)
+        return repr(self)
 
 
 # set up urlparse to recognize x-netlog schemes
@@ -489,16 +486,15 @@ def urlfile(url):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         else:
             raise ValueError(
-                "Unknown URL scheme '%s', "
-                "must be empty, 'file' or 'x-netlog[-udp]'" % scheme
+                f"Unknown URL scheme '{scheme}', "
+                "must be empty, 'file' or 'x-netlog[-udp]'"
             )
         # print "connect to address %s" % addr
         sock.connect(addr)
         fileobj = sock.makefile("w")
     else:
         raise ValueError(
-            "Unknown URL scheme '%s', "
-            "must be empty, 'file' or 'x-netlog[-udp]'" % scheme
+            f"Unknown URL scheme '{scheme}', must be empty, 'file' or 'x-netlog[-udp]'"
         )
     return fileobj
 
@@ -512,10 +508,9 @@ def urltype(url):
     scheme = urllib.parse.urlparse(url)[0]
     if scheme == "file" or scheme == "" or scheme is None:
         return "file"
-    elif scheme == "x-netlog":
+    if scheme == "x-netlog":
         return "tcp"
-    else:
-        return None
+    return None
 
 
 # Get host

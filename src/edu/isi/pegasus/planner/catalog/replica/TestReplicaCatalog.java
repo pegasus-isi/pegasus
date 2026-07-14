@@ -24,6 +24,7 @@ import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;

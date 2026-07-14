@@ -25,4 +25,3 @@ done
 echo "]" >>transfers.in
 
 pegasus-transfer -n 32 -f transfers.in
-

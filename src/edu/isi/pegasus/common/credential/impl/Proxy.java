@@ -18,9 +18,11 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Namespace;
+
+import org.globus.common.CoGProperties;
+
 import java.io.File;
 import java.util.Map;
-import org.globus.common.CoGProperties;
 
 /**
  * A convenice class that allows us to determine the path to the user proxy.
@@ -35,6 +37,7 @@ public class Proxy extends Abstract implements CredentialHandler {
 
     private static final String X509_USER_PROXY_PEGASUS_PROFILE_KEY =
             X509_USER_PROXY_KEY.toLowerCase(); // has to be lowercased
+
     /** The description. */
     private static final String DESCRIPTION = "X509 Proxy Handler";
 

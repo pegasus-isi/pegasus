@@ -23,12 +23,14 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Map;
+
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Test class to test the Pegasus Properties class

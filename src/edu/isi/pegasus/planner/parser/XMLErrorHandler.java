@@ -15,6 +15,7 @@ package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -41,7 +42,7 @@ public class XMLErrorHandler implements ErrorHandler {
      * Logs the warning messages in the SAX parser generates while validating the XML file against
      * an XML Schema.
      *
-     * @param e the execption that is being caught.
+     * @param e the exception that is being caught.
      */
     public void warning(SAXParseException e) throws SAXException {
         mLogger.log(

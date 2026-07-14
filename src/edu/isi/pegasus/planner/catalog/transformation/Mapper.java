@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.catalog.transformation.mapper.Submit;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TCMap;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public abstract class Mapper {
     public static final String PACKAGE_NAME =
             "edu.isi.pegasus.planner.catalog.transformation.mapper";
 
-    /** The handle to the tranformation catalog. */
+    /** The handle to the transformation catalog. */
     protected TransformationCatalog mTCHandle;
 
     /** The handle to the RIC. */

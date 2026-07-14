@@ -8,13 +8,13 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 export LD_LIBRARY_PATH=/ccg/software/sqlite/3.8.11.1/lib:$LD_LIBRARY_PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
 sed -i 's/wf.add_replica_catalog(rc)/rc.write("data\/rc.yml")/g' montage-workflow.py
 PYTHONPATH=$(pegasus-config --python) \
-    ./montage-workflow.py --center "275.196290 -16.171530" \
+    python3.12 ./montage-workflow.py --center "275.196290 -16.171530" \
                       --degrees 0.2 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \
@@ -47,7 +47,7 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf ../pegasusrc \
     --sites condorpool \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --cluster horizontal \

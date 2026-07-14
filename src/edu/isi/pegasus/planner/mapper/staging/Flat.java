@@ -17,10 +17,12 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.MapperException;
+
+import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 
 /**
  * Maps the output files to a flat directory on the staging site.
@@ -49,13 +51,13 @@ public class Flat extends Abstract {
     public void initialize(PegasusBag bag, Properties properties) {
         super.initialize(bag, properties);
 
-        // all file factories intialized with the addon component only
+        // all file factories initialized with the addon component only
         try {
             // Create a flat file factory
             mFactory = new VirtualFlatFileFactory("."); // minimum default
         } catch (IOException ioe) {
             throw new MapperException(
-                    "Unable to intialize the Flat File Factory for Staging Mapper ", ioe);
+                    "Unable to initialize the Flat File Factory for Staging Mapper ", ioe);
         }
     }
 

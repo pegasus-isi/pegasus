@@ -163,7 +163,7 @@ int mylist_fill(mylist_p list, const char* fn) {
         return EINVAL;
     }
 
-    /* GH-2156 expand fn to account for enviornment variables */
+    /* GH-2156 expand fn to account for environment variables */
     Node *expanded_fn = parseCommandLine(fn);
     if (expanded_fn == NULL){
       printerr("ERROR: Unable to expand the filename %s\n", fn);
@@ -172,7 +172,7 @@ int mylist_fill(mylist_p list, const char* fn) {
     }
     //printerr("DEBUG: Expanded the filename %s to %s\n", fn, expanded_fn->data);
     fn = (expanded_fn == NULL) ? fn : expanded_fn->data;
- 
+
     /* try to open file */
     if ((file=fopen(fn, "r")) == NULL) {
         return errno;
@@ -215,4 +215,3 @@ int mylist_fill(mylist_p list, const char* fn) {
     free((void*) line);
     return result;
 }
-

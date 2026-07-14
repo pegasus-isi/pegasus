@@ -165,7 +165,7 @@ failed_tests = []
 dir_list = os.listdir(options.tests_dir)
 dir_list.sort()
 for entry in dir_list:
-    
+
     # ignore .files
     if entry.find(".") == 0:
         continue;
@@ -203,4 +203,3 @@ else:
         print("  %s" %(test))
 
 myexit(rc)
-

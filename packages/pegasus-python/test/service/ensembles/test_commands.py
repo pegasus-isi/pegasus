@@ -66,9 +66,7 @@ class TestCronTriggerCommand:
         mocker.patch("Pegasus.service.ensembles.commands.CronTriggerCommand.post")
         # need to patch EnsembleClientCommand so that checks in the constructor don't
         # cause the test to fail
-        with patch(
-            "Pegasus.service.ensembles.commands.EnsembleClientCommand"
-        ) as MockEnsembleClientCommand:
+        with patch("Pegasus.service.ensembles.commands.EnsembleClientCommand"):
             cmd = CronTriggerCommand()
             cmd.parse(args)
             cmd.run()
@@ -149,9 +147,7 @@ class TestFilePatternTriggerCommand:
         )
         # need to patch EnsembleClientCommand so that checks in the constructor don't
         # cause the test to fail
-        with patch(
-            "Pegasus.service.ensembles.commands.EnsembleClientCommand"
-        ) as MockEnsembleClientCommand:
+        with patch("Pegasus.service.ensembles.commands.EnsembleClientCommand"):
             cmd = FilePatternTriggerCommand()
             cmd.parse(args)
             cmd.run()

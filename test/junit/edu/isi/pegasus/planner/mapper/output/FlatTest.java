@@ -19,6 +19,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.mapper.OutputMapper;
+
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 import org.junit.jupiter.api.Test;
 

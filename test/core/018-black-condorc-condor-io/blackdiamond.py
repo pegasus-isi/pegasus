@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import shutil
 from pathlib import Path
@@ -179,7 +179,7 @@ wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
 
 try:
     wf.plan(
-        dir="work/submit",
+        dir="submit",
         verbose=3,
         sites=["isi-condorc"],
         output_sites=["local"],

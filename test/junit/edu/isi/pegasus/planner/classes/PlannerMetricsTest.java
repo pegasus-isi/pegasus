@@ -19,12 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Metadata;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.Date;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class PlannerMetricsTest {
 
     // -----------------------------------------------------------------------

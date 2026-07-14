@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #  Copyright 2017-2021 University Of Southern California
 #
@@ -32,7 +31,7 @@ class Version(BaseVersion):
 
     def update(self, force=False):
         """."""
-        log.debug("Updating to version %s" % DB_VERSION)
+        log.debug(f"Updating to version {DB_VERSION}")
         try:
             self.db.execute(text("ALTER TABLE invocation ADD COLUMN maxrss INTEGER"))
             self.db.execute(
@@ -47,5 +46,5 @@ class Version(BaseVersion):
 
     def downgrade(self, force=False):
         """."""
-        log.debug("Downgrading from version %s" % DB_VERSION)
+        log.debug(f"Downgrading from version {DB_VERSION}")
         # no downgrade is necessary

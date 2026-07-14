@@ -150,7 +150,7 @@
         2023-03-04 01:06:18,677    INFO:  Stats: Total 1 transfers, 7.0 B transferred in 2 seconds. Rate: 3.2 B/s (25.3 b/s)
         2023-03-04 01:06:18,677    INFO:         Between sites local->local : 1 transfers, 7.0 B transferred in 2 seconds. Rate: 3.2 B/s (25.3 b/s)
         2023-03-04 01:06:18,677    INFO:  All transfers completed successfully.
-        
+
     stderr:
       temporary_name: /home/mzalam/wf/condor/local/spool/local_univ_execute/dir_190820/ks.err.N6Oooc
       descriptor: 4

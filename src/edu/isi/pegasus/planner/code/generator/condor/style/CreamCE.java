@@ -58,7 +58,7 @@ public class CreamCE extends Abstract {
      * Applies the CREAM CE style to the job.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
         String workdir = job.getDirectory();
@@ -102,7 +102,7 @@ public class CreamCE extends Abstract {
      *
      * @param job the job
      * @return the grid_resource entry
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     protected String constructGridResource(Job job) throws CondorStyleException {
         StringBuffer gridResource = new StringBuffer();

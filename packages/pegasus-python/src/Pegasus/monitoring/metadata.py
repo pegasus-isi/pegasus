@@ -17,7 +17,6 @@
 This file implements the metadata related classes for pegasus-monitord.
 """
 
-
 # Import Python modules
 import json
 import logging
@@ -141,14 +140,14 @@ def main():
 
     print(json.dumps(a.__dict__))
 
-    l = []
-    l.append(a)
-    l.append(b)
-    l.append(1)
+    ls = []
+    ls.append(a)
+    ls.append(b)
+    ls.append(1)
 
-    print(json.dumps(l, cls=MetadataCustomEncoder, indent=2))
+    print(json.dumps(ls, cls=MetadataCustomEncoder, indent=2))
 
-    Metadata.write_to_jsonfile(l, "/tmp", "test")
+    Metadata.write_to_jsonfile(ls, "/tmp", "test")
 
 
 if __name__ == "__main__":

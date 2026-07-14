@@ -28,14 +28,18 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class AbstractRefinerTest {
 
     @Test

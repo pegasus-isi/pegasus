@@ -65,7 +65,7 @@ function argfile_after {
     fi
 }
 
-# The ampersands should be propery quoted
+# The ampersands should be property quoted
 function xmlquote_ampersand {
     kickstart -B 3000 /bin/cat ampersand.txt
     return $?
@@ -200,7 +200,7 @@ function test_quoting {
 }
 
 function test_truncate {
-    # tests idents when trucating
+    # tests idents when truncating
     kickstart cat truncate.data
     rc=$?
     return $rc
@@ -626,4 +626,3 @@ run_test test_integrity_yaml_inc
 run_test test_w_with_rel_exec
 run_test test_locale
 run_test test_special_charts
-

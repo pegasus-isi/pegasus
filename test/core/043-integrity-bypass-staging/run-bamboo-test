@@ -27,5 +27,3 @@ if ! (grep pegasus-integrity $LS_SH) >/dev/null 2>&1; then
     echo "ERROR: $LS_SH does not contain a call to pegasus-integrity" 1>&2
     exit 1
 fi
-
-

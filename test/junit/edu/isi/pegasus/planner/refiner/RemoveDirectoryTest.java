@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import org.junit.jupiter.api.Test;
 
 /** Structural tests for RemoveDirectory refiner. */
 public class RemoveDirectoryTest {
@@ -65,7 +67,32 @@ public class RemoveDirectoryTest {
 
     @Test
     public void testGetCompleteTransformationNameReturnsString() throws Exception {
-        Method method = RemoveDirectory.class.getMethod("getCompleteTranformationName");
+        Method method = RemoveDirectory.class.getMethod("getCompleteTransformationName");
         assertThat((Object) method.getReturnType(), is((Object) String.class));
+    }
+
+    @Test
+    public void testCanonicalizeURLCollapsesTrailingDot() {
+        // GH-1185 a trailing /. (from --relative-submit-dir . ) must be collapsed
+        assertThat(
+                RemoveDirectory.canonicalizeURL("file:///scratch/run0001/."),
+                is("file:///scratch/run0001"));
+        assertThat(
+                RemoveDirectory.canonicalizeURL("gsiftp://example.org/data/work/."),
+                is("gsiftp://example.org/data/work"));
+    }
+
+    @Test
+    public void testCanonicalizeURLLeavesPlainPathUnchanged() {
+        assertThat(
+                RemoveDirectory.canonicalizeURL("file:///scratch/run0001"),
+                is("file:///scratch/run0001"));
+    }
+
+    @Test
+    public void testCanonicalizeURLCollapsesRedundantElements() {
+        assertThat(
+                RemoveDirectory.canonicalizeURL("file:///scratch/./run0001/"),
+                is("file:///scratch/run0001"));
     }
 }

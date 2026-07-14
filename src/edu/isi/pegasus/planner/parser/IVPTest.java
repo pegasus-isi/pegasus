@@ -16,8 +16,10 @@
 package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.planner.invocation.InvocationRecord;
-import java.io.*;
+
 import org.griphyn.vdl.util.*;
+
+import java.io.*;
 
 /**
  * This class is used to test the <code>InvocationParser</code> class. It parses an invocation

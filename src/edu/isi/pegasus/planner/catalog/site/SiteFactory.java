@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class SiteFactory {
     // value in seconds
     public static final long DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO = 24 * 60 * 60;
 
-    /** For 4.2, the orginal XML3 class was renamed XML and it supports different schemas. */
+    /** For 4.2, the original XML3 class was renamed XML and it supports different schemas. */
     private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
 
     private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
@@ -134,7 +135,7 @@ public class SiteFactory {
         }
 
         for (Iterator<SiteCatalogEntry> it = localSiteStore.entryIterator(); it.hasNext(); ) {
-            // GH-2154 local machine site entries ovewrite what we downloaded
+            // GH-2154 local machine site entries overwrite what we downloaded
             // merge the local site store entry in.
             SiteCatalogEntry localSiteStoreEntry = it.next();
             String handle = localSiteStoreEntry.getSiteHandle();
@@ -142,7 +143,8 @@ public class SiteFactory {
                 SiteCatalogEntry existing = result.lookup(handle);
                 existing.merge(localSiteStoreEntry, true);
                 logger.log(
-                        "Merged site catalog entry from remote github repo and local site catalog \n"
+                        "Merged site catalog entry from remote github repo and local site catalog"
+                                + " \n"
                                 + existing,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             } else {
@@ -200,7 +202,7 @@ public class SiteFactory {
     }
 
     /**
-     * Loads Site Catalog from a remote endpoint specified in the propoerties. If endpoint is not
+     * Loads Site Catalog from a remote endpoint specified in the properties. If endpoint is not
      * specified, then downloads from a conf directory in the default GitHub repository.
      *
      * @param bag bag of Pegasus initialization objects
@@ -342,7 +344,7 @@ public class SiteFactory {
      * configured through properties.
      *
      * @param catalogImplementor the name of the class implementing catalog
-     * @param bag bag of initalization objects
+     * @param bag bag of initialization objects
      * @param properties the connection properties.
      * @return handle to the Site Catalog.
      * @throws SiteFactoryException that nests any error that might occur during the instantiation

@@ -18,12 +18,16 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.namespace.Metadata;
+
+import org.junit.jupiter.api.Test;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
-/** @author Rajiv Mayani */
+/**
+ * @author Rajiv Mayani
+ */
 public class ReplicaCatalogEntryTest {
 
     // --- Constructor tests ---

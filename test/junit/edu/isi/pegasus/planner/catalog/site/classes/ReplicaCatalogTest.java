@@ -22,12 +22,13 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the ReplicaCatalog class in site classes. */
 public class ReplicaCatalogTest {

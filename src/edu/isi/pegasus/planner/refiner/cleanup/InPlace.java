@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -160,12 +161,12 @@ public class InPlace extends AbstractCleanupStrategy {
                     // ensure only those input files, whose source site matches
                     // the site id have to be considered. In case of sub workflow jobs,
                     // the inputs can come in from parent compute jobs that may run
-                    // on sites other than site local (which is what sub worklfow staging/execution
+                    // on sites other than site local (which is what sub workflow staging/execution
                     // site is set)
                     if (isSubWorkflow) {
                         String sourceCleanupSite = pf.getMetadata(this.CLEANUP_SOURCE_SITE_KEY);
 
-                        // an input file in a sub workflow can be assocaited with exactly
+                        // an input file in a sub workflow can be associated with exactly
                         // one cleanup source site. so after considering it once we can
                         // remove the metadata key from file object to avoid pollution
                         if (sourceCleanupSite != null && sourceCleanupSite.equals(site)) {
@@ -317,7 +318,7 @@ public class InPlace extends AbstractCleanupStrategy {
             }
         } // end of for loop
 
-        // output whats file is cleaned by what ?
+        // output what file is cleaned by what ?
         mLogger.log("", LogManager.DEBUG_MESSAGE_LEVEL);
         mLogger.log(
                 "For site: " + site + " number of files cleaned up - " + cleanedBy.keySet().size(),
@@ -697,7 +698,8 @@ public class InPlace extends AbstractCleanupStrategy {
             // the clustered cleanup job we are trying to create has
             // no files to delete
             mLogger.log(
-                    "\t\tClustered cleanup node is empty as files to be deleted are already deleted by other cleanup nodes "
+                    "\t\tClustered cleanup node is empty as files to be deleted are already deleted"
+                            + " by other cleanup nodes "
                             + clusteredCleanupNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             return null;

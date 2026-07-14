@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import logging
 import sys
 from pathlib import Path
@@ -127,7 +127,7 @@ for i in range(3):
 
         wf.add_jobs(world_job)
 
-wf.plan(sites=["local"], dir="work/submit", output_sites=["local"], cleanup="leaf")
+wf.plan(sites=["local"], dir="submit", output_sites=["local"], cleanup="leaf")
 
 # --- Test ---------------------------------------------------------------------
 # Test that the appropriate jobs have been removed during the planning process.
@@ -138,7 +138,9 @@ should_have_been_removed = {
     "hello_ID_hello_0.sub",
     "hello_ID_hello_2.sub",
     "world_ID_world_1_2.sub",
-    "world_ID_world_2_0.sub" "world_ID_world_2_1.sub" "world_ID_world_2_2.sub",
+    "world_ID_world_2_0.sub",
+    "world_ID_world_2_1.sub",
+    "world_ID_world_2_2.sub",
 }
 
 found_submit_files = set()
@@ -156,6 +158,3 @@ else:
         "Test FAILURE. Submit files for jobs for which data already exists were NOT removed"
     )
     sys.exit(1)
-
-# --- Run Workflow ------------------------------------------------------------
-wf.run()

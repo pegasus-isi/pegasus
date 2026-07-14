@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.SLS;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
@@ -613,7 +614,8 @@ public class Condor implements SLS {
                 .append(lfn)
                 .append(" ")
                 .append(
-                        "conflict due to same basename, which is not allowed in CondorIO transfer mode.");
+                        "conflict due to same basename, which is not allowed in CondorIO transfer"
+                                + " mode.");
         throw new RuntimeException(error.toString());
     }
 }

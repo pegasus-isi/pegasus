@@ -16,6 +16,7 @@ package edu.isi.pegasus.planner.partitioner;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -138,7 +139,7 @@ public class BFS extends Partitioner {
         // handle the last level of the BFS
         constructPartitions(c, levelList, mCurrentDepth);
 
-        // all the partitions are dependant sequentially
+        // all the partitions are dependent sequentially
         for (i = mCurrentDepth; i > 1; i--) {
             constructLevelRelations(c, i - 1, i);
         }

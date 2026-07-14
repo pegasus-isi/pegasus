@@ -14,7 +14,7 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 /**
- * This inteface defines a common base for all the classes that can reside in a <code>GraphNode
+ * This interface defines a common base for all the classes that can reside in a <code>GraphNode
  * </code> object.
  *
  * @author Karan Vahi vahi@isi.edu

@@ -1,5 +1,4 @@
-"""
-Condor queue utilities used by the Pegasus client status layer.
+"""Condor queue utilities used by the Pegasus client status layer.
 
 Provides helpers for executing ``condor_q`` commands and streaming their output.
 """
@@ -22,7 +21,7 @@ def _handle_stream(
     dst: list,
     logger: logging.Logger = None,
     log_lvl: int = None,
-):
+) -> None:
     """Handler for processing and logging byte streams from subprocess.Popen.
     :param proc: subprocess.Popen object used to run a pegasus CLI tool
     :type proc: subprocess.Popen
@@ -33,10 +32,10 @@ def _handle_stream(
     :param logger: the logger to use, defaults to None
     :type logger: logging.Logger, optional
     :param log_lvl: the log level to use (e.g. :code:`logging.INFO`, :code:`logging.ERROR`), defaults to None
-    :type log_lvl: int, optional
+    :type log_lvl: int, optional.
     """
 
-    def _log(logger: logging.Logger, log_lvl: int, msg: bytes):
+    def _log(logger: logging.Logger, log_lvl: int, msg: bytes) -> None:
         if logger:
             log_func = {
                 10: logger.debug,
@@ -61,13 +60,13 @@ def _handle_stream(
 
         # Has proc terminated? If so, collect remaining output and exit.
         if proc.poll() is not None:
-            for l in stream.readlines():
-                dst.append(l)
-                log(l)
+            for line in stream.readlines():
+                dst.append(line)
+                log(line)
             break
 
 
-def _exec(cmd, stream_stdout=True, stream_stderr=False):
+def _exec(cmd, stream_stdout: bool = True, stream_stderr: bool = False):
     """Execute a command and capture its output via threaded stream handlers.
 
     :param cmd: command and arguments to execute
@@ -85,7 +84,7 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     out = []
     stdout_handler = threading.Thread(
         target=_handle_stream,
-        args=(proc, proc.stdout, out, _logger if stream_stderr else None, logging.INFO),
+        args=(proc, proc.stdout, out, _logger if stream_stdout else None, logging.INFO),
     )
     stream_handlers.append(stdout_handler)
     stdout_handler.start()
@@ -108,8 +107,7 @@ def _exec(cmd, stream_stdout=True, stream_stderr=False):
     for sh in stream_handlers:
         sh.join()
     exit_code = proc.returncode
-    result = cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
-    return result
+    return cli.Result(cmd, exit_code, b"".join(out), b"".join(err))
 
 
 def _q(cmd):
@@ -123,5 +121,5 @@ def _q(cmd):
     """
     if not cmd:
         raise ValueError("cmd is required")
-    rv = _exec(cmd=cmd)
+    rv = _exec(cmd=cmd, stream_stdout=False)
     return rv.json

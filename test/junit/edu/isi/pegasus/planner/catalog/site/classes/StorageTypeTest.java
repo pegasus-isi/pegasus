@@ -19,9 +19,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.StringWriter;
 import java.util.Iterator;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for StorageType via HeadNodeScratch (concrete subclass).

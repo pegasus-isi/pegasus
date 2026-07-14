@@ -451,7 +451,7 @@ Debugging Expressions Evaluation
 
 The log of the expressions evaluations for the job is recorded in
 workflow log file (ending in suffix `*.exitcode.log`) in the
-worklfow submit directory (the same directory where the .dag file for the
+workflow submit directory (the same directory where the .dag file for the
 workflow resides).
 
 .. code-block:: console

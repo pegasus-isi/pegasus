@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.partitioner.Partition;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -104,7 +105,7 @@ public abstract class Abstract implements Clusterer {
     */
 
     /**
-     * Initializes the Clusterer impelementation
+     * Initializes the Clusterer implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.

@@ -30,5 +30,3 @@ Options
 
 **rundir**
    The run directory of the workflow you want to stop
-
-

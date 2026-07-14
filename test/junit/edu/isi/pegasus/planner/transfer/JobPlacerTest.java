@@ -28,12 +28,15 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 // import org.junit.jupiter.api.Test;
-/** @author Karan Vahi */
+/**
+ * @author Karan Vahi
+ */
 public class JobPlacerTest {
 
     private TestSetup mTestSetup;

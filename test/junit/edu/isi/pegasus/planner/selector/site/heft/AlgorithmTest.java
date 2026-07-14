@@ -18,9 +18,11 @@ import static org.hamcrest.Matchers.*;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Method;
 
 /** Tests for the HEFT Algorithm class constants. */
 public class AlgorithmTest {

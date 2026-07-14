@@ -11,7 +11,13 @@ import static edu.isi.pegasus.aws.batch.impl.Synch.JOB_QUEUE_SUFFIX;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.isi.pegasus.aws.batch.classes.AWSJob;
+
+import software.amazon.awssdk.services.batch.model.ContainerOverrides;
+import software.amazon.awssdk.services.batch.model.KeyValuePair;
+import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,14 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
-import software.amazon.awssdk.services.batch.model.ContainerOverrides;
-import software.amazon.awssdk.services.batch.model.KeyValuePair;
-import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 
 /**
  * A Builder to get objects related to Submitting a job The JSON specification
  *
- * <p>Sytax of JSON document parsed is below
+ * <p>Syntax of JSON document parsed is below
  *
  * <pre>
  * {

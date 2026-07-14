@@ -9,7 +9,7 @@
 09/15/22 15:25:38 ** Log last touched time unavailable (No such file or directory)
 09/15/22 15:25:38 ******************************************************
 09/15/22 15:25:38 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:25:38 Using local config sources: 
+09/15/22 15:25:38 Using local config sources:
 09/15/22 15:25:38    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:25:38 config Macros = 63, Sorted = 62, StringBytes = 1940, TablesBytes = 2316
 09/15/22 15:25:38 CLASSAD_CACHING is ENABLED
@@ -53,8 +53,8 @@
 09/15/22 15:25:38 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:25:38 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:25:38 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:25:38 ALL_DEBUG setting: 
-09/15/22 15:25:38 DAGMAN_DEBUG setting: 
+09/15/22 15:25:38 ALL_DEBUG setting:
+09/15/22 15:25:38 DAGMAN_DEBUG setting:
 09/15/22 15:25:38 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:25:38 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:25:38 DAGMAN will adjust edges after parsing
@@ -404,7 +404,7 @@
 09/15/22 15:26:54       Node Name: pegasus-plan_diamond_subworkflow
 09/15/22 15:26:54            Noop: false
 09/15/22 15:26:54          NodeID: 7
-09/15/22 15:26:54     Node Status: STATUS_ERROR    
+09/15/22 15:26:54     Node Status: STATUS_ERROR
 09/15/22 15:26:54 Node return val: 1
 09/15/22 15:26:54           Error: Job proc (343.0.0) failed with status 1 (after 1 node retries)
 09/15/22 15:26:54 Job Submit File: 00/00/pegasus-plan_diamond_subworkflow.sub
@@ -445,7 +445,7 @@
 09/15/22 15:33:01 ** Log last touched 9/15 15:26:54
 09/15/22 15:33:01 ******************************************************
 09/15/22 15:33:01 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:33:01 Using local config sources: 
+09/15/22 15:33:01 Using local config sources:
 09/15/22 15:33:01    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:33:01 config Macros = 63, Sorted = 62, StringBytes = 1940, TablesBytes = 2316
 09/15/22 15:33:01 CLASSAD_CACHING is ENABLED
@@ -488,8 +488,8 @@
 09/15/22 15:33:01 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:33:01 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:33:01 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:33:01 ALL_DEBUG setting: 
-09/15/22 15:33:01 DAGMAN_DEBUG setting: 
+09/15/22 15:33:01 ALL_DEBUG setting:
+09/15/22 15:33:01 DAGMAN_DEBUG setting:
 09/15/22 15:33:01 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:33:01 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:33:01 DAGMAN will adjust edges after parsing
@@ -616,7 +616,7 @@
 09/15/22 15:33:22       Node Name: pegasus-plan_diamond_subworkflow
 09/15/22 15:33:22            Noop: false
 09/15/22 15:33:22          NodeID: 7
-09/15/22 15:33:22     Node Status: STATUS_ERROR    
+09/15/22 15:33:22     Node Status: STATUS_ERROR
 09/15/22 15:33:22 Node return val: 1
 09/15/22 15:33:22           Error: Job proc (346.0.0) failed with status 1 (after 1 node retries)
 09/15/22 15:33:22 Job Submit File: 00/00/pegasus-plan_diamond_subworkflow.sub
@@ -657,7 +657,7 @@
 09/15/22 15:38:04 ** Log last touched 9/15 15:33:22
 09/15/22 15:38:04 ******************************************************
 09/15/22 15:38:04 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:38:04 Using local config sources: 
+09/15/22 15:38:04 Using local config sources:
 09/15/22 15:38:04    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:38:04 config Macros = 63, Sorted = 62, StringBytes = 1940, TablesBytes = 2316
 09/15/22 15:38:04 CLASSAD_CACHING is ENABLED
@@ -700,8 +700,8 @@
 09/15/22 15:38:04 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:38:04 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:38:04 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:38:04 ALL_DEBUG setting: 
-09/15/22 15:38:04 DAGMAN_DEBUG setting: 
+09/15/22 15:38:04 ALL_DEBUG setting:
+09/15/22 15:38:04 DAGMAN_DEBUG setting:
 09/15/22 15:38:04 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:38:04 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:38:04 DAGMAN will adjust edges after parsing
@@ -828,7 +828,7 @@
 09/15/22 15:38:30       Node Name: pegasus-plan_diamond_subworkflow
 09/15/22 15:38:30            Noop: false
 09/15/22 15:38:30          NodeID: 7
-09/15/22 15:38:30     Node Status: STATUS_ERROR    
+09/15/22 15:38:30     Node Status: STATUS_ERROR
 09/15/22 15:38:30 Node return val: 1
 09/15/22 15:38:30           Error: Job proc (349.0.0) failed with status 1 (after 1 node retries)
 09/15/22 15:38:30 Job Submit File: 00/00/pegasus-plan_diamond_subworkflow.sub
@@ -869,7 +869,7 @@
 09/15/22 15:38:51 ** Log last touched 9/15 15:38:30
 09/15/22 15:38:51 ******************************************************
 09/15/22 15:38:51 Using config source: /home/mzalam/wf/condor/etc/condor_config
-09/15/22 15:38:51 Using local config sources: 
+09/15/22 15:38:51 Using local config sources:
 09/15/22 15:38:51    /home/mzalam/wf/condor/local/config.d/00-personal-condor
 09/15/22 15:38:51 config Macros = 63, Sorted = 62, StringBytes = 1940, TablesBytes = 2316
 09/15/22 15:38:51 CLASSAD_CACHING is ENABLED
@@ -912,8 +912,8 @@
 09/15/22 15:38:51 DAGMAN_GENERATE_SUBDAG_SUBMITS setting: True
 09/15/22 15:38:51 DAGMAN_MAX_JOB_HOLDS setting: 100
 09/15/22 15:38:51 DAGMAN_HOLD_CLAIM_TIME setting: 20
-09/15/22 15:38:51 ALL_DEBUG setting: 
-09/15/22 15:38:51 DAGMAN_DEBUG setting: 
+09/15/22 15:38:51 ALL_DEBUG setting:
+09/15/22 15:38:51 DAGMAN_DEBUG setting:
 09/15/22 15:38:51 DAGMAN_SUPPRESS_JOB_LOGS setting: False
 09/15/22 15:38:51 DAGMAN_REMOVE_NODE_JOBS setting: True
 09/15/22 15:38:51 DAGMAN will adjust edges after parsing
@@ -1040,7 +1040,7 @@
 09/15/22 15:39:17       Node Name: pegasus-plan_diamond_subworkflow
 09/15/22 15:39:17            Noop: false
 09/15/22 15:39:17          NodeID: 7
-09/15/22 15:39:17     Node Status: STATUS_ERROR    
+09/15/22 15:39:17     Node Status: STATUS_ERROR
 09/15/22 15:39:17 Node return val: 1
 09/15/22 15:39:17           Error: Job proc (352.0.0) failed with status 1 (after 1 node retries)
 09/15/22 15:39:17 Job Submit File: 00/00/pegasus-plan_diamond_subworkflow.sub

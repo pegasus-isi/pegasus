@@ -90,7 +90,7 @@ public class Scalar extends Value implements Cloneable, Serializable {
      * This method determines which container is being used in the abstract base class in order to
      * kludgy statements when printing debug info.
      *
-     * @return the symblic identifier for the type of the Value.
+     * @return the symbolic identifier for the type of the Value.
      */
     public String getSymbolicType() {
         // always
@@ -227,8 +227,8 @@ public class Scalar extends Value implements Cloneable, Serializable {
      *
      * @param index is the position in the list to obtain a value from
      * @return The <code>LFN</code> or <code>Text</code> at the position.
-     * @throws IndexOutOfBoundsException if the index points to an elment in the list that does not
-     *     contain any elments.
+     * @throws IndexOutOfBoundsException if the index points to an element in the list that does not
+     *     contain any elements.
      * @see LFN
      * @see Text
      */
@@ -329,7 +329,7 @@ public class Scalar extends Value implements Cloneable, Serializable {
      * Accessor: Overwrites a <code>LFN</code> or <code>Text</code> value at a certain position in
      * the content-constituting list.
      *
-     * @param index position to overwrite an elment in.
+     * @param index position to overwrite an element in.
      * @param vLeaf is either a <code>LFN</code> or <code>Text</code> object.
      * @throws IndexOutOfBoundsException if the position pointed to is invalid.
      * @see LFN

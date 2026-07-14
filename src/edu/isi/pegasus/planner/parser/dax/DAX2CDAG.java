@@ -40,6 +40,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Selector;
 import edu.isi.pegasus.planner.parser.XMLParser;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -84,7 +85,7 @@ public class DAX2CDAG implements Callback {
     /** All the notifications associated with the adag */
     private Notifications mNotifications;
 
-    /** To track whether we auto detect data dependancies or not. */
+    /** To track whether we auto detect data dependencies or not. */
     private boolean mAddDataDependencies;
 
     /** Map to track a LFN with the job that creates the file corresponding to the LFN. */
@@ -93,7 +94,7 @@ public class DAX2CDAG implements Callback {
     /** The handle to the logger */
     private LogManager mLogger;
 
-    /** A job prefix specifed at command line. */
+    /** A job prefix specified at command line. */
     protected String mJobPrefix;
 
     /** handle to the site store * */
@@ -215,7 +216,7 @@ public class DAX2CDAG implements Callback {
         // check for compound executables
         if (this.mCompoundTransformations.containsKey(job.getCompleteTCName())) {
             CompoundTransformation ct = this.mCompoundTransformations.get(job.getCompleteTCName());
-            // add all the dependant executables and data files
+            // add all the dependent executables and data files
             for (PegasusFile pf : ct.getDependantFiles()) {
                 job.addInputFile(pf);
                 String lfn = pf.getLFN();
@@ -467,7 +468,7 @@ public class DAX2CDAG implements Callback {
                     parents.add(this.mDag.getNode(parent.getID()));
                 }
             }
-            // now add depedencies for the job
+            // now add dependencies for the job
             for (GraphNode parent : parents) {
                 mLogger.log(
                         "Adding Data Dependency edge " + parent.getID() + " -> " + job.getID(),
@@ -493,7 +494,7 @@ public class DAX2CDAG implements Callback {
             name.append(mJobPrefix);
         }
 
-        // append the name and id recevied from dax
+        // append the name and id received from dax
         name.append(j.getTXName());
         name.append("_");
         name.append(j.getLogicalID());

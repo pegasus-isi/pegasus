@@ -11,15 +11,15 @@ class TestQuoting(unittest.TestCase):
         self.assertEqual(utils.quote("hello\r\n\t"), "hello%0D%0A%09")
 
         for i in range(0, 0x20):
-            self.assertEqual(utils.quote(chr(i)), "%%%02X" % i)
+            self.assertEqual(utils.quote(chr(i)), f"%{i:02X}")
 
         for i in range(0x20, 0x7F):
-            if not chr(i) in "'\"%":
+            if chr(i) not in "'\"%":
                 self.assertEqual(utils.quote(chr(i)), chr(i))
 
         for i in range(0x7F, 0xFF):
             self.assertEqual(
-                utils.quote(i.to_bytes(length=1, byteorder="big")), "%%%02X" % i
+                utils.quote(i.to_bytes(length=1, byteorder="big")), f"%{i:02X}"
             )
 
         self.assertEqual(utils.quote("%"), "%25")
@@ -49,18 +49,18 @@ class TestQuoting(unittest.TestCase):
 
         for i in range(0, 0x20):
             self.assertEqual(
-                utils.unquote("%%%02X" % i), (i).to_bytes(1, byteorder="big")
+                utils.unquote(f"%{i:02X}"), (i).to_bytes(1, byteorder="big")
             )
 
         for i in range(0x20, 0x7F):
-            if not chr(i) in "'\"%":
+            if chr(i) not in "'\"%":
                 self.assertEqual(
                     utils.unquote(chr(i)), (i).to_bytes(1, byteorder="big")
                 )
 
         for i in range(0x7F, 0xFF):
             self.assertEqual(
-                utils.unquote("%%%02X" % i), (i).to_bytes(1, byteorder="big")
+                utils.unquote(f"%{i:02X}"), (i).to_bytes(1, byteorder="big")
             )
 
         self.assertEqual(utils.unquote("%25"), b"%")

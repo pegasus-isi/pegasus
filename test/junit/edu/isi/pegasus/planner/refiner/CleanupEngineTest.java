@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import org.junit.jupiter.api.Test;
 
 /** Structural tests for CleanupEngine. */
 public class CleanupEngineTest {

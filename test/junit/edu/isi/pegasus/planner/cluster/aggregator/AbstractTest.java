@@ -22,11 +22,13 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
+
+import org.junit.jupiter.api.Test;
+
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
-import org.junit.jupiter.api.Test;
 
 /** Tests for the Abstract aggregator class structure. */
 public class AbstractTest {
@@ -168,7 +170,7 @@ public class AbstractTest {
 
     @Test
     public void testGetCompleteTransformationNameUsesPegasusNamespace() {
-        assertThat(Abstract.getCompleteTranformationName("seqexec"), is("pegasus::seqexec"));
+        assertThat(Abstract.getCompleteTransformationName("seqexec"), is("pegasus::seqexec"));
     }
 
     @Test

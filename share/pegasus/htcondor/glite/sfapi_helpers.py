@@ -106,9 +106,16 @@ def download_file(source, destination):
         if not remote_file.is_file():
             raise SfApiHelperError(f"File not found on remote: {source}")
         buffer = remote_file.download()
-        with open(destination, 'w') as f:
-            shutil.copyfileobj(buffer, f)
-            print(f"Downloaded {os.path.abspath(destination)}")
+
+        if isinstance(buffer, BytesIO):
+            with open(destination, "wb") as f:
+                f.write(buffer.getbuffer())
+            print(f"Downloaded Binary File: {os.path.abspath(destination)}")
+        else:
+            # StringIO
+            with open(destination, 'w') as f:
+                shutil.copyfileobj(buffer, f)
+                print(f"Downloaded File: {os.path.abspath(destination)}")
 
 def download_job_outputs(blahp_job_id):
     """
@@ -331,7 +338,7 @@ def load_sflapi_client_secret():
 
     print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
- 
+
 
 # ---------------------------------------------------------------------------
 # Entry point

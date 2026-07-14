@@ -41,15 +41,19 @@ import edu.isi.pegasus.planner.mapper.StagingMapperFactory;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.RestoreSystemProperties;
 
-/** @author Karan Vahi */
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+
+/**
+ * @author Karan Vahi
+ */
 public class StageOutTest {
 
     private PegasusBag mBag;
@@ -114,7 +118,7 @@ public class StageOutTest {
         mBag.getPlannerOptions().addOutputSite(outputSite);
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
         PegasusFile outputFile = (PegasusFile) job.getOutputFiles().toArray()[0];
         // force output file to have transfer flag set to false
@@ -174,7 +178,7 @@ public class StageOutTest {
         computeSite.addDirectory(dir);
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
 
         // staging site in this case is same as compute site
@@ -213,7 +217,7 @@ public class StageOutTest {
         mBag.getPlannerOptions().addOutputSite(outputSite);
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
 
         // staging site in this case is same as compute site
@@ -260,7 +264,7 @@ public class StageOutTest {
         mBag.getPlannerOptions().addOutputSite(outputSite);
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         DAXJob job = (DAXJob) mDAG.getNode("pegasus-plan_ID2").getContent();
 
         // staging site in this case is same as compute site
@@ -391,7 +395,7 @@ public class StageOutTest {
             String outputSite, String expectedMapSite, String expectedMapPFN) throws IOException {
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
 
         // staging site in this case is same as compute site
@@ -486,7 +490,7 @@ public class StageOutTest {
         computeSite.addDirectory(dir);
 
         StageOut so = new StageOut();
-        so.initalize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
+        so.initialize(mDAG, mBag, RefinerFactory.loadInstance(mDAG, mBag));
         Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
 
         // staging site in this case is same as compute site

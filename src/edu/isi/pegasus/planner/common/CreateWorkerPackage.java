@@ -21,6 +21,7 @@ import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -180,7 +181,7 @@ class WorkerPackageCallback implements StreamGobblerCallback {
     }
 
     /**
-     * Callback whenever a line is read from the stream by the StreamGobbler. Counts the occurences
+     * Callback whenever a line is read from the stream by the StreamGobbler. Counts the occurrences
      * of the word that are in the line, and increments to the global counter.
      *
      * @param line the line that is read.
