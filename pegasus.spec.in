@@ -92,7 +92,8 @@ rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
 %config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
 %{_libdir}/pegasus
-%{_libdir}/python*
+%{_libdir}/python%{pegasus_python}/site-packages/Pegasus/
+%{_libdir}/python%{pegasus_python}/site-packages/pegasus*/
 %{_datadir}/%{name}
 %{_unitdir}/pegasus-service.service
 
