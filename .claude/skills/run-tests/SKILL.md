@@ -14,7 +14,7 @@ to completion, and on failure dumps the trace of every failed job.
 .claude/skills/run-tests/glab-pipeline.sh [BRANCH] [TYPE]
 ```
 
-- `BRANCH` — branch/ref to run on. Default: `master`.
+- `BRANCH` — branch/ref to run on. Default: `main`.
 - `TYPE` — `workflow` runs the **e2e/workflow** suite (sets pipeline variable
   `CI_PIPELINE_NAME=workflow`). **Anything else or omitted runs unit tests only.**
 
@@ -46,13 +46,13 @@ on exit instead of holding the turn.
 Unit tests (default, fast):
 
 ```bash
-.claude/skills/run-tests/glab-pipeline.sh master
+.claude/skills/run-tests/glab-pipeline.sh main
 ```
 
 e2e / workflow tests (slow — hours — only when explicitly requested):
 
 ```bash
-.claude/skills/run-tests/glab-pipeline.sh master workflow
+.claude/skills/run-tests/glab-pipeline.sh main workflow
 ```
 
 When launching via the Bash tool, set `run_in_background: true` for e2e (and for
@@ -89,8 +89,8 @@ glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PID/jobs \
 - **Traces only dump on `failed`.** On `canceled`/`cancelled`/`skipped` the
   script exits 1 with no traces — re-check the pipeline in the UI/API if so.
 - **`TYPE` arg under `set -u`:** the script uses `set -euo pipefail`. The type
-  arg is read as `${2:-}` so omitting it is safe (`./glab-pipeline.sh master`
-  works, i.e. `.claude/skills/run-tests/glab-pipeline.sh master`). If you see
+  arg is read as `${2:-}` so omitting it is safe (`./glab-pipeline.sh main`
+  works, i.e. `.claude/skills/run-tests/glab-pipeline.sh main`). If you see
   `line 4: 2: unbound variable`, the script was reverted to
   `${2}` — change it back to `${2:-}`.
 
@@ -100,4 +100,4 @@ glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PID/jobs \
 - `glab: command not found` / API 401 → `glab auth status`, re-login to
   scitech-gitlab.isi.edu.
 - Pipeline ID comes back empty → the `glab pipeline run` output format changed;
-  inspect raw output: `glab pipeline run -R pegasus/pegasus --branch master`.
+  inspect raw output: `glab pipeline run -R pegasus/pegasus --branch main`.

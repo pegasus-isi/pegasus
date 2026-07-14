@@ -38,7 +38,7 @@ done
 
 pegasus-plan \
         --conf ../pegasusrc \
-        --dir work \
+        --dir submit \
         --relative-dir `date +'%s'` \
         --sites condor_pool \
         --output-sites local \

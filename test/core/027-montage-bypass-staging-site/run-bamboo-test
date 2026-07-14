@@ -8,7 +8,7 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=`pwd`/submit/$RUN_ID
 
 export PYTHONPATH=$(pegasus-config --python)
 
@@ -81,7 +81,7 @@ EOF
 
 pegasus-plan \
         --conf ../pegasusrc \
-        --dir work \
+        --dir submit \
         --relative-dir `date +'%s'` \
         --sites CCG \
         --staging-site CCGData \

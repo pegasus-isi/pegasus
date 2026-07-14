@@ -25,32 +25,51 @@ mkdir -p work
 PYTHONPATH=$(pegasus-config --python) $testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
 
 # create the site catalog
-cat > sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-<site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/outputs">
-                </file-server>
-        </directory>
-        <directory  path="$TOPDIR/work" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work">
-                </file-server>
-        </directory>
-</site>
-<site handle="condorpool" arch="x86_64" os="LINUX" >
-        <directory  path="${CONDOR_POOL_SHARED_FS}/shared-scratch" type="shared-scratch" free-size="" total-size="">
-             <file-server  operation="all" url="scp://bamboo@bamboo.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch">
-                </file-server>
-        </directory>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="pegasus" key="ssh_private_key" >/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
-</site>
-
-</sitecatalog>
-
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${CONDOR_POOL_SHARED_FS}/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@bamboo.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/work"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/work"
+   -
+    type: "sharedStorage"
+    path: "$TOPDIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
 EOF
 
 # plan the  workflow
@@ -58,7 +77,7 @@ pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool \
     --output-sites local \
-    --dir work \
+    --dir submit \
     --cleanup leaf \
     blackdiamond.dax \
      | tee $TOPDIR/plan.out

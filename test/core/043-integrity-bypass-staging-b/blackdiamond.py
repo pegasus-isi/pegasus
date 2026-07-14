@@ -172,7 +172,7 @@ try:
         .add_inputs(fc1, fc2)
         .add_outputs(fd, register_replica=True),
     ).add_site_catalog(sc).add_replica_catalog(rc).add_transformation_catalog(tc).plan(
-        dir=str(TOP_DIR / "dags"),
+        dir=str(TOP_DIR / "submit"),
         verbose=3,
         relative_dir=RUN_ID,
         sites=[CONDOR_POOL],

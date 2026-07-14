@@ -54,36 +54,49 @@ rm -r $VIRTUAL_ENV_DIR
 echo
 echo "Setting up work directory"
 TOP_DIR=`pwd`
-WORK_DIR=$TOP_DIR/work
-mkdir -p $WORK_DIR
 export RUN_ID=047-cwl-docker-black-diamond-`date +'%s'`
 
 echo
 echo "Creating the site catalog..."
-cat > sites.xml << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site  handle="local" arch="x86_64">
-        <directory type="shared-scratch" path="$WORK_DIR/$RUN_ID">
-            <file-server operation="all" url="file://$WORK_DIR/$RUN_ID"/>
-        </directory>
-        <directory type="local-storage" path="$WORK_DIR/outputs/$RUN_ID">
-            <file-server operation="all" url="file://$WORK_DIR/outputs/$RUN_ID"/>
-        </directory>
-    </site>
-
-    <!-- this is our execution site -->
-    <site  handle="condorpool" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml << EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOP_DIR/outputs/$RUN_ID"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/outputs/$RUN_ID"
+   -
+    type: "sharedScratch"
+    path: "$TOP_DIR/shared-scratch/$RUN_ID"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/shared-scratch/$RUN_ID"
 EOF
 
 echo
 echo "Creating pegasus configuration file"
 cat > pegasus.conf << EOF
-pegasus.catalog.site.file = sites.xml
+pegasus.catalog.site.file = sites.yml
 pegasus.data.configuration = condorio
 EOF
 
@@ -93,7 +106,7 @@ unset PEGASUS_PYTHON
 pegasus-plan \
     --conf pegasus.conf \
     --force \
-    --dir $WORK_DIR \
+    --dir submit \
     --relative-dir $RUN_ID \
     --sites condorpool \
     --output-sites local \

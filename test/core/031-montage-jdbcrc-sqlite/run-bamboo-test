@@ -47,7 +47,7 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf ../pegasusrc \
     --sites condorpool \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --cluster horizontal \

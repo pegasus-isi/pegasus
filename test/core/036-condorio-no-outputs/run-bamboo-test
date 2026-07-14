@@ -13,40 +13,53 @@ TOPDIR=`pwd`
 
 #A output directory
 mkdir -p outputs
-mkdir -p work
 
 # build the dax generator
 PYTHONPATH=$(pegasus-config --python) $testdir/dax-generator.py
 
 # create the site catalog
-cat > sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-<site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory  path="$TOPDIR/outputs" type="shared-storage" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/outputs">
-                </file-server>
-        </directory>
-        <directory  path="$TOPDIR/work/local/shared-scratch" type="shared-scratch" free-size="" total-size="">
-                <file-server  operation="all" url="file://$TOPDIR/work/local/shared-scratch">
-                </file-server>
-        </directory>
-</site>
-<site  handle="condorpool" arch="x86_64" os="LINUX" osrelease="" osversion="" glibc="">
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="style" >condor</profile>
-</site>
-
-</sitecatalog>
-
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/local/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/local/shared-scratch"
+   -
+    type: "sharedStorage"
+    path: "$TOPDIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
 EOF
 
 # plan the  workflow
 pegasus-plan \
     --conf pegasusrc \
     --sites condorpool \
-    --dir work/dags \
+    --dir submit \
     --cleanup none \
     dax.yml \
      | tee $TOPDIR/plan.out

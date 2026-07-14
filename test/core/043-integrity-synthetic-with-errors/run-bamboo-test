@@ -8,31 +8,57 @@ export TOPDIR=`pwd`
 PYTHONPATH=$(pegasus-config --python) ./dax-gen.py
 
 # site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.2.xsd" version="4.2">
-    <site handle="local">
-        <directory  path="${TOPDIR}/LOCAL/shared-scratch" type="shared-scratch">
-            <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-scratch" />
-        </directory>
-        <directory  path="${TOPDIR}/LOCAL/shared-storage" type="shared-storage">
-            <file-server  operation="all" url="file:///${TOPDIR}/LOCAL/shared-storage" />
-        </directory>
-    </site>
-
-    <site  handle="condor_pool">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_TRANSFER_ERROR_RATE" >5</profile>
-    </site>
-
-    <site  handle="staging_site">
-        <directory type="shared-scratch" path="${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors">
-            <file-server operation="all" url="scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"/>
-        </directory>
-        <profile namespace="pegasus" key="ssh_private_key">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condor_pool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    env:
+      PEGASUS_TRANSFER_ERROR_RATE: "5"
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "staging_site"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"
+  profiles:
+    pegasus:
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "${TOPDIR}/LOCAL/shared-storage"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-storage"
+   -
+    type: "sharedScratch"
+    path: "${TOPDIR}/LOCAL/shared-scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///${TOPDIR}/LOCAL/shared-scratch"
 EOF
 
 echo
@@ -40,7 +66,7 @@ echo
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir workflow \
+    --dir submitflow \
     --sites condor_pool \
     --staging-site staging_site \
     --output-sites local \

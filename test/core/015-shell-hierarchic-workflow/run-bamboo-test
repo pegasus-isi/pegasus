@@ -8,7 +8,7 @@ DAX=main.dax
 
 # Unique directory for this run
 RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
-RUN_DIR=`pwd`/work/submit/$RUN_ID
+RUN_DIR=`pwd`/submit/$RUN_ID
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -23,18 +23,18 @@ sites:
   directories:
    -
     type: "sharedScratch"
-    path: "$TOPDIR/work"
+    path: "$TOPDIR/shared-scratch"
     fileServers:
      -
       operation: "all"
-      url: "$TOPDIR/work"
+      url: "$TOPDIR/shared-scratch"
    -
     type: "sharedStorage"
-    path: "$TOPDIR/work"
+    path: "$TOPDIR/shared-storage"
     fileServers:
      -
       operation: "all"
-      url: "$TOPDIR/work"
+      url: "$TOPDIR/shared-storage"
   grids:
    -
     type: "gt5"
@@ -49,15 +49,25 @@ sites:
 EOF
 
 cat > $DAX <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="main" index="0" count="1">
-   <file name="dax">
-      <pfn url="file://$TOPDIR/inner.dax" site="local"/>
-   </file>
-   <dax id="daxid" file="dax">
-      <argument>-vvv</argument>
-   </dax>
-</adag>
+pegasus: "5.0"
+name: main
+
+replicaCatalog:
+  replicas:
+    - lfn: dax
+      pfns:
+        - pfn: "file://$TOPDIR/inner.dax"
+          site: "local"
+
+jobs:
+  - type: pegasusWorkflow
+    id: daxid
+    file: dax
+    arguments: ["-vvv"]
+    uses:
+      - lfn: dax
+        type: input
+        forPlanning: true
 EOF
 
 set -x
@@ -67,7 +77,7 @@ pegasus-plan \
     --conf pegasusrc \
     --sites local \
     --output-sites local \
-    --dir work/submit \
+    --dir submit \
     --relative-submit-dir ${RUN_ID} \
     --cleanup leaf \
     --submit \

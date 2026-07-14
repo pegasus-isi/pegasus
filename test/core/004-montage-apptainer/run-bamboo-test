@@ -26,7 +26,7 @@ apptainer exec \
 
 pegasus-plan \
         -Denv.http_proxy=workflow.isi.edu:3128 \
-        --dir work \
+        --dir submit \
         --cluster horizontal \
         --submit \
         data/montage-workflow.yml \

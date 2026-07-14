@@ -41,41 +41,70 @@ java RosettaDAX dax.xml
 touch rc.data
 
 # site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory type="shared-scratch" path="$TOP_DIR/scratch">
-            <file-server operation="all" url="file://$TOP_DIR/scratch"/>
-        </directory>
-        <directory type="local-storage" path="$TOP_DIR/outputs">
-            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
-        </directory>
-    </site>
-    <site  handle="condor_pool" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-    </site>
-    <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/data/scratch/http">
-            <file-server operation="all" url="sshftp://ptesting@obelix.isi.edu/data/scratch/http"/>
-        </directory>
-        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/bamboo/.ssh/workflow_id_rsa</profile>
-    </site>
-</sitecatalog>
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "condor_pool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      style: "condor"
+ -
+  name: "staging_site"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/data/scratch/http"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "sshftp://ptesting@obelix.isi.edu/data/scratch/http"
+  profiles:
+    pegasus:
+      ssh_private_key: "/scitech/shared/bamboo/.ssh/workflow_id_rsa"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOP_DIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOP_DIR/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOP_DIR/scratch"
 EOF
 
 echo
 echo
 echo "The site catalog is:"
-cat sites.xml
+cat sites.yml
 
 echo
 echo
 echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --sites condor_pool \
     --staging-site staging_site \
     --output-sites local \
