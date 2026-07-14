@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BRANCH="${1:-master}"
+BRANCH="${1:-main}"
 TYPE="${2:-}"
 
 PIPELINE_VARS=()
