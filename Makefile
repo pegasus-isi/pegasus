@@ -35,7 +35,7 @@ _DOC_OUT   := $(DIST_DIR)/doc
 PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
 
 _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
-_JUNIT_REPORT_DIR  := test-reports/junit
+_JUNIT_REPORT_DIR  := $(BUILD_DIR)/tests/classes/junitreport
 
 .PHONY: build dev build-c build-java build-worker \
         dist-deb dist-rpm \
@@ -130,7 +130,7 @@ clean-c:
 # Remove test output artifacts only (reports, coverage data, compiled test classes).
 # Does not remove tox virtualenvs — use 'make clean' to nuke everything.
 clean-test:
-	rm -rf $(_JAVA_TEST_CLASSES) $(BUILD_DIR)/jars/pegasus-test.jar test-reports/
+	rm -rf $(_JAVA_TEST_CLASSES) $(BUILD_DIR)/jars/pegasus-test.jar $(_JUNIT_REPORT_DIR) test-reports/
 	rm -f packages/pegasus-*/.coverage
 	rm -rf packages/pegasus-*/.tox
 	rm -rf packages/pegasus-*/test-reports
@@ -216,7 +216,7 @@ test-python:
 # Run Java unit tests (JUnit 5).
 # Requires: make build-java   (produces $(BUILD_DIR)/jars/pegasus.jar)
 # JUnit JARs are committed at release-tools/jars/target/dependency/.
-test-java:
+test-java: build-java
 	@if [ ! -f "$(BUILD_DIR)/jars/pegasus.jar" ]; then \
 		echo "Skipping Java tests: run 'make build-java' first"; \
 	elif [ ! -d "release-tools/jars/target/dependency" ]; then \
@@ -248,7 +248,7 @@ test-java:
 # Run C integration tests.
 # kickstart tests require: make build-c  (populates $(BUILD_DIR)/packages/pegasus-kickstart/)
 # mpi-cluster tests require: mpicxx in PATH and make build-c with -DPEGASUS_BUILD_MPI=ON
-test-c:
+test-c: build-c
 	@if [ -d "$(BUILD_DIR)/packages/pegasus-kickstart" ]; then \
 		echo "--- pegasus-kickstart tests ---"; \
 		_py_bin=$$($(PYTHON) -c "import sys,os; print(os.path.dirname(sys.executable))"); \

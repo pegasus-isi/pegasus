@@ -1,10 +1,10 @@
 [build-system]
-requires = ["scikit-build-core>=0.9"]
+requires = ["scikit-build-core>=1.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
-version = "5.2.0"
+dynamic = ["version"]
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"
@@ -143,3 +143,10 @@ sdist.exclude = [
     "dist/",
     "_cmake_build/",
 ]
+
+# Reads the version from build.properties
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "build.properties"
+regex = '''pegasus\.version\s*=\s*(?P<value>\S+)'''
