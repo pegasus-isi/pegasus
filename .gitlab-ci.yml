@@ -232,7 +232,7 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - make build dist-rpm
+  - PYTHON=python3.12 make build dist-rpm
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -255,7 +255,7 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - make build dist-rpm
+  - PYTHON=python3.14 make build dist-rpm
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -280,7 +280,7 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - make build
+  - PYTHON=python3.11 make build
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -302,6 +302,9 @@ Debian:
       - deb_12
       - deb_13
   image: pegasus/buildenv:${OS}
+  before_script:
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv
   script:
   - make build dist-deb
   artifacts:

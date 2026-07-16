@@ -27,7 +27,15 @@ else
     PACKAGE_VERSION="$VERSION"
 fi
 
-OSID="ubuntu$(lsb_release -rs | cut -d. -f1)"
+# Derive OSID (e.g. debian12, ubuntu24) from /etc/os-release. Avoid lsb_release,
+# which is not installed in the buildenv images.
+if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    OSID="${ID}$(echo "$VERSION_ID" | cut -d. -f1)"
+else
+    OSID="unknown"
+fi
 DATE_DEB=$(date -R)
 
 cp debian/changelog.in debian/changelog
