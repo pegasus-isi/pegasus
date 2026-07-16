@@ -357,6 +357,8 @@ macOS:
   before_script:
   - env
   - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
+  - brew install cmake ninja
+  - python3 -m pip install --upgrade build
   script:
   - make build
   artifacts:
