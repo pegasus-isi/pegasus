@@ -118,11 +118,18 @@ if(PEGASUS_BUILD_C)
 endif()
 
 # ── Java JARs ─────────────────────────────────────────────────────────────────
-# Compiles Java source using CMake's UseJava module (no Ant).
+# Compiles Java source using CMake's UseJava module.
 # Produces: pegasus.jar (planner/common/ikcap), vdl.jar, pegasus-aws-batch.jar.
 # Third-party JARs already live in share/pegasus/java/ and are installed as-is.
 if(PEGASUS_BUILD_JAVA)
-    find_package(Java 1.8 REQUIRED COMPONENTS Development)
+    # Require runtime Java components
+    find_package(Java 1.8 REQUIRED COMPONENTS Runtime)
+    if(NOT Java_JAVAC_EXECUTABLE OR NOT Java_JAR_EXECUTABLE)
+        message(FATAL_ERROR
+            "Building the Pegasus JARs requires a JDK providing javac and jar; "
+            "found Java ${Java_VERSION} but javac/jar are missing "
+            "(javac='${Java_JAVAC_EXECUTABLE}', jar='${Java_JAR_EXECUTABLE}').")
+    endif()
     include(UseJava)
 
     # Java 8 source/target compatibility; UTF-8 encoding
