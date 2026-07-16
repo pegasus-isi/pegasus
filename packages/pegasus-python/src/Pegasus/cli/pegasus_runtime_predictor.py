@@ -23,7 +23,7 @@ from pathlib import Path
 import yaml
 
 from Pegasus.api import File, Job, Namespace, Workflow
-from Pegasus.runtime_predictor import (
+from Pegasus.runtime.predictor import (
     RuntimePredictionConfig,
     WorkflowRuntimePredictor,
     find_submit_dir,
