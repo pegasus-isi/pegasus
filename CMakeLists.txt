@@ -264,8 +264,14 @@ if(PEGASUS_BUILD_WORKER)
     # pegasus-keg) so the worker package is self-contained on remote nodes,
     # matching the old ant dist-worker target (which depended on compile-c).
     if(PEGASUS_BUILD_C)
-        add_dependencies(build_worker_tarball pegasus-kickstart pegasus-cluster pegasus-keg)
-        foreach(_c_tool pegasus-kickstart pegasus-cluster pegasus-keg)
+        # pegasus-keg is skipped on musl libc (Alpine), so its target may not
+        # exist; only stage it into the worker package when it was built.
+        set(_worker_c_tools pegasus-kickstart pegasus-cluster)
+        if(TARGET pegasus-keg)
+            list(APPEND _worker_c_tools pegasus-keg)
+        endif()
+        add_dependencies(build_worker_tarball ${_worker_c_tools})
+        foreach(_c_tool ${_worker_c_tools})
             add_custom_command(TARGET build_worker_tarball POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy
                         "$<TARGET_FILE:${_c_tool}>" "${_worker_bin}/"
