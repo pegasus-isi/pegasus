@@ -111,6 +111,7 @@ cmake.version = ">=3.20"
 cmake.build-type = "Release"
 build-dir = "_cmake_build"
 editable.rebuild = true
+wheel.py-api = "py3"
 
 # Python package location — pegasus-python is the main package; pegasus-common
 # and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
