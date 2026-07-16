@@ -132,8 +132,21 @@ if(PEGASUS_BUILD_JAVA)
     endif()
     include(UseJava)
 
-    # Java 8 source/target compatibility; UTF-8 encoding
-    set(CMAKE_JAVA_COMPILE_FLAGS "--release" "8" "-encoding" "UTF-8" "-Xlint:none")
+    # Java 8 bytecode target, UTF-8 encoding. `--release 8` (JDK 9+) both sets
+    # the target and constrains the API to Java 8, but javac has no --release
+    # flag on a JDK 8 toolchain (e.g. RHEL 8's default /usr/bin/javac), so fall
+    # back to `-source/-target 8` there — same Java 8 bytecode. Probe javac
+    # itself rather than the java runtime in case the two versions differ.
+    execute_process(
+        COMMAND "${Java_JAVAC_EXECUTABLE}" -version
+        OUTPUT_VARIABLE _javac_version ERROR_VARIABLE _javac_version
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(_javac_version MATCHES "javac 1\\.[0-8]")
+        # JDK 8 and older: no --release support
+        set(CMAKE_JAVA_COMPILE_FLAGS "-source" "8" "-target" "8" "-encoding" "UTF-8" "-Xlint:none")
+    else()
+        set(CMAKE_JAVA_COMPILE_FLAGS "--release" "8" "-encoding" "UTF-8" "-Xlint:none")
+    endif()
 
     # Third-party classpath JARs (already in source tree, not compiled)
     file(GLOB _cp_jars     "${CMAKE_SOURCE_DIR}/share/pegasus/java/*.jar")
