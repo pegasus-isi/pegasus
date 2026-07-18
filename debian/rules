@@ -21,9 +21,7 @@ build-stamp:
 	# Install build tooling into a temporary virtualenv (not available as distro packages)
 	$(PYTHON3) -m venv _build_venv
 	_build_venv/bin/pip install --upgrade pip scikit-build-core build
-
-	# Build the wheel (includes worker tarball + C tools + Java JARs via cmake)
-	PYTHON=_build_venv/bin/python make build
+	PYTHON=_build_venv/bin/python make build-worker dist-wheel
 
 	touch build-stamp
 
@@ -34,39 +32,56 @@ install: build
 	dh_prep
 	dh_installdirs
 
-	# Install wheel and all runtime Python deps into the staging area.
-	# We bundle deps rather than declare apt equivalents because several
-	# (pamela, pika, globus-sdk, boto3, Flask-Caching) have no apt package.
-	_build_venv/bin/pip install \
-	    --ignore-installed \
-	    --prefix=$(CURDIR)/debian/pegasus/usr \
-	    dist/pegasus_wms-*.whl
+	# Build a self-contained venv holding Pegasus + all runtime dependencies, the
+	# CLI entry-point scripts, the C binaries and the JARs. Nothing is installed
+	# into the system dist-packages, so the bundled deps (Flask, sqlalchemy,
+	# boto3, globus-sdk, ...) cannot conflict with or shadow distro packages.
+	$(PYTHON3) -m venv debian/pegasus/usr/lib/pegasus/venv
+	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --upgrade pip
+	debian/pegasus/usr/lib/pegasus/venv/bin/pip install dist/pegasus_wms-*.whl
 
-	# Debian's Python looks in dist-packages, not site-packages.
-	# Rename the directory pip creates so the installed packages are importable.
-	$(eval PY_VER := $(shell $(PYTHON3) -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"))
-	if [ -d "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/site-packages" ]; then \
-	    mv "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/site-packages" \
-	       "$(CURDIR)/debian/pegasus/usr/lib/python$(PY_VER)/dist-packages"; \
-	fi
+	# The venv was created under debian/pegasus; strip that build-time prefix from
+	# the generated script shebangs and pyvenv.cfg so paths are correct once
+	# installed. (bin/python is a symlink to the system interpreter, already ok.)
+	grep -rlI '$(CURDIR)/debian/pegasus' debian/pegasus/usr/lib/pegasus/venv/bin \
+	    | xargs -r sed -i 's|$(CURDIR)/debian/pegasus||g'
+	sed -i 's|$(CURDIR)/debian/pegasus||g' debian/pegasus/usr/lib/pegasus/venv/pyvenv.cfg
 
-	# Strip C executables
-	-strip debian/pegasus/usr/bin/pegasus-kickstart
-	-strip debian/pegasus/usr/bin/pegasus-cluster
-	-strip debian/pegasus/usr/bin/pegasus-keg
+	# Strip C executables (they live in the venv's bin/)
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-kickstart
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-cluster
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-keg
+
+	# Put the CLI + C binaries on PATH via symlinks into /usr/bin
+	mkdir -p debian/pegasus/usr/bin
+	for f in debian/pegasus/usr/lib/pegasus/venv/bin/pegasus*; do \
+	    ln -s /usr/lib/pegasus/venv/bin/$$(basename $$f) \
+	        debian/pegasus/usr/bin/$$(basename $$f); \
+	done
+
+	# Make `import Pegasus` work from the system python3 WITHOUT exposing the
+	# bundled runtime deps. A .pth adds a curated dir that symlinks only the
+	# Pegasus package and its single API-surface dep (PyYAML); the heavy deps
+	# stay private to the venv.
+	mkdir -p debian/pegasus/usr/lib/pegasus/site debian/pegasus/usr/lib/python3/dist-packages
+	venv_site=$$(debian/pegasus/usr/lib/pegasus/venv/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))"); \
+	venv_site=$${venv_site#$(CURDIR)/debian/pegasus}; \
+	for item in Pegasus pegasus_wms-*.dist-info yaml _yaml _yaml*.so PyYAML-*.dist-info pyyaml-*.dist-info; do \
+	    for src in debian/pegasus$$venv_site/$$item; do \
+	        [ -e "$$src" ] || continue; \
+	        ln -s $$venv_site/$$(basename $$src) debian/pegasus/usr/lib/pegasus/site/; \
+	    done; \
+	done
+	echo /usr/lib/pegasus/site > debian/pegasus/usr/lib/python3/dist-packages/pegasus.pth
 
 	# Install systemd service unit from source tree
 	install -d debian/pegasus/lib/systemd/system
 	install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \
 	    debian/pegasus/lib/systemd/system/
 
-	# Fix shebangs: pip writes the build-venv path; replace with system python3
-	find debian/pegasus/usr/bin -type f \
-	    -exec sed -i '1s|^#!.*/python[^ ]*|#!/usr/bin/python3|' {} \;
-
 	# Remove pyc files and __pycache__
-	find debian/pegasus/ -name \*.pyc -exec rm {} \;
-	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
+	find debian/pegasus/ -name \*.pyc -delete
+	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \; 2>/dev/null || true
 
 
 # Build architecture-independent files here.

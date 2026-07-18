@@ -27,19 +27,20 @@ if [ -z "$RHEL_VERSION" ] || [ "$RHEL_VERSION" = "%{rhel}" ]; then
 fi
 
 VERSION=$(grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
-RPM_VERSION=$(echo "$VERSION" | tr '-' '.')
 DATE_RPM=$(date +'%a %b %d %Y')
-echo "Building pegasus $RPM_VERSION for RHEL ${RHEL_VERSION}..."
+echo "Building pegasus $VERSION for RHEL ${RHEL_VERSION}..."
 
 RPM_DIR=$(mktemp -d)
 trap "rm -rf $RPM_DIR" EXIT
 mkdir -p "$RPM_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
 echo "--- Creating source tarball ---"
-tar czf "$RPM_DIR/SOURCES/pegasus-${RPM_VERSION}.tar.gz" \
-    --transform "s|^\./|pegasus-${RPM_VERSION}/|" \
+tar czf "$RPM_DIR/SOURCES/pegasus-${VERSION}.tar.gz" \
+    --transform "s|^\./|pegasus-${VERSION}/|" \
     --exclude=./.git \
+    --exclude=./.venv \
     --exclude=./_cmake_build \
+    --exclude=./_cmake_build_worker \
     --exclude=./_build_venv \
     --exclude=./dist \
     --exclude=./debian/pegasus \
@@ -47,7 +48,7 @@ tar czf "$RPM_DIR/SOURCES/pegasus-${RPM_VERSION}.tar.gz" \
 
 echo "--- Preparing spec file ---"
 sed \
-    -e "s/@PEGASUS_VERSION@/$RPM_VERSION/g" \
+    -e "s/@PEGASUS_VERSION@/$VERSION/g" \
     -e "s/@DATE@/$DATE_RPM/g" \
     pegasus.spec.in > "$RPM_DIR/SPECS/pegasus.spec"
 

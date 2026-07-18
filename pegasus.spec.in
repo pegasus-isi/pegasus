@@ -32,13 +32,18 @@ Requires:       java-21-openjdk-headless, python3
 %define pegasus_python 3.12
 %endif
 
-# Resolve site-packages path using the same prefix pip uses during %%install,
-# so that %%files matches the actual install location.
+# System interpreter's site-packages dir — used only to drop the pegasus.pth
+# that puts the (venv-private) Pegasus package on python%{pegasus_python}'s path.
 %global python_sitearch %(/usr/bin/python%{pegasus_python} -c "import sysconfig; print(sysconfig.get_paths(vars={'base': '/usr', 'platbase': '/usr'})['platlib'])")
 
 %define sourcedir %{name}-%{version}
 
-# Disables the automatic dependency generator (we bundle deps inside the wheel)
+# Self-contained install layout: Pegasus + all runtime deps live in a private
+# venv under %{pegasus_home}; nothing is dumped into the system site-packages.
+%global pegasus_home %{_prefix}/lib/pegasus
+%global pegasus_venv %{pegasus_home}/venv
+
+# Disables the automatic dependency generator (deps are bundled in the venv)
 %{?python_disable_dependency_generator}
 
 # Turn off automatic Python bytecompilation
@@ -62,23 +67,50 @@ execute the steps in appropriate order.
 # Install build tooling into a temporary virtualenv (not available as distro packages)
 /usr/bin/python%{pegasus_python} -m venv _build_venv
 _build_venv/bin/pip install --upgrade pip scikit-build-core build
-
-# Build the wheel (includes worker tarball + C tools + Java JARs via cmake)
-PYTHON=$(pwd)/_build_venv/bin/python make build
+PYTHON=$(pwd)/_build_venv/bin/python make build-worker dist-wheel
 
 %install
-mkdir -p %{buildroot}%{_bindir} %{buildroot}%{python_sitearch}
+# Build a self-contained venv holding Pegasus + all runtime dependencies, the
+# CLI entry-point scripts, the C binaries and the JARs. Nothing is installed
+# into the system site-packages, so the bundled deps (Flask, sqlalchemy, boto3,
+# globus-sdk, ...) cannot conflict with or shadow distro python packages.
+/usr/bin/python%{pegasus_python} -m venv %{buildroot}%{pegasus_venv}
+%{buildroot}%{pegasus_venv}/bin/pip install --upgrade pip
+%{buildroot}%{pegasus_venv}/bin/pip install dist/pegasus_wms-*.whl
 
-/usr/bin/python%{pegasus_python} -m pip install \
-    --ignore-installed \
-    --root %{buildroot} \
-    --prefix /usr \
-    dist/pegasus_wms-*.whl
+# The venv was created under %{buildroot}, so its generated script shebangs and
+# pyvenv.cfg embed that build-time prefix. Strip it so the paths are correct once
+# installed. (bin/python is a symlink to the system interpreter, already correct.)
+grep -rlI '%{buildroot}' %{buildroot}%{pegasus_venv}/bin \
+    | xargs -r sed -i 's|%{buildroot}||g'
+sed -i 's|%{buildroot}||g' %{buildroot}%{pegasus_venv}/pyvenv.cfg
 
-# Strip C executables
+# Strip the C executables (they live in the venv's bin/).
 for bin in pegasus-kickstart pegasus-cluster pegasus-keg; do
-    test -f %{buildroot}%{_bindir}/$bin && strip %{buildroot}%{_bindir}/$bin || true
+    test -f %{buildroot}%{pegasus_venv}/bin/$bin && strip %{buildroot}%{pegasus_venv}/bin/$bin || true
 done
+
+# Put the CLI + C binaries on PATH via symlinks into %{_bindir}.
+mkdir -p %{buildroot}%{_bindir}
+for f in %{buildroot}%{pegasus_venv}/bin/pegasus*; do
+    ln -s %{pegasus_venv}/bin/"$(basename "$f")" %{buildroot}%{_bindir}/"$(basename "$f")"
+done
+
+# Make `import Pegasus` work from the system python%{pegasus_python} WITHOUT
+# exposing the bundled runtime deps. A .pth adds a curated directory that
+# symlinks only the Pegasus package and its single API-surface dependency
+# (PyYAML); the heavy deps stay private to the venv.
+venv_site=$(%{buildroot}%{pegasus_venv}/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+venv_site=${venv_site#%{buildroot}}
+mkdir -p %{buildroot}%{pegasus_home}/site
+for item in Pegasus pegasus_wms-*.dist-info yaml _yaml _yaml*.so PyYAML-*.dist-info pyyaml-*.dist-info; do
+    for src in %{buildroot}${venv_site}/$item; do
+        [ -e "$src" ] || continue
+        ln -s ${venv_site}/"$(basename "$src")" %{buildroot}%{pegasus_home}/site/
+    done
+done
+install -d %{buildroot}%{python_sitearch}
+echo '%{pegasus_home}/site' > %{buildroot}%{python_sitearch}/pegasus.pth
 
 # Install systemd service unit from source tree
 install -d %{buildroot}%{_unitdir}
@@ -91,9 +123,9 @@ find %{buildroot} -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || t
 
 %files
 %defattr(-,root,root,-)
-%{_bindir}/*
-%{python_sitearch}/Pegasus/
-%{python_sitearch}/pegasus_wms-*.dist-info/
+%{_bindir}/pegasus*
+%{pegasus_home}/
+%{python_sitearch}/pegasus.pth
 %{_unitdir}/pegasus-service.service
 
 %post
