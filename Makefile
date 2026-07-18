@@ -1,6 +1,16 @@
 PYTHON      ?= python3
 CMAKE       ?= cmake
+# Generator for every CMake configure in this Makefile. Exported as
+# CMAKE_GENERATOR so it reaches BOTH the direct `cmake` targets below AND the
+# scikit-build-core wheel build.
+# To opt out of Ninja do "GENERATOR="Unix Makefiles make ..."
+GENERATOR   ?= Ninja
+export CMAKE_GENERATOR := $(GENERATOR)
+# Main build directory
 BUILD_DIR   ?= _cmake_build
+# Separate build dir for the worker package build.
+# Worker is build with "C=ON JAVA=OFF WORKER=ON" flags.
+WORKER_BUILD_DIR ?= _cmake_build_worker
 DIST_DIR    ?= dist
 WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
 
@@ -80,15 +90,15 @@ build-java:
 # payload so it is self-contained on remote execution nodes.
 # Slow: runs pip install for external deps.
 build-worker:
-	$(CMAKE) -B $(BUILD_DIR) -S . \
+	$(CMAKE) -B $(WORKER_BUILD_DIR) -S . \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DPEGASUS_BUILD_C=ON \
 	    -DPEGASUS_BUILD_JAVA=OFF \
 	    -DPEGASUS_BUILD_WORKER=ON
-	$(CMAKE) --build $(BUILD_DIR) --target build_worker_tarball
+	$(CMAKE) --build $(WORKER_BUILD_DIR) --target build_worker_tarball
 	mkdir -p $(WORKER_DATA) dist
-	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
-	cp $(BUILD_DIR)/pegasus-worker-*.tar.gz dist/
+	cp $(WORKER_BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
+	cp $(WORKER_BUILD_DIR)/pegasus-worker-*.tar.gz dist/
 
 # Build a .deb package using Docker (requires Docker).
 # debtest.Dockerfile is built and run with the source tree mounted.
@@ -113,7 +123,7 @@ dist-wheel:
 # Remove worker build artifacts (cmake staging dir and the staged tarball in the
 # Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
 clean-worker:
-	rm -rf $(BUILD_DIR)/worker_staging
+	rm -rf $(WORKER_BUILD_DIR)
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 
 # Remove only Java build artifacts — forces recompilation on next build.
@@ -142,7 +152,7 @@ clean-doc:
 
 # Remove all artifacts: cmake build dir, wheel output, egg-info, caches, docs, test reports, etc.
 clean: clean-test clean-doc
-	rm -rf $(BUILD_DIR) $(DIST_DIR)/ test-reports/
+	rm -rf $(BUILD_DIR) $(WORKER_BUILD_DIR) $(DIST_DIR)/ test-reports/
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true

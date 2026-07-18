@@ -261,6 +261,7 @@ flycheck_*.el
 # CMake
 cmake-build-*/
 _cmake_build/
+_cmake_build_worker/
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
