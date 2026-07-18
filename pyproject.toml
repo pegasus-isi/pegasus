@@ -117,24 +117,11 @@ wheel.py-api = "py3"
 # and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
 wheel.packages = ["packages/pegasus-python/src/Pegasus"]
 
-# Source distribution: include everything cmake needs to build from source
+# scikit core includes everything that is git tracked in sdist
+# But .gitignore has .jar in it, so sdist ignores vendored jars
+# Explicitely include the needed jars in sdist
 sdist.include = [
-    "CMakeLists.txt",
-    "packages/pegasus-common/**",
-    "packages/pegasus-api/**",
-    "packages/pegasus-python/**",
-    "packages/pegasus-kickstart/**",
-    "packages/pegasus-cluster/**",
-    "packages/pegasus-keg/**",
-    "packages/pegasus-mpi-cluster/**",
     "share/pegasus/java/**",
-    "build.properties",
-    "release-tools/getsystem",
-    "release-tools/getversion",
-    "release-tools/determine-lib-dir",
-    "src/edu/**",
-    "src/org/**",
-    "src/requirements.txt",
 ]
 sdist.exclude = [
     "**/*.o",
@@ -143,6 +130,9 @@ sdist.exclude = [
     "build/",
     "dist/",
     "_cmake_build/",
+    "_cmake_build_worker/",
+    ".claude/",
+    ".gihub/"
 ]
 
 # Reads the version from build.properties
