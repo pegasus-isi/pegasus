@@ -27,7 +27,7 @@ failed jobs printed to stdout).
 ## Prerequisites
 
 - `glab` authenticated to **scitech-gitlab.isi.edu** (the script targets repo
-  `pegasus/pegasus`, project id 49 — resolved against the configured host, NOT
+  `pegasus-isi/pegasus`, project id 49 — resolved against the configured host, NOT
   gitlab.com). Check: `glab auth status`.
 - `jq` on PATH.
 
@@ -67,11 +67,11 @@ without firing a new one:
 
 ```bash
 PID=4677   # from the script's "Pipeline ID:" line
-glab api -R pegasus/pegasus projects/:id/pipelines/$PID | jq -r '.status'
+glab api -R pegasus-isi/pegasus projects/:id/pipelines/$PID | jq -r '.status'
 # failed-job traces:
-glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PID/jobs \
+glab api -R pegasus-isi/pegasus --paginate projects/:id/pipelines/$PID/jobs \
   | jq -r '.[] | select(.status=="failed") | .id' \
-  | while read -r J; do echo "== job $J =="; glab api -R pegasus/pegasus /projects/:id/jobs/$J/trace; done
+  | while read -r J; do echo "== job $J =="; glab api -R pegasus-isi/pegasus /projects/:id/jobs/$J/trace; done
 ```
 
 ## Gotchas
@@ -80,7 +80,7 @@ glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PID/jobs \
   shared CI runners for hours. Use unit (no `TYPE`) for routine checks; reserve
   `workflow` for explicit e2e requests.
 - **Wrong GitLab host = silent confusion.** `glab` must be authed to
-  `scitech-gitlab.isi.edu`. If it's only logged into gitlab.com, `-R pegasus/pegasus`
+  `scitech-gitlab.isi.edu`. If it's only logged into gitlab.com, `-R pegasus-isi/pegasus`
   resolves to the wrong place. Verify with `glab auth status`.
 - **Mutating `glab api` is blocked by policy.** `allowed-tools` permits only
   `glab pipeline run`, `glab api` (reads), and `glab auth status`; so the skill
@@ -100,4 +100,4 @@ glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PID/jobs \
 - `glab: command not found` / API 401 → `glab auth status`, re-login to
   scitech-gitlab.isi.edu.
 - Pipeline ID comes back empty → the `glab pipeline run` output format changed;
-  inspect raw output: `glab pipeline run -R pegasus/pegasus --branch main`.
+  inspect raw output: `glab pipeline run -R pegasus-isi/pegasus --branch main`.

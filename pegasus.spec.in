@@ -29,7 +29,7 @@ Requires:       java-21-openjdk-headless, python3.12, python3.12-cryptography, p
 %if 0%{?rhel} == 10
 BuildRequires:  ant-apache-regexp, java-21-openjdk-devel, python3-devel, python3-pip, python3-setuptools
 Requires:       java-21-openjdk-headless, python3, python3-cryptography, python3-PyYAML
-%define pegasus_python 3.12
+%define pegasus_python 3.14
 %endif
 
 %define sourcedir %{name}-%{_version}
@@ -92,7 +92,8 @@ rm -rf %{buildroot}/%{_datadir}/%{name}/systemd-unit
 %config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
 %{_libdir}/pegasus
-%{_libdir}/python*
+%{_libdir}/python%{pegasus_python}/site-packages/Pegasus/
+%{_libdir}/python%{pegasus_python}/site-packages/pegasus*/
 %{_datadir}/%{name}
 %{_unitdir}/pegasus-service.service
 

@@ -21,7 +21,7 @@ done
 echo "Triggering pipeline on branch '$BRANCH'..."
 
 PIPELINE_ID=$(glab pipeline run \
-  -R pegasus/pegasus \
+  -R pegasus-isi/pegasus \
   --branch "$BRANCH" "${VAR_ARGS[@]}" | sed -E 's/.*id: ([0-9]+).*/\1/')
 
 if [[ $? -ne 0 ]]; then
@@ -33,7 +33,7 @@ echo "Pipeline ID: $PIPELINE_ID"
 
 # Wait for completion
 while true; do
-  STATUS=$(glab api -R pegasus/pegasus projects/:id/pipelines/$PIPELINE_ID | jq -r '.status')
+  STATUS=$(glab api -R pegasus-isi/pegasus projects/:id/pipelines/$PIPELINE_ID | jq -r '.status')
 
   echo "Pipeline status: $STATUS"
 
@@ -57,14 +57,14 @@ done
 
 # Print logs from failed jobs
 unset PAGER
-glab api -R pegasus/pegasus --paginate projects/:id/pipelines/$PIPELINE_ID/jobs | jq '.[] | select(.status=="failed") | .id' |
+glab api -R pegasus-isi/pegasus --paginate projects/:id/pipelines/$PIPELINE_ID/jobs | jq '.[] | select(.status=="failed") | .id' |
 while read -r JOB_ID; do
   echo
   echo "=================================================="
   echo "FAILED JOB $JOB_ID"
   echo "=================================================="
 
-  glab -R pegasus/pegasus api /projects/:id/jobs/$JOB_ID/trace
+  glab -R pegasus-isi/pegasus api /projects/:id/jobs/$JOB_ID/trace
 
   echo
 done

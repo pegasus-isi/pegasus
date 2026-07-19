@@ -226,7 +226,10 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  - |
+    ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+    # also try installing the generated RPM
+    rpm -iv $(ls dist/*.rpm | grep -v src)
   artifacts:
     paths:
     - dist/pegasus-binary*.tar.gz
@@ -249,7 +252,10 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+  - |
+    ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
+    # also try installing the generated RPM
+    rpm -iv $(ls dist/*.rpm | grep -v src)
   artifacts:
     paths:
     - dist/pegasus-binary*.tar.gz
