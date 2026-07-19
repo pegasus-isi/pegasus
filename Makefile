@@ -2,10 +2,16 @@ PYTHON      ?= python3
 CMAKE       ?= cmake
 # Generator for every CMake configure in this Makefile. Exported as
 # CMAKE_GENERATOR so it reaches BOTH the direct `cmake` targets below AND the
-# scikit-build-core wheel build.
-# To opt out of Ninja do "GENERATOR="Unix Makefiles make ..."
-GENERATOR   ?= Ninja
+# scikit-build-core wheel build. Default to Ninja when it is installed (matches
+# scikit-build-core); otherwise leave it unset so CMake falls back to the host
+# default generator — hosts without ninja must still build. Override explicitly
+# with e.g. `GENERATOR="Unix Makefiles" make ...`.
+ifeq ($(origin GENERATOR),undefined)
+GENERATOR := $(shell command -v ninja >/dev/null 2>&1 && echo Ninja)
+endif
+ifneq ($(strip $(GENERATOR)),)
 export CMAKE_GENERATOR := $(GENERATOR)
+endif
 # Main build directory
 BUILD_DIR   ?= _cmake_build
 # Separate build dir for the worker package build.
