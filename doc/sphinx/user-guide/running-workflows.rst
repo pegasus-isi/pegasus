@@ -116,8 +116,8 @@ DAG file are all Condor submit files for the jobs from the picture plus
 a number of additional helper files.
 
 The various instructions that can be put into a DAG file are described
-in `Condor's DAGMAN
-documentation <https://htcondor.readthedocs.io/en/latest/users-manual/dagman-workflows.html>`__.
+in `HTCondor's DAGMAN
+documentation <https://htcondor.readthedocs.io/en/latest/automated-workflows/dagman-introduction.html>`__.
 The constituents of the submit directory are described in the
 :ref:`Submit Directory Details <submit-directory>` section
 
