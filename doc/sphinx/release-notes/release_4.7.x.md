@@ -21,7 +21,7 @@ in the Pegasus Jira
 
    JGlobus is no longer actively supported and is not in compliance
    with RFC 2818
-   (https://docs.globus.org/security-bulletins/2015-12-strict-mode). As
+   . As
    a result cleanup jobs using pegasus-gridftp client would fail
    against the servers supporting the strict mode. We have removed the
    pegasus-gridftp client and now use gfal clients as globus-url-copy
