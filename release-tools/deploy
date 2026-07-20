@@ -70,8 +70,6 @@ done
 
 # rhel
 cd $TOPDIR/dist
-mkdir -p $DOWNLOADS/rhel/src
-cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
 
 for OSARCH in aarch64 x86_64; do
     for OSVER in $(seq 7 12); do
@@ -109,7 +107,11 @@ mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 
 NOW=$(date +'%s')
-tar -xz --transform="s/^pegasus-$VERSION/pegasus-$VERSION-$NOW/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+# The full distribution is now the wheel; install it into a self-contained venv
+# instead of extracting the old pegasus-binary tarball.
+python3 -m venv pegasus-$VERSION-$NOW
+pegasus-$VERSION-$NOW/bin/pip install --upgrade pip
+pegasus-$VERSION-$NOW/bin/pip install $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*.whl
 
 # update symlink
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
