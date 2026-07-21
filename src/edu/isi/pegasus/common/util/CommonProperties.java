@@ -174,8 +174,7 @@ public class CommonProperties implements Cloneable {
     /**
      * ctor. This initializes the local instance of properties from a central file.
      *
-     * @param confProperties the path to conf properties, that supersede the loading of properties
-     *     from $PEGASUS_HOME/.pegasusrc
+     * @param confProperties the path to conf properties
      * @exception IOException will be thrown if reading the property file goes awry.
      * @exception MissingResourceException will be thrown if not all required properties are set
      */
@@ -298,8 +297,7 @@ public class CommonProperties implements Cloneable {
      * Create a temporary property that is not attached to the Singleton. This may be helpful with
      * portal, which do magic things during the lifetime of a process.
      *
-     * @param confProperties the path to conf properties, that supersede the loading of properties
-     *     from $PEGASUS_HOME/.pegasusrc
+     * @param confProperties the path to conf properties
      * @return a reference to the parsed properties.
      * @exception IOException will be thrown if reading the property file goes awry.
      * @exception MissingResourceException will be thrown if you forgot to specify the <code>
