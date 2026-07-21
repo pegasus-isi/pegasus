@@ -95,7 +95,8 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
 %{_libdir}/pegasus
-%{_libdir}/python*
+%{python3_sitearch}/Pegasus/
+%{python3_sitearch}/pegasus*/
 %{_datadir}/%{name}
 %{_unitdir}/pegasus-service.service
 
