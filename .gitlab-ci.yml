@@ -170,7 +170,7 @@ C:
   - python3.12 -m venv /tmp/pegasus-venv
   - /tmp/pegasus-venv/bin/pip install --upgrade pip ninja
   - /tmp/pegasus-venv/bin/pip install .
-  - make test-c
+  - PYTHON=/tmp/pegasus-venv/bin/python make test-c
   rules:
   - changes:
       paths:
