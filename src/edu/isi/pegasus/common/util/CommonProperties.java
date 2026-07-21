@@ -229,9 +229,11 @@ public class CommonProperties implements Cloneable {
         }
 
         // 4. properties passed via --conf option
-        props = new File(confProperties);
-        if (props.exists()) {
-            loadProperties(props);
+        if (confProperties != null) {
+            props = new File(confProperties);
+            if (props.exists()) {
+                loadProperties(props);
+            }
         }
 
         // 5. PM-1391 pick any properties from the environment
