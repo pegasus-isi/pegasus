@@ -153,8 +153,7 @@ AWS, or even another HTCondor cluster.
    modes <data-staging-configuration>` are **condorio** and
    **nonsharedfs** .
 
-`GlideinWMS <http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/>`__
-is a tool and host environment used mostly on the `Open Science Grid <http://www.opensciencegrid.org/>`__.
+GlideinWMS is a tool and host environment used mostly on the OSG.
 
 Glideins can also be created by hand or scripts. This is a useful solution for
 example for cluster which have no external job submit mechanisms or do not
@@ -702,9 +701,6 @@ You can inspect the above file, to make sure that correct
 scheduler specific attributes have been set for your job.
 The *submit.script* file can be submitted to the local HPC scheduler,
 using the usual job submit command such as `sbatch` for SLURM.
-
-A handy primer of various HPC scheduler specific commands can be found
-`here <https://oit.ua.edu/wp-content/uploads/2020/12/scheduler_commands_cheatsheet-2020-ally.pdf>`_.
 
 If you want to tinker, or hardcode any extra attributes to appear in your
 jobs, that cannot be expressed via Pegasus profiles in the table above, you
