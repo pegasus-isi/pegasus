@@ -167,10 +167,10 @@ C:
   # test-c builds the C tools itself) and point make at that interpreter so its
   # pegasus-integrity symlink step resolves. Use a separate build-dir so the
   # scikit-build (Ninja) configure does not clobber make's _cmake_build cache.
-  - python3 -m venv /tmp/pegasus-venv
+  - python3.12 -m venv /tmp/pegasus-venv
   - /tmp/pegasus-venv/bin/pip install --upgrade pip ninja
   - /tmp/pegasus-venv/bin/pip install .
-  - PYTHON=/tmp/pegasus-venv/bin/python make test-c
+  - make test-c
   rules:
   - changes:
       paths:
