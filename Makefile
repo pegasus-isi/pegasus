@@ -208,8 +208,11 @@ doc-java:
 # Copy XSD/XML/YAML schema files into the doc output tree.
 doc-schemas:
 	mkdir -p $(_DOC_OUT)/schemas $(_DOC_OUT)/wordpress/schemas
-	cp -r doc/schemas/. $(_DOC_OUT)/schemas/
-	cp -r doc/schemas/. $(_DOC_OUT)/wordpress/schemas/
+	cp -rL doc/schemas/. $(_DOC_OUT)/schemas/
+	cp -rL doc/schemas/. $(_DOC_OUT)/wordpress/schemas/
+	find $(_DOC_OUT)/schemas $(_DOC_OUT)/wordpress/schemas \
+	    \( -name '*.xsd' -o -name '*.xml' -o -name '*.yml' \) -type f \
+	    -exec perl -i -pe 's/\r\n?/\n/g' {} +
 
 # Build all documentation: user guide, Javadoc, and schemas.
 doc: doc-sphinx doc-java doc-schemas
