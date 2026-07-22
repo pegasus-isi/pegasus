@@ -109,9 +109,20 @@ mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 
 NOW=$(date +'%s')
-# The full distribution is now the wheel; install it into a self-contained venv
-# instead of extracting the old pegasus-binary tarball.
-python3 -m venv pegasus-$VERSION-$NOW
+# The wheel requires Python >=3.10 (globus-sdk>=3.23.0 needs Python >=3.8)
+PYTHON=
+for CANDIDATE in python3.14 python3.13 python3.12 python3.11 python3.10; do
+    if command -v $CANDIDATE >/dev/null 2>&1; then
+        PYTHON=$CANDIDATE
+        break
+    fi
+done
+if [ "X$PYTHON" = "X" ]; then
+    echo "Unable to find a Python >=3.10 interpreter to build the venv! Exiting..."
+    exit 1
+fi
+
+$PYTHON -m venv pegasus-$VERSION-$NOW
 pegasus-$VERSION-$NOW/bin/pip install --upgrade pip
 pegasus-$VERSION-$NOW/bin/pip install $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*-py3-none-linux_x86_64.whl
 
