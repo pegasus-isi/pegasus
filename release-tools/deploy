@@ -8,6 +8,8 @@ TOPDIR=$(pwd)
 echo
 echo "Available artifacts are:"
 ls -lh dist/
+ls -lh dist/deb
+ls -lh dist/rpm
 echo
 
 VERSION=`./release-tools/getversion`
@@ -111,7 +113,7 @@ NOW=$(date +'%s')
 # instead of extracting the old pegasus-binary tarball.
 python3 -m venv pegasus-$VERSION-$NOW
 pegasus-$VERSION-$NOW/bin/pip install --upgrade pip
-pegasus-$VERSION-$NOW/bin/pip install $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*.whl
+pegasus-$VERSION-$NOW/bin/pip install $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*-py3-none-linux_x86_64.whl
 
 # update symlink
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
