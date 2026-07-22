@@ -45,7 +45,9 @@ SED_I   := sed -i
 endif
 
 _DOC_BUILD := doc/sphinx/_build
-_DOC_OUT   := $(DIST_DIR)/doc
+_DOC_STAGE := $(DIST_DIR)/pegasus-$(VERSION)
+_DOC_SHARE := $(_DOC_STAGE)/share
+_DOC_OUT   := $(_DOC_SHARE)/doc/pegasus
 
 # Derive tox environment name from the active Python (e.g. py313)
 PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
@@ -152,9 +154,9 @@ clean-test:
 	rm -rf packages/pegasus-*/test-reports
 	find packages -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null; true
 
-# Remove documentation build artifacts (Sphinx output, generated RST, final dist/doc).
+# Remove documentation build artifacts (Sphinx output, generated RST, staged doc tree).
 clean-doc:
-	rm -rf $(_DOC_BUILD) doc/sphinx/python doc/sphinx/java $(_DOC_OUT)
+	rm -rf $(_DOC_BUILD) doc/sphinx/python doc/sphinx/java $(_DOC_STAGE)
 
 # Remove all artifacts: cmake build dir, wheel output, egg-info, caches, docs, test reports, etc.
 clean: clean-test clean-doc
@@ -176,10 +178,10 @@ doc-sphinx:
 	fi
 	$(SED_I) 's/^version = .*/version = "5.0.0dev"/' doc/sphinx/conf.py
 	$(SED_I) 's/^release = .*/release = "5.0.0dev"/' doc/sphinx/conf.py
-	mkdir -p $(_DOC_OUT)/wordpress $(_DOC_OUT)/man
+	mkdir -p $(_DOC_OUT)/wordpress $(_DOC_SHARE)/man/man1
 	cp -r $(_DOC_BUILD)/html/. $(_DOC_OUT)/wordpress/
 	-cp $(_DOC_BUILD)/latex/*.pdf $(_DOC_OUT)/wordpress/ 2>/dev/null
-	find $(_DOC_BUILD)/man -maxdepth 1 -type f -exec cp {} $(_DOC_OUT)/man/ \;
+	find $(_DOC_BUILD)/man -maxdepth 1 -type f -exec cp {} $(_DOC_SHARE)/man/man1/ \;
 	@test -f "$(_DOC_BUILD)/html/python/Pegasus.api.html" || \
 	    (echo "ERROR: Python API docs not generated correctly"; exit 1)
 
@@ -190,9 +192,9 @@ doc-java:
 	    echo "Skipping Javadoc: run 'make build-java' first"; \
 	else \
 	    echo "--- Javadoc ---"; \
-	    mkdir -p "$(CURDIR)/$(_DOC_OUT)/javadoc"; \
+	    mkdir -p "$(CURDIR)/$(_DOC_OUT)/wordpress/javadoc"; \
 	    $(JAVADOC) -encoding UTF-8 \
-	        -d "$(CURDIR)/$(_DOC_OUT)/javadoc" \
+	        -d "$(CURDIR)/$(_DOC_OUT)/wordpress/javadoc" \
 	        -windowtitle "PEGASUS" \
 	        -doctitle "PEGASUS $(VERSION)" \
 	        -author -use -version -private \
@@ -214,7 +216,8 @@ doc: doc-sphinx doc-java doc-schemas
 
 # Package documentation into a tarball: dist/pegasus-doc-VERSION.tar.gz
 doc-dist: doc
-	tar czf $(DIST_DIR)/pegasus-doc-$(VERSION).tar.gz -C $(_DOC_OUT) .
+	tar czf $(DIST_DIR)/pegasus-doc-$(VERSION).tar.gz -C $(DIST_DIR) \
+	    pegasus-$(VERSION)/share/man pegasus-$(VERSION)/share/doc
 
 # Run all tests (Python + Java + C).
 # Java tests require: make build-java
@@ -300,7 +303,7 @@ help:
 	@echo "  dist-wheel    Build a wheel distribution of the package. (Creates a .whl file in dist/)"
 	@echo "  clean         Remove all artifacts"
 	@echo "  clean-test    Remove test output (reports, coverage, compiled test classes)"
-	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + dist/doc)"
+	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + staged doc tree)"
 	@echo "  clean-java    Remove only Java cmake build output"
 	@echo "  clean-c       Remove only C cmake build output"
 	@echo "  clean-worker  Remove only worker package cmake build output"
@@ -309,8 +312,8 @@ help:
 	@echo "  doc           Build all docs: user guide (Sphinx), Javadoc, schemas"
 	@echo "  doc-sphinx    Build Sphinx HTML + man pages (+ PDF if LaTeX installed)"
 	@echo "  doc-java      Generate Javadoc (needs 'make build-java')"
-	@echo "  doc-schemas   Copy XSD/XML/YAML schemas into dist/doc"
-	@echo "  doc-dist      Package dist/doc into dist/pegasus-doc-VERSION.tar.gz"
+	@echo "  doc-schemas   Copy XSD/XML/YAML schemas into the staged doc tree"
+	@echo "  doc-dist      Package staged docs into dist/pegasus-doc-VERSION.tar.gz"
 	@echo ""
 	@echo "Test targets:"
 	@echo "  test          Run all tests (Python + Java + C)"

@@ -74,12 +74,12 @@ cd packages/pegasus-worker && tox -e lint
 ## Documentation
 
 ```bash
-make doc           # Build all docs → dist/doc/ (Sphinx HTML+man, Javadoc, schemas)
+make doc           # Build all docs → dist/pegasus-VERSION/share/ (Sphinx HTML+man, Javadoc, schemas)
 make doc-sphinx    # Sphinx user guide (HTML + man pages; PDF if latexmk is installed)
 make doc-java      # Javadoc for planner dax/selector API (needs make build-java first)
-make doc-schemas   # Copy XSD/XML/YAML schemas to dist/doc/schemas/
-make doc-dist      # Package dist/doc/ → dist/pegasus-doc-VERSION.tar.gz
-make clean-doc     # Remove doc/sphinx/_build/, doc/sphinx/python/, dist/doc/
+make doc-schemas   # Copy XSD/XML/YAML schemas into the staged doc tree
+make doc-dist      # Package staged docs → dist/pegasus-doc-VERSION.tar.gz
+make clean-doc     # Remove doc/sphinx/_build/, doc/sphinx/python/, dist/pegasus-VERSION/
 ```
 
 Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by `tox -e docs` in `packages/pegasus-python/`. PDF generation requires `latexmk`; skipped automatically when not installed.
