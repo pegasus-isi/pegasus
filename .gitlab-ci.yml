@@ -382,7 +382,7 @@ Docs:
   #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
   #- pip3 install tox
   script:
-  - make doc-dist
+  - make clean build-java doc-dist
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
