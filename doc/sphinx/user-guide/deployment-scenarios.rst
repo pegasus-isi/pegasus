@@ -1196,6 +1196,19 @@ Troubleshooting
     ``~/superfacility-env`` does not exist or does not contain ``sfapi_client``.
 
 
+Containers on NERSC
+~~~~~~~~~~~~~~~~~~~
+
+When running workflows against NERSC, keep in mind that if your jobs require
+containers, then you need to specify `shifter` containers in the transformation
+catalog. You can find details on how to do that at :ref:`shifter_containers_staging`.
+
+Please refer to
+`NERSC Shifter documentation <https://docs.nersc.gov/development/containers/shifter/how-to-use/>`__
+for instructions on how to build a shifter container at NERSC from a docker container.
+
+
+
 .. _pyglidein:
 
 PyGlidein
