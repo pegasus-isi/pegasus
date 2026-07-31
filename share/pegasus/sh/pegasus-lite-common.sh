@@ -665,6 +665,7 @@ pegasus_lite_unexpected_exit()
     # at the last step of the lite script. The unexpected one
     # can be called anytime if the script exists as a result 
     # of for example signals
+    plite_failure_code=71
     rc=$?
 
     pegasus_include_multipart || true
@@ -699,8 +700,8 @@ pegasus_lite_unexpected_exit()
     runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: runtime $runtime" 1>&2
 
-    echo "PegasusLite: exitcode $rc" 1>&2
-    exit $rc
+    echo "PegasusLite: tool exitcode $rc, switching to exitcode $plite_failure_code" 1>&2
+    exit $plite_failure_code
 }
 
 
