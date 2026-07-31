@@ -1077,6 +1077,12 @@ jobs — all over HTTPS.
     layout, and the ``sfapi_helpers.py`` CLI, see
     :ref:`nersc-sfapi-submission` in the Reference Guide.
 
+.. figure:: ../images/pegasus-sfapi.png
+   :alt: Pegasus WMS job submission to NERSC via SFAPI
+   :width: 100.0%
+
+   Pegasus WMS job submission to NERSC via SFAPI
+
 Prerequisites
 ~~~~~~~~~~~~~
 
@@ -1100,10 +1106,10 @@ down option in the IP presets that allows you to select your IP.
 
 
 .. figure:: ../images/sfapi-token-iris.png
-   :alt: The distributed resources appear to be part of a HTCondor pool.
+   :alt: Token generation for SFAPI via IRIS web interface
    :width: 100.0%
 
-   The distributed resources appear to be part of a HTCondor pool.
+   Token generation for SFAPI via IRIS web interface
 
 
 **2. Python virtual environment with** ``sfapi_client``
