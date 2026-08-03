@@ -700,7 +700,7 @@ pegasus_lite_unexpected_exit()
     runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: runtime $runtime" 1>&2
 
-    echo "PegasusLite: tool exitcode $rc, switching to exitcode $plite_failure_code" 1>&2
+    echo "PegasusLite: exitcode $plite_failure_code, tool originally exited with exitcode $rc" 1>&2
     exit $plite_failure_code
 }
 

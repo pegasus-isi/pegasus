@@ -55,7 +55,7 @@ re_parse_dag_subdag = re.compile(
 )
 re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECASE)
 # used while parsing the job .err file.
-re_parse_pegasuslite_ec = re.compile(r"^PegasusLite: exitcode (\d+)$", re.MULTILINE)
+re_parse_pegasuslite_ec = re.compile(r"^PegasusLite: exitcode (\d+).*$", re.MULTILINE)
 # re_parse_register_input_files = re.compile(r'^([a-zA-z\.\d\\_-]+)\s+([\w]+://[\w\.\-:@]*/[\S ]*)\s+(\w=\".*\")*')
 
 
