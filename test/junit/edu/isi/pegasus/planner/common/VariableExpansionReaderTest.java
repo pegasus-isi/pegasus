@@ -28,6 +28,7 @@ import java.io.StringReader;
 public class VariableExpansionReaderTest {
 
     private static final class TrackingReader extends StringReader {
+
         private boolean mClosed;
 
         TrackingReader(String s) {
@@ -48,7 +49,9 @@ public class VariableExpansionReaderTest {
     @Test
     public void testReadSimpleLineWithoutVariables() throws IOException {
         String content = "hello world";
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader(content), PegasusProperties.nonSingletonInstance());
         BufferedReader br = new BufferedReader(reader);
         String line = br.readLine();
         br.close();
@@ -57,7 +60,9 @@ public class VariableExpansionReaderTest {
 
     @Test
     public void testReadEmptyContent() throws IOException {
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(""));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader(""), PegasusProperties.nonSingletonInstance());
         BufferedReader br = new BufferedReader(reader);
         String line = br.readLine();
         br.close();
@@ -68,7 +73,9 @@ public class VariableExpansionReaderTest {
     @Test
     public void testReadMultipleLines() throws IOException {
         String content = "line1\nline2\nline3";
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader(content), PegasusProperties.nonSingletonInstance());
         BufferedReader br = new BufferedReader(reader);
         assertThat(br.readLine(), is("line1"));
         assertThat(br.readLine(), is("line2"));
@@ -78,13 +85,17 @@ public class VariableExpansionReaderTest {
 
     @Test
     public void testReaderCanBeClosed() throws IOException {
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader("test"));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader("test"), PegasusProperties.nonSingletonInstance());
         assertDoesNotThrow(reader::close, "close() should not throw an exception");
     }
 
     @Test
     public void testReadReturnsNegativeOneAtEndOfStream() throws IOException {
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(""));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader(""), PegasusProperties.nonSingletonInstance());
         char[] buf = new char[10];
         // Read beyond end: first read may consume the empty line+\n, second should be -1
         reader.read(buf, 0, 1); // consumes the \n from empty line
@@ -105,7 +116,10 @@ public class VariableExpansionReaderTest {
             String content = "${" + propName + "}";
             assertThrows(
                     RuntimeException.class,
-                    () -> new VariableExpansionReader(new StringReader(content)),
+                    () ->
+                            new VariableExpansionReader(
+                                    new StringReader(content),
+                                    PegasusProperties.nonSingletonInstance()),
                     "VariableExpansionReader constructor throws for unknown variables");
         } finally {
         }
@@ -114,7 +128,9 @@ public class VariableExpansionReaderTest {
     @Test
     public void testReadContentWithSpecialCharacters() throws IOException {
         String content = "path=/usr/local/bin:special#chars";
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader(content));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader(content), PegasusProperties.nonSingletonInstance());
         BufferedReader br = new BufferedReader(reader);
         String line = br.readLine();
         br.close();
@@ -123,7 +139,9 @@ public class VariableExpansionReaderTest {
 
     @Test
     public void testReadAddsNewlinesBackAcrossMultipleLines() throws IOException {
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader("a\nbb"));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader("a\nbb"), PegasusProperties.nonSingletonInstance());
         char[] buf = new char[4];
 
         int read = reader.read(buf, 0, buf.length);
@@ -135,7 +153,9 @@ public class VariableExpansionReaderTest {
 
     @Test
     public void testReadUsesDestinationOffset() throws IOException {
-        VariableExpansionReader reader = new VariableExpansionReader(new StringReader("xy"));
+        VariableExpansionReader reader =
+                new VariableExpansionReader(
+                        new StringReader("xy"), PegasusProperties.nonSingletonInstance());
         char[] buf = new char[] {'_', '_', '_', '_', '_'};
 
         int read = reader.read(buf, 1, 3);
@@ -148,7 +168,8 @@ public class VariableExpansionReaderTest {
     @Test
     public void testCloseClosesUnderlyingReader() throws IOException {
         TrackingReader tracking = new TrackingReader("content");
-        VariableExpansionReader reader = new VariableExpansionReader(tracking);
+        VariableExpansionReader reader =
+                new VariableExpansionReader(tracking, PegasusProperties.nonSingletonInstance());
 
         reader.close();
 
