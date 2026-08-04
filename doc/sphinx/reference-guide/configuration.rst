@@ -1250,23 +1250,58 @@ though the extent of the substitutions are limited. Usually, you want to
 refer to a set of the standard system properties. Nesting is not
 allowed. Substitutions will only be done once.
 
+The basic properties that you may need to be set if using non default
+types and locations are for various catalogs are listed below:
+
+   .. table:: Basic Properties that you may need to set
+
+      ====================================== ===============================
+      pegasus.catalog.replica                type of replica catalog backend
+      pegasus.catalog.replica.file           path to replica catalog file
+      pegasus.catalog.transformation         type of transformation catalog
+      pegasus.catalog.transformation.file    path to transformation file
+      pegasus.catalog.site.file              path to site catalog file
+      pegasus.data.configuration             the data configuration mode for
+                                             data staging.
+      ====================================== ===============================
+
+If you are in doubt which properties are actually visible, pegasus
+during the planning of the workflow dumps all properties after reading
+and prioritizing in the submit directory in a file with the suffix
+properties.
+
+**Priority Order for Loading Properties from Various Sources**
+
 There is a priority to the order of reading and evaluating properties.
 Usually one does not need to worry about the priorities. However, it is
 good to know the details of when which property applies, and how one
-property is able to overwrite another. The following is a mutually
-exclusive list ( highest priority first ) of property file locations.
+property is able to overwrite another. Below is the priority order
+(lowest to highest) in which properties get loaded from various sources.
 
-1. --conf option to the tools. Almost all of the clients that use
-   properties have a --conf option to specify the property file to pick
-   up.
-2. submit-dir/pegasus.xxxxxxx.properties file. All tools that work on
-   the submit directory ( i.e after pegasus has planned a workflow) pick
-   up the pegasus.xxxxx.properties file from the submit directory. The
-   location for the pegasus.xxxxxxx.propertiesis picked up from the
-   braindump file.
-3. The properties defined in the user property file
-   ${user.home}/.pegasusrc
-   have lowest priority.
+1. Properties defined in a file named *pegasus.properties* in the etc
+   directory of the Pegasus install i.e. $PEGASUS_HOME/etc/pegasus.properties
+2. The properties defined in a file name *.pegasusrc* in the user home
+   directory i.e. ${user.home}/.pegasusrc
+3. Properties defined in `pegasus.properties` file in current working directory
+   This is the file that gets written out when using the Python workflow API
+   Properties class
+4. Properties defined in a file passed via the --conf option to pegasus-plan.
+   Almost all of the clients that use properties have a --conf option
+   to specify the property file to pick up.
+5. Properties defined as environment variables in the user environment.
+6. Properties defined as command line options
+
+In addition, during workflow planning Pegasus writes out a file named
+`pegasus.xxxxxxx.properties` in the workflow submit dir. All tools
+that work on the submit directory ( i.e after pegasus has planned a
+workflow) pick up the `pegasus.xxxxx.properties` file from the submit
+directory. The location for the `pegasus.xxxxxxx.properties` is picked
+up from the braindump file.
+
+.. _env-props:
+
+Properties as Environment Variables
+-----------------------------------
 
 Starting Pegasus 5.0 release, pegasus properties can also be specified as
 environment variables. The properties specified by an environment variable
@@ -1286,39 +1321,16 @@ will specify
 
  _PEGASUS__CATALOG__REPLICA__FILE = /path/to/replicas.yml
 
+.. _cmd-props:
+
+Command Line Properties
+-----------------------
 
 Commandline properties have the highest priority. These override any
 property loaded from a property file. Each commandline property is
 introduced by a -D argument. Note that these arguments are parsed by the
 shell wrapper, and thus the -D arguments must be the first arguments to
 any command. Commandline properties are useful for debugging purposes.
-
-From Pegasus 3.1 release onwards, support has been dropped for the
-following properties that were used to signify the location of the
-properties file
-
--  pegasus.properties
--  pegasus.user.properties
-
-The basic properties that you may need to be set if using non default
-   types and locations are for various catalogs are listed below:
-
-   .. table:: Basic Properties that you may need to set
-
-      ====================================== ===============================
-      pegasus.catalog.replica                type of replica catalog backend
-      pegasus.catalog.replica.file           path to replica catalog file
-      pegasus.catalog.transformation         type of transformation catalog
-      pegasus.catalog.transformation.file    path to transformation file
-      pegasus.catalog.site.file              path to site catalog file
-      pegasus.data.configuration             the data configuration mode for
-                                             data staging.
-      ====================================== ===============================
-
-If you are in doubt which properties are actually visible, pegasus
-during the planning of the workflow dumps all properties after reading
-and prioritizing in the submit directory in a file with the suffix
-properties.
 
 .. _local-dir-props:
 

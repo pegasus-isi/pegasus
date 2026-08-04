@@ -13,6 +13,7 @@
  */
 package edu.isi.pegasus.planner.client;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -45,9 +46,7 @@ public class ExecutableTest {
         assertThat(
                 executable.exposedLookupConfProperty(new String[] {"-c", "/tmp/b.properties"}, 'c'),
                 is("/tmp/b.properties"));
-        assertThat(
-                executable.exposedLookupConfProperty(new String[] {"-x"}, 'c'),
-                is("." + java.io.File.separatorChar + Executable.DEFAULT_PROPERTIES_FILE));
+        assertThat(executable.exposedLookupConfProperty(new String[] {"-x"}, 'c'), is(nullValue()));
     }
 
     @Test
@@ -101,6 +100,7 @@ public class ExecutableTest {
     }
 
     private static final class TestableExecutable extends Executable {
+
         TestableExecutable() {
             super(null);
         }

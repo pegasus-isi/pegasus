@@ -73,6 +73,11 @@ public class CommonProperties implements Cloneable {
     /** Basename of the file to read to obtain system properties */
     public static final String PROPERTY_FILENAME = "pegasus.properties";
 
+    /**
+     * basename of the file to read from in the current working directory to load the properties.
+     */
+    public static String WORKING_DIR_PROPERTIES_FILE = "pegasus.properties";
+
     /** Basename of the (new) file to read for user properties. */
     public static final String USER_PROPERTY_FILENAME = ".pegasusrc";
 
@@ -170,8 +175,7 @@ public class CommonProperties implements Cloneable {
     /**
      * ctor. This initializes the local instance of properties from a central file.
      *
-     * @param confProperties the path to conf properties, that supersede the loading of properties
-     *     from $PEGASUS_HOME/.pegasusrc
+     * @param confProperties the path to conf properties
      * @exception IOException will be thrown if reading the property file goes awry.
      * @exception MissingResourceException will be thrown if not all required properties are set
      */
@@ -204,7 +208,7 @@ public class CommonProperties implements Cloneable {
             }
         }
 
-        // PM-1917 check for an alternative property file spec in the etc dir
+        // 1. PM-1917 check for an alternative property file spec in the etc dir
         this.m_sysConfDir = pickPath(null, System.getProperty("pegasus.home.sysconfdir"));
         if (this.m_sysConfDir != null && this.m_sysConfDir.exists()) {
             loadProperties(new File(m_sysConfDir, CommonProperties.PROPERTY_FILENAME));
@@ -213,19 +217,27 @@ public class CommonProperties implements Cloneable {
         // add user properties afterwards to have higher precedence
         String userHome = System.getProperty("user.home", ".");
 
-        // try loading $HOME/.pegasusrc
+        // 2. try loading $HOME/.pegasusrc . GH-2223 we always load it now
         File props = new File(userHome, CommonProperties.USER_PROPERTY_FILENAME);
+        if (props.exists()) {
+            loadProperties(props);
+        }
 
-        // Prefer conf option over  $HOME/.pegasusrc
-        File confProps = null;
-        props =
-                (confProperties != null && (confProps = new File(confProperties)).exists())
-                        ? confProps
-                        : props;
+        // 3. $PWD/pegasus.properties
+        props = new File(".", CommonProperties.WORKING_DIR_PROPERTIES_FILE);
+        if (props.exists()) {
+            loadProperties(props);
+        }
 
-        loadProperties(props);
+        // 4. properties passed via --conf option
+        if (confProperties != null) {
+            props = new File(confProperties);
+            if (props.exists()) {
+                loadProperties(props);
+            }
+        }
 
-        // PM-1391 pick any properties from the environment
+        // 5. PM-1391 pick any properties from the environment
         // and add/override them from those picked up from
         // file based property
         Properties envProperties = retrievePropertiesFromEnvironment();
@@ -288,8 +300,7 @@ public class CommonProperties implements Cloneable {
      * Create a temporary property that is not attached to the Singleton. This may be helpful with
      * portal, which do magic things during the lifetime of a process.
      *
-     * @param confProperties the path to conf properties, that supersede the loading of properties
-     *     from $PEGASUS_HOME/.pegasusrc
+     * @param confProperties the path to conf properties
      * @return a reference to the parsed properties.
      * @exception IOException will be thrown if reading the property file goes awry.
      * @exception MissingResourceException will be thrown if you forgot to specify the <code>
