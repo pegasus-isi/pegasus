@@ -665,8 +665,8 @@ pegasus_lite_unexpected_exit()
     # at the last step of the lite script. The unexpected one
     # can be called anytime if the script exists as a result
     # of for example signals
-    plite_failure_code=71
     rc=$?
+    plite_failure_code=71
 
     pegasus_include_multipart || true
 
