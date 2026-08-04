@@ -45,7 +45,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # check for bad planner outputs
-if  grep -v 'I am: hostname:' $PLANFILE | grep 'ERROR'  >/dev/null 2>&1; then
+if  grep -v 'I am: hostname:' $PLANFILE | grep 'ERROR'; then
     echo "The planner logged a line with the string 'ERROR'"
     exit 1
 fi
