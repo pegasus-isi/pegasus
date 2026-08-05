@@ -741,24 +741,12 @@ Use :py:meth:`add_pegasus_profile` with the ``tag`` keyword:
     j_gpu = Job("train").add_pegasus_profile(tag="gpu")
     wf.add_jobs(j_cpu, j_gpu)
 
-Tagging a job in the Transformation Catalog
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The tag can also be set on a ``TransformationSite`` entry so that every
-invocation of that transformation automatically receives the tag:
+.. note::
 
-.. code-block:: yaml
+    You can associate a tag with the job only in the abstract workflow. The job tag profile
+    does not get picked up if specified in the Transformation Catalog.
 
-    transformations:
-    - namespace: myapp
-      name: train
-      sites:
-      - name: compute
-        pfn: /path/to/train
-        type: installed
-        profiles:
-          pegasus:
-            tag: gpu
 
 Example — NERSC Perlmutter (CPU vs GPU)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -769,37 +757,119 @@ illustrates a real-world use of ``x-tags``.  CPU jobs request one core and
 disable any GPU container modules, while GPU jobs switch to the ``regular``
 partition and request a GPU via the Shifter ``-C gpu`` flag:
 
-.. code-block:: yaml
+.. tabs::
 
-    sites:
-    - name: compute
-      grids:
-      - type: sfapi
-        contact: perlmutter
-        scheduler: slurm
-        jobtype: compute
-      profiles:
-        pegasus:
-          style: glite
-          queue: debug
-          project: ${RESOURCE_PROJECT}
-          memory: 1024
-          runtime: 1800
-          clusters.num: 2
-          glite.arguments: -C cpu    # default — used when no tag matches
-      x-tags:
-       - name: gpu
-         profiles:
-           pegasus:
-             glite.arguments: -C gpu
-             gpus: 1
-             queue: regular
-       - name: cpu
-         profiles:
-           pegasus:
-             cores: 1
-             glite.arguments: -C cpu
-             container.arguments: --module none
+    .. code-tab:: python generate_sc.py
+
+        from Pegasus.api import *
+
+        sc = SiteCatalog()
+
+        perlmutter = Site("compute")
+
+        # Scratch and output directories on the CFS community filesystem
+        perlmutter.add_directories(
+            Directory(
+                Directory.SHARED_SCRATCH,
+                "/global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch",
+                shared_file_system=False,
+            ).add_file_servers(
+                FileServer(
+                    "file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch",
+                    Operation.ALL,
+                )
+            ),
+            Directory(
+                Directory.LOCAL_STORAGE,
+                "/global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs",
+                shared_file_system=False,
+            ).add_file_servers(
+                FileServer(
+                    "file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs",
+                    Operation.ALL,
+                )
+            ),
+        )
+
+        # SFAPI grid entry targeting Perlmutter via Slurm
+        perlmutter.add_grids(
+            Grid(Grid.SFAPI, "perlmutter", Scheduler.SLURM, job_type=SupportedJobs.COMPUTE)
+        )
+
+        # Base profiles applied to every job mapped to this site
+        perlmutter.add_pegasus_profile(
+            style="glite",
+            queue="debug",
+            project="${RESOURCE_PROJECT}",
+            memory=1024,
+            runtime=1800,
+        )
+        perlmutter.add_pegasus_profile(key="clusters.num", value=2)
+        perlmutter.add_pegasus_profile(key="glite.arguments", value="-C cpu")
+
+        # Per-tag profile overrides — applied on top of base profiles when a
+        # job carries a matching pegasus.tag profile
+        perlmutter.add_tag_profiles(
+            "gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu"
+        )
+        perlmutter.add_tag_profiles("gpu", Namespace.PEGASUS, gpus=1, queue="regular")
+
+        perlmutter.add_tag_profiles("cpu", Namespace.PEGASUS, cores=1)
+        perlmutter.add_tag_profiles(
+            "cpu", Namespace.PEGASUS, key="glite.arguments", value="-C cpu"
+        )
+        perlmutter.add_tag_profiles(
+            "cpu", Namespace.PEGASUS, key="container.arguments", value="--module none"
+        )
+
+        sc.add_sites(perlmutter)
+        sc.write()
+
+    .. code-tab:: yaml YAML SC
+
+        pegasus: '5.0'
+        sites:
+        - name: compute
+          directories:
+          - type: sharedScratch
+            path: /global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch
+            sharedFileSystem: false
+            fileServers:
+            - url: file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch
+              operation: all
+          - type: localStorage
+            path: /global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs
+            sharedFileSystem: false
+            fileServers:
+            - url: file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs
+              operation: all
+          grids:
+          - type: sfapi
+            contact: perlmutter
+            scheduler: slurm
+            jobtype: compute
+          profiles:
+            pegasus:
+              clusters.num: 2
+              glite.arguments: -C cpu
+              memory: 1024
+              project: ${RESOURCE_PROJECT}
+              queue: debug
+              runtime: 1800
+              style: glite
+          x-tags:
+          - name: gpu
+            profiles:
+              pegasus:
+                glite.arguments: -C gpu
+                gpus: 1
+                queue: regular
+          - name: cpu
+            profiles:
+              pegasus:
+                container.arguments: --module none
+                cores: 1
+                glite.arguments: -C cpu
 
 A workflow that runs both CPU pre-processing and GPU training jobs can then
 use the same site catalog entry on any SFAPI-enabled cluster simply by
