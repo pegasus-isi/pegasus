@@ -666,6 +666,147 @@ can be used to generate a new Site Catalog programmatically.
             - {url: 'http://obelix.isi.edu/data', operation: get}
 
 
+.. _sc-job-tagging:
+
+Job Tagging
+-----------
+
+Job tagging allows individual jobs to carry a *tag* (a short string such as
+``gpu`` or ``cpu``) that the planner uses to look up and overlay additional
+profiles from the site catalog.  This makes it possible to write a
+site-agnostic workflow generator: the workflow code sets a tag on each job,
+and the site-specific resource details (queue, GPU count, container
+arguments, etc.) are encoded entirely in the site catalog.
+
+How it works
+~~~~~~~~~~~~
+
+1. **Tag a job** by setting the ``tag`` key in the ``pegasus`` profile
+   namespace, either in the workflow API or in a transformation catalog entry.
+
+2. **Define per-tag profiles** in the site catalog under the ``x-tags`` list
+   of the site entry.  Each element has a ``name`` (matching the job tag) and
+   a ``profiles`` block.
+
+When the planner maps a job to a site it first applies the site's base
+``profiles``, then — if the job carries a ``tag`` that matches an entry in
+``x-tags`` — overlays the tag-specific profiles on top.  Tag profiles follow
+the same precedence rules as all other profile sources: they override what
+was already set from the site's base profiles.
+
+Site Catalog ``x-tags`` syntax
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add an ``x-tags`` list to any site entry.  Each element specifies the tag
+name and the profiles to apply when a job with that tag is mapped to this
+site:
+
+.. code-block:: yaml
+
+    sites:
+    - name: compute
+      profiles:
+        pegasus:
+          style: glite
+          queue: debug
+          glite.arguments: -C cpu    # default — applied to all jobs
+      x-tags:
+       - name: gpu
+         profiles:
+           pegasus:
+             glite.arguments: -C gpu
+             gpus: 1
+             queue: regular
+       - name: cpu
+         profiles:
+           pegasus:
+             cores: 1
+             glite.arguments: -C cpu
+             container.arguments: --module none
+
+The ``x-tags`` block is **optional**.  Sites without it behave exactly as
+before — all jobs receive only the base profiles.
+
+Tagging a job in the Python API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use :py:meth:`add_pegasus_profile` with the ``tag`` keyword:
+
+.. code-block:: python
+
+    from Pegasus.api import *
+
+    wf = Workflow("my-workflow")
+    j_cpu = Job("analyze").add_pegasus_profile(tag="cpu")
+    j_gpu = Job("train").add_pegasus_profile(tag="gpu")
+    wf.add_jobs(j_cpu, j_gpu)
+
+Tagging a job in the Transformation Catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tag can also be set on a ``TransformationSite`` entry so that every
+invocation of that transformation automatically receives the tag:
+
+.. code-block:: yaml
+
+    transformations:
+    - namespace: myapp
+      name: train
+      sites:
+      - name: compute
+        pfn: /path/to/train
+        type: installed
+        profiles:
+          pegasus:
+            tag: gpu
+
+Example — NERSC Perlmutter (CPU vs GPU)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `NERSC Perlmutter hosted site catalog
+<https://github.com/pegasushub/pegasus-site-catalogs/blob/main/conf/nersc-perlmutter.yml>`_
+illustrates a real-world use of ``x-tags``.  CPU jobs request one core and
+disable any GPU container modules, while GPU jobs switch to the ``regular``
+partition and request a GPU via the Shifter ``-C gpu`` flag:
+
+.. code-block:: yaml
+
+    sites:
+    - name: compute
+      grids:
+      - type: sfapi
+        contact: perlmutter
+        scheduler: slurm
+        jobtype: compute
+      profiles:
+        pegasus:
+          style: glite
+          queue: debug
+          project: ${RESOURCE_PROJECT}
+          memory: 1024
+          runtime: 1800
+          clusters.num: 2
+          glite.arguments: -C cpu    # default — used when no tag matches
+      x-tags:
+       - name: gpu
+         profiles:
+           pegasus:
+             glite.arguments: -C gpu
+             gpus: 1
+             queue: regular
+       - name: cpu
+         profiles:
+           pegasus:
+             cores: 1
+             glite.arguments: -C cpu
+             container.arguments: --module none
+
+A workflow that runs both CPU pre-processing and GPU training jobs can then
+use the same site catalog entry on any SFAPI-enabled cluster simply by
+changing the hosted catalog reference — no changes to the workflow code are
+required.
+
+
 .. _sc-GitHub:
 
 Centrally hosted Site Catalogs
