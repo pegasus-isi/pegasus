@@ -100,15 +100,14 @@ public class DeployWorkerPackageTest {
 
     /**
      * The build names the worker tarball using the PEP 440 version from build.properties (e.g.
-     * pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz). The name parser must handle that scheme in
-     * addition to plain and legacy release names.
+     * pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz). The name parser must handle that scheme
+     * in addition to plain and legacy release names.
      */
     @Test
     public void testDetermineSysInfoPep440DevVersion() {
         DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
 
-        SysInfo info =
-                dwp.determineSysInfo("pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz");
+        SysInfo info = dwp.determineSysInfo("pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz");
         assertThat(info.getArchitecture(), is(SysInfo.Architecture.x86_64));
         assertThat(info.getOS(), is(SysInfo.OS.linux));
         assertThat(info.getOSRelease(), is("ubuntu"));
