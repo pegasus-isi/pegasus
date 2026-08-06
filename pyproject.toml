@@ -117,11 +117,10 @@ wheel.py-api = "py3"
 # and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
 wheel.packages = ["packages/pegasus-python/src/Pegasus"]
 
-# scikit core includes everything that is git tracked in sdist
-# But .gitignore has .jar in it, so sdist ignores vendored jars
-# Explicitely include the needed jars in sdist
+# Include non-git tracked files in the wheel and sdist (e.g., Java JARs, worker packages, etc.)
 sdist.include = [
     "share/pegasus/java/**",
+    "packages/pegasus-python/src/Pegasus/data/worker-packages/*.tar.gz",
 ]
 sdist.exclude = [
     "**/*.o",
