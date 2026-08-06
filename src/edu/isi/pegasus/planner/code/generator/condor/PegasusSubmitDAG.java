@@ -88,7 +88,7 @@ public class PegasusSubmitDAG {
 
     public PegasusSubmitDAG() {}
 
-    public void intialize(PegasusBag bag) {
+    public void initialize(PegasusBag bag) {
         mBag = bag;
         mLogger = bag.getLogger();
         mProps = bag.getPegasusProperties();
@@ -99,7 +99,7 @@ public class PegasusSubmitDAG {
      * @param dag the executable workflow.
      * @param dagFile
      * @return the Collection of <code>File</code> objects for the files written out.
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws CodeGeneratorException in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag, File dagFile) throws CodeGeneratorException {
         Collection<File> result = new ArrayList();
@@ -559,7 +559,7 @@ public class PegasusSubmitDAG {
     protected String getUpdatedDAGManEnv(String existingEnv, ENV envProfiles) {
         StringBuilder dagmanEnv = new StringBuilder();
         // PM-1895 after 10.2.0 default separator is whitespace, unless the envProfiles string
-        // explicity ends with ;
+        // explicitly ends with ;
         String separator = existingEnv.isEmpty() || existingEnv.endsWith("\"") ? " " : ";";
         if (existingEnv.isEmpty()) {
             dagmanEnv.append("environment=");

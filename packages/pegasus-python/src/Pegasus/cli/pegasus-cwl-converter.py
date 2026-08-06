@@ -318,9 +318,7 @@ def build_pegasus_rc(wf_inputs: dict, cwl_wf: cwl.Workflow) -> ReplicaCatalog:
 
             try:
                 log.info(
-                    "Adding replica: site={}, lfn={}, pfn={}".format(
-                        "local", input_name, current_wf_inputs["path"]
-                    )
+                    f"Adding replica: site=local, lfn={input_name}, pfn={current_wf_inputs['path']}"
                 )
                 # TODO: what about other sites?
                 rc.add_replica("local", input_name, current_wf_inputs["path"])
@@ -552,6 +550,14 @@ def build_pegasus_wf(
 def _main(args):
     cwl_wf = cwl.load_document(args.cwl_workflow_file_path)
     log.info(f"Loaded cwl workflow: {args.cwl_workflow_file_path}")
+
+    # CWL: a step's "run:" path is relative to the document that references it.
+    # Resolve relative refs against the workflow file's directory so sub-tools
+    # load regardless of the current working directory.
+    wf_dir = Path(args.cwl_workflow_file_path).resolve().parent
+    for step in cwl_wf.steps:
+        if isinstance(step.run, str) and not Path(step.run).is_absolute():
+            step.run = str(wf_dir / step.run)
 
     wf_inputs = load_wf_inputs(args.workflow_inputs_file_path)
     tr_specs = load_tr_specs(args.transformation_spec_file_path)

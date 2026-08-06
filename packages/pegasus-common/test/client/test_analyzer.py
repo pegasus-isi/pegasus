@@ -804,7 +804,7 @@ class TestAnalyzeFiles:
         with pytest.raises(Exception) as err:
             analyze.get_jsdl_filename(input_dir)
 
-        assert str(err.value) == "cannot read braindump.txt file... exiting..."
+        assert str(err.value) == "cannot read braindump.yml file... exiting..."
         assert AnalyzerError == err.type
 
     def test_get_jsdl_filename_no_wf_uuid(self, mocker, AnalyzerFiles):
@@ -815,7 +815,7 @@ class TestAnalyzeFiles:
         with pytest.raises(Exception) as err:
             analyze.get_jsdl_filename(input_dir)
 
-        assert str(err.value) == "braindump.txt does not contain wf_uuid... exiting..."
+        assert str(err.value) == "braindump.yml does not contain wf_uuid... exiting..."
         assert AnalyzerError == err.type
 
     def test_parse_dag_file(self, mocker, capsys, AnalyzerFiles):

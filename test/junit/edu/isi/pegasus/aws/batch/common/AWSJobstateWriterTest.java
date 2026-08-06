@@ -51,7 +51,7 @@ public class AWSJobstateWriterTest {
     public void testInitializeCreatesLogFile() {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
-        writer.initialze(tempDir, "test-", logger);
+        writer.initialize(tempDir, "test-", logger);
         File logFile = new File(tempDir, "test-" + AWSJobstateWriter.JOBSTATE_LOG_FILENAME);
         assertThat(logFile.exists(), is(true));
     }
@@ -60,7 +60,7 @@ public class AWSJobstateWriterTest {
     public void testLogWritesEntry() throws IOException {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
-        writer.initialze(tempDir, "run-", logger);
+        writer.initialize(tempDir, "run-", logger);
         writer.log("myjob", "aws-id-123", AWSJob.JOBSTATE.running);
         File logFile = new File(tempDir, "run-" + AWSJobstateWriter.JOBSTATE_LOG_FILENAME);
         String content = new String(Files.readAllBytes(logFile.toPath()));
@@ -73,7 +73,7 @@ public class AWSJobstateWriterTest {
     public void testLogStateIsUppercase() throws IOException {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
-        writer.initialze(tempDir, "state-", logger);
+        writer.initialize(tempDir, "state-", logger);
         writer.log("job1", "aws-1", AWSJob.JOBSTATE.failed);
         File logFile = new File(tempDir, "state-" + AWSJobstateWriter.JOBSTATE_LOG_FILENAME);
         String content = new String(Files.readAllBytes(logFile.toPath()));
@@ -85,7 +85,7 @@ public class AWSJobstateWriterTest {
     public void testLogWritesMultipleEntries() throws IOException {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
-        writer.initialze(tempDir, "multi-", logger);
+        writer.initialize(tempDir, "multi-", logger);
         writer.log("job-a", "aws-aaa", AWSJob.JOBSTATE.submitted);
         writer.log("job-b", "aws-bbb", AWSJob.JOBSTATE.running);
         writer.log("job-c", "aws-ccc", AWSJob.JOBSTATE.succeeded);
@@ -111,7 +111,7 @@ public class AWSJobstateWriterTest {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
         File nonExistent = new File(tempDir, "no/such/dir");
-        assertThrows(RuntimeException.class, () -> writer.initialze(nonExistent, "p-", logger));
+        assertThrows(RuntimeException.class, () -> writer.initialize(nonExistent, "p-", logger));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class AWSJobstateWriterTest {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
 
-        writer.initialze(tempDir, null, logger);
+        writer.initialize(tempDir, null, logger);
 
         File logFile = new File(tempDir, "null" + AWSJobstateWriter.JOBSTATE_LOG_FILENAME);
         assertThat(logFile.exists(), is(true));
@@ -130,7 +130,7 @@ public class AWSJobstateWriterTest {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
 
-        writer.initialze(tempDir, "logger-", logger);
+        writer.initialize(tempDir, "logger-", logger);
 
         Logger assigned = (Logger) ReflectionTestUtils.getField(writer, "mLogger");
 
@@ -142,7 +142,7 @@ public class AWSJobstateWriterTest {
     public void testLogLineUsesFourWhitespaceSeparatedTokens() throws IOException {
         Logger logger = LogManager.getLogger(AWSJobstateWriterTest.class);
         AWSJobstateWriter writer = new AWSJobstateWriter();
-        writer.initialze(tempDir, "tokens-", logger);
+        writer.initialize(tempDir, "tokens-", logger);
         writer.log("job-x", "aws-xyz", AWSJob.JOBSTATE.submitted);
 
         File logFile = new File(tempDir, "tokens-" + AWSJobstateWriter.JOBSTATE_LOG_FILENAME);

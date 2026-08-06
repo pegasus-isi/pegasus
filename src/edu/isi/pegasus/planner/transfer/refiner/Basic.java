@@ -402,7 +402,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
 
                     // moved to the inner loop Karan Aug 26, 2009
                     // else in some cases relations between compute job
-                    // and inter pool job are not added even though they shoud be
+                    // and inter pool job are not added even though they should be
                     prevParent = ft.getJobName();
                 }
             }
@@ -634,7 +634,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
     /**
      * Adds a new relation to the workflow. In the case when the parent is a transfer job that is
      * added, the parentNew should be set only the first time a relation is added. For subsequent
-     * compute jobs that maybe dependant on this, it needs to be set to false.
+     * compute jobs that maybe dependent on this, it needs to be set to false.
      *
      * @param parent the jobname of the parent node of the edge.
      * @param child the jobname of the child node of the edge.

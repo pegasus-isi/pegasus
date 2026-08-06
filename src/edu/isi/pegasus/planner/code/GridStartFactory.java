@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * An abstract factory class to load the appropriate type of GridStart implementations, and their
  * corresponding POSTScript classes. This factory class is different from other factories, in the
- * sense that it must be instantiated first and intialized first before calling out to any of the
+ * sense that it must be instantiated first and initialized first before calling out to any of the
  * Factory methods.
  *
  * @author Karan Vahi
@@ -185,7 +185,7 @@ public class GridStartFactory {
 
     /**
      * Loads the appropriate gridstart implementation for a job on the basis of the value of the
-     * GRIDSTART_KEY in the Pegasus namepsace. If no value is specified then the value in the
+     * GRIDSTART_KEY in the Pegasus namespace. If no value is specified then the value in the
      * properties file is picked up.
      *
      * @param job the job for which we want the gridstart handle.
@@ -212,7 +212,7 @@ public class GridStartFactory {
             if (!(job instanceof AggregatedJob
                     && ((AggregatedJob) job).getJobAggregator() instanceof MPIExec)) {
                 // for only MPI jobs that are not PMC, we associate exitcode postscript
-                // with the rotation of logs option  and explicity associate
+                // with the rotation of logs option  and explicitly associate
                 // NoGridStart with them
                 job.vdsNS.construct(Pegasus.GRIDSTART_KEY, "None");
 
@@ -222,7 +222,7 @@ public class GridStartFactory {
                 args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
                 args.append(" ");
                 args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
-                // PM-1821 explicity indicate no kickstart records to parse
+                // PM-1821 explicitly indicate no kickstart records to parse
                 args.append(" ")
                         .append(
                                 PegasusExitCode
@@ -250,7 +250,7 @@ public class GridStartFactory {
     /**
      * Loads the appropriate POST Script implementation for a job on the basis of the value of the
      * Pegasus profile GRIDSTART_KEY, and the DAGMan profile POST_SCRIPT_KEY in the Pegasus
-     * namepsace. If no value is specified then the value in the properties file is picked up.
+     * namespace. If no value is specified then the value in the properties file is picked up.
      *
      * @param job the job for which we want the gridstart handle.
      * @param gridStart the <code>GridStart</code> for which we want to load the POSTSCRIPT
@@ -374,7 +374,7 @@ public class GridStartFactory {
                     }
 
                     // PegasusLite for condorio and nonsharedfs mode
-                    // as long as user did not specify explicilty in the properties file
+                    // as long as user did not specify explicitly in the properties file
                     return "PegasusLite";
                 } else {
                     // GH-2074 PM-1968 in the PegasusLite mode, the grid start wrapper

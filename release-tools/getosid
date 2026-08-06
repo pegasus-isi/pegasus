@@ -10,7 +10,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-# strip architechture
+# strip architecture
 OSID=$(echo $SYSTEM | grep -E -o '[a-zA-Z]+_[0-9]+$' | sed 's/_//')
 
 echo $OSID

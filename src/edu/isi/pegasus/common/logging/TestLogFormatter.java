@@ -51,7 +51,7 @@ public class TestLogFormatter {
         fm.add("Messs supplied without a key ");
         System.out.println(fm.createLogMessage());
 
-        fm.add(LoggingKeys.QUERY_NAME, "getpredicted performace").add("time", "10.00");
+        fm.add(LoggingKeys.QUERY_NAME, "getpredicted performance").add("time", "10.00");
         System.out.println(fm.createLogMessageAndReset());
 
         System.out.println(fm.getEndEventMessage());

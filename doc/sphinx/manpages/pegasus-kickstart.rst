@@ -271,7 +271,7 @@ Options
 **-f**
    This flag causes kickstart to output full information, including the
    environment and resource limits under which the job ran, and any
-   useful auxilliary statcalls. If the job fails, then **-f** is
+   useful auxiliary statcalls. If the job fails, then **-f** is
    implied.
 
 **-k** *S*
@@ -281,7 +281,7 @@ Options
 
 **-K** *S*
    This flag causes kickstart to send the job a SIGKILL if it is still
-   running S seconds after recieving a SIGTERM sent as a result of the
+   running S seconds after receiving a SIGTERM sent as a result of the
    **-k** flag. The default value is 5. If **-k** is not set, or is set
    to 0, then this flag is ignored.
 
@@ -617,12 +617,12 @@ variables and replaced it with "KICKSTART". The "GRIDSTART" versions
 of the old variables should still work.
 
 **KICKSTART_TMP**
-   is the hightest priority to look for a temporary directory, if
+   is the highest priority to look for a temporary directory, if
    specified. This rather special variable was introduced to overcome
    some peculiarities with the FNAL cluster.
 
 **TMP**
-   is the next hightest priority to look for a temporary directory, if
+   is the next highest priority to look for a temporary directory, if
    specified.
 
 **TEMP**

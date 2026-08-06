@@ -39,16 +39,13 @@ import java.util.MissingResourceException;
  */
 public abstract class Executable {
 
-    /** The default properties file to be picked up for the conf option. */
-    public static String DEFAULT_PROPERTIES_FILE = "pegasus.properties";
-
     /** The LogManager object which is used to log all the messages. */
     protected LogManager mLogger;
 
     /** The object holding all the properties pertaining to Pegasus. */
     protected PegasusProperties mProps;
 
-    /** It stores the verison of the Griphyn Virtual Data System software. */
+    /** It stores the version of the Griphyn Virtual Data System software. */
     protected String mVersion;
 
     /** The error message to be logged. */
@@ -90,12 +87,6 @@ public abstract class Executable {
                 propertyFilePath = g.getOptarg();
                 break;
             }
-        }
-
-        if (propertyFilePath == null) {
-            // PM-1018 if no --conf provided fall back to pegasus.properties
-            // in the current working directory from where command is called
-            propertyFilePath = "." + File.separatorChar + Executable.DEFAULT_PROPERTIES_FILE;
         }
 
         return propertyFilePath;
@@ -179,7 +170,7 @@ public abstract class Executable {
                     .append(": ")
                     .append(cause.getMessage());
 
-            // append just one elment of stack trace for each exception
+            // append just one element of stack trace for each exception
             message.append(" at ").append(cause.getStackTrace()[0]);
         }
         return message.toString();

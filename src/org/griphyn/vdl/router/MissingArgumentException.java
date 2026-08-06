@@ -43,7 +43,7 @@ public class MissingArgumentException extends java.lang.RuntimeException {
     /**
      * Constructs a <code>MissingArgumentException</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public MissingArgumentException(String s) {
         super(s);

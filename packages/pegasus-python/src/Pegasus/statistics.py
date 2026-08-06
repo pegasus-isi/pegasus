@@ -291,7 +291,7 @@ class PegasusStatistics:
 #   tasks/jobs/sub workflows run, how many succeeded/failed etc.
 #   In case of hierarchical workflow the calculation shows the
 #   statistics of each individual sub workflow.The file also
-#   contains a 'Total' table at the bottom which is the cummulative
+#   contains a 'Total' table at the bottom which is the cumulative
 #   of all the individual statistics details.t shows the following
 #   statistics about tasks, jobs and sub workflows.
 #
@@ -1220,29 +1220,17 @@ class PegasusStatistics:
 
             # Time summary
             if not self.multiple_wf:
-                writer.write(
-                    "{:<57}: {}\n".format("Workflow wall time", format_seconds(wwt))
-                )
+                writer.write(f"{'Workflow wall time':<57}: {format_seconds(wwt)}\n")
 
+            writer.write(f"{'Cumulative job wall time':<57}: {format_seconds(wcjwt)}\n")
             writer.write(
-                "{:<57}: {}\n".format("Cumulative job wall time", format_seconds(wcjwt))
+                f"{'Cumulative job wall time as seen from submit side':<57}: {format_seconds(ssjwt)}\n"
             )
             writer.write(
-                "{:<57}: {}\n".format(
-                    "Cumulative job wall time as seen from submit side",
-                    format_seconds(ssjwt),
-                )
+                f"{'Cumulative job badput wall time':<57}: {format_seconds(wcbpt)}\n"
             )
             writer.write(
-                "{:<57}: {}\n".format(
-                    "Cumulative job badput wall time", format_seconds(wcbpt)
-                )
-            )
-            writer.write(
-                "{:<57}: {}\n".format(
-                    "Cumulative job badput wall time as seen from submit side",
-                    format_seconds(ssbpt),
-                )
+                f"{'Cumulative job badput wall time as seen from submit side':<57}: {format_seconds(ssbpt)}\n"
             )
 
             ## Integrity summary

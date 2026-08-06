@@ -406,7 +406,7 @@ class ProfileMixin:
         :type max_time: int, optional
         :param max_wall_time: the maximum walltime in minutes for a single execution of a job, defaults to None
         :type max_wall_time: int, optional
-        :param min_memory: the minumum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
+        :param min_memory: the minimum amount of memory required for this job. Given as a str formatted as '<int> [MB | GB | TB | PB | EB]', defaults to None
         :type min_memory: str, optional
         :param project: associates an account with a job at the remote end, defaults to None
         :type project: str, optional
@@ -559,6 +559,7 @@ class ProfileMixin:
         pegasus_lite_env_source="pegasus_lite_env_source",
         SSH_PRIVATE_KEY="SSH_PRIVATE_KEY",
         relative_submit_dir="relative.submit.dir",
+        tag="tag",
     )
     def add_pegasus_profile(
         self,
@@ -621,6 +622,7 @@ class ProfileMixin:
         pegasus_lite_env_source: str | Path = None,
         SSH_PRIVATE_KEY: str = None,
         relative_submit_dir: str | Path = None,
+        tag: str = None,
     ):
         """Add Pegasus profile(s).
 
@@ -740,6 +742,8 @@ class ProfileMixin:
         :type SSH_PRIVATE_KEY: str, optional
         :param relative_submit_dir: specify the relative directory a job's submit files are written to, defaults to None
         :type relative_submit_dir: Union[str, Path], optional
+        :param tag: associates a tag with a job; the planner uses this to select matching ``x-tags`` profiles from the site catalog entry and overlay them on top of the site's base profiles, defaults to None
+        :type tag: str, optional
         """
         ...
 
@@ -758,7 +762,7 @@ class ProfileMixin:
     ):
         """Add Selector profile(s).
 
-        The Selector namespace allows users to override the beahvior of the Workflow
+        The Selector namespace allows users to override the behavior of the Workflow
         Mapper during site selection. This gives you finer grained control over
         where a job executes and what executable it refers to.
 

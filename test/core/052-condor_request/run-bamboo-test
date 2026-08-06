@@ -30,8 +30,9 @@ echo "Searching for $variable"
 for submit_file in `find $WORK_DIR -name \*.sub`; do
     basename=`basename $submit_file`
     if [[ ! $basename =~ clean_* ]] && [[  ! $basename =~ stage_* ]] && [[  ! $basename =~ create_* ]] && [[  ! $basename =~ register_* ]] && [[  ! $basename =~ .*dag.condor.sub ]] ; then
-        pegasus_memory_mb=`grep -E "^$variable"  $submit_file | sed -E 's/^pegasus_memory_mb\s+=\s+//'` 2>/dev/null
-        #echo "pegasus memory is $pegasus_memory_mb"
+        pegasus_memory_mb=`grep -E "^\$variable"  $submit_file | sed -E 's/^\pegasus_memory_mb\s+=\s+//'` 2>/dev/null
+        echo "pegasus memory is $pegasus_memory_mb"
+
 
         if [ "x$pegasus_memory_mb" != "x$expected_value" ]; then
             echo "ERROR: +$variable is not set to value $expected_value in the submit file $submit_file"

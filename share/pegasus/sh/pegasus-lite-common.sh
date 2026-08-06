@@ -17,7 +17,7 @@
 ##
 
 #
-# This file contains a set of common bash funtions to be used by
+# This file contains a set of common bash functions to be used by
 # Pegasus Lite jobs
 #
 # Author: Mats Rynge <rynge@isi.edu>
@@ -52,8 +52,8 @@ pegasus_lite_setup_log()
     # PM-1132 set up the log explicitly to a file
     if [ "X${pegasus_lite_log_file}" != "X" ]; then
 
-        # rename the log file with approprite suffix
-        # to ensure they are not ovewritten
+        # rename the log file with appropriate suffix
+        # to ensure they are not overwritten
         count="000"
         for count in `seq -f "%03g" 0 999`;
         do
@@ -661,11 +661,12 @@ pegasus_lite_signal_term()
 pegasus_lite_unexpected_exit()
 {
     # note that there are two exit() functions, one for final
-    # exit and one for unexepected. The final one is only called
+    # exit and one for unexpected. The final one is only called
     # at the last step of the lite script. The unexpected one
     # can be called anytime if the script exists as a result
     # of for example signals
     rc=$?
+    plite_failure_code=71
 
     pegasus_include_multipart || true
 
@@ -698,16 +699,15 @@ pegasus_lite_unexpected_exit()
     pegasus_lite_end_time=$(date +%s)
     runtime=$((pegasus_lite_end_time - pegasus_lite_start_time))
     echo "PegasusLite: runtime $runtime" 1>&2
-
-    echo "PegasusLite: exitcode $rc" 1>&2
-    exit $rc
+    echo "PegasusLite: exitcode $plite_failure_code, tool originally exited with exitcode $rc" 1>&2
+    exit $plite_failure_code
 }
 
 
 pegasus_lite_final_exit()
 {
     # note that there are two exit() functions, one for final
-    # exit and one for unexepected. The final one is only called
+    # exit and one for unexpected. The final one is only called
     # at the last step of the lite script. The unexpected one
     # can be called anytime if the script exists as a result
     # of for example signals
@@ -757,7 +757,7 @@ pegasus_lite_get_system()
 {
     # PM-781
     # This function is a replacement of the old release-tools/getsystem
-    # and was moved here because we need the getsystem functionallity not
+    # and was moved here because we need the getsystem functionality not
     # only at build time, but at runtime from the jobs so that the jobs
     # can determine what worker package is required.
 

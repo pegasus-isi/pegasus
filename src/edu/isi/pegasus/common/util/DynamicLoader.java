@@ -33,7 +33,7 @@ import java.lang.reflect.*;
  * }
  * </pre>
  *
- * Similarily, to obtain an instance of a class through a static method provided by the same class,
+ * Similarly, to obtain an instance of a class through a static method provided by the same class,
  * or another class:
  *
  * <pre>

@@ -126,7 +126,7 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
                                     .get(GoogleP12.GOOGLEP12_FILE_VARIABLE);
         }
 
-        // try from properites file
+        // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);

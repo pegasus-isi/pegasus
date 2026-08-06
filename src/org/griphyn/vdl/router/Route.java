@@ -115,7 +115,7 @@ public class Route {
 
         /**
          * Descends down the stack of database manager, and for each it will determine the list of
-         * elegible logical filenames. The search only searches for Derivations and output
+         * eligible logical filenames. The search only searches for Derivations and output
          * filenames. The name to search for is the variable.
          *
          * <p>FIXME: There might be a bug/feature with default args in TRs!
@@ -319,7 +319,7 @@ public class Route {
     /**
      * Stores a reference to the underlying data as top-of-stack. At the bottom of the stack,
      * queries to the database backend are generated. At higher levels in the stack, the
-     * stack-existing definitions take precendence.
+     * stack-existing definitions take precedence.
      */
     private DatabaseSchemaStack m_stack;
 
@@ -415,7 +415,7 @@ public class Route {
     }
 
     /**
-     * Queries the current arbitrarion instance.
+     * Queries the current arbitration instance.
      *
      * @return a reference to the current arbiter for conflict resolution.
      */
@@ -609,7 +609,7 @@ public class Route {
      *
      * @param dv is an implementation of <code>HasPass</code>. Implementing classes include <code>
      *     Derivation</code> and <code>Call</code>.
-     * @param tr is the <code>Transformation</code> which supplies the formal arugments.
+     * @param tr is the <code>Transformation</code> which supplies the formal arguments.
      * @return a map from each actual argument or un-overwritten formal argument default from the
      *     argument name to its <code>Value</code>.
      * @exception MissingArgumentException is thrown, if a formal argument was declared without a
@@ -666,10 +666,10 @@ public class Route {
      * Job</code>.
      *
      * @param arguments is the map of variable bindings.
-     * @param tr is the <code>Transformation</code> which supplies the formal arugments.
+     * @param tr is the <code>Transformation</code> which supplies the formal arguments.
      * @param state is the book-keeper to use for temporary filenames.
      * @exception DuplicateIdentifier is thrown, if a bound name already exists in the map. This
-     *     indicates either a re-used name between formal args and temporary variables, or the same
+     *     indicates either a reused name between formal args and temporary variables, or the same
      *     temporary variable was used twice.
      */
     private void updateArgsFromLocal(Map arguments, Transformation tr, BookKeeper state) {
@@ -756,7 +756,7 @@ public class Route {
 
     /**
      * DAX bridge: Converts VDL <code>Argument</code> items into DAX arguments while substituting
-     * any <code>Use</code> elements againt their value.
+     * any <code>Use</code> elements against their value.
      *
      * @param job is the job to augment with profiles.
      * @param arguments are the arguments from which any <code>Use</code> elements is substituted
@@ -827,7 +827,7 @@ public class Route {
     }
 
     /**
-     * Helper function to update the guts of a <code>Scalar</code>, each occurance of a <code>Use
+     * Helper function to update the guts of a <code>Scalar</code>, each occurrence of a <code>Use
      * </code> by its matching value list from the preset map.
      *
      * @param key is a symbolic representation of the variable that we are currently mapping

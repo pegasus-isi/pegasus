@@ -77,8 +77,8 @@ Options
 **--conf** *properties_file*
    is an alternative file containing properties in the *key=value*
    format, and allows users to override values read from the
-   *braindump.txt* file. This option has precedence over the properties
-   file specified in the *braindump.txt* file. Please note that these
+   *braindump.yml* file. This option has precedence over the properties
+   file specified in the *braindump.yml* file. Please note that these
    properties will apply not only to the main workflow, but also to all
    sub-workflows found.
 
@@ -99,7 +99,7 @@ Options
    necessarily successfully). If a *jobstate.log* file is found, it will
    be rotated. However, when using a database, all previous references
    to that workflow (and all its sub-workflows) will be erased from it.
-   When outputing to a bp file, the file will be deleted. When running
+   When outputting to a bp file, the file will be deleted. When running
    in replay mode, **pegasus-monitord** will always run with the
    **--no-daemon** option, and any errors will be output directly to the
    terminal. Also, **pegasus-monitord** will not process any
@@ -153,7 +153,7 @@ Options
    option should noly be used when the user knows the previous instance
    of **pegasus-monitord** is **NOT** running anymore.
 
-**-o** *dir*; \ **--ouput-dir** *dir*
+**-o** *dir*; \ **--output-dir** *dir*
    When this option is given, **pegasus-monitord** will create all its
    output files in the directory specified by *dir.* This option is
    useful for allowing a user to debug a workflow in a directory the
@@ -233,7 +233,7 @@ will launch **pegasus-monitord** in replay mode. In this case, if a
 *jobstate.log* file already exists, it will be rotated and a new file
 will be created. If a *diamond-0.stampede.db* SQLite database already
 exists, **pegasus-monitord** will purge all references to the workflow
-id specified in the *braindump.txt* file, including all sub-workflows
+id specified in the *braindump.yml* file, including all sub-workflows
 associated with that workflow id.
 
 ::

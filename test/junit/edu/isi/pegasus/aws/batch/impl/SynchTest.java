@@ -163,7 +163,7 @@ public class SynchTest {
         properties.setProperty("aws.account", "123456789012");
         properties.setProperty("aws.region", Synch.US_EAST_1_REGION);
         properties.setProperty("aws.batch.prefix", "synch-test");
-        synch.initialze(
+        synch.initialize(
                 properties,
                 Level.INFO,
                 new EnumMap<Synch.BATCH_ENTITY_TYPE, String>(Synch.BATCH_ENTITY_TYPE.class));
@@ -179,7 +179,7 @@ public class SynchTest {
     public void testSelectedMethodSignatures() throws Exception {
         Method initialize =
                 Synch.class.getMethod(
-                        "initialze",
+                        "initialize",
                         java.util.Properties.class,
                         org.apache.logging.log4j.Level.class,
                         java.util.EnumMap.class);

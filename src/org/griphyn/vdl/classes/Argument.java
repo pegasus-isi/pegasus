@@ -76,7 +76,7 @@ public class Argument extends VDL implements Serializable {
      *
      * @param name is the unique identifier for the argument group.
      * @param firstChild is the element to place into the argument group. Only <code>Leaf</code>s of
-     *     type <code>Use</code> or <code>Text</code> are permissable.
+     *     type <code>Use</code> or <code>Text</code> are permissible.
      * @see Leaf
      * @see Use
      * @see Text
@@ -140,7 +140,7 @@ public class Argument extends VDL implements Serializable {
      * @param index is the position in the list to obtain a value from
      * @return The <code>Use</code> or <code>Text</code> at the position.
      * @throws IndexOutOfBoundsException if the index points to an element in the list that does not
-     *     contain any elments.
+     *     contain any elements.
      * @see Use
      * @see Text
      */
@@ -251,7 +251,7 @@ public class Argument extends VDL implements Serializable {
      * Accessor: Overwrites a <code>Use</code> or <code>Text</code> value fragment at a certain
      * position in this command line group.
      *
-     * @param index position to overwrite an elment in.
+     * @param index position to overwrite an element in.
      * @param vLeaf is either a <code>Use</code> or <code>Text</code> object.
      * @throws IndexOutOfBoundsException if the position pointed to is invalid.
      * @throws IllegalArgumentException if the added element is of the incorrect <code>Leaf</code>

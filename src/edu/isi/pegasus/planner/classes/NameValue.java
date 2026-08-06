@@ -139,7 +139,7 @@ public class NameValue<K, V> extends Data implements Comparable {
                 throw new IllegalArgumentException(
                         "The key for the object "
                                 + this
-                                + " does not implment comparable interface");
+                                + " does not implement comparable interface");
             }
         } else {
             throw new ClassCastException("Object is not a NameValue");

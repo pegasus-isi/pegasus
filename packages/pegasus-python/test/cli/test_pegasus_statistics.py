@@ -20,36 +20,6 @@ def test_help():
     assert result.exit_code == 0
 
 
-# @pytest.mark.parametrize(
-#     "statistics_level",
-#     [
-#         "",
-#         "all,summary,wf_stats,jb_stats,tf_stats,ti_stats,int_stats",
-#         "all,alL",
-#         "alll",
-#     ],
-# )
-# def test_statistics_level(statistics_level):
-#     runner = CliRunner()
-#     result = runner.invoke(pegasus_statistics, ["-s", statistics_level])
-#     print(result.output)
-#     assert result.exit_code == 0
-
-
-# @pytest.mark.parametrize(
-#     "submit_dirs",
-#     [
-#         [],
-#         ["."],
-#         [".", ".."],
-#     ],
-# )
-# def test_multiple_submit_dirs(submit_dirs):
-#     runner = CliRunner()
-#     result = runner.invoke(pegasus_statistics, submit_dirs)
-#     assert result.exit_code == 0
-
-
 def test_single_uuid_workflow(resource_path_root):
     runner = CliRunner()
     db = resource_path_root / "monitoring-db/monitoring-rest-api-master.db"

@@ -36,7 +36,7 @@ import java.io.Writer;
 import java.util.Iterator;
 
 /**
- * Aggergates jobs together, to be launched by pegasus-aws-batch tool.
+ * Aggregates jobs together, to be launched by pegasus-aws-batch tool.
  *
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
@@ -85,7 +85,7 @@ public class AWSBatch extends Abstract {
     }
 
     /**
-     * Initializes the JobAggregator impelementation
+     * Initializes the JobAggregator implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.
@@ -135,7 +135,7 @@ public class AWSBatch extends Abstract {
             JsonFactory factory = new JsonFactory();
             JsonGenerator generator = factory.createGenerator(writer);
             generator.setPrettyPrinter(new DefaultPrettyPrinter());
-            // traverse throught the jobs to determine input/output files
+            // traverse through the jobs to determine input/output files
             // and merge the profiles for the jobs
             int taskid = 1;
 
@@ -165,30 +165,30 @@ public class AWSBatch extends Abstract {
             generator.writeArrayFieldStart("SubmitJob");
             for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
                 GraphNode node = it.next();
-                Job constitutentJob = (Job) node.getContent();
+                Job constituentJob = (Job) node.getContent();
 
                 // handle stdin
-                if (constitutentJob instanceof AggregatedJob) {
+                if (constituentJob instanceof AggregatedJob) {
                     // slurp in contents of it's stdin
                     throw new RuntimeException(
                             "Clustering of clustered jobs not supported with "
                                     + AWSBatch.COLLAPSE_LOGICAL_NAME);
                 }
                 generator.writeStartObject();
-                generator.writeStringField("jobName", constitutentJob.getID());
-                generator.writeStringField("executable", constitutentJob.getRemoteExecutable());
-                generator.writeStringField("arguments", constitutentJob.getArguments());
+                generator.writeStringField("jobName", constituentJob.getID());
+                generator.writeStringField("executable", constituentJob.getRemoteExecutable());
+                generator.writeStringField("arguments", constituentJob.getArguments());
 
-                if (!constitutentJob.envVariables.isEmpty()) {
+                if (!constituentJob.envVariables.isEmpty()) {
                     generator.writeArrayFieldStart("environment");
                     for (Iterator<String> envIT =
-                                    constitutentJob.envVariables.getProfileKeyIterator();
+                                    constituentJob.envVariables.getProfileKeyIterator();
                             envIT.hasNext(); ) {
                         String key = envIT.next();
                         generator.writeStartObject();
                         generator.writeStringField("name", key);
                         generator.writeStringField(
-                                "value", (String) constitutentJob.envVariables.get(key));
+                                "value", (String) constituentJob.envVariables.get(key));
                         generator.writeEndObject();
                     }
                     generator.writeEndArray();

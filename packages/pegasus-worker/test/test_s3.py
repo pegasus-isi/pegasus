@@ -666,7 +666,7 @@ class TestPut:
         s3_client.create_bucket(Bucket=BUCKET)
 
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
-        paser, args = s3.parse_args(
+        parser, args = s3.parse_args(
             [
                 "put",
                 str(test_file),
@@ -749,7 +749,7 @@ class TestPut:
 
         # upload file (key that already exists in bucket)
         # pegasus-s3 put test_file s3://rynge@osgconnect/test-bucket/test_file
-        paser, args = s3.parse_args(
+        parser, args = s3.parse_args(
             [
                 "put",
                 str(test_file),

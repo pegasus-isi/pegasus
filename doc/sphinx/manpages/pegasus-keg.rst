@@ -11,7 +11,7 @@ kanonical executable for grids
       pegasus-keg [-a appname] [ -t interval | -T interval] [-s interval]
                   [-l logname] [-P prefix] [-o fn [..]] [-i fn [..]]
                   [-G sz [..]] [-m memory] [-C] [-e env [..]]
-                  [-p parm [..]] [-u data_unit]
+                  [-p param [..]] [-u data_unit]
 
 
 

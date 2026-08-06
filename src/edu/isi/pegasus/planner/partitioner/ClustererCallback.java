@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * A Callback implementation that passes the partitions detected during the partitioning of the
- * worflow to a Clusterer for clustering. The clusterer is passed off to the callback during the
+ * workflow to a Clusterer for clustering. The clusterer is passed off to the callback during the
  * callback initialization.
  *
  * @author Karan Vahi

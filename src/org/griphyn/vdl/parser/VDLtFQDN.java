@@ -26,7 +26,7 @@ class VDLtFQDN implements VDLtToken {
     /** The name of the identifier */
     private String m_value[];
 
-    /** Contructs an empty fqdn to pass. */
+    /** Constructs an empty fqdn to pass. */
     public VDLtFQDN() {
         this.m_value = new String[4];
     }
@@ -53,7 +53,7 @@ class VDLtFQDN implements VDLtToken {
      * Obtains the current name value of an fqdn part.
      *
      * @param index is the part to obtain the value for
-     * @return the name of the identifer, which may be null. null is always returned for index out
+     * @return the name of the identifier, which may be null. null is always returned for index out
      *     of bounds.
      */
     public String getValue(int index) {

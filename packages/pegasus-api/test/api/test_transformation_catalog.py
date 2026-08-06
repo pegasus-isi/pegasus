@@ -328,7 +328,7 @@ class TestTransformation:
 
         assert "invalid pfn" in str(e)
 
-    def test_add_single_tranformation_site_constructor(self):
+    def test_add_single_transformation_site_constructor(self):
         t1 = Transformation("t1")
         assert len(t1.sites) == 0
 

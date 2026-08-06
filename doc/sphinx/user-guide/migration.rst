@@ -168,7 +168,7 @@ workflows however, it is encouraged that the new workflow generators be used
 to create these YAML based workflows). Additionally, the Site Catalog, Transformation
 Catalog, and Replica Catalog formats have all been updated to a YAML based format.
 Using the respective modules in the :doc:`/python/Pegasus.api`, these catalogs can be
-generated programatically. Furthermore, the ``pegasus.properties`` file used for
+generated programmatically. Furthermore, the ``pegasus.properties`` file used for
 configuration can be generated with this API. If you have existing catalogs that need to be converted
 to the newer format, usage of Pegasus catalog conversion tools are covered in the
 subsequent sections.
@@ -179,8 +179,8 @@ subsequent sections.
 Properties
 ----------
 
-The ``pegasus.properies`` file format remains the same in this release however
-you can now programatically generate this file with :py:class:`~Pegasus.api.properties.Properties`.
+The ``pegasus.properties`` file format remains the same in this release however
+you can now programmatically generate this file with :py:class:`~Pegasus.api.properties.Properties`.
 The following illustrates how this can be done:
 
 .. code-block:: python
@@ -208,7 +208,7 @@ command::
     pegasus-sc-converter -i sites.xml -o sites.yml
 
 The following illustrates how :py:class:`Pegasus.api.site_catalog.SiteCatalog` can
-be used to generate a new Site Catalog programatically based on an existing XML based Site Catalog.
+be used to generate a new Site Catalog programmatically based on an existing XML based Site Catalog.
 
 .. tabs::
 
@@ -316,7 +316,7 @@ command::
     pegasus-rc-converter -I File -O YAML -i rc.txt -o replicas.yml
 
 The following illustrates how :py:class:`Pegasus.api.replica_catalog.ReplicaCatalog` can be
-used to generate a new Replica Catalog programatically based on an existing text based
+used to generate a new Replica Catalog programmatically based on an existing text based
 Replica Catalog.
 
 .. tabs::
@@ -354,7 +354,7 @@ file, ``tc.txt``, to YAML, use the following command::
     pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
 
 The following illustrates how :py:class:`Pegasus.api.transformation_catalog.TransformationCatalog` can
-be used to generate a new Transformation Catalog programatically based on an
+be used to generate a new Transformation Catalog programmatically based on an
 existing text based Transformation Catalog.
 
 .. tabs::
@@ -917,7 +917,7 @@ then ``wf.plan(submit=True).wait()`` can be used.
 
 .. tip::
     Because the property file, catalogs, and the workflow can all be generated and
-    run programatically, it is recommended to keep everything in a single script
+    run programmatically, it is recommended to keep everything in a single script
     so that a wrapper shell script is not needed.
 
 
@@ -1058,7 +1058,7 @@ information to connect to the database. Note that a database type
 
 
 Example: connection by providing the path to the submit directory
-containning the *braindump.txt* file, where information to connect to
+containing the *braindump.txt* file, where information to connect to
 the database can be extracted. Note that a database type (MASTER,
 WORKFLOW, or JDBCRC) should also be provided:
 
@@ -1218,7 +1218,7 @@ entry looks something like this
            <profile namespace="env" key="PEGASUS_HOME" >/cluster-software/pegasus/2.4.1</profile>
            <profile namespace="env" key="GLOBUS_LOCATION" >/cluster-software/globus/5.0.1</profile>
 
-           <!-- profies for site to be treated as condor pool -->
+           <!-- profiles for site to be treated as condor pool -->
            <profile namespace="pegasus" key="style" >condor</profile>
            <profile namespace="condor" key="universe" >vanilla</profile>
 
@@ -1269,7 +1269,7 @@ $PEGASUS_HOME/setup.sh \| $PEGASUS_HOME/setup.csh before running Pegasus
 to setup CLASSPATH and other variables.
 
 Starting with Pegasus 3.0 this is no longer required. The above paths
-are automaticallly determined by the Pegasus tools when they are
+are automatically determined by the Pegasus tools when they are
 invoked.
 
 All the users need to do is to set the PATH variable to pick up the
@@ -1341,7 +1341,7 @@ given below.
    $ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 
    2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
-   2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text
+   2010.11.22 12:53:16.666 PST:   The output transformation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text
 
 To use the converted transformation catalog, in the properties do the
 following

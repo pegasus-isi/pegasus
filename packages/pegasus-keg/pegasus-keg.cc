@@ -519,7 +519,7 @@ void helpMe(const char *ptr, unsigned long timeout, unsigned long spinout,
 
 unsigned long long
 data_unit_multiplier( char data_unit )
-/* purpose: convert a description of a data unit to a coresponding number of bytes
+/* purpose: convert a description of a data unit to a corresponding number of bytes
  * paramtr: data_unit (char): a character indicating data unit, accepting only B K M G
  * returns: the amount of bytes in the specified data unit */
 {
@@ -550,7 +550,7 @@ data_unit_multiplier( char data_unit )
 
 char*
 allocate_mem_buffer( size_t mem_buf_size )
-/* purpose: allocate a memory buffor on heap and prevent it from being paged out
+/* purpose: allocate a memory buffer on heap and prevent it from being paged out
  * paramtr: mem_buf_size (size_t): the memory size to be allocated
  * returns: a pointer to the allocated buffer */
 {
@@ -562,7 +562,7 @@ allocate_mem_buffer( size_t mem_buf_size )
     }
     else
     {
-        // printf( "Memory allocation was successfull\n" );
+        // printf( "Memory allocation was successful\n" );
         for (unsigned int i = 0; i < mem_buf_size; i += getpagesize())
             memory_buffer[i] = 'Z';
     }

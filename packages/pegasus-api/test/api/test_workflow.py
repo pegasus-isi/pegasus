@@ -170,7 +170,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.add_inputs(File("a"))
 
-        assert "file: {file}".format(file=File("a")) in str(e)
+        assert f"file: {File('a')}" in str(e)
 
     def test_add_invalid_input(self):
         job = AbstractJob()
@@ -204,7 +204,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.add_outputs(File("a"))
 
-        assert "file: {file}".format(file=File("a")) in str(e)
+        assert f"file: {File('a')}" in str(e)
 
     def test_add_invalid_output(self):
         job = AbstractJob()
@@ -221,7 +221,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.add_inputs(File("b"))
 
-        assert "file: {file}".format(file=File("b")) in str(e)
+        assert f"file: {File('b')}" in str(e)
 
     def test_add_checkpoint(self):
         job = AbstractJob()
@@ -244,7 +244,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.add_checkpoint(File("abc"))
 
-        assert "file: {file}".format(file=File("abc")) in str(e)
+        assert f"file: {File('abc')}" in str(e)
 
     def test_add_args(self):
         job = AbstractJob()
@@ -280,7 +280,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.set_stdin(File("a"))
 
-        assert "file: {file}".format(file=File("a")) in str(e)
+        assert f"file: {File('a')}" in str(e)
 
     def test_set_invalid_stdin(self):
         job = AbstractJob()
@@ -315,7 +315,7 @@ class TestAbstractJob:
         with pytest.raises(DuplicateError) as e:
             job.set_stdout(File("a"))
 
-        assert "file: {file}".format(file=File("a")) in str(e)
+        assert f"file: {File('a')}" in str(e)
 
     def test_set_invalid_stdout(self):
         job = AbstractJob()

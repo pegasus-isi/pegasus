@@ -122,7 +122,7 @@ public class BotoConfig extends Abstract implements CredentialHandler {
                                     .get(BotoConfig.BOTO_CONFIG_FILE_VARIABLE);
         }
 
-        // try from properites file
+        // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);

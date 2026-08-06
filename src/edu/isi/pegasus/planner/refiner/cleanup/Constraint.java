@@ -289,7 +289,7 @@ public class Constraint extends AbstractCleanupStrategy {
             // iterate over all dependencies
             Set<GraphNode> dependenciesForNode = dependencies.get(currentNode);
             for (GraphNode dependency : dependenciesForNode) {
-                // if we find a dependency thats running here this is not a head job
+                // if we find a dependency that's running here this is not a head job
                 if (currentSiteJobs.contains(dependency)) {
                     // the dependency is scheduled to run here
                     currentNodeIsHead = false;

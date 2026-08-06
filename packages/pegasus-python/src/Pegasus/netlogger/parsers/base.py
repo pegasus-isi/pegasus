@@ -109,7 +109,7 @@ class BPError(ValueError):
         """Create error object.
 
         Arguments:
-          lineno - The line number on which the error occured.
+          lineno - The line number on which the error occurred.
           msg    - The error message.
         """
         self.lineno = lineno

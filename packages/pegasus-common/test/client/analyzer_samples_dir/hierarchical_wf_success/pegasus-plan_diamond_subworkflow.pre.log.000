@@ -419,7 +419,7 @@
 2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_0_0
 2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_1_0
 2023.03.04 01:02:16.569 PST: [DEBUG]  Not adding edge to create dir job for job register_local_2_0
-2023.03.04 01:02:16.569 PST: [DEBUG]  Adding node to the worfklow create_dir_blackdiamond_0_local
+2023.03.04 01:02:16.569 PST: [DEBUG]  Adding node to the workflow create_dir_blackdiamond_0_local
 2023.03.04 01:02:16.569 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond-0  (0.005 seconds) - FINISHED
 2023.03.04 01:02:16.571 PST: [INFO] event.pegasus.refinement dax.id blackdiamond-0  (0.124 seconds) - FINISHED
 2023.03.04 01:02:16.601 PST: [DEBUG]  Condor Version as string 10.2.5
@@ -595,6 +595,6 @@ pegasus-run  /home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hie
 
 
 2023.03.04 01:02:19.518 PST: [DEBUG]  Sending Planner Metrics to [1 of 1] http://metrics.pegasus.isi.edu/metrics
-2023.03.04 01:02:19.731 PST: [DEBUG]  Metrics succesfully sent to the server
+2023.03.04 01:02:19.731 PST: [DEBUG]  Metrics successfully sent to the server
 2023.03.04 01:02:19.732 PST:   Time taken to execute is 4.295 seconds
 2023.03.04 01:02:19.733 PST: [INFO] event.pegasus.planner planner.version 5.0.5  (4.435 seconds) - FINISHED

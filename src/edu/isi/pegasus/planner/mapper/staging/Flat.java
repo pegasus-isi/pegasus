@@ -51,13 +51,13 @@ public class Flat extends Abstract {
     public void initialize(PegasusBag bag, Properties properties) {
         super.initialize(bag, properties);
 
-        // all file factories intialized with the addon component only
+        // all file factories initialized with the addon component only
         try {
             // Create a flat file factory
             mFactory = new VirtualFlatFileFactory("."); // minimum default
         } catch (IOException ioe) {
             throw new MapperException(
-                    "Unable to intialize the Flat File Factory for Staging Mapper ", ioe);
+                    "Unable to initialize the Flat File Factory for Staging Mapper ", ioe);
         }
     }
 

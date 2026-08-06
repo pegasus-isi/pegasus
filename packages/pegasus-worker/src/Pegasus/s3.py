@@ -656,7 +656,7 @@ def cp(args):
                 "do not match: %s -> %s" % (src, dest)
             )
 
-    # using the first source (from the checks above, it is garuanteed that
+    # using the first source (from the checks above, it is guaranteed that
     # identities all match)
     s3, region_name = get_s3_client(config, srcs[0])
 

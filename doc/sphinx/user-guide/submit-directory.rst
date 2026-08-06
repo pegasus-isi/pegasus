@@ -91,7 +91,7 @@ includes the following:
 
 #.  **<wflabel-wfindex>.metadata**
 
-    This is a worflow level metadata json formatted file that is written
+    This is a workflow level metadata json formatted file that is written
     out by the planner at mapping time, and lists all metadata for
     workflow, jobs and files specified in the Abstract Workflow.
 
@@ -659,7 +659,7 @@ monitoring :ref:`chapter <monitoring-files>`.
 Pegasus Workflow Job States and Delays
 --------------------------------------
 
-The various job states that a job goes through ( as caputured in the
+The various job states that a job goes through ( as captured in the
 dagman.out and jobstate.log file) during it's lifecycle are illustrated
 below. The figure below highlights the various local and remote delays
 during job lifecycle.
@@ -688,7 +688,7 @@ contains metadata about the workflow.
    dax_index         the index in the dax.
    dax_version       the version of the DAX schema that DAX referred to.
    pegasus_wf_name   the workflow name constructed by pegasus when planning
-   timestamp         the timestamp when planning occured
+   timestamp         the timestamp when planning occurred
    basedir           the base submit directory
    submit_dir        the full path for the submit directory
    properties        the full path to the properties file in the submit directory

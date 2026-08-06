@@ -68,7 +68,7 @@ public class Replica implements OutputMapper {
     public static final String READ_ONLY_KEY = "read.only";
 
     /**
-     * The name of the key that disables exception thown in case of unable to map a file. Instead
+     * The name of the key that disables exception thrown in case of unable to map a file. Instead
      * return null in that case.
      */
     public static final String DISABLE_EXCEPTIONS_KEY = "disable.exceptions";
@@ -153,7 +153,7 @@ public class Replica implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location. It queries the underlying Replica Catalog and
      * returns the first matching PFN.
      *
@@ -171,7 +171,7 @@ public class Replica implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns a single externally
+     * Maps a LFN to a location on the filesystem of a site and returns a single externally
      * accessible URL corresponding to that location. It queries the underlying Replica Catalog and
      * returns the first matching PFN.
      *
@@ -219,7 +219,7 @@ public class Replica implements OutputMapper {
     }
 
     /**
-     * Maps a LFN to a location on the filsystem of a site and returns all the possible equivalent
+     * Maps a LFN to a location on the filesystem of a site and returns all the possible equivalent
      * externally accessible URL corresponding to that location. In case of the replica backed only
      * one URL is returned and that is the first matching PFN for the output site.
      *

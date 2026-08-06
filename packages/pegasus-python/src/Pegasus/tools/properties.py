@@ -231,7 +231,7 @@ class Properties:
         properties file. config_file is the properties file passed via
         the --conf command-line option, it has the highest
         priority. rundir_propfile is the properties file in the run
-        directory (specified in the braindump.txt file with the
+        directory (specified in the braindump.yml file with the
         properties tag. It has the second highest priority. If those
         are not specified, we try to lost $(HOME)/.pegasusrc, as a
         last resort.

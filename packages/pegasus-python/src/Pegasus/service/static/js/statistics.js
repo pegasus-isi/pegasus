@@ -421,7 +421,7 @@ function activateEventHandler(e) {
   } else if (id == "int-stats") {
     getIntegrityStats(target.attr("href"), container);
   } else {
-    alert("Invalid accordian option " + id);
+    alert("Invalid accordion option " + id);
   }
 }
 

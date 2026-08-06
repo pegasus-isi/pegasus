@@ -111,13 +111,7 @@ class TriggerManager(threading.Thread):
         t.start()
 
         # update state
-        self.log.debug(
-            "changing {name} state: {old_state} -> {new_state}".format(
-                name=trigger_name,
-                old_state=trigger.state,
-                new_state="RUNNING",
-            )
-        )
+        self.log.debug(f"changing {trigger_name} state: {trigger.state} -> RUNNING")
         self.trigger_dao.update_state(
             ensemble_id=trigger.ensemble_id, trigger_id=trigger._id, new_state="RUNNING"
         )

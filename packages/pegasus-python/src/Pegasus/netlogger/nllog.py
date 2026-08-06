@@ -40,8 +40,8 @@ set_logger_class = setLoggerClass
 
 def get_logger(filename):
     """
-    Return a NetLogger logger with qualified name based on the provied
-    filename.  This method is indended to be called by scripts and
+    Return a NetLogger logger with qualified name based on the provided
+    filename.  This method is intended to be called by scripts and
     modules by passing in their own __file__ as filename after already
     having initialized the logging module via the NL OptionParser or
     some equivalent action.
@@ -432,14 +432,10 @@ class Profiler(type):
     def __new__(cls, classname, bases, classdict):
         if os.getenv("NETLOGGER_ON", False) in ("off", "0", "no", "false", "", False):
             setLoggerClass(FakeBPLogger)
-            classdict["_log"] = _logger(
-                "{}.{}".format(classdict["__module__"], classname)
-            )
+            classdict["_log"] = _logger(f"{classdict['__module__']}.{classname}")
             return type.__new__(cls, classname, bases, classdict)
 
-        classdict["_log"] = log = _logger(
-            "{}.{}".format(classdict["__module__"], classname)
-        )
+        classdict["_log"] = log = _logger(f"{classdict['__module__']}.{classname}")
         log.set_meta(pid=os.getpid(), ppid=os.getppid(), gpid=os.getgid())
         keys = []
         if not classdict.get("profiler_skip_all", cls.profiler_skip_all):

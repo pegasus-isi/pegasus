@@ -377,7 +377,7 @@ File / Symlink (file:// , symlink://)
 Globus Transfers (go://)
 ------------------------
 
-`Globus <http://globus.org>`__ offers a transfer service with
+Globus offers a transfer service with
 features such as policy based connection management and automatic
 failure detection and recovery. Pegasus has limited support for
 Globus transfers.
@@ -446,8 +446,7 @@ Preference of GFAL over GUC
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 JGlobus is no longer actively supported and is not in compliance with
-`RFC
-2818 <https://docs.globus.org/security-bulletins/2015-12-strict-mode>`__
+RFC 2818
 . As a result cleanup jobs using pegasus-gridftp client would fail
 against the servers supporting the strict mode. We have removed the
 pegasus-gridftp client and now use gfal clients as globus-url-copy does
@@ -458,8 +457,7 @@ If you want to force globus-url-copy to be preferred over GFAL, set the
 **PEGASUS_FORCE_GUC=1** environment variable in the site catalog for the
 sites you want the preference to be enforced. Please note that we expect
 globus-url-copy support to be completely removed in future releases of
-Pegasus due to the end of life of Globus Toolkit (see
-`announcement <https://www.globus.org/blog/support-open-source-globus-toolkit-ends-january-2018>`__).
+Pegasus due to the end of life of Globus Toolkit.
 
 .. _transfer-gridftp-ssh:
 
@@ -467,9 +465,7 @@ GridFTP over SSH (sshftp://)
 ----------------------------
 
 Instead of using X.509 based security, newer version of Globus GridFTP
-can be configured to set up transfers over SSH. See the `Globus
-Documentation <http://toolkit.globus.org/toolkit/docs/6.0/gridftp/admin/#gridftp-admin-config-security-sshftp>`__
-for details on installing and setting up this feature.
+can be configured to set up transfers over SSH.
 
 Pegasus requires the ability to specify which SSH key to be used at
 runtime, and thus a small modification is necessary to the default
@@ -538,7 +534,7 @@ HPSS (hpss://)
 
 We support retrieval of input files from a tar file in HPSS storage
 using the htar command. The naming convention to describe the tar file
-and the file to retrieve fro the tar file is as follows
+and the file to retrieve from the tar file is as follows
 
 ::
 
@@ -724,7 +720,7 @@ is just an arbitrary name with an endpoint entry. Example:
     # Refer to https://docs.aws.amazon.com/general/latest/gr/s3.html
     # for a mapping of amazon endpoints to regions.
     # It is highly recommended that you specify the amazon
-    # region key in the amazon section that is consisten with
+    # region key in the amazon section that is consistent with
     # the endpoint.
 
     [amazon]
@@ -852,7 +848,7 @@ iRods Password and Tickets
 --------------------------
 
 If a workflow is using iRods URLs, Pegasus has to be given an
-irods_environment.json file. It is a standard file, with the addtion of
+irods_environment.json file. It is a standard file, with the addition of
 an password attribute, and optionally one for the ticket strong.
 Example:
 
@@ -973,7 +969,7 @@ default .
 
    ::
 
-      pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accomodate the files. Defaults to 2.
+      pegasus.dir.staging.mapper.hashed.levels     the number of directory levels used to accommodate the files. Defaults to 2.
       pegasus.dir.staging.mapper.hashed.multiplier the number of files associated with a job in the submit directory. defaults to 5.
 
 ..
@@ -1008,7 +1004,7 @@ The following mappers are supported currently
    storage directory specified in the site catalog for the output site.
 
 2. **Fixed** : This mapper allows users to specify an externally
-   accesible url to the storage directory in their properties file. To
+   accessible url to the storage directory in their properties file. To
    use this mapper, the following property needs to be set.
 
    -  pegasus.dir.storage.mapper.fixed.url an externally accessible URL
@@ -1480,7 +1476,7 @@ node. If checksums are not specified, then Pegasus will compute them
 during the data transfer to the staging site, and use them.
 
 To specify checksums in replica catalog, you need to specify two
-additonal attributes with your LFN -> PFN mapping.
+additional attributes with your LFN -> PFN mapping.
 
 1. **checksum.type** The checksum type. Currently only type of sha256 is
    supported

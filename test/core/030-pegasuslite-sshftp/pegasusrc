@@ -1,5 +1,5 @@
 
-pegasus.catalog.site.file = sites.xml
+pegasus.catalog.site.file = sites.yml
 
 # to track our output files
 # and have planner generate registration jobs

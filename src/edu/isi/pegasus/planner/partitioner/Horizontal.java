@@ -170,7 +170,7 @@ public class Horizontal extends BFS {
                 .append(name)
                 .append(" at level ")
                 .append(level)
-                .append(" wth collapse factor ")
+                .append(" with collapse factor ")
                 .append(cFactor[0])
                 .append(",")
                 .append(cFactor[1]);

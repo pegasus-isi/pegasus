@@ -185,7 +185,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
                 throw e; // re-throw
             }
 
-            // add ID explicitely from sequence to insertion
+            // add ID explicitly from sequence to insertion
             ps = m_dbdriver.getPreparedStatement("stmt.save.uname");
             i = 1;
             longOrNull(ps, i++, result);
@@ -251,7 +251,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
                 throw e; // re-throw
             }
 
-            // add ID explicitely from sequence to insertion
+            // add ID explicitly from sequence to insertion
             Logging.instance().log("xaction", 1, "START save invocation");
             PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.ivr");
             int i = 1;
@@ -429,7 +429,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
             throw e; // re-throw
         }
 
-        // add ID explicitely from sequence to insertion
+        // add ID explicitly from sequence to insertion
         Logging.instance().log("xaction", 1, "START save rusage");
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.rusage");
         int i = 1;
@@ -483,7 +483,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
             throw e; // re-throw
         }
 
-        // add ID explicitely from sequence to insertion
+        // add ID explicitly from sequence to insertion
         Logging.instance().log("xaction", 1, "START save stat");
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement("stmt.save.stat");
         int i = 1;
@@ -563,7 +563,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.lfn");
         int i = 1;
 
-        // add foreign ID explicitely
+        // add foreign ID explicitly
         ps.setLong(i++, iid);
 
         // stat (foreign key)
@@ -609,7 +609,7 @@ public class InvocationSchema extends DatabaseSchema implements PTC {
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.job");
         int i = 1;
 
-        // add foreign ID explicitely
+        // add foreign ID explicitly
         ps.setLong(i++, iid);
 
         // type

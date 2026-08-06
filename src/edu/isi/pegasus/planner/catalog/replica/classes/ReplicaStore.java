@@ -61,7 +61,7 @@ public class ReplicaStore extends Data implements Cloneable {
     }
 
     /**
-     * Overloaded constructor. Intializes the member variables to the values passed.
+     * Overloaded constructor. initializes the member variables to the values passed.
      *
      * @param rces map indexed by LFN's and each value is a collection of replica catalog entries
      *     for the LFN.

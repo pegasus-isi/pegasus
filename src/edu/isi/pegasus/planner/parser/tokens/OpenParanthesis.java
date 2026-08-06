@@ -14,7 +14,7 @@
 package edu.isi.pegasus.planner.parser.tokens;
 
 /**
- * Class to convey a closed paranthesis, no token value necessary.
+ * Class to convey a closed parenthesis, no token value necessary.
  *
  * @author Jens Voeckler
  * @author Karan Vahi

@@ -29,12 +29,12 @@ fixes some bugs to Pegasus 4.2.0 release.  Improvements include
     More details can be found at
      PM-688 [\#806](https://github.com/pegasus-isi/pegasus/issues/806)
 
-2) Monitord Recovery in case of SQLLite DB
+2) Monitord Recovery in case of SQLite DB
 
    If a monitord gets killed on a currently running workflow, then it
    restarts from the start. The information in the recovery file it
    writes out is insufficient to recover gracefully. In case of
-   SQLlite DB , monitord does not attempt to expunge the information
+   SQLite DB , monitord does not attempt to expunge the information
    from the database. Instead it takes a backup of the sqlite database
    in the submit directory.
 
@@ -193,7 +193,7 @@ the fix for
 
 - planner fails if there is NullPointerException in the underlying COG code
   when trying to determine the DN.
-- pegasus-exitcode checks for existense of .err file before trying to base the
+- pegasus-exitcode checks for existence of .err file before trying to base the
   exitcode on it's contents.
 
 ### Pegasus 4.2.0
@@ -310,7 +310,7 @@ for more details on our privacy policy and configuration.
    workflows run by that user. The dashboard gets a list of running
    workflows by looking up a sqlite database in the users home
    directory ~HOME/.pegasus/workflow.db . This database is populated
-   by pegasus-monitord everytime a new root workflow is
+   by pegasus-monitord every time a new root workflow is
    executed. Detailed information for each workflow is retrieved from
    the stampede database for the each workflow.
 
@@ -343,7 +343,7 @@ for more details on our privacy policy and configuration.
    pegasus-statistics displays.
 
 
-   The workflow dashboad can be started by a  a command line tool
+   The workflow dashboard can be started by a  a command line tool
    called pegasus-dashboard.
 
 
@@ -425,7 +425,7 @@ for more details on our privacy policy and configuration.
 8) Regular Expressions support in File based Replica Catalog
 
    Users can now specify a regex expression in a file based replica
-   catalog to specify paths for mulitple files/data sets.
+   catalog to specify paths for multiple files/data sets.
 
    To use it you need to set
    pegasus.catalog.replica to Regex

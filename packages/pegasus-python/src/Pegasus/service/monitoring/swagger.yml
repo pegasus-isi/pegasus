@@ -924,7 +924,7 @@ paths:
         default:
           $ref: "#/responses/default-error"
 
-  /root/{m-wf-id}/workflow/{wf-id}/job/succesful:
+  /root/{m-wf-id}/workflow/{wf-id}/job/successful:
     parameters:
       - $ref: "#/parameters/m-wf-id"
       - $ref: "#/parameters/wf-id"

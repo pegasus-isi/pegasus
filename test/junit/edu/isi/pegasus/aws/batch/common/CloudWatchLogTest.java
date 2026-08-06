@@ -52,7 +52,7 @@ public class CloudWatchLogTest {
 
     @Test
     public void testRetrieveByJobNameThrowsWhenNotInitialized() {
-        // mLogger and mBatchClient are null until initialze() is called
+        // mLogger and mBatchClient are null until initialize() is called
         assertThrows(Exception.class, () -> log.retrieve("aws-job-id-123", "task-summary"));
     }
 
@@ -67,7 +67,7 @@ public class CloudWatchLogTest {
 
     @Test
     public void testRetrieveWithStreamThrowsWhenNotInitialized() {
-        // mLogger is null until initialze() is called, so mLogger.info() throws
+        // mLogger is null until initialize() is called, so mLogger.info() throws
         assertThrows(
                 Exception.class,
                 () -> log.retrieve("my-job", "/aws/batch/job", "my-job/default/abc123", "summary"));
@@ -75,7 +75,7 @@ public class CloudWatchLogTest {
 
     @Test
     public void testDeleteThrowsWhenNotInitialized() {
-        // mCWL is null until initialze() is called; the NPE from mLogger.error() in the
+        // mCWL is null until initialize() is called; the NPE from mLogger.error() in the
         // catch block is not swallowed, so delete() throws rather than returning false
         assertThrows(Exception.class, () -> log.delete("/aws/batch/job", "stream-name"));
     }
@@ -87,7 +87,7 @@ public class CloudWatchLogTest {
 
     @Test
     public void testDetermineLogBuildsExpectedTupleFromLastAttempt() throws Exception {
-        log.initialze(Region.US_EAST_1, org.apache.logging.log4j.Level.INFO, "/aws/batch/job");
+        log.initialize(Region.US_EAST_1, org.apache.logging.log4j.Level.INFO, "/aws/batch/job");
 
         AttemptDetail firstAttempt =
                 AttemptDetail.builder()

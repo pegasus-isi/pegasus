@@ -92,7 +92,7 @@ public class TransformationFactory {
      * catalog section and any transformations specified in the directory either passed on the
      * command line or the default transformations directory, into the catalog instance.
      *
-     * @param bag bag of initalization objects
+     * @param bag bag of initialization objects
      * @param dag the workflow
      * @return Transformation Catalog
      * @throws RuntimeException encountered while loading TC only if the daxStore is null or empty,
@@ -122,7 +122,7 @@ public class TransformationFactory {
                     // insert an entry into the transformation catalog
                     // for the mapper to pick up later on
                     logger.log(
-                            "Addding entry into transformation catalog " + entry,
+                            "Adding entry into transformation catalog " + entry,
                             LogManager.DEBUG_MESSAGE_LEVEL);
 
                     if (catalog.insert(entry, false) != 1) {
@@ -143,7 +143,7 @@ public class TransformationFactory {
     /**
      * Loads the transformation catalog.
      *
-     * @param bag bag of initalization objects
+     * @param bag bag of initialization objects
      * @param dag the workflow
      * @param directoriesTXStore the store of transformations loaded from directory
      * @return Transformation Catalog
@@ -353,7 +353,7 @@ public class TransformationFactory {
         Collection<String> directories = new HashSet();
         // null is fine, as the transformation factory will default to
         // the default directory transformations to pick up the
-        // excutables from
+        // executables from
         directories.add(bag.getPlannerOptions().getTransformationsDirectory());
 
         return TransformationFactory.loadTransformationStoreFromDirectories(

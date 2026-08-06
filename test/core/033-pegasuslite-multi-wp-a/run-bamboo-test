@@ -29,54 +29,88 @@ javac $testdir/BlackDiamondDAX.java
 java BlackDiamondDAX "$(dirname $(dirname $(which pegasus-version)))" blackdiamond.dax
 
 # create the site catalog
-cat >sites.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.2.xsd" version="4.2">
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "eclair"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/nas/home/rynge/tmp/${TEST_NAME}/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://rynge@eclair-sub-01.isi.edu/nas/home/rynge/tmp/${TEST_NAME}/scratch"
+  grids:
+   -
+    type: "batch"
+    contact: "rynge@eclair-sub-01.isi.edu:22"
+    scheduler: "slurm"
+    jobtype: "compute"
+   -
+    type: "batch"
+    contact: "rynge@eclair-sub-01.isi.edu:22"
+    scheduler: "slurm"
+    jobtype: "auxillary"
+  profiles:
+    env:
+      PEGASUS_HOME: "/usr"
+    pegasus:
+      change.dir: "true"
+      clusters.num: "1"
+      data.configuration: "sharedfs"
+      glite.arguments: "--cpus-per-task=1"
+      memory: "1024"
+      project: "eclair"
+      queue: "scavenge"
+      runtime: "600"
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+      style: "ssh"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      clusters.num: "1"
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOPDIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/scratch"
 
-    <site handle="local" arch="x86_64" os="LINUX" osrelease="rhel" osversion="7">
-        <directory type="shared-scratch" path="$TOPDIR/scratch">
-            <file-server operation="all" url="file://$TOPDIR/scratch"/>
-        </directory>
-        <directory type="local-storage" path="$TOPDIR/outputs">
-            <file-server operation="all" url="file://$TOPDIR/outputs"/>
-        </directory>
-    </site>
-
-    <site  handle="condorpool" arch="x86_64" os="LINUX">
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="pegasus" key="clusters.num">1</profile>
-    </site>
-
-     <site  handle="eclair" arch="x86_64" os="LINUX">
-        <grid  type="batch" contact="rynge@eclair-sub-01.isi.edu:22" scheduler="slurm" jobtype="auxillary"/>
-        <grid  type="batch" contact="rynge@eclair-sub-01.isi.edu:22" scheduler="slurm" jobtype="compute"/>
-
-        <directory type="shared-scratch" path="/nas/home/rynge/tmp/${TEST_NAME}/scratch">
-            <file-server operation="all" url="scp://rynge@eclair-sub-01.isi.edu/nas/home/rynge/tmp/${TEST_NAME}/scratch"/>
-        </directory>
-
-        <profile namespace="pegasus" key="style">ssh</profile>
-        <profile namespace="pegasus" key="change.dir">true</profile>
-        <profile namespace="pegasus" key="queue">scavenge</profile>
-        <profile namespace="pegasus" key="project">scavenge</profile>
-        <profile namespace="pegasus" key="runtime">600</profile>
-        <profile namespace="pegasus" key="glite.arguments">--cpus-per-task=1</profile>
-        <profile namespace="pegasus" key="memory">1024</profile>
-        <profile namespace="pegasus" key="SSH_PRIVATE_KEY">/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
-        <profile namespace="pegasus" key="clusters.num">1</profile>
-        <profile namespace="pegasus" key="data.configuration">sharedfs</profile>
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
-    </site>
-
-</sitecatalog>
 EOF
 
 # plan and submit the  workflow
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites condorpool,eclair \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cluster horizontal \
     blackdiamond.dax  | tee $TOPDIR/plan.out

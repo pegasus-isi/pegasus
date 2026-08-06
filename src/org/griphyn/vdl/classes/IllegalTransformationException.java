@@ -34,7 +34,7 @@ public class IllegalTransformationException extends java.lang.RuntimeException {
     /**
      * Constructs a <code>IllegalTransformationException</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public IllegalTransformationException(String s) {
         super(s);

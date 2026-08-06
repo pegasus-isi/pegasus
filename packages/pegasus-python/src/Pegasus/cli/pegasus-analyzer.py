@@ -6,10 +6,11 @@ Pegasus utility for reporting successful and failed jobs
 Usage: pegasus-analyzer [options]
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os
-import subprocess
 import sys
 import traceback
 
@@ -22,11 +23,10 @@ if peg_path:
 
 import click
 
+from Pegasus import analyzer_report
 from Pegasus.client import agent, analyzer
 
 root_logger = logging.getLogger()
-prog_base = os.path.split(sys.argv[0])[1].replace(".py", "")  # Name of this program
-indent = ""  # the corresponding indent string
 
 
 class HelpCmd(click.Command):
@@ -194,6 +194,7 @@ class HelpCmd(click.Command):
 @click.argument(
     "submit-dir",
     required=False,
+    default=".",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, exists=True),
 )
 @click.option(
@@ -204,31 +205,38 @@ class HelpCmd(click.Command):
     show_default=True,
     help="Pegasus AI-based analysis of the workflow",
 )
+@click.option(
+    "--plain/--no-plain",
+    "plain",
+    default=False,
+    help="Emit raw Markdown even on a terminal (no Rich rendering)",
+)
 def pegasus_analyzer(
-    ctx,
-    vb,
-    input_dir,
-    dag_filename,
-    use_files,
-    run_monitord,
-    output_dir,
-    top_dir,
-    config_properties,
-    quiet_mode,
-    recurse_mode,
-    indent_length,
-    print_options,
-    strict_mode,
-    summary_mode,
-    traverse_all,
-    debug_job,
-    debug_job_local_executable,
-    debug_dir,
-    workflow_type,
-    submit_dir,
-    json_mode,
-    ai,
-):
+    ctx: click.Context,
+    vb: int,
+    input_dir: str | None,
+    dag_filename: str | None,
+    use_files: bool,
+    run_monitord: bool,
+    output_dir: str | None,
+    top_dir: str | None,
+    config_properties: str | None,
+    quiet_mode: bool,
+    recurse_mode: bool,
+    indent_length: int,
+    print_options: str | None,
+    strict_mode: bool,
+    summary_mode: bool,
+    traverse_all: bool,
+    debug_job: str | None,
+    debug_job_local_executable: str | None,
+    debug_dir: str | None,
+    workflow_type: str | None,
+    submit_dir: str | None,
+    json_mode: bool,
+    ai: bool,
+    plain: bool,
+) -> None:
 
     if vb == 0:
         lvl = logging.WARNING
@@ -269,9 +277,6 @@ def pegasus_analyzer(
         # Enables the debugging mode
         options.debug_mode = True
 
-    for num in range(0, options.indent_length):
-        indent += "\t"
-
     if dag_filename:
         options.input_dir = os.path.abspath(os.path.split(dag_filename)[0])
         # Assume current directory if input dir is empty
@@ -308,7 +313,7 @@ def pegasus_analyzer(
         if use_files:
             analyze = analyzer.AnalyzeFiles(options)
             output = analyze.analyze_files()
-        # Run via quering the stampede database
+        # Run via querying the stampede database
         else:
             analyze = analyzer.AnalyzeDB(options)
             output = analyze.analyze_db(config_properties)
@@ -320,16 +325,31 @@ def pegasus_analyzer(
         ctx.exit(1)
 
     # generate the console output - we might need it later for the ai
+    console = analyzer_report.make_console()
     if json_mode:
         console_output = json.dumps(output.as_dict(), indent=2)
+        print(console_output)
     else:
-        console_output = generate_analyzer_output(ctx, options, output)
-    print(console_output)
+        # Single Markdown source of truth: rendered on a terminal, raw when
+        # redirected/piped, and sent verbatim to the AI agent.
+        console_output = analyzer_report.build_report_markdown(options, output)
+        analyzer_report.emit(
+            console, console_output, plain=plain, indent_length=options.indent_length
+        )
     print()
 
     if ai:
-        # call out to the Pegasus Agent for AI analysis if needed
-        print(indent_console(" Pegasus AI Analysis ".center(80, "*")))
+        # Show the section header up front -- the agent call can take a while,
+        # so the response is emitted separately once it returns.
+        analyzer_report.emit(
+            console,
+            "## Pegasus AI Analysis\n",
+            plain=plain,
+            indent_length=options.indent_length,
+        )
+        # The response is a separate render, so add the blank line that Rich would
+        # otherwise place after a heading followed by content in the same document.
+        console.print()
         agent_output = None
         try:
             agent_output = agent.AgentClient().analyze(
@@ -340,406 +360,15 @@ def pegasus_analyzer(
                 f"Error occurred while calling Pegasus Agent for AI analysis: {e}"
             )
         if agent_output is not None:
-            print(agent_output)
+            analyzer_report.emit(
+                console,
+                agent_output + "\n",
+                plain=plain,
+                indent_length=options.indent_length,
+            )
         print()
 
     sys.exit(0)
-
-
-def generate_analyzer_output(ctx, options, output):
-
-    # capture all the output in a string
-    cout = ""
-
-    for wf in output.workflows:
-        cout += generate_output(ctx, options, output.workflows[wf])
-
-    if len(output.get_failed_workflows()) > 0:
-        cout += "One or more workflows failed!"
-    else:
-        cout += "Done".center(80, "*")
-        cout += "\n"
-        cout += f"{analyzer.prog_base}: end of status report"
-        cout += "\n"
-
-    return cout
-
-
-def generate_output(ctx, options, wf):
-    """
-    This function prints the summary for the analyzer report,
-    which is the same for the long and short output versions
-    """
-
-    # capture all the output in a string
-    cout = ""
-
-    options.input_dir
-    counts = wf.jobs
-
-    # PM-1762 add a helpful message in case failed jobs are zero and workflow failed
-    if wf.wf_status == "failure" and counts.failed == 0 and not options.use_files:
-        cout += "\n" + indent_console(
-            "It seems your workflow failed with zero failed jobs. Please check the dagman.out and the monitord.log file in %s"
-            % (options.input_dir or options.top_dir)
-        )
-
-    # Let's print the results
-    cout += "\n"
-    cout += indent_console(" Summary ".center(80, "*"))
-    cout += "\n"
-    cout += indent_console(f" Submit Directory   : {wf.submit_dir}")
-    cout += indent_console(f" Workflow Status    : {wf.wf_status}")
-
-    cout += indent_console(f" Total jobs         : {counts.total: 6d}")
-    cout += indent_console(
-        f" # jobs succeeded   : {counts.success: 6d} ({100 * (1.0 * counts.success / (counts.total or 1)):3.2f}%)"
-    )
-    cout += indent_console(
-        f" # jobs failed      : {counts.failed: 6d} ({100 * (1.0 * counts.failed / (counts.total or 1)):3.2f}%)"
-    )
-    cout += indent_console(
-        f" # jobs held        : {counts.held: 6d} ({100 * (1.0 * counts.held / (counts.total or 1)):3.2f}%)"
-    )
-    cout += indent_console(
-        f" # jobs unsubmitted : {counts.unsubmitted: 6d} ({100 * (1.0 * counts.unsubmitted / (counts.total or 1)):3.2f}%)"
-    )
-    if options.use_files:
-        if "unknown_jobs_details" in wf.jobs.job_details:
-            unknown = len(wf.jobs.job_details["unknown_jobs_details"])
-        else:
-            unknown = 0
-        cout += indent_console(
-            f" # jobs unknown     : {unknown: 6d} ({100 * (1.0 * unknown / (counts.total or 1)):3.2f}%)"
-        )
-    cout += "\n"
-
-    if not options.summary_mode:
-        if counts.held > 0:
-            cout += generate_held_jobs(
-                options, wf.jobs.job_details["held_jobs_details"]
-            )
-
-        if "failing_jobs_details" in wf.jobs.job_details:
-            cout += generate_failing_jobs(
-                options, wf.jobs.job_details["failing_jobs_details"]
-            )
-
-        if counts.failed > 0:
-            cout += generate_failed_jobs(
-                options, wf.jobs.job_details["failed_jobs_details"]
-            )
-
-        if "unknown_jobs_details" in wf.jobs.job_details:
-            cout += generate_unknown_jobs(
-                options, wf.jobs.job_details["unknown_jobs_details"]
-            )
-
-    if counts.failed > 0:
-        cout += indent_console(
-            f"Workflow failed : wf_uuid: {wf.wf_uuid} submit dir: {wf.submit_dir}\n"
-        )
-
-    return cout
-
-
-def generate_held_jobs(options, held_jobs):
-    cout = ""
-    cout += indent_console(" Held jobs' details ".center(80, "*"))
-    cout += "\n"
-
-    for job in held_jobs:
-        held_job = held_jobs[job]
-        # each tuple is max_ji_id, jobid, jobname, reason
-        # first two are database id's for debugging
-        cout += indent_console(job.center(80, "="))
-        cout += "\n"
-        cout += indent_console(
-            "submit file            : {}".format(held_job["submit_file"])
-        )
-        cout += indent_console(
-            "last_job_instance_id   : {}".format(held_job["last_job_instance_id"])
-        )
-        cout += indent_console("reason                 : {}".format(held_job["reason"]))
-        cout += "\n"
-
-    return cout
-
-
-def generate_failing_jobs(options, failing_jobs):
-    cout = ""
-    cout += indent_console("failing jobs' details".center(80, "*"))
-    for my_job in failing_jobs:
-        _cout, _ = generate_job_instance(options, failing_jobs[my_job])
-        cout += _cout
-    return cout
-
-
-def generate_failed_jobs(options, failed_jobs):
-    cout = ""
-    cout += indent_console("Failed jobs' details".center(80, "*"))
-
-    for my_job in failed_jobs:
-        sout, sub_wf_cmd = generate_job_instance(options, failed_jobs[my_job])
-
-        # recurse for sub workflow
-        if sub_wf_cmd is not None and options.recurse_mode:
-            cout += indent_console(("Failed Sub Workflow").center(80, "="))
-            try:
-                result = subprocess.run(
-                    sub_wf_cmd, shell=True, capture_output=True, text=True
-                )
-                cout += result.stdout
-                if result.stderr:
-                    cout += result.stderr
-            except Exception as e:
-                cout += f"\n[Error running sub workflow command: {e}]\n"
-            cout += indent_console(("").center(80, "="))
-        else:
-            cout += sout
-
-    return cout
-
-
-def generate_unknown_jobs(options, unknown_jobs):
-    cout = ""
-    cout += indent_console("Unknown jobs' details".center(80, "*"))
-
-    for my_job in unknown_jobs:
-        _cout, _ = generate_job_instance(options, unknown_jobs[my_job])
-        cout += _cout
-
-    return cout
-
-
-def indent_console(stmt=""):
-    """
-    A utility function to print to console with the correct indentation
-    """
-    return indent + stmt + "\n"
-
-
-def generate_job_instance(options, job_instance_info):
-    """
-    The function prints information related to one job instance retried from the
-    stampede database
-    """
-    cout = ""
-    sub_wf_cmd = None
-
-    cout += "\n"
-    cout += indent_console(job_instance_info.job_name.center(80, "="))
-    cout += "\n"
-    cout += indent_console(" last state: %s" % (job_instance_info.state or "-"))
-    cout += indent_console("       site: %s" % (job_instance_info.site or "-"))
-    cout += indent_console("submit file: %s" % (job_instance_info.submit_file or "-"))
-    cout += indent_console("output file: %s" % (job_instance_info.stdout_file or "-"))
-    cout += indent_console(" error file: %s" % (job_instance_info.stderr_file or "-"))
-    if options.print_invocation:
-        cout += "\n"
-        cout += indent_console(
-            "To re-run this job, use: {} {}".format(
-                (job_instance_info.executable or "-"), (job_instance_info.argv or "-")
-            )
-        )
-        cout += "\n"
-    if options.print_pre_script and len(job_instance_info.pre_executable or "") > 0:
-        cout += "\n"
-        cout += indent_console("SCRIPT PRE:")
-        cout += indent_console(
-            "{} {}".format(
-                (job_instance_info.pre_executable or ""),
-                (job_instance_info.pre_argv or ""),
-            )
-        )
-        cout += "\n"
-
-    if job_instance_info.subwf_dir != "-":
-        # This job has a sub workflow
-        user_cmd = f" {prog_base}"
-
-        # get any options that need to be invoked for the sub workflow
-        # extraOptions = addon(options)
-        extraOptions = ""
-
-        if options.use_files:
-            if options.output_dir is not None:
-                user_cmd = user_cmd + f" --output-dir {options.output_dir}"
-
-            # get any options that need to be invoked for the sub workflow
-
-            sub_wf_cmd = f"{user_cmd} {extraOptions} -d {os.path.split(job_instance_info.subwf_dir)[0]}"
-
-        else:
-            my_wfdir = os.path.normpath(job_instance_info.subwf_dir)
-            if my_wfdir.find(job_instance_info.submit_dir) >= 0:
-                # Path to dagman_out file includes original submit_dir, let's try to change it...
-                my_wfdir = os.path.normpath(
-                    my_wfdir.replace((job_instance_info.submit_dir + os.sep), "", 1)
-                )
-                my_wfdir = os.path.join(options.input_dir, my_wfdir)
-
-            sub_wf_cmd = f"{user_cmd} {extraOptions} -d {my_wfdir} --top-dir {options.top_dir or options.input_dir}"
-        if not options.recurse_mode:
-            # we print only if recurse mode is disabled
-            cout += indent_console(" This job contains sub workflows!")
-            cout += indent_console(
-                " Please run the command below for more information:"
-            )
-            cout += indent_console(sub_wf_cmd)
-        cout += "\n"
-    cout += "\n"
-
-    # print all the tasks associated with the job
-    cout += generate_tasks_info(options, job_instance_info)
-
-    return cout, sub_wf_cmd
-
-
-def generate_tasks_info(options, job_instance_info):
-    """
-    The function prints information related tasks relevant to one job instance
-    """
-    cout = ""
-
-    # Unquote stdout and stderr
-    ji_stdout_text = job_instance_info.stdout_text
-    ji_stderr_text = job_instance_info.stderr_text
-    job_tasks = job_instance_info.tasks
-
-    some_tasks_failed = False
-    for task in job_tasks:
-        my_task = job_tasks[task]
-        some_tasks_failed = some_tasks_failed or (my_task.exitcode != 0)
-
-    # PM-798 track whether we need to actually print the condor job stderr or not
-    # we only print if there is no information in the kickstart record
-    my_print_job_stderr = True
-
-    # Now, print task information
-    for task in job_tasks:
-        my_task = job_tasks[task]
-
-        if my_task.exitcode == 0 and some_tasks_failed:
-            # Skip tasks that succeeded only if we know some tasks did fail
-            continue
-
-        # Print task summary
-        cout += indent_console(
-            ("Task #" + str(my_task.task_submit_seq) + " - Summary").center(80, "-")
-        )
-        cout += "\n"
-        cout += indent_console(f"site        : {job_instance_info.site}")
-        cout += indent_console(f"hostname    : {job_instance_info.hostname}")
-        cout += indent_console(f"executable  : {my_task.executable}")
-        cout += indent_console(f"arguments   : {my_task.arguments}")
-        cout += indent_console(f"exitcode    : {my_task.exitcode}")
-        cout += indent_console(f"working dir : {job_instance_info.work_dir}")
-        cout += "\n"
-
-        if not options.quiet_mode:
-            stdout_output = (
-                "Task #"
-                + str(my_task.task_submit_seq)
-                + " - "
-                + str(my_task.transformation)
-                + " - "
-                + str(my_task.abs_task_id)
-                + " - stdout"
-            ).center(80, "-")
-
-            if options.use_files and ji_stdout_text != "-":
-                if ji_stdout_text:
-                    my_print_job_stderr = False
-                    cout += indent_console(stdout_output)
-                    cout += indent_console(ji_stdout_text)
-            else:
-                # Now, print task stdout and stderr, if anything is there
-                my_stdout_str = f"#@ {my_task.task_submit_seq:d} stdout"
-                my_stderr_str = f"#@ {my_task.task_submit_seq:d} stderr"
-
-                # Start with stdout
-                my_stdout_start = ji_stdout_text.find(my_stdout_str)
-                if my_stdout_start >= 0:
-                    my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
-                    my_stdout_end = ji_stdout_text.find("#@", my_stdout_start)
-                    if my_stdout_end < 0:
-                        # Next comment not found, possibly the last entry
-                        my_stdout_end = len(ji_stdout_text)
-                    else:
-                        my_stdout_end = my_stdout_end - 1
-
-                    if my_stdout_end - my_stdout_start > 0:
-                        # Something to display
-                        my_print_job_stderr = False
-                        cout += indent_console(stdout_output)
-                        cout += "\n"
-                        cout += indent_console(
-                            ji_stdout_text[my_stdout_start:my_stdout_end]
-                        )
-                        cout += "\n"
-
-                # Now print stderr (from the kickstart output file)
-                my_stderr_start = ji_stdout_text.find(my_stderr_str)
-                if my_stderr_start >= 0:
-                    my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
-                    my_stderr_end = ji_stdout_text.find("#@", my_stderr_start)
-                    if my_stderr_end < 0:
-                        # Next comment not found, possibly the last entry
-                        my_stderr_end = len(ji_stdout_text)
-                    else:
-                        my_stderr_end = my_stderr_end - 1
-
-                    if my_stderr_end - my_stderr_start > 0:
-                        # Something to display
-                        my_print_job_stderr = False
-                        cout += indent_console(
-                            (
-                                "Task #"
-                                + str(my_task.task_submit_seq)
-                                + " - "
-                                + str(my_task.transformation)
-                                + " - "
-                                + str(my_task.abs_task_id)
-                                + " - Kickstart stderr"
-                            ).center(80, "-")
-                        )
-                        cout += "\n"
-                        cout += indent_console(
-                            ji_stdout_text[my_stderr_start:my_stderr_end]
-                        )
-                        cout += "\n"
-
-                # PM-808 print jobinstance stdout for prescript failures only.
-                if my_task.task_submit_seq == -1 and ji_stdout_text is not None:
-                    cout += "\n"
-                    cout += indent_console(
-                        (
-                            "Task #"
-                            + str(my_task.task_submit_seq)
-                            + " - "
-                            + str(my_task.transformation)
-                            + " - "
-                            + str(my_task.abs_task_id)
-                            + " - stdout"
-                        ).center(80, "-")
-                    )
-                    cout += "\n"
-                    cout += indent_console(ji_stdout_text)
-                    cout += "\n"
-
-    # Now print the stderr output from the .err file
-    if ji_stderr_text and ji_stderr_text.strip("\n\t \r") != "" and my_print_job_stderr:
-        # Something to display
-        # if task exitcode is 0, it should indicate PegasusLite case compute job succeeded but stageout failed
-        cout += indent_console(
-            ("Job stderr - %s" % (job_instance_info.job_name or "-")).center(80, "-")
-        )
-        cout += "\n"
-        cout += indent_console(ji_stderr_text)
-        cout += "\n"
-
-    return cout
 
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@ public abstract class AbstractContainer extends Abstract {
     public abstract String getContainerWorkingDirectory();
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

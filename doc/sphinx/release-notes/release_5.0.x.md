@@ -145,7 +145,7 @@ https://pegasus.isi.edu/downloads
 2)  [PM-1906]  Planner container mount point parsing breaks on . in the dir name [\#2019](https://github.com/pegasus-isi/pegasus/issues/2019)
 
 3)  [PM-1909]  request_disk is incorrectly set to MBs instead of KBs [\#2022](https://github.com/pegasus-isi/pegasus/issues/2022)
-4)  [PM-1913]  +DAGNodeRetry for attrib=value assigment breaks on HTondor 10.0.x when direct submission is disabled [\#2026](https://github.com/pegasus-isi/pegasus/issues/2026)
+4)  [PM-1913]  +DAGNodeRetry for attrib=value assignment breaks on HTondor 10.0.x when direct submission is disabled [\#2026](https://github.com/pegasus-isi/pegasus/issues/2026)
 
 5)  [PM-1916]  Data management between parent compute job and a sub workflow job broken [\#2029](https://github.com/pegasus-isi/pegasus/issues/2029)
 
@@ -176,7 +176,7 @@ https://pegasus.isi.edu/downloads
 **Release Date:** February 9, 2023
 
 We are happy to announce the release of Pegasus 5.0.4, which is a minor bug
-fix release for Pegasus 5.0 branch.  This release has some importan
+fix release for Pegasus 5.0 branch.  This release has some important
  updates namely
 
 - Support for HTCondor 10.2 series
@@ -415,7 +415,7 @@ https://pegasus.isi.edu/downloads
 
 10) [PM-1672] – override add_args for SubWorkflow so that args refer to planner args [\#1786](https://github.com/pegasus-isi/pegasus/issues/1786)
 
-11) [PM-1706] – sphinx has hardcoded versios [\#1820](https://github.com/pegasus-isi/pegasus/issues/1820)
+11) [PM-1706] – sphinx has hardcoded versions [\#1820](https://github.com/pegasus-isi/pegasus/issues/1820)
 
 12) [PM-1730] – 5.0.1 Python Api improvements [\#1844](https://github.com/pegasus-isi/pegasus/issues/1844)
 
@@ -1011,7 +1011,7 @@ https://pegasus.isi.edu/docs/5.0.0/user-guide/migration.html#migrating-from-pega
 
 162) [PM-1445] – update monitord to parse yaml based brain dump file [\#1559](https://github.com/pegasus-isi/pegasus/issues/1559)
 
-163) [PM-1447] – update pegasus-sc-converter to covert old format catalog to new yaml based one [\#1561](https://github.com/pegasus-isi/pegasus/issues/1561)
+163) [PM-1447] – update pegasus-sc-converter to convert old format catalog to new yaml based one [\#1561](https://github.com/pegasus-isi/pegasus/issues/1561)
 
 164) [PM-1448] – SiteFactory should auto detect version and load the correct implementation [\#1562](https://github.com/pegasus-isi/pegasus/issues/1562)
 

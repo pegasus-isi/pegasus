@@ -288,7 +288,7 @@ public class DeployWorkerPackage extends Engine {
     private File mSubmitHostWorkerPackage;
 
     /**
-     * A pratically nothing constructor !
+     * A practically nothing constructor !
      *
      * @param bag bag of initialization objects
      */
@@ -370,7 +370,7 @@ public class DeployWorkerPackage extends Engine {
 
         if (mTransferWorkerPackage && !deploymentSites[0].isEmpty()) {
             // PM-810 for sharedfs case, worker package transfer can only happen
-            // if the property is set by the user in the proeprties file
+            // if the property is set by the user in the properties file
             setupTCForWorkerPackageLocations(deploymentSites[0], m, txSelector, false);
         }
         setupTCForWorkerPackageLocations(deploymentSites[1], m, txSelector, true);
@@ -384,7 +384,7 @@ public class DeployWorkerPackage extends Engine {
      * @param mapper
      * @param selector
      * @param workerNodeExecution boolean indicating whether a job runs on sharedfs or local node
-     *     filesytem
+     *     filesystem
      */
     protected void setupTCForWorkerPackageLocations(
             Set sites,
@@ -716,7 +716,7 @@ public class DeployWorkerPackage extends Engine {
 
         if (mTransferWorkerPackage && !deploymentSites[0].isEmpty()) {
             // PM-810 for sharedfs case, worker package transfer can only happen
-            // if the property is set by the user in the proeprties file
+            // if the property is set by the user in the properties file
 
             // we add untar nodes only if worker node execution/pegasus lite
             // mode is disabled
@@ -767,7 +767,7 @@ public class DeployWorkerPackage extends Engine {
             List<FileTransfer> fts = new ArrayList<FileTransfer>(1);
             fts.add(ft);
 
-            // hmm need to propogate site info with a dummy job on fly
+            // hmm need to propagate site info with a dummy job on fly
             Job dummy = new Job();
             dummy.setSiteHandle(site);
 
@@ -814,7 +814,7 @@ public class DeployWorkerPackage extends Engine {
 
             exitcodeArgs.append(" ");
             exitcodeArgs.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
-            // PM-1821 explicity indicate no kickstart records to parse
+            // PM-1821 explicitly indicate no kickstart records to parse
             exitcodeArgs
                     .append(" ")
                     .append(
@@ -935,7 +935,7 @@ public class DeployWorkerPackage extends Engine {
             return workflow;
         }
 
-        // hmm need to propogate site info with a dummy job on fly
+        // hmm need to propagate site info with a dummy job on fly
         Job dummy = new Job();
         dummy.setSiteHandle(stagingSite);
 
@@ -1048,7 +1048,7 @@ public class DeployWorkerPackage extends Engine {
 
     /**
      * It returns the name of the deployment job, that is to be assigned. The name takes into
-     * account the workflow name while constructing it, as that is thing that can guarentee
+     * account the workflow name while constructing it, as that is thing that can guarantee
      * uniqueness of name in case of deferred planning.
      *
      * @param dag the workflow so far.
@@ -1081,7 +1081,7 @@ public class DeployWorkerPackage extends Engine {
 
     /**
      * It returns the name of the untar job, that is to be assigned. The name takes into account the
-     * workflow name while constructing it, as that is thing that can guarentee uniqueness of name
+     * workflow name while constructing it, as that is thing that can guarantee uniqueness of name
      * in case of deferred planning.
      *
      * @param dag the workflow so far.
@@ -1107,7 +1107,7 @@ public class DeployWorkerPackage extends Engine {
 
     /**
      * It returns the name of the untar job, that is to be assigned. The name takes into account the
-     * workflow name while constructing it, as that is thing that can guarentee uniqueness of name
+     * workflow name while constructing it, as that is thing that can guarantee uniqueness of name
      * in case of deferred planning.
      *
      * @param dag the workflow so far.
@@ -1224,7 +1224,7 @@ public class DeployWorkerPackage extends Engine {
 
         // the profile information from the pool catalog needs to be
         // assimilated into the job.
-        newJob.updateProfiles(ePool.getProfiles());
+        newJob.updateProfiles(ePool);
 
         // add any notifications specified in the transformation
         // catalog for the job. JIRA PM-391
@@ -1318,7 +1318,7 @@ public class DeployWorkerPackage extends Engine {
      * The following rules are followed for determining the entry
      *
      * <pre>
-     *    - if a pegasus::worker entry exists in the trasnformation catalog for the site, it is used
+     *    - if a pegasus::worker entry exists in the transformation catalog for the site, it is used
      *    - else, the worker package based on the submit host install is used if
      *          a) user specified osrelease for the site in the site catalog and there is a
      *             complete match for sysinfo ( os, osrelease, version, and arch)

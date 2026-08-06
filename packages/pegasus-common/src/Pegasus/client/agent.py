@@ -23,7 +23,7 @@ class AgentClient:
         if self.props.property("pegasus.agent.url"):
             self.url = self.props.property("pegasus.agent.url")
         else:
-            self.url = "https://agent.k.scitech.group"
+            self.url = "https://api.pegasus-ai.org"
 
         # token
         if self.props.property("pegasus.agent.token"):

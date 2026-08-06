@@ -111,8 +111,8 @@ public class StageIn extends Abstract {
      * @param refiner
      */
     @Override
-    public void initalize(ADag dag, PegasusBag bag, Refiner refiner) {
-        super.initalize(dag, bag, refiner);
+    public void initialize(ADag dag, PegasusBag bag, Refiner refiner) {
+        super.initialize(dag, bag, refiner);
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap(mProps);
@@ -129,7 +129,7 @@ public class StageIn extends Abstract {
      * @param plannerCache
      * @param workflowCache
      */
-    public void initalize(
+    public void initialize(
             ADag dag,
             PegasusBag bag,
             Refiner refiner,
@@ -137,7 +137,7 @@ public class StageIn extends Abstract {
             ReplicaSelector rs,
             PlannerCache plannerCache,
             ReplicaCatalog workflowCache) {
-        this.initalize(dag, bag, refiner);
+        this.initialize(dag, bag, refiner);
         mRCBridge = rcb;
         mReplicaSelector = rs;
 
@@ -328,7 +328,7 @@ public class StageIn extends Abstract {
         // dAbsPath would be just the destination directory absolute path
 
         // sDirURL would be the url to the source directory.
-        // dDirPutURL would be the url to the destination directoy
+        // dDirPutURL would be the url to the destination directory
         // and is always a networked url.
 
         boolean symlinkingEnabledForJob = symlinkingEnabled(job, this.mUseSymLinks);
@@ -379,14 +379,14 @@ public class StageIn extends Abstract {
                             // use the default pull mode
                             fileDestDir;
 
-            // see if the pf is infact an instance of FileTransfer
+            // see if the pf is in fact an instance of FileTransfer
             if (pf instanceof FileTransfer) {
                 // that means we should be having the source url already.
                 // nv contains both the source pool and the url.
                 // PM-1213 remote the source URL. will be added later back
                 nv = ((FileTransfer) pf).removeSourceURL();
 
-                // PM-833 we have to explicity set the remote executable
+                // PM-833 we have to explicitly set the remote executable
                 // especially for the staging of executables in sharedfs
                 if (lfn.equalsIgnoreCase(job.getStagedExecutableBaseName())) {
                     job.setRemoteExecutable(dAbsPath + File.separator + lfn);
@@ -396,7 +396,7 @@ public class StageIn extends Abstract {
                         && job.runsInContainerUniverse()) // PM-1950 check for container universe
                 // to trigger transfer from submit dir
                 {
-                    // PM-1950 only transfer the container to the submit directory of the workfow
+                    // PM-1950 only transfer the container to the submit directory of the workflow
                     // and turn off integrity checking for the container since HTCondor
                     // is managing it
                     ftForContainerToSubmitHost = true;
@@ -464,7 +464,7 @@ public class StageIn extends Abstract {
             ft.setSize(pf.getSize());
 
             // the transfer mode for the file needs to be
-            // propogated for optional transfers.
+            // propagated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
 
             ReplicaLocation candidateLocations = null;
@@ -678,7 +678,7 @@ public class StageIn extends Abstract {
             pf.setForBypassStaging(bypassFirstLevelStagingPossible);
 
             // GH-2141 if the destination URL is an OSDF URL
-            // explicilty turn cleanup off
+            // explicitly turn cleanup off
             if (preferredDestPutURL.startsWith(PegasusURL.OSDF_PROTOCOL_SCHEME)) {
                 mLogger.log(
                         "For job "

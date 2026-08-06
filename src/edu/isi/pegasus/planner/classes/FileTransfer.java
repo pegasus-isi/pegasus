@@ -42,7 +42,7 @@ import java.util.Objects;
 public class FileTransfer extends PegasusFile {
 
     /**
-     * The logical name of the asssociated VDS super node, with which the file is associated. The
+     * The logical name of the associated VDS super node, with which the file is associated. The
      * name of the job can be of the job that generates that file(while doing intersite or
      * transferring output files to output site) or of a job for which the file is an input(getting
      * an input file from the Replica Services).
@@ -319,7 +319,7 @@ public class FileTransfer extends PegasusFile {
      * entry from the key set of the underlying map.
      *
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> getSourceURL() {
         return getSourceURL(false);
@@ -331,7 +331,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param random boolean indicating if a random entry needs to be picked.
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> getSourceURL(boolean random) {
         return getURL(mSourceMap, random);
@@ -342,7 +342,7 @@ public class FileTransfer extends PegasusFile {
      * is first entry from the key set of the underlying map.
      *
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> getDestURL() {
         return getDestURL(false);
@@ -354,7 +354,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param random boolean indicating if a random entry needs to be picked.
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> getDestURL(boolean random) {
         return getURL(mDestMap, random);
@@ -396,7 +396,7 @@ public class FileTransfer extends PegasusFile {
      * entry from the key set of the underlying map.
      *
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> removeSourceURL() {
         return removeURL(mSourceMap);
@@ -407,7 +407,7 @@ public class FileTransfer extends PegasusFile {
      * first entry from the key set of the underlying map.
      *
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     public NameValue<String, String> removeDestURL() {
         return removeURL(mDestMap);
@@ -441,7 +441,7 @@ public class FileTransfer extends PegasusFile {
      * @param m the map containing the url's
      * @param random boolean indicating that a random url to be picked up.
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     private NameValue<String, String> getURL(
             Map<String, List<ReplicaCatalogEntry>> m, boolean random) {
@@ -473,7 +473,7 @@ public class FileTransfer extends PegasusFile {
      *
      * @param m the map containing the url's
      * @return NameValue where the name would be the site on which the URL is and value the URL.
-     *     null if no urls are assoiciated with the object.
+     *     null if no urls are associated with the object.
      */
     private NameValue<String, String> removeURL(Map<String, List<ReplicaCatalogEntry>> m) {
         if (m == null || m.keySet().isEmpty()) {

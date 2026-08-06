@@ -2,7 +2,7 @@
 tr example::keg:1.0 {
 
   #specify profiles that apply for all the sites for the transformation
-  #in each site entry the profile can be overriden
+  #in each site entry the profile can be overridden
 
   profile env "APP_HOME" "/tmp/myscratch"
   profile env "JAVA_HOME" "/opt/java/1.6"

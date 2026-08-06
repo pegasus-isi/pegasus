@@ -167,7 +167,7 @@ public class InvocationParser extends DefaultHandler {
                 m_log.log("app", 2, "will use document schema hint");
             }
         } catch (ClassNotFoundException e) {
-            m_log.log("defaut", 0, "The SAXParser class was not found: " + e);
+            m_log.log("default", 0, "The SAXParser class was not found: " + e);
         } catch (InstantiationException e) {
             m_log.log("default", 0, "The SAXParser class could not be instantiated: " + e);
         } catch (IllegalAccessException e) {
@@ -324,7 +324,7 @@ public class InvocationParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      * @param atts has the names and values of all the attributes
      */
     public void startElement(
@@ -367,7 +367,7 @@ public class InvocationParser extends DefaultHandler {
      *
      * @param namespaceURI is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param qName is the element name as it appears in the dociment
      */
     public void endElement(
             java.lang.String namespaceURI, java.lang.String localName, java.lang.String qName)
@@ -1292,7 +1292,7 @@ public class InvocationParser extends DefaultHandler {
      * element in terms of Java objects. Usually it involves adding the object to the parent's child
      * object list.
      *
-     * @param initial is the first charactor of the parent element name
+     * @param initial is the first character of the parent element name
      * @param parent is a reference to the parent's Java object
      * @param child is the completed child object to connect to the parent
      * @return true if the element was added successfully, false, if the child does not match into

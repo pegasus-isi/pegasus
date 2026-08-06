@@ -53,7 +53,7 @@ typedef struct {
 extern
 int
 jobs_init( Jobs* jobs, int cpus );
-/* purpose: Initialize maintainance data structure
+/* purpose: Initialize maintenance data structure
  * paramtr: jobs (IO): pointer to Jobs data structure
  *          cpus (IN): how many job slots to allocate
  * returns: 0 on success, -1 on error.
@@ -79,7 +79,7 @@ extern
 size_t
 jobs_first_slot( Jobs* jobs, JobState state );
 /* purpose: find first slot of a job with state state
- * paramtr: jobs (IN): pointer to maintanance structure
+ * paramtr: jobs (IN): pointer to maintenance structure
  *          state (IN): job state to search
  * returns: 0 .. cpus-1: valid job slot
  *          cpus: no such slot found

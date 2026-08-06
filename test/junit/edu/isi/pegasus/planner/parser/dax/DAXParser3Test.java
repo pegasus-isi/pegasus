@@ -211,7 +211,7 @@ public class DAXParser3Test {
         int set = 1;
         // test with no deep storage structure enabled
         mLogger.logEventStart("test.planner.parser.dax", "set", Integer.toString(set++));
-        String name = "black.diam.ond+dax++";
+        String name = "black.diam.ond+dax++"; // codespell:ignore ond
         assertThat(XMLParser.makeDAGManCompliant(name), is("black_diam_ond_dax__"));
         mLogger.logEventCompletion();
     }

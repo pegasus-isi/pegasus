@@ -201,7 +201,7 @@ public class TransferEngine extends Engine {
 
         mOutputSites = (Set<String>) mPOptions.getOutputSites();
         mStageOutFileTransferGenerator = new StageOut();
-        mStageOutFileTransferGenerator.initalize(reducedDag, bag, mTXRefiner);
+        mStageOutFileTransferGenerator.initialize(reducedDag, bag, mTXRefiner);
 
         mWorkflowCache = this.initializeWorkflowCacheFile(reducedDag);
 
@@ -233,7 +233,7 @@ public class TransferEngine extends Engine {
         mPlannerCache = plannerCache;
 
         mStageInFileTransferGenerator = new StageIn();
-        mStageInFileTransferGenerator.initalize(
+        mStageInFileTransferGenerator.initialize(
                 mDag, mBag, mTXRefiner, mRCBridge, mReplicaSelector, mPlannerCache, mWorkflowCache);
 
         Job currentJob;
@@ -370,7 +370,7 @@ public class TransferEngine extends Engine {
      * Mechanism.
      *
      * @param job the <code>Job</code> object containing all the details of the job.
-     * @param parents list <code>GraphNode</code> ojbects corresponding to the parent jobs of the
+     * @param parents list <code>GraphNode</code> objects corresponding to the parent jobs of the
      *     job.
      */
     private void processParents(Job job, Collection<GraphNode> parents) {
@@ -471,7 +471,7 @@ public class TransferEngine extends Engine {
      * are executed.
      *
      * @param job the job with reference to which interpool file transfers need to be determined.
-     * @param parents Collection of <code>GraphNode</code> ojbects corresponding to the parent jobs
+     * @param parents Collection of <code>GraphNode</code> objects corresponding to the parent jobs
      *     of the job.
      * @return array of Collection of <code>FileTransfer</code> objects
      */
@@ -542,7 +542,7 @@ public class TransferEngine extends Engine {
                     File parentAddon =
                             mStagingMapper.getRelativeDirectory(pJob.getStagingSiteHandle(), lfn);
 
-                    // definite inconsitency as url prefix and mount point
+                    // definite inconsistency as url prefix and mount point
                     // are not picked up from the same server
                     boolean localTransfer =
                             mTransferJobPlacer.runTransferOnLocalSite(
@@ -624,7 +624,7 @@ public class TransferEngine extends Engine {
                                 it1.hasNext(); ) {
 
                             FileServer server = (FileServer) it1.next();
-                            // definite inconsitency as url prefix and mount point
+                            // definite inconsistency as url prefix and mount point
                             // are not picked up from the same server
                             sourceURI = server.getURLPrefix();
 
@@ -866,7 +866,7 @@ public class TransferEngine extends Engine {
 
     /**
      * Constructs the basename to the cache file that is to be used to log the transient files. The
-     * basename is dependant on whether the basename prefix has been specified at runtime or not.
+     * basename is dependent on whether the basename prefix has been specified at runtime or not.
      *
      * @param adag the ADag object containing the workflow that is being concretized.
      * @return the name of the cache file
@@ -936,7 +936,7 @@ public class TransferEngine extends Engine {
                 .append(job.getID())
                 .append(".input.cache");
 
-        // PM-1916 set the path to input cache file for sub workflow explicilty
+        // PM-1916 set the path to input cache file for sub workflow explicitly
         job.setInputWorkflowCacheFile(file.toString());
 
         // set the appropriate property to designate path to file

@@ -88,7 +88,7 @@ public class MapGraph implements Graph {
     }
 
     /**
-     * Adds a single root node to the Graph. All the exisitng roots of the Graph become children of
+     * Adds a single root node to the Graph. All the existing roots of the Graph become children of
      * the root.
      *
      * @param root the <code>GraphNode</code> to be added as a root.
@@ -171,7 +171,7 @@ public class MapGraph implements Graph {
     /**
      * Returns the root nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the root nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the root nodes.
      */
     public List<GraphNode> getRoots() {
         List rootNodes = new LinkedList();
@@ -198,7 +198,7 @@ public class MapGraph implements Graph {
     /**
      * Returns the leaf nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the leaf nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the leaf nodes.
      */
     public List<GraphNode> getLeaves() {
         List leaves = new LinkedList();
@@ -234,7 +234,7 @@ public class MapGraph implements Graph {
 
         if (notExist != null) {
             /* should be replaced by Graph Exception */
-            throw new RuntimeException("The node with identifier doesnt exist " + notExist);
+            throw new RuntimeException("The node with identifier doesn't exist " + notExist);
         }
 
         this.addEdge(parentNode, childNode);
@@ -272,7 +272,7 @@ public class MapGraph implements Graph {
 
         if (childNode == null) {
             /* should be replaced by Graph Exception */
-            throw new RuntimeException("The node with identifier doesnt exist " + child);
+            throw new RuntimeException("The node with identifier doesn't exist " + child);
         }
 
         String parentId;
@@ -285,7 +285,7 @@ public class MapGraph implements Graph {
 
             if (parentNode == null) {
                 /* should be replaced by Graph Exception */
-                throw new RuntimeException("The node with identifier doesnt exist " + parentId);
+                throw new RuntimeException("The node with identifier doesn't exist " + parentId);
             }
 
             parentList.add(parentNode);
@@ -450,14 +450,14 @@ public class MapGraph implements Graph {
             mLevelList = new LinkedList();
             mCurrentDepth = -1;
 
-            // sanity intialization of all nodes depth
+            // sanity initialization of all nodes depth
             for (Iterator it = nodeIterator(); it.hasNext(); ) {
                 GraphNode node = (GraphNode) it.next();
                 node.setDepth(mCurrentDepth);
                 node.setColor(GraphNode.WHITE_COLOR);
             }
 
-            // intialize all the root nodes depth to 0
+            // initialize all the root nodes depth to 0
             // and put them in the queue
             mCurrentDepth = 0;
             for (Iterator it = getRoots().iterator(); it.hasNext(); ) {
@@ -555,14 +555,14 @@ public class MapGraph implements Graph {
             mLevelList = new LinkedList();
             mCurrentDepth = -1;
 
-            // sanity intialization of all nodes depth
+            // sanity initialization of all nodes depth
             for (Iterator it = nodeIterator(); it.hasNext(); ) {
                 GraphNode node = (GraphNode) it.next();
                 node.setDepth(mCurrentDepth);
                 node.setColor(GraphNode.WHITE_COLOR);
             }
 
-            // intialize all the root nodes depth to 0
+            // initialize all the root nodes depth to 0
             // and put them in the queue
             mCurrentDepth = 0;
             for (Iterator it = getLeaves().iterator(); it.hasNext(); ) {

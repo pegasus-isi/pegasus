@@ -44,7 +44,7 @@ public class VDLtConvert extends Directive {
      * Reads VDLt specification and outputs VDLx specification
      *
      * @param reader the vdlt source reader
-     * @param writer the vdlx taget writer
+     * @param writer the vdlx target writer
      * @throws java.io.IOException exception
      */
     public void VDLt2VDLx(Reader reader, Writer writer)
@@ -56,7 +56,7 @@ public class VDLtConvert extends Directive {
      * Reads VDLt specification and outputs VDLx specification
      *
      * @param reader the vdlt source reader
-     * @param writer the vdlx taget writer
+     * @param writer the vdlx target writer
      * @param namespace the common vdl namespace for all the definitions included
      * @param version the common version number for all the definitions included
      * @throws java.io.IOException exception

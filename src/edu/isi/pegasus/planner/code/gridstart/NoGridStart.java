@@ -53,7 +53,8 @@ public class NoGridStart implements GridStart {
     private ADag mDAG;
 
     /**
-     * The basename of the class that is implmenting this. Could have been determined by reflection.
+     * The basename of the class that is implementing this. Could have been determined by
+     * reflection.
      */
     public static final String CLASSNAME = "NoGridStart";
 
@@ -175,7 +176,7 @@ public class NoGridStart implements GridStart {
 
     /**
      * Enables a job to run on the grid. This also determines how the stdin,stderr and stdout of the
-     * job are to be propogated. To grid enable a job, the job may need to be wrapped into another
+     * job are to be propagated. To grid enable a job, the job may need to be wrapped into another
      * job, that actually launches the job. It usually results in the job description passed being
      * modified modified.
      *
@@ -214,11 +215,11 @@ public class NoGridStart implements GridStart {
             // always pass isGlobus true as always
             // interested only in executable strargs
             // due to the fact that seqexec does not allow for setting environment
-            // per constitutent constituentJob, we cannot set the postscript removal option
+            // per constituent constituentJob, we cannot set the postscript removal option
             this.enable(constituentJob, isGlobusJob);
         }
 
-        // all the constitutent jobs are enabled.
+        // all the constituent jobs are enabled.
         // get the job aggregator to render the job
         // to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete(job);
@@ -265,7 +266,7 @@ public class NoGridStart implements GridStart {
         /*
                 //the executable path and arguments are put
                 //in the Condor namespace and not printed to the
-                //file so that they can be overriden if desired
+                //file so that they can be overridden if desired
                 //later through profiles and key transfer_executable
                 construct(job,"executable", handleTransferOfExecutable( job ) );
                 //sanity check for the arguments
@@ -300,7 +301,7 @@ public class NoGridStart implements GridStart {
             }
             if (isGlobusJob) {
                 // this needs to be true as you want the stdin
-                // to be transfered to the remote execution
+                // to be transferred to the remote execution
                 // pool, as in case of the transfer script.
                 // it needs to be set if the stdin is already
                 // prepopulated at the remote side which

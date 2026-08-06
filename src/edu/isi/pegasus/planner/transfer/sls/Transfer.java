@@ -634,7 +634,7 @@ public class Transfer implements SLS {
                         // now update the source url to reflect pegasus_lite_start_dir
                         // however the lfn is the basename of the source url. not
                         // the actual lfn for the file. this is to account for
-                        // mistmatch in the URL basename in replica catalog and the
+                        // mismatch in the URL basename in replica catalog and the
                         // lfn for the file in the job.
                         // For example lfn association with the job can f.a . the url
                         // can be osdf:///pelicanplatform/test/hello-world.txt
@@ -802,7 +802,7 @@ public class Transfer implements SLS {
 
     /**
      * Modifies a compute job for second level staging. The only modification it does is add the
-     * appropriate environment varialbes to the job
+     * appropriate environment variables to the job
      *
      * @param job the job to be modified.
      * @param stagingSiteURLPrefix the url prefix for the server on the staging site

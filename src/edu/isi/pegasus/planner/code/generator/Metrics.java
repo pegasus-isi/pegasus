@@ -119,7 +119,7 @@ public class Metrics {
             }
         }
 
-        // intialize the logger defensively
+        // initialize the logger defensively
         if (bag != null) {
             mLogger = bag.getLogger();
         }
@@ -203,7 +203,7 @@ public class Metrics {
             throw new IOException("NULL Metrics passed");
         }
 
-        // create a writer to the braindump.txt in the directory.
+        // create a writer to the metrics file in the directory.
         File f = metrics.getMetricsFileLocationInSubmitDirectory();
 
         if (f == null) {
@@ -233,7 +233,7 @@ public class Metrics {
         SendMetricsResult result = sm.call();
 
         if (result.getCode() == 202) {
-            mLogger.log("Metrics succesfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Metrics successfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
         } else {
             mLogger.log(
                     "Unable to send metrics to the server " + result,
@@ -242,7 +242,7 @@ public class Metrics {
     }
 
     /**
-     * Sends the planner metrics to the metrics server asynchrnously with a timeout of 5 seconds
+     * Sends the planner metrics to the metrics server asynchronously with a timeout of 5 seconds
      *
      * @param metrics the metrics to log
      * @param url the url to send the metrics to
@@ -281,7 +281,7 @@ public class Metrics {
         if (result != null) {
             if (result.getCode() == 202) {
                 mLogger.log(
-                        "Metrics succesfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
+                        "Metrics successfully sent to the server", LogManager.DEBUG_MESSAGE_LEVEL);
             } else {
                 mLogger.log(
                         "Unable to send metrics to the server " + result,

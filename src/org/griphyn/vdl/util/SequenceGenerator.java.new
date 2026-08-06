@@ -132,7 +132,7 @@ import java.text.DecimalFormat;
  * Each instance of this class produces a row of sequence numbers.
  * By default, the sequence string has six digits.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. Vï¿½ckler
  * @author Yong Zhao
  * @version $Revision$
  */
@@ -162,7 +162,7 @@ public class SequenceGenerator
   }
 
   /**
-   * C'tor: Instances from this contructor will generate ${prefix}xxxxx.
+   * C'tor: Instances from this constructor will generate ${prefix}xxxxx.
    * Please note that multiple instances of this class with the same
    * prefix will produce the same sequences! The sequence generator will
    * be initialized to zero.
@@ -189,7 +189,7 @@ public class SequenceGenerator
   /**
    * Creates the next sequence number as textual string.
    * @return the next sequence number string.
-   * @exception RuntimeException, if the maximum permissable value was reached.
+   * @exception RuntimeException, if the maximum permissible value was reached.
    */
   public String generate()
     throws RuntimeException

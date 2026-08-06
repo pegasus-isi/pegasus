@@ -122,19 +122,19 @@ public class MonitordNotify implements CodeGenerator {
             mNotificationsWriter = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
         } catch (IOException ioe) {
             mLogger.log(
-                    "Unable to intialize writer for notifications file ",
+                    "Unable to initialize writer for notifications file ",
                     ioe,
                     LogManager.ERROR_MESSAGE_LEVEL);
             throw new CodeGeneratorException(
-                    "Unable to intialize writer for notifications file ", ioe);
+                    "Unable to initialize writer for notifications file ", ioe);
         }
 
         // lets first generate code for the workflow level
         // notifications
         String uuid = dag.getWorkflowUUID();
-        Notifications notfications = dag.getNotifications();
+        Notifications notifications = dag.getNotifications();
         for (WHEN when : WHEN.values()) {
-            for (Invoke invoke : notfications.getNotifications(when)) {
+            for (Invoke invoke : notifications.getNotifications(when)) {
                 mNotificationsWriter.println(
                         MonitordNotify.WORKFLOW
                                 + DELIMITER

@@ -24,7 +24,7 @@ import java.util.StringTokenizer;
 
 /**
  * The environment namespace, that puts in the environment variables for the transformation that is
- * being run, through Condor. At present on the occurence of a clash between the values of an
+ * being run, through Condor. At present on the occurrence of a clash between the values of an
  * environment variable the values are overwritten with the order of preference in decreasing order
  * being users local properties, transformation catalog, pool file and the dax (vdl). Later on
  * operations like append , prepend would also be supported.

@@ -219,7 +219,7 @@ public class AbstractJob {
     }
 
     /**
-     * Add a argument key and value to the argument List. The argkey and argvalue are seperated by
+     * Add a argument key and value to the argument List. The argkey and argvalue are separated by
      * space. Example addArgument("-p","0") will result in the argument being added as -p 0<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
      *
@@ -234,7 +234,7 @@ public class AbstractJob {
 
     /**
      * Add a argument key and value to the argument List.<br>
-     * The argkey and argvalue are seperated by argdelimiter.<br>
+     * The argkey and argvalue are separated by argdelimiter.<br>
      * Example addArgument("-p","0","=") will result in the argument being added as -p=0<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
      *
@@ -253,7 +253,7 @@ public class AbstractJob {
 
     /**
      * Add a argument key and File value to the argument List.<br>
-     * The argkey and argvalue are seperated by space.<br>
+     * The argkey and argvalue are separated by space.<br>
      * Example addArgument("-i",new File("f.a")) will result in the argument being added as -i
      * &lt;file name="f.a"&gt;<br>
      * Multiple calls to addArgument results in the arguments being separated by space.
@@ -1652,7 +1652,7 @@ public class AbstractJob {
     }
 
     /**
-     * @param label node lable
+     * @param label node label
      */
     public void setNodeLabel(String label) {
         this.mNodeLabel = label;

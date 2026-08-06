@@ -48,7 +48,7 @@ Launches a script or executable in the container.
 The script:executable is pulled down from a S3 bucket
 identified by the evn variable PEGASUS_AWS_BATCH_BUCKET
 
-Required environment varialbes to be set:
+Required environment variables to be set:
 export PEGASUS_AWS_BATCH_BUCKET=s3://my-bucket
 export PEGASUS_JOB_NAME="my-job"
 

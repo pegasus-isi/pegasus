@@ -21,7 +21,7 @@
 #include "tools.h"
 
 ssize_t
-writen( int fd, const char* buffer, ssize_t n, unsigned restart )
+written( int fd, const char* buffer, ssize_t n, unsigned restart )
 /* purpose: write all n bytes in buffer, if possible at all
  * paramtr: fd (IN): filedescriptor open for writing
  *          buffer (IN): bytes to write (must be at least n byte long)
@@ -56,7 +56,7 @@ showerr( const char* fmt, ... )
   va_end(ap);
 
   /* (almost) atomic write */
-  return writen( STDOUT_FILENO, line, strlen(line), 3 );
+  return written( STDOUT_FILENO, line, strlen(line), 3 );
 }
 
 double

@@ -34,7 +34,7 @@ import java.util.Iterator;
 /**
  * This class aggregates the smaller jobs in a manner such that they are launched at remote end, by
  * mpiexec on n nodes where n is the nodecount associated with the aggregated job that is being
- * lauched by mpiexec. The executable mpiexec is a Pegasus tool distributed in the Pegasus worker
+ * launched by mpiexec. The executable mpiexec is a Pegasus tool distributed in the Pegasus worker
  * package, and can be usually found at $PEGASUS_HOME/bin/mpiexec.
  *
  * @author Karan Vahi vahi@isi.edu
@@ -54,7 +54,7 @@ public class MPIExec extends Abstract {
     }
 
     /**
-     * Initializes the JobAggregator impelementation
+     * Initializes the JobAggregator implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.
@@ -150,17 +150,17 @@ public class MPIExec extends Abstract {
             stdIn = new File(directory, name);
             writer = new BufferedWriter(new FileWriter(stdIn));
 
-            // traverse throught the jobs to determine input/output files
+            // traverse through the jobs to determine input/output files
             // and merge the profiles for the jobs
             int taskid = 1;
             for (Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++) {
                 GraphNode node = it.next();
-                Job constitutentJob = (Job) node.getContent();
+                Job constituentJob = (Job) node.getContent();
 
                 // handle stdin
-                if (constitutentJob instanceof AggregatedJob) {
+                if (constituentJob instanceof AggregatedJob) {
                     // slurp in contents of it's stdin
-                    File file = new File(mDirectory, constitutentJob.getStdIn());
+                    File file = new File(mDirectory, constituentJob.getStdIn());
                     BufferedReader reader = new BufferedReader(new FileReader(file));
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -179,11 +179,11 @@ public class MPIExec extends Abstract {
                     // write out the argument string to the
                     // stdin file for the fat job
 
-                    // genereate the comment string that has the
+                    // generate the comment string that has the
                     // taskid transformation derivation
-                    writer.write(getCommentString(constitutentJob, taskid) + "\n");
+                    writer.write(getCommentString(constituentJob, taskid) + "\n");
 
-                    // the id associated with the task is dependant on whether
+                    // the id associated with the task is dependent on whether
                     // the input file is generated for the whole workflow or
                     // a clustered job. PM-660
                     StringBuffer task = new StringBuffer();
@@ -191,10 +191,10 @@ public class MPIExec extends Abstract {
                             .append(" ")
                             .append(
                                     isClustered
-                                            ? constitutentJob.getLogicalID()
+                                            ? constituentJob.getLogicalID()
                                             : // for file generation for a clustered job we want the
                                             // ID in the DAX
-                                            constitutentJob
+                                            constituentJob
                                                     .getID() // for file generation as part of PMC
                                     // code generator we want the pegasus
                                     // assigned job id
@@ -203,17 +203,17 @@ public class MPIExec extends Abstract {
 
                     // check and add if a job has requested any memory or cpus
                     // JIRA PM-601, PM-620 and PM-621
-                    task.append(getMemoryRequirementsArgument(constitutentJob));
-                    task.append(getCPURequirementsArgument(constitutentJob));
-                    task.append(getPriorityArgument(constitutentJob));
+                    task.append(getMemoryRequirementsArgument(constituentJob));
+                    task.append(getCPURequirementsArgument(constituentJob));
+                    task.append(getPriorityArgument(constituentJob));
 
                     // PM-654 post add the arguments if any specified by pmc_arguments
                     // This needs to go after all other arguments
-                    task.append(getExtraArguments(constitutentJob));
+                    task.append(getExtraArguments(constituentJob));
 
-                    task.append(constitutentJob.getRemoteExecutable())
+                    task.append(constituentJob.getRemoteExecutable())
                             .append(" ")
-                            .append(constitutentJob.getArguments())
+                            .append(constituentJob.getArguments())
                             .append("\n");
                     writer.write(task.toString());
                 }

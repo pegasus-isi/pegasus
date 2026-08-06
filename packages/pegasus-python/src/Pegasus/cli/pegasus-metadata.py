@@ -54,9 +54,8 @@ def configure_logging(verbosity=0):
 
 def get_workflow_uuid(submit_dir):
     bdump_yml = Path(submit_dir) / "braindump.yml"
-    bdump_txt = Path(submit_dir) / "braindump.txt"
 
-    if bdump_yml.exists() is False and bdump_txt.exists() is False:
+    if bdump_yml.exists() is False:
         raise ValueError(f"Not a valid workflow submit directory: {submit_dir!r}")
 
     braindump = utils.slurp_braindb(submit_dir)

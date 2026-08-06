@@ -106,7 +106,7 @@ public class MainEngine extends Engine {
     /**
      * The main function which calls the other engines and does the necessary work.
      *
-     * @return the planned worflow.
+     * @return the planned workflow.
      */
     public ADag runPlanner() {
         String abstractWFName = mOriginalDag.getAbstractWorkflowName();
@@ -117,7 +117,7 @@ public class MainEngine extends Engine {
         // refinement process starting
         mOriginalDag.setWorkflowRefinementStarted(true);
 
-        // PM-1535 we only want to write original proerties in the properties file
+        // PM-1535 we only want to write original properties in the properties file
         // plus some catalog add on defaults.
         PegasusProperties propsBeforePlanning = (PegasusProperties) this.mProps.clone();
 
@@ -185,8 +185,8 @@ public class MainEngine extends Engine {
         mIPEng = null;
         mLogger.logEventCompletion();
 
-        // intialize the deployment engine
-        // requried to setup the TC with the deployed worker package
+        // initialize the deployment engine
+        // required to setup the TC with the deployed worker package
         // executable locations
         DeployWorkerPackage deploy = DeployWorkerPackage.loadDeployWorkerPackage(mBag);
         deploy.initialize(mReducedDag);
@@ -281,7 +281,7 @@ public class MainEngine extends Engine {
         }
 
         try {
-            /* PM-714. The approach does not scale for the planner performace test case.
+            /* PM-714. The approach does not scale for the planner performance test case.
             mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
             ReduceEdges p = new ReduceEdges();
             p.reduce(mReducedDag);
@@ -306,7 +306,7 @@ public class MainEngine extends Engine {
     }
 
     /**
-     * Returns the bag of intialization objects.
+     * Returns the bag of initialization objects.
      *
      * @return PegasusBag
      */
@@ -403,7 +403,7 @@ public class MainEngine extends Engine {
         Properties p = new Properties();
 
         /* PM-1535 for hierarchal workflows dont pass path to parent replica catalog file
-                   unless user have explicilty specified in the parent workflow property file
+                   unless user have explicitly specified in the parent workflow property file
         File replicaFileSource = bag.getReplicaCatalogFileSource();
         if (replicaFileSource != null && replicaFileSource.exists()) {
             p.setProperty(
@@ -412,7 +412,7 @@ public class MainEngine extends Engine {
         }
         */
 
-        // PM-1549 if a output replica catalog is not explicity defined in the properties
+        // PM-1549 if a output replica catalog is not explicitly defined in the properties
         // then we set up a default sqlite based replica catalog in the submit directory
         // for registration purposes
         Properties output =

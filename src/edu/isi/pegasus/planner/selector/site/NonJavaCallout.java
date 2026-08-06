@@ -106,7 +106,7 @@ import java.util.StringTokenizer;
  * </pre>
  *
  * Note, these are two examples. The site selector only returns one line with the appropriate
- * solution. If no site is found to be eligble, the poolhandle should be set to NONE by the site
+ * solution. If no site is found to be eligible, the poolhandle should be set to NONE by the site
  * selector.
  *
  * <p>The temporary file is the corner stone of the communication between the site selecting caller
@@ -130,7 +130,7 @@ import java.util.StringTokenizer;
  * <tr align="left"><th>N</th><th>resource.id</th>
  *  <td>A pool handle, followed by a whitespace, followed by a gridftp server.
  *  Typically, each gridftp server is enumerated once, so you may have multiple
- *  occurances of the same site.</td></tr>
+ *  occurrences of the same site.</td></tr>
  * <tr align="left"><th>M</th><th>input.lfn</th>
  *  <td>An input LFN, optionally followed by a whitespace and filesize.</td></tr>
  * <tr align="left"><th>1</th><th>wf.name</th>
@@ -541,7 +541,7 @@ public class NonJavaCallout extends AbstractPerJob {
      *
      * @param job the job that has to be mapped.
      * @param s is the stdout received from the site selector.
-     * @return boolean indicating if the stdout was succesfully parsed and job populated.
+     * @return boolean indicating if the stdout was successfully parsed and job populated.
      */
     private boolean parseStdOut(Job job, String s) {
         String val = null;
@@ -567,7 +567,7 @@ public class NonJavaCallout extends AbstractPerJob {
 
     /**
      * Creates a temporary file and obtains its name. This method returns the absolute path to a
-     * temporary file in the system's TEMP directory. The file is guarenteed to be unique for the
+     * temporary file in the system's TEMP directory. The file is guaranteed to be unique for the
      * current invocation of the virtual machine.
      *
      * <p>FIXME: However, since we return a filename and not an opened file, race conditions are
@@ -626,7 +626,7 @@ public class NonJavaCallout extends AbstractPerJob {
      * Generates an array of environment variables. The variables are kept in an internal map.
      * Converts the environment variables in the map to the array format.
      *
-     * @return array of enviroment variables set, or <code>null</code> if the map is empty.
+     * @return array of environment variables set, or <code>null</code> if the map is empty.
      * @see #loadEnvironmentVariables()
      */
     private String[] getEnvArrFromMap() {

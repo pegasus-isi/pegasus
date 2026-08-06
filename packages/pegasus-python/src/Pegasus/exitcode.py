@@ -54,7 +54,7 @@ re_parse_pegasuslite_runtime = re.compile(r"^PegasusLite: runtime (\d+)$", re.MU
 # Since we are putting in a new value that we rely on python format option to provide it via {}
 
 # Note: the 4th capturing group is ([^\']*) to match the value enclosed in quotes. If we did (\S+) then
-# trailing " in qouted input value disappears in the generated substituted value. With (\S+)
+# trailing " in quoted input value disappears in the generated substituted value. With (\S+)
 # pegasus_queue = "debug" would translate to pegasus_queue = "long as \4 would have matched to debug" and
 # \5 would be empty.
 sed_pattern_update_pegasus_classads = (
@@ -581,7 +581,7 @@ def _get_sed_pattern(expression, symbols, key, value):
     expression.
 
     :param expression: the expression to apply
-    :param symbols: the variables made available for expression evaulation
+    :param symbols: the variables made available for expression evaluation
     :param key: the key that is being updated
     :param value: current value of the key from the submit file.
     :return:
@@ -869,7 +869,7 @@ def main(args):
 
         try:
             # job failed lets see if we need to change any
-            # pegasus resoruce requirement classads
+            # pegasus resource requirement classads
             if options.update_submit_file:
                 if SUBMIT_FILE_UPDATE_ENABLED:
                     update_job_submit_file(outfile, retry=options.job_retry)

@@ -67,13 +67,13 @@ public class Call extends VDL implements HasPass, Serializable {
 
     /**
      * Any <code>Transformation</code> may exist in multiple versions. This argument specifies the
-     * minimum permissable version that can be used. FIXME: versioning is not really supported.
+     * minimum permissible version that can be used. FIXME: versioning is not really supported.
      */
     private String m_maxIncludeVersion;
 
     /**
      * Any <code>Transformation</code> may exist in multiple versions. This argument specifies the
-     * maximum permissable version that can be used. FIXME: versioning is not really supported.
+     * maximum permissible version that can be used. FIXME: versioning is not really supported.
      */
     private String m_minIncludeVersion;
 
@@ -111,12 +111,12 @@ public class Call extends VDL implements HasPass, Serializable {
     }
 
     /**
-     * Convenience ctor: Supplies the used <code>Transformation</code> as well as the permissable
+     * Convenience ctor: Supplies the used <code>Transformation</code> as well as the permissible
      * version range.
      *
      * @param uses is the name of the <code>Transformation</code>.
-     * @param min is the minimum inclusive permissable version.
-     * @param max is the maximum inclusive permissable version.
+     * @param min is the minimum inclusive permissible version.
+     * @param max is the maximum inclusive permissible version.
      * @see Transformation
      */
     public Call(String uses, String min, String max) {
@@ -203,7 +203,7 @@ public class Call extends VDL implements HasPass, Serializable {
     }
 
     /**
-     * Accessor: Obtains the maximum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the maximum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the maximum inclusive version number.
@@ -214,7 +214,7 @@ public class Call extends VDL implements HasPass, Serializable {
     }
 
     /**
-     * Accessor: Obtains the minimum inclusive version permissable for binding to a {@link
+     * Accessor: Obtains the minimum inclusive version permissible for binding to a {@link
      * Transformation}.
      *
      * @return the minimum inclusive version number.
@@ -350,7 +350,7 @@ public class Call extends VDL implements HasPass, Serializable {
     }
 
     /**
-     * Accessor: Sets the maximum inclusive permissable version of a logical transformation to run
+     * Accessor: Sets the maximum inclusive permissible version of a logical transformation to run
      * with.
      *
      * @param miv is the (new) maximum inclusive version.
@@ -361,7 +361,7 @@ public class Call extends VDL implements HasPass, Serializable {
     }
 
     /**
-     * Accessor: Sets the minimum inclusive permissable version of a logical transformation to run
+     * Accessor: Sets the minimum inclusive permissible version of a logical transformation to run
      * with.
      *
      * @param miv is the (new) minimum inclusive version.

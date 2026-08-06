@@ -121,7 +121,7 @@ pegasus-run reads its properties from several locations.
    *$HOME/.pegasusrc*
 
    The merge logic is CONF PROPERTIES \|\| DEFAULT RUNDIR PROPERTIES
-   \|\| PEGASUSRC overriden by Command line properties
+   \|\| PEGASUSRC overridden by Command line properties
 
 
 

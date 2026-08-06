@@ -377,28 +377,18 @@ Docs:
   image: pegasus/buildenv:rhel_9
   before_script:
   - env
-  #- set -ex
-  #- yum install -y epel-release
-  #- yum install -y --enablerepo=devel git ant perl python3 python3-pip R-devel
-  #- pip3 install tox
   script:
   - make clean build-java doc-dist
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz
+    - doc/sphinx/build.log
+    - doc/sphinx/warn.log
   dependencies: []
   tags:
   - docker
 
 # Deploy packages
-
-# Deploy Python:
-#   stage: deploy
-#   image: pegasus/buildenv:rhel_8
-#   dependencies:
-#   - 'Python'
-#   script:
-#   - find packages -type d
 
 Binaries:
   stage: deploy
@@ -615,7 +605,8 @@ Workflow Tests:
       - 047-cwl-docker-black-diamond
       - 048-black-deep-condorio
       - 048-black-deep-condorio-local
-      - 049-pycbc-search
+      - 049-pycbc-search py311_26.3.2-2
+      - 049-pycbc-search py313_26.3.2-2
       - 050-singularity-container-universe nonsharedfs
       - 050-singularity-container-universe nonsharedfs-shared
       - 050-singularity-container-universe nonsharedfs-symlink
@@ -639,6 +630,10 @@ Workflow Tests:
   - /tmp/pegasus-venv/bin/pip install dist/pegasus_wms-*.whl
   - export PATH=/tmp/pegasus-venv/bin:${PATH}
   - ./test/scripts/${EXEC} ${TESTNAME}
+  artifacts:
+    when: on_failure
+    paths:
+    - test/core/${TESTNAME}/submit
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:

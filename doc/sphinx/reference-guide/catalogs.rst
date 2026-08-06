@@ -157,7 +157,7 @@ safe purposes in any way. Multiple concurrent instances will conflict
 with each other. The site attribute should be specified whenever
 possible. The attribute key for the site attribute is **"site".**
 
-In addition users can specifiy regular expression based LFN's. A regular
+In addition users can specify regular expression based LFN's. A regular
 expression based entry should be qualified with an attribute named
 'regex'. The attribute regex when set to true identifies the catalog
 entry as a regular expression based entry. Regular expressions should
@@ -168,8 +168,8 @@ For example, consider a replica catalog as shown below.
 Entry 1 refers to an entry which does not use a regular expressions.
 This entry would only match a file named 'f.a', and nothing else.
 
-Entry 2 referes to an entry which uses a regular expression. In this
-entry f.a referes to files having name as f<any-character>a i.e. faa,
+Entry 2 refers to an entry which uses a regular expression. In this
+entry f.a refers to files having name as f<any-character>a i.e. faa,
 f.a, f0a, etc.
 
 ::
@@ -188,7 +188,7 @@ PFN.
 
 For the entry below if the file being looked up is alpha.csv, the PFN
 for the file would be generated as
-file:///Volumes/data/input/csv/alpha.csv. Similary if the file being
+file:///Volumes/data/input/csv/alpha.csv. Similarly if the file being
 lookedup was alpha.csv, the PFN for the file would be generated as
 file:///Volumes/data/input/xml/alpha.xml i.e. The section [0], [1] will
 be replaced. Section [0] refers to the entire string i.e. alpha.csv.
@@ -419,7 +419,7 @@ located in **$HOME/rc** using the pegasus-rc-client. Replace the
    $ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
     f.a gsiftp://somehost:port/path/to/file/f.a site=local
 
-You may first want to verify that the file registeration is in the
+You may first want to verify that the file registration is in the
 replica catalog. Since we are using a File catalog we can look at the
 file **$HOME/rc** to view entries.
 
@@ -486,7 +486,7 @@ Described below are some of the entries in the site catalog.
 
    For each of the directories, you can specify access methods. Allowed
    methods are **put**, **get**, and **all** which means both put and
-   get. For each mehod, specify a URL including the protocol. For
+   get. For each method, specify a URL including the protocol. For
    example, if you want share data via http using the /var/www/staging
    directory, you can use scp://hostname/var/www for the put element and
    http://hostname/staging for the get element. Also for each shared-*
@@ -666,6 +666,217 @@ can be used to generate a new Site Catalog programmatically.
             - {url: 'http://obelix.isi.edu/data', operation: get}
 
 
+.. _sc-job-tagging:
+
+Job Tagging
+-----------
+
+Job tagging allows individual jobs to carry a *tag* (a short string such as
+``gpu`` or ``cpu``) that the planner uses to look up and overlay additional
+profiles from the site catalog.  This makes it possible to write a
+site-agnostic workflow generator: the workflow code sets a tag on each job,
+and the site-specific resource details (queue, GPU count, container
+arguments, etc.) are encoded entirely in the site catalog.
+
+How it works
+~~~~~~~~~~~~
+
+1. **Tag a job** by setting the ``tag`` key in the ``pegasus`` profile
+   namespace, either in the workflow API or in a transformation catalog entry.
+
+2. **Define per-tag profiles** in the site catalog under the ``x-tags`` list
+   of the site entry.  Each element has a ``name`` (matching the job tag) and
+   a ``profiles`` block.
+
+When the planner maps a job to a site it first applies the site's base
+``profiles``, then — if the job carries a ``tag`` that matches an entry in
+``x-tags`` — overlays the tag-specific profiles on top.  Tag profiles follow
+the same precedence rules as all other profile sources: they override what
+was already set from the site's base profiles.
+
+Site Catalog ``x-tags`` syntax
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add an ``x-tags`` list to any site entry.  Each element specifies the tag
+name and the profiles to apply when a job with that tag is mapped to this
+site:
+
+.. code-block:: yaml
+
+    sites:
+    - name: compute
+      profiles:
+        pegasus:
+          style: glite
+          queue: debug
+          glite.arguments: -C cpu    # default — applied to all jobs
+      x-tags:
+       - name: gpu
+         profiles:
+           pegasus:
+             glite.arguments: -C gpu
+             gpus: 1
+             queue: regular
+       - name: cpu
+         profiles:
+           pegasus:
+             cores: 1
+             glite.arguments: -C cpu
+             container.arguments: --module none
+
+The ``x-tags`` block is **optional**.  Sites without it behave exactly as
+before — all jobs receive only the base profiles.
+
+Tagging a job in the Python API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use :py:meth:`add_pegasus_profile` with the ``tag`` keyword:
+
+.. code-block:: python
+
+    from Pegasus.api import *
+
+    wf = Workflow("my-workflow")
+    j_cpu = Job("analyze").add_pegasus_profile(tag="cpu")
+    j_gpu = Job("train").add_pegasus_profile(tag="gpu")
+    wf.add_jobs(j_cpu, j_gpu)
+
+
+.. note::
+
+    You can associate a tag with the job only in the abstract workflow. The job tag profile
+    does not get picked up if specified in the Transformation Catalog.
+
+
+Example — NERSC Perlmutter (CPU vs GPU)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `NERSC Perlmutter hosted site catalog
+<https://github.com/pegasushub/pegasus-site-catalogs/blob/main/conf/nersc-perlmutter.yml>`_
+illustrates a real-world use of ``x-tags``.  CPU jobs request one core and
+disable any GPU container modules, while GPU jobs switch to the ``regular``
+partition and request a GPU via the Shifter ``-C gpu`` flag:
+
+.. tabs::
+
+    .. code-tab:: python generate_sc.py
+
+        from Pegasus.api import *
+
+        sc = SiteCatalog()
+
+        perlmutter = Site("compute")
+
+        # Scratch and output directories on the CFS community filesystem
+        perlmutter.add_directories(
+            Directory(
+                Directory.SHARED_SCRATCH,
+                "/global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch",
+                shared_file_system=False,
+            ).add_file_servers(
+                FileServer(
+                    "file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch",
+                    Operation.ALL,
+                )
+            ),
+            Directory(
+                Directory.LOCAL_STORAGE,
+                "/global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs",
+                shared_file_system=False,
+            ).add_file_servers(
+                FileServer(
+                    "file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs",
+                    Operation.ALL,
+                )
+            ),
+        )
+
+        # SFAPI grid entry targeting Perlmutter via Slurm
+        perlmutter.add_grids(
+            Grid(Grid.SFAPI, "perlmutter", Scheduler.SLURM, job_type=SupportedJobs.COMPUTE)
+        )
+
+        # Base profiles applied to every job mapped to this site
+        perlmutter.add_pegasus_profile(
+            style="glite",
+            queue="debug",
+            project="${RESOURCE_PROJECT}",
+            memory=1024,
+            runtime=1800,
+        )
+        perlmutter.add_pegasus_profile(key="clusters.num", value=2)
+        perlmutter.add_pegasus_profile(key="glite.arguments", value="-C cpu")
+
+        # Per-tag profile overrides — applied on top of base profiles when a
+        # job carries a matching pegasus.tag profile
+        perlmutter.add_tag_profiles(
+            "gpu", Namespace.PEGASUS, key="glite.arguments", value="-C gpu"
+        )
+        perlmutter.add_tag_profiles("gpu", Namespace.PEGASUS, gpus=1, queue="regular")
+
+        perlmutter.add_tag_profiles("cpu", Namespace.PEGASUS, cores=1)
+        perlmutter.add_tag_profiles(
+            "cpu", Namespace.PEGASUS, key="glite.arguments", value="-C cpu"
+        )
+        perlmutter.add_tag_profiles(
+            "cpu", Namespace.PEGASUS, key="container.arguments", value="--module none"
+        )
+
+        sc.add_sites(perlmutter)
+        sc.write()
+
+    .. code-tab:: yaml YAML SC
+
+        pegasus: '5.0'
+        sites:
+        - name: compute
+          directories:
+          - type: sharedScratch
+            path: /global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch
+            sharedFileSystem: false
+            fileServers:
+            - url: file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-scratch
+              operation: all
+          - type: localStorage
+            path: /global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs
+            sharedFileSystem: false
+            fileServers:
+            - url: file:///global/cfs/cdirs/${RESOURCE_PROJECT}/${RESOURCE_USERNAME}/wf-outputs
+              operation: all
+          grids:
+          - type: sfapi
+            contact: perlmutter
+            scheduler: slurm
+            jobtype: compute
+          profiles:
+            pegasus:
+              clusters.num: 2
+              glite.arguments: -C cpu
+              memory: 1024
+              project: ${RESOURCE_PROJECT}
+              queue: debug
+              runtime: 1800
+              style: glite
+          x-tags:
+          - name: gpu
+            profiles:
+              pegasus:
+                glite.arguments: -C gpu
+                gpus: 1
+                queue: regular
+          - name: cpu
+            profiles:
+              pegasus:
+                container.arguments: --module none
+                cores: 1
+                glite.arguments: -C cpu
+
+A workflow that runs both CPU pre-processing and GPU training jobs can then
+use the same site catalog entry on any SFAPI-enabled cluster simply by
+changing the hosted catalog reference — no changes to the workflow code are
+required.
+
+
 .. _sc-GitHub:
 
 Centrally hosted Site Catalogs
@@ -792,7 +1003,7 @@ a property of the form
 **pegasus.catalog.site.sites.[sitename].profiles.[namespace].key**
 
 For example, going back to previous usecase of changing the queue
-specfiied in the site catalog, you can specify the following
+specified in the site catalog, you can specify the following
 in your properties
 
 ::
@@ -1019,7 +1230,7 @@ behavior of this implementation.
 MultiLine Text based TC (Text)
 ------------------------------
 
-The multile line text based TC is the new default TC in Pegasus. This
+The multiple line text based TC is the new default TC in Pegasus. This
 format allows you to define the transformations
 
 The file is read and cached in memory. Any modifications, as adding or
@@ -1254,7 +1465,7 @@ given below.
    $ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 
    2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
-   2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  sample.tc.text
+   2010.11.22 12:53:16.666 PST:   The output transformation catalog is in file  sample.tc.text
 
 To use the converted transformation catalog, in the properties do the
 following:

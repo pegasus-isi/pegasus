@@ -194,7 +194,7 @@ static void helpMe(const AppInfo* run) {
             " -L lbl\tReflects the workflow label into record, no default.\n"
             " -T iso\tReflects the workflow time stamp into record, no default.\n"
             " -H\tOmit <?xml ...?> header and <machine> from record. This is used\n"
-            "   \tin clustered jobs to supress duplicate information.\n"
+            "   \tin clustered jobs to suppress duplicate information.\n"
             " -I fn\tReads job and args from the file fn, one arg per line.\n"
             " -V\tDisplays the version and exit.\n"
             " -X\tMakes the application executable, no matter what.\n"

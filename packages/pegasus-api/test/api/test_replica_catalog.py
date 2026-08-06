@@ -100,7 +100,7 @@ class TestFile:
     def test_repr(self):
         assert repr(File("a")) == "<File a>"
 
-    def test_tojson_with_metdata(self, convert_yaml_schemas_to_json, load_schema):
+    def test_tojson_with_metadata(self, convert_yaml_schemas_to_json, load_schema):
         result = File("lfn", size=2048).add_metadata(key="value").__json__()
         expected = {
             "lfn": "lfn",
@@ -113,7 +113,7 @@ class TestFile:
 
         assert result == expected
 
-    def test_tojson_forplanning_with_metdata(self):
+    def test_tojson_forplanning_with_metadata(self):
         result = (
             File("subwf_tc.yml", size=1024, for_planning=True)
             .add_metadata(creator="zaiyan")

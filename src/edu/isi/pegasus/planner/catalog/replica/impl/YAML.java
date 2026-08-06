@@ -121,7 +121,7 @@ import java.util.regex.Pattern;
  *      pfns:
  *        - site: local
  *          pfn: input/mono/[0]
- *          # cant have checksum
+ *          # can't have checksum
  *      metadata:
  *        owner: pegasus
  *        regex: true
@@ -217,7 +217,7 @@ public class YAML implements ReplicaCatalog {
         if (replicaFile.exists() && validate(replicaFile, SCHEMA_FILE)) {
             Reader reader = null;
             try {
-                reader = new VariableExpansionReader(new FileReader(filename));
+                reader = new VariableExpansionReader(new FileReader(filename), null);
 
                 // GH-2113 set loader options correctly
                 LoaderOptions loaderOptions = new LoaderOptions();
@@ -286,7 +286,7 @@ public class YAML implements ReplicaCatalog {
         boolean validate = true;
         Reader reader = null;
         try {
-            reader = new VariableExpansionReader(new FileReader(f));
+            reader = new VariableExpansionReader(new FileReader(f), null);
         } catch (IOException ioe) {
             throw new ReplicaCatalogException(ioe);
         }
@@ -1179,7 +1179,7 @@ public class YAML implements ReplicaCatalog {
          *      pfns:
          *        - site: local
          *          pfn: input/mono/[0]
-         *          # cant have checksum
+         *          # can't have checksum
          *      metadata:
          *        owner: pegasus
          *        regex: true
@@ -1198,7 +1198,7 @@ public class YAML implements ReplicaCatalog {
             JsonNode node = oc.readTree(parser);
             YAML yamlRC = (YAML) dc.findInjectableValue("callback", null, null);
             if (yamlRC == null) {
-                throw new RuntimeException("Callback not initialized when parsing inititated");
+                throw new RuntimeException("Callback not initialized when parsing initiated");
             }
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> e = it.next();

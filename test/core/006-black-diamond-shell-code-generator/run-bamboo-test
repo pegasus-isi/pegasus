@@ -8,7 +8,7 @@ TOPDIR=`pwd`
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/submit/$RUN_ID
+RUN_DIR=`pwd`/submit/$RUN_ID
 
 # generate the input file
 echo "This is sample input to KEG" > f.a
@@ -43,11 +43,11 @@ sites:
       url: "file://$TOPDIR/outputs"
    -
     type: "sharedScratch"
-    path: "$TOPDIR/work"
+    path: "$TOPDIR/shared-scratch"
     fileServers:
      -
       operation: "all"
-      url: "file://$TOPDIR/work"
+      url: "file://$TOPDIR/shared-scratch"
   profiles:
     env:
       SSH_PRIVATE_KEY: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
@@ -60,7 +60,7 @@ pegasus-plan \
     -Dpegasus.code.generator=Shell \
     --conf pegasusrc \
     --sites local \
-    --dir work/submit \
+    --dir submit \
     --relative-submit-dir ${RUN_ID} \
     --output-sites local \
     --cleanup leaf \

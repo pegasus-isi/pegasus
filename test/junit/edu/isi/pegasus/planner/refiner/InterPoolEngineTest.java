@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -179,6 +180,34 @@ public class InterPoolEngineTest {
         assertThat(engine.incorporateHint(j, Selector.EXECUTION_SITE_KEY), is(true));
         // selector profile is preferred
         assertThat(j.getSiteHandle(), is(site));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void validateStageablePFNRejectsBareFilename() {
+        mLogger.logEventStart(
+                "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
+        InterPoolEngine engine = new InterPoolEngine(new ADag(), mBag);
+        TransformationCatalogEntry entry = new TransformationCatalogEntry(null, "script.sh", null);
+        entry.setPhysicalTransformation("script.sh");
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> engine.validateStageablePFN(entry));
+        assertThat(
+                e.getMessage(),
+                is(
+                        "Transformation script.sh has invalid pfn: 'script.sh'. The pfn for a"
+                                + " stageable executable must be an absolute path or a URL."));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
+    public void validateStageablePFNAcceptsAbsolutePath() {
+        mLogger.logEventStart(
+                "test.refiner.interpoolengine", "set", Integer.toString(mTestNumber++));
+        InterPoolEngine engine = new InterPoolEngine(new ADag(), mBag);
+        TransformationCatalogEntry entry = new TransformationCatalogEntry(null, "script.sh", null);
+        entry.setPhysicalTransformation("/path/to/script.sh");
+        engine.validateStageablePFN(entry);
         mLogger.logEventCompletion();
     }
 }

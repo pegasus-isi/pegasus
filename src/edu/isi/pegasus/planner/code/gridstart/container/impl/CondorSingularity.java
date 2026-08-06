@@ -47,7 +47,7 @@ public class CondorSingularity extends AbstractContainer {
     private PlannerCache mPlannerCache;
 
     /**
-     * Initiailizes the Container shell wrapper
+     * Initializes the Container shell wrapper
      *
      * @param bag
      * @param dag

@@ -127,7 +127,7 @@ public class Oracle extends DatabaseDriver {
      * NULL into auto-increment value should use this method to return the inserted ID value via the
      * statements getGeneratedKeys(). Other JDBC drivers should treat return the parametric id.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.

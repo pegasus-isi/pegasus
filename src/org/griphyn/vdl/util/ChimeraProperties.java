@@ -187,7 +187,7 @@ public class ChimeraProperties {
 
     /**
      * Gets the location the VDLx XML schema from properties, if available. Please note that the
-     * schema location URL in the instance document is only a hint, and may be overriden by the
+     * schema location URL in the instance document is only a hint, and may be overridden by the
      * findings of this method.
      *
      * @return a location pointing to a definition document of the XML schema that can read VDLx.
@@ -206,7 +206,7 @@ public class ChimeraProperties {
 
     /**
      * Gets the location of the DAX XML schema from properties, if available. Please note that the
-     * schema location URL in the instance document is only a hint, and may be overriden by the
+     * schema location URL in the instance document is only a hint, and may be overridden by the
      * findings of this method.
      *
      * @return a location pointing to a definition document of the XML schema that can read DAX.
@@ -225,8 +225,8 @@ public class ChimeraProperties {
 
     /**
      * Helps the load database to locate the invocation record XML schema, if available. Please note
-     * that the schema location URL in the instance document is only a hint, and may be overriden by
-     * the findings of this method.
+     * that the schema location URL in the instance document is only a hint, and may be overridden
+     * by the findings of this method.
      *
      * @return a location pointing to a definition document of the XML schema that can read DAX.
      *     Result may be null, if such a document is unknown or unspecified.
@@ -346,7 +346,7 @@ public class ChimeraProperties {
     }
 
     /**
-     * Gets the name of the replica catalog implementating class from the properties.
+     * Gets the name of the replica catalog implementing class from the properties.
      *
      * @param dbReplicaPrefix is the replica catalog class name in the properties file.
      * @return the replica catalog implementing class name, result may be null, if such property is

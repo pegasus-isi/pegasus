@@ -86,7 +86,7 @@ Options
    This way, multiple workflow files can be stored in the same
    directory. **pegasus-analyzer** has built-in logic to find the
    specific *jobstate.log* file by looking at the workflow
-   *braindump.txt* file first and figuring out the corresponding
+   *braindump.yml* file first and figuring out the corresponding
    *wf_uuid.* If *output_dir* does not exist, it will be created.
 
 **--dag** 'dag_filename
@@ -138,7 +138,7 @@ Options
    This option is used to specify an alternative property file, which
    may contain the path to the database to be used by
    **pegasus-analyzer**. If this option is not specified, the config
-   file specified in the **braindump.txt** file will take precedence.
+   file specified in the **braindump.yml** file will take precedence.
 
 **--files**
    This option allows users to run **pegasus-analyzer** using the files

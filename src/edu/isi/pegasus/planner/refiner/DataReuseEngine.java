@@ -326,12 +326,12 @@ public class DataReuseEngine extends Engine implements Refiner {
      *  )
      * </pre>
      *
-     * @param workflow the worfklow to be deduced
+     * @param workflow the workflow to be deduced
      * @param originalJobsInRC list of nodes found to be in the Replica Catalog.
      */
     protected Graph cascadeDeletionUpwards(Graph workflow, List<GraphNode> originalJobsInRC) {
 
-        // sanity intialization of all nodes depth
+        // sanity initialization of all nodes depth
         // also associate a boolean bag with the nodes
         // that tracks whether a node has been marked for deletion or not
         for (Iterator it = workflow.nodeIterator(); it.hasNext(); ) {
@@ -340,7 +340,7 @@ public class DataReuseEngine extends Engine implements Refiner {
             node.setBag(bag);
         }
 
-        // PM-756 the boolean value assoicated with the bag is treated
+        // PM-756 the boolean value associated with the bag is treated
         // to mean that the node is marked for deletion.
         // all jobs whose files were in the RC are marked for deletion initially
         for (GraphNode job : originalJobsInRC) {

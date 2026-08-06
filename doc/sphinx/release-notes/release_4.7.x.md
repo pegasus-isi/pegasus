@@ -21,7 +21,7 @@ in the Pegasus Jira
 
    JGlobus is no longer actively supported and is not in compliance
    with RFC 2818
-   (https://docs.globus.org/security-bulletins/2015-12-strict-mode). As
+   . As
    a result cleanup jobs using pegasus-gridftp client would fail
    against the servers supporting the strict mode. We have removed the
    pegasus-gridftp client and now use gfal clients as globus-url-copy
@@ -129,7 +129,7 @@ break for users running with HTCondor 8.5.8 or higher.
 
 #### Bugs Fixed
 
-1) [PM-1132] – Hashed staging mapper doen’t work correctly with sub [\#1246](https://github.com/pegasus-isi/pegasus/issues/1246)
+1) [PM-1132] – Hashed staging mapper doesn’t work correctly with sub [\#1246](https://github.com/pegasus-isi/pegasus/issues/1246)
    dax generation jobs
 
    For large workflows with dax generation jobs, the planning broke
@@ -246,7 +246,7 @@ New features and Improvements in 4.7.0 are
    properties
 
    pegasus.dir.submit.mapper.hashed.levels         the number of
-   directory levels used to accomodate the files. Defaults to 2.
+   directory levels used to accommodate the files. Defaults to 2.
    pegasus.dir.submit.mapper.hashed.multiplier      the number of
    files associated with a job in the submit directory. defaults to    5.
 

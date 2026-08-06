@@ -299,7 +299,7 @@ public class Transformation {
                     writer.writeAttribute("name", f.getName());
                     // PM-1316 data files should explicitly have executable set to false
                     // to override the default attribute value for this in the schema for
-                    // occurences of uses in the transformation element
+                    // occurrences of uses in the transformation element
                     writer.writeAttribute("executable", "false");
                     writer.endElement();
                 } else if (c.getClass() == Executable.class) {

@@ -44,7 +44,7 @@ public class Panda extends GLite {
      * Applies the CREAM CE style to the job.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
         // construct the grid_resource for the job
@@ -70,7 +70,7 @@ public class Panda extends GLite {
      *
      * @param job the job
      * @return the grid_resource entry
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     protected String constructGridResource(Job job) throws CondorStyleException {
         StringBuilder gridResource = new StringBuilder();

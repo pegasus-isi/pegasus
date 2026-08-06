@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The base namespace class that all the othernamepsace handling classes extend. Some constants are
+ * The base namespace class that all the othernamespace handling classes extend. Some constants are
  * defined.
  *
  * @author Karan Vahi
@@ -139,7 +139,7 @@ public abstract class Namespace /*extends Data*/ {
 
     /**
      * Singleton access to the deprecated table that holds the deprecated keys, and the keys that
-     * replace them. It should be overriden in the namespaces, that have deprecated keys.
+     * replace them. It should be overridden in the namespaces, that have deprecated keys.
      *
      * @return Map
      */
@@ -183,11 +183,11 @@ public abstract class Namespace /*extends Data*/ {
 
     /**
      * It takes in a Profiles object and puts them into the namespace after checking if the
-     * namespace in the Profile object is same as the namepsace implementation.
+     * namespace in the Profile object is same as the namespace implementation.
      *
      * @param profile the <code>Profile</code> object containing the key and value.
      * @exception IllegalArgumentException if the namespace in the profile is not the same as the
-     *     profile namepsace in which the profile is being incorporated.
+     *     profile namespace in which the profile is being incorporated.
      * @see edu.isi.pegasus.planner.classes.Profile
      */
     public void checkKeyInNS(Profile profile) throws IllegalArgumentException {

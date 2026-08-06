@@ -33,7 +33,7 @@ public interface JobAggregator {
     public static final String VERSION = "1.5";
 
     /**
-     * Initializes the JobAggregator impelementation
+     * Initializes the JobAggregator implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.

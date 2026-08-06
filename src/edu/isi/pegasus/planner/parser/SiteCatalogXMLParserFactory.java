@@ -61,7 +61,7 @@ public class SiteCatalogXMLParserFactory {
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param connectProps the connection properties without the site catalog prefix
      * @param file the site catalog file
      * @param sites the list of sites that need to be parsed. * means all
@@ -98,7 +98,7 @@ public class SiteCatalogXMLParserFactory {
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
                 // append .0 to the version number
-                // to be able to convert to numberic value
+                // to be able to convert to numeric value
                 schemaVersion = schemaVersion + ".0";
             }
 
@@ -111,8 +111,8 @@ public class SiteCatalogXMLParserFactory {
                         "Guessing schema version from schema location " + schemaLocation,
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 // split on whitespace
-                String constitutents[] = schemaLocation.split(file);
-                schemaLocation = constitutents[constitutents.length - 1];
+                String constituents[] = schemaLocation.split(file);
+                schemaLocation = constituents[constituents.length - 1];
 
                 // get the basename
                 String schema = new File(schemaLocation).getName();
@@ -126,7 +126,7 @@ public class SiteCatalogXMLParserFactory {
                             LogManager.DEBUG_MESSAGE_LEVEL);
 
                     // append .0 to the version number
-                    // to be able to convert to numberic value
+                    // to be able to convert to numeric value
                     schemaVersion = schemaVersion + ".0";
                 }
             }
@@ -162,7 +162,7 @@ public class SiteCatalogXMLParserFactory {
      * the user.
      *
      * @param classname the classname of the parser class that needs to be loaded
-     * @param bag bag of Pegasus intialization objects
+     * @param bag bag of Pegasus initialization objects
      * @param connectProps the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all
      * @return the DAXParser loaded.
@@ -247,7 +247,7 @@ class SiteCatalogXMLMetadataParser extends XMLParser {
     /**
      * The overloaded constructor
      *
-     * @param bag the bag of intiialization documents
+     * @param bag the bag of initialization documents
      * @param element the root element
      */
     public SiteCatalogXMLMetadataParser(PegasusBag bag, String element) {
@@ -258,7 +258,7 @@ class SiteCatalogXMLMetadataParser extends XMLParser {
     }
 
     /**
-     * Returns the metadata/attributes assoicated with the element that was parsed for.
+     * Returns the metadata/attributes associated with the element that was parsed for.
      *
      * @return
      */

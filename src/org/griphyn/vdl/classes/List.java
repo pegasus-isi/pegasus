@@ -80,7 +80,7 @@ public class List extends Value implements Cloneable, Serializable {
      * This method determines which container is being used in the abstract base class in order to
      * kludgy statements when printing debug info.
      *
-     * @return the symblic identifier for the type of the Value.
+     * @return the symbolic identifier for the type of the Value.
      */
     public String getSymbolicType() {
         // always
@@ -315,7 +315,7 @@ public class List extends Value implements Cloneable, Serializable {
 
     /**
      * Dumps the list and all its contents into a string. The list will be terminated by brackets,
-     * elements separated by komma, space. Elements itself will be dumped by recursive calls to the
+     * elements separated by comma, space. Elements itself will be dumped by recursive calls to the
      * element specific method of the same name.
      *
      * @param stream is a stream opened and ready for writing. This can also be a string stream for

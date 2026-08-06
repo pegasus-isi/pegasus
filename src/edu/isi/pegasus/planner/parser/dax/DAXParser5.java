@@ -127,7 +127,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
     public void parse(String file) {
         Reader reader;
         try {
-            reader = new VariableExpansionReader(new FileReader(file));
+            reader = new VariableExpansionReader(new FileReader(file), this.mProps);
         } catch (IOException ioe) {
             throw new RuntimeException("Exception while reading file " + file, ioe);
         }
@@ -168,7 +168,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
                 throws IOException, JsonProcessingException {
             Callback c = (Callback) dc.findInjectableValue("callback", null, null);
             if (c == null) {
-                throw new RuntimeException("Callback not initialized when parsing inititated");
+                throw new RuntimeException("Callback not initialized when parsing initiated");
             }
             ObjectCodec oc = parser.getCodec();
             JsonNode node = oc.readTree(parser);

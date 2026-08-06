@@ -61,4 +61,4 @@ The codebase is ~8 C source files with matching headers:
 - snake_case for variables, PascalCase for typedef'd structs (`Job`, `Jobs`, `Signals`)
 - Module-prefixed functions: `job_done()`, `jobs_init()`, `jobs_first_slot()`
 - Comment style: `/* paramtr/returns */` blocks for function documentation
-- Atomic writes via `writen()` for signal safety
+- Atomic writes via `written()` for signal safety

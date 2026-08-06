@@ -28,7 +28,7 @@ in the input file must be topologically sorted.
 Applications are usually using **pegasus-kickstart** to execute. In the
 **pegasus-kickstart** case, all invocations of **pegasus-kickstart**
 except the first should add the **pegasus-kickstart** option *-H* to
-supress repeating the XML preamble and certain other headers of no
+suppress repeating the XML preamble and certain other headers of no
 interest when repeated.
 
 **pegasus-cluster** permits shell-style quoting. One level of quoting is
@@ -48,7 +48,7 @@ Arguments
    This flag turns on the old behavior of **pegasus-cluster** to always
    run everything *and* return success no matter what. The **-e** flag
    is mutually exclusive with the **-f** flag. By default, all
-   applications are executed regardles of failures. Any detected
+   applications are executed regardless of failures. Any detected
    application failure results in a non-zero exit status from
    **pegasus-cluster**.
 

@@ -357,7 +357,7 @@ class BaseAnalyze:
                         BaseAnalyze.print_console(" " + dagman_lib_err_contents)
 
     def print_console(stmt="") -> None:
-        """A utilty function to print to console with the correct indentation."""
+        """A utility function to print to console with the correct indentation."""
         print(indent + stmt)
 
     def backticks(cmd_line) -> None:
@@ -370,7 +370,7 @@ class BaseAnalyze:
 
     def addon(options):
         """This function constructs a command line invocation that needs to be passed for invoking for a sub workflow.
-        Only a certain subset of options are propogated to the sub workflow invocations if passed.
+        Only a certain subset of options are propagated to the sub workflow invocations if passed.
         """
         cmd_line_args = ""
 
@@ -891,7 +891,7 @@ class AnalyzeDB(BaseAnalyze):
                 else WORKFLOW_STATUS.FAILURE
             )
         else:
-            raise ValueError(f"Invalid worklfow state {last_wf_state}")
+            raise ValueError(f"Invalid workflow state {last_wf_state}")
 
         return workflow_status
 
@@ -978,7 +978,7 @@ class AnalyzeFiles(BaseAnalyze):
                 "jobstate.log older than the dagman.out file, workflow logs may not be up to date..."
             )
 
-        # Try to parse workflow parameters from braindump.txt file
+        # Try to parse workflow parameters from braindump.yml file
         wfparams = utils.slurp_braindb(self.options.input_dir)
         if "submit_dir" in wfparams:
             self.options.workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
@@ -1111,12 +1111,12 @@ class AnalyzeFiles(BaseAnalyze):
         try:
             my_wf_params = utils.slurp_braindb(input_dir)
         except Exception:
-            raise AnalyzerError("cannot read braindump.txt file... exiting...")
+            raise AnalyzerError("cannot read braindump.yml file... exiting...")
 
         if "wf_uuid" in my_wf_params:
             return my_wf_params["wf_uuid"] + "-" + self.jsdl_filename
 
-        raise AnalyzerError("braindump.txt does not contain wf_uuid... exiting...")
+        raise AnalyzerError("braindump.yml does not contain wf_uuid... exiting...")
 
     def parse_dag_file(self, dag_fn) -> None:
         """This function walks through the dag file, learning about
@@ -1582,7 +1582,7 @@ class DebugWF(BaseAnalyze):
             # and checking the exit code, otherwise $? will break...
             debug_script.write("# Check error code\n")
             debug_script.write("rc=$?\n")
-            # reenable fail on error before launching
+            # re-enable fail on error before launching
             debug_script.write("set -e\n")
             debug_script.write("if [ $rc -eq 0 ]; then\n")
             debug_script.write('   echo "executable ran successfully"\n')

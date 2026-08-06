@@ -181,7 +181,7 @@ class WorkerPackageCallback implements StreamGobblerCallback {
     }
 
     /**
-     * Callback whenever a line is read from the stream by the StreamGobbler. Counts the occurences
+     * Callback whenever a line is read from the stream by the StreamGobbler. Counts the occurrences
      * of the word that are in the line, and increments to the global counter.
      *
      * @param line the line that is read.

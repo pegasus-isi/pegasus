@@ -7,7 +7,7 @@ TOP_DIR=`pwd`
 export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
@@ -32,7 +32,7 @@ cat $HOME/.jdbcrc-test.conf >> ../pegasus.properties
 echo "Updating the database..."
 pegasus-db-admin update --conf ../pegasus.properties -t jdbcrc
 
-echo "Cleanning the database..."
+echo "Cleaning the database..."
 pegasus-rc-client --conf ../pegasus.properties list >tmp.list
 pegasus-rc-client --conf ../pegasus.properties --delete tmp.list
 rm -f tmp.list
@@ -45,7 +45,7 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf ../pegasus.properties \
     --sites condorpool \
-    --dir work \
+    --dir submit \
     --output-sites local \
     --cleanup leaf \
     --cluster horizontal \

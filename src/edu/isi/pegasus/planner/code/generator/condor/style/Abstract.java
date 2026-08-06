@@ -109,7 +109,7 @@ public abstract class Abstract implements CondorStyle {
      * Apply a style to an AggregatedJob
      *
      * @param job the <code>AggregatedJob</code> object containing the job.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(AggregatedJob job) throws CondorStyleException {
         // apply style to all constituent jobs
@@ -125,14 +125,14 @@ public abstract class Abstract implements CondorStyle {
      * Empty implementation.
      *
      * @param site the site catalog entry object
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(SiteCatalogEntry site) throws CondorStyleException {
         // do nothing
     }
 
     /**
-     * Examines the credential requirements for a job and adds appropiate transfer and environment
+     * Examines the credential requirements for a job and adds appropriate transfer and environment
      * directives for the credentials to be staged and picked up by the job.
      *
      * @param job
@@ -159,7 +159,7 @@ public abstract class Abstract implements CondorStyle {
                 SiteCatalogEntry site = mSiteStore.lookup(job.getSiteHandle());
                 if (site.getEnvironmentVariable(handler.getProfileKey()) != null
                         && siteHandle.equals(job.getSiteHandle())) {
-                    // the user has the enviornment variable specified in the site
+                    // the user has the environment variable specified in the site
                     // catalog pointing to an existing credential on the remote
                     // site and the job is going to run on the site for which we
                     // need the credential
@@ -256,7 +256,7 @@ public abstract class Abstract implements CondorStyle {
     }
 
     /**
-     * Examines the credential requirements for a job and adds appropiate transfer and environment
+     * Examines the credential requirements for a job and adds appropriate transfer and environment
      * directives for the credentials to be picked up for the local job
      *
      * @param job
@@ -481,7 +481,7 @@ public abstract class Abstract implements CondorStyle {
     private void applyCredentialForLocalExec(
             CredentialHandler handler, CredentialHandler.TYPE credType, Job job, String siteHandle)
             throws CondorStyleException {
-        // for local exec, just set envionment variables to full path
+        // for local exec, just set environment variables to full path
         String path = handler.getPath(siteHandle);
         if (path == null) {
             this.complainForCredential(job, handler.getProfileKey(), siteHandle);

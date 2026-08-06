@@ -77,7 +77,7 @@ public interface Graph extends GraphNodeContent { // allows us to have graphs as
     public GraphNode getNode(String identifier);
 
     /**
-     * Adds a single root node to the Graph. All the exisitng roots of the Graph become children of
+     * Adds a single root node to the Graph. All the existing roots of the Graph become children of
      * the root.
      *
      * @param root the <code>GraphNode</code> to be added as a root.
@@ -128,14 +128,14 @@ public interface Graph extends GraphNodeContent { // allows us to have graphs as
     /**
      * Returns the root nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the root nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the root nodes.
      */
     public List<GraphNode> getRoots();
 
     /**
      * Returns the leaf nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the leaf nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the leaf nodes.
      */
     public List<GraphNode> getLeaves();
 

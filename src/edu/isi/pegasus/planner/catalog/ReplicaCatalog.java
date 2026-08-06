@@ -190,8 +190,8 @@ public interface ReplicaCatalog extends Catalog {
 
     /**
      * Inserts a new mapping into the replica catalog. This is a convenience function exposing the
-     * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be contructed,
-     * and passed to the appropriate insert function.
+     * resource handle. Internally, the <code>ReplicaCatalogEntry</code> element will be
+     * constructed, and passed to the appropriate insert function.
      *
      * @param lfn is the logical filename under which to book the entry.
      * @param pfn is the physical filename associated with it.

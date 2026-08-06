@@ -199,7 +199,7 @@ public class AggregatedJob extends Job implements Graph {
      */
     public Iterator<Job> constituentJobsIterator() {
         //        return mConstituentJobs.iterator();
-        // need to use the toplogical sort iterator for label based clustering
+        // need to use the topological sort iterator for label based clustering
         List<Job> l = new LinkedList();
         for (Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ) {
             GraphNode n = it.next();
@@ -252,7 +252,7 @@ public class AggregatedJob extends Job implements Graph {
         for (Iterator it = this.nodeIterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             Job constituentJob = (Job) node.getContent();
-            // GH-2163 the constitutent jobs should have it set
+            // GH-2163 the constituent jobs should have it set
             // so that lof files get placed correctly
             constituentJob.setRelativeSubmitDirectory(dir);
             if (constituentJob instanceof AggregatedJob) {
@@ -331,7 +331,7 @@ public class AggregatedJob extends Job implements Graph {
     }
 
     /**
-     * Adds a single root node to the Graph. All the exisitng roots of the Graph become children of
+     * Adds a single root node to the Graph. All the existing roots of the Graph become children of
      * the root.
      *
      * @param root the <code>GraphNode</code> to be added as a root.
@@ -404,7 +404,7 @@ public class AggregatedJob extends Job implements Graph {
     /**
      * Returns the root nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the root nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the root nodes.
      */
     public List<GraphNode> getRoots() {
         return this.mGraphImplementor.getRoots();
@@ -413,7 +413,7 @@ public class AggregatedJob extends Job implements Graph {
     /**
      * Returns the leaf nodes of the Graph.
      *
-     * @return a list containing <code>GraphNode</code> corressponding to the leaf nodes.
+     * @return a list containing <code>GraphNode</code> corresponding to the leaf nodes.
      */
     public List<GraphNode> getLeaves() {
         return this.mGraphImplementor.getLeaves();

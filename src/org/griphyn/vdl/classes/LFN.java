@@ -507,7 +507,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Obtains the predicate on registring with a replica catalog.
+     * Accessor: Obtains the predicate on registering with a replica catalog.
      *
      * @return true if the file will be registered with a replica catalog.
      * @see #setRegister( boolean )
@@ -529,7 +529,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Obtains the predicate on registring with a replica catalog.
+     * Accessor: Obtains the predicate on registering with a replica catalog.
      *
      * @return false if the file will be registered with a replica catalog.
      * @see #setRegister( boolean )
@@ -542,9 +542,9 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Obtains the transfering mode.
+     * Accessor: Obtains the transferring mode.
      *
-     * @return true if the file will be tranferred to an output collector.
+     * @return true if the file will be transferred to an output collector.
      * @see #setTransfer( int )
      * @since 2.1
      */
@@ -553,9 +553,9 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Obtains the transfering mode.
+     * Accessor: Obtains the transferring mode.
      *
-     * @return false if the file will be tranferred to an output collector.
+     * @return false if the file will be transferred to an output collector.
      * @deprecated
      * @see #getTransfer()
      * @see #setTransfer( int )
@@ -566,7 +566,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Acessor: Obtains the optionality of the file.
+     * Accessor: Obtains the optionality of the file.
      *
      * @return false, if the file is required, or true, if it is optional.
      * @see #setOptional( boolean )
@@ -626,7 +626,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Sets the predicate on registring with a replica catalog.
+     * Accessor: Sets the predicate on registering with a replica catalog.
      *
      * @param register is true, if the file should be registered with a replica catalog.
      * @see #getRegister( )
@@ -652,7 +652,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Accessor: Sets the predicate on registring with a replica catalog.
+     * Accessor: Sets the predicate on registering with a replica catalog.
      *
      * @param dontRegister is false, if the file should be registered with a replica catalog.
      * @see #getDontRegister()
@@ -698,7 +698,7 @@ public class LFN extends Leaf implements Cloneable, Serializable {
     }
 
     /**
-     * Acessor: Sets the optionality of the file.
+     * Accessor: Sets the optionality of the file.
      *
      * @param optional false, if the file is required, or true, if it is optional.
      * @see #getOptional()

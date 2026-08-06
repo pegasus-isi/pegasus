@@ -294,7 +294,7 @@ class DuplicateError(ConfigObjError):
 
 class ConfigspecError(ConfigObjError):
     """
-    An error occured whilst parsing a configspec.
+    An error occurred whilst parsing a configspec.
     """
 
 
@@ -835,11 +835,11 @@ class Section(dict):
 
         Return a dictionary of the return values
 
-        If the function raises an exception, raise the errror
+        If the function raises an exception, raise the error
         unless ``raise_errors=False``, in which case set the return value to
         ``False``.
 
-        Any unrecognised keyword arguments you pass to walk, will be pased on
+        Any unrecognised keyword arguments you pass to walk, will be passed on
         to the function you pass in.
 
         Note: if ``call_on_sections`` is ``True`` then - on encountering a
@@ -1729,7 +1729,7 @@ class ConfigObj(Section):
         Handle an error according to the error settings.
 
         Either raise the error or store it.
-        The error will have occured at ``cur_index``
+        The error will have occurred at ``cur_index``
         """
         line = infile[cur_index]
         cur_index += 1
@@ -2022,22 +2022,22 @@ class ConfigObj(Section):
             val = self._decode_element(self._quote(this_entry))
         else:
             val = repr(this_entry)
-        return "{}{}{}{}{}".format(
-            indent_string,
-            self._decode_element(self._quote(entry, multiline=False)),
-            self._a_to_u(" = "),
-            val,
-            self._decode_element(comment),
+        return (
+            f"{indent_string}"
+            f"{self._decode_element(self._quote(entry, multiline=False))}"
+            f"{self._a_to_u(' = ')}"
+            f"{val}"
+            f"{self._decode_element(comment)}"
         )
 
     def _write_marker(self, indent_string, depth, entry, comment):
         """Write a section marker line"""
-        return "{}{}{}{}{}".format(
-            indent_string,
-            self._a_to_u("[" * depth),
-            self._quote(self._decode_element(entry), multiline=False),
-            self._a_to_u("]" * depth),
-            self._decode_element(comment),
+        return (
+            f"{indent_string}"
+            f"{self._a_to_u('[' * depth)}"
+            f"{self._quote(self._decode_element(entry), multiline=False)}"
+            f"{self._a_to_u(']' * depth)}"
+            f"{self._decode_element(comment)}"
         )
 
     def _handle_comment(self, comment):

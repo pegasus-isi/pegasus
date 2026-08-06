@@ -56,7 +56,7 @@ enables **pegasus-mpi-cluster** to pick up running the workflow where it
 stopped.
 
 **pegasus-mpi-cluster** was designed to work either as a standalone tool
-or as a complement to the Pegasus Workflow Managment System (WMS). For
+or as a complement to the Pegasus Workflow Management System (WMS). For
 more information about using PMC with Pegasus see the section on :ref:`PMC AND PEGASUS <PMC_AND_PEGASUS>`.
 
 **pegasus-mpi-cluster** allows applications expressed as a DAG to be
@@ -515,7 +515,7 @@ workflow.
 
 In contrast to using PMC as a task clustering tool, in this mode there
 are no jobs in the workflow executed without PMC. The entire workflow,
-including auxilliary jobs such as directory creation and file transfers,
+including auxiliary jobs such as directory creation and file transfers,
 is managed by PMC. If Pegasus is configured in this mode, then DAGMan
 and Condor are not required.
 
@@ -570,7 +570,7 @@ Host Scripts
 
 A host script is a shell script or executable that
 **pegasus-mpi-cluster** launches on each unique host on which it is
-running. They can be used to start auxilliary services, such as
+running. They can be used to start auxiliary services, such as
 memcached, that the tasks in a workflow require.
 
 Host scripts are specified using either the **--host-script** argument
@@ -616,7 +616,7 @@ memory and CPUs available. This enables **pegasus-mpi-cluster** to take
 advantage of all the CPUs available when the tasks' memory requirement
 is low, but also disable some CPUs when the tasks' memory requirement is
 higher. It also enables workflows with a mixture of single core and
-multi-core tasks to be executed on a heterogenous pool.
+multi-core tasks to be executed on a heterogeneous pool.
 
 If there are no hosts available that have enough memory and CPUs to
 execute one of the tasks in a workflow, then the workflow is aborted.

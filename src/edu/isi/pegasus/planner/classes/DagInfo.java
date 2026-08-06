@@ -94,7 +94,7 @@ public class DagInfo extends Data {
 
     /**
      * Contains a unique ordered listing of the logical names referred to by the dag. The TreeMap
-     * implementation guarentees us a log(n) execution time for the basic operations. Hence should
+     * implementation guarantees us a log(n) execution time for the basic operations. Hence should
      * scale well. The key for the map is the lfn name. The value is a NameValue object, where key
      * is the name of the job that this file is currently associated with and value is a character
      * flag denoting whether this file is an input(i) or output(o) or both (b) or none(n). A value
@@ -503,7 +503,7 @@ public class DagInfo extends Data {
         if (mNameOfADag != null) sb.append(mNameOfADag);
         else sb.append(this.DEFAULT_NAME);
 
-        // append the mCount. that is important for deffered planning
+        // append the mCount. that is important for deferred planning
         sb.append("-").append(mIndex);
 
         mFlowIDName = sb.toString();

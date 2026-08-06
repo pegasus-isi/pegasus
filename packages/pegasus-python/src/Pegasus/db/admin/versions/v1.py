@@ -70,7 +70,7 @@ class Version(BaseVersion):
                 self.db.execute(text("ALTER TABLE rc_lfn RENAME TO rc_lfn_old"))
                 self.db.execute(text("ALTER TABLE rc_lfn_new RENAME TO rc_lfn"))
 
-            log.debug("    Droping old table...")
+            log.debug("    Dropping old table...")
             self.db.execute(text("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr"))
             self.db.execute(text("DROP TABLE rc_lfn_old"))
             log.debug("  Data schema successfully updated.")
@@ -161,7 +161,7 @@ class Version(BaseVersion):
             self.db.execute(
                 text("RENAME TABLE rc_lfn TO rc_lfn_old, rc_lfn_new TO rc_lfn")
             )
-            log.debug("    Droping old table...")
+            log.debug("    Dropping old table...")
             self.db.execute(text("ALTER TABLE rc_attr DROP FOREIGN KEY fk_rc_attr"))
             self.db.execute(text("DROP TABLE rc_lfn_old"))
             self.db.execute(

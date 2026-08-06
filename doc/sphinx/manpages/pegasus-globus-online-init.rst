@@ -42,7 +42,7 @@ Options
    Prints a usage summary with all the available command-line options.
 
 **-p**; \ **--permanent**
-   Requests a refresh token that can be used indefinetely. Access can be
+   Requests a refresh token that can be used indefinitely. Access can be
    revoked from globus web interface (manage consents).
 
 **-c**; \ **--collections**
@@ -51,7 +51,7 @@ Options
 
 **-e**; \ **--endpoints**
    A list of endpoint uuids that require manage_collections consent to create
-   collections in them. Access can be revoked from the globus web interface.
+   collections in them. Access can be revoked from the Globus web interface.
 
 **-d**; \ **--domains**
    A list of domain requirements that must be satisfied by the valid identities

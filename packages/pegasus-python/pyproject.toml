@@ -16,7 +16,7 @@ namespaces = true
 [project]
 
 name = "pegasus-wms"
-version = "5.2.0-dev.0"
+version = "6.0.0-dev.0"
 authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 description = "Pegasus Workflow Management System Python API"
@@ -52,6 +52,8 @@ dependencies = [
     "requests",
     "pymysql",
     "sqlalchemy",
+    "pythonsed",          # For profile expression
+    "rich",               # Console/Markdown rendering for pegasus-analyzer
     "pegasus-wms.api",
     "pegasus-wms.common",
     "pegasus-wms.worker",
@@ -121,9 +123,6 @@ ignore = ["F403", "F405"]
 "src/Pegasus/cli/**" = ["E402", "LOG015"]
 "src/Pegasus/netlogger/**" = ["F821", "E741", "F811"]
 "test/**" = ["S101", "D101", "D103", "D104"]
-# BUGS
-"src/Pegasus/cli/pegasus-analyzer.py" = ["F823", "F841"]
-"src/Pegasus/monitoring/workflow.py" = ["F821"]
 
 [tool.ruff.lint.pydocstyle]
 
@@ -144,6 +143,7 @@ known-third-party = [
     "flask",
     "requests",
     "sqlaclhemy",
+    "PythonSed",
 ]
 forced-separate = ["Pegasus"]
 

@@ -5,7 +5,7 @@ set -e
 TOP_DIR=`pwd`
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 echo
@@ -26,7 +26,7 @@ apptainer exec \
 
 pegasus-plan \
         -Denv.http_proxy=workflow.isi.edu:3128 \
-        --dir work \
+        --dir submit \
         --cluster horizontal \
         --submit \
         data/montage-workflow.yml \

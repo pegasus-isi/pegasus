@@ -157,8 +157,8 @@ Pegasus can
          derivation     is the fully qualified definition identifier for the derivation (DV), namespace::name:version.
          job.level      is the job's depth in the tree of the workflow DAG.
          job.id         is the job's ID, as used in the DAX file.
-         resource.id    is a pool handle, followed by whitespace, followed by a gridftp server. Typically, each gridftp server is enumerated once, so you may have multiple occurances of the same site. There can be multiple occurances of this key.
-         input.lfn      is an input LFN, optionally followed by a whitespace and file size. There can be multiple occurances of this key,one for each input LFN required by the job.
+         resource.id    is a pool handle, followed by whitespace, followed by a gridftp server. Typically, each gridftp server is enumerated once, so you may have multiple occurrences of the same site. There can be multiple occurrences of this key.
+         input.lfn      is an input LFN, optionally followed by a whitespace and file size. There can be multiple occurrences of this key,one for each input LFN required by the job.
          wf.name        label of the dax, as found in the DAX's root element. wf.index is the DAX index, that is incremented for each partition in case of deferred planning.
          wf.time        is the mtime of the workflow.
          wf.manager     is the name of the workflow manager being used .e.g condor

@@ -69,7 +69,7 @@ public class Notifications extends Data {
     }
 
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      *
      * @param notification the notification object
      */
@@ -174,7 +174,7 @@ public class Notifications extends Data {
      * Convenience method at add all the notifications corresponding to a particular event
      *
      * @param when when does the event happen
-     * @param notifications the list of notificiations
+     * @param notifications the list of notifications
      */
     private void addAll(WHEN when, Collection<Invoke> invokes) {
         Collection<Invoke> c = this.mInvokeMap.get(when);

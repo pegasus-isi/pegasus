@@ -52,9 +52,9 @@ public class DiamondTest {
 
         // de-serialize from file
         Logging.instance().log("default", 0, "de-serialize from disk");
-        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("data.out"));
-        Definitions diamond = (Definitions) ois.readObject();
-        ois.close();
+        ObjectInputStream is = new ObjectInputStream(new FileInputStream("data.out"));
+        Definitions diamond = (Definitions) is.readObject();
+        is.close();
         Logging.instance().log("default", 0, "de-serializing done");
 
         // create a router

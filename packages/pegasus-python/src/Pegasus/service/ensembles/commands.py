@@ -325,17 +325,17 @@ class StatusCommand(EnsembleClientCommand):
 
         result = response.json()
 
-        print("ID:           {}".format(result["id"]))
-        print("Name:         {}".format(result["name"]))
-        print("Plan Command: {}".format(result["plan_command"]))
-        print("Created:      {}".format(formatts(result["created"])))
-        print("Updated:      {}".format(formatts(result["updated"])))
-        print("State:        {}".format(result["state"]))
+        print(f"ID:           {result['id']}")
+        print(f"Name:         {result['name']}")
+        print(f"Plan Command: {result['plan_command']}")
+        print(f"Created:      {formatts(result['created'])}")
+        print(f"Updated:      {formatts(result['updated'])}")
+        print(f"State:        {result['state']}")
         print("UUID:         %s" % (result["wf_uuid"] or ""))
-        print("Priority:     {}".format(result["priority"]))
-        print("Base Dir:     {}".format(result["basedir"]))
+        print(f"Priority:     {result['priority']}")
+        print(f"Base Dir:     {result['basedir']}")
         print("Submit Dir:   %s" % (result["submitdir"] or ""))
-        print("Log:          {}".format(result["log"]))
+        print(f"Log:          {result['log']}")
 
 
 class AnalyzeCommand(EnsembleClientCommand):

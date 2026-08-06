@@ -248,7 +248,7 @@ class Workflow(Base):
 
     __tablename__ = "workflow"
 
-    # ==> Information comes from braindump.txt file
+    # ==> Information comes from braindump.yml file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
     wf_uuid = Column("wf_uuid", String(255), nullable=False)
     dag_file_name = Column("dag_file_name", String(255))
@@ -1003,7 +1003,7 @@ class MasterWorkflow(Base):
 
     __tablename__ = "master_workflow"
 
-    # ==> Information comes from braindump.txt file
+    # ==> Information comes from braindump.yml file
     wf_id = Column("wf_id", KeyInteger, primary_key=True)
     wf_uuid = Column("wf_uuid", String(255), nullable=False)
     dax_label = Column("dax_label", String(255))

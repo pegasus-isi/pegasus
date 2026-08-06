@@ -385,7 +385,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Adds a dependant transformation
+     * Adds a dependent transformation
      *
      * @param transformationFQDN
      */
@@ -396,7 +396,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Adds a dependant transformation
+     * Adds a dependent transformation
      *
      * @param pf pegasus file object containing the tx
      */
@@ -430,7 +430,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
      */
     public void incorporateContainerProfiles(Container cont) {
         // PM-1214 all  ENV profiles have to be merged
-        // with the tranformation profile overriding the container
+        // with the transformation profile overriding the container
         // but carried forward with the container object.
         ENV containerENVProfiles = (ENV) cont.getAllProfiles().get(Profiles.NAMESPACES.env);
 
@@ -465,7 +465,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Set the logical transformation with a fully qualified tranformation String of the format
+     * Set the logical transformation with a fully qualified transformation String of the format
      * NS::NAME:Ver
      *
      * @param logicaltransformation String
@@ -565,7 +565,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     }
 
     /**
-     * Adds a Invoke object correpsonding to a notification.
+     * Adds a Invoke object corresponding to a notification.
      *
      * @param invoke the invoke object containing the notification
      */
@@ -707,7 +707,7 @@ public class TransformationCatalogEntry implements CatalogEntry {
     /**
      * Returns the mVersion of the logical transformation.
      *
-     * @return String Returns null if no mVersion assocaited with the transformation.
+     * @return String Returns null if no mVersion associated with the transformation.
      */
     public String getLogicalVersion() {
         return this.mVersion;

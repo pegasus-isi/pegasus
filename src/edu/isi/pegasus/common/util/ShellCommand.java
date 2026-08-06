@@ -110,7 +110,8 @@ public class ShellCommand {
             }
 
         } catch (IOException ioe) {
-            mLogger.log("IOException while executng command ", ioe, LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log(
+                    "IOException while executing command ", ioe, LogManager.ERROR_MESSAGE_LEVEL);
         } catch (InterruptedException ie) {
             // ignore
         }

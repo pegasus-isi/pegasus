@@ -119,7 +119,7 @@ public class JobPlacer {
      *     container to submit host
      * @param forSymlink boolean indicating if this tx is flagged for symlinking
      * @param isLocalTransfer boolean indicating initial determination if tx can be run locally
-     * @param isRemoteTransfer boolen indicating whether the tx can be run remotely
+     * @param isRemoteTransfer boolean indicating whether the tx can be run remotely
      * @return
      */
     public boolean runTransferRemotely(

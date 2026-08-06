@@ -186,7 +186,7 @@ public abstract class Toolkit {
             int p = line.indexOf('#');
             if (p != -1) line = line.substring(0, p);
 
-            // remove superflous whitespace
+            // remove superfluous whitespace
             line = line.trim();
 
             // add anything non-empty

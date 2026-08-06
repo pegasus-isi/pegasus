@@ -63,7 +63,7 @@ public abstract class Value extends VDL implements Cloneable, Serializable {
      * This method determines which container is being used in the abstract base class in order to
      * kludgy statements when printing debug info.
      *
-     * @return the symblic identifier for the type of the Value.
+     * @return the symbolic identifier for the type of the Value.
      */
     public abstract String getSymbolicType();
 

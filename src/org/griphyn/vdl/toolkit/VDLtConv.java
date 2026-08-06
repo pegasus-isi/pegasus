@@ -76,7 +76,7 @@ public class VDLtConv extends Toolkit {
                         + linefeed
                         + " -n|--vdlns ns    generates default namespace ns, default is none."
                         + linefeed
-                        + " -v|--vdlvs vs    geneartes default version vs, default is none."
+                        + " -v|--vdlvs vs    generates default version vs, default is none."
                         + linefeed);
     }
 

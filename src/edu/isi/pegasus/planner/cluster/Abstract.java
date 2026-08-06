@@ -105,7 +105,7 @@ public abstract class Abstract implements Clusterer {
     */
 
     /**
-     * Initializes the Clusterer impelementation
+     * Initializes the Clusterer implementation
      *
      * @param dag the workflow that is being clustered.
      * @param bag the bag of objects that is useful for initialization.

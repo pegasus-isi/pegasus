@@ -175,7 +175,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             // PM-831 set up the parser with our own reader
             // that allows for parameter expansion before
             // doing any XML processing
-            InputSource is = new InputSource(new VariableExpansionReader(new FileReader(file)));
+            InputSource is =
+                    new InputSource(new VariableExpansionReader(new FileReader(file), this.mProps));
             mParser.parse(is);
 
             // sanity check
@@ -744,7 +745,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                            transfer  	TransferType  	optional  	true
                            namespace  	xs:string  	optional
                            version  	VersionPattern  	optional
-                           exectuable  	xs:boolean  	optional  	false
+                           executable  	xs:boolean  	optional  	false
                         */
                         if (name.equals("name")) {
                             pf.setLFN(value);

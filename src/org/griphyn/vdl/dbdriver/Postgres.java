@@ -173,7 +173,7 @@ public class Postgres extends DatabaseDriver {
      * auto-increment columns. Postgres uses explicit sequence generators, so this function always
      * returns -1.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.

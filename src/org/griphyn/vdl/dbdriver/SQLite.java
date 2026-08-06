@@ -114,7 +114,7 @@ public class SQLite extends DatabaseDriver {
      * Obtains the sequence value for the current statement. SQLite uses NULL-driven auto-increment
      * column. Thus, we do the heavy lifting here.
      *
-     * @param s is a statment or prepared statement
+     * @param s is a statement or prepared statement
      * @param name is the name of the sequence.
      * @param pos is the column number of the auto-increment column.
      * @return the next sequence number.

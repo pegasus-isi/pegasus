@@ -393,7 +393,7 @@ static ProcInfo *processTraceFiles(const char *tempdir, const char *trace_file_p
                 lastproc->next = p;
             }
             lastproc = p;
-            /* If processTraceFile retuns a list of several procs */
+            /* If processTraceFile returns a list of several procs */
             while (lastproc->next != NULL) {
                 lastproc = lastproc->next;
             }

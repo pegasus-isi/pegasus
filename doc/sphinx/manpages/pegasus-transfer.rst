@@ -53,7 +53,7 @@ Options
    file will be symlinked to the destination rather than being copied.
 
 **-d**; \ **--debug**
-   Enables debugging ouput.
+   Enables debugging output.
 
 Example
 =======

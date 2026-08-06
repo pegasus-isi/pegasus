@@ -73,7 +73,7 @@ public class CloudWatchLog {
      * @param logLevel the logging level
      * @param logGroup the cloud watch log group
      */
-    public void initialze(Region awsRegion, Level logLevel, String logGroup) {
+    public void initialize(Region awsRegion, Level logLevel, String logGroup) {
         // "405596411149";
         mLogger = org.apache.logging.log4j.LogManager.getLogger(Synch.class.getName());
         Configurator.setLevel(Synch.class.getName(), logLevel);
@@ -146,7 +146,7 @@ public class CloudWatchLog {
         File stderrFile = null;
         Tuple<File, File> result = null;
         try {
-            // initally we flush to stdout file until switch over
+            // initially we flush to stdout file until switch over
             boolean notSwitched = true;
             stdoutFile = new File(jobName + ".out");
             stderrFile = new File(jobName + ".err");
@@ -236,7 +236,7 @@ public class CloudWatchLog {
      * @return
      */
     private Tuple<String, String> determineLog(JobDetail jobDetail) {
-        // go through the attemps and get last attempt
+        // go through the attempts and get last attempt
         AttemptDetail detail = null;
         StringBuilder logStreamName =
                 new StringBuilder(); // karan-batch-synch-test-job-definition/default/e6b3eb37-46d3-4aa5-9208-e80eec481550

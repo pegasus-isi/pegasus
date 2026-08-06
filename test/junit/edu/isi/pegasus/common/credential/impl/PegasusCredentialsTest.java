@@ -202,7 +202,7 @@ public class PegasusCredentialsTest {
         this.testForEndpointInCredentialFile(
                 credFile,
                 CredentialHandler.TYPE.http,
-                "http://not.existant.endpoint",
+                "http://not.existent.endpoint",
                 false,
                 "testForNonExistingEndpointInCredFile");
     }

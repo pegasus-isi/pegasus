@@ -121,7 +121,7 @@ public class Restricted extends Default {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
@@ -222,7 +222,7 @@ public class Restricted extends Default {
     }
 
     /**
-     * Returns a boolean indicating whether a source site is to be preffered for staging to a
+     * Returns a boolean indicating whether a source site is to be preferred for staging to a
      * destination site
      *
      * @param source the source site.

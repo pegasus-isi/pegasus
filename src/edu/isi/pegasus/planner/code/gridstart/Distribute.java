@@ -62,7 +62,8 @@ public class Distribute implements GridStart {
     private ADag mDAG;
 
     /**
-     * The basename of the class that is implmenting this. Could have been determined by reflection.
+     * The basename of the class that is implementing this. Could have been determined by
+     * reflection.
      */
     public static final String CLASSNAME = "Distribute";
 
@@ -201,7 +202,7 @@ public class Distribute implements GridStart {
 
     /**
      * Enables a job to run on the grid. This also determines how the stdin,stderr and stdout of the
-     * job are to be propogated. To grid enable a job, the job may need to be wrapped into another
+     * job are to be propagated. To grid enable a job, the job may need to be wrapped into another
      * job, that actually launches the job. It usually results in the job description passed being
      * modified modified.
      *
@@ -239,8 +240,8 @@ public class Distribute implements GridStart {
                 // vanilla treatment from the kickstart enabling.
                 return jobGridStartImplementation.enable(job, isGlobusJob);
             } else {
-                // the clustered jobs are never lauched via kickstart
-                // as their constitutents are enabled
+                // the clustered jobs are never launched via kickstart
+                // as their constituents are enabled
                 jobGridStartImplementation.enable(job, isGlobusJob);
 
                 // now we enable the jobs with the distribute wrapper
@@ -306,7 +307,7 @@ public class Distribute implements GridStart {
 
     /**
      * Wraps a job with the distribute wrapper. The job existing executable and arguments are
-     * retrived to construct an invocation string that is passed as an argument to the distribute
+     * retrieved to construct an invocation string that is passed as an argument to the distribute
      * job launcher. Also, the job is modified to run on local site.
      *
      * @param job the job to be wrapped with distribute
@@ -601,14 +602,14 @@ public class Distribute implements GridStart {
      */
     private void updateJobWithCredentialsForRemoteSites(Job job) {
         // we need to associate credentials that maybe required for transfers in
-        // PegasusLite w.r.t the orignal execution site, before mapping the job to
+        // PegasusLite w.r.t the original execution site, before mapping the job to
         // run locally. This is because credentials for jobs mapped tp remotes sites
         // are handled differently comparted to jobs mapped to local site.
         String originalSite = job.getSiteHandle();
         try {
 
             // for jobs mapped to local site, credentials are handled
-            // when the distirbute wrapped job goes to the code generator, and
+            // when the distribute wrapped job goes to the code generator, and
             // the condor style gets applied.
             if (!originalSite.equalsIgnoreCase("local")) {
                 CondorStyle cs = mStyleFactory.loadInstance(job);

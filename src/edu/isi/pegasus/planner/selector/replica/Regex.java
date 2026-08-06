@@ -98,7 +98,7 @@ public class Regex extends Default {
      *
      * @param rl the <code>ReplicaLocation</code> object containing all the pfn's associated with
      *     that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected
@@ -173,7 +173,7 @@ public class Regex extends Default {
      *
      * @param candidates the <code>ReplicaLocation</code> object containing all the pfn's associated
      *     with that LFN.
-     * @param preferredSite the preffered site for picking up the replicas.
+     * @param preferredSite the preferred site for picking up the replicas.
      * @param allowLocalFileURLs indicates whether Replica Selector can select a replica on the
      *     local site / submit host.
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
@@ -299,7 +299,7 @@ public class Regex extends Default {
         }
 
         // add default rank
-        /* we shoud not.
+        /* we should not.
         Rank lowestRank = new Rank( Regex.LOWEST_RANK_VALUE, ".*" );
         lowestRank.setPriority( 0 );
         result.add(lowestRank);

@@ -173,7 +173,7 @@ public class PegasusProperties implements Cloneable {
     // code generator constants
     public static final String DEFAULT_CODE_GENERATOR = "condor";
 
-    // some tranformation catalog constants
+    // some transformation catalog constants
     public static final String DEFAULT_TC_MAPPER_MODE = "All";
 
     public static final String DEFAULT_TX_SELECTOR_MODE = "Random";
@@ -495,7 +495,7 @@ public class PegasusProperties implements Cloneable {
 
     /**
      * It allows you to get any property from the property file without going through the
-     * corresponding accesor function in this class. For coding and clarity purposes, the function
+     * corresponding accessor function in this class. For coding and clarity purposes, the function
      * should be used judiciously, and the accessor function should be used as far as possible.
      *
      * @param key the property whose value is desired.
@@ -507,7 +507,7 @@ public class PegasusProperties implements Cloneable {
 
     /**
      * Returns the CommonProperties that this object encapsulates. Use only when absolutely
-     * necessary. Use accessor methods whereever possible.
+     * necessary. Use accessor methods wherever possible.
      *
      * @return CommonProperties
      */
@@ -876,7 +876,7 @@ public class PegasusProperties implements Cloneable {
 
     /**
      * Returns the scope for file cleanup. It is used to trigger cleanup in case of deferred
-     * planning. The vaild property values accepted are - fullahead - deferred
+     * planning. The valid property values accepted are - fullahead - deferred
      *
      * <p>Referred to by the property "pegasus.file.cleanup.scope"
      *
@@ -1691,7 +1691,7 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Returns a boolean indicating whehter to pass extra options to kickstart or not. The extra
+     * Returns a boolean indicating whether to pass extra options to kickstart or not. The extra
      * options have appeared only in VDS version 1.4.2 (like -L and -T).
      *
      * <p>Referred to by "pegasus.gridstart.label" property.
@@ -1720,7 +1720,7 @@ public class PegasusProperties implements Cloneable {
     */
 
     /**
-     * Returns the postscript to use with the jobs in the workflow. They maybe overriden by values
+     * Returns the postscript to use with the jobs in the workflow. They maybe overridden by values
      * specified in the profiles.
      *
      * <p>Referred to by the "pegasus.exitcode.impl" property.
@@ -2370,7 +2370,7 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns the bundle value for a particular transformation.
      *
-     * <p>Referred to by the "pegasus.partitioner.horziontal.bundle.[txname]" property, where
+     * <p>Referred to by the "pegasus.partitioner.horizontal.bundle.[txname]" property, where
      * [txname] is replaced by the name passed an input to this function.
      *
      * @param name the logical name of the transformation.
@@ -2385,7 +2385,7 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns the collapse value for a particular transformation.
      *
-     * <p>Referred to by the "pegasus.partitioner.horziontal.collapse.[txname]" property, where
+     * <p>Referred to by the "pegasus.partitioner.horizontal.collapse.[txname]" property, where
      * [txname] is replaced by the name passed an input to this function.
      *
      * @param name the logical name of the transformation.
@@ -2530,7 +2530,7 @@ public class PegasusProperties implements Cloneable {
         buffer.append(Dagman.NAMESPACE_NAME).append(".").append(Dagman.MAXPRE_KEY.toLowerCase());
         String key = buffer.toString();
         if (!properties.containsKey(key)) {
-            // add defautl value
+            // add default value
             properties.put(key, DEFAULT_DAGMAN_MAX_PRE_VALUE);
         }
 
@@ -2557,7 +2557,7 @@ public class PegasusProperties implements Cloneable {
     }
 
     /**
-     * Santizes the value in the properties . Ensures that the path is absolute.
+     * Sanitizes the value in the properties . Ensures that the path is absolute.
      *
      * @param properties the properties
      * @param key the key whose value needs to be sanitized

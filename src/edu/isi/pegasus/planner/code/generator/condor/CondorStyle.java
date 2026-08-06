@@ -47,7 +47,7 @@ public interface CondorStyle {
      * existing profiles for the site so far.
      *
      * @param site the site catalog entry object
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(SiteCatalogEntry site) throws CondorStyleException;
 
@@ -56,7 +56,7 @@ public interface CondorStyle {
      * Condor submit file.
      *
      * @param job the <code>Job</code> object containing the job.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException;
 
@@ -64,7 +64,7 @@ public interface CondorStyle {
      * Apply a style to an AggregatedJob
      *
      * @param job the <code>AggregatedJob</code> object containing the job.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(AggregatedJob job) throws CondorStyleException;
 }

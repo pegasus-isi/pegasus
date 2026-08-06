@@ -61,7 +61,7 @@ def test_loads(s, obj):
 
 def test_loads_fail():
     with pytest.raises(TypeError) as e:
-        loads("userr: a")
+        loads("userr: a")  # codespell:ignore userr
     assert "'userr'" in str(e)
 
 

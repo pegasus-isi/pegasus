@@ -32,7 +32,7 @@ class Container(ProfileMixin):
     """
     Describes a container that can be added to the :py:class:`~Pegasus.api.transformation_catalog.TransformationCatalog` .
     Note that the :code:`checksum` parameter refers to the checksum of the tar file of the image and not the specific
-    version of an image (digest/content-addressable identifer in the case of Docker).
+    version of an image (digest/content-addressable identifier in the case of Docker).
 
     .. code-block:: python
 

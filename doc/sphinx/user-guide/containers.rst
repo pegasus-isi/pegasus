@@ -201,7 +201,7 @@ More details can be found in the HTCondor documentation
 Containers on OSG / PATh
 ========================
 
-If you are running worklfows on OSG or PATh, we now recommend you to use
+If you are running workflows on OSG or PATh, we now recommend you to use
 *container* universe to let HTCondor manage the deployment of the containers
 your job requires. More details can be found in the previous section
 about use of
@@ -352,7 +352,7 @@ In this example there are three sections.
 
 From the ``Essential Packages``, **python** and either **curl** or
 **wget** have to be present. ``Install Globus Toolkit``, sets up the
-enviroment for GridFTP transfers. And ``Install CA Certs`` copies the grid
+environment for GridFTP transfers. And ``Install CA Certs`` copies the grid
 certificates in the container.
 
 .. note::
@@ -361,7 +361,7 @@ certificates in the container.
    authentication module, and some sites haven't upgraded their
    installations (eg. NERSC). GridFTP in order to authenticate
    successfully, requires the ``libglobus-gssapi-gsi4`` package to be pinned
-   to the version 13.8-1. The code snipet below contains installation
+   to the version 13.8-1. The code snippet below contains installation
    directives to handle this but they are commented out.
 
 ::

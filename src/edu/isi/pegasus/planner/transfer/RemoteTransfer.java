@@ -295,16 +295,16 @@ public class RemoteTransfer {
      */
     private static class TransferState {
 
-        /** The constant to denote that a stage-in transfer is to be exectuted remotely */
+        /** The constant to denote that a stage-in transfer is to be executed remotely */
         public static final int STAGE_IN_REMOTE_TYPE = 0x1; // 000001
 
-        /** The constant to denote that an inter site transfer is to be exectuted remotely */
+        /** The constant to denote that an inter site transfer is to be executed remotely */
         public static final int INTER_REMOTE_TYPE = 0x2; // 000010
 
-        /** The constant to denote that a stage-out transfer is to be exectuted remotely */
+        /** The constant to denote that a stage-out transfer is to be executed remotely */
         public static final int STAGE_OUT_REMOTE_TYPE = 0x4; // 000100
 
-        /** The constant to denote that all transfers are to be exectuted remotely */
+        /** The constant to denote that all transfers are to be executed remotely */
         public static final int ALL_REMOTE_TYPE = 0x7; // 000111
 
         /** Stores the state as an integer. */

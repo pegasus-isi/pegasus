@@ -1,0 +1,4 @@
+[codespell]
+skip = *.html,*.png,*.pdf,*.xsd,*.jpg,*.jpeg,*.gif,*.svg,*.ico,*.class,*.jar,*.zip,*.tar,*.gz,*.min.js,*.map,.git,*/test-reports/*,*/htmlcov/*,*/build/*,*/dist/*,*/node_modules/*,*/.tox/*,*/__pycache__/*,*.bp,copyright
+ignore-words-list = inout,startd,implementor,implementors,nd,te,fo,ba,childs,AfterAll,auxillary,thirdparty,namd,iput,iTerm,mulitpart
+ignore-regex = .*"image/png":.*

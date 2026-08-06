@@ -59,7 +59,7 @@ public class CleanupTest {
 
     @Test
     public void testGetCompleteTransformationName() {
-        assertThat(Cleanup.getCompleteTranformationName(), is("pegasus::cleanup"));
+        assertThat(Cleanup.getCompleteTransformationName(), is("pegasus::cleanup"));
     }
 
     @Test

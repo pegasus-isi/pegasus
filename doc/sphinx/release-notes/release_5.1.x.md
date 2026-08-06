@@ -61,7 +61,7 @@ The release can be downloaded from:
 
 1) enforce maximum document parsing size for yaml docs to 2047 MB [\#2152](https://github.com/pegasus-isi/pegasus/issues/2152)
 2) expand wf_submit_dir when generating AWS Batch job descriptions #2151 [\#2151](https://github.com/pegasus-isi/pegasus/issues/2151)
-3) cpu atttributes are not included in the job composite event [\#2150](https://github.com/pegasus-isi/pegasus/issues/2150)
+3) cpu attributes are not included in the job composite event [\#2150](https://github.com/pegasus-isi/pegasus/issues/2150)
 4) ensure user JAVA\_HEAPMAX and JAVA\_HEAPMIN values are propagated to the planner invocations for sub workflows [\#2147](https://github.com/pegasus-isi/pegasus/issues/2147)
 5) pegasus-wms.worker incompatible with globus-sdk 4 [\#2146](https://github.com/pegasus-isi/pegasus/issues/2146)
 6) bypass in condorio mode gets incorrectly triggered if a directory path specified for a local file [\#2142](https://github.com/pegasus-isi/pegasus/issues/2142)

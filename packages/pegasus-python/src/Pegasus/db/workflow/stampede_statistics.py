@@ -18,7 +18,7 @@ Constructor and initialize methods:
 The constructor takes a required sqlalchemy connection string
 as the first argument.  The stats class will default to returning
 data in the "expanded workflow" mode.  To change this behavior
-and only analyize a single workflow set the optional arg:
+and only analyze a single workflow set the optional arg:
 
 expand_workflow = False
 

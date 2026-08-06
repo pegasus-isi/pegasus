@@ -36,7 +36,7 @@ public class UndeclaredVariableException extends java.lang.RuntimeException {
     /**
      * Constructs a <code>UndeclaredVariableException</code> with the specified detailed message.
      *
-     * @param s is the detailled message.
+     * @param s is the detailed message.
      */
     public UndeclaredVariableException(String s) {
         super(s);

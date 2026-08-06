@@ -74,7 +74,7 @@ public class MetaData {
     }
 
     /**
-     * Create a copy of this Metdata Object
+     * Create a copy of this Metadata Object
      *
      * @return clone of the object
      */
@@ -103,7 +103,7 @@ public class MetaData {
     }
 
     /**
-     * Get the type of the metdata object
+     * Get the type of the metadata object
      *
      * @return the type
      */
@@ -112,7 +112,7 @@ public class MetaData {
     }
 
     /**
-     * Get the value of the metdata object
+     * Get the value of the metadata object
      *
      * @return the value
      */

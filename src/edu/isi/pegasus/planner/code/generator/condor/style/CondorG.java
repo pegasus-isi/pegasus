@@ -48,7 +48,7 @@ public class CondorG extends Abstract {
      * the default case.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
         //           Removed for JIRA PM-543
@@ -142,7 +142,7 @@ public class CondorG extends Abstract {
 
         // GH-2176 no special handling for runtime key
         // Globus is not used job submission. Globus profile
-        // namespace is internal. so no unnecesary conversion
+        // namespace is internal. so no unnecessary conversion
         // from seconds to minutes and then seconds later
         // in Glite.java for generating job runtimes etc.
 

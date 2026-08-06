@@ -125,7 +125,7 @@ public class Irods extends Abstract implements CredentialHandler {
                                     .get(Irods.IRODSENVFILE);
         }
 
-        // try from properites file
+        // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);

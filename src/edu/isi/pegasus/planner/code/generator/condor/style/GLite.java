@@ -212,7 +212,7 @@ public class GLite extends Abstract {
      *
      * @param job the job
      * @return the grid_resource entry
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     private String constructGridResourceFromGridGateway(Job job) throws CondorStyleException {
         StringBuilder gridResource = new StringBuilder();
@@ -266,7 +266,7 @@ public class GLite extends Abstract {
      * existing profiles for the site so far.
      *
      * @param site the site catalog entry object
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(SiteCatalogEntry site) throws CondorStyleException {
         Namespace pegasusProfiles = site.getProfiles().get(Profiles.NAMESPACES.pegasus);
@@ -322,7 +322,7 @@ public class GLite extends Abstract {
      * Applies the gLite style to the job.
      *
      * @param job the job on which the style needs to be applied.
-     * @throws CondorStyleException in case of any error occuring code generation.
+     * @throws CondorStyleException in case of any error occurring code generation.
      */
     public void apply(Job job) throws CondorStyleException {
 
@@ -343,7 +343,7 @@ public class GLite extends Abstract {
         }
 
         // GH-2156 until HTCondor fixes setting of $_CONDOR_SCRATCH_DIR environment
-        // variable for grid universe jobs, we explicity set the variable to .
+        // variable for grid universe jobs, we explicitly set the variable to .
         // in order for kickstart to read in the lof files correctly.
         // GH-2173 BUT, we only do set $_CONDOR_SCRATCH_DIR for the sharedfs
         // case where PegasusLite is not used to launch the jobs
@@ -454,14 +454,14 @@ public class GLite extends Abstract {
          * as condor file transfer mechanism does not work
          * Special handling for the JPL cluster */
         if (job.getSiteHandle().equals("local") && job instanceof TransferJob) {
-            /* remove the change dir requirments for the
+            /* remove the change dir requirements for the
              * third party transfer on local host */
             job.condorVariables.removeKey(GLite.CONDOR_REMOTE_DIRECTORY_KEY);
         }
 
         /* similar handling for registration jobs */
         if (job.getSiteHandle().equals("local") && job.getJobType() == Job.REPLICA_REG_JOB) {
-            /* remove the change dir requirments for the
+            /* remove the change dir requirements for the
              * third party transfer on local host */
             job.condorVariables.removeKey(GLite.CONDOR_REMOTE_DIRECTORY_KEY);
         }
@@ -1003,7 +1003,7 @@ public class GLite extends Abstract {
             } else {
                 // we need to attempt to arrive at a value or specify a default value
                 if (coresSet && ppnSet) {
-                    // set nodes to div, we don't handle the case where cores/ppn is not divisable
+                    // set nodes to div, we don't handle the case where cores/ppn is not divisible
                     int cores = Integer.parseInt((String) job.globusRSL.get(Globus.COUNT_KEY));
                     int ppn = Integer.parseInt((String) job.globusRSL.get(Globus.XCOUNT_KEY));
                     job.globusRSL.construct(Globus.HOST_COUNT_KEY, Integer.toString(cores / ppn));

@@ -370,9 +370,9 @@ def get_wf_uuid(submit_dir):
     # Getting values from the submit_dir braindump file
     top_level_wf_params = utils.slurp_braindb(submit_dir)
 
-    # Return if we cannot parse the braindump.txt file
+    # Return if we cannot parse the braindump.yml file
     if not top_level_wf_params:
-        log.error(f"Unable to process braindump.txt in {submit_dir}")
+        log.error(f"Unable to process braindump.yml in {submit_dir}")
         return None
 
     # Get wf_uuid for this workflow
@@ -380,7 +380,7 @@ def get_wf_uuid(submit_dir):
     if "wf_uuid" in top_level_wf_params:
         wf_uuid = top_level_wf_params["wf_uuid"]
     else:
-        log.error("workflow id cannot be found in the braindump.txt ")
+        log.error("workflow id cannot be found in the braindump.yml ")
         return None
 
     return wf_uuid
@@ -482,7 +482,7 @@ def _get_jdbcrc_uri(props=None):
                 + database
             )
 
-        log.debug("Invalid JDBCRC driver: {}".format(rc_info["driver"]))
+        log.debug(f"Invalid JDBCRC driver: {rc_info['driver']}")
     return None
 
 
@@ -556,9 +556,9 @@ def _get_workflow_uri(props=None, submit_dir=None, top_dir=None):
     if "dag" in top_level_wf_params:
         dag_file_name = top_level_wf_params["dag"]
     else:
-        raise ConnectionError("DAG file name cannot be found in the braindump.txt.")
+        raise ConnectionError("DAG file name cannot be found in the braindump.yml.")
 
-    # Create the sqllite db url
+    # Create the sqlite db url
     dag_file_name = os.path.basename(dag_file_name)
     output_db_file = os.path.join(
         top_level_wf_params["submit_dir"],
@@ -688,9 +688,9 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
 
     top_level_wf_params = utils.slurp_braindb(dir)
 
-    # Return if we cannot parse the braindump.txt file
+    # Return if we cannot parse the braindump.yml file
     if not top_level_wf_params:
-        raise ConnectionError(f"File 'braindump.txt' not found in {dir}.")
+        raise ConnectionError(f"File 'braindump.yml' not found in {dir}.")
 
     if top_level_wf_params["root_wf_uuid"] == top_level_wf_params["wf_uuid"]:
         return top_level_wf_params
@@ -709,7 +709,7 @@ def _parse_top_level_wf_params(submit_dir, top_dir):
             break
 
     if not top_level_wf_params:
-        raise ConnectionError("Unable to find file 'braindump.txt' in parent folders.")
+        raise ConnectionError("Unable to find file 'braindump.yml' in parent folders.")
 
     return top_level_wf_params
 
@@ -740,7 +740,7 @@ def _backup_db(dburi):
 def _truncate_previous_backup_file(backup_file, prefix):
     """
     Truncates the previous backed up file to zero bytes to ensure
-    filesytem does not get clogged up on multiple restarts.
+    filesystem does not get clogged up on multiple restarts.
 
     :param backup_file:
     :param prefix:

@@ -66,12 +66,12 @@ Options
 
 **-a** *AWS account id*; \ **--account**\ ='AWS account id '
    the AWS account to use for running jobs on AWS Batch. Can also be
-   specified in the properites using the property
+   specified in the properties using the property
    **pegasus.aws.account**.
 
 **-a** *AWS region*; \ **--account**\ =\ *AWS region*
-   the AWS region in which the S3 bucket and other batch entitites
-   required by AWS batch exist. Can also be specified in the properites
+   the AWS region in which the S3 bucket and other batch entities
+   required by AWS batch exist. Can also be specified in the properties
    using the property **pegasus.aws.region**.
 
 **-c**; \ **--create**
@@ -97,7 +97,7 @@ Options
    https://docs.aws.amazon.com/batch/latest/userguide/job-definition-template.html
    A sample job definition file is listed in the configuration section.
 
-   The value for this option can also be specified in the properites
+   The value for this option can also be specified in the properties
    using the property **pegasus.aws.batch.job_definition**.
 
 **--ce** *jsonfile or arn or compute environment name*; \ **--compute-environment** *jsonfile or arn or compute environment name*
@@ -109,7 +109,7 @@ Options
    A sample compute-environment file is listed in the configuration
    section.
 
-   The value for this option can also be specified in the properites
+   The value for this option can also be specified in the properties
    using the property **pegasus.aws.batch.compute_environment**.
 
 **-q** *jsonfile or arn or job queue name*; \ **--job-queue** *jsonfile or arn or job queue name*
@@ -120,14 +120,14 @@ Options
    https://docs.aws.amazon.com/batch/latest/userguide/job-queue-template.html
    A sample job-queue file is listed in the configuration section.
 
-   The value for this option can also be specified in the properites
+   The value for this option can also be specified in the properties
    using the property **pegasus.aws.batch.job_queue**.
 
 **-s** *s3 URL*; \ **--s3** *s3 URL*
-   The S3 bucket to use for lifecycle of the client. If not specifed
+   The S3 bucket to use for lifecycle of the client. If not specified
    then a bucket is created based on the prefix passed.
 
-   The value for this option can also be specified in the properites
+   The value for this option can also be specified in the properties
    using the property **pegasus.aws.batch.s3_bucket**.
 
 **-f** *file*\ [,*file*,…]; \ **--files** *file*\ [,*file*,…]
@@ -165,22 +165,22 @@ Configuration Properties
    The URL of the web service endpoint. If the URL begins with *https*,
    then SSL will be used.
 
-**pegasus.aws.account** (aws account) The AWS region to use. Can alse be
+**pegasus.aws.account** (aws account) The AWS region to use. Can also be
 specified by -a option.
 
-**pegasus.aws.region** (region) The AWS region to use. Can alse be
+**pegasus.aws.region** (region) The AWS region to use. Can also be
 specified by -r option.
 
 **pegasus.aws.batch.job_definition** (the json file or existing ARN or
-basename) Can alse be specified by -j option.
+basename) Can also be specified by -j option.
 
 **pegasus.aws.batch.compute_environment** (the json file or existing ARN
-or basename) Can alse be specified by --ce option.
+or basename) Can also be specified by --ce option.
 
 **pegasus.aws.batch.job_queue** (the json file or existing ARN or
-basename) Can alse be specified by -q option.
+basename) Can also be specified by -q option.
 
-**pegasus.aws.batch.s3_bucket** (the S3 URL) Can alse be specified by
+**pegasus.aws.batch.s3_bucket** (the S3 URL) Can also be specified by
 --s3 option.
 
 
@@ -346,7 +346,7 @@ local filesystem in two ways. a. Common Files Required For All Jobs
 
 + b. TRANSFER_INPUT_FILES Environment Variable
 
-+ You can also associate in the job submit a file, an enviornment
++ You can also associate in the job submit a file, an environment
   variable named **TRANSFER_INPUT_FILES** for each job that the tool will
   transfer at the time of job submission. The value for the environment
   variable is a comma separated list of files.

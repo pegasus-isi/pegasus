@@ -366,7 +366,7 @@ class DashboardLoader(BaseLoader):
         @param  wfs: Workflow state object from an end event.
 
         Purges information from the lookup caches after a workflow.end
-        event has been recieved.
+        event has been received.
         """
         self.log.debug("Purging caches for: %s", wfs.wf_uuid)
 

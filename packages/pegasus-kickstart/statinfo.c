@@ -203,7 +203,7 @@ int initStatInfoFromName(StatInfo* statinfo, const char* filename,
 
     if ((flag & 0x01) == 1) {
         /* FIXME: As long as we use shared stdio for stdout and stderr, we need
-         * to explicitely truncate (and create) file to zero, if not appending.
+         * to explicitly truncate (and create) file to zero, if not appending.
          */
         if ((flag & 0x02) == 0) {
             int fd;
@@ -248,7 +248,7 @@ int updateStatInfo(StatInfo* statinfo) {
 
     if (statinfo->source == IS_FILE && (statinfo->deferred & 1) == 1) {
         /* FIXME: As long as we use shared stdio for stdout and stderr, we need
-         * to explicitely truncate (and create) file to zero, if not appending.
+         * to explicitly truncate (and create) file to zero, if not appending.
          */
         int fd;
         if ((statinfo->deferred & 4) == 4) {

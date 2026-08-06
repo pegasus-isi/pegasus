@@ -8,12 +8,12 @@ export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=`pwd`/submit/$RUN_ID
 
 export PYTHONPATH=$(pegasus-config --python)
 
 rm -rf montage-workflow-v3
-git clone https://github.com/pegasus-isi/montage-workflow-v3.git
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
@@ -81,7 +81,7 @@ EOF
 
 pegasus-plan \
         --conf ../pegasusrc \
-        --dir work \
+        --dir submit \
         --relative-dir `date +'%s'` \
         --sites CCG \
         --staging-site CCGData \

@@ -224,7 +224,7 @@ class Status:
     def show_debug_info(self) -> None:
         """Print the ``condor_q`` command that was used to query the HTCondor queue."""
         print("condor_q command used to retrieve jobs in Condor Q :")
-        print("{} {}".format(shutil.which("condor_q"), " ".join(self.q_cmd[1:])))
+        print(f"{shutil.which('condor_q')} {' '.join(self.q_cmd[1:])}")
 
     def get_q_values(self):
         """Internal method to retrieve Condor Q jobs."""
@@ -272,8 +272,8 @@ class Status:
         }
 
         if long:
-            idcol = "{:^8}".format("ID")
-            st = "{:^15}".format("SITE")
+            idcol = f"{'ID':^8}"
+            st = f"{'SITE':^15}"
         else:
             idcol = ""
             st = ""
@@ -291,11 +291,7 @@ class Status:
                 )
             )
 
-        print(
-            "\n{}{}{:5}{:^11}{:25}".format(
-                idcol, st, "STAT", "IN_STATE", "JOB"
-            ).rstrip()
-        )
+        print(f"\n{idcol}{st}{'STAT':5}{'IN_STATE':^11}{'JOB':25}".rstrip())
 
         job_counts = {
             self.JS_IDLE: 0,
@@ -329,8 +325,8 @@ class Status:
                 status = self.job_status_codes[job["JobStatus"]]
 
                 if long:
-                    jobid = "{:^8}".format(job["ClusterId"])
-                    site = "{:^15}".format(job["pegasus_site"])
+                    jobid = f"{job['ClusterId']:^8}"
+                    site = f"{job['pegasus_site']:^15}"
                 else:
                     jobid = ""
                     site = ""
@@ -339,14 +335,14 @@ class Status:
                 in_state = self.get_time(int(time.time() - job["EnteredCurrentStatus"]))
 
                 if job["pegasus_wf_xformation"] == "pegasus::dagman":
-                    job_name = "{} ({})".format(job["pegasus_wf_name"], job["Iwd"])
+                    job_name = f"{job['pegasus_wf_name']} ({job['Iwd']})"
                 else:
                     job_name = prefix + pointer + job["pegasus_wf_dag_job_id"]
 
                 print(f"{jobid}{site}{status:^5}{in_state:^11}{job_name:25}".rstrip())
                 if status == "Held":
                     screen_size = shutil.get_terminal_size().columns
-                    print("{}{}..".format(L, job["HoldReason"][: screen_size - 5]))
+                    print(f"{L}{job['HoldReason'][: screen_size - 5]}..")
 
                 if job["pegasus_wf_xformation"] == "condor::dagman":
                     extension = bar if pointer == t else space
@@ -361,10 +357,10 @@ class Status:
             for each_root_wf in root_wf_uuids:
                 print_q(each_root_wf)
 
-        idle = {False: "", True: "I:{} ".format(job_counts["Idle"])}
-        run = {False: "", True: "R:{} ".format(job_counts["Run"])}
-        held = {False: "", True: "H:{} ".format(job_counts["Held"])}
-        rem = {False: "", True: "X:{}".format(job_counts["Del"])}
+        idle = {False: "", True: f"I:{job_counts['Idle']} "}
+        run = {False: "", True: f"R:{job_counts['Run']} "}
+        held = {False: "", True: f"H:{job_counts['Held']} "}
+        rem = {False: "", True: f"X:{job_counts['Del']}"}
         total_jobs = len(condor_jobs)
         s = {False: "", True: "s"}
 
@@ -603,16 +599,16 @@ class Status:
         }
 
         column_names = {  # Long = False          ,     Long = True
-            "unready": ["{:^8}".format("UNREADY"), "{:^7}".format("UNREADY")],
-            "ready": ["{:^8}".format("READY"), "{:^7}".format("READY")],
-            "pre": ["{:^6}".format("PRE"), "{:^5}".format("PRE")],
-            "queued": ["{:^8}".format("QUEUED"), "{:^6}".format("IN_Q")],
-            "post": ["{:^8}".format("POST"), "{:^6}".format("POST")],
-            "completed": ["{:^9}".format("SUCCESS"), "{:^6}".format("DONE")],
-            "failed": ["{:^9}".format("FAILURE"), "{:^6}".format("FAIL")],
-            "percent_done": ["{:^8}".format("%DONE"), "{:^6}".format("%DONE")],
-            "state": ["", "{:^8}".format("STATE")],
-            "dagname": ["", "{:25}".format("DAGNAME")],
+            "unready": [f"{'UNREADY':^8}", f"{'UNREADY':^7}"],
+            "ready": [f"{'READY':^8}", f"{'READY':^7}"],
+            "pre": [f"{'PRE':^6}", f"{'PRE':^5}"],
+            "queued": [f"{'QUEUED':^8}", f"{'IN_Q':^6}"],
+            "post": [f"{'POST':^8}", f"{'POST':^6}"],
+            "completed": [f"{'SUCCESS':^9}", f"{'DONE':^6}"],
+            "failed": [f"{'FAILURE':^9}", f"{'FAIL':^6}"],
+            "percent_done": [f"{'%DONE':^8}", f"{'%DONE':^6}"],
+            "state": ["", f"{'STATE':^8}"],
+            "dagname": ["", f"{'DAGNAME':25}"],
         }
 
         if legend:
@@ -668,13 +664,13 @@ class Status:
 
         else:
             if self.is_hierarchical:
-                total_name = "TOTALS({} jobs)".format(values["totals"]["total"])
+                total_name = f"TOTALS({values['totals']['total']} jobs)"
                 self.dag_tree_struct.append(("totals", total_name))
 
             for index, each_dag in enumerate(self.dag_tree_struct):
                 if not index:
                     dag_dict = values["dags"]["root"]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = values["dags"]["root"]["dagname"]
                 elif each_dag[0] == "totals":
                     dag_dict = values["totals"]
@@ -683,7 +679,7 @@ class Status:
                 else:
                     dag = Path(each_dag[0]).stem
                     dag_dict = values["dags"][dag]
-                    state = dag_dict[self.K_DAGSTATE]
+                    state = dag_dict[self.K_DAGSTATE] or self.DAG_OK
                     name = each_dag[1]
 
                 print(
@@ -692,11 +688,11 @@ class Status:
 
         dag_state_counts = {"Running": 0, "Success": 0, "Failure": 0}
         for each_dag in values["dags"]:
-            dag_state_counts[values["dags"][each_dag]["state"]] += 1
+            dag_state_counts[values["dags"][each_dag]["state"] or self.DAG_OK] += 1
 
-        done = {False: "", True: "Success:{} ".format(dag_state_counts["Success"])}
-        fail = {False: "", True: "Failure:{} ".format(dag_state_counts["Failure"])}
-        run = {False: "", True: "Running:{}".format(dag_state_counts["Running"])}
+        done = {False: "", True: f"Success:{dag_state_counts['Success']} "}
+        fail = {False: "", True: f"Failure:{dag_state_counts['Failure']} "}
+        run = {False: "", True: f"Running:{dag_state_counts['Running']}"}
         total_dags = len(values["dags"])
         s = {False: "", True: "s"}
 

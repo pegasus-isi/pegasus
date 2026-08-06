@@ -163,7 +163,7 @@ int mylist_fill(mylist_p list, const char* fn) {
         return EINVAL;
     }
 
-    /* GH-2156 expand fn to account for enviornment variables */
+    /* GH-2156 expand fn to account for environment variables */
     Node *expanded_fn = parseCommandLine(fn);
     if (expanded_fn == NULL){
       printerr("ERROR: Unable to expand the filename %s\n", fn);

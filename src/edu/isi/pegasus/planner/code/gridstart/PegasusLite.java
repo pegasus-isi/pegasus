@@ -113,7 +113,8 @@ public class PegasusLite implements GridStart {
             Metrics.COLLECT_METRICS_ENV_VARIABLE.toLowerCase();
 
     /**
-     * The basename of the class that is implmenting this. Could have been determined by reflection.
+     * The basename of the class that is implementing this. Could have been determined by
+     * reflection.
      */
     public static final String CLASSNAME = "PegasusLite";
 
@@ -180,7 +181,7 @@ public class PegasusLite implements GridStart {
     /** A boolean indicating whether to have worker node execution or not. */
     // protected boolean mWorkerNodeExecution;
 
-    // PM-810 done throught PegasusConfiguration
+    // PM-810 done through PegasusConfiguration
     /** Handle to PegasusConfiguration */
     private PegasusConfiguration mPegasusConfiguration;
 
@@ -332,7 +333,7 @@ public class PegasusLite implements GridStart {
 
     /**
      * Enables a job to run on the grid. This also determines how the stdin,stderr and stdout of the
-     * job are to be propogated. To grid enable a job, the job may need to be wrapped into another
+     * job are to be propagated. To grid enable a job, the job may need to be wrapped into another
      * job, that actually launches the job. It usually results in the job description passed being
      * modified modified.
      *
@@ -579,7 +580,7 @@ public class PegasusLite implements GridStart {
             args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_EXITCODE);
             args.append(" ");
             args.append(PegasusExitCode.POSTSCRIPT_ARGUMENTS_FOR_PASSING_DAGMAN_JOB_RETRY);
-            // PM-1821 explicity indicate no kickstart records to parse
+            // PM-1821 explicitly indicate no kickstart records to parse
             args.append(" ")
                     .append(
                             PegasusExitCode
@@ -872,7 +873,7 @@ public class PegasusLite implements GridStart {
                 String dir = null;
 
                 if (job.envVariables.containsKey(PegasusLite.WORKER_NODE_DIRECTORY_KEY)) {
-                    // user metioned it as a profile that got assocaited with the job
+                    // user mentioned it as a profile that got associated with the job
                     dir = (String) job.envVariables.get(PegasusLite.WORKER_NODE_DIRECTORY_KEY);
                 } else if (execSiteEntry != null) {
                     Directory directory = execSiteEntry.getDirectory(Directory.TYPE.local_scratch);
@@ -1059,7 +1060,7 @@ public class PegasusLite implements GridStart {
     }
 
     /**
-     * Convers the collection of files into an input format suitable for the transfer executable
+     * Covers the collection of files into an input format suitable for the transfer executable
      *
      * @param files Collection of <code>FileTransfer</code> objects.
      * @param linkage file type of transfers

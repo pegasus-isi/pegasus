@@ -149,7 +149,7 @@ public class ReplicaFactory {
         // pegasus.catalog.work.db.driver.*
         db.putAll(properties.matchingSubset(ReplicaCatalog.DB_PREFIX, false));
 
-        // PM-778 properties propFile location requried for pegasus-db-admin
+        // PM-778 properties propFile location required for pegasus-db-admin
         if (propFile != null) {
             connectProps.put("properties.file", propFile);
         }

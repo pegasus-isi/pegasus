@@ -33,7 +33,7 @@ import java.util.Set;
  * A data class that is used to track the various files placed by the mapper on the staging sites
  * for the workflow.
  *
- * <p>The url's are stored into a memory based Replica Catalog instance, dependant upon type ( get |
+ * <p>The url's are stored into a memory based Replica Catalog instance, dependent upon type ( get |
  * put URL ).
  *
  * @author Karan Vahi
@@ -80,8 +80,8 @@ public class PlannerCache extends Data implements Cloneable {
         mLogger = bag.getLogger();
         mPOptions = bag.getPlannerOptions();
 
-        mGetRCCache = this.intializeRCAsCache(dag, OPERATION.get);
-        mPutRCCache = this.intializeRCAsCache(dag, OPERATION.put);
+        mGetRCCache = this.initializeRCAsCache(dag, OPERATION.get);
+        mPutRCCache = this.initializeRCAsCache(dag, OPERATION.put);
     }
 
     /**
@@ -200,7 +200,7 @@ public class PlannerCache extends Data implements Cloneable {
         }
     }
 
-    /** Explicitely free resources before the garbage collection hits. */
+    /** Explicitly free resources before the garbage collection hits. */
     public void close() {
         if (mGetRCCache != null) {
             mGetRCCache.close();
@@ -217,7 +217,7 @@ public class PlannerCache extends Data implements Cloneable {
      * @param type the url type that will be stored
      * @return handle to transient catalog
      */
-    private ReplicaCatalog intializeRCAsCache(ADag dag, OPERATION type) {
+    private ReplicaCatalog initializeRCAsCache(ADag dag, OPERATION type) {
         ReplicaCatalog rc = null;
         mLogger.log(
                 "Initialising  Replica Catalog for Planner Cache", LogManager.DEBUG_MESSAGE_LEVEL);
@@ -251,7 +251,7 @@ public class PlannerCache extends Data implements Cloneable {
 
     /**
      * Constructs the basename to the cache file that is to be used to log the transient files. The
-     * basename is dependant on whether the basename prefix has been specified at runtime or not.
+     * basename is dependent on whether the basename prefix has been specified at runtime or not.
      *
      * @param adag the ADag object containing the workflow that is being concretized.
      * @return the name of the cache file
@@ -270,7 +270,7 @@ public class PlannerCache extends Data implements Cloneable {
 
         // PM-677 deliberately a put cache to make sure it is never
         // it does not overwrite the workflow cache written out in
-        // Transfer Engine. We do explicilty set read only flag to true
+        // Transfer Engine. We do explicitly set read only flag to true
         // This is a failsafe.
         sb.append(".").append(operation).append("cache");
 

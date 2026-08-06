@@ -718,7 +718,7 @@ def add(wf, jobid, event, sched_id=None, status=None, reason=None):
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
     if event == "SUBMIT" or event == "SUBMIT_FAILED":
-        # Add job to our workflow (if not alredy there), will update sched_id in both cases
+        # Add job to our workflow (if not already there), will update sched_id in both cases
         my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
     # Get job_submit_seq if we don't already have it
@@ -1453,7 +1453,7 @@ while len(wfs) > 0:
                     # Go to the next workflow_entry in the for loop
                     continue
 
-                # In replay mode, we can be a little more aggresive
+                # In replay mode, we can be a little more aggressive
                 # FIXME Why would you have to wait for 5 tries in replay mode?
                 if replay_mode and workflow_entry.ml_retries > 5:
                     # We are in replay mode, so we should have everything here

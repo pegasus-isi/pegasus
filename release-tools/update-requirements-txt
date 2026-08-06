@@ -4,26 +4,71 @@
 # specific to the supported Python versions. It ignores packages that are to
 # be installed externally, like PyYAML, and cryptography.
 
-set -e
+set -euo pipefail
 
-DIR=$(dirname $(dirname $0))
+DIR=$(cd "$(dirname "$0")/.." && pwd)
+UV=${UV:-uv}
+REQUIREMENTS="$DIR/src/requirements.txt"
 
-PACKAGES=""
-for i in $(echo worker python api common); do
-    PACKAGES="packages/pegasus-${i} ${PACKAGES}"
-done
+WORKER_PACKAGE=(packages/pegasus-worker)
+PACKAGES=(
+    packages/pegasus-worker
+    packages/pegasus-python
+    packages/pegasus-api
+    packages/pegasus-common
+)
 
-rm -f $DIR/src/requirements.txt
+EXCLUDED_PACKAGES=(
+    pegasus-wms
+    pegasus-wms.api
+    pegasus-wms.common
+    pegasus-wms.worker
+    PyYAML
+    cryptography
+    cffi
+    pycparser
+)
+
+if ! command -v "$UV" >/dev/null 2>&1; then
+    echo "ERROR: uv is required to update requirements.txt" >&2
+    exit 1
+fi
+
+TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/pegasus-requirements.XXXXXX")
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+cd "$DIR"
+rm -f "$REQUIREMENTS"
 for i in {6..14}; do
-    echo "# ------- Python 3.$i -------" | tee -a src/requirements.txt
+    PYTHON_VERSION="3.$i"
+    echo "# ------- Python $PYTHON_VERSION -------" | tee -a "$REQUIREMENTS"
 
-    pip3.$i download -d p3${i} ${PACKAGES}
+    REQUIREMENTS_IN="$TMP_DIR/requirements-$PYTHON_VERSION.in"
+    COMPILED_REQUIREMENTS="$TMP_DIR/requirements-$PYTHON_VERSION.txt"
 
-    ls -1 p3${i} | sort | grep -iv pegasus_wms | \
-        grep -Eiv '(cryptography|cffi|pycparser)' | \
-        grep -iv pyyaml | \
-        sed -E "s/^([^-]*)-([^-]*)[-.].*/\1==\2;python_version=='3.$i'/g" | \
-        sed -E "s/\.tar(\.gz)?//g" >> $DIR/src/requirements.txt
+    : > "$REQUIREMENTS_IN"
+    # Only pegasus-worker still supports Python < 3.10.
+    if [[ "$i" -lt 10 ]]; then
+        printf "%s\n" "${WORKER_PACKAGE[@]}" > "$REQUIREMENTS_IN"
+    else
+        printf "%s\n" "${PACKAGES[@]}" > "$REQUIREMENTS_IN"
+    fi
 
-    rm -rf p3${i}
+    UV_ARGS=()
+    for package in "${EXCLUDED_PACKAGES[@]}"; do
+        UV_ARGS+=(--no-emit-package "$package")
+    done
+
+    "$UV" pip compile "$REQUIREMENTS_IN" \
+        --python-version "$PYTHON_VERSION" \
+        --no-header \
+        --no-annotate \
+        "${UV_ARGS[@]}" \
+        --output-file "$COMPILED_REQUIREMENTS"
+
+    awk -v python_version="$PYTHON_VERSION" '
+        NF && $1 !~ /^#/ {
+            printf "%s;python_version==\047%s\047\n", $0, python_version
+        }
+    ' "$COMPILED_REQUIREMENTS" >> "$REQUIREMENTS"
 done

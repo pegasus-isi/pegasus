@@ -505,7 +505,7 @@ public class File extends CatalogType {
                 mLogger.log(
                         "The file element for "
                                 + mName
-                                + " must have atleast 1 pfn or 1 metadata entry. Skipping empty"
+                                + " must have at least 1 pfn or 1 metadata entry. Skipping empty"
                                 + " file element",
                         LogManager.WARNING_MESSAGE_LEVEL);
             } else {
@@ -595,7 +595,7 @@ public class File extends CatalogType {
 
             // optional
             // By default optional is false. we only write out if set to true.
-            // Else can confict with the checkpoint files that are automatically
+            // Else can conflict with the checkpoint files that are automatically
             // tagged internally as optional when the planner parses checkpoint file.
             // explicitly optional set to false, will lead to planner tagging checkpoint
             // file as not optional, which is incorrect behavior.

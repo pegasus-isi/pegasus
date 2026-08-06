@@ -41,7 +41,7 @@ import java.util.Set;
 public class Tentacles extends AbstractStrategy {
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates create dir job

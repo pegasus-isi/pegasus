@@ -88,7 +88,7 @@ public interface Implementation {
      * @param txJobName the name of the transfer job that is staging the files.
      * @param execFiles the executable files that are being staged.
      * @param transferClass the class of transfer job
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     /*public boolean addSetXBitJobs( Job computeJob,
                                        String txJobName,
@@ -104,7 +104,7 @@ public interface Implementation {
      * @param execFiles the executable files that are being staged.
      * @param transferClass the class of transfer job
      * @param xbitIndex index to be used for creating the name of XBitJob.
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     public boolean addSetXBitJobs(
             Job computeJob,
@@ -134,7 +134,7 @@ public interface Implementation {
      * @param txJobName the name of the transfer job that is staging the files.
      * @param execFiles the executable files that are being staged.
      * @param transferClass the class of transfer job
-     * @return boolean indicating whether any XBitJobs were succesfully added or not.
+     * @return boolean indicating whether any XBitJobs were successfully added or not.
      */
     //    public boolean addSetXBitJobs(String computeJobName,
     //                                  String txJobName,

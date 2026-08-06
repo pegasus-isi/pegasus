@@ -223,7 +223,7 @@ public class Currently {
                         zuluTime ? TimeZone.getTimeZone("UTC") : TimeZone.getDefault());
         c.setTime(now);
 
-        // set up formattting options
+        // set up formatting options
         DecimalFormat nf2 = new DecimalFormat("##00");
         DecimalFormat nf3 = new DecimalFormat("###000");
         DecimalFormat nf4 = new DecimalFormat("####0000");

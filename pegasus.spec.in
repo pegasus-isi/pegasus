@@ -29,7 +29,7 @@ Requires:       java-21-openjdk-headless, python3.12
 %if 0%{?rhel} == 10
 BuildRequires:  java-21-openjdk-devel, python3-devel, python3-pip
 Requires:       java-21-openjdk-headless, python3
-%define pegasus_python 3.12
+%define pegasus_python 3.14
 %endif
 
 # System interpreter's site-packages dir — used only to drop the pegasus.pth

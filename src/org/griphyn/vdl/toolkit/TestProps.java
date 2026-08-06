@@ -134,7 +134,7 @@ public class TestProps extends Toolkit {
                 keys.add(key);
             }
 
-            // create sufficient spaces to accomodate the smallest key
+            // create sufficient spaces to accommodate the smallest key
             StringBuffer space = new StringBuffer(max - min + 1);
             for (int i = min; i <= max; ++i) space.append(' ');
 

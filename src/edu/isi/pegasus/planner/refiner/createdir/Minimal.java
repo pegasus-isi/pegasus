@@ -51,7 +51,7 @@ import java.util.Set;
 public class Minimal extends AbstractStrategy {
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates create dir job
@@ -226,7 +226,7 @@ public class Minimal extends AbstractStrategy {
             GraphNode createDirNode = entry.getKey();
             List<GraphNode> children = entry.getValue();
             mLogger.log(
-                    "Adding node to the worfklow " + createDirNode.getID(),
+                    "Adding node to the workflow " + createDirNode.getID(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
             for (GraphNode child : children) {
                 createDirNode.addChild(child);
@@ -239,7 +239,7 @@ public class Minimal extends AbstractStrategy {
     }
 
     /**
-     * Returns the associated site that job is dependant on. This is site, whose create dir job
+     * Returns the associated site that job is dependent on. This is site, whose create dir job
      * should be a parent or an ancestor of the job.
      *
      * @param job the job for which we need the associated create dir site.

@@ -119,7 +119,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
     protected static final String DUMMY_LOCAL_CONTAINER_SITE = "localC";
 
     /**
-     * Intializes the class.
+     * initializes the class.
      *
      * @param bag bag of initialization objects
      * @param impl the implementation instance that creates cleanup job
@@ -132,7 +132,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
 
         mImpl = impl;
 
-        // intialize the internal structures
+        // initialize the internal structures
         mResMap = new HashMap();
         mResMapLeaves = new HashMap();
         mResMapRoots = new HashMap();
@@ -406,7 +406,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
         Set<String> sites = new HashSet();
         String cacheFile = job.getInputWorkflowCacheFile();
         // for DAX jobs we look at the site based on if any
-        // inputs of DAX job are being retreived from a parent
+        // inputs of DAX job are being retrieved from a parent
         // job. For this look into the sub workflow input cache file
         if (cacheFile == null) {
             // PM-1918 just return the execution set for the job. that
@@ -438,7 +438,7 @@ public abstract class AbstractCleanupStrategy implements CleanupStrategy {
                 // DAXJob/Sub workflow jobs can be associated with multiple sites
                 // that it needs to be mapped. one is the execution site. other is
                 // where the parents job have placed their outputs that sub workflow
-                // requries as input on their data staging site. we retrieve these
+                // requires as input on their data staging site. we retrieve these
                 // locations from parsing the sub workflow input cache file
                 String sourceSite = job.getSiteHandle();
                 for (ReplicaCatalogEntry rce : rces) {

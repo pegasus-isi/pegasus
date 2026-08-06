@@ -60,7 +60,7 @@ public class Arch implements Serializable {
      * Creates a new Arch Object givan a arch string.
      *
      * @param value String
-     * @throws IllegalStateException Throws Exception if the architecure is not defined in this
+     * @throws IllegalStateException Throws Exception if the architecture is not defined in this
      *     class.
      * @return Arch
      */
@@ -76,7 +76,7 @@ public class Arch implements Serializable {
      * Creates a new Arch object given a arch string.
      *
      * @param value String
-     * @throws IllegalStateException Throws Exception if the architecure is not defined in this
+     * @throws IllegalStateException Throws Exception if the architecture is not defined in this
      *     class.
      * @return Arch
      */
