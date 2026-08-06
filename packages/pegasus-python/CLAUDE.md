@@ -95,5 +95,5 @@ Tests mirror the source layout. The `conftest.py` provides session-scoped Flask 
 - SQLAlchemy pinned to `>=1.4` (not compatible with 2.x)
 - Flask pinned to `>=2.2,<3.0`
 - Python 3.10+ required (set in root `pyproject.toml`)
-- Version is `5.2.0-dev`, defined in root `build.properties` and `pyproject.toml`
+- Version is `6.0.0-dev0`, defined in root `build.properties` and `pyproject.toml`
 - This package is not installed standalone — it ships as part of the `pegasus-wms` wheel built from the repo root
