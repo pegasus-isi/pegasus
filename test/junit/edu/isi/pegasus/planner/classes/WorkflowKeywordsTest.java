@@ -160,6 +160,11 @@ public class WorkflowKeywordsTest {
     }
 
     @Test
+    public void testIsDirectoryReservedName() {
+        assertThat(WorkflowKeywords.IS_DIRECTORY.getReservedName(), is("isDirectory"));
+    }
+
+    @Test
     public void testEveryReservedNameRoundTripsToItsEnum() {
         for (WorkflowKeywords keyword : WorkflowKeywords.values()) {
             assertThat(WorkflowKeywords.getReservedKey(keyword.getReservedName()), is(keyword));

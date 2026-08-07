@@ -1089,6 +1089,18 @@ public class PegasusLite implements GridStart {
                 sb.append("   \"verify_symlink_source\": false").append(",\n");
             }
 
+            // PM-112 SLS transfers only ever run directly between the staging site and the
+            // worker node, so there is no relay/passthrough case here (unlike the first level
+            // staging transfer jobs): an input transfer is delivering the tarball straight into
+            // the job's worker node working directory, and an output transfer is picking the
+            // directory straight out of it.
+            if (ft.isDirectory()) {
+                sb.append("   \"directory\": true,\n");
+                sb.append("   \"directory_action\": \"")
+                        .append(linkage == PegasusFile.LINKAGE.input ? "untar" : "tar")
+                        .append("\",\n");
+            }
+
             sb.append("   \"src_urls\": [");
 
             boolean notFirst = false;

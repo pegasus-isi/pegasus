@@ -243,11 +243,19 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
+     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     *     transfer job is setup for worker node execution ( PegasusLite ). Unused by this
+     *     implementation.
      * @see edu.isi.pegasus.planner.classes.FileTransfer#toString()
      * @throws java.lang.Exception
      */
     protected void writeStdInAndAssociateCredentials(
-            TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass)
+            TransferJob job,
+            FileWriter writer,
+            Collection files,
+            String stagingSite,
+            int jobClass,
+            boolean jobSetupForWorkerNodeExecution)
             throws Exception {
 
         for (Iterator it = files.iterator(); it.hasNext(); ) {

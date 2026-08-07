@@ -379,10 +379,19 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
+     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     *     transfer job is setup for worker node execution ( PegasusLite ). Used to determine the
+     *     directory tar/untar action for directory (tar'd) transfers - see {@link
+     *     #getDirectoryAction(boolean, int)}.
      * @throws Exception
      */
     protected void writeStdInAndAssociateCredentials(
-            TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass)
+            TransferJob job,
+            FileWriter writer,
+            Collection files,
+            String stagingSite,
+            int jobClass,
+            boolean jobSetupForWorkerNodeExecution)
             throws Exception {
 
         // format is a JSON list
@@ -395,6 +404,11 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         if (type == Job.STAGE_IN_JOB || type == Job.STAGE_IN_WORKER_PACKAGE_JOB) {
             linkage = PegasusFile.LINKAGE.input;
         }
+
+        // PM-112 the directory tar/untar/passthrough action is the same for every file in
+        // this job's transfer set (it only depends on the job, not the individual file), so
+        // compute it once rather than per-file inside the loop below
+        String directoryAction = this.getDirectoryAction(jobSetupForWorkerNodeExecution, jobClass);
 
         int num = 1;
         for (Iterator it = files.iterator(); it.hasNext(); ) {
@@ -437,6 +451,16 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             // TODO: integrity knob
             if (jobClass == Job.STAGE_OUT_JOB && ft.hasChecksumComputedInWF()) {
                 urlPair.append("   \"verify_checksum_remote\": ").append(true).append(",\n");
+            }
+
+            // PM-112 whole directory staging - tell pegasus-transfer whether it needs to
+            // tar/untar the directory as part of this transfer, or just move the already
+            // tarred artifact through unchanged
+            if (ft.isDirectory()) {
+                urlPair.append("   \"directory\": ").append(true).append(",\n");
+                urlPair.append("   \"directory_action\": \"")
+                        .append(directoryAction)
+                        .append("\",\n");
             }
 
             // PM-1190 dump any metadata that planner knows of about the file
@@ -507,6 +531,42 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         }
 
         writer.write("]\n");
+    }
+
+    /**
+     * PM-112 determines the directory tar/untar action pegasus-transfer should take for a directory
+     * transfer, based on the job class and whether the associated compute job runs via a
+     * PegasusLite worker node wrapper.
+     *
+     * <p>For jobs setup for worker node execution (nonsharedfs/condorio), the actual tar/untar
+     * happens in the PegasusLite SLS transfers at the worker node (see {@link
+     * edu.isi.pegasus.planner.code.gridstart.PegasusLite#convertToTransferInputFormat} ) - this
+     * implementation only ever relays the already-tarred artifact between the staging site and the
+     * RC/storage site, hence "passthrough". For sharedfs jobs (no PegasusLite), this implementation
+     * is the only transfer touching the directory, so it does the tar (stage-out, leaving the job's
+     * execution directory) or untar (stage-in, landing directly in shared scratch where the job
+     * will read it) itself.
+     *
+     * <p>anything other than STAGE_IN_JOB/STAGE_OUT_JOB (e.g. INTER_POOL_JOB relays between staging
+     * sites) is always a "passthrough", as it never touches the compute job's own execution
+     * directory.
+     *
+     * @param jobSetupForWorkerNodeExecution whether the compute job associated with this transfer
+     *     is setup for worker node execution ( PegasusLite )
+     * @param jobClass the job class - one of stage-in, stage-out, inter-pool transfer
+     * @return one of "tar", "untar" or "passthrough"
+     */
+    protected String getDirectoryAction(boolean jobSetupForWorkerNodeExecution, int jobClass) {
+        if (jobSetupForWorkerNodeExecution) {
+            return "passthrough";
+        }
+        if (jobClass == Job.STAGE_OUT_JOB) {
+            return "tar";
+        }
+        if (jobClass == Job.STAGE_IN_JOB) {
+            return "untar";
+        }
+        return "passthrough";
     }
 
     /**

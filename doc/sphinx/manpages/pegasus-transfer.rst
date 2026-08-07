@@ -71,6 +71,38 @@ Example
    CTRL+D
 
 
+Directory Transfers
+===================
+
+A transfer entry can be marked as a whole directory transfer by setting
+**directory** to **true**, and **directory_action** to one of:
+
+**tar**
+   The source is a local directory that pegasus-transfer should tar up
+   (as ``<lfn>.tar.gz``) before transferring.
+
+**untar**
+   The destination is a local path that, once the tarball has been
+   transferred and its integrity verified, pegasus-transfer should
+   extract in place, leaving a directory instead of a tarball.
+
+**passthrough**
+   The tarball is moved as-is, with no tar/untar performed. This is used
+   for relay hops where the directory is already tarred and is not yet at
+   its final destination (e.g. an intermediate staging site).
+
+::
+
+   [
+    { "type": "transfer",
+      "id": 1,
+      "directory": true,
+      "directory_action": "tar",
+      "src_urls": [ { "site_label": "condorpool", "url": "file:///scratch/wf/mydir" } ],
+      "dest_urls": [ { "site_label": "staging", "url": "gsiftp://staging.example.edu/wf/mydir" } ]
+    }
+   ]
+
 Protocols Supported
 ===================
 

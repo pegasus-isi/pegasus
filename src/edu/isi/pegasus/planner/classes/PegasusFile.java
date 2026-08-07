@@ -75,8 +75,11 @@ public class PegasusFile extends Data {
     /** If set, means can be considered for bypass staging */
     public static final int PLANNING_USE_BIT_FLAG = 5;
 
+    /** If set, means the file represents a whole directory that is tarred/untarred in transit */
+    public static final int IS_DIRECTORY_BIT_FLAG = 6;
+
     /** The number of transient flags. This is the length of the BitSet in the flags fields. */
-    public static final int NO_OF_TRANSIENT_FLAGS = 6;
+    public static final int NO_OF_TRANSIENT_FLAGS = 7;
 
     /**
      * The mode where the transfer for this file to the pool is constructed and the transfer job
@@ -661,6 +664,29 @@ public class PegasusFile extends Data {
         return mFlags.get(BYPASS_BIT_FLAG);
     }
 
+    /** Sets the directory flag denoting the file represents a whole directory */
+    public void setForDirectory() {
+        mFlags.set(IS_DIRECTORY_BIT_FLAG);
+    }
+
+    /**
+     * Sets the directory flag denoting the file represents a whole directory
+     *
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForDirectory(boolean value) {
+        mFlags.set(IS_DIRECTORY_BIT_FLAG, value);
+    }
+
+    /**
+     * Returns whether the file represents a whole directory that is tarred/untarred in transit.
+     *
+     * @return true denoting the file represents a directory.
+     */
+    public boolean isDirectory() {
+        return mFlags.get(IS_DIRECTORY_BIT_FLAG);
+    }
+
     /**
      * Returns the tristate transfer mode that is associated with the file.
      *
@@ -982,7 +1008,7 @@ public class PegasusFile extends Data {
                 .append(
                         "\n"
                             + " Transient Flags"
-                            + " (transfer,optional,dontRegister,cleanup,integrity,bypass,plannerUse):")
+                            + " (transfer,optional,dontRegister,cleanup,integrity,bypass,plannerUse,isDirectory):")
                 .append(" ( ")
                 .append(getTransferFlag())
                 .append(",");
@@ -1073,6 +1099,10 @@ public class PegasusFile extends Data {
 
                     case BYPASS:
                         pf.setForBypassStaging(node.get(key).asBoolean());
+                        break;
+
+                    case IS_DIRECTORY:
+                        pf.setForDirectory(node.get(key).asBoolean());
                         break;
 
                     case OPTIONAL:

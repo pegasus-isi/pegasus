@@ -13,6 +13,7 @@ import socket
 import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import time
@@ -311,6 +312,8 @@ class Transfer(TransferBase):
         self.verify_checksum_remote = (
             False  # should we generate checksums as we transfer?
         )
+        self.directory = False  # PM-112 is this transfer for a whole directory?
+        self.directory_action = None  # PM-112 one of "tar", "untar", "passthrough"
 
     def __str__(self):
         return "{} -> {}".format(
@@ -4225,6 +4228,83 @@ class Panorama:
             data = u.read()
 
 
+def tar_directory(local_dir_path):
+    """
+    PM-112 tar a local directory into a sibling ``<basename>.tar.gz`` file, so it
+    can be staged/registered as a single file like everything else.
+
+    :param local_dir_path: absolute path to the directory to tar
+    :type local_dir_path: str
+    :return: path to the created tarball
+    :rtype: str
+    :raises RuntimeError: if local_dir_path is not an existing local directory
+    """
+    local_dir_path = local_dir_path.rstrip("/")
+    if not os.path.isdir(local_dir_path):
+        raise RuntimeError(
+            f"Unable to tar '{local_dir_path}' for directory staging - it is not "
+            "a local directory. The source of a directory transfer must be on a "
+            "local filesystem."
+        )
+    parent_dir = os.path.dirname(local_dir_path) or "."
+    base_name = os.path.basename(local_dir_path)
+    tarball_path = os.path.join(parent_dir, base_name + ".tar.gz")
+    with tarfile.open(tarball_path, "w:gz") as tf:
+        tf.add(local_dir_path, arcname=base_name)
+    return tarball_path
+
+
+def untar_directory(tarball_path, extract_dir=None):
+    """
+    PM-112 untar a directory tarball created by :func:`tar_directory`.
+
+    :param tarball_path: path to the ``.tar.gz`` file to extract
+    :type tarball_path: str
+    :param extract_dir: directory to extract into, defaults to the tarball's own directory
+    :type extract_dir: str, optional
+    """
+    if extract_dir is None:
+        extract_dir = os.path.dirname(tarball_path) or "."
+    with tarfile.open(tarball_path, "r:gz") as tf:
+        # guard against path traversal ("tar-slip"/"zip-slip") from a
+        # maliciously crafted tarball - every member must resolve inside
+        # extract_dir. This is checked purely syntactically against the
+        # pristine filesystem (nothing has been extracted yet), so a
+        # symlink/hardlink member's *target* is checked here too - otherwise
+        # an earlier member could plant a symlink pointing outside
+        # extract_dir and a later member could write "through" it during
+        # extractall(), escaping this member.name-only check.
+        real_extract_dir = os.path.realpath(extract_dir)
+        for member in tf.getmembers():
+            member_path = os.path.realpath(os.path.join(extract_dir, member.name))
+            if os.path.commonpath([real_extract_dir, member_path]) != real_extract_dir:
+                raise RuntimeError(
+                    f"Refusing to extract '{member.name}' from '{tarball_path}' - "
+                    "path escapes the extraction directory"
+                )
+            if member.issym() or member.islnk():
+                link_target = member.linkname
+                if os.path.isabs(link_target):
+                    target_path = os.path.realpath(link_target)
+                else:
+                    target_path = os.path.realpath(
+                        os.path.join(os.path.dirname(member_path), link_target)
+                    )
+                if (
+                    os.path.commonpath([real_extract_dir, target_path])
+                    != real_extract_dir
+                ):
+                    raise RuntimeError(
+                        f"Refusing to extract link '{member.name}' -> "
+                        f"'{link_target}' from '{tarball_path}' - link target "
+                        "escapes the extraction directory"
+                    )
+        if sys.version_info >= (3, 12):
+            tf.extractall(extract_dir, filter="data")
+        else:
+            tf.extractall(extract_dir)
+
+
 class SimilarWorkSet:
     """
     A transfer set is a set of similar transfers, similar in the sense
@@ -4386,6 +4466,42 @@ class SimilarWorkSet:
             return
 
         # actual transfers
+
+        # PM-112 directory staging: tar the local source directory into a
+        # tarball, then let the rest of this method transfer that single
+        # tarball as usual. The tarball is a temp file and gets removed once
+        # the transfer attempt is done, further below.
+        directory_tarballs_to_clean_up = []
+        for t in self._transfers:
+            if t.directory_action == "tar":
+                src = t._src_urls[0]
+                if src.proto != "file":
+                    raise RuntimeError(
+                        f"Cannot tar directory for lfn '{t.lfn}' - source "
+                        f"'{src.get_url()}' is not on a local filesystem. "
+                        "Register an already tarred .tar.gz replica for remote "
+                        "directory sources instead."
+                    )
+                tarball_path = tar_directory(src.path)
+                directory_tarballs_to_clean_up.append(tarball_path)
+                t._src_urls[0] = PegasusURL(
+                    "file://" + tarball_path,
+                    src.file_type,
+                    src.site_label,
+                    src.priority,
+                )
+                dst = t._dst_urls[0]
+                dst_url = dst.get_url()
+                # PM-112 the planner may already have appended ".tar.gz" itself
+                # (e.g. for a nonsharedfs relay hop, where the destination is
+                # never touched again after this) - only append it here if
+                # it's not already there, so it's never doubled up
+                if not dst_url.endswith(".tar.gz"):
+                    dst_url = dst_url + ".tar.gz"
+                t._dst_urls[0] = PegasusURL(
+                    dst_url, dst.file_type, dst.site_label, dst.priority
+                )
+
         self._tmp_name = None
         if self._secondary_handler is not None:
             # we have a two stage transfer to deal with and we need a temp file
@@ -4440,6 +4556,12 @@ class SimilarWorkSet:
 
         # remove temp file
         self.clean_up_temp_file(self._tmp_name)
+
+        # PM-112 the tarball created for a "tar" directory transfer is no
+        # longer needed once the transfer attempt (success or failure) is done
+        for tarball_path in directory_tarballs_to_clean_up:
+            if os.path.exists(tarball_path):
+                os.remove(tarball_path)
 
         # verify that the remotely stored file's checksum matches - this means
         # pulling the file back to the local filesystem and verifying the checksum
@@ -4496,6 +4618,24 @@ class SimilarWorkSet:
             else:
                 # no verification needed
                 success_list.append(t)
+
+        # PM-112 directory staging: for a successful "untar" transfer, the
+        # local destination is currently a tarball - extract it in place, so
+        # the consuming job sees a real directory again. This happens after
+        # checksumming/verification above, on purpose - integrity is always
+        # checked against the tarball, never the extracted contents.
+        untarred_list = []
+        for t in success_list:
+            if t.directory_action == "untar":
+                try:
+                    self._untar_directory_transfer(t)
+                    untarred_list.append(t)
+                except Exception:
+                    logger.exception(f"Failed to untar directory for lfn '{t.lfn}'")
+                    failed_list.append(t)
+            else:
+                untarred_list.append(t)
+        success_list = untarred_list
 
         # accounting
         for t in success_list:
@@ -4597,6 +4737,38 @@ class SimilarWorkSet:
             os.unlink(fname)
         except Exception:
             pass
+
+    def _untar_directory_transfer(self, t):
+        """
+        PM-112 untars a completed "untar" directory transfer's local
+        destination, and removes the tarball afterwards, leaving a real
+        directory in its place.
+        """
+        dst = t._dst_urls[0]
+        if dst.proto != "file":
+            raise RuntimeError(
+                f"Cannot untar directory for lfn '{t.lfn}' - destination "
+                f"'{dst.get_url()}' is not a local filesystem path"
+            )
+        dst_path = dst.path
+        tarball_path = dst_path
+        renamed = False
+        if not tarball_path.endswith(".tar.gz"):
+            # the destination path is the plain lfn (e.g. "mydir") - move it
+            # aside first so extraction doesn't collide with it
+            tarball_path = dst_path + ".pegasus-directory.tar.gz"
+            os.rename(dst_path, tarball_path)
+            renamed = True
+        try:
+            untar_directory(tarball_path, os.path.dirname(dst_path) or ".")
+        except Exception:
+            if renamed:
+                # put the tarball back under its original name so the
+                # transfer can be retried cleanly
+                os.rename(tarball_path, dst_path)
+            raise
+        else:
+            os.remove(tarball_path)
 
 
 class WorkThread(threading.Thread):
@@ -4981,6 +5153,15 @@ def json_object_decoder(obj):
             t.generate_checksum = obj["generate_checksum"]
         if "verify_checksum_remote" in obj:
             t.verify_checksum_remote = obj["verify_checksum_remote"]
+        if "directory" in obj:
+            t.directory = obj["directory"]
+        if "directory_action" in obj:
+            t.directory_action = obj["directory_action"]
+        if t.directory_action in ("tar", "untar"):
+            # PM-112 the src/dst basenames get rewritten by the tar/untar
+            # steps in SimilarWorkSet.do_transfers(), so this transfer can
+            # never be grouped with others
+            t.allow_grouping = False
         # src
         for surl in obj["src_urls"]:
             file_type = None

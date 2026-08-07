@@ -45,6 +45,10 @@ If not specified, the transfer flag defaults to true. So if you don't want all
 the generated files to be transferred to the output sites, you need to
 explicitly set the stage_out flag to false for the file.
 
+A job input or output can also be marked as a whole directory using the
+``is_directory`` flag, in which case Pegasus stages it as a single tarred
+file behind the scenes. See :ref:`directory-staging` for details.
+
 .. tabs::
 
     .. code-tab:: python Pegasus.api
@@ -1088,3 +1092,43 @@ For source URL's that are file URL's **bypass** only works if the
 
 * the file URL is at site "local" and the pegasus profile *auxillary.local*
   is set to true for the compute site in the site catalog.
+
+
+.. _directory-staging:
+
+Staging a Whole Directory
+-------------------------
+Instead of enumerating every file in a directory as a separate job input
+or output, a job can be told to stage the directory as a whole by setting
+the **is_directory** flag on the input or output. Behind the scenes,
+Pegasus stages the directory as a single ``<lfn>.tar.gz`` tarball -
+``pegasus-transfer`` takes care of tarring it up on stage-out and
+untarring it again on stage-in - while the logical filename you use in
+the workflow always stays the plain directory name (e.g. ``mydir``, not
+``mydir.tar.gz``).
+
+.. tabs::
+
+   .. code-tab:: python Pegasus.api
+
+        mydir = File("mydir")
+        job_produce_dir = Job("produce_dir").add_outputs(mydir, is_directory=True)
+        job_consume_dir = Job("consume_dir").add_inputs(mydir, is_directory=True)
+
+   .. code-tab:: yaml  Workflow Snippet
+
+        uses:
+          - lfn: mydir
+            type: output
+            isDirectory: true
+
+.. note::
+
+   The tarring/untarring is done by ``pegasus-transfer`` and requires a
+   local filesystem source when creating the tarball. A directory whose
+   replica catalog entry points at a remote location that is never staged
+   through a local filesystem (e.g. a ``gsiftp://`` or ``s3://`` URL
+   pointing directly at a directory) cannot be tarred on the fly. For
+   such cases, either register an already tarred ``<lfn>.tar.gz`` replica
+   for the directory, or ensure the directory is staged in via a
+   ``file://`` URL on a site where stage-in runs locally.

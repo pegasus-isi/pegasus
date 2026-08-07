@@ -274,6 +274,10 @@ can look like the following:
          children:
             - ID0000004
 
+**Note:** ``add_inputs()`` and ``add_outputs()`` also accept an
+``is_directory`` flag, for jobs that consume or produce a whole directory
+instead of individual files. See :ref:`directory-staging` for details.
+
 .. _catalogs:
 
 Catalogs

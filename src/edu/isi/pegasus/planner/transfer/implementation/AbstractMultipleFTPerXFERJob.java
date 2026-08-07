@@ -159,12 +159,25 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         // the files as output files of the transfer job
         txJob.outputFiles = new HashSet(files);
 
+        // PM-810 worker node execution ( PegasusLite ) is determined per job.
+        // PM-112 this also tells us, for directory (tar'd) transfers, whether
+        // the tar/untar for this job's directory files happens in the
+        // PegasusLite SLS transfers on the worker node ( in which case this
+        // transfer job only relays the already tarred file ), or has to be
+        // done by this transfer job itself ( sharedfs, no PegasusLite ).
+        boolean jobSetupForWorkerNodeExecution =
+                mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+
         try {
             // credentials are handled generically now when the stdin is
             // written out
             txJob.stdIn =
                     prepareSTDINAndAssociateCredentials(
-                            txJob, files, job.getSiteHandle(), jobClass);
+                            txJob,
+                            files,
+                            job.getSiteHandle(),
+                            jobClass,
+                            jobSetupForWorkerNodeExecution);
         } catch (Exception e) {
             StringBuffer error = new StringBuffer();
             error.append("Unable to write the stdIn file for job ")
@@ -202,7 +215,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.strargs = this.generateArgumentString(txJob);
 
         // PM-810 worker node exeucution is per job level now
-        boolean addNodesForSettingXBit = !mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+        boolean addNodesForSettingXBit = !jobSetupForWorkerNodeExecution;
         if (execFiles != null && addNodesForSettingXBit) {
             // we need to add setup jobs to change the XBit
             super.addSetXBitJobs(job, txJob, execFiles);
@@ -376,11 +389,20 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
+     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     *     transfer job is setup for worker node execution ( PegasusLite ). This is used by
+     *     directory (tar'd) transfers to determine whether tar/untar has already been / will be
+     *     handled by the PegasusLite SLS transfers on the worker node.
      * @return the path to the prepared stdin file.
      * @throws Exception in case of error.
      */
     protected String prepareSTDINAndAssociateCredentials(
-            TransferJob job, Collection files, String stagingSite, int jobClass) throws Exception {
+            TransferJob job,
+            Collection files,
+            String stagingSite,
+            int jobClass,
+            boolean jobSetupForWorkerNodeExecution)
+            throws Exception {
         // writing the stdin file
         FileWriter stdIn;
         String basename = job.getName() + ".in";
@@ -390,7 +412,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         File dir = new File(mPOptions.getSubmitDirectory(), job.getRelativeSubmitDirectory());
 
         stdIn = new FileWriter(new File(dir, basename));
-        writeStdInAndAssociateCredentials(job, stdIn, files, stagingSite, jobClass);
+        writeStdInAndAssociateCredentials(
+                job, stdIn, files, stagingSite, jobClass, jobSetupForWorkerNodeExecution);
         // close the stdin stream
         stdIn.close();
         return basename;
@@ -436,10 +459,17 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
+     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     *     transfer job is setup for worker node execution ( PegasusLite ).
      * @throws Exception
      */
     protected abstract void writeStdInAndAssociateCredentials(
-            TransferJob job, FileWriter stdIn, Collection files, String stagingSite, int jobClass)
+            TransferJob job,
+            FileWriter stdIn,
+            Collection files,
+            String stagingSite,
+            int jobClass,
+            boolean jobSetupForWorkerNodeExecution)
             throws Exception;
 
     /**

@@ -403,6 +403,41 @@ public class PegasusFileTest {
     }
 
     @Test
+    public void testDefaultIsDirectoryIsFalse() {
+        PegasusFile pf = new PegasusFile("f.txt");
+        assertFalse(pf.isDirectory());
+    }
+
+    @Test
+    public void testSetForDirectory() {
+        PegasusFile pf = new PegasusFile("f.txt");
+        pf.setForDirectory();
+        assertTrue(pf.isDirectory());
+    }
+
+    @Test
+    public void testSetForDirectoryFalse() {
+        PegasusFile pf = new PegasusFile("f.txt");
+        pf.setForDirectory(true);
+        pf.setForDirectory(false);
+        assertFalse(pf.isDirectory());
+    }
+
+    @Test
+    public void testUsesIsDirectory() throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+
+        String test = "lfn: mydir\n" + "isDirectory: true\n" + "type: output\n";
+
+        PegasusFile pf = mapper.readValue(test, PegasusFile.class);
+        assertNotNull(pf);
+        assertEquals("mydir", pf.getLFN());
+        assertTrue(pf.isDirectory());
+        assertEquals("output", pf.getLinkage().toString());
+    }
+
+    @Test
     public void testDefaultOptionalFlagIsFalse() {
         PegasusFile pf = new PegasusFile("f.txt");
         assertFalse(pf.fileOptional());

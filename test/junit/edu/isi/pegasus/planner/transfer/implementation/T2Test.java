@@ -98,7 +98,8 @@ public class T2Test {
                         java.io.FileWriter.class,
                         java.util.Collection.class,
                         String.class,
-                        int.class);
+                        int.class,
+                        boolean.class);
         assertThat(writeStdInAndAssociateCredentials.getReturnType(), is(void.class));
         assertThat(
                 Modifier.isProtected(writeStdInAndAssociateCredentials.getModifiers()), is(true));

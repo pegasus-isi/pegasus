@@ -47,6 +47,10 @@ class Test_Use:
     def test_valid_use(self, file, link, stage_out, register_replica, bypass_staging):
         assert _Use(file, link, stage_out, register_replica, bypass_staging)
 
+    def test_valid_use_is_directory(self):
+        assert _Use(File("mydir"), _LinkType.INPUT, is_directory=True)
+        assert _Use(File("mydir"), _LinkType.OUTPUT, is_directory=True)
+
     def test_invalid_use_bad_file(self):
         with pytest.raises(TypeError) as e:
             _Use(123, _LinkType.INPUT)
@@ -104,6 +108,16 @@ class Test_Use:
                     bypass_staging=True,
                 ),
                 {"lfn": "a", "type": "input", "bypass": True},
+            ),
+            (
+                _Use(
+                    File("mydir"),
+                    _LinkType.OUTPUT,
+                    stage_out=None,
+                    register_replica=None,
+                    is_directory=True,
+                ),
+                {"lfn": "mydir", "type": "output", "isDirectory": True},
             ),
             (
                 _Use(
@@ -179,6 +193,15 @@ class TestAbstractJob:
 
         assert "invalid input_file: 123" in str(e)
 
+    def test_add_inputs_is_directory(self):
+        job = AbstractJob()
+        f = File("mydir")
+
+        job.add_inputs(f, is_directory=True)
+
+        use = next(iter(job.uses))
+        assert use.is_directory is True
+
     def test_get_outputs(self):
         job = AbstractJob()
         f1 = File("a")
@@ -212,6 +235,15 @@ class TestAbstractJob:
             job.add_outputs(123, "abc")
 
         assert "invalid output_file: 123" in str(e)
+
+    def test_add_outputs_is_directory(self):
+        job = AbstractJob()
+        f = File("mydir")
+
+        job.add_outputs(f, is_directory=True)
+
+        use = next(iter(job.uses))
+        assert use.is_directory is True
 
     def test_add_inputs_and_outputs(self):
         job = AbstractJob()
