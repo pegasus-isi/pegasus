@@ -312,8 +312,8 @@ class Transfer(TransferBase):
         self.verify_checksum_remote = (
             False  # should we generate checksums as we transfer?
         )
-        self.directory = False  # PM-112 is this transfer for a whole directory?
-        self.directory_action = None  # PM-112 one of "tar", "untar", "passthrough"
+        self.directory = False  # GH-233 is this transfer for a whole directory?
+        self.directory_action = None  # GH-233 one of "tar", "untar", "passthrough"
 
     def __str__(self):
         return "{} -> {}".format(
@@ -4230,7 +4230,7 @@ class Panorama:
 
 def tar_directory(local_dir_path):
     """
-    PM-112 tar a local directory into a sibling ``<basename>.tar.gz`` file, so it
+    GH-233 tar a local directory into a sibling ``<basename>.tar.gz`` file, so it
     can be staged/registered as a single file like everything else.
 
     :param local_dir_path: absolute path to the directory to tar
@@ -4256,7 +4256,7 @@ def tar_directory(local_dir_path):
 
 def untar_directory(tarball_path, extract_dir=None):
     """
-    PM-112 untar a directory tarball created by :func:`tar_directory`.
+    GH-233 untar a directory tarball created by :func:`tar_directory`.
 
     :param tarball_path: path to the ``.tar.gz`` file to extract
     :type tarball_path: str
@@ -4303,6 +4303,25 @@ def untar_directory(tarball_path, extract_dir=None):
             tf.extractall(extract_dir, filter="data")
         else:
             tf.extractall(extract_dir)
+
+
+def _with_tar_gz_suffix(url):
+    """
+    GH-233 the physical artifact for a directory transfer is always
+    ``<lfn>.tar.gz``, but the planner's src/dst URLs sometimes carry the
+    plain lfn - the planner may already have appended the suffix itself for
+    some hops (e.g. a nonsharedfs relay), so this is idempotent: returns
+    ``url`` unchanged if it already ends in ``.tar.gz``, otherwise a new
+    :class:`PegasusURL` with the suffix appended.
+
+    :param url: the source or destination URL of a directory transfer
+    :type url: PegasusURL
+    :rtype: PegasusURL
+    """
+    url_str = url.get_url()
+    if url_str.endswith(".tar.gz"):
+        return url
+    return PegasusURL(url_str + ".tar.gz", url.file_type, url.site_label, url.priority)
 
 
 class SimilarWorkSet:
@@ -4467,7 +4486,7 @@ class SimilarWorkSet:
 
         # actual transfers
 
-        # PM-112 directory staging: tar the local source directory into a
+        # GH-233 directory staging: tar the local source directory into a
         # tarball, then let the rest of this method transfer that single
         # tarball as usual. The tarball is a temp file and gets removed once
         # the transfer attempt is done, further below.
@@ -4483,24 +4502,30 @@ class SimilarWorkSet:
                         "directory sources instead."
                     )
                 tarball_path = tar_directory(src.path)
-                directory_tarballs_to_clean_up.append(tarball_path)
                 t._src_urls[0] = PegasusURL(
                     "file://" + tarball_path,
                     src.file_type,
                     src.site_label,
                     src.priority,
                 )
+                t._dst_urls[0] = _with_tar_gz_suffix(t._dst_urls[0])
                 dst = t._dst_urls[0]
-                dst_url = dst.get_url()
-                # PM-112 the planner may already have appended ".tar.gz" itself
-                # (e.g. for a nonsharedfs relay hop, where the destination is
-                # never touched again after this) - only append it here if
-                # it's not already there, so it's never doubled up
-                if not dst_url.endswith(".tar.gz"):
-                    dst_url = dst_url + ".tar.gz"
-                t._dst_urls[0] = PegasusURL(
-                    dst_url, dst.file_type, dst.site_label, dst.priority
-                )
+                # GH-233 if the destination is the exact same local path the
+                # tarball was just created at (e.g. a same-site relay that
+                # only renames in place, as with condorio), the tarball IS
+                # the final deliverable, not a temp intermediate - it must
+                # not be cleaned up below
+                if not (
+                    dst.proto == "file"
+                    and os.path.abspath(dst.path) == os.path.abspath(tarball_path)
+                ):
+                    directory_tarballs_to_clean_up.append(tarball_path)
+            elif t.directory_action == "untar":
+                # the physical artifact sitting at the source is always
+                # <lfn>.tar.gz (written there by an earlier "tar" transfer) -
+                # patch up the planner's (possibly plain-lfn) src_url before
+                # the copy below looks for the file
+                t._src_urls[0] = _with_tar_gz_suffix(t._src_urls[0])
 
         self._tmp_name = None
         if self._secondary_handler is not None:
@@ -4557,7 +4582,7 @@ class SimilarWorkSet:
         # remove temp file
         self.clean_up_temp_file(self._tmp_name)
 
-        # PM-112 the tarball created for a "tar" directory transfer is no
+        # GH-233 the tarball created for a "tar" directory transfer is no
         # longer needed once the transfer attempt (success or failure) is done
         for tarball_path in directory_tarballs_to_clean_up:
             if os.path.exists(tarball_path):
@@ -4619,7 +4644,7 @@ class SimilarWorkSet:
                 # no verification needed
                 success_list.append(t)
 
-        # PM-112 directory staging: for a successful "untar" transfer, the
+        # GH-233 directory staging: for a successful "untar" transfer, the
         # local destination is currently a tarball - extract it in place, so
         # the consuming job sees a real directory again. This happens after
         # checksumming/verification above, on purpose - integrity is always
@@ -4740,7 +4765,7 @@ class SimilarWorkSet:
 
     def _untar_directory_transfer(self, t):
         """
-        PM-112 untars a completed "untar" directory transfer's local
+        GH-233 untars a completed "untar" directory transfer's local
         destination, and removes the tarball afterwards, leaving a real
         directory in its place.
         """
@@ -5158,7 +5183,7 @@ def json_object_decoder(obj):
         if "directory_action" in obj:
             t.directory_action = obj["directory_action"]
         if t.directory_action in ("tar", "untar"):
-            # PM-112 the src/dst basenames get rewritten by the tar/untar
+            # GH-233 the src/dst basenames get rewritten by the tar/untar
             # steps in SimilarWorkSet.do_transfers(), so this transfer can
             # never be grouped with others
             t.allow_grouping = False

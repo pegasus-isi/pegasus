@@ -379,7 +379,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
-     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     * @param jobSetupForWorkerNodeExecution GH-233 whether the compute job associated with this
      *     transfer job is setup for worker node execution ( PegasusLite ). Used to determine the
      *     directory tar/untar action for directory (tar'd) transfers - see {@link
      *     #getDirectoryAction(boolean, int)}.
@@ -405,7 +405,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             linkage = PegasusFile.LINKAGE.input;
         }
 
-        // PM-112 the directory tar/untar/passthrough action is the same for every file in
+        // GH-233 the directory tar/untar/passthrough action is the same for every file in
         // this job's transfer set (it only depends on the job, not the individual file), so
         // compute it once rather than per-file inside the loop below
         String directoryAction = this.getDirectoryAction(jobSetupForWorkerNodeExecution, jobClass);
@@ -453,7 +453,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                 urlPair.append("   \"verify_checksum_remote\": ").append(true).append(",\n");
             }
 
-            // PM-112 whole directory staging - tell pegasus-transfer whether it needs to
+            // GH-233 whole directory staging - tell pegasus-transfer whether it needs to
             // tar/untar the directory as part of this transfer, or just move the already
             // tarred artifact through unchanged
             if (ft.isDirectory()) {
@@ -534,7 +534,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
     }
 
     /**
-     * PM-112 determines the directory tar/untar action pegasus-transfer should take for a directory
+     * GH-233 determines the directory tar/untar action pegasus-transfer should take for a directory
      * transfer, based on the job class and whether the associated compute job runs via a
      * PegasusLite worker node wrapper.
      *

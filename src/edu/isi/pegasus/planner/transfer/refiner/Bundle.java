@@ -615,6 +615,22 @@ public class Bundle extends Basic {
     }
 
     /**
+     * GH-233 creates a synthetic placeholder Job representing the (possibly several) compute jobs
+     * bundled into a stage-in/stage-out transfer for a site, with the data configuration populated
+     * so directory tar/untar/passthrough decisions are made correctly for the batched transfer.
+     *
+     * @param site the site the placeholder is for
+     * @return the placeholder Job
+     */
+    protected Job createPlaceholderJob(String site) {
+        Job job = new Job();
+        job.setSiteHandle(site);
+        job.setStagingSiteHandle(site);
+        mPegasusConfiguration.assignDataConfiguration(job, mSiteStore.lookup(site));
+        return job;
+    }
+
+    /**
      * Signals that the traversal of the workflow is done. At this point the transfer nodes are
      * actually constructed traversing through the transfer containers and the stdin of the transfer
      * jobs written.
@@ -636,7 +652,6 @@ public class Bundle extends Basic {
         PoolTransfer pt;
         TransferContainer tc;
         Map.Entry entry;
-        Job job = new Job();
 
         for (Iterator it = stageInMap.entrySet().iterator(); it.hasNext(); ) {
             entry = (Map.Entry) it.next();
@@ -645,6 +660,9 @@ public class Bundle extends Basic {
             mLogger.log(
                     "Adding stage in transfer nodes for pool " + key,
                     LogManager.DEBUG_MESSAGE_LEVEL);
+
+            // we just need the execution pool in the job object
+            Job job = createPlaceholderJob(key);
 
             for (Iterator pIt = pt.getTransferContainerIterator(); pIt.hasNext(); ) {
                 tc = (TransferContainer) pIt.next();
@@ -657,9 +675,6 @@ public class Bundle extends Basic {
                         LogManager.DEBUG_MESSAGE_LEVEL);
                 // added in make transfer node
                 // mDag.addNewJob(tc.getName());
-                // we just need the execution pool in the job object
-                job.executionPool = key;
-                job.setStagingSiteHandle(key);
 
                 String site = localTransfer ? "local" : job.getSiteHandle();
 
@@ -724,13 +739,10 @@ public class Bundle extends Basic {
      */
     protected Map resetStageOutMap(Map<String, PoolTransfer> map, boolean localTransfer) {
         if (map != null) {
-            // before flushing add the stageout nodes to the workflow
-            Job job = new Job();
-
             for (Iterator it = map.values().iterator(); it.hasNext(); ) {
                 PoolTransfer pt = (PoolTransfer) it.next();
-                job.setSiteHandle(pt.mPool);
-                job.setStagingSiteHandle(pt.mPool);
+                // before flushing add the stageout nodes to the workflow
+                Job job = createPlaceholderJob(pt.mPool);
 
                 // site is where transfer job runs
                 String site = localTransfer ? "local" : job.getSiteHandle();

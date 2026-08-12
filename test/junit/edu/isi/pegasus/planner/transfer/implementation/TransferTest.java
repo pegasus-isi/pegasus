@@ -121,7 +121,7 @@ public class TransferTest {
             assertThat(Modifier.isFinal(field.getModifiers()), is(true));
         }
 
-        // PM-112 added getDirectoryAction()
+        // GH-233 added getDirectoryAction()
         assertThat(Transfer.class.getDeclaredMethods().length, is(15));
     }
 

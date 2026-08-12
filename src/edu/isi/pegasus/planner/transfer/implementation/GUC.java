@@ -389,7 +389,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
-     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     * @param jobSetupForWorkerNodeExecution GH-233 whether the compute job associated with this
      *     transfer job is setup for worker node execution ( PegasusLite ). Unused by this
      *     implementation.
      * @throws Exception

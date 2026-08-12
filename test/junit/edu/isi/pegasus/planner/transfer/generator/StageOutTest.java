@@ -247,7 +247,7 @@ public class StageOutTest {
     }
 
     /**
-     * PM-112 for a directory output on a sharedfs job, the destination URL and the replica
+     * GH-233 for a directory output on a sharedfs job, the destination URL and the replica
      * registration URL must both point at the ".tar.gz" artifact pegasus-transfer actually stages,
      * not the plain lfn - even though the source (the job's own raw execution directory) is not
      * tarred yet at plan time.

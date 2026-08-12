@@ -441,7 +441,7 @@ public class StageOut extends Abstract {
         ft.setMetadata(pf.getAllMetadata());
         ft.setType(pf.getType());
 
-        // PM-112 if this job runs via a PegasusLite worker node wrapper (nonsharedfs/
+        // GH-233 if this job runs via a PegasusLite worker node wrapper (nonsharedfs/
         // condorio), the PegasusLite SLS "output" transfer has already tarred the directory
         // before this transfer job even starts - so whatever is sitting at the shared
         // scratch/exec dir location for this file is already a tarball, not the raw
@@ -634,7 +634,7 @@ public class StageOut extends Abstract {
     }
 
     /**
-     * PM-112 returns the URL/PFN to use for a directory file's staged physical artifact, appending
+     * GH-233 returns the URL/PFN to use for a directory file's staged physical artifact, appending
      * the ".tar.gz" suffix. For a non-directory file, returns url unchanged.
      *
      * <p>A directory's logical name (lfn) never changes, but the physical artifact pegasus-transfer

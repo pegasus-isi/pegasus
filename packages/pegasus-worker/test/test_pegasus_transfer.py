@@ -273,7 +273,7 @@ class TestPegasusTransferInvocation:
 
 
 class TestDirectoryStaging:
-    """PM-112: tar/untar support for whole-directory staging."""
+    """GH-233: tar/untar support for whole-directory staging."""
 
     def test_tar_directory_round_trip(self):
         with tempfile.TemporaryDirectory() as tmp:

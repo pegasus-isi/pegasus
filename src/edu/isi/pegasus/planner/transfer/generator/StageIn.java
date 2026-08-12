@@ -357,7 +357,7 @@ public class StageIn extends Abstract {
                     this.getURLOnSharedScratch(
                             stagingSite, job, FileServerType.OPERATION.get, addOn, lfn);
             if (pf.isDirectory()) {
-                // PM-112 the physical artifact landing at this staging site location is
+                // GH-233 the physical artifact landing at this staging site location is
                 // always <lfn>.tar.gz, not the plain lfn - for a sharedfs job this transfer
                 // job itself untars it in place afterwards (see
                 // Transfer.getDirectoryAction()); for a nonsharedfs/condorio job, a later

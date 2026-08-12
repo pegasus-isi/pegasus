@@ -141,7 +141,7 @@ public class Condor implements SLS {
             // PM-1952 need to make sure that if a file is being bypassed
             // then also return true, to ensure the pegasus lite script
             // the transfer invocation to do the transfer for this file
-            if (pf.doBypassStaging() || lfn.contains(File.separator)) {
+            if (pf.doBypassStaging() || lfn.contains(File.separator) || pf.isDirectory()) {
                 return true;
             }
         }
@@ -153,9 +153,16 @@ public class Condor implements SLS {
      * Transfer reads from stdin the file transfers that it needs to do.
      *
      * @param job the job being detected.
-     * @return false
+     * @return true if any output file is a directory, else false
      */
     public boolean needsSLSOutputTransfers(Job job) {
+        // GH-233 a directory output has to be tarred locally before HTCondor's
+        // own file transfer mechanism ships it back to the staging site
+        for (PegasusFile pf : job.getOutputFiles()) {
+            if (pf.isDirectory()) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -253,6 +260,16 @@ public class Condor implements SLS {
                 continue;
             }
 
+            // GH-233 a directory input arrives as a tarball via HTCondor file
+            // transfer (see modifyJobForWorkerNodeExecution); untar it locally
+            // before the job runs
+            if (pf.isDirectory()) {
+                result.add(
+                        fileTransferForUntarOfDirectoryInput(
+                                pf, job.getSiteHandle(), destDir, escapeEnvVariable));
+                continue;
+            }
+
             // PM-1875 only when a lfn is deep LFN, we create file transfer pairs
             // that use pegasus-transfer to rename the files in the condor
             // scratch directory that is the same as the bash variable
@@ -319,7 +336,20 @@ public class Condor implements SLS {
             String stagingSiteDirectory,
             String workerNodeDirectory) {
 
-        return null;
+        // GH-233 tar any directory output locally, so that HTCondor's own file
+        // transfer mechanism (added in modifyJobForWorkerNodeExecution) only
+        // ever has to move a regular file back to the staging site
+        Collection<FileTransfer> result = new LinkedList();
+        for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
+            PegasusFile pf = (PegasusFile) it.next();
+            if (!pf.isDirectory()) {
+                continue;
+            }
+            result.add(
+                    fileTransferForTarOfDirectoryOutput(
+                            pf, job.getSiteHandle(), workerNodeDirectory));
+        }
+        return result;
     }
 
     /**
@@ -424,7 +454,8 @@ public class Condor implements SLS {
                 // nothing in the cache
                 // construct the location with respect to the staging site
                 // we add just the lfn as we are setting initialdir
-                pfn = lfn;
+                // GH-233 a directory is materialized at the staging site as <lfn>.tar.gz
+                pfn = pf.isDirectory() ? withTarGzSuffix(lfn) : lfn;
             } else {
                 // construct the URL wrt to the planner cache location
                 pfn = cacheLocation.getPFN();
@@ -455,7 +486,9 @@ public class Condor implements SLS {
             }
 
             // add an output file for transfer
-            files.add(lfn);
+            // GH-233 a directory is tarred locally (see determineSLSOutputTransfers)
+            // before HTCondor ships it back, so request the tarball instead
+            files.add(pf.isDirectory() ? withTarGzSuffix(lfn) : lfn);
 
             // check for deep lfn
             if (lfn.contains(File.separator)) {
@@ -587,6 +620,103 @@ public class Condor implements SLS {
                 .append(lfn);
         ft.addDestination(siteHandle, destURL.toString());
         return ft;
+    }
+
+    /**
+     * GH-233 creates a file transfer object that untars a directory tarball, already delivered into
+     * the job's own sandbox by HTCondor file transfer, into the job's working directory.
+     *
+     * @param pf the PegasusFile (a directory) that needs to be untarred
+     * @param siteHandle the compute site where job runs
+     * @param destDir the destination directory on the worker node
+     * @param escapeEnvVariable whether to escape environment variable in the generated source
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForUntarOfDirectoryInput(
+            PegasusFile pf, String siteHandle, String destDir, boolean escapeEnvVariable) {
+        String lfn = pf.getLFN();
+
+        // the source is the tarball HTCondor file transfer already placed
+        // in the job's own working directory
+        StringBuffer sourceURL = new StringBuffer();
+        sourceURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            sourceURL.append("\\");
+        }
+        sourceURL
+                .append("$pegasus_lite_work_dir")
+                .append(File.separator)
+                .append(withTarGzSuffix(lfn));
+
+        String destURL =
+                new StringBuffer()
+                        .append(PegasusURL.FILE_URL_SCHEME)
+                        .append("//")
+                        .append(destDir)
+                        .append(File.separator)
+                        .append(lfn)
+                        .toString();
+
+        return newLocalDirectoryFileTransfer(pf, siteHandle, sourceURL.toString(), destURL);
+    }
+
+    /**
+     * GH-233 creates a file transfer object that tars a directory output in the job's working
+     * directory, so that HTCondor file transfer only ever has to move a regular file back to the
+     * staging site.
+     *
+     * @param pf the PegasusFile (a directory) that needs to be tarred
+     * @param siteHandle the compute site where job runs
+     * @param sourceDir the directory on the worker node containing the directory to be tarred
+     * @return generated FileTransfer
+     */
+    protected FileTransfer fileTransferForTarOfDirectoryOutput(
+            PegasusFile pf, String siteHandle, String sourceDir) {
+        String sourceURL =
+                new StringBuffer()
+                        .append(PegasusURL.FILE_URL_SCHEME)
+                        .append("//")
+                        .append(sourceDir)
+                        .append(File.separator)
+                        .append(pf.getLFN())
+                        .toString();
+
+        // tar locally, in place, in the same worker node directory. HTCondor
+        // file transfer picks up the result from here (see
+        // modifyJobForWorkerNodeExecution)
+        String destURL = withTarGzSuffix(sourceURL);
+
+        return newLocalDirectoryFileTransfer(pf, siteHandle, sourceURL, destURL);
+    }
+
+    /**
+     * GH-233 creates a file transfer object for a local, same-site directory tar/untar hop, where
+     * the directory_action (tar for output, untar for input) is determined by which of {@link
+     * #determineSLSInputTransfers} / {@link #determineSLSOutputTransfers} the caller belongs to.
+     *
+     * @param pf the PegasusFile (a directory) the transfer is for
+     * @param siteHandle the compute site where job runs
+     * @param sourceURL the source URL
+     * @param destURL the destination URL
+     * @return generated FileTransfer
+     */
+    private FileTransfer newLocalDirectoryFileTransfer(
+            PegasusFile pf, String siteHandle, String sourceURL, String destURL) {
+        FileTransfer ft = new FileTransfer(pf);
+        ft.addSource(siteHandle, sourceURL);
+        ft.addDestination(siteHandle, destURL);
+        return ft;
+    }
+
+    /**
+     * GH-233 the physical artifact for a directory is always {@code <lfn>.tar.gz} - appends the
+     * suffix to a plain LFN, or to a URL naming that LFN.
+     *
+     * @param s a LFN, or a URL ending in a LFN
+     * @return s with ".tar.gz" appended
+     */
+    private static String withTarGzSuffix(String s) {
+        return s + ".tar.gz";
     }
 
     /**

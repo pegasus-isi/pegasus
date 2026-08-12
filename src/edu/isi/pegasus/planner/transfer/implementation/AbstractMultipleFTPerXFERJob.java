@@ -160,7 +160,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.outputFiles = new HashSet(files);
 
         // PM-810 worker node execution ( PegasusLite ) is determined per job.
-        // PM-112 this also tells us, for directory (tar'd) transfers, whether
+        // GH-233 this also tells us, for directory (tar'd) transfers, whether
         // the tar/untar for this job's directory files happens in the
         // PegasusLite SLS transfers on the worker node ( in which case this
         // transfer job only relays the already tarred file ), or has to be
@@ -389,7 +389,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
-     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     * @param jobSetupForWorkerNodeExecution GH-233 whether the compute job associated with this
      *     transfer job is setup for worker node execution ( PegasusLite ). This is used by
      *     directory (tar'd) transfers to determine whether tar/untar has already been / will be
      *     handled by the PegasusLite SLS transfers on the worker node.
@@ -459,7 +459,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param stagingSite the site where the data will be populated by first level staging jobs.
      * @param jobClass the job Class for the newly added job. Can be one of the following: stage-in
      *     stage-out inter-pool transfer
-     * @param jobSetupForWorkerNodeExecution PM-112 whether the compute job associated with this
+     * @param jobSetupForWorkerNodeExecution GH-233 whether the compute job associated with this
      *     transfer job is setup for worker node execution ( PegasusLite ).
      * @throws Exception
      */
