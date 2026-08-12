@@ -180,6 +180,82 @@ public class CondorTest {
                 thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
     }
 
+    /**
+     * GH-233 a directory input arrives as a tarball via HTCondor file transfer; it must be untarred
+     * locally before the job runs, symmetric to a directory output being tarred locally before
+     * HTCondor ships it back (see fileTransferForTarOfDirectoryOutput).
+     */
+    @Test
+    public void testStageInForDirectory() {
+        String lfn = "out";
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        inputFile.setLFN(lfn);
+        inputFile.setForDirectory();
+
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN(lfn);
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource("compute", "file://$pegasus_lite_work_dir/" + lfn + ".tar.gz");
+        expectedOutput.addDestination("compute", "file://$PWD/" + lfn);
+
+        this.testStageIn("local", expectedOutput);
+    }
+
+    /**
+     * GH-233 HTCondor file transfer always flattens a deep LFN down to its basename on delivery - a
+     * directory input's tarball must be looked up under that basename, not the full deep LFN,
+     * mirroring what testStageInForDeepLFN already verifies for a plain (non-directory) file.
+     */
+    @Test
+    public void testStageInForDeepLFNDirectory() {
+        String lfn = "data/out";
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        inputFile.setLFN(lfn);
+        inputFile.setForDirectory();
+
+        FileTransfer expectedOutput = new FileTransfer();
+        expectedOutput.setLFN(lfn);
+        expectedOutput.setRegisterFlag(true);
+        expectedOutput.setTransferFlag(true);
+        expectedOutput.addSource(
+                "compute", "file://$pegasus_lite_work_dir/" + new File(lfn).getName() + ".tar.gz");
+        expectedOutput.addDestination("compute", "file://$PWD/" + lfn);
+
+        this.testStageIn("local", expectedOutput);
+    }
+
+    /**
+     * GH-233 a directory input with a deep LFN flattens to &lt;basename&gt;.tar.gz on delivery,
+     * exactly like an existing flat input already named &lt;basename&gt;.tar.gz would land - both
+     * silently clobbering the other in the job's own sandbox unless caught, mirroring what
+     * testStageInForDeepLFNWAWConflict already verifies for two plain deep LFNs.
+     */
+    @Test
+    public void testStageInForDirectoryWAWConflictWithShallowFile() {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+        job.setInputFiles(new LinkedHashSet());
+
+        PegasusFile shallowFile = (PegasusFile) inputFile.clone();
+        shallowFile.setLFN("model.tar.gz");
+        job.addInputFile(shallowFile);
+
+        PegasusFile directoryFile = (PegasusFile) inputFile.clone();
+        directoryFile.setLFN("a/model");
+        directoryFile.setForDirectory();
+        job.addInputFile(directoryFile);
+
+        RuntimeException thrown =
+                Assertions.assertThrows(
+                        RuntimeException.class,
+                        () -> this.testStageIn("local", new LinkedList<FileTransfer>()));
+        assertThat(
+                thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
+    }
+
     /** PM-1885 */
     @Test
     public void testStageInForBypassLFN() {
@@ -338,6 +414,82 @@ public class CondorTest {
         assertThat(actual.getDestURLCount(), is(1));
         assertThat(actual.getSourceURL(), is(expected.getSourceURL()));
         assertThat(actual.getDestURL(), is(expected.getDestURL()));
+    }
+
+    /**
+     * GH-233 for a directory output with a deep LFN, both the requested transfer_output_files entry
+     * and the transfer_output_remaps target need the .tar.gz suffix, since HTCondor delivers
+     * &lt;basename&gt;.tar.gz (not &lt;basename&gt;) once the local tar step (see
+     * determineSLSOutputTransfers) has run.
+     */
+    @Test
+    public void testStageOutRemapForDeepLFNDirectory() {
+        String lfn = "data/out";
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        job.setStagingSiteHandle("local");
+        job.vdsNS.checkKeyInNS(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE);
+
+        PegasusFile outputFile = (PegasusFile) job.getOutputFiles().toArray()[0];
+        outputFile.setLFN(lfn);
+        outputFile.setForDirectory();
+
+        modifyJobForWorkerNodeExecution(job);
+
+        assertThat(
+                (String)
+                        job.condorVariables.get(
+                                edu.isi.pegasus.planner.namespace.Condor.TRANSFER_OP_FILES_KEY),
+                is(lfn + ".tar.gz"));
+        assertThat(
+                (String)
+                        job.condorVariables.get(
+                                edu.isi.pegasus.planner.namespace.Condor.TRANSFER_OP_REMAPS_KEY),
+                is("out.tar.gz=" + lfn + ".tar.gz"));
+    }
+
+    /**
+     * GH-233 a directory output with a deep LFN flattens to &lt;basename&gt;.tar.gz on delivery,
+     * exactly like an existing flat output already named &lt;basename&gt;.tar.gz would land - both
+     * silently clobbering the other at the staging site unless caught, mirroring the input-side
+     * check verified above.
+     */
+    @Test
+    public void testStageOutWAWConflictForDirectory() {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        job.setStagingSiteHandle("local");
+        job.vdsNS.checkKeyInNS(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE);
+
+        PegasusFile outputFile = (PegasusFile) job.getOutputFiles().toArray()[0];
+        job.setOutputFiles(new LinkedHashSet());
+
+        PegasusFile shallowFile = (PegasusFile) outputFile.clone();
+        shallowFile.setLFN("model.tar.gz");
+        job.addOutputFile(shallowFile);
+
+        PegasusFile directoryFile = (PegasusFile) outputFile.clone();
+        directoryFile.setLFN("a/model");
+        directoryFile.setForDirectory();
+        job.addOutputFile(directoryFile);
+
+        RuntimeException thrown =
+                Assertions.assertThrows(
+                        RuntimeException.class, () -> modifyJobForWorkerNodeExecution(job));
+        assertThat(
+                thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
+    }
+
+    private void modifyJobForWorkerNodeExecution(Job job) {
+        Condor cTX = new Condor();
+        cTX.initialize(mBag);
+
+        SiteStore store = this.mBag.getHandleToSiteStore();
+        SiteCatalogEntry stagingSiteEntry = store.lookup(job.getStagingSiteHandle());
+        String stagingSiteDirectory = stagingSiteEntry.getInternalMountPointOfWorkDirectory();
+        FileServer stagingSiteServer =
+                stagingSiteEntry.selectHeadNodeScratchSharedFileServer(FileServer.OPERATION.get);
+
+        cTX.modifyJobForWorkerNodeExecution(
+                job, stagingSiteServer.getURLPrefix(), stagingSiteDirectory, "$PWD");
     }
 
     private ADag constructTestWorkflow() {

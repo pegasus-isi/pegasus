@@ -260,36 +260,40 @@ public class Condor implements SLS {
                 continue;
             }
 
-            // GH-233 a directory input arrives as a tarball via HTCondor file
-            // transfer (see modifyJobForWorkerNodeExecution); untar it locally
-            // before the job runs
-            if (pf.isDirectory()) {
-                result.add(
-                        fileTransferForUntarOfDirectoryInput(
-                                pf, job.getSiteHandle(), destDir, escapeEnvVariable));
-                continue;
-            }
-
-            // PM-1875 only when a lfn is deep LFN, we create file transfer pairs
-            // that use pegasus-transfer to rename the files in the condor
-            // scratch directory that is the same as the bash variable
-            // $pegasus_lite_work_dir in the PegaussLite script at job runtime
-            boolean deepLFN = lfn.contains(File.separator);
-            if (!deepLFN) {
-                continue;
-            }
-            // In CondorIO case, condor file io has already  gotten the job the compute site
-            // before PegasusLitejob starts
-            FileTransfer ft =
-                    fileTransferForMoveOfInputs(
-                            pf, job.getSiteHandle(), destDir, escapeEnvVariable);
-            // GH-2106 track source url to lfn mapping
-            // and throw error if exists in waw map
-            String sourcePFN = ft.getSourceURL().getValue();
+            // GH-2106 GH-233 every input remaining at this point lands in the job's own
+            // sandbox at a basename-keyed path once HTCondor file transfer delivers it - a
+            // directory or deep LFN flattens to its basename (tarred, for a directory), and
+            // a flat LFN already is its own basename. Two inputs landing at the same
+            // basename would silently clobber each other, so check all of them here, not
+            // just the ones that go on to need a local move/untar step below.
+            String basename =
+                    pf.isDirectory()
+                            ? withTarGzSuffix(new File(lfn).getName())
+                            : new File(lfn).getName();
+            String sourcePFN = deliveredBasenameURL(basename, escapeEnvVariable);
             if (wawDetectionMap.containsKey(sourcePFN)) {
                 complainForWAWConflict(job, wawDetectionMap.get(sourcePFN), lfn, sourcePFN);
             }
             wawDetectionMap.put(sourcePFN, lfn);
+
+            // PM-1875 only when a lfn is deep LFN, we create file transfer pairs
+            // that use pegasus-transfer to rename the files in the condor
+            // scratch directory that is the same as the bash variable
+            // $pegasus_lite_work_dir in the PegaussLite script at job runtime -
+            // GH-233 a directory input needs the same treatment regardless of lfn depth
+            boolean deepLFN = lfn.contains(File.separator);
+            if (!pf.isDirectory() && !deepLFN) {
+                continue;
+            }
+
+            // In CondorIO case, condor file io has already gotten the job the compute
+            // site before PegasusLitejob starts
+            FileTransfer ft =
+                    pf.isDirectory()
+                            ? fileTransferForUntarOfDirectoryInput(
+                                    pf, job.getSiteHandle(), destDir, escapeEnvVariable)
+                            : fileTransferForMoveOfInputs(
+                                    pf, job.getSiteHandle(), destDir, escapeEnvVariable);
 
             result.add(ft);
         }
@@ -471,6 +475,12 @@ public class Condor implements SLS {
         job.condorVariables.addIPFileForTransfer(files);
 
         files = new LinkedList();
+        // GH-2106 GH-233 maps the basename HTCondor delivers an output file under (in the
+        // job's own sandbox, and so also in initialdir absent a remap) back to that
+        // output's own lfn, so a deep LFN/directory output that flattens to the same
+        // basename as another output - regardless of whether that other output is itself
+        // deep - can be caught, mirroring the input-side check above
+        Map<String, String> outputWawDetectionMap = new HashMap();
         // iterate and add output files for transfer back
         for (Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ) {
             PegasusFile pf = (PegasusFile) it.next();
@@ -488,14 +498,28 @@ public class Condor implements SLS {
             // add an output file for transfer
             // GH-233 a directory is tarred locally (see determineSLSOutputTransfers)
             // before HTCondor ships it back, so request the tarball instead
-            files.add(pf.isDirectory() ? withTarGzSuffix(lfn) : lfn);
+            String suffixedLfn = pf.isDirectory() ? withTarGzSuffix(lfn) : lfn;
+            files.add(suffixedLfn);
+
+            String basename = new File(suffixedLfn).getName();
+            if (outputWawDetectionMap.containsKey(basename)) {
+                complainForWAWConflict(job, outputWawDetectionMap.get(basename), lfn, basename);
+            }
+            outputWawDetectionMap.put(basename, lfn);
 
             // check for deep lfn
             if (lfn.contains(File.separator)) {
                 // PM-1875 if the output file is a deep LFN then add
                 // transfer_output_remaps key, with name as basename
                 // and new name as the deep LFN
-                job.condorVariables.addOPFileForTransferRemap(new File(lfn).getName(), lfn);
+                // GH-233 for a directory both sides of the remap need the tarball
+                // suffix - HTCondor delivers <basename>.tar.gz, and the canonical
+                // resting name at the staging site is <lfn>.tar.gz (see
+                // StageIn#getURLOnSharedScratch/StageOut, which apply the same suffix
+                // to the full, slash-preserving lfn). new File(suffixedLfn).getName()
+                // already carries that suffix since it's appended after the last
+                // separator, so the basename doesn't need a separate ternary.
+                job.condorVariables.addOPFileForTransferRemap(basename, suffixedLfn);
             }
         }
         job.condorVariables.addOPFileForTransfer(files);
@@ -534,23 +558,9 @@ public class Condor implements SLS {
         ft.setType(pf.getType());
 
         // the source URL is the basename of the file in the directory
-        // on the worker node .
-        StringBuffer sourceURL = new StringBuffer();
-        sourceURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
-        if (escapeEnvVariable) {
-            // PM-1875 when a job is run through a container, then data stage-in
-            // happens inside the container. so we need to ensure
-            // the variable does not expanded on the host OS where pegasuslite
-            // script runs
-            sourceURL.append("\\");
-        }
-        sourceURL
-                .append("$pegasus_lite_work_dir")
-                .append(File.separator)
-                .append(new File(lfn).getName());
-        // In CondorIO case, condor file io has already  gotten the job the compute site
-        // before PegasusLitejob starts
-        ft.addSource(siteHandle, sourceURL.toString());
+        // on the worker node . In CondorIO case, condor file io has already
+        // gotten the job the compute site before PegasusLitejob starts
+        ft.addSource(siteHandle, deliveredBasenameURL(new File(lfn).getName(), escapeEnvVariable));
 
         // the destination is the complete LFN in $pegasus_lite_work_dir ($PWD)
         // directory
@@ -636,17 +646,11 @@ public class Condor implements SLS {
             PegasusFile pf, String siteHandle, String destDir, boolean escapeEnvVariable) {
         String lfn = pf.getLFN();
 
-        // the source is the tarball HTCondor file transfer already placed
-        // in the job's own working directory
-        StringBuffer sourceURL = new StringBuffer();
-        sourceURL.append(PegasusURL.FILE_URL_SCHEME).append("//");
-        if (escapeEnvVariable) {
-            sourceURL.append("\\");
-        }
-        sourceURL
-                .append("$pegasus_lite_work_dir")
-                .append(File.separator)
-                .append(withTarGzSuffix(lfn));
+        // the source is the tarball HTCondor file transfer already placed in the job's
+        // own working directory - GH-233 HTCondor flattens a deep LFN to its basename
+        // on delivery, same as the plain-file case in fileTransferForMoveOfInputs above
+        String sourceURL =
+                deliveredBasenameURL(withTarGzSuffix(new File(lfn).getName()), escapeEnvVariable);
 
         String destURL =
                 new StringBuffer()
@@ -657,7 +661,7 @@ public class Condor implements SLS {
                         .append(lfn)
                         .toString();
 
-        return newLocalDirectoryFileTransfer(pf, siteHandle, sourceURL.toString(), destURL);
+        return newLocalDirectoryFileTransfer(pf, siteHandle, sourceURL, destURL);
     }
 
     /**
@@ -717,6 +721,31 @@ public class Condor implements SLS {
      */
     private static String withTarGzSuffix(String s) {
         return s + ".tar.gz";
+    }
+
+    /**
+     * GH-233 GH-2106 builds the local file:// URL for a basename as HTCondor file transfer delivers
+     * it into the job's own working directory - the shared building block for both an actual local
+     * move/untar {@link FileTransfer}'s source, and the write-after-write collision check in {@link
+     * #determineSLSInputTransfers}, which must agree on exactly this URL to catch two inputs
+     * landing at the same delivered basename.
+     *
+     * @param basename the basename HTCondor delivers the file under
+     * @param escapeEnvVariable whether to escape environment variable in the generated URL
+     * @return the local file:// URL
+     */
+    private static String deliveredBasenameURL(String basename, boolean escapeEnvVariable) {
+        StringBuffer url = new StringBuffer();
+        url.append(PegasusURL.FILE_URL_SCHEME).append("//");
+        if (escapeEnvVariable) {
+            // PM-1875 when a job is run through a container, then data stage-in
+            // happens inside the container. so we need to ensure
+            // the variable does not expanded on the host OS where pegasuslite
+            // script runs
+            url.append("\\");
+        }
+        url.append("$pegasus_lite_work_dir").append(File.separator).append(basename);
+        return url.toString();
     }
 
     /**

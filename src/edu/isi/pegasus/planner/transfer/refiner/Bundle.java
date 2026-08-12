@@ -626,7 +626,7 @@ public class Bundle extends Basic {
         Job job = new Job();
         job.setSiteHandle(site);
         job.setStagingSiteHandle(site);
-        mPegasusConfiguration.assignDataConfiguration(job, mSiteStore.lookup(site));
+        mPegasusConfiguration.assignDataConfiguration(job, mSiteStore.lookup(site), mProps);
         return job;
     }
 
