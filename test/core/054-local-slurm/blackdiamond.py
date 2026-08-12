@@ -46,6 +46,7 @@ LOCAL = "local"
 COMPUTE = "slurm"
 STAGING = config["STAGING"] if "STAGING" in config else COMPUTE
 SHARED = config["SHARED"] if "SHARED" in config else False
+CONTAINERS = config["CONTAINERS"] if "CONTAINERS" in config else False
 
 if not STAGING:
     STAGING = COMPUTE
@@ -150,15 +151,38 @@ logging.info(
 )
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
 
+docker_container = None
+singularity_container = None
+if CONTAINERS:
+    docker_container = Container(
+        "osgvo-el8-docker",
+        Container.DOCKER,
+        image_site="local",
+        image="docker:///hub.opensciencegrid.org/opensciencegrid/osgvo-el8:latest",
+        bypass_staging=False,
+    )
+    docker_container.add_env("APP_HOME", "/tmp/myscratch")
+
+    singularity_container = Container(
+        "ospool-rocky-9-singularity",
+        Container.SINGULARITY,
+        image_site="local",
+        image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+        bypass_staging=False,
+    )
+    singularity_container.add_env("APP_HOME", "/tmp/myscratch")
+
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX
+        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX,
+        container=docker_container,
     )
 )
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX
+        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX,
+        container=singularity_container,
     )
 )
 
@@ -168,7 +192,10 @@ analyze = Transformation("analyze", namespace="pegasus", version="4.0").add_site
     )
 )
 
-TransformationCatalog().add_transformations(preprocess, findrage, analyze).write(
+tc = TransformationCatalog()
+if CONTAINERS:
+    tc.add_containers(docker_container, singularity_container)
+tc.add_transformations(preprocess, findrage, analyze).write(
     str(transformation_catalog_file)
 )
 
