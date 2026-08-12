@@ -204,8 +204,8 @@ public class Condor extends Abstract {
             // to container (can be the case when set as a profile in the site catalog)
             // we ensure that the job universe is set to vanilla in the
             // condor submit file
-            // GH-2224 compute jobs that are assocaited with container universe,
-            // but don't have a container assocaited with them at Pegasus level,
+            // GH-2224 compute jobs that are associated with container universe,
+            // but don't have a container associated with them at Pegasus level,
             // need to run in vanilla universe, not container universe.!
             if (!job.runsInContainerUniverse()) {
                 job.condorVariables.construct("universe", universe);

@@ -469,7 +469,7 @@ container_env()
         done
     done
 
-    echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d"
+    echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.multipart.d"
 }
 
 container_init()
@@ -572,7 +572,7 @@ pegasus_lite_init()
     pegasus_lite_setup_log
 
     # multipart is where other tools can drop in extra data for the ks record
-    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
+    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.multipart.d
     mkdir -p $PEGASUS_MULTIPART_DIR
 
     if [ "X$pegasus_lite_inside_container" != "Xtrue" ]; then

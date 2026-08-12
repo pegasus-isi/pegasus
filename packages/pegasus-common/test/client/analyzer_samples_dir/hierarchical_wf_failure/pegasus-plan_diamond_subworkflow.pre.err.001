@@ -261,7 +261,7 @@ cannot chirp_connect to condor_starter
     "OLDPWD": "/tmp"
     "PATH": "/home/mzalam/pegasus-5.0.5/bin:/home/mzalam/wf/condor/bin:/home/mzalam/wf/condor/sbin:/home/mzalam/wf/bin:/home/mzalam/.local/bin:/home/mzalam/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
     "PEGASUS_HOME": "/home/mzalam/pegasus-5.0.5"
-    "PEGASUS_MULTIPART_DIR": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/.pegasus.mulitpart.d"
+    "PEGASUS_MULTIPART_DIR": "/home/mzalam/hierar/hierarichal-sample-wf/submit/mzalam/pegasus/hierarchical-workflow/run0003/.pegasus.multipart.d"
     "PWD": "/tmp/pegasus.AK65dbzWn"
     "PYTHONPATH": "/home/mzalam/pegasus-5.0.5/lib64/python3.6/site-packages"
     "SHELL": "/bin/bash"
