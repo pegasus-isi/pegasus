@@ -688,6 +688,20 @@ public class PegasusFile extends Data {
     }
 
     /**
+     * GH-233 returns the physical name/URL to use for this file's staged artifact, appending the
+     * ".tar.gz" suffix if this file {@link #isDirectory()}. For a non-directory file, returns pfn
+     * unchanged. A directory is always tarred for staging/transfer/cleanup (see {@link
+     * #IS_DIRECTORY_BIT_FLAG}), so every site that names where a directory physically lives has to
+     * apply this consistently.
+     *
+     * @param pfn the physical name or URL as computed from the plain lfn
+     * @return pfn, or pfn with ".tar.gz" appended if this file is a directory
+     */
+    public String getDirectoryAwarePFN(String pfn) {
+        return isDirectory() ? pfn + ".tar.gz" : pfn;
+    }
+
+    /**
      * Returns the tristate transfer mode that is associated with the file.
      *
      * @return the int value denoting the type.

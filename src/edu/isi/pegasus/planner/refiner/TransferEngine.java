@@ -739,12 +739,21 @@ public class TransferEngine extends Engine {
             File addOn = mStagingMapper.mapToRelativeDirectory(job, stagingSiteEntry, lfn);
 
             // construct the URL to track in planner cache
+            // GH-233 the physical artifact staged for a directory is always <lfn>.tar.gz,
+            // not the plain lfn (see PegasusFile#getDirectoryAwarePFN) - the cached URL has
+            // to match, or consumers of these caches (e.g. the default Cleanup
+            // implementation, which looks up the planner cache entry to determine what to
+            // remove) will operate on a path that was never the real artifact
             String stagingSitePutURL =
-                    this.getURLOnSharedScratch(stagingSiteEntry, job, OPERATION.put, addOn, lfn);
+                    pf.getDirectoryAwarePFN(
+                            this.getURLOnSharedScratch(
+                                    stagingSiteEntry, job, OPERATION.put, addOn, lfn));
             trackInPlannerCache(lfn, stagingSitePutURL, stagingSiteEntry.getSiteHandle());
 
             String stagingSiteGetURL =
-                    this.getURLOnSharedScratch(stagingSiteEntry, job, OPERATION.get, addOn, lfn);
+                    pf.getDirectoryAwarePFN(
+                            this.getURLOnSharedScratch(
+                                    stagingSiteEntry, job, OPERATION.get, addOn, lfn));
             trackInWorkflowCache(lfn, stagingSiteGetURL, stagingSiteEntry.getSiteHandle());
         }
     }

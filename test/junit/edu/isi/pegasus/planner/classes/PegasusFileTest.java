@@ -423,6 +423,24 @@ public class PegasusFileTest {
         assertFalse(pf.isDirectory());
     }
 
+    /**
+     * GH-233 a directory's physical artifact is always &lt;lfn&gt;.tar.gz - every site that stages,
+     * transfers, or cleans up a directory relies on this to name where it physically lives (see
+     * StageIn/StageOut/Condor/TransferEngine/RM).
+     */
+    @Test
+    public void testGetDirectoryAwarePFNAppendsSuffixForDirectory() {
+        PegasusFile pf = new PegasusFile("out");
+        pf.setForDirectory();
+        assertEquals("file:///scratch/out.tar.gz", pf.getDirectoryAwarePFN("file:///scratch/out"));
+    }
+
+    @Test
+    public void testGetDirectoryAwarePFNLeavesPlainFileUnchanged() {
+        PegasusFile pf = new PegasusFile("f.out");
+        assertEquals("file:///scratch/f.out", pf.getDirectoryAwarePFN("file:///scratch/f.out"));
+    }
+
     @Test
     public void testUsesIsDirectory() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
