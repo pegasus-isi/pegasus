@@ -271,7 +271,8 @@ public class Condor implements SLS {
                             ? withTarGzSuffix(new File(lfn).getName())
                             : new File(lfn).getName();
             String sourcePFN = deliveredBasenameURL(basename, escapeEnvVariable);
-            if (wawDetectionMap.containsKey(sourcePFN)) {
+            if (wawDetectionMap.containsKey(sourcePFN)
+                    && !wawDetectionMap.get(sourcePFN).equals(lfn)) {
                 complainForWAWConflict(job, wawDetectionMap.get(sourcePFN), lfn, sourcePFN);
             }
             wawDetectionMap.put(sourcePFN, lfn);
@@ -502,7 +503,8 @@ public class Condor implements SLS {
             files.add(suffixedLfn);
 
             String basename = new File(suffixedLfn).getName();
-            if (outputWawDetectionMap.containsKey(basename)) {
+            if (outputWawDetectionMap.containsKey(basename)
+                    && !outputWawDetectionMap.get(basename).equals(lfn)) {
                 complainForWAWConflict(job, outputWawDetectionMap.get(basename), lfn, basename);
             }
             outputWawDetectionMap.put(basename, lfn);

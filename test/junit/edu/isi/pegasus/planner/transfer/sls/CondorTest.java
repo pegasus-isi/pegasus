@@ -46,8 +46,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * Unit tests for CondorIO mode, PegasusLite transfers
@@ -254,6 +257,31 @@ public class CondorTest {
                         () -> this.testStageIn("local", new LinkedList<FileTransfer>()));
         assertThat(
                 thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
+    }
+
+    /**
+     * GH-233 a clustered job can legitimately require the very same input (e.g. a shared
+     * executable) via two distinct PegasusFile objects that both report the same lfn - this is not
+     * two different files landing at the same basename, just the same file listed twice, and must
+     * not be flagged as a WAW conflict. Reproduces the failure seen for a horizontally clustered
+     * job, where two constituent jobs both add the same transformation as an input.
+     */
+    @Test
+    public void testStageInDuplicateInputLFNIsNotAWAWConflict() {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        PegasusFile inputFile = (PegasusFile) job.getInputFiles().toArray()[0];
+
+        Set<PegasusFile> files = Collections.newSetFromMap(new IdentityHashMap());
+        PegasusFile first = (PegasusFile) inputFile.clone();
+        first.setLFN("pegasus-findrange-4.0");
+        PegasusFile second = (PegasusFile) inputFile.clone();
+        second.setLFN("pegasus-findrange-4.0");
+        files.add(first);
+        files.add(second);
+        job.setInputFiles(files);
+
+        Assertions.assertDoesNotThrow(
+                () -> this.testStageIn("local", new LinkedList<FileTransfer>()));
     }
 
     /** PM-1885 */
@@ -476,6 +504,31 @@ public class CondorTest {
                         RuntimeException.class, () -> modifyJobForWorkerNodeExecution(job));
         assertThat(
                 thrown.getMessage(), containsString("Conflict for job preprocess_ID1 detected."));
+    }
+
+    /**
+     * GH-233 mirrors testStageInDuplicateInputLFNIsNotAWAWConflict for the output side - the same
+     * output lfn showing up via two distinct PegasusFile objects is not a basename collision
+     * between two different files and must not be flagged as a WAW conflict.
+     */
+    @Test
+    public void testStageOutDuplicateOutputLFNIsNotAWAWConflict() {
+        Job job = (Job) mDAG.getNode("preprocess_ID1").getContent();
+        job.setStagingSiteHandle("local");
+        job.vdsNS.checkKeyInNS(Pegasus.STYLE_KEY, Pegasus.CONDOR_STYLE);
+
+        PegasusFile outputFile = (PegasusFile) job.getOutputFiles().toArray()[0];
+
+        Set<PegasusFile> files = Collections.newSetFromMap(new IdentityHashMap());
+        PegasusFile first = (PegasusFile) outputFile.clone();
+        first.setLFN("pegasus-findrange-4.0");
+        PegasusFile second = (PegasusFile) outputFile.clone();
+        second.setLFN("pegasus-findrange-4.0");
+        files.add(first);
+        files.add(second);
+        job.setOutputFiles(files);
+
+        Assertions.assertDoesNotThrow(() -> modifyJobForWorkerNodeExecution(job));
     }
 
     private void modifyJobForWorkerNodeExecution(Job job) {
