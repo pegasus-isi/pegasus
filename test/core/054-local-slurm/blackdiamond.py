@@ -89,7 +89,7 @@ compute_site = (
     Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="glite")
     .add_pegasus_profile(clusters_num=1)
-    .add_pegasus_profile(queue="debug", runtime=70)
+    .add_pegasus_profile(queue="debug", runtime=1800)
     .add_profiles(Namespace.CONDOR, key="grid_resource", value="batch slurm")
 )
 

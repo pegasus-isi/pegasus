@@ -3,13 +3,22 @@
 set -e
 set -o pipefail
 
-TOPDIR=`pwd`
+START_DIR=`pwd`
 TESTNAME="$1"
+TEST_DIR=/scitech/shared/scratch2-90-days/bamboo/$(uuidgen)
 
-echo "Running test $TOPDIR -> $TESTNAME"
+mkdir -p $TEST_DIR
+cd $TEST_DIR
+
+# copy the whole test into the new TEST DIR
+# slurm submission tests need to be submitted
+# from the shared filesystem only.
+cp -r $START_DIR/* .
+
+echo "Running test $(basename $START_DIR) -> $TESTNAME in directory $TEST_DIR"
 
 # generate the dax
-PLAN_OUT=$TOPDIR/$TESTNAME/plan.out
+PLAN_OUT=$TEST_DIR/$TESTNAME/plan.out
 PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
 
 WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
