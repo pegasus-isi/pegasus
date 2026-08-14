@@ -258,6 +258,7 @@ entry-point name:
    pegasus.monitord.plugins.myplugin.tick_interval  5       # >0 enables tick() (default 0 = no ticks)
    pegasus.monitord.plugins.myplugin.events          stampede.job_inst.,stampede.xwf.  # event-name prefixes; overrides the plugin's event_filter; '*' = all (default: all)
    pegasus.monitord.plugins.myplugin.overflow_policy drop-newest  # or drop-oldest: evict the oldest queued event instead (default drop-newest)
+   pegasus.monitord.plugins.myplugin.event_timeout  0       # >0 cancels an async handler call that exceeds it, seconds (default 0 = no bound; async plugins only)
    # any other key in the namespace is yours, via props.propertyset(...)
 
 If you enable a name that no installed package registers under the
@@ -325,6 +326,37 @@ drops.
    after an event once the interval has elapsed — and never after
    shutdown begins. It is the supported way to do wall-clock work (e.g.
    polling an external service) without a thread of your own.
+
+**Async plugins.** ``handle_event()``, ``tick()``, and ``stop()`` may each
+be declared ``async def`` — detected automatically, no configuration
+needed. Async handlers run on a private asyncio event loop owned by the
+plugin's worker thread (reach it with ``asyncio.get_running_loop()``);
+delivery stays strictly in order, one event at a time, and
+``handle_event()``/``tick()`` still never run concurrently, so the
+no-locking contract is unchanged.
+
+What async buys is *recoverable timeouts*: with
+``pegasus.monitord.plugins.<name>.event_timeout`` set to a positive number
+of seconds, a handler call that exceeds it is **cancelled** and the worker
+moves on to the next event — where a wedged sync handler permanently costs
+its worker thread and its ``stop()`` cleanup. An ``async def stop()`` is
+likewise cancelled at ``join_timeout`` instead of being abandoned
+mid-call. With ``event_timeout`` unset (the default), async plugins behave
+exactly like sync ones, wedges included.
+
+Two caveats, both important:
+
+-  Cancellation is **cooperative**. ``asyncio.CancelledError`` is raised
+   at the coroutine's next ``await`` — a coroutine that blocks in
+   synchronous code (``requests.get``, a stuck DB driver, a tight loop)
+   starves the loop and wedges the worker exactly like a blocking sync
+   handler. The timeout only protects handlers that actually ``await``
+   their slow work (e.g. ``aiohttp``, ``asyncio.to_thread`` is *not*
+   sufficient — the blocked thread survives cancellation).
+-  Write handlers **cancellation-safe**: cleanup belongs in ``finally``
+   (which runs on the worker thread), and a cancelled handler's partial
+   work must not corrupt your durable output — the same idempotency
+   thinking replay/recovery already requires.
 
 **Replay and recovery: the stream can be re-emitted from the beginning.**
 Two situations make ``pegasus-monitord`` re-read ``dagman.out`` from the

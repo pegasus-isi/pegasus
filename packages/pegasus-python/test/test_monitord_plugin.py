@@ -3,6 +3,7 @@ Tests for the pegasus-monitord plugin system (Pegasus.monitoring.plugin) and
 its host sink (Pegasus.monitoring.event_output.PluginHostEventSink).
 """
 
+import asyncio
 import copy
 import importlib.metadata
 import logging
@@ -1924,3 +1925,286 @@ def test_snapshot_failure_counts_as_drop_and_never_raises(monkeypatch):
     assert _wait_for(lambda: len(plugin.events) == 1)
     mgr.stop_all()
     assert plugin.events == [("stampede.good", {"xwf__id": "abc"})]
+
+
+# --------------------------------------------------------------------------- #
+# async plugins — opt-in coroutine handlers, event_timeout cancellation,
+# async stop(); the sync contract pinned elsewhere in this file is untouched
+# --------------------------------------------------------------------------- #
+
+
+class AsyncRecordingPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+        self.ticks = []
+        self.stopped = False
+
+    async def handle_event(self, event, kw):
+        await asyncio.sleep(0)
+        self.events.append((event, dict(kw)))
+
+    async def tick(self):
+        await asyncio.sleep(0)
+        self.ticks.append(time.monotonic())
+
+    def stop(self):
+        self.stopped = True
+
+
+class AsyncFlakyPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.bad":
+            raise ValueError("bad async event")
+        self.events.append(event)
+
+
+class AsyncHangingPlugin(MonitordEventPlugin):
+    """handle_event for the designated event awaits an asyncio.Event that is
+    never set by the plugin itself (a test can release it cross-thread via
+    loop.call_soon_threadsafe for cleanup)."""
+
+    def __init__(self):
+        self.entered = threading.Event()
+        self.events = []
+        self.cancelled = 0
+        self.finally_ran = 0
+        self.stopped = False
+        self.loop = None
+        self.release = None
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.hang":
+            self.loop = asyncio.get_running_loop()
+            self.release = asyncio.Event()
+            self.entered.set()
+            try:
+                await self.release.wait()
+            except asyncio.CancelledError:
+                self.cancelled += 1
+                raise
+            finally:
+                self.finally_ran += 1
+        else:
+            self.events.append(event)
+
+    def stop(self):
+        self.stopped = True
+
+
+class AsyncStopPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.stopped = False
+
+    async def stop(self):
+        await asyncio.sleep(0)
+        self.stopped = True
+
+
+class HangingAsyncStopPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.stop_entered = threading.Event()
+        self.stop_cancelled = threading.Event()
+
+    async def stop(self):
+        self.stop_entered.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            self.stop_cancelled.set()
+            raise
+
+
+class SyncReturnsCoroutinePlugin(MonitordEventPlugin):
+    """The author forgot 'async def': a sync-declared handler returning a
+    coroutine object."""
+
+    def __init__(self):
+        self.ran = threading.Event()
+
+    def handle_event(self, event, kw):
+        async def never():
+            self.ran.set()
+
+        return never()
+
+
+def test_async_events_delivered_verbatim_in_order(monkeypatch):
+    _patch_entry_points(monkeypatch, {"arec": AsyncRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.arec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    sent = [
+        ("stampede.wf.plan", {"xwf__id": "abc", "dax__label": "diamond"}),
+        ("stampede.job_inst.main.end", {"xwf__id": "abc", "exitcode": 0}),
+    ]
+    for event, kw in sent:
+        mgr.dispatch(event, kw)
+
+    assert _wait_for(lambda: len(plugin.events) == len(sent))
+    mgr.stop_all()
+    # same FIFO delivery contract as the sync mirror of this test
+    assert plugin.events == sent
+    assert plugin.stopped is True
+
+
+def test_async_handler_exception_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"aflaky": AsyncFlakyPlugin})
+    props = _props({"pegasus.monitord.plugins.aflaky.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.bad", {})  # raises inside the coroutine
+    mgr.dispatch("stampede.good", {})
+
+    assert _wait_for(lambda: plugin.events == ["stampede.good"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_ticks_interleave_and_events_flow(monkeypatch):
+    _patch_entry_points(monkeypatch, {"atick": AsyncRecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.atick.enabled": "true",
+            "pegasus.monitord.plugins.atick.tick_interval": "0.05",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    assert _wait_for(lambda: len(plugin.ticks) >= 1)  # idle async ticks fire
+    n = 5
+    for i in range(n):
+        mgr.dispatch(f"stampede.e{i}", {})
+    assert _wait_for(lambda: len(plugin.events) == n)
+    mgr.stop_all()
+    assert [e for e, _kw in plugin.events] == [f"stampede.e{i}" for i in range(n)]
+    assert plugin.stopped is True
+
+
+def test_event_timeout_cancels_hung_async_handler_and_worker_survives(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ahang": AsyncHangingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.ahang.enabled": "true",
+            "pegasus.monitord.plugins.ahang.event_timeout": "0.2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.hang", {})
+    assert plugin.entered.wait(timeout=2)
+    mgr.dispatch("stampede.after", {})
+
+    # the hung handler is cancelled and the worker moves on to the next event
+    assert _wait_for(lambda: plugin.events == ["stampede.after"], timeout=5.0)
+    assert plugin.cancelled == 1
+    assert plugin.finally_ran == 1
+
+    # and shutdown completes fully: sentinel drains, worker exits, stop()
+    # runs -- the recovery a wedged sync handler can never get
+    mgr.stop_all()
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
+    assert worker._timed_out == 1
+
+
+def test_async_handler_without_event_timeout_wedges_like_sync(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ahang": AsyncHangingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.ahang.enabled": "true",
+            "pegasus.monitord.plugins.ahang.join_timeout": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.hang", {})
+    assert plugin.entered.wait(timeout=2)
+
+    mgr.stop_all()
+    # default event_timeout=0: exactly today's abandonment semantics
+    # (mirror of test_stop_is_skipped_when_worker_misses_join_timeout)
+    assert worker._thread.is_alive()
+    assert plugin.stopped is False
+
+    # test hygiene: release the coroutine cross-thread so the worker drains
+    # the already-enqueued sentinel and exits
+    plugin.loop.call_soon_threadsafe(plugin.release.set)
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
+def test_sync_handler_returning_coroutine_logged_once_never_runs(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"oops": SyncReturnsCoroutinePlugin})
+    props = _props({"pegasus.monitord.plugins.oops.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    with caplog.at_level(logging.ERROR):
+        mgr.dispatch("stampede.e0", {})
+        mgr.dispatch("stampede.e1", {})
+        mgr.stop_all()  # drains both events ahead of the sentinel
+
+    complaints = [r for r in caplog.records if "returned a coroutine" in r.message]
+    assert len(complaints) == 1  # logged once per worker, not per event
+    assert not plugin.ran.is_set()  # closed, never executed
+
+
+def test_async_stop_runs_to_completion(monkeypatch):
+    _patch_entry_points(monkeypatch, {"astop": AsyncStopPlugin})
+    props = _props({"pegasus.monitord.plugins.astop.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    mgr.stop_all()
+    assert plugin.stopped is True
+
+
+def test_async_stop_cancelled_at_timeout(monkeypatch):
+    _patch_entry_points(monkeypatch, {"astophang": HangingAsyncStopPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.astophang.enabled": "true",
+            "pegasus.monitord.plugins.astophang.join_timeout": "0.2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    mgr.stop_all()
+    assert plugin.stop_entered.wait(timeout=1)
+    # the hung async stop() is cancelled and its helper thread exits -- the
+    # sync path would leave it blocked forever on an abandoned thread
+    assert plugin.stop_cancelled.wait(timeout=2)
+
+
+def test_invalid_event_timeout_skips_plugin_before_start(monkeypatch):
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+    _patch_entry_points(monkeypatch, {"badet": CountingStartPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.badet.enabled": "true",
+            "pegasus.monitord.plugins.badet.event_timeout": "-1",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 0
+    assert mgr._workers == []
+    assert CountingStartPlugin.started == 0

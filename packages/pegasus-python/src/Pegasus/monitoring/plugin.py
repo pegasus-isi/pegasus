@@ -30,6 +30,7 @@ lives in :mod:`Pegasus.monitoring.event_output` as ``PluginHostEventSink``.
 #  limitations under the License.
 ##
 
+import asyncio
 import collections
 import copy
 import inspect
@@ -55,6 +56,7 @@ _ENABLED_SUFFIX = ".enabled"
 DEFAULT_QUEUE_SIZE = 10000
 DEFAULT_JOIN_TIMEOUT = 10.0
 DEFAULT_TICK_INTERVAL = 0.0  # 0 = no ticks; the worker blocks exactly as before
+DEFAULT_EVENT_TIMEOUT = 0.0  # 0 = no per-event bound (async plugins included)
 
 # Queue-overflow policies (pegasus.monitord.plugins.<name>.overflow_policy).
 OVERFLOW_DROP_NEWEST = "drop-newest"
@@ -89,8 +91,21 @@ def _snapshot_payload(kw):
 
 _WorkerConfig = collections.namedtuple(
     "_WorkerConfig",
-    "queue_size start_timeout join_timeout tick_interval events overflow_policy",
+    "queue_size start_timeout join_timeout tick_interval events overflow_policy"
+    " event_timeout",
 )
+
+
+def _is_coroutine_callable(fn):
+    """
+    True when ``fn`` is declared ``async def``. Degrades to False (the sync
+    dispatch path) on exotic callables that ``inspect`` cannot analyze,
+    mirroring the defensive signature sniffing in ``_start_kwargs``.
+    """
+    try:
+        return inspect.iscoroutinefunction(fn)
+    except (TypeError, ValueError):
+        return False
 
 
 def enabled_plugin_names(props):
@@ -195,6 +210,21 @@ class MonitordEventPlugin:
         :param kw: the event payload dict. Keys use ``__`` as the separator
             (e.g. ``xwf__id``, ``job__id``); the payload is passed through
             unmodified, exactly as monitord produced it.
+
+        May be declared ``async def``. An async handler runs on a private
+        asyncio event loop owned by this plugin's worker thread (reach it
+        with :func:`asyncio.get_running_loop`); events are still delivered
+        strictly in order, one at a time, and :meth:`tick` still never runs
+        concurrently. When ``pegasus.monitord.plugins.<name>.event_timeout``
+        is set to a positive number of seconds, a handler exceeding it is
+        **cancelled** and the worker moves on to the next event -- the one
+        recovery a blocked sync handler can never get. Cancellation is
+        *cooperative*: :class:`asyncio.CancelledError` is raised at the
+        coroutine's next ``await``, so code that blocks synchronously inside
+        a coroutine (e.g. ``requests.get``) starves the loop and wedges the
+        worker exactly like a blocking sync handler. Write handlers
+        cancellation-safe: cleanup belongs in ``finally``, which runs on the
+        worker thread.
         """
 
     def tick(self):
@@ -215,6 +245,10 @@ class MonitordEventPlugin:
         exceptions; a failing tick never kills the worker. ``tick()`` is never
         called after the shutdown sentinel has been drained, so it cannot race
         :meth:`stop`.
+
+        May be declared ``async def``; it then runs on the same private
+        event loop as an async :meth:`handle_event`, under the same
+        ``event_timeout`` bound, and the two still never run concurrently.
         """
 
     def stop(self):
@@ -224,6 +258,11 @@ class MonitordEventPlugin:
         ``join_timeout``, Pegasus skips ``stop()`` rather than racing cleanup
         against a still-running ``handle_event()``. If ``stop()`` itself does
         not return within ``join_timeout``, Pegasus logs and continues exit.
+
+        May be declared ``async def``: it is then driven on a throwaway
+        event loop under the same ``join_timeout`` bound, but a timeout
+        **cancels** the coroutine (cooperatively, like ``event_timeout``)
+        instead of abandoning the helper thread mid-call.
         """
 
 
@@ -251,6 +290,7 @@ class _PluginWorker:
         tick_interval=DEFAULT_TICK_INTERVAL,
         event_filter=None,
         overflow_policy=DEFAULT_OVERFLOW_POLICY,
+        event_timeout=DEFAULT_EVENT_TIMEOUT,
     ):
         self._name = name
         self._plugin = plugin
@@ -259,11 +299,19 @@ class _PluginWorker:
         self._tick_interval = tick_interval
         self._event_filter = event_filter
         self._overflow_policy = overflow_policy
+        self._event_timeout = event_timeout
+        # ``async def`` hooks are detected once here; async plugins get a
+        # private asyncio event loop owned by the worker thread (see _run)
+        self._handle_is_async = _is_coroutine_callable(plugin.handle_event)
+        self._tick_is_async = _is_coroutine_callable(plugin.tick)
+        self._loop = None
         # queue_size <= 0 means unbounded (matches queue.Queue default)
         maxsize = queue_size if queue_size and queue_size > 0 else 0
         self._queue = queue.Queue(maxsize=maxsize)
         self._dropped = 0
         self._filtered = 0
+        self._timed_out = 0
+        self._warned_sync_coroutine = False
         self._thread = Thread(
             target=self._run, name=f"monitord-plugin-{name}", daemon=True
         )
@@ -377,7 +425,14 @@ class _PluginWorker:
 
     def _handle(self, event, kw):
         try:
-            self._plugin.handle_event(event, kw)
+            if self._handle_is_async:
+                self._run_coroutine(
+                    self._plugin.handle_event(event, kw), f"handle_event({event})"
+                )
+            else:
+                ret = self._plugin.handle_event(event, kw)
+                if inspect.iscoroutine(ret):
+                    self._warn_sync_returned_coroutine("handle_event", ret)
         except Exception:
             # A misbehaving plugin must never kill its own thread.
             self._log.error(
@@ -389,7 +444,12 @@ class _PluginWorker:
 
     def _tick(self):
         try:
-            self._plugin.tick()
+            if self._tick_is_async:
+                self._run_coroutine(self._plugin.tick(), "tick()")
+            else:
+                ret = self._plugin.tick()
+                if inspect.iscoroutine(ret):
+                    self._warn_sync_returned_coroutine("tick", ret)
         except Exception:
             # Same isolation contract as handle_event: a failing tick is
             # logged, never fatal to the worker.
@@ -399,7 +459,65 @@ class _PluginWorker:
                 traceback.format_exc(),
             )
 
+    def _run_coroutine(self, coro, what):
+        """
+        Drive one plugin coroutine to completion on this worker's private
+        event loop (run_until_complete per event: per-plugin FIFO and the
+        no-concurrent-tick guarantee hold exactly as for sync plugins).
+        With a positive ``event_timeout``, a coroutine that exceeds it is
+        *cancelled* -- the worker survives and moves on to the next queued
+        item, instead of wedging forever the way a blocked sync handler
+        does. Cancellation is cooperative: it lands at the coroutine's next
+        ``await``, so synchronously-blocking code inside a coroutine still
+        wedges.
+        """
+        timeout = self._event_timeout
+        if not timeout or timeout <= 0:
+            self._loop.run_until_complete(coro)
+            return
+        try:
+            self._loop.run_until_complete(asyncio.wait_for(coro, timeout))
+        except asyncio.TimeoutError:
+            # wait_for has already cancelled the coroutine
+            self._timed_out += 1
+            self._log.error(
+                "plugin %r %s did not complete within %.1fs; cancelled "
+                "(%d cancelled so far)",
+                self._name,
+                what,
+                timeout,
+                self._timed_out,
+            )
+
+    def _warn_sync_returned_coroutine(self, hook, coro):
+        """A sync-declared hook returned a coroutine object: the plugin
+        author forgot ``async def``. Log once per worker and close the
+        coroutine so it neither runs nor warns about never being awaited."""
+        coro.close()
+        if self._warned_sync_coroutine:
+            return
+        self._warned_sync_coroutine = True
+        self._log.error(
+            "plugin %r %s() returned a coroutine but is not declared "
+            "'async def'; it will never run -- declare the hook async",
+            self._name,
+            hook,
+        )
+
     def _run(self):
+        if self._handle_is_async or self._tick_is_async:
+            # One private event loop for this worker thread's whole
+            # lifetime -- never a per-event asyncio.run(), which would tear
+            # the loop machinery down and up for every event. Handlers use
+            # asyncio.get_running_loop() to reach it.
+            self._loop = asyncio.new_event_loop()
+        try:
+            self._consume()
+        finally:
+            if self._loop is not None:
+                self._loop.close()
+
+    def _consume(self):
         interval = self._tick_interval
         if not interval or interval <= 0:
             # No ticks configured: block exactly as before (zero overhead).
@@ -466,6 +584,9 @@ class _PluginWorker:
                 self._name,
                 self._filtered,
             )
+        # _timed_out is written on the worker thread (unlike the two above);
+        # reading it here is safe only after the join below, so report it in
+        # a second pass at the end of this method.
         if not self._thread.is_alive():
             return True
         try:
@@ -484,6 +605,13 @@ class _PluginWorker:
                 self._join_timeout,
             )
             return False
+        # joined: the worker's _timed_out writes happened-before this read
+        if self._timed_out:
+            self._log.warning(
+                "plugin %r had %d handler call(s) cancelled on event_timeout",
+                self._name,
+                self._timed_out,
+            )
         return True
 
 
@@ -562,6 +690,7 @@ class MonitordPluginManager:
                 tick_interval=cfg.tick_interval,
                 event_filter=event_filter,
                 overflow_policy=cfg.overflow_policy,
+                event_timeout=cfg.event_timeout,
             )
             worker.start()
             self._log.info("started monitord event plugin %r", name)
@@ -794,12 +923,18 @@ class MonitordPluginManager:
     def _stop_plugin(self, name, plugin, timeout, context="shutdown"):
         """
         Run plugin.stop() with the same bound used for worker shutdown.
+        An ``async def stop()`` is driven on a throwaway event loop and, on
+        timeout, *cancelled* -- the helper thread then exits, instead of
+        being abandoned mid-call the way a blocked sync stop() is.
         """
         done = []
 
         def stop_target():
             try:
-                plugin.stop()
+                if _is_coroutine_callable(plugin.stop):
+                    self._run_stop_coroutine(name, plugin, timeout, context)
+                else:
+                    plugin.stop()
             except Exception:
                 self._log.error(
                     "plugin %r stop() failed during %s\n%s",
@@ -826,6 +961,30 @@ class MonitordPluginManager:
             )
             return False
         return bool(done)
+
+    def _run_stop_coroutine(self, name, plugin, timeout, context):
+        """
+        Drive an ``async def stop()`` on a throwaway event loop, bounded by
+        ``timeout`` when positive (a non-positive timeout keeps today's
+        join-only bound, like the sync path).
+        """
+        loop = asyncio.new_event_loop()
+        try:
+            if timeout and timeout > 0:
+                try:
+                    loop.run_until_complete(asyncio.wait_for(plugin.stop(), timeout))
+                except asyncio.TimeoutError:
+                    self._log.warning(
+                        "plugin %r async stop() did not complete within %.1fs "
+                        "during %s; cancelled",
+                        name,
+                        timeout,
+                        context,
+                    )
+            else:
+                loop.run_until_complete(plugin.stop())
+        finally:
+            loop.close()
 
     def _iter_enabled_plugin_classes(self, entry_points):
         for name, ep in entry_points:
@@ -864,6 +1023,10 @@ class MonitordPluginManager:
             f"pegasus.monitord.plugins.{name}.tick_interval",
             DEFAULT_TICK_INTERVAL,
         )
+        event_timeout = self._float_prop(
+            f"pegasus.monitord.plugins.{name}.event_timeout",
+            DEFAULT_EVENT_TIMEOUT,
+        )
         if start_timeout < 0:
             raise ValueError(
                 f"pegasus.monitord.plugins.{name}.start_timeout must be >= 0"
@@ -871,6 +1034,10 @@ class MonitordPluginManager:
         if join_timeout < 0:
             raise ValueError(
                 f"pegasus.monitord.plugins.{name}.join_timeout must be >= 0"
+            )
+        if event_timeout < 0:
+            raise ValueError(
+                f"pegasus.monitord.plugins.{name}.event_timeout must be >= 0"
             )
         events = None
         raw = self._raw_prop(f"pegasus.monitord.plugins.{name}.events", None)
@@ -900,6 +1067,7 @@ class MonitordPluginManager:
             tick_interval=tick_interval,
             events=events,
             overflow_policy=policy,
+            event_timeout=event_timeout,
         )
 
     def _compile_event_filter(self, name, prop_patterns, plugin):
