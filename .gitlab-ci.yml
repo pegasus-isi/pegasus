@@ -608,6 +608,9 @@ Workflow Tests:
       - 051-osdf condorio/bypass
       - 052-condor_request memory
       - 053-profile-exp queue
+      - 054-local-slurm sharedfs
+      - 054-local-slurm nonsharedfs
+      - 054-local-slurm condorio
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt

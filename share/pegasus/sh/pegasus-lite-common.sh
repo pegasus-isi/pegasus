@@ -570,6 +570,7 @@ pegasus_lite_init()
 
     # setup pegasus lite log
     pegasus_lite_setup_log
+    pegasus_lite_log "Job launched in directory $pegasus_lite_start_dir"
 
     # multipart is where other tools can drop in extra data for the ks record
     export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.multipart.d
