@@ -917,6 +917,20 @@ class SlowTickingPlugin(TickingPlugin):
         self.events.append(event)
 
 
+class BlockingTickPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.tick_entered = threading.Event()
+        self.release_tick = threading.Event()
+        self.stopped = False
+
+    def tick(self):
+        self.tick_entered.set()
+        self.release_tick.wait(timeout=5)
+
+    def stop(self):
+        self.stopped = True
+
+
 def _ticking_manager(monkeypatch, plugin_cls, extra_props=None):
     _patch_entry_points(monkeypatch, {"tk": plugin_cls})
     d = {"pegasus.monitord.plugins.tk.enabled": "true"}
@@ -1002,6 +1016,36 @@ def test_stop_all_drains_and_joins_ticking_plugin(monkeypatch):
     ticks_at_stop = len(plugin.ticks)
     time.sleep(0.2)
     assert len(plugin.ticks) == ticks_at_stop
+
+
+def test_failed_start_cleanup_skips_stop_when_idle_tick_is_wedged(
+    monkeypatch, caplog
+):
+    mgr, plugin, worker = _ticking_manager(
+        monkeypatch,
+        BlockingTickPlugin,
+        {
+            "pegasus.monitord.plugins.tk.tick_interval": "0.01",
+            "pegasus.monitord.plugins.tk.join_timeout": "0.01",
+        },
+    )
+    assert plugin.tick_entered.wait(timeout=2)
+
+    # Model a worker that timed out immediately after bootstrap started it,
+    # before the manager published it for event dispatch.
+    mgr._workers = []
+    with caplog.at_level(logging.WARNING):
+        mgr._cleanup_failed_start("tk", plugin, worker, 0.01)
+
+    assert worker._thread.is_alive()
+    assert plugin.stopped is False
+    assert any(
+        "skipping plugin 'tk' stop() during startup cleanup" in record.message
+        for record in caplog.records
+    )
+
+    plugin.release_tick.set()
+    assert _wait_for(lambda: not worker._thread.is_alive())
 
 
 # --------------------------------------------------------------------------- #
