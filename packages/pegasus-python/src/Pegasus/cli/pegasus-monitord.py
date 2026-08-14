@@ -1222,7 +1222,20 @@ else:
                 "error flushing previous wf_uuid from database... continuing..."
             )
             logger.error("cannot create events output... disabling event output!")
-            wf_event_sink = None
+            # The sink has already been constructed (and a multiplex sink may
+            # already have started plugin workers). Close it before clearing
+            # the global; finish_stampede_loader reads that global at atexit,
+            # so assigning None first would orphan the sink and skip every
+            # plugin's stop() cleanup.
+            try:
+                wf_event_sink.close()
+            except Exception:
+                logger.warning(
+                    "could not close workflow event output after purge failure"
+                )
+                logger.warning(traceback.format_exc())
+            finally:
+                wf_event_sink = None
 
     # create the stampede_dashboard_loader
     try:
