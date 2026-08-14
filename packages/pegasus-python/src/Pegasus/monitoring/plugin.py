@@ -936,7 +936,7 @@ class MonitordPluginManager:
                 )
         if not worker_exited:
             # Same rule as stop_all: never race stop() against a worker that
-            # may still be inside handle_event.
+            # may still be inside handle_event or tick.
             self._log.warning(
                 "skipping plugin %r stop() during startup cleanup "
                 "because its worker is still running",

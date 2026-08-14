@@ -15,7 +15,15 @@ from Pegasus.service.ensembles.trigger import TriggerManager
 
 log = logging.getLogger(__name__)
 
-EM_PORT = os.getuid() + 7919
+EM_PORT_MIN = 7919
+EM_PORT_MAX = 65535
+
+
+def _compute_em_port(uid: int) -> int:
+    return EM_PORT_MIN + (uid % (EM_PORT_MAX - EM_PORT_MIN))
+
+
+EM_PORT = _compute_em_port(os.getuid())
 
 
 class EnsembleClientCommand(Command):

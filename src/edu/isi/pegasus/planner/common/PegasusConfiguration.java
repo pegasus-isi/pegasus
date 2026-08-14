@@ -13,6 +13,8 @@
  */
 package edu.isi.pegasus.planner.common;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.common.util.ShellCommand;
@@ -226,10 +228,18 @@ public class PegasusConfiguration {
         // check for local site or create a default entry
         if (!store.list().contains("local")) {
             store.addEntry(constructDefaultLocalSiteEntry(options, pegasusHome));
-            mLogger.log(
-                    "Constructed default site catalog entry for local site "
-                            + store.lookup("local"),
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+
+            SiteCatalogEntry site = store.lookup("local");
+            try {
+                mLogger.log(
+                        "Constructed default site catalog entry for local site " + site.toYAML(),
+                        LogManager.CONFIG_MESSAGE_LEVEL);
+            } catch (JsonProcessingException ex) {
+                mLogger.log(
+                        "Unable to convert to yaml site catalog entry for site - "
+                                + site.getSiteHandle(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
         }
 
         // PM-1702 set PATH and PYTHONPATH for local site to what the planner
@@ -254,10 +264,18 @@ public class PegasusConfiguration {
         // PM-1516 check for condorpool site or create a default entry
         if (!store.list().contains("condorpool")) {
             store.addEntry(constructDefaultCondorPoolSiteEntry(options, pegasusHome));
-            mLogger.log(
-                    "Constructed default site catalog entry for condorpool site "
-                            + store.lookup("condorpool"),
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+            SiteCatalogEntry site = store.lookup("condorpool");
+            try {
+                mLogger.log(
+                        "Constructed default site catalog entry for condorpool site "
+                                + site.toYAML(),
+                        LogManager.CONFIG_MESSAGE_LEVEL);
+            } catch (JsonProcessingException ex) {
+                mLogger.log(
+                        "Unable to convert to yaml site catalog entry for site - "
+                                + site.getSiteHandle(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
         }
 
         // PM-1929 see if any site profiles need to be merged from the properties

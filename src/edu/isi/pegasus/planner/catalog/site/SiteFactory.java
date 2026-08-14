@@ -18,6 +18,8 @@
 
 package edu.isi.pegasus.planner.catalog.site;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FileDetector;
@@ -142,11 +144,18 @@ public class SiteFactory {
             if (result.contains(handle)) {
                 SiteCatalogEntry existing = result.lookup(handle);
                 existing.merge(localSiteStoreEntry, true);
-                logger.log(
-                        "Merged site catalog entry from remote github repo and local site catalog"
-                                + " \n"
-                                + existing,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
+                try {
+                    logger.log(
+                            "Merged site catalog entry from remote github repo and local site"
+                                    + " catalog \n"
+                                    + existing.toYAML(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                } catch (JsonProcessingException ex) {
+                    logger.log(
+                            "Unable to convert to yaml site catalog entry for site - "
+                                    + existing.getSiteHandle(),
+                            LogManager.ERROR_MESSAGE_LEVEL);
+                }
             } else {
                 result.addEntry(localSiteStoreEntry);
             }
