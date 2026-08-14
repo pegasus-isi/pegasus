@@ -112,7 +112,7 @@ public class CondorC extends Condor {
 
             String w_t_f =
                     (String) job.condorVariables.removeKey(CondorC.WHEN_TO_TRANSFER_OUTPUT_KEY);
-            if (s_t_f != null) {
+            if (w_t_f != null) {
                 // convert to remote key and quote it
                 job.condorVariables.construct(
                         CondorC.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY,
