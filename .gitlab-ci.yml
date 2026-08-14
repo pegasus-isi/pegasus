@@ -623,6 +623,12 @@ Workflow Tests:
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
   - ./test/scripts/${EXEC} ${TESTNAME}
+  after_script:
+  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - |
+    if [ "${EXEC}" == "launch-bamboo-test" ]; then
+      pegasus-remove test/core/${TESTNAME}/submit
+    fi
   artifacts:
     when: on_failure
     paths:

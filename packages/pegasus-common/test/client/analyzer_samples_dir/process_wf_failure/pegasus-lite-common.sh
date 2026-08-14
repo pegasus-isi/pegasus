@@ -377,7 +377,7 @@ container_env()
         done
     done
 
-    echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.mulitpart.d"
+    echo "export PEGASUS_MULTIPART_DIR=$inside_work_dir/.pegasus.multipart.d"
 }
 
 container_init()
@@ -526,7 +526,7 @@ pegasus_lite_init()
         done
     done
 
-    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.mulitpart.d
+    export PEGASUS_MULTIPART_DIR=`pwd`/.pegasus.multipart.d
     mkdir -p $PEGASUS_MULTIPART_DIR
 }
 
