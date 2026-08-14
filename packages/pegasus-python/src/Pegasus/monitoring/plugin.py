@@ -575,15 +575,26 @@ class MonitordPluginManager:
                 )
 
     def _cleanup_failed_start(self, name, plugin, worker, join_timeout):
+        worker_exited = True
         if worker is not None:
             try:
-                worker.close()
+                worker_exited = worker.close()
             except Exception:
+                worker_exited = False
                 self._log.error(
                     "error closing partially-started worker for plugin %r\n%s",
                     name,
                     traceback.format_exc(),
                 )
+        if not worker_exited:
+            # Same rule as stop_all: never race stop() against a worker that
+            # may still be inside handle_event.
+            self._log.warning(
+                "skipping plugin %r stop() during startup cleanup "
+                "because its worker is still running",
+                name,
+            )
+            return
         if plugin is not None:
             self._stop_plugin(name, plugin, join_timeout, "startup cleanup")
 

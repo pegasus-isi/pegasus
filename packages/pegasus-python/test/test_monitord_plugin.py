@@ -15,6 +15,7 @@ from Pegasus.monitoring.plugin import (
     MONITORD_PLUGIN_ENTRY_POINT_GROUP,
     MonitordEventPlugin,
     MonitordPluginManager,
+    _PluginWorker,
     enabled_plugin_names,
 )
 from Pegasus.tools import properties
@@ -1543,3 +1544,175 @@ def test_factory_threads_restart_through_multiplex_to_plugins(monkeypatch, tmp_p
     assert isinstance(host, eo.PluginHostEventSink)
     assert host._manager._workers[0][1].restart_seen is True
     sink.close()
+
+
+# --------------------------------------------------------------------------- #
+# concurrency invariants pinned directly (load-bearing for any future
+# asynchrony work; previously only inferred indirectly)
+# --------------------------------------------------------------------------- #
+
+
+class MutexProbePlugin(MonitordEventPlugin):
+    """
+    Gated first handle_event plus a thread-ident audit of both hooks, to pin
+    the handle_event/tick mutual-exclusion contract directly: both hooks must
+    only ever run on the one worker thread, and no tick may fire while the
+    worker is provably parked inside handle_event.
+    """
+
+    def __init__(self):
+        self.entered = threading.Event()
+        self.release = threading.Event()
+        self.ticks = []
+        self.hook_threads = set()
+
+    def handle_event(self, event, kw):
+        self.hook_threads.add(threading.get_ident())
+        self.entered.set()
+        self.release.wait(timeout=5)
+
+    def tick(self):
+        self.hook_threads.add(threading.get_ident())
+        self.ticks.append(time.monotonic())
+
+
+class _PutRecordingQueue(queue.Queue):
+    """queue.Queue that records the thread ident of every enqueue
+    (put_nowait routes through put, so both are captured)."""
+
+    def __init__(self, maxsize=0):
+        super().__init__(maxsize)
+        self.put_idents = []
+
+    def put(self, item, block=True, timeout=None):
+        self.put_idents.append(threading.get_ident())
+        return super().put(item, block=block, timeout=timeout)
+
+
+class _ThreadRecordingProbe:
+    """Payload value that records the thread ident of every deepcopy."""
+
+    def __init__(self):
+        self.copy_idents = []
+
+    def __deepcopy__(self, memo):
+        self.copy_idents.append(threading.get_ident())
+        return self
+
+
+def test_tick_never_runs_concurrently_with_handle_event(monkeypatch):
+    _patch_entry_points(monkeypatch, {"mx": MutexProbePlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.mx.enabled": "true",
+            "pegasus.monitord.plugins.mx.tick_interval": "0.02",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    # ticking is provably live before the handler is pinned
+    assert _wait_for(lambda: len(plugin.ticks) >= 1)
+
+    mgr.dispatch("stampede.block", {})
+    assert plugin.entered.wait(timeout=2)
+    ticks_before = len(plugin.ticks)
+    # the worker is parked inside handle_event; a concurrent tick would have
+    # to fire from some other thread. Several intervals of silence prove the
+    # exclusion (negative assertion, same style as the no-tick-after-sentinel
+    # check in test_stop_all_drains_and_joins_ticking_plugin).
+    time.sleep(0.15)
+    assert len(plugin.ticks) == ticks_before
+    plugin.release.set()
+    # ticks resume once the handler returns
+    assert _wait_for(lambda: len(plugin.ticks) > ticks_before)
+    mgr.stop_all()
+    # both hooks only ever ran on the single worker thread
+    assert len(plugin.hook_threads) == 1
+    assert threading.get_ident() not in plugin.hook_threads
+
+
+def test_single_producer_all_enqueues_on_dispatching_thread():
+    """
+    Pins the single-producer invariant the drop-oldest bounded retry relies
+    on: every queue put (events, evict-then-requeue, shutdown sentinel) and
+    every payload snapshot happens synchronously on the dispatching thread;
+    the worker thread only ever get()s.
+    """
+    plugin = GatedRecordingPlugin()
+    worker = _PluginWorker(
+        "sp",
+        plugin,
+        queue_size=1,
+        join_timeout=2.0,
+        overflow_policy="drop-oldest",
+    )
+    recording = _PutRecordingQueue(maxsize=1)
+    worker._queue = recording  # swapped before start(); _run reads it live
+    worker.start()
+    producer = threading.get_ident()
+    probe = _ThreadRecordingProbe()
+
+    # e0 is dequeued and pins the worker inside handle_event
+    worker.submit("stampede.e0", {"probe": probe})
+    assert plugin.entered.wait(timeout=2)
+    # e1 fills the single queue slot; e2 forces the drop-oldest bounded
+    # retry (get_nowait eviction + put_nowait requeue) on this thread
+    worker.submit("stampede.e1", {"probe": probe})
+    worker.submit("stampede.e2", {"probe": probe})
+    # the drop is already visible to the producer when submit returns --
+    # the counter write happened synchronously on this thread
+    assert worker._dropped == 1
+
+    plugin.release.set()
+    assert worker.close() is True
+
+    # drop-oldest kept the newest event
+    assert [e for e, _kw in plugin.events] == ["stampede.e0", "stampede.e2"]
+    # every enqueue attempt -- e0, e1, e2's rejected overflow put, e2's
+    # requeue after eviction, and the sentinel -- came from the dispatching
+    # thread; the worker thread never put anything
+    assert set(recording.put_idents) == {producer}
+    assert len(recording.put_idents) == 5
+    # every payload snapshot ran synchronously on the dispatching thread
+    assert set(probe.copy_idents) == {producer}
+
+
+# --------------------------------------------------------------------------- #
+# startup-failure cleanup must not race a still-running worker
+# --------------------------------------------------------------------------- #
+
+
+def test_cleanup_failed_start_skips_stop_when_worker_wedged(caplog):
+    plugin = StopRecordingBlockingPlugin()
+    worker = _PluginWorker("wedge", plugin, join_timeout=0.01)
+    worker.start()
+    worker.submit("stampede.block", {})
+    assert plugin.entered.wait(timeout=2)
+
+    mgr = MonitordPluginManager(_props())
+    with caplog.at_level(logging.WARNING):
+        mgr._cleanup_failed_start("wedge", plugin, worker, 0.01)
+
+    # stop() must be skipped, exactly like stop_all does for a wedged worker
+    assert plugin.stopped is False
+    assert any(
+        "skipping plugin 'wedge' stop() during startup cleanup" in r.message
+        for r in caplog.records
+    )
+    plugin.release.set()
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
+def test_cleanup_failed_start_stops_plugin_after_worker_exit():
+    plugin = StopRecordingBlockingPlugin()
+    worker = _PluginWorker("clean", plugin, join_timeout=2.0)
+    worker.start()
+
+    mgr = MonitordPluginManager(_props())
+    mgr._cleanup_failed_start("clean", plugin, worker, 2.0)
+
+    # idle worker exits within the bound, so cleanup still runs stop()
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
