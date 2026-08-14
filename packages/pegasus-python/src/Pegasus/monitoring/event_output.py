@@ -32,6 +32,7 @@ from Pegasus import json
 from Pegasus.db import connection, expunge
 from Pegasus.db.dashboard_loader import DashboardLoader
 from Pegasus.db.workflow_loader import WorkflowLoader
+from Pegasus.monitoring.plugin import MonitordPluginManager, enabled_plugin_names
 from Pegasus.netlogger import nlapi
 from Pegasus.tools import properties, utils
 
@@ -53,6 +54,46 @@ except Exception:
 # Event name-spaces
 STAMPEDE_NS = "stampede."
 DASHBOARD_NS = "dashboard."
+
+PLUGIN_HOST_URL = "plugins://"
+PLUGIN_HOST_ENDPOINT_BASE = "__monitord_plugins"
+PLUGIN_HOST_ENDPOINT_PREFIX = "pegasus.catalog.workflow."
+
+
+def has_monitord_plugin_config(props):
+    """
+    Return True when the full Pegasus properties enable at least one monitord
+    plugin (a truthy ``pegasus.monitord.plugins.<name>.enabled``). Leftover
+    plugin configuration with every plugin disabled must not flip monitord's
+    sink topology to a multiplex.
+    """
+    return bool(props and enabled_plugin_names(props))
+
+
+def ensure_monitord_plugin_endpoint(props):
+    """
+    Inject a reserved workflow-catalog endpoint for the in-process plugin host.
+
+    User-defined multiplex endpoints live in the same
+    ``pegasus.catalog.workflow.<name>.url`` namespace, so avoid overwriting an
+    existing endpoint by probing a small reserved-name sequence.
+    """
+    if not has_monitord_plugin_config(props):
+        return None
+
+    for i in range(100):
+        endpoint_name = PLUGIN_HOST_ENDPOINT_BASE
+        if i:
+            endpoint_name = f"{endpoint_name}_{i}"
+        key = f"{PLUGIN_HOST_ENDPOINT_PREFIX}{endpoint_name}.url"
+        current = props.property(key)
+        if current == PLUGIN_HOST_URL:
+            return key
+        if current is None:
+            props.property(key, PLUGIN_HOST_URL)
+            return key
+
+    raise RuntimeError("could not reserve a monitord plugin endpoint name")
 
 
 def purge_wf_uuid_from_database(rundir, output_db):
@@ -277,6 +318,57 @@ class FileEventSink(EventSink):
         self._log.trace("close.start")
         self._output.close()
         self._log.trace("close.end")
+
+
+class PluginHostEventSink(EventSink):
+    """
+    An EventSink that fans monitord events out to enabled third-party plugins.
+
+    Each plugin runs on its own background thread fed by a bounded queue (see
+    :class:`Pegasus.monitoring.plugin.MonitordPluginManager`), so a slow or
+    crashing plugin can neither block monitord's parse loop nor disable the
+    database writer. ``send`` only enqueues -- it never blocks and never raises.
+
+    Attached to monitord's fan-out via the ``plugins://`` URL scheme, which is
+    injected as a reserved extra ``pegasus.catalog.workflow.*.url`` endpoint
+    when at least one plugin is enabled via
+    ``pegasus.monitord.plugins.<name>.enabled``.
+
+    Plugin config lives under ``pegasus.monitord.plugins.*``, which the
+    multiplex machinery strips from the per-endpoint ``props`` it hands each
+    child sink. monitord therefore threads the *full* properties object through
+    as ``monitord_props`` (alongside the ``restart``/``backup`` kwargs already
+    fanned out to every sink); we use it when present and fall back to ``props``
+    otherwise.
+
+    The ``restart`` kwarg monitord fans out to every sink (True in
+    replay/recovery, when the whole event stream is re-emitted;
+    ``FileEventSink`` truncates on it) is forwarded to each plugin's
+    ``start()``.
+    """
+
+    def __init__(self, dest, props=None, monitord_props=None, restart=False, **kw):
+        super().__init__()
+        self._manager = MonitordPluginManager(
+            monitord_props if monitord_props is not None else props,
+            restart=restart,
+        )
+        started = self._manager.discover_and_start()
+        self._log.info("plugin host event sink started %d plugin(s)", started)
+
+    def send(self, event, kw):
+        # Other sinks receive the unqualified event name and prepend the
+        # namespace themselves; do the same so plugins see fully-qualified
+        # names (e.g. "stampede.job_inst.main.end"). The payload is passed
+        # through unmodified.
+        self._manager.dispatch(STAMPEDE_NS + event, kw)
+
+    def close(self):
+        self._manager.stop_all()
+
+    def flush(self):
+        # Nothing to flush synchronously -- delivery is queue-backed.
+        pass
 
 
 class TCPEventSink(EventSink):
@@ -549,6 +641,9 @@ class MultiplexEventSink(EventSink):
         except Exception:
             pass
 
+    def endpoint(self, key):
+        return self._endpoints.get(key)
+
     def flush(self):
         "Clients call this to flush events to the sink"
         for key in self._endpoints:
@@ -682,6 +777,11 @@ def create_wf_event_sink(
             **kw,
         )
         _type, _name = "AMQP", f"{url.host}:{url.port}/{url.path}"
+    elif url.scheme == "plugins":
+        # fan events out to enabled third-party monitord plugins. This needs an
+        # explicit branch because unknown schemes fall through to DBEventSink.
+        sink = PluginHostEventSink(dest, props=sink_props, **kw)
+        _type, _name = "plugins", "monitord-plugins"
     else:
         # load the appropriate DBEvent on basis of prefix passed
         sink = DBEventSink(dest, namespace=prefix, props=sink_props, **kw)
@@ -690,6 +790,25 @@ def create_wf_event_sink(
     log.info(f"output type={_type} namespace={prefix} name={_name}")
 
     return sink
+
+
+def is_workflow_db_event_sink(sink):
+    """
+    Return True when a sink, including a multiplex wrapper, contains the primary
+    workflow DB sink.
+    """
+    if isinstance(sink, DBEventSink):
+        return sink._namespace == STAMPEDE_NS
+    if isinstance(sink, MultiplexEventSink):
+        return is_workflow_db_event_sink(sink.endpoint("default"))
+    return False
+
+
+def should_purge_workflow_database(restart_logging, sink):
+    """
+    Replay/recovery purge is needed only when restarting a workflow DB sink.
+    """
+    return restart_logging and is_workflow_db_event_sink(sink)
 
 
 def multiplex(dest, prefix, props=None):

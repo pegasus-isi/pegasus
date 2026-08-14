@@ -1174,6 +1174,19 @@ else:
             logger.error(f"Invalid sqlite connection string passed {event_dest} ")
         backup = True
 
+    # Enable monitord event plugins by injecting a reserved synthetic multiplex
+    # endpoint, so the existing fan-out machinery drives the plugin host sink
+    # alongside the database sink. Only fires when at least one
+    # pegasus.monitord.plugins.<name>.enabled property is true (otherwise no
+    # behavior change).
+    plugin_endpoint = eo.ensure_monitord_plugin_endpoint(props)
+    if plugin_endpoint is not None:
+        logger.info(
+            "Enabling monitord event plugin host via %s=%s",
+            plugin_endpoint,
+            eo.PLUGIN_HOST_URL,
+        )
+
     try:
         wf_event_sink = eo.create_wf_event_sink(
             event_dest,
@@ -1183,6 +1196,9 @@ else:
             props=props,
             db_type=connection.DBType.WORKFLOW,
             backup=backup,
+            # full props for the plugin host: the multiplex layer strips
+            # pegasus.monitord.plugins.* from each endpoint's per-sink props.
+            monitord_props=props,
         )
         atexit.register(finish_stampede_loader)
     except Exception:
@@ -1191,7 +1207,7 @@ else:
         wf_event_sink = None
     else:
         try:
-            if restart_logging and isinstance(wf_event_sink, eo.DBEventSink):
+            if eo.should_purge_workflow_database(restart_logging, wf_event_sink):
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
                 eo.purge_wf_uuid_from_database(run, event_dest)
@@ -1201,7 +1217,20 @@ else:
                 "error flushing previous wf_uuid from database... continuing..."
             )
             logger.error("cannot create events output... disabling event output!")
-            wf_event_sink = None
+            # The sink has already been constructed (and a multiplex sink may
+            # already have started plugin workers). Close it before clearing
+            # the global; finish_stampede_loader reads that global at atexit,
+            # so assigning None first would orphan the sink and skip every
+            # plugin's stop() cleanup.
+            try:
+                wf_event_sink.close()
+            except Exception:
+                logger.warning(
+                    "could not close workflow event output after purge failure"
+                )
+                logger.warning(traceback.format_exc())
+            finally:
+                wf_event_sink = None
 
     # create the stampede_dashboard_loader
     try:
