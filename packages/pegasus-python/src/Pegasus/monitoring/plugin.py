@@ -485,20 +485,85 @@ class MonitordPluginManager:
         """
         entry_points = self._discover_entry_points()
         self._warn_unmatched_enabled_names(entry_points)
-        for name, cls in self._iter_enabled_plugin_classes(entry_points):
-            plugin = None
-            worker = None
-            join_timeout = DEFAULT_JOIN_TIMEOUT
+        for name, entry_point in self._iter_enabled_entry_points(entry_points):
+            item = self._start_one(name, entry_point)
+            if item is not None:
+                self._workers.append(item)
+        return len(self._workers)
+
+    def _start_one(self, name, entry_point):
+        """
+        Run one plugin's complete bootstrap under ``start_timeout``: load the
+        entry point, construct the instance, call ``start()``, compile its
+        filter, and start its worker. Returns the ``(name, plugin, worker)``
+        triple, or ``None`` when the plugin is skipped.
+
+        Python cannot kill the helper thread. If a timed-out bootstrap returns
+        later, it observes ``timed_out`` and performs bounded cleanup without
+        publishing the plugin to the manager.
+        """
+        try:
+            cfg = self._worker_config(name)
+        except Exception:
+            self._log.error(
+                "invalid configuration for plugin %r; skipping\n%s",
+                name,
+                traceback.format_exc(),
+            )
+            return None
+
+        done = Event()
+        timed_out = Event()
+        cleanup_lock = Lock()
+        cleanup_started = []
+        result = {
+            "plugin": None,
+            "worker": None,
+            "triple": None,
+            "traceback": None,
+        }
+
+        def cleanup_after_timeout():
+            with cleanup_lock:
+                if cleanup_started:
+                    return
+                cleanup_started.append(True)
+            if result["traceback"]:
+                self._log.error(
+                    "plugin %r bootstrap failed after startup timeout\n%s",
+                    name,
+                    result["traceback"],
+                )
+            elif result["plugin"] is not None:
+                self._log.warning(
+                    "plugin %r bootstrap returned after startup timeout; "
+                    "running stop() cleanup",
+                    name,
+                )
+            self._cleanup_failed_start(
+                name,
+                result["plugin"],
+                result["worker"],
+                cfg.join_timeout,
+            )
+
+        def bootstrap_target():
             try:
-                cfg = self._worker_config(name)
-                join_timeout = cfg.join_timeout
+                cls = entry_point.load()
+                if timed_out.is_set():
+                    return
                 plugin = cls()
-                if not self._start_plugin(name, plugin, cfg.start_timeout):
-                    plugin = None
-                    continue
-                # read from the instance after start() so plugins may derive
-                # their filter dynamically (e.g. from props) in start()
+                result["plugin"] = plugin
+                if timed_out.is_set():
+                    return
+                plugin.start(self._props, **self._start_kwargs(plugin))
+                if timed_out.is_set():
+                    return
+                # Read from the instance after start() so plugins may derive
+                # their filter dynamically (e.g. from props) in start().
                 event_filter = self._compile_event_filter(name, cfg.events, plugin)
+                if timed_out.is_set():
+                    return
                 worker = _PluginWorker(
                     name,
                     plugin,
@@ -508,17 +573,51 @@ class MonitordPluginManager:
                     event_filter=event_filter,
                     overflow_policy=cfg.overflow_policy,
                 )
+                result["worker"] = worker
+                if timed_out.is_set():
+                    return
                 worker.start()
-                self._workers.append((name, plugin, worker))
-                self._log.info("started monitord event plugin %r", name)
+                result["triple"] = (name, plugin, worker)
             except Exception:
-                self._log.error(
-                    "failed to start plugin %r; skipping\n%s",
-                    name,
-                    traceback.format_exc(),
-                )
-                self._cleanup_failed_start(name, plugin, worker, join_timeout)
-        return len(self._workers)
+                result["traceback"] = traceback.format_exc()
+            finally:
+                done.set()
+                if timed_out.is_set():
+                    cleanup_after_timeout()
+
+        bootstrap_thread = Thread(
+            target=bootstrap_target,
+            name=f"monitord-plugin-{name}-start",
+            daemon=True,
+        )
+        bootstrap_thread.start()
+        bootstrap_thread.join(timeout=cfg.start_timeout)
+        if bootstrap_thread.is_alive():
+            timed_out.set()
+            self._log.warning(
+                "plugin %r bootstrap did not complete within %.1fs; skipping it",
+                name,
+                cfg.start_timeout,
+            )
+            if done.is_set():
+                cleanup_after_timeout()
+            return None
+        if result["traceback"]:
+            self._log.error(
+                "failed to start plugin %r; skipping\n%s",
+                name,
+                result["traceback"],
+            )
+            self._cleanup_failed_start(
+                name,
+                result["plugin"],
+                result["worker"],
+                cfg.join_timeout,
+            )
+            return None
+        if result["triple"] is not None:
+            self._log.info("started monitord event plugin %r", name)
+        return result["triple"]
 
     def dispatch(self, event, kw):
         """
@@ -587,76 +686,6 @@ class MonitordPluginManager:
         if plugin is not None:
             self._stop_plugin(name, plugin, join_timeout, "startup cleanup")
 
-    def _start_plugin(self, name, plugin, timeout):
-        """
-        Run plugin.start() with a bounded wait. Timed-out plugins are skipped.
-        """
-        done = Event()
-        timed_out = Event()
-        cleanup_lock = Lock()
-        cleanup_started = []
-        result = {"ok": False, "traceback": None}
-        start_kwargs = self._start_kwargs(plugin)
-
-        def cleanup_after_timeout():
-            with cleanup_lock:
-                if cleanup_started:
-                    return
-                cleanup_started.append(True)
-            if result["traceback"]:
-                self._log.error(
-                    "plugin %r start() failed after startup timeout\n%s",
-                    name,
-                    result["traceback"],
-                )
-                context = "late startup failure cleanup"
-            else:
-                self._log.warning(
-                    "plugin %r start() returned after startup timeout; running stop() cleanup",
-                    name,
-                )
-                context = "late startup cleanup"
-            self._stop_plugin(name, plugin, timeout, context)
-
-        def start_target():
-            try:
-                plugin.start(self._props, **start_kwargs)
-            except Exception:
-                result["traceback"] = traceback.format_exc()
-            else:
-                result["ok"] = True
-            finally:
-                done.set()
-                if timed_out.is_set():
-                    cleanup_after_timeout()
-
-        start_thread = Thread(
-            target=start_target,
-            name=f"monitord-plugin-{name}-start",
-            daemon=True,
-        )
-        start_thread.start()
-        start_thread.join(timeout=timeout)
-        if start_thread.is_alive():
-            timed_out.set()
-            self._log.warning(
-                "plugin %r start() did not return within %.1fs; skipping it",
-                name,
-                timeout,
-            )
-            if done.is_set():
-                cleanup_after_timeout()
-            return False
-        if result["traceback"]:
-            self._log.error(
-                "failed to start plugin %r; skipping\n%s",
-                name,
-                result["traceback"],
-            )
-            self._stop_plugin(name, plugin, timeout, "startup failure cleanup")
-            return False
-        return True
-
     def _start_kwargs(self, plugin):
         """
         Keyword arguments beyond ``props`` that this plugin's ``start()``
@@ -710,7 +739,7 @@ class MonitordPluginManager:
             return False
         return bool(done)
 
-    def _iter_enabled_plugin_classes(self, entry_points):
+    def _iter_enabled_entry_points(self, entry_points):
         for name, ep in entry_points:
             if not self._is_enabled(name):
                 self._log.debug(
@@ -720,16 +749,7 @@ class MonitordPluginManager:
                     name,
                 )
                 continue
-            try:
-                cls = ep.load()
-            except Exception:
-                self._log.error(
-                    "failed to load plugin %r; skipping\n%s",
-                    name,
-                    traceback.format_exc(),
-                )
-                continue
-            yield name, cls
+            yield name, ep
 
     def _worker_config(self, name):
         queue_size = self._int_prop(

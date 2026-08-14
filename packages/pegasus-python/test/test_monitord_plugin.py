@@ -138,6 +138,25 @@ class BlockingStartPlugin(MonitordEventPlugin):
         self.stopped = True
 
 
+class BlockingConstructorPlugin(MonitordEventPlugin):
+    instances = []
+    constructor_entered = threading.Event()
+    release_constructor = threading.Event()
+    started = 0
+
+    def __init__(self):
+        type(self).constructor_entered.set()
+        type(self).release_constructor.wait(timeout=5)
+        self.stopped = False
+        type(self).instances.append(self)
+
+    def start(self, props=None):
+        type(self).started += 1
+
+    def stop(self):
+        self.stopped = True
+
+
 class FlakyHandlePlugin(MonitordEventPlugin):
     """Raises on a designated event, records the rest."""
 
@@ -339,6 +358,89 @@ def test_start_timeout_skips_plugin_and_late_cleans_up(monkeypatch):
 
     mgr.stop_all()
     assert mgr._workers == []
+
+
+def test_start_timeout_bounds_constructor_and_late_cleans_up(monkeypatch):
+    BlockingConstructorPlugin.instances = []
+    BlockingConstructorPlugin.constructor_entered = threading.Event()
+    BlockingConstructorPlugin.release_constructor = threading.Event()
+    BlockingConstructorPlugin.started = 0
+    _patch_entry_points(
+        monkeypatch,
+        {"slowctor": BlockingConstructorPlugin, "good": RecordingPlugin},
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slowctor.enabled": "true",
+            "pegasus.monitord.plugins.slowctor.start_timeout": "0.01",
+            "pegasus.monitord.plugins.good.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+
+    start = time.monotonic()
+    assert mgr.discover_and_start() == 1
+    elapsed = time.monotonic() - start
+
+    assert elapsed < 1.0, f"discover_and_start blocked for {elapsed:.2f}s"
+    assert BlockingConstructorPlugin.constructor_entered.is_set()
+    assert isinstance(mgr._workers[0][1], RecordingPlugin)
+
+    BlockingConstructorPlugin.release_constructor.set()
+    assert _wait_for(lambda: len(BlockingConstructorPlugin.instances) == 1)
+    late = BlockingConstructorPlugin.instances[0]
+    assert BlockingConstructorPlugin.started == 0
+    assert _wait_for(lambda: late.stopped is True)
+
+    mgr.stop_all()
+
+
+def test_start_timeout_bounds_entry_point_load(monkeypatch):
+    load_entered = threading.Event()
+    release_load = threading.Event()
+    load_returned = threading.Event()
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+
+    class BlockingLoadEntryPoint(_FakeEntryPoint):
+        def load(self):
+            load_entered.set()
+            release_load.wait(timeout=5)
+            load_returned.set()
+            return super().load()
+
+    eps = [
+        BlockingLoadEntryPoint("slowload", CountingStartPlugin),
+        _FakeEntryPoint("good", RecordingPlugin),
+    ]
+    monkeypatch.setattr(
+        importlib.metadata,
+        "entry_points",
+        lambda: _FakeEntryPoints(eps),
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.slowload.enabled": "true",
+            "pegasus.monitord.plugins.slowload.start_timeout": "0.01",
+            "pegasus.monitord.plugins.good.enabled": "true",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+
+    start = time.monotonic()
+    assert mgr.discover_and_start() == 1
+    elapsed = time.monotonic() - start
+
+    assert elapsed < 1.0, f"discover_and_start blocked for {elapsed:.2f}s"
+    assert load_entered.is_set()
+    assert isinstance(mgr._workers[0][1], RecordingPlugin)
+
+    release_load.set()
+    assert load_returned.wait(timeout=1)
+    assert CountingStartPlugin.started == 0
+    assert CountingStartPlugin.stopped == 0
+
+    mgr.stop_all()
 
 
 def test_entry_point_discovery_error_is_graceful(monkeypatch):
