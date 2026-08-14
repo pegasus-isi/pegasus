@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+START_DIR=`pwd`
+TESTNAME="$1"
+TEST_DIR=/scitech/shared/scratch2-90-days/bamboo/$(uuidgen)
+
+mkdir -p $TEST_DIR
+cd $TEST_DIR
+
+# copy the whole test into the new TEST DIR
+# slurm submission tests need to be submitted
+# from the shared filesystem only.
+cp -r $START_DIR/* .
+
+echo "Running test $(basename $START_DIR) -> $TESTNAME in directory $TEST_DIR"
+
+# generate the dax
+PLAN_OUT=$TEST_DIR/$TESTNAME/plan.out
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $TESTNAME 2>&1 | tee $PLAN_OUT
+
+WORK_DIR=`cat $PLAN_OUT | grep -E "^pegasus-run" | sed -E 's/.*pegasus-run[ ]+//'`
+if [ "x$WORK_DIR" = "x" ]; then
+    echo "Unable to determine work directory from the planner output"
+    exit 1
+fi
+echo "work directory is $WORK_DIR"
+cd $WORK_DIR
+
+# now we are good to submit
+echo "Submitting the workflow for execution"
+pegasus-run $WORK_DIR

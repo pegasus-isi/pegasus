@@ -224,7 +224,7 @@
     "OPENBLAS_NUM_THREADS": "1"
     "PATH": "/home/mzalam/wf/condor/local/execute/dir_148321/pegasus-5.0.5-x86_64_rhel_8/bin:/usr/local/bin:/usr/bin"
     "PEGASUS_DAG_JOB_ID": "ls_ID0000001"
-    "PEGASUS_MULTIPART_DIR": "/home/mzalam/wf/condor/local/execute/dir_148321/.pegasus.mulitpart.d"
+    "PEGASUS_MULTIPART_DIR": "/home/mzalam/wf/condor/local/execute/dir_148321/.pegasus.multipart.d"
     "PEGASUS_SITE": "condorpool"
     "PEGASUS_WF_LABEL": "process"
     "PEGASUS_WF_UUID": "f84f05fc-a8d0-42b5-bac5-52d6f41a77e3"

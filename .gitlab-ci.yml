@@ -615,6 +615,9 @@ Workflow Tests:
       - 051-osdf condorio/bypass
       - 052-condor_request memory
       - 053-profile-exp queue
+      - 054-local-slurm sharedfs
+      - 054-local-slurm nonsharedfs
+      - 054-local-slurm condorio
       - blackdiamond pl-condorio
       - blackdiamond pl-condorio-local
       - blackdiamond pl-pt
@@ -630,6 +633,12 @@ Workflow Tests:
   - /tmp/pegasus-venv/bin/pip install dist/pegasus_wms-*.whl
   - export PATH=/tmp/pegasus-venv/bin:${PATH}
   - ./test/scripts/${EXEC} ${TESTNAME}
+  after_script:
+  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - |
+    if [ "${EXEC}" == "launch-bamboo-test" ]; then
+      pegasus-remove test/core/${TESTNAME}/submit
+    fi
   artifacts:
     when: on_failure
     paths:
