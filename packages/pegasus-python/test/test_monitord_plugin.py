@@ -1018,9 +1018,7 @@ def test_stop_all_drains_and_joins_ticking_plugin(monkeypatch):
     assert len(plugin.ticks) == ticks_at_stop
 
 
-def test_failed_start_cleanup_skips_stop_when_idle_tick_is_wedged(
-    monkeypatch, caplog
-):
+def test_failed_start_cleanup_skips_stop_when_idle_tick_is_wedged(monkeypatch, caplog):
     mgr, plugin, worker = _ticking_manager(
         monkeypatch,
         BlockingTickPlugin,
