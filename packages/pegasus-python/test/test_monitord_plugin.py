@@ -1877,6 +1877,18 @@ def test_snapshot_payload_semantics():
     assert snap["d"]["nested"] is not src["d"]["nested"]
 
 
+def test_snapshot_preserves_aliases_and_cycles_across_top_level_values():
+    shared = []
+    src = {"a": shared, "b": shared}
+    src["self"] = src
+
+    snap = _snapshot_payload(src)
+
+    assert snap["a"] is snap["b"]
+    assert snap["a"] is not shared
+    assert snap["self"] is snap
+
+
 def test_snapshot_skips_deepcopy_machinery_for_scalars(monkeypatch):
     deepcopied = []
     real_deepcopy = copy.deepcopy
@@ -2031,6 +2043,26 @@ class SyncReturnsCoroutinePlugin(MonitordEventPlugin):
         return never()
 
 
+class AsyncSelfCancellingPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.cancel":
+            raise asyncio.CancelledError
+        self.events.append(event)
+
+
+class AsyncSelfCancellingTickPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.tick_calls = 0
+
+    async def tick(self):
+        self.tick_calls += 1
+        if self.tick_calls == 1:
+            raise asyncio.CancelledError
+
+
 def test_async_events_delivered_verbatim_in_order(monkeypatch):
     _patch_entry_points(monkeypatch, {"arec": AsyncRecordingPlugin})
     props = _props({"pegasus.monitord.plugins.arec.enabled": "true"})
@@ -2064,6 +2096,40 @@ def test_async_handler_exception_is_swallowed(monkeypatch):
     mgr.dispatch("stampede.good", {})
 
     assert _wait_for(lambda: plugin.events == ["stampede.good"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_handler_cancelled_error_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"acancel": AsyncSelfCancellingPlugin})
+    props = _props({"pegasus.monitord.plugins.acancel.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.cancel", {})
+    mgr.dispatch("stampede.after", {})
+
+    assert _wait_for(lambda: plugin.events == ["stampede.after"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_tick_cancelled_error_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"atcancel": AsyncSelfCancellingTickPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.atcancel.enabled": "true",
+            "pegasus.monitord.plugins.atcancel.tick_interval": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    assert _wait_for(lambda: plugin.tick_calls >= 2)
     assert worker._thread.is_alive()
     mgr.stop_all()
 
@@ -2188,10 +2254,14 @@ def test_async_stop_cancelled_at_timeout(monkeypatch):
     plugin = mgr._workers[0][1]
 
     mgr.stop_all()
-    assert plugin.stop_entered.wait(timeout=1)
-    # the hung async stop() is cancelled and its helper thread exits -- the
-    # sync path would leave it blocked forever on an abandoned thread
-    assert plugin.stop_cancelled.wait(timeout=2)
+    # Cancellation is complete before stop_all returns, rather than racing a
+    # same-length outer join and happening later on an abandoned daemon thread.
+    assert plugin.stop_entered.is_set()
+    assert plugin.stop_cancelled.is_set()
+    assert not any(
+        t.name == "monitord-plugin-astophang-stop" and t.is_alive()
+        for t in threading.enumerate()
+    )
 
 
 def test_invalid_event_timeout_skips_plugin_before_start(monkeypatch):

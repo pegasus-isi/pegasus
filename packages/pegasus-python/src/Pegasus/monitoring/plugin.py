@@ -83,10 +83,20 @@ def _snapshot_payload(kw):
     threads). Stampede payloads are overwhelmingly flat scalar dicts, so
     this avoids most of a blanket ``copy.deepcopy(kw)``'s cost.
     """
-    return {
-        key: val if type(val) in _IMMUTABLE_SCALAR_TYPES else copy.deepcopy(val)
-        for key, val in kw.items()
-    }
+    # Reuse one deepcopy memo for the whole payload so aliases and cycles
+    # spanning multiple top-level values retain the same object-graph shape
+    # as ``copy.deepcopy(kw)``. Seeding the memo with the new outer dict also
+    # preserves a nested reference back to the payload itself.
+    snapshot = {}
+    memo = {id(kw): snapshot}
+    for key, val in kw.items():
+        snapshot_key = (
+            key if type(key) in _IMMUTABLE_SCALAR_TYPES else copy.deepcopy(key, memo)
+        )
+        snapshot[snapshot_key] = (
+            val if type(val) in _IMMUTABLE_SCALAR_TYPES else copy.deepcopy(val, memo)
+        )
+    return snapshot
 
 
 _WorkerConfig = collections.namedtuple(
@@ -256,13 +266,14 @@ class MonitordEventPlugin:
         Called once after all events have been processed and this plugin's
         background thread has been joined. If the worker does not exit within
         ``join_timeout``, Pegasus skips ``stop()`` rather than racing cleanup
-        against a still-running ``handle_event()``. If ``stop()`` itself does
-        not return within ``join_timeout``, Pegasus logs and continues exit.
+        against a still-running ``handle_event()``. A synchronous ``stop()``
+        that does not return within ``join_timeout`` is abandoned; async
+        cancellation behavior is described below.
 
         May be declared ``async def``: it is then driven on a throwaway
-        event loop under the same ``join_timeout`` bound, but a timeout
-        **cancels** the coroutine (cooperatively, like ``event_timeout``)
-        instead of abandoning the helper thread mid-call.
+        event loop. After ``join_timeout`` the coroutine is **cancelled**;
+        Pegasus waits up to one additional ``join_timeout`` for cooperative
+        cancellation cleanup before abandoning the helper thread.
         """
 
 
@@ -433,6 +444,16 @@ class _PluginWorker:
                 ret = self._plugin.handle_event(event, kw)
                 if inspect.iscoroutine(ret):
                     self._warn_sync_returned_coroutine("handle_event", ret)
+        except asyncio.CancelledError:
+            # CancelledError inherits BaseException, not Exception. A plugin
+            # may legitimately receive it from an awaited child operation;
+            # letting it escape would silently kill this worker and strand
+            # every later event in the queue.
+            self._log.error(
+                "plugin %r handle_event(%s) was cancelled; continuing",
+                self._name,
+                event,
+            )
         except Exception:
             # A misbehaving plugin must never kill its own thread.
             self._log.error(
@@ -450,6 +471,11 @@ class _PluginWorker:
                 ret = self._plugin.tick()
                 if inspect.iscoroutine(ret):
                     self._warn_sync_returned_coroutine("tick", ret)
+        except asyncio.CancelledError:
+            self._log.error(
+                "plugin %r tick() was cancelled; continuing",
+                self._name,
+            )
         except Exception:
             # Same isolation contract as handle_event: a failing tick is
             # logged, never fatal to the worker.
@@ -923,18 +949,36 @@ class MonitordPluginManager:
     def _stop_plugin(self, name, plugin, timeout, context="shutdown"):
         """
         Run plugin.stop() with the same bound used for worker shutdown.
-        An ``async def stop()`` is driven on a throwaway event loop and, on
-        timeout, *cancelled* -- the helper thread then exits, instead of
-        being abandoned mid-call the way a blocked sync stop() is.
+        An ``async def stop()`` is driven on a throwaway event loop. It gets
+        one ``timeout`` interval to finish normally; if still running, the
+        host requests cancellation and waits one additional ``timeout`` for
+        cooperative cancellation cleanup before abandoning the helper.
         """
         done = []
+        async_stop = _is_coroutine_callable(plugin.stop)
+        cancel_requested = Event()
+        async_ready = Event()
+        async_state = {}
 
         def stop_target():
             try:
-                if _is_coroutine_callable(plugin.stop):
-                    self._run_stop_coroutine(name, plugin, timeout, context)
+                if async_stop:
+                    self._run_stop_coroutine(
+                        plugin,
+                        cancel_requested,
+                        async_ready,
+                        async_state,
+                    )
                 else:
                     plugin.stop()
+            except asyncio.CancelledError:
+                # A self-cancelling stop hook is a plugin failure, but it must
+                # not escape the helper thread as an unhandled BaseException.
+                self._log.error(
+                    "plugin %r stop() cancelled itself during %s",
+                    name,
+                    context,
+                )
             except Exception:
                 self._log.error(
                     "plugin %r stop() failed during %s\n%s",
@@ -952,6 +996,44 @@ class MonitordPluginManager:
         )
         stop_thread.start()
         stop_thread.join(timeout=timeout)
+        if not stop_thread.is_alive():
+            return bool(done)
+
+        if async_stop:
+            # Request cancellation from the controlling thread so it begins
+            # before _stop_plugin returns. An inner wait_for using the same
+            # timeout races this outer join and always loses that guarantee.
+            cancel_requested.set()
+            if async_ready.is_set():
+                loop = async_state.get("loop")
+                task = async_state.get("task")
+                if loop is not None and task is not None:
+                    try:
+                        loop.call_soon_threadsafe(task.cancel)
+                    except RuntimeError:
+                        # The task completed and closed its loop between the
+                        # liveness check and cancellation request.
+                        pass
+            stop_thread.join(timeout=timeout)
+            if not stop_thread.is_alive():
+                self._log.warning(
+                    "plugin %r async stop() exceeded %.1fs during %s; cancelled",
+                    name,
+                    timeout,
+                    context,
+                )
+                return bool(done)
+            self._log.warning(
+                "plugin %r async stop() did not finish within %.1fs during %s "
+                "and did not complete cancellation within another %.1fs; "
+                "abandoning it",
+                name,
+                timeout,
+                context,
+                timeout,
+            )
+            return False
+
         if stop_thread.is_alive():
             self._log.warning(
                 "plugin %r stop() did not return within %.1fs during %s; abandoning it",
@@ -962,27 +1044,31 @@ class MonitordPluginManager:
             return False
         return bool(done)
 
-    def _run_stop_coroutine(self, name, plugin, timeout, context):
+    def _run_stop_coroutine(
+        self,
+        plugin,
+        cancel_requested,
+        ready,
+        state,
+    ):
         """
-        Drive an ``async def stop()`` on a throwaway event loop, bounded by
-        ``timeout`` when positive (a non-positive timeout keeps today's
-        join-only bound, like the sync path).
+        Drive an ``async def stop()`` on a throwaway event loop. The caller
+        owns the timeout and requests cancellation through shared state so
+        the runtime bound and cancellation-grace bound cannot race each other.
         """
         loop = asyncio.new_event_loop()
+        task = loop.create_task(plugin.stop())
+        state["loop"] = loop
+        state["task"] = task
+        ready.set()
+        if cancel_requested.is_set():
+            task.cancel()
         try:
-            if timeout and timeout > 0:
-                try:
-                    loop.run_until_complete(asyncio.wait_for(plugin.stop(), timeout))
-                except asyncio.TimeoutError:
-                    self._log.warning(
-                        "plugin %r async stop() did not complete within %.1fs "
-                        "during %s; cancelled",
-                        name,
-                        timeout,
-                        context,
-                    )
-            else:
-                loop.run_until_complete(plugin.stop())
+            try:
+                loop.run_until_complete(task)
+            except asyncio.CancelledError:
+                if not cancel_requested.is_set():
+                    raise
         finally:
             loop.close()
 

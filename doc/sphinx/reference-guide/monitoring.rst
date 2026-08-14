@@ -305,8 +305,8 @@ drops.
 
 -  Delivery is **best-effort**: the queue is bounded (drop-on-overflow,
    counted and logged, with a final per-plugin dropped total logged at
-   shutdown), workers are daemon threads, and shutdown joins are bounded
-   by ``join_timeout``. Which event is lost on overflow is configurable:
+   shutdown), workers are daemon threads, and worker joins are bounded by
+   ``join_timeout``. Which event is lost on overflow is configurable:
    ``drop-newest`` (default) drops the event being submitted, while
    ``overflow_policy = drop-oldest`` evicts the oldest queued event so a
    live-monitoring plugin keeps the freshest state — either way exactly
@@ -314,8 +314,9 @@ drops.
    raises, wedges, or falls behind is isolated and logged; it never
    blocks, grows, or kills monitord. If the worker does not exit within
    ``join_timeout``, ``stop()`` is skipped for that plugin because
-   ``handle_event()`` may still be running. If ``stop()`` itself does
-   not return within ``join_timeout``, Pegasus logs and continues exit.
+   ``handle_event()`` may still be running. A synchronous ``stop()`` that
+   does not return within ``join_timeout`` is abandoned; async cancellation
+   behavior is described below.
 
 -  A single monitord may process a root workflow and its sub-workflows;
    demultiplex on the ``xwf__id`` / ``root__xwf__id`` payload keys if
@@ -340,9 +341,10 @@ What async buys is *recoverable timeouts*: with
 of seconds, a handler call that exceeds it is **cancelled** and the worker
 moves on to the next event — where a wedged sync handler permanently costs
 its worker thread and its ``stop()`` cleanup. An ``async def stop()`` is
-likewise cancelled at ``join_timeout`` instead of being abandoned
-mid-call. With ``event_timeout`` unset (the default), async plugins behave
-exactly like sync ones, wedges included.
+cancelled at ``join_timeout`` and gets up to one additional
+``join_timeout`` to finish cooperative cancellation cleanup before its
+helper thread is abandoned. With ``event_timeout`` unset (the default),
+async event handlers behave exactly like sync ones, wedges included.
 
 Two caveats, both important:
 
