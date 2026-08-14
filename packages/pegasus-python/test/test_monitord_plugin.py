@@ -1025,6 +1025,7 @@ def test_failed_start_cleanup_skips_stop_when_idle_tick_is_wedged(monkeypatch, c
         {
             "pegasus.monitord.plugins.tk.tick_interval": "0.01",
             "pegasus.monitord.plugins.tk.join_timeout": "0.01",
+            "pegasus.monitord.plugins.tk.start_timeout": "2",
         },
     )
     assert plugin.tick_entered.wait(timeout=2)
