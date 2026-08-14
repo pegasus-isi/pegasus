@@ -411,6 +411,29 @@ A complete production example is the ``wfmonitor`` plugin in
 event stream into its native JSONL records and uses ``tick()`` to poll
 HTCondor alongside.
 
+**When not to run in-process: native, untrusted, or crash-isolated
+consumers.** In-process plugins are for **trusted, pure-Python** code.
+The host isolates plugins from monitord at the Python level — exceptions
+are swallowed, queues are bounded, every lifecycle wait carries a
+timeout — but no in-process safeguard can survive what happens *below*
+Python: a native-extension segfault kills the whole monitord process, an
+``os._exit()`` call skips every atexit drain, and a GIL-holding busy
+loop starves the parse loop itself. If your consumer links native code
+you do not fully trust, must not be able to take monitord down under any
+circumstance, or needs true CPU parallelism, run it **out of process**
+and use monitord's existing delivery mechanisms as the boundary:
+
+-  **AMQP**: point ``pegasus.catalog.workflow.amqp.url`` at a broker and
+   consume the event stream from any language, at any pace, in a process
+   whose crash monitord never notices. This is the sanctioned pattern
+   for untrusted consumers — the queue-plus-external-consumer split is
+   exactly the isolation an in-process plugin cannot get.
+-  **File tail**: a minimal trusted in-process plugin (or the
+   ``file://`` sink) writes events to a line-buffered file; the real
+   consumer tails it from its own process. This is the pattern the
+   ``wfmonitor`` plugin's JSONL output follows, and it adds
+   crash-replayability for free — the file is the durable hand-off.
+
 .. _stampede-schema-overview:
 
 Overview of the Workflow Database Schema.
