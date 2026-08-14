@@ -280,11 +280,12 @@ drops.
 
 **Threading and delivery contract.**
 
--  ``start()`` runs once during monitord startup in a bounded helper
-   thread. If it does not return within ``start_timeout``, Pegasus logs,
-   skips that plugin, and continues startup. Python cannot forcibly kill
-   the helper thread, so Pegasus attempts bounded ``stop()`` cleanup if a
-   timed-out ``start()`` returns later. ``handle_event()`` and ``tick()``
+-  The complete plugin bootstrap — entry-point loading, construction, and
+   ``start()`` — runs during monitord startup in a bounded helper thread.
+   If it does not complete within ``start_timeout``, Pegasus logs, skips
+   that plugin, and continues startup. Python cannot forcibly kill the
+   helper thread, so Pegasus attempts bounded ``stop()`` cleanup if a
+   timed-out bootstrap returns later. ``handle_event()`` and ``tick()``
    run on the plugin's own dedicated thread, so they never race each
    other and shared plugin state needs no locking. ``stop()`` runs once
    after the worker exits, in a bounded helper thread. When several
