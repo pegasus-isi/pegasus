@@ -286,7 +286,11 @@ drops.
    timed-out ``start()`` returns later. ``handle_event()`` and ``tick()``
    run on the plugin's own dedicated thread, so they never race each
    other and shared plugin state needs no locking. ``stop()`` runs once
-   after the worker exits, in a bounded helper thread.
+   after the worker exits, in a bounded helper thread. When several
+   plugins are enabled, different plugins start and stop concurrently
+   with one another (startup and shutdown are bounded by the slowest
+   plugin, not the sum); each plugin's own lifecycle stays strictly
+   ordered.
 
 -  Events are delivered to a single plugin **in order**; different
    plugins (and monitord's own database writer) run concurrently. Do not

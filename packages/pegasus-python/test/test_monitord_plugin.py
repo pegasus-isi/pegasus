@@ -1680,6 +1680,125 @@ def test_single_producer_all_enqueues_on_dispatching_thread():
 
 
 # --------------------------------------------------------------------------- #
+# parallel lifecycle — plugins start and stop concurrently, in discovery order
+# --------------------------------------------------------------------------- #
+
+
+class BarrierStartPlugin(MonitordEventPlugin):
+    """start() blocks until BOTH instances are inside start() -- possible
+    only when the manager runs plugin startups concurrently."""
+
+    barrier = None  # threading.Barrier(2), installed by the test
+
+    def __init__(self):
+        self.stopped = False
+
+    def start(self, props=None):
+        type(self).barrier.wait(timeout=5)  # BrokenBarrierError under serial
+
+    def stop(self):
+        self.stopped = True
+
+
+class BarrierStopPlugin(MonitordEventPlugin):
+    """stop() blocks until BOTH instances are inside stop()."""
+
+    barrier = None
+
+    def __init__(self):
+        self.stopped = False
+
+    def stop(self):
+        type(self).barrier.wait(timeout=5)
+        self.stopped = True
+
+
+class WaitsForPeerStartPlugin(MonitordEventPlugin):
+    """start() completes only after the peer plugin's start() has finished."""
+
+    peer_done = None  # threading.Event, installed by the test
+
+    def start(self, props=None):
+        type(self).peer_done.wait(timeout=5)
+
+
+class SignalsPeerStartPlugin(MonitordEventPlugin):
+    peer_done = None
+
+    def start(self, props=None):
+        type(self).peer_done.set()
+
+
+def test_plugins_start_concurrently(monkeypatch):
+    BarrierStartPlugin.barrier = threading.Barrier(2)
+    _patch_entry_points(
+        monkeypatch, {"p1": BarrierStartPlugin, "p2": BarrierStartPlugin}
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.p1.enabled": "true",
+            "pegasus.monitord.plugins.p2.enabled": "true",
+            # keeps the failure mode fast if startup regresses to serial
+            "pegasus.monitord.plugins.p1.start_timeout": "1",
+            "pegasus.monitord.plugins.p2.start_timeout": "1",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    # serial startup would break the barrier and start at most one plugin
+    assert mgr.discover_and_start() == 2
+    assert [name for name, _p, _w in mgr._workers] == ["p1", "p2"]
+    mgr.stop_all()
+
+
+def test_plugins_stop_concurrently(monkeypatch):
+    BarrierStopPlugin.barrier = threading.Barrier(2)
+    _patch_entry_points(monkeypatch, {"p1": BarrierStopPlugin, "p2": BarrierStopPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.p1.enabled": "true",
+            "pegasus.monitord.plugins.p2.enabled": "true",
+            "pegasus.monitord.plugins.p1.join_timeout": "2",
+            "pegasus.monitord.plugins.p2.join_timeout": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 2
+    plugins = [p for _n, p, _w in mgr._workers]
+
+    start = time.monotonic()
+    mgr.stop_all()
+    elapsed = time.monotonic() - start
+    # serial teardown would park p1's stop() on the barrier for the full
+    # 2s join_timeout before p2's stop() could release it
+    assert elapsed < 1.0, f"stop_all took {elapsed:.2f}s; teardown ran serially?"
+    assert all(p.stopped for p in plugins)
+
+
+def test_workers_keep_discovery_order_regardless_of_completion(monkeypatch):
+    gate = threading.Event()
+    WaitsForPeerStartPlugin.peer_done = gate
+    SignalsPeerStartPlugin.peer_done = gate
+    # discovery order: pa first -- but its start() finishes only after pb's
+    _patch_entry_points(
+        monkeypatch,
+        {"pa": WaitsForPeerStartPlugin, "pb": SignalsPeerStartPlugin},
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.pa.enabled": "true",
+            "pegasus.monitord.plugins.pb.enabled": "true",
+            "pegasus.monitord.plugins.pa.start_timeout": "2",
+            "pegasus.monitord.plugins.pb.start_timeout": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 2
+    # completion order was pb-then-pa; _workers order must stay pa, pb
+    assert [name for name, _p, _w in mgr._workers] == ["pa", "pb"]
+    mgr.stop_all()
+
+
+# --------------------------------------------------------------------------- #
 # startup-failure cleanup must not race a still-running worker
 # --------------------------------------------------------------------------- #
 

@@ -106,7 +106,10 @@ class MonitordEventPlugin:
 
     * :meth:`start` is called once before events flow, in a bounded helper
       thread during monitord startup. :meth:`stop` is called once after the
-      event worker exits, also in a bounded helper thread.
+      event worker exits, also in a bounded helper thread. When several
+      plugins are enabled, different plugins' ``start()`` (and ``stop()``)
+      hooks may run concurrently with one another; each plugin's own
+      lifecycle stays strictly ordered.
     * :meth:`handle_event` is called once per event on this plugin's *own*
       dedicated background thread. Events are delivered to a single plugin in
       order, but different plugins (and monitord's own database writer) run
@@ -419,10 +422,12 @@ class _PluginWorker:
         ``join_timeout``). Returns once the thread has exited or the timeout
         has elapsed. Logs a final total if any events were dropped.
         """
-        # _dropped/_filtered are written only by submit() and read only here;
-        # both run on monitord's main thread (dispatch via the sink's send,
-        # close via the atexit sink close), so no lock is needed and the
-        # totals are final.
+        # _dropped/_filtered are written only by submit() (monitord's main
+        # thread, via the sink's send) and read only here. close() may run on
+        # a per-plugin teardown helper thread, but every submit() has ceased
+        # before that helper is spawned and Thread.start() publishes all
+        # prior writes to it -- so no lock is needed and the totals are
+        # final.
         if self._dropped:
             self._log.warning(
                 "plugin %r dropped %d event(s) in total "
@@ -482,43 +487,101 @@ class MonitordPluginManager:
         the others or monitord itself. A name that is enabled in properties
         but not registered under the entry-point group is logged as a warning
         and skipped.
+
+        When more than one plugin is enabled, the per-plugin startup sequences
+        run concurrently (one helper thread each), so N slow ``start()``s cost
+        one ``start_timeout``, not N. Survivors are recorded in discovery
+        (entry-point) order regardless of completion order.
         """
         entry_points = self._discover_entry_points()
         self._warn_unmatched_enabled_names(entry_points)
-        for name, cls in self._iter_enabled_plugin_classes(entry_points):
-            plugin = None
-            worker = None
-            join_timeout = DEFAULT_JOIN_TIMEOUT
-            try:
-                cfg = self._worker_config(name)
-                join_timeout = cfg.join_timeout
-                plugin = cls()
-                if not self._start_plugin(name, plugin, cfg.start_timeout):
-                    plugin = None
-                    continue
-                # read from the instance after start() so plugins may derive
-                # their filter dynamically (e.g. from props) in start()
-                event_filter = self._compile_event_filter(name, cfg.events, plugin)
-                worker = _PluginWorker(
-                    name,
-                    plugin,
-                    queue_size=cfg.queue_size,
-                    join_timeout=cfg.join_timeout,
-                    tick_interval=cfg.tick_interval,
-                    event_filter=event_filter,
-                    overflow_policy=cfg.overflow_policy,
-                )
-                worker.start()
-                self._workers.append((name, plugin, worker))
-                self._log.info("started monitord event plugin %r", name)
-            except Exception:
-                self._log.error(
-                    "failed to start plugin %r; skipping\n%s",
-                    name,
-                    traceback.format_exc(),
-                )
-                self._cleanup_failed_start(name, plugin, worker, join_timeout)
+        enabled = list(self._iter_enabled_plugin_classes(entry_points))
+        if len(enabled) <= 1:
+            results = [self._start_one(name, cls) for name, cls in enabled]
+        else:
+            results = self._fan_out(
+                "startup",
+                [(name, (name, cls)) for name, cls in enabled],
+                lambda name, cls: self._start_one(name, cls),
+            )
+        for item in results:
+            if item is not None:
+                self._workers.append(item)
         return len(self._workers)
+
+    def _start_one(self, name, cls):
+        """
+        Run one plugin's full startup sequence: config parse, instantiate,
+        bounded ``start()``, then spin up its worker. Returns the
+        ``(name, plugin, worker)`` triple, or ``None`` when the plugin is
+        skipped. Safe to run on a helper thread: everything it touches is
+        per-plugin, except the shared properties object, which is only read.
+        """
+        plugin = None
+        worker = None
+        join_timeout = DEFAULT_JOIN_TIMEOUT
+        try:
+            cfg = self._worker_config(name)
+            join_timeout = cfg.join_timeout
+            plugin = cls()
+            if not self._start_plugin(name, plugin, cfg.start_timeout):
+                return None
+            # read from the instance after start() so plugins may derive
+            # their filter dynamically (e.g. from props) in start()
+            event_filter = self._compile_event_filter(name, cfg.events, plugin)
+            worker = _PluginWorker(
+                name,
+                plugin,
+                queue_size=cfg.queue_size,
+                join_timeout=cfg.join_timeout,
+                tick_interval=cfg.tick_interval,
+                event_filter=event_filter,
+                overflow_policy=cfg.overflow_policy,
+            )
+            worker.start()
+            self._log.info("started monitord event plugin %r", name)
+            return (name, plugin, worker)
+        except Exception:
+            self._log.error(
+                "failed to start plugin %r; skipping\n%s",
+                name,
+                traceback.format_exc(),
+            )
+            self._cleanup_failed_start(name, plugin, worker, join_timeout)
+            return None
+
+    def _fan_out(self, stage, named_args, fn):
+        """
+        Run ``fn(*args)`` once per ``(name, args)`` entry, each on its own
+        daemon helper thread, and return the results in input order.
+
+        Plain threads rather than a ``concurrent.futures`` pool: ``stop_all``
+        runs from monitord's atexit handler, where importing/creating an
+        executor has interpreter-shutdown interplay that bare ``Thread`` +
+        ``join`` (already used in this path today) does not. The joins carry
+        no timeout because every operation inside ``fn`` is itself bounded --
+        except code the plugin author controls (e.g. ``__init__``), which was
+        equally unbounded on the main thread before parallelization.
+        """
+        results = [None] * len(named_args)
+
+        def _task(idx, args):
+            results[idx] = fn(*args)
+
+        threads = [
+            Thread(
+                target=_task,
+                args=(idx, args),
+                name=f"monitord-plugin-{name}-{stage}",
+                daemon=True,
+            )
+            for idx, (name, args) in enumerate(named_args)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        return results
 
     def dispatch(self, event, kw):
         """
@@ -530,27 +593,45 @@ class MonitordPluginManager:
     def stop_all(self):
         """
         Drain and join every plugin worker, then call each plugin's ``stop()``
-        in a bounded helper thread. Ordering matches the contract: ``stop()``
-        starts only after the plugin's event thread has been joined.
+        in a bounded helper thread. Per-plugin ordering matches the contract:
+        ``stop()`` starts only after that plugin's event thread has been
+        joined. Different plugins tear down concurrently (one helper thread
+        each), so shutdown is bounded by the slowest plugin, not the sum.
         """
-        for name, plugin, worker in self._workers:
-            worker_exited = False
-            try:
-                worker_exited = worker.close()
-            except Exception:
-                self._log.error(
-                    "error closing worker for plugin %r\n%s",
-                    name,
-                    traceback.format_exc(),
-                )
-            if not worker_exited:
-                self._log.warning(
-                    "skipping plugin %r stop() because its worker is still running",
-                    name,
-                )
-                continue
-            self._stop_plugin(name, plugin, worker._join_timeout)
+        workers = self._workers
+        if len(workers) <= 1:
+            for name, plugin, worker in workers:
+                self._stop_one(name, plugin, worker)
+        else:
+            self._fan_out(
+                "teardown",
+                [(entry[0], entry) for entry in workers],
+                self._stop_one,
+            )
         self._workers = []
+
+    def _stop_one(self, name, plugin, worker):
+        """
+        Tear one plugin down: drain and join its worker, then run ``stop()``
+        -- skipped when the worker misses its join timeout, so cleanup never
+        races a still-running ``handle_event``.
+        """
+        worker_exited = False
+        try:
+            worker_exited = worker.close()
+        except Exception:
+            self._log.error(
+                "error closing worker for plugin %r\n%s",
+                name,
+                traceback.format_exc(),
+            )
+        if not worker_exited:
+            self._log.warning(
+                "skipping plugin %r stop() because its worker is still running",
+                name,
+            )
+            return
+        self._stop_plugin(name, plugin, worker._join_timeout)
 
     # ------------------------------------------------------------------ #
     # discovery / configuration helpers
