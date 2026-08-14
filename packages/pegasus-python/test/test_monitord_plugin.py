@@ -3,6 +3,7 @@ Tests for the pegasus-monitord plugin system (Pegasus.monitoring.plugin) and
 its host sink (Pegasus.monitoring.event_output.PluginHostEventSink).
 """
 
+import copy
 import importlib.metadata
 import logging
 import queue
@@ -16,6 +17,7 @@ from Pegasus.monitoring.plugin import (
     MonitordEventPlugin,
     MonitordPluginManager,
     _PluginWorker,
+    _snapshot_payload,
     enabled_plugin_names,
 )
 from Pegasus.tools import properties
@@ -1835,3 +1837,90 @@ def test_cleanup_failed_start_stops_plugin_after_worker_exit():
     # idle worker exits within the bound, so cleanup still runs stop()
     assert plugin.stopped is True
     assert not worker._thread.is_alive()
+
+
+# --------------------------------------------------------------------------- #
+# shape-aware payload snapshot — scalars shared by reference, containers
+# deep-copied; observable isolation semantics identical to a blanket deepcopy
+# --------------------------------------------------------------------------- #
+
+
+class _MutableStr(str):
+    """A str subclass can carry mutable state, so the exact-type scalar
+    gate must NOT share it by reference."""
+
+
+class _ExplodingValue:
+    def __deepcopy__(self, memo):
+        raise RuntimeError("cannot copy this value")
+
+
+def test_snapshot_payload_semantics():
+    src = {
+        "s": "str",
+        "i": 7,
+        "f": 1.5,
+        "b": True,
+        "by": b"x",
+        "n": None,
+        "lst": [1, {"k": "v"}],
+        "d": {"nested": [2]},
+    }
+    snap = _snapshot_payload(src)
+    assert snap == src
+    assert snap is not src  # new outer dict: producer key rebinding is safe
+    # containers are deep-copied, all the way down
+    assert snap["lst"] is not src["lst"]
+    assert snap["lst"][1] is not src["lst"][1]
+    assert snap["d"] is not src["d"]
+    assert snap["d"]["nested"] is not src["d"]["nested"]
+
+
+def test_snapshot_skips_deepcopy_machinery_for_scalars(monkeypatch):
+    deepcopied = []
+    real_deepcopy = copy.deepcopy
+
+    def recording_deepcopy(obj, *args, **kwargs):
+        deepcopied.append(obj)
+        return real_deepcopy(obj, *args, **kwargs)
+
+    monkeypatch.setattr(copy, "deepcopy", recording_deepcopy)
+
+    # an all-scalar payload (the overwhelmingly common shape) never touches
+    # deepcopy at all
+    _snapshot_payload({"xwf__id": "abc", "exitcode": 0, "site": None})
+    assert deepcopied == []
+
+    # only the non-scalar values go through deepcopy, not the outer dict
+    nested = {"attempts": [1]}
+    _snapshot_payload({"xwf__id": "abc", "multipart": nested})
+    assert deepcopied == [nested]
+
+
+def test_snapshot_copies_scalar_subclasses():
+    tainted = _MutableStr("looks like a str")
+    tainted.attached = ["mutable state"]
+    snap = _snapshot_payload({"v": tainted})
+    assert snap["v"] is not tainted
+    assert snap["v"] == tainted
+    assert snap["v"].attached is not tainted.attached
+
+
+def test_snapshot_failure_counts_as_drop_and_never_raises(monkeypatch):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    # a payload value that cannot be snapshotted is a counted drop, never an
+    # exception into the dispatching (parse) loop
+    mgr.dispatch("stampede.bad", {"boom": _ExplodingValue()})
+    assert worker._dropped == 1
+
+    # and the worker is unharmed: the next event flows normally
+    mgr.dispatch("stampede.good", {"xwf__id": "abc"})
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    mgr.stop_all()
+    assert plugin.events == [("stampede.good", {"xwf__id": "abc"})]

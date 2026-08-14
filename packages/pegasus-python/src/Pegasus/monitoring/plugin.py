@@ -64,6 +64,29 @@ DEFAULT_OVERFLOW_POLICY = OVERFLOW_DROP_NEWEST
 # Distinct from None, which could in principle be a queued value.
 _NOTHING = object()
 
+# Payload values of these EXACT types are immutable, so sharing them by
+# reference between the producer and every plugin is safe and skips
+# deepcopy's per-object machinery (deepcopy would return them by identity
+# anyway -- this is a cost cut, not a semantic change). Exact-type match
+# only: a subclass may carry mutable state, so it takes the deepcopy path.
+_IMMUTABLE_SCALAR_TYPES = frozenset({str, int, float, bool, bytes, type(None)})
+
+
+def _snapshot_payload(kw):
+    """
+    Per-plugin snapshot of an event payload: a new outer dict (the producer
+    reuses and rebinds keys in the original after dispatch), sharing
+    immutable scalar values by reference and deep-copying everything else
+    (nested mutables in composite events must not be aliased across
+    threads). Stampede payloads are overwhelmingly flat scalar dicts, so
+    this avoids most of a blanket ``copy.deepcopy(kw)``'s cost.
+    """
+    return {
+        key: val if type(val) in _IMMUTABLE_SCALAR_TYPES else copy.deepcopy(val)
+        for key, val in kw.items()
+    }
+
+
 _WorkerConfig = collections.namedtuple(
     "_WorkerConfig",
     "queue_size start_timeout join_timeout tick_interval events overflow_policy",
@@ -264,15 +287,17 @@ class _PluginWorker:
         payload snapshot below -- that is the entire point of filtering; they
         are counted separately and are not drops.
 
-        The payload is snapshotted with ``copy.deepcopy(kw)`` before it is
-        queued. The worker thread reads the payload asynchronously, while
+        The payload is snapshotted with :func:`_snapshot_payload` before it
+        is queued. The worker thread reads the payload asynchronously, while
         monitord's main thread keeps -- and in places reuses/mutates -- the
         original dict (e.g. the per-LFN ``rc.meta`` loop in ``workflow.py``
         overwrites ``key``/``value`` and re-sends the same dict; ``wf.plan``
-        adds ``db_url`` after the event is dispatched). A per-worker copy gives
-        each plugin its own isolated, stable payload and removes that
-        cross-thread data race, including nested mutable values in composite
-        events.
+        adds ``db_url`` after the event is dispatched). A per-worker snapshot
+        gives each plugin its own isolated, stable payload and removes that
+        cross-thread data race: the new outer dict decouples it from the
+        producer's key rebinding, immutable scalar values are shared by
+        reference, and everything else -- including nested mutable values in
+        composite events -- is deep-copied.
 
         On overflow, which event is lost depends on ``overflow_policy``:
         ``drop-newest`` (default) drops the event being submitted;
@@ -287,7 +312,7 @@ class _PluginWorker:
         if not self._thread.is_alive():
             return
         try:
-            payload = copy.deepcopy(kw)
+            payload = _snapshot_payload(kw)
         except Exception:
             if self._record_drop():
                 self._log.error(
