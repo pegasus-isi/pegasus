@@ -6,9 +6,19 @@ import pytest
 import Pegasus
 from Pegasus.db.ensembles import TriggerType
 from Pegasus.service.ensembles.commands import (
+    EM_PORT_MAX,
+    EM_PORT_MIN,
     CronTriggerCommand,
     FilePatternTriggerCommand,
+    _compute_em_port,
 )
+
+
+class TestEMPort:
+    @pytest.mark.parametrize("uid", [0, 1000, 57616, 100_000_000])
+    def test_em_port_is_within_valid_range(self, uid):
+        port = _compute_em_port(uid)
+        assert EM_PORT_MIN <= port < EM_PORT_MAX
 
 
 class TestCronTriggerCommand:
