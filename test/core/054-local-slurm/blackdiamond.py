@@ -85,11 +85,13 @@ local_site = (
 )
 
 # compute site: local Slurm cluster accessed via HTCondor's BLAHP glite interface
+# runtime is set 15 mins, as max runtime on bamboo slurm is 30 mins
+# and we also have job clustering on. so 15*2 becomes 30 for findrange jobs
 compute_site = (
     Site(COMPUTE, arch=Arch.X86_64, os_type=OS.LINUX)
     .add_pegasus_profile(style="glite")
     .add_pegasus_profile(clusters_num=1)
-    .add_pegasus_profile(queue="debug", runtime=1800)
+    .add_pegasus_profile(queue="debug", runtime=900)
     .add_profiles(Namespace.CONDOR, key="grid_resource", value="batch slurm")
 )
 
