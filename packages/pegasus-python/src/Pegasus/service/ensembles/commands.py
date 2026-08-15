@@ -666,7 +666,55 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
 
 # TODO: StopTriggerCommand
 
-# TODO: ListTriggersCommand
+
+class ListTriggersCommand(EnsembleClientCommand):
+    description = "List triggers in an ensemble"
+    usage = "Usage: %prog triggers [options] ENSEMBLE"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        self.parser.add_option(
+            "-l",
+            "--long",
+            action="store_true",
+            dest="long",
+            default=False,
+            help="Show detailed output",
+        )
+
+    def run(self):
+        if len(self.args) == 0:
+            self.parser.error("Specify ENSEMBLE")
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
+
+        response = self.get(f"/ensembles/{self.args[0]}/triggers")
+
+        result = response.json()
+
+        if len(result) == 0:
+            return
+
+        if self.options.long:
+            for t in result:
+                print("Name:".ljust(15), t["name"])
+                print("Type:".ljust(15), t["type"])
+                print("State:".ljust(15), t["state"])
+                print("Workflow:".ljust(15), t["workflow"]["script"])
+                print(
+                    "Workflow Args:".ljust(15),
+                    " ".join(str(a) for a in (t["workflow"]["args"] or [])),
+                )
+                for key, value in (t["args"] or {}).items():
+                    print(f"{key.replace('_', ' ').title()}:".ljust(15), value)
+                print()
+        else:
+            print(f"{'NAME':<20} {'TYPE':<14} {'STATE':<10} {'WORKFLOW SCRIPT':<30}")
+            for t in result:
+                print(
+                    f"{t['name']:<20} {t['type']:<14} {t['state']:<10} "
+                    f"{t['workflow']['script']:<30}"
+                )
 
 
 # ------------------------------------------------------------------------------
@@ -690,6 +738,7 @@ class EnsembleCommand(CompoundCommand):
         ("priority", PriorityCommand),
         ("cron-trigger", CronTriggerCommand),
         ("file-pattern-trigger", FilePatternTriggerCommand),
+        ("triggers", ListTriggersCommand),
     ]
     aliases = {
         "c": "create",
@@ -698,6 +747,7 @@ class EnsembleCommand(CompoundCommand):
         "sub": "submit",
         "an": "analyze",
         "st": "status",
+        "t": "triggers",
     }
 
 
