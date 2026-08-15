@@ -55,8 +55,7 @@ set -e
 chown -R scitech /home/scitech/
 chmod +x /usr/local/bin/wrapdocker /usr/local/bin/htcondor-wrapper
 
-# dnf -y install /tmp/pegasus-*-*.`arch`.rpm
-dnf -y install https://download.pegasus.isi.edu/pegasus/6.0.0-dev.0/pegasus-6.0.0-dev.0-1.el9.aarch64.rpm
+dnf -y install /tmp/pegasus-*-*.`arch`.rpm
 
 su -s /bin/bash scitech <<EOS
 # Set up config for ensemble manager and service
