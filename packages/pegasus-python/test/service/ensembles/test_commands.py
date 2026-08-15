@@ -1,5 +1,5 @@
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,7 +10,9 @@ from Pegasus.service.ensembles.commands import (
     EM_PORT_MIN,
     CronTriggerCommand,
     FilePatternTriggerCommand,
+    ListTriggersCommand,
     _compute_em_port,
+    emapp,
 )
 
 
@@ -164,3 +166,106 @@ class TestFilePatternTriggerCommand:
         Pegasus.service.ensembles.commands.FilePatternTriggerCommand.post.assert_called_once_with(
             "/ensembles/ensemble/triggers/file_pattern", data=expected_request_data
         )
+
+
+class TestListTriggersCommand:
+    @pytest.fixture(autouse=True)
+    def configure_credentials(self, mocker):
+        # ListTriggersCommand relies on EnsembleClientCommand's real __init__ to
+        # build self.parser (optparse), so unlike the argparse-based trigger
+        # creation commands, EnsembleClientCommand itself can't be mocked out here.
+        mocker.patch.dict(emapp.config, {"USERNAME": "user", "PASSWORD": "pass"})
+
+    def _mock_get(self, mocker, triggers):
+        response = MagicMock()
+        response.json.return_value = triggers
+        return mocker.patch(
+            "Pegasus.service.ensembles.commands.ListTriggersCommand.get",
+            return_value=response,
+        )
+
+    def test_short_format(self, mocker, capsys):
+        get = self._mock_get(
+            mocker,
+            [
+                {
+                    "name": "trigger1",
+                    "type": TriggerType.CRON.value,
+                    "state": "RUNNING",
+                    "workflow": {"script": "/workflow.py", "args": []},
+                    "args": {"interval": 10, "timeout": None},
+                }
+            ],
+        )
+
+        cmd = ListTriggersCommand()
+        cmd.parse(["ensemble"])
+        cmd.run()
+
+        get.assert_called_once_with("/ensembles/ensemble/triggers")
+        out = capsys.readouterr().out
+        assert "trigger1" in out
+        assert "RUNNING" in out
+        assert "/workflow.py" in out
+
+    def test_long_format(self, mocker, capsys):
+        self._mock_get(
+            mocker,
+            [
+                {
+                    "name": "trigger1",
+                    "type": TriggerType.CRON.value,
+                    "state": "RUNNING",
+                    "workflow": {"script": "/workflow.py", "args": ["arg1"]},
+                    "args": {"interval": 10, "timeout": 20},
+                }
+            ],
+        )
+
+        cmd = ListTriggersCommand()
+        cmd.parse(["ensemble", "-l"])
+        cmd.run()
+
+        out = capsys.readouterr().out
+        assert "trigger1" in out
+        assert "/workflow.py" in out
+        assert "arg1" in out
+        assert "10" in out
+        assert "20" in out
+
+    def test_long_format_with_null_workflow_args_and_args(self, mocker, capsys):
+        self._mock_get(
+            mocker,
+            [
+                {
+                    "name": "trigger1",
+                    "type": TriggerType.CRON.value,
+                    "state": "READY",
+                    "workflow": {"script": "/workflow.py", "args": None},
+                    "args": None,
+                }
+            ],
+        )
+
+        cmd = ListTriggersCommand()
+        cmd.parse(["ensemble", "-l"])
+        cmd.run()
+
+        out = capsys.readouterr().out
+        assert "trigger1" in out
+        assert "/workflow.py" in out
+
+    def test_empty_result_prints_nothing(self, mocker, capsys):
+        self._mock_get(mocker, [])
+
+        cmd = ListTriggersCommand()
+        cmd.parse(["ensemble"])
+        cmd.run()
+
+        assert capsys.readouterr().out == ""
+
+    def test_requires_ensemble_argument(self):
+        cmd = ListTriggersCommand()
+        cmd.parse([])
+        with pytest.raises(SystemExit):
+            cmd.run()
