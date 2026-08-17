@@ -131,10 +131,14 @@ public class RM implements CleanupImplementation {
         cJob.setRemoteExecutable(entry.getPhysicalTransformation());
 
         // set the arguments for the cleanup job
+        // GH-233 a directory's physical artifact at the staging site is always
+        // <lfn>.tar.gz, not the plain lfn (see PegasusFile#getDirectoryAwarePFN) - rm has
+        // to be told to remove that, or it silently does nothing and the tarball is never
+        // cleaned up
         StringBuffer arguments = new StringBuffer();
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             PegasusFile file = (PegasusFile) it.next();
-            arguments.append(" ").append(file.getLFN());
+            arguments.append(" ").append(file.getDirectoryAwarePFN(file.getLFN()));
         }
         cJob.setArguments(arguments.toString());
 

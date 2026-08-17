@@ -45,6 +45,10 @@ If not specified, the transfer flag defaults to true. So if you don't want all
 the generated files to be transferred to the output sites, you need to
 explicitly set the stage_out flag to false for the file.
 
+A job input or output can also be marked as a whole directory using the
+``is_directory`` flag, in which case Pegasus stages it as a single tarred
+file behind the scenes. See :ref:`directory-staging` for details.
+
 .. tabs::
 
     .. code-tab:: python Pegasus.api
@@ -238,6 +242,10 @@ nodes. Running in that mode is explained in detail
    Set **pegasus.data.configuration** to **condorio** to run in this
    configuration. In this mode, the staging site is automatically set to
    site **local**
+
+Directory inputs/outputs (see :ref:`directory-staging`) are also
+supported in this mode; see the condorio-specific note at the end of
+that section for how the mechanics differ from *nonsharedfs*.
 
 In this setup, Pegasus always stages the input files through the submit
 host i.e the stage-in job stages in data from the input site to the
@@ -1088,3 +1096,62 @@ For source URL's that are file URL's **bypass** only works if the
 
 * the file URL is at site "local" and the pegasus profile *auxillary.local*
   is set to true for the compute site in the site catalog.
+
+
+.. _directory-staging:
+
+Staging a Whole Directory
+-------------------------
+Instead of enumerating every file in a directory as a separate job input
+or output, a job can be told to stage the directory as a whole by setting
+the **is_directory** flag on the input or output. Behind the scenes,
+Pegasus stages the directory as a single ``<lfn>.tar.gz`` tarball -
+``pegasus-transfer`` takes care of tarring it up on stage-out and
+untarring it again on stage-in - while the logical filename you use in
+the workflow always stays the plain directory name (e.g. ``mydir``, not
+``mydir.tar.gz``).
+
+.. tabs::
+
+   .. code-tab:: python Pegasus.api
+
+        mydir = File("mydir")
+        job_produce_dir = Job("produce_dir").add_outputs(mydir, is_directory=True)
+        job_consume_dir = Job("consume_dir").add_inputs(mydir, is_directory=True)
+
+   .. code-tab:: yaml  Workflow Snippet
+
+        uses:
+          - lfn: mydir
+            type: output
+            isDirectory: true
+
+.. note::
+
+   The tarring/untarring is done by ``pegasus-transfer`` and requires a
+   local filesystem source when creating the tarball. A directory whose
+   replica catalog entry points at a remote location that is never staged
+   through a local filesystem (e.g. a ``gsiftp://`` or ``s3://`` URL
+   pointing directly at a directory) cannot be tarred on the fly. For
+   such cases, either register an already tarred ``<lfn>.tar.gz`` replica
+   for the directory, or ensure the directory is staged in via a
+   ``file://`` URL on a site where stage-in runs locally.
+
+Directory Staging in condorio Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Directory staging is also supported in the default :ref:`condorio
+<ref-data-staging-condorio>` configuration. The ``<lfn>.tar.gz``
+convention is unchanged, but the hop between the submit host and the
+worker node is done with Condor File IO instead of ``pegasus-transfer``:
+the directory is tarred locally on whichever end currently has the
+plain directory (the worker node for an output, the PegasusLite wrapper
+for an input), and Condor then transfers the resulting tarball
+unmodified.
+
+Condor File IO always delivers a file into a job's sandbox under its
+basename, so a directory whose LFN contains a path separator is tarred
+and delivered under that basename too. If the basename of a staged
+directory or deep LFN would collide with another input or output of the
+same job, Pegasus reports the conflict at plan time instead of silently
+overwriting one of the files.

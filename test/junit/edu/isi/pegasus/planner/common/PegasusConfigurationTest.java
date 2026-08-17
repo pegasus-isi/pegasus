@@ -20,6 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties.PEGASUS_MODE;
@@ -128,6 +130,29 @@ public class PegasusConfigurationTest {
         PegasusConfiguration pc = new PegasusConfiguration(mLogger);
         int actual = pc.computeLogLevel(mode, options);
         assertThat(actual, is(expected));
+    }
+
+    /**
+     * GH-233 a data configuration set globally in the properties file must not be shadowed by the
+     * condorio default for a synthetic placeholder job that has no per-site data.configuration
+     * profile - mirrors the precedence InterPoolEngine#incorporateProfiles applies for a real
+     * compute job (site, then properties - properties last, so it wins).
+     */
+    @Test
+    public void testAssignDataConfigurationHonorsGlobalProperties() {
+        mProps.setProperty(
+                PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY,
+                PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE);
+
+        Job job = new Job();
+        job.setSiteHandle("compute");
+        SiteCatalogEntry site = new SiteCatalogEntry("compute");
+
+        PegasusConfiguration pc = new PegasusConfiguration(mLogger);
+        pc.assignDataConfiguration(job, site, mProps);
+
+        assertThat(
+                job.getDataConfiguration(), is(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE));
     }
 
     @AfterEach

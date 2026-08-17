@@ -611,6 +611,31 @@ public class PegasusConfiguration {
     }
 
     /**
+     * GH-233 populates a job's data configuration from a site's Pegasus profile and the properties
+     * file, applying the same precedence and default fallback {@link
+     * edu.isi.pegasus.planner.refiner.InterPoolEngine#incorporateProfiles(Job,
+     * edu.isi.pegasus.planner.catalog.transformation.classes.TransformationCatalogEntry)} uses for
+     * a real compute job (site, then properties - properties last, so it wins). Intended for
+     * synthetic placeholder <code>Job</code> objects (e.g. the bundled/clustered transfer refiners
+     * construct one to represent a batch of compute jobs) that never go through normal
+     * site-selection profile incorporation, and so would otherwise report a null data configuration
+     * to {@link #jobSetupForWorkerNodeExecution(Job)}.
+     *
+     * @param job the placeholder job to populate
+     * @param site the site whose profiles should be incorporated
+     * @param properties the properties whose profiles should be incorporated, taking precedence
+     *     over the site's
+     */
+    public void assignDataConfiguration(
+            Job job, SiteCatalogEntry site, PegasusProperties properties) {
+        job.updateProfiles(site);
+        job.updateProfiles(properties);
+        if (!job.vdsNS.containsKey(Pegasus.DATA_CONFIGURATION_KEY)) {
+            job.setDataConfiguration(PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE);
+        }
+    }
+
+    /**
      * Returns a boolean indicating if job has to be executed using condorio
      *
      * @param job

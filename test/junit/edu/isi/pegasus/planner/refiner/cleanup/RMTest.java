@@ -17,7 +17,17 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /** Structural tests for RM cleanup implementation. */
 public class RMTest {
@@ -93,6 +103,44 @@ public class RMTest {
                         (Object)
                                 edu.isi.pegasus.planner.catalog.transformation
                                         .TransformationCatalogEntry.class));
+    }
+
+    /**
+     * GH-233 a directory's physical artifact at the staging site is always &lt;lfn&gt;.tar.gz, not
+     * the plain lfn (see StageIn/StageOut) - the generated rm command must be told to remove that,
+     * or it silently does nothing and the tarball is never cleaned up.
+     */
+    @Test
+    public void testCreateCleanupJobAppendsTarGzSuffixForDirectory() {
+        PegasusProperties props = PegasusProperties.nonSingletonInstance();
+
+        SiteStore store = new SiteStore();
+        store.addEntry(new SiteCatalogEntry("compute"));
+
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
+        bag.add(PegasusBag.SITE_STORE, store);
+
+        RM rm = new RM();
+        rm.initialize(bag);
+
+        Job job = new Job();
+        job.setSiteHandle("compute");
+        job.setStagingSiteHandle("compute");
+
+        PegasusFile directoryFile = new PegasusFile("out");
+        directoryFile.setForDirectory();
+        PegasusFile plainFile = new PegasusFile("f.out");
+
+        List<PegasusFile> files = new LinkedList();
+        files.add(directoryFile);
+        files.add(plainFile);
+
+        Job cleanupJob = rm.createCleanupJob("clean_up_1", files, job);
+
+        assertThat(cleanupJob.getArguments(), containsString("out.tar.gz"));
+        assertThat(cleanupJob.getArguments(), containsString("f.out"));
+        assertThat(cleanupJob.getArguments(), not(containsString("f.out.tar.gz")));
     }
 
     @Test

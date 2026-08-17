@@ -270,3 +270,116 @@ class TestPegasusTransferInvocation:
 
             assert is_successful == False
             assert "Some transfers failed!" in str(caplog.record_tuples)
+
+
+class TestDirectoryStaging:
+    """GH-233: tar/untar support for whole-directory staging."""
+
+    def test_tar_directory_round_trip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src_dir = os.path.join(tmp, "mydir")
+            os.mkdir(src_dir)
+            with open(os.path.join(src_dir, "a.txt"), "w") as f:
+                f.write("hello")
+            os.mkdir(os.path.join(src_dir, "sub"))
+            with open(os.path.join(src_dir, "sub", "b.txt"), "w") as f:
+                f.write("world")
+
+            tarball_path = transfer.tar_directory(src_dir)
+
+            assert tarball_path == os.path.join(tmp, "mydir.tar.gz")
+            assert os.path.isfile(tarball_path)
+
+            # untar into a fresh location and verify the tree round-trips
+            extract_root = os.path.join(tmp, "extracted")
+            os.mkdir(extract_root)
+            transfer.untar_directory(tarball_path, extract_root)
+
+            extracted_dir = os.path.join(extract_root, "mydir")
+            assert os.path.isdir(extracted_dir)
+            with open(os.path.join(extracted_dir, "a.txt")) as f:
+                assert f.read() == "hello"
+            with open(os.path.join(extracted_dir, "sub", "b.txt")) as f:
+                assert f.read() == "world"
+
+    def test_tar_directory_rejects_non_local_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            not_a_dir = os.path.join(tmp, "not-here")
+
+            with pytest.raises(RuntimeError) as e:
+                transfer.tar_directory(not_a_dir)
+
+            assert "not a local directory" in str(e.value)
+
+    def test_untar_directory_rejects_path_traversal(self):
+        import tarfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            evil_tarball = os.path.join(tmp, "evil.tar.gz")
+            with tarfile.open(evil_tarball, "w:gz") as tf:
+                info = tarfile.TarInfo(name="../escaped.txt")
+                data = b"pwned"
+                info.size = len(data)
+                tf.addfile(info, io.BytesIO(data))
+
+            extract_dir = os.path.join(tmp, "safe")
+            os.mkdir(extract_dir)
+
+            with pytest.raises(RuntimeError) as e:
+                transfer.untar_directory(evil_tarball, extract_dir)
+
+            assert "escapes the extraction directory" in str(e.value)
+
+    def test_untar_directory_rejects_symlink_escape(self):
+        import tarfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            # a symlink member whose *target* escapes extract_dir - the
+            # member's own name ("link") stays inside extract_dir, so only
+            # checking member.name (and not the link target) would miss this
+            evil_tarball = os.path.join(tmp, "evil.tar.gz")
+            with tarfile.open(evil_tarball, "w:gz") as tf:
+                info = tarfile.TarInfo(name="link")
+                info.type = tarfile.SYMTYPE
+                info.linkname = "../escaped"
+                tf.addfile(info)
+
+            extract_dir = os.path.join(tmp, "safe")
+            os.mkdir(extract_dir)
+
+            with pytest.raises(RuntimeError) as e:
+                transfer.untar_directory(evil_tarball, extract_dir)
+
+            assert "link target escapes the extraction directory" in str(e.value)
+
+    def test_json_object_decoder_parses_directory_fields(self):
+        obj = {
+            "type": "transfer",
+            "lfn": "mydir",
+            "directory": True,
+            "directory_action": "tar",
+            "src_urls": [{"site_label": "local", "url": "file:///tmp/mydir"}],
+            "dest_urls": [{"site_label": "storage", "url": "file:///out/mydir"}],
+        }
+
+        t = transfer.json_object_decoder(obj)
+
+        assert t.directory is True
+        assert t.directory_action == "tar"
+        # a directory transfer's src/dst get rewritten by the tar/untar step,
+        # so it can never be grouped with other transfers
+        assert t.allow_grouping is False
+
+    def test_json_object_decoder_defaults_for_non_directory_transfer(self):
+        obj = {
+            "type": "transfer",
+            "lfn": "f.txt",
+            "src_urls": [{"site_label": "local", "url": "file:///tmp/f.txt"}],
+            "dest_urls": [{"site_label": "storage", "url": "file:///out/f.txt"}],
+        }
+
+        t = transfer.json_object_decoder(obj)
+
+        assert t.directory is False
+        assert t.directory_action is None
+        assert t.allow_grouping is True

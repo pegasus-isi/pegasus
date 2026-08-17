@@ -517,11 +517,9 @@ public class Transfer implements SLS {
                 continue;
             }
 
-            FileTransfer ft = new FileTransfer();
-            ft.setLFN(pf.getLFN());
-            // ensure that right type gets associated, especially
-            // whether a file is a checkpoint file or not
-            ft.setType(pf.getType());
+            // GH-233 use the PegasusFile constructor so flags (including isDirectory)
+            // carry over, not just LFN and type
+            FileTransfer ft = new FileTransfer(pf);
 
             // create the default path from the directory
             // on the head node
@@ -733,11 +731,9 @@ public class Transfer implements SLS {
             pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            FileTransfer ft = new FileTransfer();
-            ft.setLFN(lfn);
-            // ensure that right type gets associated, especially
-            // whether a file is a checkpoint file or not
-            ft.setType(pf.getType());
+            // GH-233 use the PegasusFile constructor so flags (including isDirectory)
+            // carry over, not just LFN and type
+            FileTransfer ft = new FileTransfer(pf);
 
             // source
             StringBuffer url = new StringBuffer();

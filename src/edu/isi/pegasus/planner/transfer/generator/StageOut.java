@@ -236,7 +236,7 @@ public class StageOut extends Abstract {
                 ft = new FileTransfer(lfn, job.getName());
                 ft.addSource(selLoc.getResourceHandle(), sourceURL);
                 ft.addDestination(destSite, putDestURL);
-                ft.setURLForRegistrationOnDestination(getDestURL);
+                ft.setURLForRegistrationOnDestination(this.getDirectoryAwarePFN(pf, getDestURL));
                 ft.setSize(pf.getSize());
                 ft.setForCleanup(false); // PM-739
 
@@ -441,10 +441,20 @@ public class StageOut extends Abstract {
         ft.setMetadata(pf.getAllMetadata());
         ft.setType(pf.getType());
 
+        // GH-233 if this job runs via a PegasusLite worker node wrapper (nonsharedfs/
+        // condorio), the PegasusLite SLS "output" transfer has already tarred the directory
+        // before this transfer job even starts - so whatever is sitting at the shared
+        // scratch/exec dir location for this file is already a tarball, not the raw
+        // directory. For sharedfs (no PegasusLite wrapper), the raw directory the job wrote
+        // is still there - pegasus-transfer's own tar step (see Transfer.getDirectoryAction())
+        // does the tarring, as part of *this* transfer.
+        boolean directoryAlreadyTarredAtSource =
+                pf.isDirectory() && mPegasusConfiguration.jobSetupForWorkerNodeExecution(job);
+
         boolean localTransfer = true;
         for (NameValue<String, String> nv :
                 this.mOutputMapper.mapAll(lfn, destSiteHandle, FileServerType.OPERATION.put)) {
-            String destURL = nv.getValue();
+            String destURL = this.getDirectoryAwarePFN(pf, nv.getValue());
             localTransfer =
                     mTransferJobPlacer.runTransferOnLocalSite(
                             stagingSite, sharedScratchGetURL, Job.STAGE_OUT_JOB);
@@ -454,6 +464,9 @@ public class StageOut extends Abstract {
                 // job will be run remotely. So pick file URL path
                 sourceURL =
                         constructFileURLToStagingSiteDirectory(stagingSiteHandle, path, addOn, lfn);
+            }
+            if (directoryAlreadyTarredAtSource) {
+                sourceURL = sourceURL + ".tar.gz";
             }
             ft.addSource(stagingSiteHandle, sourceURL);
 
@@ -473,7 +486,11 @@ public class StageOut extends Abstract {
 
         // construct a registration URL
         ft.setURLForRegistrationOnDestination(
-                mOutputMapper.map(lfn, destSiteHandle, FileServer.OPERATION.get, true).getValue());
+                this.getDirectoryAwarePFN(
+                        pf,
+                        mOutputMapper
+                                .map(lfn, destSiteHandle, FileServer.OPERATION.get, true)
+                                .getValue()));
 
         if (job instanceof DAXJob) {
             // PM-1608 if the dax job itself wants to transfer the output
@@ -614,5 +631,24 @@ public class StageOut extends Abstract {
                 .append(File.separator)
                 .append(lfn);
         return url.toString();
+    }
+
+    /**
+     * GH-233 returns the URL/PFN to use for a directory file's staged physical artifact, appending
+     * the ".tar.gz" suffix. For a non-directory file, returns url unchanged.
+     *
+     * <p>A directory's logical name (lfn) never changes, but the physical artifact pegasus-transfer
+     * (or a PegasusLite SLS transfer) actually stages is always <code>&lt;lfn&gt;.tar.gz</code> -
+     * see <code>tar_directory()</code> in the worker's <code>transfer.py</code>. This has to be
+     * reflected consistently in every URL that names that staged location: the destination URL of
+     * the transfer job itself, and the (separate, static) URL written into the replica catalog for
+     * registration - neither of which is ever touched again once computed here at plan time.
+     *
+     * @param pf the PegasusFile the URL is for
+     * @param url the URL as computed from the plain lfn
+     * @return url, or url with ".tar.gz" appended if pf is a directory
+     */
+    private String getDirectoryAwarePFN(PegasusFile pf, String url) {
+        return pf.isDirectory() ? url + ".tar.gz" : url;
     }
 }

@@ -105,8 +105,10 @@ public class TransferTest {
                 FileWriter.class,
                 Collection.class,
                 String.class,
-                int.class);
+                int.class,
+                boolean.class);
         assertProtectedMethod("getCompleteTCName", String.class);
+        assertProtectedMethod("getDirectoryAction", String.class, boolean.class, int.class);
     }
 
     @Test
@@ -119,7 +121,8 @@ public class TransferTest {
             assertThat(Modifier.isFinal(field.getModifiers()), is(true));
         }
 
-        assertThat(Transfer.class.getDeclaredMethods().length, is(14));
+        // GH-233 added getDirectoryAction()
+        assertThat(Transfer.class.getDeclaredMethods().length, is(15));
     }
 
     private void assertProtectedMethod(String name, Class<?> returnType, Class<?>... parameterTypes)

@@ -52,9 +52,14 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         self.metadata = OrderedDict()
 
     @_chained
-    def add_inputs(self, *input_files: File | str, bypass_staging: bool = False):
+    def add_inputs(
+        self,
+        *input_files: File | str,
+        bypass_staging: bool = False,
+        is_directory: bool = False,
+    ):
         """
-        add_inputs(self, *input_files: Union[File, str], bypass: bool = False)
+        add_inputs(self, *input_files: Union[File, str], bypass: bool = False, is_directory: bool = False)
         Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as input to this job.
         If :code:`input_file` is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object is created for
         you internally with the given value as its lfn.
@@ -63,6 +68,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :type input_files: Union[File, str]
         :param bypass_staging: whether or not to bypass the staging site when this file is fetched by the job, defaults to False
         :type bypass_staging: bool, optional
+        :param is_directory: whether this input represents a whole directory rather than a single file, defaults to False
+        :type is_directory: bool, optional
         :raises DuplicateError: all input files must be unique
         :raises TypeError: job inputs must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
@@ -82,6 +89,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                 register_replica=None,
                 stage_out=None,
                 bypass_staging=bypass_staging,
+                is_directory=is_directory,
             )
             if _input in self.uses:
                 raise DuplicateError(
@@ -104,9 +112,10 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         *output_files: File | str,
         stage_out: bool = True,
         register_replica: bool = True,
+        is_directory: bool = False,
     ):
         """
-        add_outputs(self, *output_files: Union[File, str], stage_out: bool = True, register_replica: bool = True)
+        add_outputs(self, *output_files: Union[File, str], stage_out: bool = True, register_replica: bool = True, is_directory: bool = False)
         Add one or more :py:class:`~Pegasus.api.replica_catalog.File` objects as outputs to this job. :code:`stage_out` and :code:`register_replica`
         will be applied to all files given.
         If :code:`output_file` is given as a str, a :py:class:`~Pegasus.api.replica_catalog.File` object is created for
@@ -118,6 +127,8 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
         :type stage_out: bool, optional
         :param register_replica: whether or not to register replica with a :py:class:`~Pegasus.api.replica_catalog.ReplicaCatalog`, defaults to True
         :type register_replica: bool, optional
+        :param is_directory: whether this output represents a whole directory rather than a single file, defaults to False
+        :type is_directory: bool, optional
         :raises DuplicateError: all output files must be unique
         :raises TypeError: job outputs must be of type :py:class:`~Pegasus.api.replica_catalog.File` or str
         :return: self
@@ -136,6 +147,7 @@ class AbstractJob(HookMixin, ProfileMixin, MetadataMixin):
                 _LinkType.OUTPUT,
                 stage_out=stage_out,
                 register_replica=register_replica,
+                is_directory=is_directory,
             )
             if output in self.uses:
                 raise DuplicateError(
@@ -722,6 +734,7 @@ class _Use:
         stage_out=True,
         register_replica=True,
         bypass_staging=False,
+        is_directory=False,
     ):
         """
         :param file: the file being used
@@ -734,6 +747,8 @@ class _Use:
         :type register_replica: bool
         :param bypass_staging: whether to bypass staging (only valid for INPUT link type), defaults to False
         :type bypass_staging: bool
+        :param is_directory: whether this file represents a whole directory, defaults to False
+        :type is_directory: bool
         :raises TypeError: file must be of type :py:class:`~Pegasus.api.replica_catalog.File`
         :raises TypeError: link_type must be one of :py:class:`~Pegasus.api.workflow._LinkType`
         :raises ValueError: bypass can only be set to True when link type is INPUT
@@ -760,6 +775,8 @@ class _Use:
         self.stage_out = stage_out
         self.register_replica = register_replica
 
+        self.is_directory = is_directory or None
+
     def __hash__(self):
         return hash(self.file)
 
@@ -783,6 +800,7 @@ class _Use:
                     ("stageOut", self.stage_out),
                     ("registerReplica", self.register_replica),
                     ("bypass", self.bypass),
+                    ("isDirectory", self.is_directory),
                 ]
             )
         )

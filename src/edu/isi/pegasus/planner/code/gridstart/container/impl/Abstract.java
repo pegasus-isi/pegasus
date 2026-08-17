@@ -194,6 +194,15 @@ public abstract class Abstract implements ContainerShellWrapper {
                 sb.append("   \"verify_symlink_source\": false").append(",\n");
             }
 
+            // GH-233 mirrors PegasusLite#convertToTransferInputFormat - see its javadoc for
+            // why this is always tar/untar and never passthrough
+            if (ft.isDirectory()) {
+                sb.append("   \"directory\": true,\n");
+                sb.append("   \"directory_action\": \"")
+                        .append(linkage == PegasusFile.LINKAGE.input ? "untar" : "tar")
+                        .append("\",\n");
+            }
+
             sb.append("   \"src_urls\": [");
 
             boolean notFirst = false;
