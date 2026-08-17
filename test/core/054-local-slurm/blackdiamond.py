@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 import json
 import logging
@@ -17,7 +17,9 @@ PEGASUS_VERSION = utils.backticks("pegasus-version").strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:
-    logging.error("ERROR: workflow generator requires testname to invoke as an argument")
+    logging.error(
+        "ERROR: workflow generator requires testname to invoke as an argument"
+    )
     sys.exit(1)
 
 TEST_NAME = sys.argv[1]
@@ -131,14 +133,14 @@ sc.write(str(site_catalog_file))
 
 # --- Replicas -----------------------------------------------------------------
 replica_catalog_file = TOP_DIR / TEST_NAME / "replicas.yml"
-logging.info("Generating replica catalog at: {}".format(replica_catalog_file))
+logging.info("Generating replica catalog at: %s", replica_catalog_file)
 cmd_properties["pegasus.catalog.replica.file"] = replica_catalog_file
 
 # place the input file on the shared filesystem when in sharedfs mode so the
 # compute nodes can read it directly; otherwise keep it local
 INPUT_DIR = Path(slurm_shared_dir) if SHARED else TOP_DIR / TEST_NAME
 os.makedirs(INPUT_DIR, exist_ok=True)
-with open("{}/f.a".format(INPUT_DIR), "w") as f:
+with open(f"{INPUT_DIR}/f.a", "w") as f:
     f.write("This is sample input to KEG\n")
 
 fa = File("f.a").add_metadata({"㐦": "㒦"})
@@ -148,9 +150,7 @@ ReplicaCatalog().add_replica(
 
 # --- Transformations ----------------------------------------------------------
 transformation_catalog_file = TOP_DIR / TEST_NAME / "transformations.yml"
-logging.info(
-    "Generating transformation catalog at: {}".format(transformation_catalog_file)
-)
+logging.info("Generating transformation catalog at: %s", transformation_catalog_file)
 cmd_properties["pegasus.catalog.transformation.file"] = transformation_catalog_file
 
 docker_container = None
@@ -176,14 +176,22 @@ if CONTAINERS:
 
 preprocess = Transformation("preprocess", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX,
+        LOCAL,
+        PEGASUS_LOCATION,
+        is_stageable=True,
+        arch=Arch.X86_64,
+        os_type=OS.LINUX,
         container=docker_container,
     )
 )
 
 findrage = Transformation("findrange", namespace="pegasus", version="4.0").add_sites(
     TransformationSite(
-        LOCAL, PEGASUS_LOCATION, is_stageable=True, arch=Arch.X86_64, os_type=OS.LINUX,
+        LOCAL,
+        PEGASUS_LOCATION,
+        is_stageable=True,
+        arch=Arch.X86_64,
+        os_type=OS.LINUX,
         container=singularity_container,
     )
 )

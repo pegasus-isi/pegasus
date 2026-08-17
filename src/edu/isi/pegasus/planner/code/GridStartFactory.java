@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.code;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
@@ -392,9 +393,27 @@ public class GridStartFactory {
             }
         }
 
-        return (propValue == null)
-                ? GridStartFactory.DEFAULT_GRIDSTART_MODE
-                : propValue; // return what was specified in the properties file.
+        String gridstart =
+                (propValue == null)
+                        ? GridStartFactory.DEFAULT_GRIDSTART_MODE
+                        : propValue; // return what was specified in the properties file.
+
+        // GH-2188 containers are only supported when the job is launched via PegasusLite
+        // i.e. data configuration is condorio or nonsharedfs. sharedfs mode does not wrap
+        // jobs with PegasusLite, so a job with a container attached cannot be honored.
+        Container container = job.getContainer();
+        if (container != null && !gridstart.equalsIgnoreCase("PegasusLite")) {
+            throw new GridStartFactoryException(
+                    "Container "
+                            + container.getName()
+                            + " specified for job "
+                            + job.getID()
+                            + " but the job is not set to be launched via PegasusLite."
+                            + " Containers are only supported when the data configuration is"
+                            + " condorio or nonsharedfs, not sharedfs.");
+        }
+
+        return gridstart;
     }
 
     /**

@@ -17,6 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -126,6 +127,29 @@ public class GridStartFactoryTest {
         TestGridStartFactory factory = configuredFactory(null);
         Job job = new Job();
         job.setDataConfiguration(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
+
+        assertThat(factory.shortNameFor(job), is("PegasusLite"));
+    }
+
+    @Test
+    public void testGetGridStartShortNameThrowsWhenContainerUsedWithSharedFs() throws Exception {
+        TestGridStartFactory factory = configuredFactory(null);
+        Job job = new Job();
+        job.setDataConfiguration(PegasusConfiguration.SHARED_FS_CONFIGURATION_VALUE);
+        job.setContainer(new Container("centos-pegasus"));
+
+        GridStartFactoryException exception =
+                assertThrows(GridStartFactoryException.class, () -> factory.shortNameFor(job));
+
+        assertThat(exception.getMessage().contains("centos-pegasus"), is(true));
+    }
+
+    @Test
+    public void testGetGridStartShortNameAllowsContainerForNonSharedFs() throws Exception {
+        TestGridStartFactory factory = configuredFactory(null);
+        Job job = new Job();
+        job.setDataConfiguration(PegasusConfiguration.NON_SHARED_FS_CONFIGURATION_VALUE);
+        job.setContainer(new Container("centos-pegasus"));
 
         assertThat(factory.shortNameFor(job), is("PegasusLite"));
     }
