@@ -26,6 +26,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from rich.console import Console
+from rich.live import Live
 
 from Pegasus.monitor import cli
 from Pegasus.monitor.display import (
@@ -585,6 +587,33 @@ def test_live_rendering_suspends_gc_and_restores_enabled_state(tmp_path):
     assert all(not enabled for _operation, enabled in observed_gc_states)
     assert gc.isenabled()
     assert calls.coordinator_closed == 1
+
+
+def test_real_live_session_has_no_background_refresh_thread():
+    runtime = SimpleNamespace(
+        live_type=Live,
+        rendering_gc_guard=rendering_gc_guard,
+    )
+    output = io.StringIO()
+    console = Console(
+        file=output,
+        force_terminal=True,
+        color_system=None,
+        width=80,
+        height=24,
+    )
+
+    with cli._live_rendering_session(
+        runtime,
+        lambda: "initial",
+        console=console,
+    ) as live:
+        assert live.auto_refresh is False
+        assert live._refresh_thread is None
+        cli._refresh_live(runtime, live, lambda: "updated")
+        assert live._refresh_thread is None
+
+    assert live._refresh_thread is None
 
 
 def test_live_rendering_restores_gc_after_refresh_failure(tmp_path):

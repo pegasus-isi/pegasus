@@ -533,6 +533,7 @@ def _live_rendering_session(
             renderable_factory(),
             console=console,
             refresh_per_second=4,
+            auto_refresh=False,
             transient=False,
             screen=True,
         )
@@ -547,6 +548,17 @@ def _live_rendering_session(
     else:
         with runtime.rendering_gc_guard():
             manager.__exit__(None, None, None)
+
+
+def _refresh_live(
+    runtime: RuntimeComponents,
+    live: object,
+    renderable_factory: Callable[[], object],
+) -> None:
+    """Perform one production Rich refresh under the rendering GC guard."""
+
+    with runtime.rendering_gc_guard():
+        live.update(renderable_factory(), refresh=True)
 
 
 async def _run_once(
@@ -698,11 +710,13 @@ async def _run_live(
                     height=console.height,
                     live=True,
                 )
-                with runtime.rendering_gc_guard():
-                    live.update(
-                        runtime.render_dashboard(context, current, analysis, options),
-                        refresh=True,
-                    )
+                _refresh_live(
+                    runtime,
+                    live,
+                    lambda: runtime.render_dashboard(
+                        context, current, analysis, options
+                    ),
+                )
                 last_rendered_snapshot = current
                 if current.authoritative_complete:
                     if not args.no_condor:
@@ -729,13 +743,13 @@ async def _run_live(
                             runtime,
                         )
                         analysis_sequence = current.sequence
-                    with runtime.rendering_gc_guard():
-                        live.update(
-                            runtime.render_dashboard(
-                                context, current, analysis, options
-                            ),
-                            refresh=True,
-                        )
+                    _refresh_live(
+                        runtime,
+                        live,
+                        lambda: runtime.render_dashboard(
+                            context, current, analysis, options
+                        ),
+                    )
                     last_rendered_snapshot = current
                     return 0
                 await asyncio.sleep(0.25)

@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import math
 import os
@@ -32,7 +33,11 @@ import tempfile
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
+
+from rich.console import Console
+from rich.live import Live
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -57,12 +62,15 @@ else:  # Direct execution by the separately measured worker subprocess.
         validate_workload,
     )
 
+from Pegasus.monitor.cli import _live_rendering_session, _refresh_live
 from Pegasus.monitor.coordinator import CoordinatorSnapshot
 from Pegasus.monitor.diagnostics import DiagnosticsEngine
 from Pegasus.monitor.display import (
+    DisplayAnalysis,
     DisplayContext,
     DisplayOptions,
-    render_text,
+    render_dashboard,
+    rendering_gc_guard,
 )
 from Pegasus.monitor.live_events import LiveEventTail
 from Pegasus.monitor.models import (
@@ -79,6 +87,11 @@ from Pegasus.monitor.stampede import StampedeReader
 from Pegasus.monitor.stats import compute_workflow_stats
 
 WORKFLOW = WorkflowIdentity(WORKFLOW_UUID, WORKFLOW_UUID)
+LIVE_RUNTIME = SimpleNamespace(
+    live_type=Live,
+    rendering_gc_guard=rendering_gc_guard,
+)
+DISPLAY_PATH = "rich_live_manual_refresh"
 
 
 def _quantile(samples: list[float], probability: float) -> float:
@@ -168,6 +181,19 @@ def _timed(function: Callable[[], Any], samples: int) -> tuple[list[float], Any]
     return durations, result
 
 
+def _live_console() -> Console:
+    """Construct the deterministic terminal used by the production-path probe."""
+
+    return Console(
+        file=io.StringIO(),
+        force_terminal=True,
+        color_system=None,
+        width=120,
+        height=40,
+        legacy_windows=False,
+    )
+
+
 def _run_probes(
     config: ScaleConfig,
     reconciler: Reconciler,
@@ -190,12 +216,27 @@ def _run_probes(
     publication_samples, publication = _timed(publish, config.probe_samples)
     context = _display_context(workspace, database, tail)
     options = DisplayOptions(
-        live=False, condor_enabled=False, job_row_limit=200, event_limit=15
+        live=True,
+        condor_enabled=False,
+        job_row_limit=200,
+        event_limit=15,
+        width=120,
     )
-    display_samples, _ = _timed(
-        lambda: render_text(context, publication, options=options, width=120),
-        config.probe_samples,
-    )
+    analysis = DisplayAnalysis()
+    console = _live_console()
+    with _live_rendering_session(
+        LIVE_RUNTIME,
+        lambda: render_dashboard(context, publication, analysis, options),
+        console=console,
+    ) as live:
+        display_samples, _ = _timed(
+            lambda: _refresh_live(
+                LIVE_RUNTIME,
+                live,
+                lambda: render_dashboard(context, publication, analysis, options),
+            ),
+            config.probe_samples,
+        )
     stats_samples, _ = _timed(
         lambda: compute_workflow_stats(publication), config.probe_samples
     )
@@ -205,6 +246,8 @@ def _run_probes(
     )
     probes = {
         "job_count": len(publication.effective.jobs),
+        "display_path": DISPLAY_PATH,
+        "display_auto_refresh": False,
         "publication_seconds": _sample_summary(publication_samples),
         "display_seconds": _sample_summary(display_samples),
         "stats_seconds": _sample_summary(stats_samples),
@@ -236,6 +279,7 @@ def _live_burst(
     workspace: Path,
     database: Path,
     tail_path: Path,
+    initial_publication: CoordinatorSnapshot,
     start_sequence: int,
 ) -> tuple[dict[str, object], int]:
     writes: dict[str, float] = {}
@@ -244,8 +288,14 @@ def _live_burst(
     chunk_size = max(1, int(config.burst_rate * interval))
     context = _display_context(workspace, database, tail_path)
     options = DisplayOptions(
-        live=False, condor_enabled=False, job_row_limit=200, event_limit=15
+        live=True,
+        condor_enabled=False,
+        job_row_limit=200,
+        event_limit=15,
+        width=120,
     )
+    analysis = DisplayAnalysis()
+    console = _live_console()
     latencies: list[float] = []
     poll_samples: list[float] = []
     ingest_samples: list[float] = []
@@ -253,7 +303,14 @@ def _live_burst(
     display_samples: list[float] = []
     call_counts = {"tail_poll": 0, "publication": 0, "display": 0}
 
-    with LiveEventTail(tail_path) as tail:
+    with (
+        LiveEventTail(tail_path) as tail,
+        _live_rendering_session(
+            LIVE_RUNTIME,
+            lambda: render_dashboard(context, initial_publication, analysis, options),
+            console=console,
+        ) as live,
+    ):
 
         def write_burst() -> None:
             try:
@@ -317,7 +374,11 @@ def _live_burst(
                 publication_samples.append(time.perf_counter() - publication_started)
                 call_counts["publication"] += 1
                 display_started = time.perf_counter()
-                render_text(context, publication, options=options, width=120)
+                _refresh_live(
+                    LIVE_RUNTIME,
+                    live,
+                    lambda: render_dashboard(context, publication, analysis, options),
+                )
                 display_samples.append(time.perf_counter() - display_started)
                 call_counts["display"] += 1
                 displayed = time.perf_counter()
@@ -339,6 +400,8 @@ def _live_burst(
     return (
         {
             "configured_lines_per_second": config.burst_rate,
+            "display_path": DISPLAY_PATH,
+            "display_auto_refresh": False,
             "lines": config.burst_lines,
             "observed_lines": len(latencies),
             "display_latency_seconds": _sample_summary(latencies),
@@ -617,6 +680,7 @@ def run_worker(
         workload.database_path.parent,
         workload.database_path,
         workload.jobstate_path,
+        publication,
         publication.sequence,
     )
     monitor_elapsed = time.perf_counter() - started_wall
@@ -712,12 +776,20 @@ def run_live_probe(
         max_pending_bytes=max(4 * 1024 * 1024, config.burst_lines * 256),
     )
     reconciler.apply_database(result)
+    effective = reconciler.build_snapshot(
+        SnapshotEpoch(1),
+        ClockSample(time.time(), time.perf_counter()),
+    )
+    if effective is None:
+        raise RuntimeError("live-probe publication lost its authoritative base")
+    publication = _coordinator_snapshot(effective, 1, reconciler)
     live, _ = _live_burst(
         config,
         reconciler,
         workload.database_path.parent,
         workload.database_path,
         workload.jobstate_path,
+        publication,
         1,
     )
     return {

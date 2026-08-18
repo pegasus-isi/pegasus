@@ -26,6 +26,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
+from heapq import nsmallest
 from typing import TYPE_CHECKING
 
 from rich import box
@@ -96,8 +97,10 @@ def rendering_gc_guard():
     try:
         yield
     finally:
-        if gc_was_enabled:
+        if gc_was_enabled and not gc.isenabled():
             gc.enable()
+        elif not gc_was_enabled and gc.isenabled():
+            gc.disable()
 
 
 @dataclass(frozen=True, slots=True)
@@ -347,7 +350,11 @@ def _job_roster(jobs: tuple[JobSnapshot, ...], options: DisplayOptions) -> _JobR
                 yield _activity_sort_key(index, job, lifecycle), job, lifecycle
 
     if options.sort_by_activity:
-        rows = sorted(selected())[: options.job_row_limit]
+        rows = nsmallest(
+            options.job_row_limit,
+            selected(),
+            key=lambda row: row[0],
+        )
     else:
         rows = []
         for item in selected():

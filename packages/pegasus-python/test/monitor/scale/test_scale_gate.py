@@ -44,6 +44,8 @@ def _assert_report(payload, *, strict_cardinality: bool) -> None:
     assert observed["actual_database_transitions"] == config["transitions"]
     assert observed["actual_tail_lines_before_burst"] == config["prefilled_tail_lines"]
     assert payload["live_burst"]["observed_lines"] == config["burst_lines"]
+    assert payload["live_burst"]["display_path"] == "rich_live_manual_refresh"
+    assert payload["live_burst"]["display_auto_refresh"] is False
     assert set(payload["live_burst"]["stage_seconds"]) == {
         "tail_poll",
         "reconciler_ingest",
@@ -60,6 +62,8 @@ def _assert_report(payload, *, strict_cardinality: bool) -> None:
         "stampede_transaction_max_seconds",
     } <= payload["budgets"].keys()
     assert payload["probes"]["job_count"] == config["jobs"]
+    assert payload["probes"]["display_path"] == "rich_live_manual_refresh"
+    assert payload["probes"]["display_auto_refresh"] is False
     assert payload["call_counts"]["stampede_refresh"] == config["refresh_samples"]
     assert payload["writer_impact"]["wal"]["paired_trials"] == config["writer_trials"]
     assert (

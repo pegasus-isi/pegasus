@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import gc
+import tracemalloc
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -33,6 +34,7 @@ from Pegasus.monitor.display import (
     _scheduler_display,
     _visible_jobs,
     render_text,
+    rendering_gc_guard,
 )
 from Pegasus.monitor.models import (
     ClockSample,
@@ -262,6 +264,28 @@ def test_render_text_preserves_already_disabled_gc_and_output(tmp_path):
     assert disabled_output == enabled_output
 
 
+def test_rendering_gc_guard_restores_enabled_policy_after_body_disables():
+    gc.enable()
+
+    with rendering_gc_guard():
+        assert not gc.isenabled()
+        gc.disable()
+
+    assert gc.isenabled()
+
+
+def test_rendering_gc_guard_restores_disabled_policy_after_body_enables():
+    gc.disable()
+    try:
+        with rendering_gc_guard():
+            assert not gc.isenabled()
+            gc.enable()
+
+        assert not gc.isenabled()
+    finally:
+        gc.enable()
+
+
 def test_visible_jobs_is_row_bounded_for_100k_jobs():
     class CountingJobs(tuple):
         iterations = 0
@@ -273,14 +297,20 @@ def test_visible_jobs_is_row_bounded_for_100k_jobs():
     jobs = CountingJobs(
         _job(f"job_{index}", Lifecycle.QUEUED) for index in range(100_000)
     )
-    visible, total = _visible_jobs(
-        jobs,
-        DisplayOptions(job_row_limit=37, sort_by_activity=True),
-    )
+    tracemalloc.start()
+    try:
+        visible, total = _visible_jobs(
+            jobs,
+            DisplayOptions(job_row_limit=37, sort_by_activity=True),
+        )
+        _current, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
 
     assert len(visible) == 37
     assert total == 100_000
     assert jobs.iterations == 1
+    assert peak < 2 * 1024 * 1024
 
 
 def test_visible_jobs_preserves_activity_order_and_stable_ties():
