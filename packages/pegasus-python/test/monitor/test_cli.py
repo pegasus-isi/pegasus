@@ -65,7 +65,9 @@ class _Console:
         return None
 
 
-def _runtime(tmp_path: Path, *, authoritative: bool = True):
+def _runtime(
+    tmp_path: Path, *, authoritative: bool = True, on_start=None, on_render=None
+):
     calls = SimpleNamespace(
         locator=0,
         stampede=0,
@@ -76,6 +78,7 @@ def _runtime(tmp_path: Path, *, authoritative: bool = True):
         tail_factory_seen=None,
         disabled_kinds=None,
         credential_values=None,
+        console_prints=0,
     )
     braindump_path = tmp_path / "braindump.yml"
     braindump_path.write_text(
@@ -161,6 +164,8 @@ def _runtime(tmp_path: Path, *, authoritative: bool = True):
             return snapshot
 
         async def start(self):
+            if on_start is not None:
+                on_start()
             return snapshot
 
         async def poll_scheduler_once(self, kind):
@@ -190,6 +195,16 @@ def _runtime(tmp_path: Path, *, authoritative: bool = True):
         calls.disabled_kinds = kwargs["disabled_scheduler_kinds"]
         return SimpleNamespace()
 
+    def render_dashboard(*_args, **_kwargs):
+        if on_render is not None:
+            on_render()
+        return "dashboard"
+
+    class Console(_Console):
+        def print(self, renderable):
+            calls.console_prints += 1
+            return super().print(renderable)
+
     runtime = cli.RuntimeComponents(
         Locator,
         Stampede,
@@ -202,9 +217,9 @@ def _runtime(tmp_path: Path, *, authoritative: bool = True):
         Diagnostics,
         lambda _snapshot: SimpleNamespace(),
         analyze_why_idle,
-        lambda *_args, **_kwargs: "dashboard",
+        render_dashboard,
         lambda *_args, **_kwargs: "rendered\n",
-        _Console,
+        Console,
         _Live,
         scheduler_factory,
         SchedulerQueryKind,
@@ -544,6 +559,35 @@ def test_tail_only_live_observation_exits_cleanly_on_interrupt(tmp_path, monkeyp
     )
     assert calls.tail == 1
     assert calls.coordinator_closed == 1
+
+
+def test_sigterm_requests_clean_shutdown_and_restores_handler(tmp_path, monkeypatch):
+    installed = []
+    previous = object()
+
+    monkeypatch.setattr(cli.signal, "getsignal", lambda _signal: previous)
+
+    def install(selected, handler):
+        installed.append((selected, handler))
+
+    monkeypatch.setattr(cli.signal, "signal", install)
+
+    def terminate():
+        assert installed
+        installed[0][1](cli.signal.SIGTERM, None)
+
+    runtime, calls = _runtime(tmp_path, authoritative=False, on_render=terminate)
+
+    assert (
+        cli.main(
+            [str(tmp_path)], runtime=runtime, stdout=_Output(tty=True), stderr=_Output()
+        )
+        == 0
+    )
+    assert calls.coordinator_closed == 1
+    assert calls.console_prints == 0
+    assert installed[0][0] == cli.signal.SIGTERM
+    assert installed[-1] == (cli.signal.SIGTERM, previous)
 
 
 def test_braindump_context_falls_back_to_dag_stem(tmp_path):

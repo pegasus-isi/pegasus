@@ -1119,35 +1119,60 @@ class JobSnapshot:
             object.__setattr__(
                 self, "state_timestamp", db_timestamp(self.state_timestamp)
             )
-        attempt_id_list = [attempt.identity for attempt in self.attempts]
-        if len(set(attempt_id_list)) != len(attempt_id_list):
-            raise ValueError("job attempts must be unique")
-        attempt_instance_ids = [
-            identity.job_instance_id for identity in attempt_id_list
-        ]
-        if len(set(attempt_instance_ids)) != len(attempt_instance_ids):
-            raise ValueError("job attempt instance IDs must be unique")
-        attempt_submit_seqs = [identity.job_submit_seq for identity in attempt_id_list]
-        if len(set(attempt_submit_seqs)) != len(attempt_submit_seqs):
-            raise ValueError("job attempt submit sequences must be unique")
-        if self.job_id is not None and any(
-            identity.job_id != self.job_id for identity in attempt_id_list
-        ):
-            raise ValueError("job attempts must match the DB job_id")
-        attempt_ids = set(attempt_id_list)
-        if self.current_attempt is not None and self.current_attempt not in attempt_ids:
+        attempts = self.attempts
+        transition_attempt: JobAttemptIdentity | None = None
+        if len(attempts) == 1:
+            only_identity = attempts[0].identity
+            if self.job_id is not None and only_identity.job_id != self.job_id:
+                raise ValueError("job attempts must match the DB job_id")
+            if self.current_attempt != only_identity:
+                if self.current_attempt is None:
+                    raise ValueError(
+                        "current_attempt must have the highest job_submit_seq"
+                    )
+                raise ValueError("current_attempt must identify an included attempt")
+            if (
+                self.transition is not None
+                and only_identity.job_instance_id
+                == self.transition.identity.job_instance_id
+            ):
+                transition_attempt = only_identity
+        elif attempts:
+            attempt_ids: set[JobAttemptIdentity] = set()
+            attempt_instance_ids: set[int] = set()
+            attempt_submit_seqs: set[int] = set()
+            highest_attempt: JobAttemptIdentity | None = None
+            for attempt in attempts:
+                identity = attempt.identity
+                if identity in attempt_ids:
+                    raise ValueError("job attempts must be unique")
+                attempt_ids.add(identity)
+                if identity.job_instance_id in attempt_instance_ids:
+                    raise ValueError("job attempt instance IDs must be unique")
+                attempt_instance_ids.add(identity.job_instance_id)
+                if identity.job_submit_seq in attempt_submit_seqs:
+                    raise ValueError("job attempt submit sequences must be unique")
+                attempt_submit_seqs.add(identity.job_submit_seq)
+                if self.job_id is not None and identity.job_id != self.job_id:
+                    raise ValueError("job attempts must match the DB job_id")
+                if (
+                    highest_attempt is None
+                    or identity.job_submit_seq > highest_attempt.job_submit_seq
+                ):
+                    highest_attempt = identity
+                if (
+                    self.transition is not None
+                    and identity.job_instance_id
+                    == self.transition.identity.job_instance_id
+                ):
+                    transition_attempt = identity
+            if self.current_attempt not in attempt_ids:
+                raise ValueError("current_attempt must identify an included attempt")
+            if self.current_attempt != highest_attempt:
+                raise ValueError("current_attempt must have the highest job_submit_seq")
+        elif self.current_attempt is not None:
             raise ValueError("current_attempt must identify an included attempt")
-        if attempt_id_list and self.current_attempt != max(
-            attempt_id_list, key=lambda identity: identity.job_submit_seq
-        ):
-            raise ValueError("current_attempt must have the highest job_submit_seq")
         if self.transition is not None:
-            attempts_by_instance = {
-                identity.job_instance_id: identity for identity in attempt_ids
-            }
-            transition_attempt = attempts_by_instance.get(
-                self.transition.identity.job_instance_id
-            )
             if (
                 self.transition.workflow != self.workflow
                 or self.transition.exec_job_id != self.exec_job_id
@@ -1212,17 +1237,29 @@ class JobTransitionWatermark:
         identities = tuple(self.identities_at_highest_seq)
         if not identities:
             raise ValueError("job watermark requires at least one transition identity")
-        if any(
-            identity.job_instance_id != self.job_instance_id for identity in identities
-        ):
-            raise ValueError("watermark identities must belong to the same instance")
-        if any(
-            identity.jobstate_submit_seq != self.highest_jobstate_submit_seq
-            for identity in identities
-        ):
-            raise ValueError("watermark identities must be at the highest sequence")
-        if len(set(identities)) != len(identities):
-            raise ValueError("watermark identities must be unique")
+        if len(identities) == 1:
+            identity = identities[0]
+            if identity.job_instance_id != self.job_instance_id:
+                raise ValueError(
+                    "watermark identities must belong to the same instance"
+                )
+            if identity.jobstate_submit_seq != self.highest_jobstate_submit_seq:
+                raise ValueError("watermark identities must be at the highest sequence")
+        else:
+            if any(
+                identity.job_instance_id != self.job_instance_id
+                for identity in identities
+            ):
+                raise ValueError(
+                    "watermark identities must belong to the same instance"
+                )
+            if any(
+                identity.jobstate_submit_seq != self.highest_jobstate_submit_seq
+                for identity in identities
+            ):
+                raise ValueError("watermark identities must be at the highest sequence")
+            if len(set(identities)) != len(identities):
+                raise ValueError("watermark identities must be unique")
         object.__setattr__(self, "identities_at_highest_seq", identities)
 
     def to_json_dict(self) -> dict[str, JSONValue]:
@@ -1298,72 +1335,87 @@ class DatabaseSnapshot:
             raise ValueError(
                 "database workflow state cannot contain pending tail events"
             )
-        if any(job.workflow != self.workflow.workflow for job in jobs):
-            raise ValueError("all DB jobs must match the exact selected wf_uuid scope")
-        if any(
-            job.provenance is not Provenance.DB_CONFIRMED
-            or job.job_id is None
-            or job.pending_tail
-            or job.scheduler.fields
-            for job in jobs
-        ):
-            raise ValueError("database snapshots contain DB-confirmed jobs only")
-        job_ids = [job.job_id for job in jobs]
-        if len(set(job_ids)) != len(job_ids):
-            raise ValueError("database snapshots contain one row per unique job_id")
-        exec_job_ids = [job.exec_job_id for job in jobs]
-        if len(set(exec_job_ids)) != len(exec_job_ids):
-            raise ValueError("database snapshots contain one job per exec_job_id")
-        attempts = [attempt.identity for job in jobs for attempt in job.attempts]
-        if len(set(attempts)) != len(attempts):
-            raise ValueError("database snapshots contain unique job attempts")
-        attempt_instance_ids = [attempt.job_instance_id for attempt in attempts]
-        if len(set(attempt_instance_ids)) != len(attempt_instance_ids):
-            raise ValueError("job_instance_id must be workflow-unique")
-        attempt_submit_seqs = [attempt.job_submit_seq for attempt in attempts]
-        if len(set(attempt_submit_seqs)) != len(attempt_submit_seqs):
-            raise ValueError("job_submit_seq must be workflow-global unique")
-        included_instance_ids = set(attempt_instance_ids)
-        watermark_instance_ids = [watermark.job_instance_id for watermark in watermarks]
-        if len(set(watermark_instance_ids)) != len(watermark_instance_ids):
-            raise ValueError("job watermarks must be unique per job_instance_id")
-        watermarks_by_instance = {
-            watermark.job_instance_id: watermark for watermark in watermarks
-        }
-        if any(
-            watermark.job_instance_id not in included_instance_ids
-            for watermark in watermarks
-        ):
-            raise ValueError("job watermarks must match included attempts")
-        watermark_identities = [
-            identity
-            for watermark in watermarks
-            for identity in watermark.identities_at_highest_seq
-        ]
-        if len(set(watermark_identities)) != len(watermark_identities):
-            raise ValueError("job watermark transition identities must be unique")
-        if any(
-            transition.workflow != self.workflow.workflow for transition in transitions
-        ):
-            raise ValueError("DB job transitions must match the selected wf_uuid")
-        transition_identities = [transition.identity for transition in transitions]
-        if len(set(transition_identities)) != len(transition_identities):
-            raise ValueError("DB job transition identities must be unique")
-        if transitions != tuple(
-            sorted(transitions, key=lambda transition: transition.recent_event_sort_key)
-        ):
-            raise ValueError("DB recent job transitions must use stable feed order")
-        jobs_by_exec_id = {job.exec_job_id: job for job in jobs}
+        job_ids: set[int] = set()
+        jobs_by_exec_id: dict[str, JobSnapshot] = {}
+        attempts_by_exec_id: dict[str, dict[int, int]] = {}
+        attempt_identities: set[JobAttemptIdentity] = set()
+        included_instance_ids: set[int] = set()
+        attempt_submit_seqs: set[int] = set()
+        for job in jobs:
+            if job.workflow != self.workflow.workflow:
+                raise ValueError(
+                    "all DB jobs must match the exact selected wf_uuid scope"
+                )
+            if (
+                job.provenance is not Provenance.DB_CONFIRMED
+                or job.job_id is None
+                or job.pending_tail
+                or job.scheduler.fields
+            ):
+                raise ValueError("database snapshots contain DB-confirmed jobs only")
+            if job.job_id in job_ids:
+                raise ValueError("database snapshots contain one row per unique job_id")
+            job_ids.add(job.job_id)
+            if job.exec_job_id in jobs_by_exec_id:
+                raise ValueError("database snapshots contain one job per exec_job_id")
+            jobs_by_exec_id[job.exec_job_id] = job
+            attempts_for_job: dict[int, int] = {}
+            for attempt in job.attempts:
+                identity = attempt.identity
+                if identity in attempt_identities:
+                    raise ValueError("database snapshots contain unique job attempts")
+                attempt_identities.add(identity)
+                if identity.job_instance_id in included_instance_ids:
+                    raise ValueError("job_instance_id must be workflow-unique")
+                included_instance_ids.add(identity.job_instance_id)
+                if identity.job_submit_seq in attempt_submit_seqs:
+                    raise ValueError("job_submit_seq must be workflow-global unique")
+                attempt_submit_seqs.add(identity.job_submit_seq)
+                attempts_for_job[identity.job_submit_seq] = identity.job_instance_id
+            attempts_by_exec_id[job.exec_job_id] = attempts_for_job
+
+        watermarks_by_instance: dict[int, JobTransitionWatermark] = {}
+        watermark_identities: set[DBTransitionIdentity] = set()
+        for watermark in watermarks:
+            if watermark.job_instance_id in watermarks_by_instance:
+                raise ValueError("job watermarks must be unique per job_instance_id")
+            watermarks_by_instance[watermark.job_instance_id] = watermark
+            if watermark.job_instance_id not in included_instance_ids:
+                raise ValueError("job watermarks must match included attempts")
+            for identity in watermark.identities_at_highest_seq:
+                if identity in watermark_identities:
+                    raise ValueError(
+                        "job watermark transition identities must be unique"
+                    )
+                watermark_identities.add(identity)
+
+        transition_identities: set[DBTransitionIdentity] = set()
+        recent_by_instance: dict[int, DBJobTransition] = {}
+        previous_recent_key: tuple[object, ...] | None = None
         for transition in transitions:
+            if transition.workflow != self.workflow.workflow:
+                raise ValueError("DB job transitions must match the selected wf_uuid")
+            if transition.identity in transition_identities:
+                raise ValueError("DB job transition identities must be unique")
+            transition_identities.add(transition.identity)
+            recent_key = transition.recent_event_sort_key
+            if previous_recent_key is not None and recent_key < previous_recent_key:
+                raise ValueError("DB recent job transitions must use stable feed order")
+            previous_recent_key = recent_key
+            current_recent = recent_by_instance.get(transition.identity.job_instance_id)
+            if (
+                current_recent is None
+                or transition.authoritative_sort_key
+                > current_recent.authoritative_sort_key
+            ):
+                recent_by_instance[transition.identity.job_instance_id] = transition
             job = jobs_by_exec_id.get(transition.exec_job_id)
             if job is None:
                 raise ValueError("DB job transition has no included job row")
-            matching_attempts = {
-                attempt.identity.job_submit_seq: attempt.identity.job_instance_id
-                for attempt in job.attempts
-            }
             if (
-                matching_attempts.get(transition.job_submit_seq)
+                attempts_by_exec_id[transition.exec_job_id].get(
+                    transition.job_submit_seq
+                )
                 != transition.identity.job_instance_id
             ):
                 raise ValueError("DB job transition has no included attempt row")
@@ -1404,18 +1456,13 @@ class DatabaseSnapshot:
                 raise ValueError(
                     "current job transition must be the authoritative watermark row"
                 )
-            same_instance_recent = [
-                transition
-                for transition in transitions
-                if transition.identity.job_instance_id
-                == job.transition.identity.job_instance_id
-            ]
-            if same_instance_recent and (
-                max(
-                    same_instance_recent + [job.transition],
-                    key=lambda transition: transition.authoritative_sort_key,
-                ).identity
-                != job.transition.identity
+            same_instance_recent = recent_by_instance.get(
+                job.transition.identity.job_instance_id
+            )
+            if (
+                same_instance_recent is not None
+                and same_instance_recent.authoritative_sort_key
+                > job.transition.authoritative_sort_key
             ):
                 raise ValueError(
                     "current job transition cannot lag the recent transition feed"

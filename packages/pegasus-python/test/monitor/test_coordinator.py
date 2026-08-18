@@ -410,6 +410,13 @@ def run(coro):
     return asyncio.run(coro)
 
 
+def test_default_reconciliation_suffix_budget_covers_bounded_live_overlay() -> None:
+    config = CoordinatorConfig()
+
+    assert config.recent_transition_limit == 8192
+    assert config.recent_transition_limit >= 2 * Reconciler(WORKFLOW).max_pending_events
+
+
 def test_bootstrap_order_captures_event_appended_during_db_transaction() -> None:
     async def scenario() -> None:
         calls: list[str] = []

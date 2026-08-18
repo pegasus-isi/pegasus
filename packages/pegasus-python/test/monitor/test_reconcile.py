@@ -362,6 +362,22 @@ def test_initial_merge_suppresses_event_already_in_database() -> None:
     assert snapshot.jobs[0].provenance is Provenance.DB_CONFIRMED
 
 
+def test_repeated_publication_reuses_job_roster_until_inputs_change() -> None:
+    reconciler = Reconciler(WORKFLOW)
+    install(reconciler, database((job_transition("SUBMIT", "100", 1),)))
+
+    first = effective(reconciler, 10)
+    second = effective(reconciler, 11)
+
+    assert second.jobs is first.jobs
+
+    reconciler.ingest_tail(tail_result(tail_job("EXECUTE", "101", 10)))
+    changed = effective(reconciler, 12)
+
+    assert changed.jobs is not second.jobs
+    assert changed.jobs[0].state == "EXECUTE"
+
+
 def test_pre_database_preview_migrates_to_confirmed_event_at_stable_order() -> None:
     transition = job_transition("EXECUTE", "101", 2)
     event = tail_job("EXECUTE", "101", 10, base=None)

@@ -271,6 +271,7 @@ class Reconciler:
         self.max_pending_events = max_pending_events
         self.max_pending_bytes = max_pending_bytes
         self._database: DatabaseSnapshot | None = None
+        self._database_jobs_by_exec_id: dict[str, JobSnapshot] = {}
         self._pending_jobs: list[TailJobEvent] = []
         self._pending_workflow: list[TailWorkflowEvent] = []
         self._quarantined_jobs: list[TailJobEvent] = []
@@ -287,6 +288,11 @@ class Reconciler:
         self._scheduler_by_name: dict[
             SchedulerQueryKind, dict[str, tuple[FrozenPayload, ...]]
         ] = {}
+        self._scheduler_jobs_revision = 0
+        self._effective_jobs_database: DatabaseSnapshot | None = None
+        self._effective_jobs_pending: tuple[object, ...] = ()
+        self._effective_jobs_scheduler_revision = -1
+        self._effective_jobs_cache: tuple[JobSnapshot, ...] | None = None
         self._force_full_refresh = False
         self._database_rebootstrap = False
         self._publication_frozen = False
@@ -431,6 +437,11 @@ class Reconciler:
         self._scheduler_by_name[result.request.kind] = {
             key: tuple(values) for key, values in by_name.items()
         }
+        if result.request.kind in {
+            SchedulerQueryKind.QUEUE,
+            SchedulerQueryKind.HISTORY,
+        }:
+            self._scheduler_jobs_revision += 1
         self.update_health(result.health)
 
     def ingest_tail(self, result: TailPollResult) -> bool:
@@ -520,18 +531,7 @@ class Reconciler:
                 continue
             known_identities.add(event.identity)
             if isinstance(event, TailJobEvent):
-                database_job = (
-                    next(
-                        (
-                            job
-                            for job in self._database.jobs
-                            if job.exec_job_id == event.exec_job_id
-                        ),
-                        None,
-                    )
-                    if self._database is not None
-                    else None
-                )
+                database_job = self._database_jobs_by_exec_id.get(event.exec_job_id)
                 attempt_visible = bool(
                     database_job is not None
                     and any(
@@ -637,6 +637,7 @@ class Reconciler:
             self.begin_database_rebootstrap()
 
         self._database = snapshot
+        self._database_jobs_by_exec_id = {job.exec_job_id: job for job in snapshot.jobs}
         if full:
             self._force_full_refresh = False
             self._database_rebootstrap = False
@@ -723,7 +724,7 @@ class Reconciler:
         }
         if pending_attempts:
             watermarks = {item.job_instance_id: item for item in database.watermarks}
-            jobs = {job.exec_job_id: job for job in database.jobs}
+            jobs = self._jobs_by_exec_id(database)
             for key in pending_attempts - set(self._job_cursors):
                 if key in self._uncursored_attempts:
                     continue
@@ -756,11 +757,10 @@ class Reconciler:
         )
         self._ensure_reconciliation_cursors(database)
 
-    @staticmethod
     def _retire_older_attempts_in(
-        pending: Sequence[TailJobEvent], database: DatabaseSnapshot
+        self, pending: Sequence[TailJobEvent], database: DatabaseSnapshot
     ) -> list[TailJobEvent]:
-        jobs = {job.exec_job_id: job for job in database.jobs}
+        jobs = self._jobs_by_exec_id(database)
         retained: list[TailJobEvent] = []
         for event in pending:
             current = jobs.get(event.exec_job_id)
@@ -789,9 +789,12 @@ class Reconciler:
 
         transitions = list(database.recent_transitions)
         known_transition_ids = {transition.identity for transition in transitions}
-        for job in database.jobs:
+        jobs = self._jobs_by_exec_id(database)
+        for exec_job_id in {event.exec_job_id for event in pending}:
+            job = jobs.get(exec_job_id)
             if (
-                job.transition is not None
+                job is not None
+                and job.transition is not None
                 and job.transition.identity not in known_transition_ids
             ):
                 transitions.append(job.transition)
@@ -1067,10 +1070,7 @@ class Reconciler:
     ) -> bool:
         if event.normalized_state not in _KNOWN_JOB_STATES:
             return False
-        job = next(
-            (item for item in database.jobs if item.exec_job_id == event.exec_job_id),
-            None,
-        )
+        job = self._jobs_by_exec_id(database).get(event.exec_job_id)
         if job is None:
             return False
         matching_attempt = next(
@@ -1235,6 +1235,15 @@ class Reconciler:
         )
 
     def _effective_jobs(self, database: DatabaseSnapshot) -> tuple[JobSnapshot, ...]:
+        pending_key = tuple(event.identity for event in self._pending_jobs)
+        if (
+            self._effective_jobs_database is database
+            and self._effective_jobs_pending == pending_key
+            and self._effective_jobs_scheduler_revision == self._scheduler_jobs_revision
+            and self._effective_jobs_cache is not None
+        ):
+            return self._effective_jobs_cache
+
         jobs = {job.exec_job_id: job for job in database.jobs}
         pending_by_job: dict[str, list[TailJobEvent]] = defaultdict(list)
         for event in self._pending_jobs:
@@ -1276,7 +1285,7 @@ class Reconciler:
                 scheduler = self._scheduler_payload(base, exec_job_id)
                 if scheduler != base.scheduler:
                     jobs[exec_job_id] = replace(base, scheduler=scheduler)
-        return tuple(
+        result = tuple(
             sorted(
                 jobs.values(),
                 key=lambda job: (
@@ -1286,6 +1295,16 @@ class Reconciler:
                 ),
             )
         )
+        self._effective_jobs_database = database
+        self._effective_jobs_pending = pending_key
+        self._effective_jobs_scheduler_revision = self._scheduler_jobs_revision
+        self._effective_jobs_cache = result
+        return result
+
+    def _jobs_by_exec_id(self, database: DatabaseSnapshot) -> dict[str, JobSnapshot]:
+        if database is self._database:
+            return self._database_jobs_by_exec_id
+        return {job.exec_job_id: job for job in database.jobs}
 
     def _scheduler_payload(
         self, job: JobSnapshot | None, exec_job_id: str

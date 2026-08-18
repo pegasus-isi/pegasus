@@ -213,7 +213,16 @@ def test_render_path_does_not_open_workflow_sources(tmp_path, monkeypatch):
 
 
 def test_visible_jobs_is_row_bounded_for_100k_jobs():
-    jobs = tuple(_job(f"job_{index}", Lifecycle.QUEUED) for index in range(100_000))
+    class CountingJobs(tuple):
+        iterations = 0
+
+        def __iter__(self):
+            self.iterations += 1
+            return super().__iter__()
+
+    jobs = CountingJobs(
+        _job(f"job_{index}", Lifecycle.QUEUED) for index in range(100_000)
+    )
     visible, total = _visible_jobs(
         jobs,
         DisplayOptions(job_row_limit=37, sort_by_activity=True),
@@ -221,6 +230,7 @@ def test_visible_jobs_is_row_bounded_for_100k_jobs():
 
     assert len(visible) == 37
     assert total == 100_000
+    assert jobs.iterations == 1
 
 
 def test_disabled_condor_is_explicit(tmp_path):

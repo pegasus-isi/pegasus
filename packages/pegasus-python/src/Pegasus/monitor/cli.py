@@ -22,7 +22,10 @@ import argparse
 import asyncio
 import importlib.metadata
 import math
+import signal
 import sys
+import threading
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TextIO
@@ -65,6 +68,21 @@ def _version() -> str:
         return importlib.metadata.version("pegasus-wms")
     except importlib.metadata.PackageNotFoundError:
         return "development"
+
+
+@contextmanager
+def _temporary_sigterm_handler(callback: Callable[[int, object | None], None]):
+    """Install SIGTERM only on the main thread and restore prior ownership."""
+
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+    previous = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGTERM, callback)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -564,6 +582,7 @@ async def _run_live(
     scheduled_sequence = 0
     snapshot = None
     last_rendered_snapshot = None
+    cancelled = False
     try:
         snapshot = await coordinator.start()
         analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
@@ -685,6 +704,9 @@ async def _run_live(
                     last_rendered_snapshot = current
                     return 0
                 await asyncio.sleep(0.25)
+    except asyncio.CancelledError:
+        cancelled = True
+        raise
     finally:
         if analysis_task is not None:
             analysis_task.cancel()
@@ -692,7 +714,7 @@ async def _run_live(
         if enrichment_task is not None:
             enrichment_task.cancel()
             await asyncio.gather(enrichment_task, return_exceptions=True)
-        if snapshot is not None:
+        if snapshot is not None and not cancelled:
             final_snapshot = last_rendered_snapshot or coordinator.latest or snapshot
             final_options = _display_options(
                 args,
@@ -715,28 +737,57 @@ async def _run(
     stdout: TextIO,
     stderr: TextIO,
 ) -> int:
-    locator = runtime.locator_type()
-    try:
-        location = locator.locate(
-            args.target,
-            remap_submit_dir=args.remap_submit_dir,
-            jobstate_path=args.jobstate_path,
-        )
-        context = _load_display_context(location, runtime)
-        coordinator = _make_coordinator(args, location, runtime)
-    except (OSError, TypeError, ValueError, RuntimeError) as error:
-        print(f"pegasus-monitor: {error}", file=stderr)
-        return 1
+    termination = asyncio.Event()
+    loop = asyncio.get_running_loop()
 
-    try:
-        if args.once or args.why_idle:
-            return await _run_once(args, coordinator, context, runtime, stdout, stderr)
-        return await _run_live(args, coordinator, context, runtime, stdout)
-    except (OSError, TypeError, ValueError, RuntimeError) as error:
-        print(f"pegasus-monitor: {error}", file=stderr)
-        return 1
-    finally:
-        await coordinator.close()
+    def request_termination(_signum: int, _frame: object | None) -> None:
+        loop.call_soon_threadsafe(termination.set)
+
+    with _temporary_sigterm_handler(request_termination):
+        locator = runtime.locator_type()
+        try:
+            location = locator.locate(
+                args.target,
+                remap_submit_dir=args.remap_submit_dir,
+                jobstate_path=args.jobstate_path,
+            )
+            context = _load_display_context(location, runtime)
+            coordinator = _make_coordinator(args, location, runtime)
+        except (OSError, TypeError, ValueError, RuntimeError) as error:
+            print(f"pegasus-monitor: {error}", file=stderr)
+            return 1
+
+        operation = asyncio.create_task(
+            (
+                _run_once(args, coordinator, context, runtime, stdout, stderr)
+                if args.once or args.why_idle
+                else _run_live(args, coordinator, context, runtime, stdout)
+            ),
+            name="pegasus-monitor-operation",
+        )
+        termination_waiter = asyncio.create_task(
+            termination.wait(), name="pegasus-monitor-sigterm"
+        )
+        try:
+            done, _pending = await asyncio.wait(
+                (operation, termination_waiter),
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if termination_waiter in done:
+                operation.cancel()
+                await asyncio.gather(operation, return_exceptions=True)
+                return 0
+            return await operation
+        except (OSError, TypeError, ValueError, RuntimeError) as error:
+            print(f"pegasus-monitor: {error}", file=stderr)
+            return 1
+        finally:
+            if not operation.done():
+                operation.cancel()
+            await asyncio.gather(operation, return_exceptions=True)
+            termination_waiter.cancel()
+            await asyncio.gather(termination_waiter, return_exceptions=True)
+            await coordinator.close()
 
 
 def main(

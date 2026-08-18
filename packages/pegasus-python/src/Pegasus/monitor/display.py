@@ -292,23 +292,23 @@ def _activity_key(indexed: tuple[int, JobSnapshot]) -> tuple[object, ...]:
 def _visible_jobs(
     jobs: tuple[JobSnapshot, ...], options: DisplayOptions
 ) -> tuple[list[JobSnapshot], int]:
-    selected = (
-        (index, job)
-        for index, job in enumerate(jobs)
-        if options.show_all_jobs or job.type_desc.lower() == "compute"
-    )
+    total = 0
+
+    def selected():
+        nonlocal total
+        for index, job in enumerate(jobs):
+            if options.show_all_jobs or job.type_desc.lower() == "compute":
+                total += 1
+                yield index, job
+
     if options.sort_by_activity:
-        rows = heapq.nsmallest(options.job_row_limit, selected, key=_activity_key)
+        rows = heapq.nsmallest(options.job_row_limit, selected(), key=_activity_key)
     else:
         rows = []
-        for item in selected:
-            rows.append(item)
-            if len(rows) >= options.job_row_limit:
-                break
+        for item in selected():
+            if len(rows) < options.job_row_limit:
+                rows.append(item)
     visible = [job for _, job in rows]
-    total = sum(
-        options.show_all_jobs or job.type_desc.lower() == "compute" for job in jobs
-    )
     return visible, total
 
 
@@ -415,8 +415,10 @@ def _status_panel(snapshot: CoordinatorSnapshot, analysis: DisplayAnalysis) -> P
 
     jobs = effective.jobs
     counts = dict.fromkeys(Lifecycle, 0)
+    provenance_counts = dict.fromkeys(Provenance, 0)
     for job in jobs:
         counts[job.lifecycle] += 1
+        provenance_counts[job.provenance] += 1
     succeeded = counts[Lifecycle.SUCCEEDED]
     failed = counts[Lifecycle.FAILED]
     done = succeeded + failed
@@ -446,9 +448,9 @@ def _status_panel(snapshot: CoordinatorSnapshot, analysis: DisplayAnalysis) -> P
     provenance.append(
         "  jobs: "
         + ", ".join(
-            f"{source.value}={sum(job.provenance is source for job in jobs)}"
+            f"{source.value}={provenance_counts[source]}"
             for source in Provenance
-            if any(job.provenance is source for job in jobs)
+            if provenance_counts[source]
         ),
         style="dim",
     )

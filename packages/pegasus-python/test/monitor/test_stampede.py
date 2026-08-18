@@ -28,6 +28,7 @@ from queue import Queue
 
 import pytest
 
+import Pegasus.monitor.stampede as stampede_module
 from Pegasus.monitor.locator import DatabaseBackend, WorkflowLocation
 from Pegasus.monitor.models import (
     ClockSample,
@@ -265,6 +266,33 @@ def test_full_snapshot_has_exact_jobs_attempts_transitions_and_metadata(tmp_path
     ]
 
 
+def test_full_snapshot_commits_before_building_immutable_models(tmp_path, monkeypatch):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    original = reader._build_jobs
+    writer_committed = False
+
+    def build_after_commit(*args, **kwargs):
+        nonlocal writer_committed
+        connection = sqlite3.connect(path, timeout=0.01)
+        try:
+            connection.execute(
+                "UPDATE workflow SET dag_file_name = dag_file_name || '.concurrent'"
+            )
+            connection.commit()
+            writer_committed = True
+        finally:
+            connection.close()
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(reader, "_build_jobs", build_after_commit)
+    result = reader.refresh(_request())
+
+    assert result.snapshot is not None
+    assert writer_committed
+    assert reader.last_transaction_seconds > 0
+
+
 @pytest.mark.parametrize(
     ("raw", "decoded"),
     [(None, None), (-1, -128), (0, 0), (256, 1), (9, -9), (137, -9), (11, -11)],
@@ -377,6 +405,56 @@ def test_current_snapshot_requires_and_preserves_generation(tmp_path):
     assert second.snapshot.snapshot_at_epoch == 1002.0
 
 
+def test_unchanged_current_snapshot_reuses_last_good_without_opening_sqlite(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("unchanged database opened")
+
+    monkeypatch.setattr(reader, "_open_read_only", forbidden)
+    second = reader.refresh(
+        _request(
+            epoch=2,
+            now=1002.0,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert second.snapshot is not None
+    assert second.snapshot.epoch == SnapshotEpoch(2)
+    assert second.snapshot.snapshot_at_epoch == 1002.0
+    assert second.snapshot.jobs is first.snapshot.jobs
+    assert reader.last_transaction_seconds == 0.0
+
+
+def test_unchanged_current_snapshot_honors_smaller_history_limits(tmp_path):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request(recent_limit=8, workflow_limit=8))
+    assert first.snapshot is not None
+
+    second = reader.refresh(
+        _request(
+            epoch=2,
+            now=1002.0,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+            recent_limit=1,
+            workflow_limit=1,
+        )
+    )
+
+    assert second.snapshot is not None
+    assert len(second.snapshot.recent_transitions) <= 1
+    assert len(second.snapshot.recent_workflow_transitions) == 1
+
+
 def test_bounded_suffix_uses_watermark_and_provisional_attempt_keys(tmp_path):
     path = _create_database(tmp_path / "workflow.db")
     reader = StampedeReader(path, ROOT)
@@ -457,6 +535,41 @@ def test_bounded_suffix_overflow_is_visible_and_preserves_last_good(tmp_path):
     assert result.health.state is HealthState.RESYNC
     assert result.health.error_code == "reconciliation_suffix_overflow"
     assert reader.last_good_snapshot is first.snapshot
+
+
+def test_bounded_suffix_absorbs_two_seconds_of_1000hz_paired_transitions(tmp_path):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request(recent_limit=8192))
+    assert first.snapshot is not None
+    watermark = next(
+        item for item in first.snapshot.watermarks if item.job_instance_id == 100
+    )
+    rows = []
+    for sequence in range(4, 2004):
+        timestamp = 140 + sequence / 10_000
+        rows.extend(
+            (
+                (100, "JOB_ABORTED", timestamp, sequence, "removed"),
+                (100, "JOB_FAILURE", timestamp, sequence, "removed"),
+            )
+        )
+    with _writer(path) as connection:
+        connection.executemany("INSERT INTO jobstate VALUES (?,?,?,?,?)", rows)
+
+    result = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.BOUNDED_SUFFIX,
+            prior=first.generation,
+            job_watermarks=(watermark,),
+            recent_limit=8192,
+        )
+    )
+
+    assert result.snapshot is not None
+    assert result.health.state is HealthState.HEALTHY
+    assert len(result.snapshot.recent_transitions) == 4002
 
 
 def test_bounded_suffix_batches_large_watermark_set_in_global_order(tmp_path):
@@ -556,6 +669,126 @@ def test_bounded_suffix_keeps_nonpending_job_current(tmp_path):
         item.identity.job_instance_id for item in result.snapshot.recent_transitions
     } == {100}
     assert result.snapshot.jobs[1].state == "JOB_RELEASED"
+
+
+def test_incremental_refresh_does_not_rescan_all_jobstate_heads(tmp_path, monkeypatch):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("non-full refresh rescanned all jobstate heads")
+
+    monkeypatch.setattr(reader, "_load_jobstate_heads", forbidden)
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO jobstate VALUES (200, 'JOB_RELEASED', 141, 3, NULL)"
+        )
+
+    result = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert result.snapshot is not None
+    assert result.snapshot.jobs[1].state == "JOB_RELEASED"
+
+
+def test_failed_changed_refresh_is_retried_instead_of_reusing_stale_snapshot(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO jobstate VALUES (200, 'JOB_RELEASED', 141, 3, NULL)"
+        )
+
+    original = reader._load_snapshot
+    attempts = 0
+
+    def fail_once(*args, **kwargs):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise sqlite3.OperationalError("database is busy")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(reader, "_load_snapshot", fail_once)
+    failed = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+    retried = reader.refresh(
+        _request(
+            epoch=3,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert failed.snapshot is None
+    assert failed.health.error_code == "database_busy"
+    assert retried.snapshot is not None
+    assert retried.snapshot.jobs[1].state == "JOB_RELEASED"
+    assert attempts == 2
+
+
+def test_commit_after_snapshot_is_loaded_on_next_refresh(tmp_path, monkeypatch):
+    path = _create_database(tmp_path / "workflow.db")
+    with _writer(path) as connection:
+        connection.execute("PRAGMA journal_mode=WAL")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO jobstate VALUES (200, 'JOB_RELEASED', 141, 3, NULL)"
+        )
+
+    original = reader._load_snapshot
+    injected = False
+
+    def load_then_commit(*args, **kwargs):
+        nonlocal injected
+        loaded = original(*args, **kwargs)
+        if not injected:
+            injected = True
+            with _writer(path) as connection:
+                connection.execute(
+                    "INSERT INTO jobstate VALUES (200, 'JOB_SUCCESS', 142, 4, NULL)"
+                )
+        return loaded
+
+    monkeypatch.setattr(reader, "_load_snapshot", load_then_commit)
+    second = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+    third = reader.refresh(
+        _request(
+            epoch=3,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert second.snapshot is not None
+    assert second.snapshot.jobs[1].state == "JOB_RELEASED"
+    assert third.snapshot is not None
+    assert third.snapshot.jobs[1].state == "JOB_SUCCESS"
 
 
 def test_bounded_suffix_refreshes_maxrss_without_state_advance(tmp_path):
@@ -878,19 +1111,18 @@ def test_concurrent_writer_commit_finishes_within_busy_bound(tmp_path, journal_m
     assert commit_elapsed < 0.5
 
 
-def test_locked_database_degrades_and_retains_last_good(tmp_path):
+def test_locked_full_refresh_degrades_and_retains_last_good(tmp_path):
     path = _create_database(tmp_path / "workflow.db")
     reader = StampedeReader(path, ROOT, busy_timeout_seconds=0.01)
     first = reader.refresh(_request())
     lock = _writer(path)
     try:
         lock.execute("BEGIN EXCLUSIVE")
-        lock.execute("UPDATE workflow SET dag_file_name = dag_file_name")
+        lock.execute("UPDATE workflow SET dag_file_name = dag_file_name || '.locked'")
         result = reader.refresh(
             _request(
                 epoch=2,
-                mode=DBRefreshMode.CURRENT_SNAPSHOT,
-                prior=first.generation,
+                mode=DBRefreshMode.FULL_REBOOTSTRAP,
             )
         )
     finally:
@@ -976,6 +1208,70 @@ def test_same_sequence_identity_group_rollback_is_rejected(tmp_path):
 
     assert result.snapshot is None
     assert result.health.error_code == "transition_watermark_rollback"
+
+
+def test_same_cursor_transition_replacement_is_rejected(tmp_path):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    with _writer(path) as connection:
+        connection.execute(
+            "UPDATE jobstate SET state = 'JOB_SUCCESS' "
+            "WHERE job_instance_id = 100 AND state = 'JOB_FAILURE' "
+            "AND jobstate_submit_seq = 3"
+        )
+
+    result = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert result.snapshot is None
+    assert result.health.state is HealthState.RESYNC
+    assert result.health.error_code == "transition_watermark_rollback"
+    assert result.generation != first.generation
+
+
+def test_large_workflow_same_cursor_update_forces_audit_without_more_writes(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    monkeypatch.setattr(stampede_module, "_LARGE_WORKFLOW_AUDIT_THRESHOLD", 0)
+    monkeypatch.setattr(stampede_module, "_CURSOR_STABLE_AUDIT_INTERVAL", 2)
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+    with _writer(path) as connection:
+        connection.execute(
+            "UPDATE jobstate SET state = 'JOB_SUCCESS' "
+            "WHERE job_instance_id = 100 AND state = 'JOB_FAILURE' "
+            "AND jobstate_submit_seq = 3"
+        )
+
+    cached = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+    audited = reader.refresh(
+        _request(
+            epoch=3,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+
+    assert cached.snapshot is not None
+    assert cached.snapshot.jobs[0].state == "JOB_FAILURE"
+    assert audited.snapshot is None
+    assert audited.health.state is HealthState.RESYNC
+    assert audited.health.error_code == "transition_watermark_rollback"
+    assert audited.generation != first.generation
 
 
 def test_explicit_full_rebootstrap_accepts_rollback_as_new_generation(tmp_path):

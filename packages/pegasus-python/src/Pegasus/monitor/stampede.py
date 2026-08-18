@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import sqlite3
+import time
 from collections import defaultdict
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -54,7 +55,7 @@ from .models import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Callable, Iterable, Sequence
     from decimal import Decimal
 
 CURRENT_STAMPEDE_SCHEMA_VERSION = 14
@@ -62,6 +63,8 @@ CURRENT_STAMPEDE_SCHEMA_VERSION = 14
 _STALE_AFTER_SECONDS = 10.0
 _MAX_HEALTH_AGE_SECONDS = 30 * 24 * 60 * 60.0
 _SUFFIX_THRESHOLD_BATCH_SIZE = 400
+_LARGE_WORKFLOW_AUDIT_THRESHOLD = 10_000
+_CURSOR_STABLE_AUDIT_INTERVAL = 30
 _TERMINAL_MAIN_JOB_STATES = (
     "JOB_SUCCESS",
     "JOB_FAILURE",
@@ -158,6 +161,13 @@ class _FileMarker:
     device: int
     inode: int
     size: int
+    mtime_ns: int
+    wal_size: int
+    wal_mtime_ns: int
+
+    @property
+    def content_signature(self) -> tuple[int, int, int, int]:
+        return self.size, self.mtime_ns, self.wal_size, self.wal_mtime_ns
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,6 +200,8 @@ class _AttemptRow:
 class _LoadedSnapshot:
     snapshot: DatabaseSnapshot
     heads: dict[int, tuple[DBJobTransition, ...]]
+    jobstate_rowid: int
+    change_vector: tuple[int, ...]
     timings: dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]]
     maxrss: dict[int, int]
     workflow_identities: frozenset[DBWorkflowTransitionIdentity]
@@ -322,10 +334,15 @@ class StampedeReader:
             self.workflow = workflow
         self.busy_timeout_seconds = busy_timeout_seconds
         self._last_marker: _FileMarker | None = None
+        self._last_snapshot_marker: _FileMarker | None = None
         self._generation: DatabaseGeneration | None = None
         self._generation_counter = 0
         self._last_good: DatabaseSnapshot | None = None
         self._last_heads: dict[int, tuple[DBJobTransition, ...]] = {}
+        self._last_jobstate_rowid = 0
+        self._last_change_vector: tuple[int, ...] | None = None
+        self._cursor_stable_changes = 0
+        self._force_validation_once = False
         self._last_timings: dict[
             int, tuple[Decimal | None, Decimal | None, Decimal | None]
         ] = {}
@@ -335,12 +352,20 @@ class StampedeReader:
         )
         self._last_success_epoch: float | None = None
         self._consecutive_failures = 0
+        self._last_transaction_seconds = 0.0
 
     @property
     def last_good_snapshot(self) -> DatabaseSnapshot | None:
         return self._last_good
 
+    @property
+    def last_transaction_seconds(self) -> float:
+        """Longest read transaction held during the most recent refresh."""
+
+        return self._last_transaction_seconds
+
     def refresh(self, request: DBRefreshRequest) -> DBRefreshResult:
+        self._last_transaction_seconds = 0.0
         if self.workflow is not None and request.workflow != self.workflow:
             return self._failure(
                 request,
@@ -373,6 +398,7 @@ class StampedeReader:
             )
 
         try:
+            previous_marker = self._last_snapshot_marker
             marker = self._stat_database()
             generation = self._observe_generation(marker)
             if (
@@ -393,17 +419,102 @@ class StampedeReader:
                     "bounded suffix refresh has no matching last-good base",
                     state=HealthState.RESYNC,
                 )
+            if (
+                request.mode is DBRefreshMode.CURRENT_SNAPSHOT
+                and self._last_good is not None
+                and previous_marker is not None
+            ):
+                unchanged = (
+                    not self._force_validation_once
+                    and marker.content_signature == previous_marker.content_signature
+                )
+                if unchanged and self._cursor_stable_changes:
+                    self._cursor_stable_changes += 1
+                    if self._cursor_stable_changes >= _CURSOR_STABLE_AUDIT_INTERVAL:
+                        unchanged = False
+                        self._force_validation_once = True
+                        self._cursor_stable_changes = 0
+                if not unchanged:
+                    probe = self._open_read_only()
+                    probe_started = time.perf_counter()
+                    try:
+                        probe.execute("BEGIN")
+                        change_vector = self._load_change_vector(probe)
+                        if self._last_change_vector is not None:
+                            unchanged = change_vector == self._last_change_vector
+                            if unchanged:
+                                self._cursor_stable_changes += 1
+                                validation_due = (
+                                    self._force_validation_once
+                                    or len(self._last_good.jobs)
+                                    <= _LARGE_WORKFLOW_AUDIT_THRESHOLD
+                                    or self._cursor_stable_changes
+                                    >= _CURSOR_STABLE_AUDIT_INTERVAL
+                                )
+                                if validation_due:
+                                    unchanged = False
+                                    self._force_validation_once = True
+                                    self._cursor_stable_changes = 0
+                            else:
+                                self._cursor_stable_changes = 0
+                                if any(
+                                    current < previous
+                                    for current, previous in zip(
+                                        change_vector,
+                                        self._last_change_vector,
+                                        strict=True,
+                                    )
+                                ):
+                                    self._force_validation_once = True
+                        probe.execute("COMMIT")
+                        self._record_transaction(probe_started)
+                    except Exception:
+                        if probe.in_transaction:
+                            probe.execute("ROLLBACK")
+                            self._record_transaction(probe_started)
+                        raise
+                    finally:
+                        probe.close()
+                if unchanged:
+                    return self._reuse_last_good(request, generation, marker)
 
             connection = self._open_read_only()
-            try:
+            transaction_started = 0.0
+            transaction_open = False
+
+            def begin_transaction() -> None:
+                nonlocal transaction_open, transaction_started
+                if transaction_open:
+                    raise RuntimeError("Stampede read transaction is already open")
+                transaction_started = time.perf_counter()
                 connection.execute("BEGIN")
-                self._check_schema(connection)
-                loaded = self._load_snapshot(connection, request, generation)
-                snapshot = loaded.snapshot
+                transaction_open = True
+
+            def finish_transaction() -> None:
+                nonlocal transaction_open
+                if not transaction_open:
+                    return
                 connection.execute("COMMIT")
+                transaction_open = False
+                self._record_transaction(transaction_started)
+
+            try:
+                begin_transaction()
+                self._check_schema(connection)
+                loaded = self._load_snapshot(
+                    connection,
+                    request,
+                    generation,
+                    finish_transaction,
+                )
+                snapshot = loaded.snapshot
+                finish_transaction()
             except Exception:
                 if connection.in_transaction:
                     connection.execute("ROLLBACK")
+                if transaction_open:
+                    transaction_open = False
+                    self._record_transaction(transaction_started)
                 raise
             finally:
                 connection.close()
@@ -433,6 +544,8 @@ class StampedeReader:
                 snapshot = replace(snapshot, generation=new_generation)
                 loaded = replace(loaded, snapshot=snapshot)
         except StampedeReadError as error:
+            if error.code == "database_roster_rollback":
+                self._advance_logical_generation(marker)
             return self._failure(request, error, self._generation)
         except sqlite3.OperationalError as error:
             message = str(error)
@@ -462,7 +575,14 @@ class StampedeReader:
             )
 
         self._last_good = snapshot
+        # The SQLite snapshot can only include commits visible at the
+        # pre-transaction stat. If a writer commits before the post-read stat,
+        # deliberately leave this marker behind so the next refresh observes it.
+        self._last_snapshot_marker = marker
         self._last_heads = loaded.heads
+        self._last_jobstate_rowid = loaded.jobstate_rowid
+        self._last_change_vector = loaded.change_vector
+        self._force_validation_once = False
         self._last_timings = loaded.timings
         self._last_maxrss = loaded.maxrss
         self._last_workflow_identities = loaded.workflow_identities
@@ -504,7 +624,23 @@ class StampedeReader:
                 f"Stampede path is not a regular file: {self.database_path}",
                 state=HealthState.UNAVAILABLE,
             )
-        return _FileMarker(status.st_dev, status.st_ino, status.st_size)
+        wal_path = self.database_path.with_name(f"{self.database_path.name}-wal")
+        try:
+            wal_status = wal_path.stat()
+        except FileNotFoundError:
+            wal_size = 0
+            wal_mtime_ns = 0
+        else:
+            wal_size = wal_status.st_size
+            wal_mtime_ns = wal_status.st_mtime_ns
+        return _FileMarker(
+            status.st_dev,
+            status.st_ino,
+            status.st_size,
+            status.st_mtime_ns,
+            wal_size,
+            wal_mtime_ns,
+        )
 
     def _observe_generation(self, marker: _FileMarker) -> DatabaseGeneration:
         changed = self._last_marker is not None and (
@@ -606,6 +742,7 @@ class StampedeReader:
         connection: sqlite3.Connection,
         request: DBRefreshRequest,
         generation: DatabaseGeneration,
+        finish_transaction: Callable[[], None],
     ) -> _LoadedSnapshot:
         workflow_row = self._load_workflow_row(connection, request.workflow)
         workflow_transitions = self._load_workflow_transitions(
@@ -620,75 +757,96 @@ class StampedeReader:
         workflow, workflow_watermark = self._build_workflow_snapshot(
             workflow_row, request.workflow, workflow_transitions
         )
+        if request.mode is DBRefreshMode.FULL_REBOOTSTRAP:
+            return self._load_full_snapshot(
+                connection,
+                request,
+                generation,
+                workflow_row,
+                workflow_transitions,
+                workflow,
+                workflow_watermark,
+                finish_transaction,
+            )
 
         jobs = self._load_job_rows(connection, workflow_row.wf_id)
         attempts = self._load_attempt_rows(connection, workflow_row.wf_id)
         tasks = self._load_tasks(connection, workflow_row.wf_id)
+        change_vector = self._load_change_vector(connection)
+        self._reject_roster_rollback_rows(jobs, attempts, generation)
         instance_ids = {
             attempt.job_instance_id
             for job_attempts in attempts.values()
             for attempt in job_attempts
         }
-        # Every refresh publishes an authoritative current snapshot for the
-        # entire selected workflow. BOUNDED_SUFFIX narrows only the detailed
-        # transition history used for reconciliation, never current heads.
-        heads = self._load_jobstate_heads(
-            connection, workflow_row.wf_id, request.workflow
-        )
-
-        if request.mode is DBRefreshMode.FULL_REBOOTSTRAP:
-            changed_ids = instance_ids
-            timings: dict[
-                int, tuple[Decimal | None, Decimal | None, Decimal | None]
-            ] = {}
+        # jobstate is append-only in Stampede. After the full base, advance
+        # current heads from new rowids instead of regrouping the workflow's
+        # complete transition history while holding a SQLite read transaction.
+        if not self._last_heads or self._force_validation_once:
+            heads = self._load_jobstate_heads(
+                connection, workflow_row.wf_id, request.workflow
+            )
+            jobstate_rowid = change_vector[3]
+            updates: dict[int, tuple[DBJobTransition, ...]] = {}
+            incremental_heads = False
         else:
-            previous_sequences = {
-                instance_id: group[0].identity.jobstate_submit_seq
-                for instance_id, group in self._last_heads.items()
-                if group
-            }
-            changed_ids = {
-                instance_id
-                for instance_id in instance_ids
-                if instance_id not in previous_sequences
-                or (
-                    instance_id in heads
-                    and heads[instance_id][0].identity.jobstate_submit_seq
-                    > previous_sequences[instance_id]
-                )
-            }
-            timings = {
-                instance_id: values
-                for instance_id, values in self._last_timings.items()
-                if instance_id in instance_ids
-            }
-        changed_scope = (
-            None if request.mode is DBRefreshMode.FULL_REBOOTSTRAP else changed_ids
-        )
+            updates, jobstate_rowid = self._load_jobstate_updates(
+                connection,
+                workflow_row.wf_id,
+                request.workflow,
+                self._last_jobstate_rowid,
+            )
+            # Advance across unrelated workflows too. The global cursor is an
+            # O(1) rowid lookup and prevents rescanning the same irrelevant gap.
+            jobstate_rowid = change_vector[3]
+            incremental_heads = True
+            heads = self._merge_jobstate_heads(self._last_heads, updates)
+
+        previous_sequences = {
+            instance_id: group[0].identity.jobstate_submit_seq
+            for instance_id, group in self._last_heads.items()
+            if group
+        }
+        changed_ids = {
+            instance_id
+            for instance_id in instance_ids
+            if instance_id not in previous_sequences
+            or heads.get(instance_id) != self._last_heads.get(instance_id)
+        }
+        timings = {
+            instance_id: values
+            for instance_id, values in self._last_timings.items()
+            if instance_id in instance_ids
+        }
         timings.update(
-            self._load_attempt_timings(connection, workflow_row.wf_id, changed_scope)
+            self._load_attempt_timings(connection, workflow_row.wf_id, changed_ids)
         )
         # Invocation rows are written independently of jobstate transitions.
         # Refresh them independently so a late kickstart record is visible even
         # when the authoritative state head did not advance.
         maxrss = self._load_maxrss(connection, workflow_row.wf_id)
-        watermarks = self._build_job_watermarks(heads)
-        job_snapshots = self._build_jobs(
-            request.workflow,
-            jobs,
-            attempts,
-            tasks,
-            maxrss,
-            timings,
-            heads,
-        )
-
         if request.mode is DBRefreshMode.BOUNDED_SUFFIX:
             recent = self._load_suffix_transitions(
                 connection, workflow_row.wf_id, request
             )
             recent_workflow = self._bounded_workflow_suffix(
                 workflow_transitions, request
+            )
+        elif (
+            request.mode is DBRefreshMode.CURRENT_SNAPSHOT
+            and incremental_heads
+            and self._last_good is not None
+        ):
+            recent = self._merge_recent_transitions(
+                self._last_good.recent_transitions,
+                tuple(item for items in updates.values() for item in items),
+                request.recent_transition_limit,
+            )
+            recent_workflow = tuple(
+                sorted(
+                    workflow_transitions,
+                    key=lambda transition: transition.authoritative_sort_key,
+                )[-request.recent_workflow_transition_limit :]
             )
         else:
             recent = self._load_recent_transitions(
@@ -704,6 +862,23 @@ class StampedeReader:
                 )[-request.recent_workflow_transition_limit :]
             )
 
+        # All SQLite rows needed for this publication are materialized. Release
+        # the read transaction before constructing and cross-validating the
+        # large immutable Python snapshot so DELETE-journal writers are not
+        # held behind CPU-only work.
+        finish_transaction()
+
+        watermarks = self._build_job_watermarks(heads)
+        job_snapshots = self._build_jobs(
+            request.workflow,
+            jobs,
+            attempts,
+            tasks,
+            maxrss,
+            timings,
+            heads,
+        )
+
         return _LoadedSnapshot(
             snapshot=DatabaseSnapshot(
                 epoch=request.next_epoch,
@@ -717,12 +892,250 @@ class StampedeReader:
                 workflow_watermark=workflow_watermark,
             ),
             heads=heads,
+            jobstate_rowid=jobstate_rowid,
+            change_vector=change_vector,
             timings=timings,
             maxrss=maxrss,
             workflow_identities=frozenset(
                 transition.identity for transition in workflow_transitions
             ),
         )
+
+    def _load_full_snapshot(
+        self,
+        connection: sqlite3.Connection,
+        request: DBRefreshRequest,
+        generation: DatabaseGeneration,
+        workflow_row: _WorkflowRow,
+        workflow_transitions: tuple[DBWorkflowTransition, ...],
+        workflow: WorkflowSnapshot,
+        workflow_watermark: WorkflowTransitionWatermark,
+        finish_transaction: Callable[[], None],
+    ) -> _LoadedSnapshot:
+        """Materialize SQLite rows, then build the large model after COMMIT."""
+
+        wf_id = workflow_row.wf_id
+        # The globally ordered recent feed needs SQLite to sort the full event
+        # history when no supporting production index exists. Materialize it
+        # with the authoritative base in this same read transaction.
+        recent_rows = connection.execute(
+            f"""
+            SELECT j.exec_job_id, ji.job_submit_seq,
+                   js.job_instance_id, js.state, js.timestamp,
+                   js.jobstate_submit_seq, js.reason
+            FROM jobstate AS js
+            JOIN job_instance AS ji ON ji.job_instance_id = js.job_instance_id
+            JOIN job AS j ON j.job_id = ji.job_id
+            WHERE j.wf_id = ?
+            ORDER BY js.timestamp DESC, j.exec_job_id DESC,
+                     js.job_instance_id DESC, ji.job_submit_seq DESC,
+                     js.jobstate_submit_seq DESC,
+                     {_STATE_PRECEDENCE_SQL} DESC, js.state DESC
+            LIMIT ?
+            """,
+            (wf_id, request.recent_transition_limit + 1),
+        ).fetchall()
+        job_rows = connection.execute(
+            """
+            SELECT job_id, exec_job_id, type_desc, task_count
+            FROM job
+            WHERE wf_id = ?
+            ORDER BY job_id
+            """,
+            (wf_id,),
+        ).fetchall()
+        attempt_rows = connection.execute(
+            """
+            SELECT ji.job_id, ji.job_instance_id, ji.job_submit_seq,
+                   ji.sched_id, ji.site, ji.stdout_file, ji.stderr_file,
+                   ji.exitcode
+            FROM job_instance AS ji
+            JOIN job AS j ON j.job_id = ji.job_id
+            WHERE j.wf_id = ?
+            ORDER BY ji.job_id, ji.job_submit_seq, ji.job_instance_id
+            """,
+            (wf_id,),
+        ).fetchall()
+        task_rows = connection.execute(
+            """
+            SELECT task_id, job_id, transformation
+            FROM task
+            WHERE wf_id = ? AND job_id IS NOT NULL
+            ORDER BY job_id, task_id
+            """,
+            (wf_id,),
+        ).fetchall()
+        summary_rows = self._query_jobstate_summary(connection, wf_id)
+        maxrss_rows = connection.execute(
+            """
+            SELECT job_instance_id, MAX(maxrss) AS maxrss
+            FROM invocation
+            WHERE wf_id = ? AND task_submit_seq >= 1 AND maxrss IS NOT NULL
+            GROUP BY job_instance_id
+            """,
+            (wf_id,),
+        ).fetchall()
+        change_vector = self._load_change_vector(connection)
+        finish_transaction()
+
+        jobs = tuple(
+            _JobRow(
+                _int(row["job_id"], "job_id"),
+                str(row["exec_job_id"]),
+                str(row["type_desc"]),
+                _int(row["task_count"], "task_count"),
+            )
+            for row in job_rows
+        )
+        if len({row.job_id for row in jobs}) != len(jobs) or len(
+            {row.exec_job_id for row in jobs}
+        ) != len(jobs):
+            raise StampedeReadError(
+                "duplicate_job_row",
+                "selected workflow contains duplicate job identity",
+                state=HealthState.DEGRADED,
+            )
+
+        attempts_grouped: dict[int, list[_AttemptRow]] = defaultdict(list)
+        seen_instances: set[int] = set()
+        seen_submit_sequences: set[int] = set()
+        for row in attempt_rows:
+            attempt = _AttemptRow(
+                job_id=_int(row["job_id"], "job_id"),
+                job_instance_id=_int(row["job_instance_id"], "job_instance_id"),
+                job_submit_seq=_int(row["job_submit_seq"], "job_submit_seq"),
+                sched_id=row["sched_id"],
+                site=row["site"],
+                stdout_file=row["stdout_file"],
+                stderr_file=row["stderr_file"],
+                raw_wait_status=_optional_int(row["exitcode"], "exitcode"),
+            )
+            if attempt.job_instance_id in seen_instances:
+                raise StampedeReadError(
+                    "duplicate_job_attempt",
+                    "job_instance_id is not unique",
+                    state=HealthState.DEGRADED,
+                )
+            if attempt.job_submit_seq in seen_submit_sequences:
+                raise StampedeReadError(
+                    "duplicate_job_submit_seq",
+                    "job_submit_seq is not workflow-global unique",
+                    state=HealthState.DEGRADED,
+                )
+            seen_instances.add(attempt.job_instance_id)
+            seen_submit_sequences.add(attempt.job_submit_seq)
+            attempts_grouped[attempt.job_id].append(attempt)
+        attempts = {job_id: tuple(items) for job_id, items in attempts_grouped.items()}
+
+        task_ids: dict[int, set[int]] = defaultdict(set)
+        task_transformations: dict[int, list[str]] = defaultdict(list)
+        for row in task_rows:
+            job_id = _int(row["job_id"], "task.job_id")
+            task_ids[job_id].add(_int(row["task_id"], "task_id"))
+            transformation = row["transformation"]
+            if (
+                transformation is not None
+                and str(transformation) not in task_transformations[job_id]
+            ):
+                task_transformations[job_id].append(str(transformation))
+        tasks = {
+            job_id: (len(ids), tuple(task_transformations[job_id]))
+            for job_id, ids in task_ids.items()
+        }
+
+        heads, timings = self._jobstate_summary_from_rows(
+            summary_rows, request.workflow
+        )
+        maxrss = {
+            _int(row["job_instance_id"], "invocation.job_instance_id"): _int(
+                row["maxrss"], "maxrss"
+            )
+            for row in maxrss_rows
+        }
+        recent = self._recent_transitions_from_rows(
+            recent_rows, request.workflow, request.recent_transition_limit
+        )
+        recent_workflow = tuple(
+            sorted(
+                workflow_transitions,
+                key=lambda transition: transition.authoritative_sort_key,
+            )[-request.recent_workflow_transition_limit :]
+        )
+        watermarks = self._build_job_watermarks(heads)
+        job_snapshots = self._build_jobs(
+            request.workflow,
+            jobs,
+            attempts,
+            tasks,
+            maxrss,
+            timings,
+            heads,
+        )
+        return _LoadedSnapshot(
+            snapshot=DatabaseSnapshot(
+                epoch=request.next_epoch,
+                generation=generation,
+                snapshot_at_epoch=request.clock.epoch,
+                workflow=workflow,
+                jobs=job_snapshots,
+                recent_transitions=recent,
+                recent_workflow_transitions=recent_workflow,
+                watermarks=watermarks,
+                workflow_watermark=workflow_watermark,
+            ),
+            heads=heads,
+            jobstate_rowid=change_vector[3],
+            change_vector=change_vector,
+            timings=timings,
+            maxrss=maxrss,
+            workflow_identities=frozenset(
+                transition.identity for transition in workflow_transitions
+            ),
+        )
+
+    def _record_transaction(self, started: float) -> None:
+        self._last_transaction_seconds = max(
+            self._last_transaction_seconds,
+            time.perf_counter() - started,
+        )
+
+    def _reuse_last_good(
+        self,
+        request: DBRefreshRequest,
+        generation: DatabaseGeneration,
+        marker: _FileMarker,
+    ) -> DBRefreshResult:
+        assert self._last_good is not None
+        snapshot = replace(
+            self._last_good,
+            epoch=request.next_epoch,
+            snapshot_at_epoch=request.clock.epoch,
+            recent_transitions=self._merge_recent_transitions(
+                (),
+                self._last_good.recent_transitions,
+                request.recent_transition_limit,
+            ),
+            recent_workflow_transitions=self._last_good.recent_workflow_transitions[
+                -request.recent_workflow_transition_limit :
+            ],
+        )
+        self._last_good = snapshot
+        self._last_snapshot_marker = marker
+        self._last_success_epoch = request.clock.epoch
+        self._consecutive_failures = 0
+        health = SourceHealth(
+            source=SourceName.STAMPEDE,
+            state=HealthState.HEALTHY,
+            checked_at_epoch=request.clock.epoch,
+            last_success_epoch=request.clock.epoch,
+            last_good_age=BoundedAge.between(
+                request.clock.epoch,
+                request.clock.epoch,
+                _MAX_HEALTH_AGE_SECONDS,
+            ),
+            stale_after_seconds=_STALE_AFTER_SECONDS,
+        )
+        return DBRefreshResult(request, snapshot, health, generation)
 
     def _load_workflow_row(
         self, connection: sqlite3.Connection, workflow: WorkflowIdentity
@@ -1023,6 +1436,77 @@ class StampedeReader:
             for row in rows
         }
 
+    def _query_jobstate_summary(
+        self, connection: sqlite3.Connection, wf_id: int
+    ) -> list[sqlite3.Row]:
+        submit_placeholders = ",".join("?" for _ in _SUBMIT_STATES)
+        terminal_placeholders = ",".join("?" for _ in _TERMINAL_MAIN_JOB_STATES)
+        parameters: list[object] = [*_SUBMIT_STATES, *_TERMINAL_MAIN_JOB_STATES, wf_id]
+        return connection.execute(
+            f"""
+            WITH summary AS (
+                SELECT js.job_instance_id,
+                       MAX(js.jobstate_submit_seq) AS highest_seq,
+                       MIN(CASE WHEN js.state IN ({submit_placeholders})
+                                THEN js.timestamp END) AS submit_time,
+                       MIN(CASE WHEN js.state = 'EXECUTE'
+                                THEN js.timestamp END) AS start_time,
+                       MAX(CASE WHEN js.state IN ({terminal_placeholders})
+                                THEN js.timestamp END) AS end_time
+                FROM jobstate AS js
+                JOIN job_instance AS ji
+                  ON ji.job_instance_id = js.job_instance_id
+                JOIN job AS j ON j.job_id = ji.job_id
+                WHERE j.wf_id = ?
+                GROUP BY js.job_instance_id
+            )
+            SELECT j.exec_job_id, ji.job_submit_seq,
+                   js.job_instance_id, js.state, js.timestamp,
+                   js.jobstate_submit_seq, js.reason,
+                   summary.submit_time, summary.start_time, summary.end_time
+            FROM summary
+            JOIN jobstate AS js
+              ON js.job_instance_id = summary.job_instance_id
+             AND js.jobstate_submit_seq = summary.highest_seq
+            JOIN job_instance AS ji
+              ON ji.job_instance_id = js.job_instance_id
+            JOIN job AS j ON j.job_id = ji.job_id
+            WHERE j.wf_id = ?
+            """,
+            (*parameters, wf_id),
+        ).fetchall()
+
+    def _jobstate_summary_from_rows(
+        self, rows: Sequence[sqlite3.Row], workflow: WorkflowIdentity
+    ) -> tuple[
+        dict[int, tuple[DBJobTransition, ...]],
+        dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]],
+    ]:
+        grouped: dict[int, list[DBJobTransition]] = defaultdict(list)
+        timings: dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]] = {}
+        for row in rows:
+            transition = _transition_from_row(row, workflow)
+            instance_id = transition.identity.job_instance_id
+            grouped[instance_id].append(transition)
+            timings[instance_id] = (
+                db_timestamp(row["submit_time"])
+                if row["submit_time"] is not None
+                else None,
+                db_timestamp(row["start_time"])
+                if row["start_time"] is not None
+                else None,
+                db_timestamp(row["end_time"]) if row["end_time"] is not None else None,
+            )
+        return (
+            {
+                instance_id: tuple(
+                    sorted(items, key=lambda item: item.authoritative_sort_key)
+                )
+                for instance_id, items in grouped.items()
+            },
+            timings,
+        )
+
     def _load_jobstate_heads(
         self,
         connection: sqlite3.Connection,
@@ -1089,6 +1573,144 @@ class StampedeReader:
             )
             for instance_id, items in grouped.items()
         }
+
+    def _load_change_vector(self, connection: sqlite3.Connection) -> tuple[int, ...]:
+        row = connection.execute(
+            """
+            SELECT
+              (SELECT COALESCE(MAX(job_id), 0) FROM job),
+              (SELECT COALESCE(MAX(job_instance_id), 0) FROM job_instance),
+              (SELECT COALESCE(MAX(task_id), 0) FROM task),
+              (SELECT COALESCE(MAX(rowid), 0) FROM jobstate),
+              (SELECT COALESCE(MAX(invocation_id), 0) FROM invocation),
+              (SELECT COALESCE(MAX(rowid), 0) FROM workflowstate)
+            """
+        ).fetchone()
+        if row is None:
+            return ()
+        return tuple(_int(value, "change vector") for value in row)
+
+    def _load_jobstate_updates(
+        self,
+        connection: sqlite3.Connection,
+        wf_id: int,
+        workflow: WorkflowIdentity,
+        after_rowid: int,
+    ) -> tuple[dict[int, tuple[DBJobTransition, ...]], int]:
+        rows = connection.execute(
+            """
+            SELECT js.rowid AS monitor_rowid,
+                   j.exec_job_id, ji.job_submit_seq,
+                   js.job_instance_id, js.state, js.timestamp,
+                   js.jobstate_submit_seq, js.reason
+            FROM jobstate AS js
+            JOIN job_instance AS ji ON ji.job_instance_id = js.job_instance_id
+            JOIN job AS j ON j.job_id = ji.job_id
+            WHERE j.wf_id = ? AND js.rowid > ?
+            ORDER BY js.rowid
+            """,
+            (wf_id, after_rowid),
+        ).fetchall()
+        grouped: dict[int, list[DBJobTransition]] = defaultdict(list)
+        latest = after_rowid
+        for row in rows:
+            latest = max(latest, _int(row["monitor_rowid"], "jobstate.rowid"))
+            transition = _transition_from_row(row, workflow)
+            grouped[transition.identity.job_instance_id].append(transition)
+        return (
+            {instance_id: tuple(items) for instance_id, items in grouped.items()},
+            latest,
+        )
+
+    @staticmethod
+    def _merge_jobstate_heads(
+        previous: dict[int, tuple[DBJobTransition, ...]],
+        updates: dict[int, tuple[DBJobTransition, ...]],
+    ) -> dict[int, tuple[DBJobTransition, ...]]:
+        merged = dict(previous)
+        for instance_id, new_items in updates.items():
+            combined = (*merged.get(instance_id, ()), *new_items)
+            highest = max(item.identity.jobstate_submit_seq for item in combined)
+            by_identity = {
+                item.identity: item
+                for item in combined
+                if item.identity.jobstate_submit_seq == highest
+            }
+            merged[instance_id] = tuple(
+                sorted(
+                    by_identity.values(), key=lambda item: item.authoritative_sort_key
+                )
+            )
+        return merged
+
+    @staticmethod
+    def _merge_recent_transitions(
+        previous: tuple[DBJobTransition, ...],
+        updates: tuple[DBJobTransition, ...],
+        limit: int,
+    ) -> tuple[DBJobTransition, ...]:
+        by_identity = {item.identity: item for item in (*previous, *updates)}
+        ordered = tuple(
+            sorted(by_identity.values(), key=lambda item: item.recent_event_sort_key)
+        )
+        if len(ordered) <= limit:
+            return ordered
+        selected = ordered[-limit:]
+        boundary = selected[0].identity
+        boundary_group = (
+            boundary.job_instance_id,
+            boundary.jobstate_submit_seq,
+        )
+        if any(
+            (
+                item.identity.job_instance_id,
+                item.identity.jobstate_submit_seq,
+            )
+            == boundary_group
+            for item in ordered[:-limit]
+        ):
+            selected = tuple(
+                item
+                for item in selected
+                if (
+                    item.identity.job_instance_id,
+                    item.identity.jobstate_submit_seq,
+                )
+                != boundary_group
+            )
+        return selected
+
+    def _reject_roster_rollback_rows(
+        self,
+        jobs: tuple[_JobRow, ...],
+        attempts: dict[int, tuple[_AttemptRow, ...]],
+        generation: DatabaseGeneration,
+    ) -> None:
+        previous = self._last_good
+        if previous is None or previous.generation != generation:
+            return
+        previous_jobs = {(job.job_id, job.exec_job_id) for job in previous.jobs}
+        current_jobs = {(job.job_id, job.exec_job_id) for job in jobs}
+        previous_attempts = {
+            attempt.identity for job in previous.jobs for attempt in job.attempts
+        }
+        current_attempts = {
+            JobAttemptIdentity(
+                attempt.job_id,
+                attempt.job_instance_id,
+                attempt.job_submit_seq,
+            )
+            for values in attempts.values()
+            for attempt in values
+        }
+        if not previous_jobs.issubset(current_jobs) or not previous_attempts.issubset(
+            current_attempts
+        ):
+            raise StampedeReadError(
+                "database_roster_rollback",
+                "Stampede job or attempt identity roster moved backwards",
+                state=HealthState.RESYNC,
+            )
 
     def _build_job_watermarks(
         self, heads: dict[int, tuple[DBJobTransition, ...]]
@@ -1193,9 +1815,18 @@ class StampedeReader:
             """,
             (wf_id, limit + 1),
         ).fetchall()
-        if len(rows) > limit:
-            boundary = rows[limit - 1]
-            hidden = rows[limit]
+        return self._recent_transitions_from_rows(rows, workflow, limit)
+
+    def _recent_transitions_from_rows(
+        self,
+        rows: Sequence[sqlite3.Row],
+        workflow: WorkflowIdentity,
+        limit: int,
+    ) -> tuple[DBJobTransition, ...]:
+        selected = list(rows)
+        if len(selected) > limit:
+            boundary = selected[limit - 1]
+            hidden = selected[limit]
             boundary_group = (
                 boundary["job_instance_id"],
                 boundary["jobstate_submit_seq"],
@@ -1205,13 +1836,13 @@ class StampedeReader:
                 hidden["jobstate_submit_seq"],
             )
             if boundary_group == hidden_group:
-                rows = [
+                selected = [
                     row
-                    for row in rows[:limit]
+                    for row in selected[:limit]
                     if (row["job_instance_id"], row["jobstate_submit_seq"])
                     != boundary_group
                 ]
-                if not rows:
+                if not selected:
                     raise StampedeReadError(
                         "recent_transition_group_exceeds_limit",
                         "one complete jobstate_submit_seq group exceeds the "
@@ -1219,10 +1850,10 @@ class StampedeReader:
                         state=HealthState.DEGRADED,
                     )
             else:
-                rows = rows[:limit]
+                selected = selected[:limit]
         return tuple(
             sorted(
-                (_transition_from_row(row, workflow) for row in rows),
+                (_transition_from_row(row, workflow) for row in selected),
                 key=lambda transition: transition.recent_event_sort_key,
             )
         )

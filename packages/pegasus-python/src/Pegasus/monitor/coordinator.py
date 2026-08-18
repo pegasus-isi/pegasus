@@ -87,7 +87,10 @@ class CoordinatorConfig:
     database_interval: float = 2.0
     tail_max_bytes: int = 256 * 1024
     tail_max_lines: int = 2048
-    recent_transition_limit: int = 256
+    # The live overlay is bounded at 4096 events. A producer event can map to
+    # two authoritative rows (for example the synthetic terminal pair), so a
+    # suffix budget twice that size avoids routine resync during a 2s burst.
+    recent_transition_limit: int = 8192
     recent_workflow_transition_limit: int = 64
     scheduler_timeout: float = 5.0
     scheduler_result_limit: int = 4096
