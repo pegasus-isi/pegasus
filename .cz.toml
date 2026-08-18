@@ -1,8 +1,8 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
 tag_format = "$version"
-version_scheme = "semver2"
-version = "6.0.0-dev.0"
+version_scheme = "pep440"
+version = "6.0.0.dev0"
 version_files = [
     "build.properties",
     "packages/pegasus-common/pyproject.toml:version",
