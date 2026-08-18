@@ -27,10 +27,95 @@ important. Pegasus comes with a series of utilities that can be used to
 monitor and debug workflows both in real-time as well as after execution
 is already completed.
 
+.. _monitoring-pegasus-monitor:
+
+pegasus-monitor
+---------------
+
+``pegasus-monitor`` is the native, richer live view for one Pegasus workflow.
+It can attach after a workflow has started without advance configuration:
+
+::
+
+   $ pegasus-monitor /Workflow/dags/run0001
+
+The default interactive view combines three kinds of evidence while keeping
+their authority separate:
+
+* The local Stampede SQLite database is the authoritative source for complete
+  history, job metadata, counts, and workflow completion. It is opened
+  read-only with short queries.
+* New ``jobstate.log`` records are displayed immediately as a provisional live
+  overlay, then retired when the same transition appears in Stampede. This is
+  what lets a late-started monitor recover old history from the database while
+  still showing new events before the next database commit.
+* Optional HTCondor queue, history, pool, priority, and negotiator queries add
+  scheduler context. They are bounded and never determine Pegasus job state.
+
+The live file is written before the corresponding Stampede update, so this
+precedence avoids both missed recent events and duplicate counts. A tail gap,
+rotation, or truncation causes a database catch-up and reattach. If Stampede is
+temporarily locked, the display keeps its last-good base and safe pending
+overlay. If Stampede becomes permanently unavailable, the header reports
+``DB FAILED / LIVE UNCONFIRMED``: recent activity may remain visible, but the
+monitor does not claim authoritative counts or completion.
+
+Source badges report states including ``WAITING``, ``STALE``, ``GAP``,
+``REATTACHING``, ``RESYNC``, ``UNAVAILABLE``, and ``DISABLED`` together with
+last-good age. An unavailable optional source does not terminate the TUI.
+``Ctrl-C`` exits cleanly and does not alter DAGMan, pegasus-monitord, the
+schedd, or any workflow job.
+
+For scripts, redirected output, or a single report, use ``--once``:
+
+::
+
+   $ pegasus-monitor --once /Workflow/dags/run0001
+
+One-shot mode requires an authoritative Stampede snapshot and exits nonzero if
+one cannot be read. Live mode requires a terminal. ``--no-live-events`` uses
+Stampede polling only, while ``--jobstate-path`` selects an explicit live event
+file. The default Stampede interval is two seconds.
+
+Scheduler observation is optional. Queue polling normally occurs every five
+seconds, history and pool polling every 30 seconds, and priority/negotiator
+queries only for ``--why-idle`` or a confirmed stall. Queries use exact
+``pegasus_wf_uuid`` constraints where job scope applies, execute one at a time,
+have deadlines and output limits, and back off on failure. Use ``--no-condor``
+for a hard guarantee that no HTCondor executable or binding is invoked:
+
+::
+
+   $ pegasus-monitor --no-condor /Workflow/dags/run0001
+
+``--schedd`` and ``--collector`` select daemons. ``--token``, ``--cert``,
+``--key``, and ``--password-file`` provide optional credentials to a copied
+subprocess environment; they do not modify the parent process configuration,
+and credential values are redacted from diagnostic details.
+
+Use ``--diagnose`` for bounded hold, exit-code, kickstart, and stall findings,
+or ``--why-idle`` for a one-shot explanation using available scheduler
+evidence. Missing evidence is identified as unknown instead of inferred as a
+workflow failure.
+
+Version 1 monitors exactly one workflow UUID. It does not aggregate
+subworkflows; select a subworkflow directory separately when needed. Only local
+SQLite Stampede databases are supported. PostgreSQL and MySQL database URLs are
+reported as unsupported rather than opened or translated. The monitor neither
+loads nor configures a pegasus-monitord plugin.
+
+See the :ref:`pegasus-monitor manual page <cli-pegasus-monitor>` for its exact
+options and exit statuses.
+
 .. _monitoring-pegasus-status:
 
 pegasus-status
 --------------
+
+``pegasus-status --watch`` remains supported, unchanged, and not deprecated.
+It is the established queue and DAG progress view; ``pegasus-monitor`` adds the
+hybrid Stampede/live-event view, source health, and richer diagnostics. Users
+may choose either tool for its respective presentation and data needs.
 
 To monitor the execution of the workflow run the ``pegasus-status``
 command as suggested by the output of the ``pegasus-run`` command.
