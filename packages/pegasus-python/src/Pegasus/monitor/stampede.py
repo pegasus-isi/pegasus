@@ -52,6 +52,7 @@ from .models import (
     WorkflowSnapshot,
     WorkflowTransitionWatermark,
     db_timestamp,
+    state_precedence,
 )
 
 if TYPE_CHECKING:
@@ -65,6 +66,9 @@ _MAX_HEALTH_AGE_SECONDS = 30 * 24 * 60 * 60.0
 _SUFFIX_THRESHOLD_BATCH_SIZE = 400
 _LARGE_WORKFLOW_AUDIT_THRESHOLD = 10_000
 _CURSOR_STABLE_AUDIT_INTERVAL = 30
+_RECENT_FRONTIER_INITIAL_ROWS = 4_096
+_RECENT_FRONTIER_MAX_ROWS = 65_536
+_HEAD_SEQUENCE_LAYER_LIMIT = 256
 _TERMINAL_MAIN_JOB_STATES = (
     "JOB_SUCCESS",
     "JOB_FAILURE",
@@ -162,12 +166,23 @@ class _FileMarker:
     inode: int
     size: int
     mtime_ns: int
+    header: bytes
     wal_size: int
     wal_mtime_ns: int
+    wal_header: bytes
+    wal_tail: bytes
 
     @property
-    def content_signature(self) -> tuple[int, int, int, int]:
-        return self.size, self.mtime_ns, self.wal_size, self.wal_mtime_ns
+    def content_signature(self) -> tuple[object, ...]:
+        return (
+            self.size,
+            self.mtime_ns,
+            self.header,
+            self.wal_size,
+            self.wal_mtime_ns,
+            self.wal_header,
+            self.wal_tail,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,20 +289,26 @@ def _optional_int(value: object, field: str) -> int | None:
         ) from error
 
 
+def _field(row: sqlite3.Row | Sequence[object], name: str, index: int) -> object:
+    return row[name] if isinstance(row, sqlite3.Row) else row[index]
+
+
 def _transition_from_row(
-    row: sqlite3.Row, workflow: WorkflowIdentity
+    row: sqlite3.Row | Sequence[object], workflow: WorkflowIdentity
 ) -> DBJobTransition:
     return DBJobTransition(
         workflow=workflow,
-        exec_job_id=str(row["exec_job_id"]),
-        job_submit_seq=_int(row["job_submit_seq"], "job_submit_seq"),
+        exec_job_id=str(_field(row, "exec_job_id", 0)),
+        job_submit_seq=_int(_field(row, "job_submit_seq", 1), "job_submit_seq"),
         identity=DBTransitionIdentity(
-            job_instance_id=_int(row["job_instance_id"], "job_instance_id"),
-            state=str(row["state"]),
-            timestamp=_decimal(row["timestamp"], "jobstate.timestamp"),
-            jobstate_submit_seq=_int(row["jobstate_submit_seq"], "jobstate_submit_seq"),
+            job_instance_id=_int(_field(row, "job_instance_id", 2), "job_instance_id"),
+            state=str(_field(row, "state", 3)),
+            timestamp=_decimal(_field(row, "timestamp", 4), "jobstate.timestamp"),
+            jobstate_submit_seq=_int(
+                _field(row, "jobstate_submit_seq", 5), "jobstate_submit_seq"
+            ),
         ),
-        reason=row["reason"],
+        reason=_field(row, "reason", 6),  # type: ignore[arg-type]
     )
 
 
@@ -624,22 +645,57 @@ class StampedeReader:
                 f"Stampede path is not a regular file: {self.database_path}",
                 state=HealthState.UNAVAILABLE,
             )
+        try:
+            with self.database_path.open("rb", buffering=0) as stream:
+                header = stream.read(100)
+        except OSError as error:
+            raise StampedeReadError(
+                "database_stat_failed",
+                str(error),
+                state=HealthState.STALE if self._last_good else HealthState.UNAVAILABLE,
+            ) from error
         wal_path = self.database_path.with_name(f"{self.database_path.name}-wal")
         try:
             wal_status = wal_path.stat()
         except FileNotFoundError:
             wal_size = 0
             wal_mtime_ns = 0
+            wal_header = b""
+            wal_tail = b""
         else:
-            wal_size = wal_status.st_size
-            wal_mtime_ns = wal_status.st_mtime_ns
+            try:
+                with wal_path.open("rb", buffering=0) as stream:
+                    wal_header = stream.read(32)
+                    stream.seek(max(0, wal_status.st_size - 32))
+                    wal_tail = stream.read(32)
+            except FileNotFoundError:
+                wal_size = 0
+                wal_mtime_ns = 0
+                wal_header = b""
+                wal_tail = b""
+            except OSError as error:
+                raise StampedeReadError(
+                    "database_stat_failed",
+                    str(error),
+                    state=(
+                        HealthState.STALE
+                        if self._last_good
+                        else HealthState.UNAVAILABLE
+                    ),
+                ) from error
+            else:
+                wal_size = wal_status.st_size
+                wal_mtime_ns = wal_status.st_mtime_ns
         return _FileMarker(
             status.st_dev,
             status.st_ino,
             status.st_size,
             status.st_mtime_ns,
+            header,
             wal_size,
             wal_mtime_ns,
+            wal_header,
+            wal_tail,
         )
 
     def _observe_generation(self, marker: _FileMarker) -> DatabaseGeneration:
@@ -915,26 +971,14 @@ class StampedeReader:
         """Materialize SQLite rows, then build the large model after COMMIT."""
 
         wf_id = workflow_row.wf_id
-        # The globally ordered recent feed needs SQLite to sort the full event
-        # history when no supporting production index exists. Materialize it
-        # with the authoritative base in this same read transaction.
-        recent_rows = connection.execute(
-            f"""
-            SELECT j.exec_job_id, ji.job_submit_seq,
-                   js.job_instance_id, js.state, js.timestamp,
-                   js.jobstate_submit_seq, js.reason
-            FROM jobstate AS js
-            JOIN job_instance AS ji ON ji.job_instance_id = js.job_instance_id
-            JOIN job AS j ON j.job_id = ji.job_id
-            WHERE j.wf_id = ?
-            ORDER BY js.timestamp DESC, j.exec_job_id DESC,
-                     js.job_instance_id DESC, ji.job_submit_seq DESC,
-                     js.jobstate_submit_seq DESC,
-                     {_STATE_PRECEDENCE_SQL} DESC, js.state DESC
-            LIMIT ?
-            """,
-            (wf_id, request.recent_transition_limit + 1),
-        ).fetchall()
+        # The full bootstrap materializes hundreds of thousands of rows. Plain
+        # tuples avoid sqlite3.Row allocation overhead while the one consistent
+        # read transaction is open; validation and model construction still
+        # happen after COMMIT.
+        connection.row_factory = None
+        recent_rows = self._query_recent_transition_rows(
+            connection, wf_id, request.recent_transition_limit
+        )
         job_rows = connection.execute(
             """
             SELECT job_id, exec_job_id, type_desc, task_count
@@ -965,7 +1009,9 @@ class StampedeReader:
             """,
             (wf_id,),
         ).fetchall()
-        summary_rows = self._query_jobstate_summary(connection, wf_id)
+        head_rows, timing_rows = self._query_full_jobstate_state(
+            connection, wf_id, attempt_rows
+        )
         maxrss_rows = connection.execute(
             """
             SELECT job_instance_id, MAX(maxrss) AS maxrss
@@ -980,10 +1026,10 @@ class StampedeReader:
 
         jobs = tuple(
             _JobRow(
-                _int(row["job_id"], "job_id"),
-                str(row["exec_job_id"]),
-                str(row["type_desc"]),
-                _int(row["task_count"], "task_count"),
+                _int(_field(row, "job_id", 0), "job_id"),
+                str(_field(row, "exec_job_id", 1)),
+                str(_field(row, "type_desc", 2)),
+                _int(_field(row, "task_count", 3), "task_count"),
             )
             for row in job_rows
         )
@@ -1001,14 +1047,16 @@ class StampedeReader:
         seen_submit_sequences: set[int] = set()
         for row in attempt_rows:
             attempt = _AttemptRow(
-                job_id=_int(row["job_id"], "job_id"),
-                job_instance_id=_int(row["job_instance_id"], "job_instance_id"),
-                job_submit_seq=_int(row["job_submit_seq"], "job_submit_seq"),
-                sched_id=row["sched_id"],
-                site=row["site"],
-                stdout_file=row["stdout_file"],
-                stderr_file=row["stderr_file"],
-                raw_wait_status=_optional_int(row["exitcode"], "exitcode"),
+                job_id=_int(_field(row, "job_id", 0), "job_id"),
+                job_instance_id=_int(
+                    _field(row, "job_instance_id", 1), "job_instance_id"
+                ),
+                job_submit_seq=_int(_field(row, "job_submit_seq", 2), "job_submit_seq"),
+                sched_id=_field(row, "sched_id", 3),  # type: ignore[arg-type]
+                site=_field(row, "site", 4),  # type: ignore[arg-type]
+                stdout_file=_field(row, "stdout_file", 5),  # type: ignore[arg-type]
+                stderr_file=_field(row, "stderr_file", 6),  # type: ignore[arg-type]
+                raw_wait_status=_optional_int(_field(row, "exitcode", 7), "exitcode"),
             )
             if attempt.job_instance_id in seen_instances:
                 raise StampedeReadError(
@@ -1030,9 +1078,9 @@ class StampedeReader:
         task_ids: dict[int, set[int]] = defaultdict(set)
         task_transformations: dict[int, list[str]] = defaultdict(list)
         for row in task_rows:
-            job_id = _int(row["job_id"], "task.job_id")
-            task_ids[job_id].add(_int(row["task_id"], "task_id"))
-            transformation = row["transformation"]
+            job_id = _int(_field(row, "job_id", 1), "task.job_id")
+            task_ids[job_id].add(_int(_field(row, "task_id", 0), "task_id"))
+            transformation = _field(row, "transformation", 2)
             if (
                 transformation is not None
                 and str(transformation) not in task_transformations[job_id]
@@ -1043,12 +1091,13 @@ class StampedeReader:
             for job_id, ids in task_ids.items()
         }
 
-        heads, timings = self._jobstate_summary_from_rows(
-            summary_rows, request.workflow
+        heads = self._jobstate_heads_from_index_rows(
+            head_rows, jobs, attempts, request.workflow
         )
+        timings = self._jobstate_timings_from_rows(timing_rows)
         maxrss = {
-            _int(row["job_instance_id"], "invocation.job_instance_id"): _int(
-                row["maxrss"], "maxrss"
+            _int(_field(row, "job_instance_id", 0), "invocation.job_instance_id"): _int(
+                _field(row, "maxrss", 1), "maxrss"
             )
             for row in maxrss_rows
         }
@@ -1476,36 +1525,209 @@ class StampedeReader:
             (*parameters, wf_id),
         ).fetchall()
 
+    def _query_full_jobstate_state(
+        self,
+        connection: sqlite3.Connection,
+        wf_id: int,
+        attempt_rows: Sequence[sqlite3.Row | Sequence[object]],
+    ) -> tuple[
+        list[sqlite3.Row | Sequence[object]],
+        list[sqlite3.Row | Sequence[object]],
+    ]:
+        """Read exact current heads and timings without a full grouped sort.
+
+        ``jobstate_submit_seq`` is indexed in the production schema and is a
+        small per-attempt lifecycle counter. Reading descending sequence
+        layers usually finds every state-bearing attempt in one or a handful
+        of indexed probes. Attempts observed between ``job_instance`` creation
+        and their first state are allowed; if the bounded sequence inventory
+        cannot prove that the remaining attempts are state-less, fall back to
+        the original one-pass summary query.
+        """
+
+        attempt_ids = {
+            _int(_field(row, "job_instance_id", 1), "job_instance_id")
+            for row in attempt_rows
+        }
+        remaining = set(attempt_ids)
+        if not attempt_ids:
+            return [], []
+        # This inventory is global only as a conservative bound. Other
+        # workflows can force the bounded fallback, but cannot hide a selected
+        # workflow head: layer rows are accepted only for its scoped attempt
+        # identities.
+        sequences = connection.execute(
+            """
+            SELECT DISTINCT jobstate_submit_seq
+            FROM jobstate
+            ORDER BY jobstate_submit_seq DESC
+            LIMIT ?
+            """,
+            (_HEAD_SEQUENCE_LAYER_LIMIT + 1,),
+        ).fetchall()
+        head_rows: list[sqlite3.Row | Sequence[object]] = []
+        for sequence_row in sequences[:_HEAD_SEQUENCE_LAYER_LIMIT]:
+            sequence = _int(sequence_row[0], "jobstate_submit_seq")
+            layer = connection.execute(
+                """
+                SELECT js.job_instance_id, js.state, js.timestamp,
+                       js.jobstate_submit_seq, js.reason
+                FROM jobstate AS js
+                WHERE js.jobstate_submit_seq = ?
+                """,
+                (sequence,),
+            ).fetchall()
+            found: set[int] = set()
+            for row in layer:
+                instance_id = _int(_field(row, "job_instance_id", 0), "job_instance_id")
+                if instance_id in remaining:
+                    head_rows.append(row)
+                    found.add(instance_id)
+            remaining.difference_update(found)
+            if not remaining:
+                break
+
+        if remaining and len(sequences) > _HEAD_SEQUENCE_LAYER_LIMIT:
+            summary = self._query_jobstate_summary(connection, wf_id)
+            return (
+                [
+                    (
+                        _field(row, "job_instance_id", 2),
+                        _field(row, "state", 3),
+                        _field(row, "timestamp", 4),
+                        _field(row, "jobstate_submit_seq", 5),
+                        _field(row, "reason", 6),
+                    )
+                    for row in summary
+                ],
+                summary,
+            )
+
+        timing_states = (*_SUBMIT_STATES, "EXECUTE", *_TERMINAL_MAIN_JOB_STATES)
+        timing_placeholders = ",".join("?" for _ in timing_states)
+        submit_placeholders = ",".join("?" for _ in _SUBMIT_STATES)
+        terminal_placeholders = ",".join("?" for _ in _TERMINAL_MAIN_JOB_STATES)
+        timing_rows = connection.execute(
+            f"""
+            SELECT NULL AS exec_job_id, NULL AS job_submit_seq,
+                   js.job_instance_id, NULL AS state, NULL AS timestamp,
+                   NULL AS jobstate_submit_seq, NULL AS reason,
+                   MIN(CASE WHEN js.state IN ({submit_placeholders})
+                            THEN js.timestamp END) AS submit_time,
+                   MIN(CASE WHEN js.state = 'EXECUTE'
+                            THEN js.timestamp END) AS start_time,
+                   MAX(CASE WHEN js.state IN ({terminal_placeholders})
+                            THEN js.timestamp END) AS end_time
+            FROM jobstate AS js
+            JOIN job_instance AS ji
+              ON ji.job_instance_id = js.job_instance_id
+            JOIN job AS j ON j.job_id = ji.job_id
+            WHERE j.wf_id = ? AND js.state IN ({timing_placeholders})
+            GROUP BY js.job_instance_id
+            """,
+            (
+                *_SUBMIT_STATES,
+                *_TERMINAL_MAIN_JOB_STATES,
+                wf_id,
+                *timing_states,
+            ),
+        ).fetchall()
+        return head_rows, timing_rows
+
     def _jobstate_summary_from_rows(
         self, rows: Sequence[sqlite3.Row], workflow: WorkflowIdentity
     ) -> tuple[
         dict[int, tuple[DBJobTransition, ...]],
         dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]],
     ]:
+        return (
+            self._jobstate_heads_from_rows(rows, workflow),
+            self._jobstate_timings_from_rows(rows),
+        )
+
+    def _jobstate_heads_from_rows(
+        self, rows: Sequence[sqlite3.Row], workflow: WorkflowIdentity
+    ) -> dict[int, tuple[DBJobTransition, ...]]:
         grouped: dict[int, list[DBJobTransition]] = defaultdict(list)
-        timings: dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]] = {}
         for row in rows:
             transition = _transition_from_row(row, workflow)
-            instance_id = transition.identity.job_instance_id
-            grouped[instance_id].append(transition)
-            timings[instance_id] = (
-                db_timestamp(row["submit_time"])
-                if row["submit_time"] is not None
-                else None,
-                db_timestamp(row["start_time"])
-                if row["start_time"] is not None
-                else None,
-                db_timestamp(row["end_time"]) if row["end_time"] is not None else None,
+            grouped[transition.identity.job_instance_id].append(transition)
+        return {
+            instance_id: tuple(
+                sorted(items, key=lambda item: item.authoritative_sort_key)
             )
-        return (
-            {
-                instance_id: tuple(
-                    sorted(items, key=lambda item: item.authoritative_sort_key)
-                )
-                for instance_id, items in grouped.items()
-            },
-            timings,
-        )
+            for instance_id, items in grouped.items()
+        }
+
+    def _jobstate_heads_from_index_rows(
+        self,
+        rows: Sequence[sqlite3.Row | Sequence[object]],
+        jobs: Sequence[_JobRow],
+        attempts: dict[int, tuple[_AttemptRow, ...]],
+        workflow: WorkflowIdentity,
+    ) -> dict[int, tuple[DBJobTransition, ...]]:
+        exec_job_ids = {job.job_id: job.exec_job_id for job in jobs}
+        attempt_keys = {
+            attempt.job_instance_id: (
+                exec_job_ids[attempt.job_id],
+                attempt.job_submit_seq,
+            )
+            for values in attempts.values()
+            for attempt in values
+        }
+        grouped: dict[int, list[DBJobTransition]] = defaultdict(list)
+        for row in rows:
+            instance_id = _int(_field(row, "job_instance_id", 0), "job_instance_id")
+            try:
+                exec_job_id, job_submit_seq = attempt_keys[instance_id]
+            except KeyError as error:
+                raise StampedeReadError(
+                    "jobstate_attempt_missing",
+                    f"jobstate references unknown job instance {instance_id}",
+                    state=HealthState.DEGRADED,
+                ) from error
+            transition = DBJobTransition(
+                workflow=workflow,
+                exec_job_id=exec_job_id,
+                job_submit_seq=job_submit_seq,
+                identity=DBTransitionIdentity(
+                    job_instance_id=instance_id,
+                    state=str(_field(row, "state", 1)),
+                    timestamp=_decimal(
+                        _field(row, "timestamp", 2), "jobstate.timestamp"
+                    ),
+                    jobstate_submit_seq=_int(
+                        _field(row, "jobstate_submit_seq", 3),
+                        "jobstate_submit_seq",
+                    ),
+                ),
+                reason=_field(row, "reason", 4),  # type: ignore[arg-type]
+            )
+            grouped[instance_id].append(transition)
+        return {
+            instance_id: tuple(
+                sorted(items, key=lambda item: item.authoritative_sort_key)
+            )
+            for instance_id, items in grouped.items()
+        }
+
+    def _jobstate_timings_from_rows(
+        self, rows: Sequence[sqlite3.Row | Sequence[object]]
+    ) -> dict[int, tuple[Decimal | None, Decimal | None, Decimal | None]]:
+        return {
+            _int(_field(row, "job_instance_id", 2), "jobstate.job_instance_id"): (
+                db_timestamp(_field(row, "submit_time", 7))
+                if _field(row, "submit_time", 7) is not None
+                else None,
+                db_timestamp(_field(row, "start_time", 8))
+                if _field(row, "start_time", 8) is not None
+                else None,
+                db_timestamp(_field(row, "end_time", 9))
+                if _field(row, "end_time", 9) is not None
+                else None,
+            )
+            for row in rows
+        }
 
     def _load_jobstate_heads(
         self,
@@ -1798,7 +2020,13 @@ class StampedeReader:
         workflow: WorkflowIdentity,
         limit: int,
     ) -> tuple[DBJobTransition, ...]:
-        rows = connection.execute(
+        rows = self._query_sorted_recent_transition_rows(connection, wf_id, limit)
+        return self._recent_transitions_from_rows(rows, workflow, limit)
+
+    def _query_sorted_recent_transition_rows(
+        self, connection: sqlite3.Connection, wf_id: int, limit: int
+    ) -> list[sqlite3.Row | Sequence[object]]:
+        return connection.execute(
             f"""
             SELECT j.exec_job_id, ji.job_submit_seq,
                    js.job_instance_id, js.state, js.timestamp,
@@ -1815,11 +2043,81 @@ class StampedeReader:
             """,
             (wf_id, limit + 1),
         ).fetchall()
-        return self._recent_transitions_from_rows(rows, workflow, limit)
+
+    def _query_recent_transition_rows(
+        self, connection: sqlite3.Connection, wf_id: int, limit: int
+    ) -> list[sqlite3.Row | Sequence[object]]:
+        """Find the exact recent suffix without normally sorting all history.
+
+        Stampede appends ``jobstate`` rows, so start with a bounded rowid
+        frontier. The frontier is accepted only when an exact older-row probe
+        proves that no excluded timestamp can enter the requested suffix.
+        Equal timestamps deliberately fail the proof because later stable
+        identity fields decide their order. Sparse or out-of-order histories
+        fall back to the original fully sorted query.
+        """
+
+        row = connection.execute(
+            "SELECT COALESCE(MAX(rowid), 0) FROM jobstate"
+        ).fetchone()
+        maximum = _int(row[0], "jobstate.rowid") if row is not None else 0
+        width = max(_RECENT_FRONTIER_INITIAL_ROWS, (limit + 1) * 8)
+        while maximum and width <= _RECENT_FRONTIER_MAX_ROWS:
+            cutoff = max(0, maximum - width)
+            candidates = connection.execute(
+                """
+                SELECT j.exec_job_id, ji.job_submit_seq,
+                       js.job_instance_id, js.state, js.timestamp,
+                       js.jobstate_submit_seq, js.reason
+                FROM jobstate AS js
+                JOIN job_instance AS ji
+                  ON ji.job_instance_id = js.job_instance_id
+                JOIN job AS j ON j.job_id = ji.job_id
+                WHERE js.rowid > ? AND j.wf_id = ?
+                """,
+                (cutoff, wf_id),
+            ).fetchall()
+            ordered = sorted(
+                candidates,
+                key=lambda item: (
+                    _decimal(_field(item, "timestamp", 4), "jobstate.timestamp"),
+                    str(_field(item, "exec_job_id", 0)),
+                    _int(_field(item, "job_instance_id", 2), "job_instance_id"),
+                    _int(_field(item, "job_submit_seq", 1), "job_submit_seq"),
+                    _int(
+                        _field(item, "jobstate_submit_seq", 5),
+                        "jobstate_submit_seq",
+                    ),
+                    state_precedence(str(_field(item, "state", 3))),
+                    str(_field(item, "state", 3)),
+                ),
+                reverse=True,
+            )
+            if cutoff == 0:
+                return ordered[: limit + 1]
+            if len(ordered) > limit:
+                boundary_timestamp = _field(ordered[limit], "timestamp", 4)
+                # This probe is intentionally global and therefore
+                # conservative: another workflow can force a wider frontier
+                # or the exact-sort fallback, but can never admit a stale row
+                # from the selected workflow.
+                hidden = connection.execute(
+                    """
+                    SELECT 1
+                    FROM jobstate
+                    WHERE rowid <= ? AND timestamp >= ?
+                    LIMIT 1
+                    """,
+                    (cutoff, boundary_timestamp),
+                ).fetchone()
+                if hidden is None:
+                    return ordered[: limit + 1]
+            width *= 2
+        return self._query_sorted_recent_transition_rows(connection, wf_id, limit)
 
     def _recent_transitions_from_rows(
         self,
-        rows: Sequence[sqlite3.Row],
+        rows: Sequence[sqlite3.Row | Sequence[object]],
         workflow: WorkflowIdentity,
         limit: int,
     ) -> tuple[DBJobTransition, ...]:
@@ -1828,18 +2126,21 @@ class StampedeReader:
             boundary = selected[limit - 1]
             hidden = selected[limit]
             boundary_group = (
-                boundary["job_instance_id"],
-                boundary["jobstate_submit_seq"],
+                _field(boundary, "job_instance_id", 2),
+                _field(boundary, "jobstate_submit_seq", 5),
             )
             hidden_group = (
-                hidden["job_instance_id"],
-                hidden["jobstate_submit_seq"],
+                _field(hidden, "job_instance_id", 2),
+                _field(hidden, "jobstate_submit_seq", 5),
             )
             if boundary_group == hidden_group:
                 selected = [
                     row
                     for row in selected[:limit]
-                    if (row["job_instance_id"], row["jobstate_submit_seq"])
+                    if (
+                        _field(row, "job_instance_id", 2),
+                        _field(row, "jobstate_submit_seq", 5),
+                    )
                     != boundary_group
                 ]
                 if not selected:

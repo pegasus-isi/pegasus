@@ -22,6 +22,7 @@ import os
 import sqlite3
 import threading
 import time
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 from queue import Queue
@@ -322,6 +323,166 @@ def test_current_attempt_is_highest_workflow_global_submit_sequence(tmp_path):
         101,
         200,
     }
+
+
+def test_full_recent_frontier_falls_back_for_older_newer_timestamp(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO jobstate VALUES (100, 'REMOTE_ERROR', 10000, 4, NULL)"
+        )
+        connection.executemany(
+            "INSERT INTO jobstate VALUES (100, 'IMAGE_SIZE', ?, ?, NULL)",
+            ((1000 + index, 5 + index) for index in range(40)),
+        )
+    monkeypatch.setattr(stampede_module, "_RECENT_FRONTIER_INITIAL_ROWS", 4)
+    monkeypatch.setattr(stampede_module, "_RECENT_FRONTIER_MAX_ROWS", 24)
+    reader = StampedeReader(path, ROOT)
+    original = reader._query_sorted_recent_transition_rows
+    fallbacks = 0
+
+    def counted(*args, **kwargs):
+        nonlocal fallbacks
+        fallbacks += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(reader, "_query_sorted_recent_transition_rows", counted)
+
+    result = reader.refresh(_request(recent_limit=2))
+
+    assert result.snapshot is not None
+    assert fallbacks == 1
+    assert [item.identity.timestamp for item in result.snapshot.recent_transitions] == [
+        Decimal("1039"),
+        Decimal("10000"),
+    ]
+
+
+def test_full_recent_frontier_proves_monotonic_suffix_without_fallback(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    with _writer(path) as connection:
+        connection.executemany(
+            "INSERT INTO jobstate VALUES (100, 'IMAGE_SIZE', ?, ?, NULL)",
+            ((1000 + index, 4 + index) for index in range(40)),
+        )
+    monkeypatch.setattr(stampede_module, "_RECENT_FRONTIER_INITIAL_ROWS", 4)
+    monkeypatch.setattr(stampede_module, "_RECENT_FRONTIER_MAX_ROWS", 24)
+    reader = StampedeReader(path, ROOT)
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("monotonic frontier unexpectedly used the full sort")
+
+    monkeypatch.setattr(reader, "_query_sorted_recent_transition_rows", forbidden)
+
+    result = reader.refresh(_request(recent_limit=2))
+
+    assert result.snapshot is not None
+    assert [item.identity.timestamp for item in result.snapshot.recent_transitions] == [
+        Decimal("1038"),
+        Decimal("1039"),
+    ]
+
+
+def test_full_head_fallback_keeps_scope_and_state_less_attempt(tmp_path, monkeypatch):
+    path = _create_database(tmp_path / "workflow.db", include_child=True)
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO job VALUES (40, 1, 'waiting_job', 'compute', 1)"
+        )
+        connection.execute(
+            "INSERT INTO job_instance VALUES "
+            "(400, 40, 4, '1004.0', 'local', NULL, NULL, NULL)"
+        )
+        connection.execute("INSERT INTO task VALUES (5, 1, 40, 'example::waiting')")
+        connection.execute(
+            "INSERT INTO jobstate VALUES (300, 'JOB_SUCCESS', 9999, 999, NULL)"
+        )
+    monkeypatch.setattr(stampede_module, "_HEAD_SEQUENCE_LAYER_LIMIT", 2)
+    reader = StampedeReader(path, ROOT)
+    original = reader._query_jobstate_summary
+    fallbacks = 0
+
+    def counted(*args, **kwargs):
+        nonlocal fallbacks
+        fallbacks += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(reader, "_query_jobstate_summary", counted)
+
+    result = reader.refresh(_request(ROOT))
+
+    assert result.snapshot is not None
+    assert fallbacks == 1
+    jobs = {job.exec_job_id: job for job in result.snapshot.jobs}
+    assert set(jobs) == {"cluster_ID0000001", "held_ID0000002", "waiting_job"}
+    assert jobs["waiting_job"].current_attempt.job_instance_id == 400
+    assert jobs["waiting_job"].state is None
+    assert all(item.workflow == ROOT for item in result.snapshot.recent_transitions)
+
+
+def test_optimized_full_snapshot_matches_exact_fallbacks_on_complex_database(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db", include_child=True)
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO job_instance VALUES "
+            "(101, 10, 4, '1003.0', 'retry-site', NULL, NULL, 0)"
+        )
+        connection.executemany(
+            "INSERT INTO jobstate VALUES (?,?,?,?,NULL)",
+            [
+                (101, "SUBMIT", 200, 1),
+                (101, "EXECUTE", 210, 2),
+                (101, "JOB_TERMINATED", 220, 3),
+                (101, "JOB_SUCCESS", 220, 3),
+            ],
+        )
+        connection.execute(
+            "INSERT INTO job VALUES (40, 1, 'waiting_job', 'compute', 1)"
+        )
+        connection.execute(
+            "INSERT INTO job_instance VALUES "
+            "(400, 40, 5, '1004.0', 'local', NULL, NULL, NULL)"
+        )
+        connection.execute("INSERT INTO task VALUES (5, 1, 40, 'example::waiting')")
+        connection.execute(
+            "INSERT INTO jobstate VALUES (300, 'JOB_SUCCESS', 9999, 999, NULL)"
+        )
+
+    optimized_reader = StampedeReader(path, ROOT)
+    optimized = optimized_reader.refresh(_request(ROOT, recent_limit=64))
+    assert optimized.snapshot is not None
+
+    monkeypatch.setattr(stampede_module, "_RECENT_FRONTIER_MAX_ROWS", 0)
+    monkeypatch.setattr(stampede_module, "_HEAD_SEQUENCE_LAYER_LIMIT", 0)
+    exact = StampedeReader(path, ROOT).refresh(_request(ROOT, recent_limit=64))
+
+    assert exact.snapshot is not None
+    assert optimized.snapshot == exact.snapshot
+
+    # A later refresh opens a new read-only connection, so the tuple row
+    # factory used only inside full bootstrap cannot leak into current reads.
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO jobstate VALUES (200, 'JOB_RELEASED', 230, 3, NULL)"
+        )
+    current = optimized_reader.refresh(
+        _request(
+            ROOT,
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=optimized.generation,
+        )
+    )
+    assert current.snapshot is not None
+    assert {job.exec_job_id: job.state for job in current.snapshot.jobs}[
+        "held_ID0000002"
+    ] == "JOB_RELEASED"
 
 
 def test_root_and_subworkflow_scopes_do_not_contaminate_each_other(tmp_path):
@@ -1420,6 +1581,53 @@ def test_prior_restart_workflow_identity_regression_is_rejected(tmp_path):
     assert result.snapshot is None
     assert result.health.error_code == "workflow_watermark_rollback"
     assert result.generation != second.generation
+
+
+def test_sqlite_header_detects_mutation_with_coarse_file_timestamps(
+    tmp_path, monkeypatch
+):
+    path = _create_database(tmp_path / "workflow.db")
+    reader = StampedeReader(path, ROOT)
+    original = reader._stat_database
+
+    def coarse_marker():
+        marker = original()
+        return replace(marker, mtime_ns=0, wal_mtime_ns=0)
+
+    monkeypatch.setattr(reader, "_stat_database", coarse_marker)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+    first_header = reader._last_snapshot_marker.header
+    with _writer(path) as connection:
+        connection.execute(
+            "INSERT INTO workflowstate VALUES "
+            "(1, 'WORKFLOW_STARTED', 400, 1, NULL, 'restart')"
+        )
+    second = reader.refresh(
+        _request(
+            epoch=2,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=first.generation,
+        )
+    )
+    assert second.snapshot is not None
+    assert reader._last_snapshot_marker.header != first_header
+    with _writer(path) as connection:
+        connection.execute(
+            "DELETE FROM workflowstate WHERE restart_count = 0 "
+            "AND state = 'WORKFLOW_STARTED'"
+        )
+
+    result = reader.refresh(
+        _request(
+            epoch=3,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=second.generation,
+        )
+    )
+
+    assert result.snapshot is None
+    assert result.health.error_code == "workflow_watermark_rollback"
 
 
 def test_rollback_journal_database_is_observable(tmp_path):
