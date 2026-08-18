@@ -330,6 +330,30 @@ class Reconciler:
 
         return self._event_order
 
+    def unconfirmed_tail_events(self) -> tuple[EffectiveEvent, ...]:
+        """Return a bounded pre-DB preview without constructing workflow state.
+
+        A continuity boundary quarantines or drops the overlay, so no preview is
+        exposed until an authoritative database base has repaired that boundary.
+        The returned events use the same session-monotonic ordering registry as
+        an eventual :class:`EffectiveSnapshot`.
+        """
+
+        if (
+            self._database is not None
+            or self._publication_frozen
+            or self._tail_gap_active
+            or self._tail_reattaching_active
+            or self._tail_rearm_required
+        ):
+            return ()
+        pending: tuple[TailJobEvent | TailWorkflowEvent, ...] = tuple(
+            sorted((*self._pending_jobs, *self._pending_workflow), key=_event_offset)
+        )
+        return self._ordered_effective_events(
+            (Provenance.TAIL_PENDING, event) for event in pending
+        )
+
     @property
     def source_health(self) -> tuple[SourceHealth, ...]:
         return self._source_health()
@@ -795,6 +819,9 @@ class Reconciler:
                         attempt_pending[cursor:], group
                     )
                     if consumed:
+                        self._remember_job_confirmation_orders(
+                            attempt_pending[cursor : cursor + consumed], group
+                        )
                         cursor += consumed
                         last_reconciled_group = group
                         break
@@ -895,6 +922,7 @@ class Reconciler:
                 event, restart_count = assigned[cursor]
                 if self._workflow_match(event, restart_count, transition):
                     key = self._workflow_event_key(event, restart_count)
+                    self._remember_confirmation_order(event, transition)
                     cursor += 1
                     # Equivalent duplicate markers share an epoch and do not
                     # need duplicate workflowstate rows to retire.
@@ -1306,6 +1334,20 @@ class Reconciler:
             for transition in database.recent_workflow_transitions
         )
         values.extend((Provenance.TAIL_PENDING, event) for event in pending)
+        return self._ordered_effective_events(values)
+
+    def _ordered_effective_events(
+        self,
+        values: Iterable[
+            tuple[
+                Provenance,
+                DBJobTransition
+                | DBWorkflowTransition
+                | TailJobEvent
+                | TailWorkflowEvent,
+            ]
+        ],
+    ) -> tuple[EffectiveEvent, ...]:
         effective: list[EffectiveEvent] = []
         for provenance, event in values:
             key = self._effective_event_key(event)
@@ -1320,6 +1362,63 @@ class Reconciler:
                 self._event_orders.move_to_end(key)
             effective.append(EffectiveEvent(order, provenance, event))
         return tuple(sorted(effective, key=lambda item: item.order))
+
+    def _remember_job_confirmation_orders(
+        self,
+        tail: Sequence[TailJobEvent],
+        group: Sequence[DBJobTransition],
+    ) -> None:
+        """Alias confirmed rows to their already-published tail event order."""
+
+        raw_tail = tuple(event.state.strip().upper() for event in tail)
+        if raw_tail == ("JOB_HELD", "JOB_HELD_REASON"):
+            reason = tail[-1]
+            match = next(
+                (
+                    transition
+                    for transition in group
+                    if transition.normalized_state == "JOB_HELD"
+                    and transition.identity.producer_timestamp
+                    == producer_timestamp_key(reason.event_timestamp)
+                ),
+                None,
+            )
+            if match is not None:
+                self._remember_confirmation_order(reason, match)
+            return
+
+        available = list(group)
+        for event in tail:
+            match = next(
+                (
+                    transition
+                    for transition in available
+                    if transition.normalized_state == event.normalized_state
+                    and transition.identity.producer_timestamp
+                    == producer_timestamp_key(event.event_timestamp)
+                ),
+                None,
+            )
+            if match is None:
+                continue
+            self._remember_confirmation_order(event, match)
+            available.remove(match)
+
+    def _remember_confirmation_order(
+        self,
+        tail: TailJobEvent | TailWorkflowEvent,
+        confirmed: DBJobTransition | DBWorkflowTransition,
+    ) -> None:
+        tail_key = self._effective_event_key(tail)
+        order = self._event_orders.get(tail_key)
+        if order is None:
+            return
+        confirmed_key = self._effective_event_key(confirmed)
+        if confirmed_key in self._event_orders:
+            return
+        self._event_orders[confirmed_key] = order
+        while len(self._event_orders) > self._max_event_order_keys:
+            self._event_orders.popitem(last=False)
 
     @staticmethod
     def _effective_event_key(

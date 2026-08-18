@@ -32,6 +32,7 @@ from dataclasses import dataclass, field, replace
 from typing import TypeAlias
 
 from Pegasus.monitor.models import (
+    BoundedAge,
     ClockSample,
     DBRefreshMode,
     DBRefreshRequest,
@@ -99,6 +100,7 @@ class CoordinatorConfig:
             (SchedulerQueryKind.POOL, 30.0),
         )
     )
+    tail_event_age_maximum: float = 7 * 24 * 60 * 60
 
     def __post_init__(self) -> None:
         positive = (
@@ -106,6 +108,7 @@ class CoordinatorConfig:
             self.tail_idle_interval,
             self.database_interval,
             self.scheduler_timeout,
+            self.tail_event_age_maximum,
             self.loop_retry_interval,
         )
         if any(value <= 0 for value in positive):
@@ -136,6 +139,8 @@ class CoordinatorSnapshot:
     source_health: tuple[SourceHealth, ...]
     scheduler_results: tuple[SchedulerQueryResult, ...]
     pending_tail_events: int
+    unconfirmed_tail_events: tuple[EffectiveEvent, ...]
+    last_tail_event_age: BoundedAge | None
     semantic_progress: int
     latest_effective_event: EffectiveEvent | None
     has_authoritative_base: bool
@@ -145,12 +150,29 @@ class CoordinatorSnapshot:
     coordinator_errors: FrozenPayload = field(default_factory=FrozenPayload)
 
     def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "unconfirmed_tail_events", tuple(self.unconfirmed_tail_events)
+        )
         if self.sequence <= 0:
             raise ValueError("coordinator publication sequence must be positive")
         if self.pending_tail_events < 0:
             raise ValueError("pending tail count must be non-negative")
+        if self.effective is not None and self.unconfirmed_tail_events:
+            raise ValueError("unconfirmed tail preview requires a missing DB base")
+        if self.effective is not None and self.last_tail_event_age is not None:
+            raise ValueError("tail preview age requires a missing DB base")
+        if any(
+            event.provenance is not Provenance.TAIL_PENDING
+            for event in self.unconfirmed_tail_events
+        ):
+            raise ValueError("unconfirmed preview may contain only tail events")
         if self.semantic_progress < 0:
             raise ValueError("semantic progress must be non-negative")
+        if any(
+            event.order > self.semantic_progress
+            for event in self.unconfirmed_tail_events
+        ):
+            raise ValueError("unconfirmed event cannot exceed semantic progress")
         if self.publisher_failures < 0:
             raise ValueError("publisher failure count must be non-negative")
         if (
@@ -219,6 +241,7 @@ class MonitorCoordinator:
         self._database_wakeup = asyncio.Event()
         self._scheduler_wakeup = asyncio.Event()
         self._last_terminal_count = 0
+        self._last_tail_event_epoch: float | None = None
         self._final_history_requested = False
         self._started = False
         self._closed = False
@@ -305,6 +328,8 @@ class MonitorCoordinator:
                 lines_read=0,
             )
         urgent = self.reconciler.ingest_tail(result)
+        if result.job_events or result.workflow_events or result.source_events:
+            self._last_tail_event_epoch = result.request.clock.epoch
         if self.reconciler.tail_rearm_required:
             self._rearm_tail()
         if urgent:
@@ -444,6 +469,33 @@ class MonitorCoordinator:
                 if effective is not None
                 else self.reconciler.source_health
             )
+            unconfirmed_tail_events = (
+                self.reconciler.unconfirmed_tail_events() if effective is None else ()
+            )
+            tail_health = next(
+                (
+                    health
+                    for health in source_health
+                    if health.source is SourceName.LIVE_TAIL
+                ),
+                None,
+            )
+            tail_contiguous = tail_health is not None and tail_health.state not in {
+                HealthState.GAP,
+                HealthState.REATTACHING,
+                HealthState.RESYNC,
+            }
+            last_tail_event_age = (
+                BoundedAge.between(
+                    clock.epoch,
+                    self._last_tail_event_epoch,
+                    self.config.tail_event_age_maximum,
+                )
+                if effective is None
+                and self._last_tail_event_epoch is not None
+                and tail_contiguous
+                else None
+            )
             publication = CoordinatorSnapshot(
                 sequence=self._publication_sequence,
                 clock=clock,
@@ -454,6 +506,8 @@ class MonitorCoordinator:
                     for kind in sorted(self._scheduler_results, key=lambda x: x.value)
                 ),
                 pending_tail_events=self.reconciler.buffered_count,
+                unconfirmed_tail_events=unconfirmed_tail_events,
+                last_tail_event_age=last_tail_event_age,
                 semantic_progress=self.reconciler.semantic_progress,
                 latest_effective_event=(
                     max(effective.events, key=lambda item: item.order)

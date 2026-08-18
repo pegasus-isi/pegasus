@@ -41,6 +41,7 @@ from Pegasus.monitor.models import (
     SnapshotEpoch,
     SourceHealth,
     SourceName,
+    TailGap,
     TailGeneration,
     TailJobEvent,
     TailPollRequest,
@@ -359,6 +360,63 @@ def test_initial_merge_suppresses_event_already_in_database() -> None:
     assert snapshot.pending_overlay_count == 0
     assert len(snapshot.jobs) == 1
     assert snapshot.jobs[0].provenance is Provenance.DB_CONFIRMED
+
+
+def test_pre_database_preview_migrates_to_confirmed_event_at_stable_order() -> None:
+    transition = job_transition("EXECUTE", "101", 2)
+    event = tail_job("EXECUTE", "101", 10, base=None)
+    reconciler = Reconciler(WORKFLOW)
+    reconciler.ingest_tail(tail_result(event))
+
+    first = reconciler.unconfirmed_tail_events()
+    repeated = reconciler.unconfirmed_tail_events()
+
+    assert first == repeated
+    assert len(first) == 1
+    assert first[0].event == event
+    assert first[0].provenance is Provenance.TAIL_PENDING
+    assert reconciler.semantic_progress == first[0].order
+
+    install(reconciler, database((transition,)))
+    snapshot = effective(reconciler)
+    confirmed = next(item for item in snapshot.events if item.event == transition)
+
+    assert reconciler.unconfirmed_tail_events() == ()
+    assert reconciler.pending_count == 0
+    assert confirmed.provenance is Provenance.DB_CONFIRMED
+    assert confirmed.order == first[0].order
+    assert sum(item.order == confirmed.order for item in snapshot.events) == 1
+
+
+def test_pre_database_preview_withholds_gap_and_overflowed_streams() -> None:
+    event = tail_job("EXECUTE", "101", 10, base=None)
+    reconciler = Reconciler(WORKFLOW)
+    reconciler.ingest_tail(tail_result(event))
+    assert len(reconciler.unconfirmed_tail_events()) == 1
+
+    gap = replace(
+        tail_result(),
+        gaps=(TailGap(TAIL_GENERATION, "truncated", dropped_lines=1),),
+        health=SourceHealth(SourceName.LIVE_TAIL, HealthState.GAP, CLOCK.epoch),
+    )
+    reconciler.ingest_tail(gap)
+
+    assert reconciler.unconfirmed_tail_events() == ()
+    assert reconciler.buffered_count == 1
+
+    bounded = Reconciler(WORKFLOW, max_pending_events=2)
+    bounded.ingest_tail(
+        tail_result(
+            tail_job("SUBMIT", "100", 10, base=None),
+            tail_job("EXECUTE", "101", 20, base=None),
+        )
+    )
+    assert len(bounded.unconfirmed_tail_events()) == 2
+
+    bounded.ingest_tail(tail_result(tail_job("JOB_SUCCESS", "102", 30, base=None)))
+    assert bounded.unconfirmed_tail_events() == ()
+    assert bounded.buffered_count == 0
+    assert bounded.tail_rearm_required
 
 
 def test_unmatched_initial_event_uses_zero_based_semantic_suffix_cursor() -> None:

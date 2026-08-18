@@ -56,6 +56,8 @@ from Pegasus.monitor.models import (
     TailJobEvent,
     TailPollRequest,
     TailPollResult,
+    TailSourceEvent,
+    TailSourceMarker,
     TailTransitionIdentity,
     WorkflowIdentity,
     WorkflowRestartIdentity,
@@ -440,19 +442,251 @@ def test_pre_boundary_event_arrives_only_from_later_database_refresh() -> None:
 def test_database_waiting_publication_does_not_fabricate_workflow_identity() -> None:
     async def scenario() -> None:
         calls: list[str] = []
+        clock = FakeClock()
         tail = FakeTail(calls, [tail_builder("SUBMIT", "101", 10)])
         stampede = FakeStampede(None, calls)
-        coordinator = MonitorCoordinator(WORKFLOW, stampede, tail=tail)
+        coordinator = MonitorCoordinator(WORKFLOW, stampede, tail=tail, clock=clock)
 
         publication = await coordinator.bootstrap()
 
         assert publication.effective is None
         assert not publication.authoritative
         assert publication.pending_tail_events == 1
+        assert len(publication.unconfirmed_tail_events) == 1
+        assert publication.unconfirmed_tail_events[0].event.exec_job_id == (
+            "compute_ID0000001"
+        )
+        assert publication.last_tail_event_age is not None
+        assert publication.last_tail_event_age.seconds == 0.0
         assert any(
             item.source is SourceName.STAMPEDE and item.state is HealthState.WAITING
             for item in publication.source_health
         )
+        await coordinator.close()
+
+    run(scenario())
+
+
+def test_pre_database_preview_is_stable_then_clears_on_database_arrival() -> None:
+    async def scenario() -> None:
+        calls: list[str] = []
+        clock = FakeClock()
+        tail = FakeTail(calls, [tail_builder("EXECUTE", "101", 10)])
+        stampede = FakeStampede(None, calls)
+        coordinator = MonitorCoordinator(WORKFLOW, stampede, tail=tail, clock=clock)
+
+        first = await coordinator.bootstrap()
+        assert len(first.unconfirmed_tail_events) == 1
+        preview = first.unconfirmed_tail_events[0]
+
+        clock.advance(3.0)
+        await coordinator.refresh_database_once()
+        second = coordinator.latest
+        assert second is not None
+        assert second.unconfirmed_tail_events == first.unconfirmed_tail_events
+        assert second.semantic_progress == first.semantic_progress
+        assert second.last_tail_event_age is not None
+        assert second.last_tail_event_age.seconds == 3.0
+
+        stampede.snapshot = database(
+            (
+                transition("SUBMIT", "100", 1),
+                transition("EXECUTE", "101", 2),
+            )
+        )
+        await coordinator.refresh_database_once()
+        confirmed = coordinator.latest
+        assert confirmed is not None
+        assert confirmed.effective is not None
+        assert confirmed.unconfirmed_tail_events == ()
+        assert confirmed.last_tail_event_age is None
+        matching = [
+            event
+            for event in confirmed.effective.events
+            if isinstance(event.event, DBJobTransition)
+            and event.event.normalized_state == "EXECUTE"
+        ]
+        assert len(matching) == 1
+        assert matching[0].order == preview.order
+        await coordinator.close()
+
+    run(scenario())
+
+
+def test_pre_database_tail_event_age_advances_during_readable_silence() -> None:
+    async def scenario() -> None:
+        calls: list[str] = []
+        clock = FakeClock()
+        tail = FakeTail(calls, [tail_builder("EXECUTE", "101", 10)])
+        coordinator = MonitorCoordinator(
+            WORKFLOW, FakeStampede(None, calls), tail=tail, clock=clock
+        )
+        await coordinator.bootstrap()
+
+        clock.advance(5.0)
+        await coordinator.poll_tail_once()
+        publication = coordinator.latest
+
+        assert publication is not None
+        assert publication.last_tail_event_age is not None
+        assert publication.last_tail_event_age.seconds == 5.0
+        assert any(
+            item.source is SourceName.LIVE_TAIL and item.state is HealthState.HEALTHY
+            for item in publication.source_health
+        )
+        await coordinator.close()
+
+    run(scenario())
+
+
+def test_pre_database_malformed_or_empty_tail_does_not_invent_event_age() -> None:
+    class UnparsedTail(FakeTail):
+        def poll(self, request: TailPollRequest) -> TailPollResult:
+            self.calls.append("tail")
+            self.polls += 1
+            return TailPollResult(
+                request,
+                (),
+                (),
+                (),
+                (),
+                SourceHealth(
+                    SourceName.LIVE_TAIL, HealthState.HEALTHY, request.clock.epoch
+                ),
+                self.generation,
+                12,
+                1,
+            )
+
+    async def scenario() -> None:
+        calls: list[str] = []
+        coordinator = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(None, calls),
+            tail=UnparsedTail(calls),
+            clock=FakeClock(),
+        )
+
+        publication = await coordinator.bootstrap()
+
+        assert publication.unconfirmed_tail_events == ()
+        assert publication.last_tail_event_age is None
+        await coordinator.close()
+
+        empty = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(None, calls),
+            tail=FakeTail(calls),
+            clock=FakeClock(),
+        )
+        empty_publication = await empty.bootstrap()
+        assert empty_publication.last_tail_event_age is None
+        await empty.close()
+
+        disabled = MonitorCoordinator(
+            WORKFLOW, FakeStampede(None, calls), clock=FakeClock()
+        )
+        disabled_publication = await disabled.bootstrap()
+        assert disabled_publication.last_tail_event_age is None
+        await disabled.close()
+
+    run(scenario())
+
+
+def test_pre_database_overflow_withholds_preview_and_event_age() -> None:
+    async def scenario() -> None:
+        calls: list[str] = []
+        tail = FakeTail(
+            calls,
+            [
+                lambda request: (
+                    tail_builder("EXECUTE", "101", 10)(request)
+                    + tail_builder("JOB_SUCCESS", "102", 30)(request)
+                )
+            ],
+        )
+        coordinator = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(None, calls),
+            tail=tail,
+            reconciler=Reconciler(WORKFLOW, max_pending_events=1),
+            clock=FakeClock(),
+        )
+
+        publication = await coordinator.bootstrap()
+
+        assert publication.effective is None
+        assert publication.unconfirmed_tail_events == ()
+        assert publication.last_tail_event_age is None
+        assert any(
+            item.source is SourceName.LIVE_TAIL and item.state is HealthState.GAP
+            for item in publication.source_health
+        )
+        await coordinator.close()
+
+    run(scenario())
+
+
+def test_pre_database_source_marker_updates_age_without_fabricating_preview() -> None:
+    class SourceTail(FakeTail):
+        def poll(self, request: TailPollRequest) -> TailPollResult:
+            self.calls.append("tail")
+            self.polls += 1
+            if self.polls > 1:
+                return TailPollResult(
+                    request,
+                    (),
+                    (),
+                    (),
+                    (),
+                    SourceHealth(
+                        SourceName.LIVE_TAIL,
+                        HealthState.HEALTHY,
+                        request.clock.epoch,
+                    ),
+                    self.generation,
+                    0,
+                    0,
+                )
+            line = "101 INTERNAL *** MONITORD_STARTED ***"
+            source = TailSourceEvent(
+                WORKFLOW,
+                TailTransitionIdentity(self.generation, 10),
+                request.base_db_generation,
+                10 + len(line),
+                request.clock.monotonic,
+                Decimal("101"),
+                TailSourceMarker.MONITORD_STARTED,
+                None,
+                line,
+            )
+            return TailPollResult(
+                request,
+                (),
+                (),
+                (source,),
+                (),
+                SourceHealth(
+                    SourceName.LIVE_TAIL, HealthState.HEALTHY, request.clock.epoch
+                ),
+                self.generation,
+                len(line),
+                1,
+            )
+
+    async def scenario() -> None:
+        calls: list[str] = []
+        coordinator = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(None, calls),
+            tail=SourceTail(calls),
+            clock=FakeClock(),
+        )
+        publication = await coordinator.bootstrap()
+
+        assert publication.unconfirmed_tail_events == ()
+        assert publication.last_tail_event_age is not None
+        assert publication.last_tail_event_age.seconds == 0.0
         await coordinator.close()
 
     run(scenario())
