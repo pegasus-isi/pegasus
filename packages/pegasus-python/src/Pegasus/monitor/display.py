@@ -26,7 +26,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from heapq import nsmallest
+from heapq import heappush, heapreplace
 from typing import TYPE_CHECKING
 
 from rich import box
@@ -335,31 +335,32 @@ def _job_roster(jobs: tuple[JobSnapshot, ...], options: DisplayOptions) -> _JobR
     total = 0
     counts = dict.fromkeys(Lifecycle, 0)
     provenance_counts = dict.fromkeys(Provenance, 0)
-
-    def selected():
-        nonlocal total
-        for index, job in enumerate(jobs):
-            lifecycle = job.lifecycle
-            counts[lifecycle] += 1
-            provenance_counts[job.provenance] += 1
-            is_compute = getattr(job, "is_compute", None)
-            if is_compute is None:
-                is_compute = job.type_desc.lower() == "compute"
-            if options.show_all_jobs or is_compute:
-                total += 1
-                yield _activity_sort_key(index, job, lifecycle), job, lifecycle
-
-    if options.sort_by_activity:
-        rows = nsmallest(
-            options.job_row_limit,
-            selected(),
-            key=lambda row: row[0],
-        )
-    else:
-        rows = []
-        for item in selected():
+    rows = []
+    heap = []
+    for index, job in enumerate(jobs):
+        lifecycle = job.lifecycle
+        counts[lifecycle] += 1
+        provenance_counts[job.provenance] += 1
+        is_compute = getattr(job, "is_compute", None)
+        if is_compute is None:
+            is_compute = job.type_desc.lower() == "compute"
+        if not options.show_all_jobs and not is_compute:
+            continue
+        total += 1
+        key = _activity_sort_key(index, job, lifecycle)
+        if not options.sort_by_activity:
             if len(rows) < options.job_row_limit:
-                rows.append(item)
+                rows.append((key, job, lifecycle))
+            continue
+        reverse_key = (-key[0][0], -key[0][1], -key[1])
+        item = (reverse_key, key, job, lifecycle)
+        if len(heap) < options.job_row_limit:
+            heappush(heap, item)
+        elif reverse_key > heap[0][0]:
+            heapreplace(heap, item)
+    if options.sort_by_activity:
+        rows = [(key, job, lifecycle) for _, key, job, lifecycle in heap]
+        rows.sort(key=lambda row: row[0])
     return _JobRoster(
         tuple(job for _, job, _ in rows), total, counts, provenance_counts
     )
