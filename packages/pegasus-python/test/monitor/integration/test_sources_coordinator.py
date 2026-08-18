@@ -344,7 +344,9 @@ def test_db_lock_replacement_and_rollback_keep_last_good_until_rebootstrap(
             try:
                 lock.execute("BEGIN EXCLUSIVE")
                 lock.execute("UPDATE workflow SET dag_file_name = dag_file_name")
-                locked = await coordinator.refresh_database_once()
+                locked = await coordinator.refresh_database_once(
+                    requested_mode=DBRefreshMode.FULL_REBOOTSTRAP
+                )
             finally:
                 lock.rollback()
                 lock.close()
