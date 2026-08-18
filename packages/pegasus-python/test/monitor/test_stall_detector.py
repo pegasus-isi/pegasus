@@ -114,16 +114,18 @@ def _publication(
         source_health,
     )
     return CoordinatorSnapshot(
-        sequence,
-        ClockSample(monotonic, monotonic),
-        effective,
-        source_health,
-        (),
-        pending,
-        semantic_progress,
-        None,
-        True,
-        terminated,
+        sequence=sequence,
+        clock=ClockSample(monotonic, monotonic),
+        effective=effective,
+        source_health=source_health,
+        scheduler_results=(),
+        pending_tail_events=pending,
+        unconfirmed_tail_events=(),
+        last_tail_event_age=None,
+        semantic_progress=semantic_progress,
+        latest_effective_event=None,
+        has_authoritative_base=True,
+        authoritative_complete=terminated,
     )
 
 

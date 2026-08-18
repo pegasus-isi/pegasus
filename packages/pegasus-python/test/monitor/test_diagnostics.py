@@ -157,16 +157,18 @@ def _effective_many(jobs: tuple[JobSnapshot, ...]) -> EffectiveSnapshot:
 def _publication(sequence: int, job: JobSnapshot) -> CoordinatorSnapshot:
     effective = replace(_effective(job), epoch=SnapshotEpoch(sequence))
     return CoordinatorSnapshot(
-        sequence,
-        ClockSample(float(sequence), float(sequence)),
-        effective,
-        (),
-        (),
-        0,
-        sequence,
-        None,
-        True,
-        False,
+        sequence=sequence,
+        clock=ClockSample(float(sequence), float(sequence)),
+        effective=effective,
+        source_health=(),
+        scheduler_results=(),
+        pending_tail_events=0,
+        unconfirmed_tail_events=(),
+        last_tail_event_age=None,
+        semantic_progress=sequence,
+        latest_effective_event=None,
+        has_authoritative_base=True,
+        authoritative_complete=False,
     )
 
 
@@ -417,16 +419,18 @@ def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
     jobs = tuple(_indexed_job(index) for index in range(1, 8001))
     effective = _effective_many(jobs)
     publication = CoordinatorSnapshot(
-        1,
-        ClockSample(1.0, 1.0),
-        effective,
-        (),
-        (),
-        0,
-        1,
-        None,
-        True,
-        False,
+        sequence=1,
+        clock=ClockSample(1.0, 1.0),
+        effective=effective,
+        source_health=(),
+        scheduler_results=(),
+        pending_tail_events=0,
+        unconfirmed_tail_events=(),
+        last_tail_event_age=None,
+        semantic_progress=1,
+        latest_effective_event=None,
+        has_authoritative_base=True,
+        authoritative_complete=False,
     )
     findings = tuple(
         DiagnosticFinding(

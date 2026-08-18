@@ -350,15 +350,17 @@ def test_finality_and_provenance_are_explicit() -> None:
 def test_coordinator_finality_is_not_reconstructed_by_analysis() -> None:
     effective = _snapshot((), terminated=True)
     publication = CoordinatorSnapshot(
-        1,
-        ClockSample(200.0, 100.0),
-        effective,
-        (),
-        (),
-        1,
-        1,
-        None,
-        True,
-        False,
+        sequence=1,
+        clock=ClockSample(200.0, 100.0),
+        effective=effective,
+        source_health=(),
+        scheduler_results=(),
+        pending_tail_events=1,
+        unconfirmed_tail_events=(),
+        last_tail_event_age=None,
+        semantic_progress=1,
+        latest_effective_event=None,
+        has_authoritative_base=True,
+        authoritative_complete=False,
     )
     assert not compute_workflow_stats(publication).authoritative_final
