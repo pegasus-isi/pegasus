@@ -577,6 +577,7 @@ def run_worker(
     started_cpu = time.process_time()
     reader = StampedeReader(workload.database_path, WORKFLOW, busy_timeout_seconds=0.25)
     refresh_samples: list[float] = []
+    transaction_samples: list[float] = []
     result = None
     for sample in range(config.refresh_samples):
         mode = (
@@ -590,6 +591,7 @@ def run_worker(
         before = time.perf_counter()
         result = reader.refresh(request)
         refresh_samples.append(time.perf_counter() - before)
+        transaction_samples.append(reader.last_transaction_seconds)
         if result.snapshot is None:
             raise RuntimeError(
                 f"Stampede refresh {sample} failed: {result.health.error_code}: "
@@ -629,20 +631,15 @@ def run_worker(
     }
     total_elapsed = time.perf_counter() - started_wall
     refresh = _sample_summary(refresh_samples)
+    transactions = _sample_summary(transaction_samples)
     live_p95 = float(live["display_latency_seconds"]["p95"])
     full = config.mode == "full"
     budgets = {
         "live_display_p95_seconds": _budget(live_p95, 1.0),
         "monitor_average_logical_cores": _budget(cpu_cores, 1.0),
         "monitor_peak_rss_bytes": _budget(monitor_rss, 1024**3),
-        # Refresh wall time encloses BEGIN-through-COMMIT, and is therefore a
-        # conservative upper bound when production exposes no transaction hook.
-        "stampede_transaction_p95_seconds_upper_bound": _budget(
-            float(refresh["p95"]), 0.5
-        ),
-        "stampede_transaction_max_seconds_upper_bound": _budget(
-            float(refresh["max"]), 2.0
-        ),
+        "stampede_transaction_p95_seconds": _budget(float(transactions["p95"]), 0.5),
+        "stampede_transaction_max_seconds": _budget(float(transactions["max"]), 2.0),
         "wal_writer_median_impact_fraction": _budget(
             float(writer["wal"]["median_makespan_impact_fraction"]),
             0.02,
@@ -672,6 +669,7 @@ def run_worker(
             "actual_tail_lines_before_burst": observed_cardinalities["tail_lines"],
         },
         "stampede_refresh_seconds": refresh,
+        "stampede_transaction_seconds": transactions,
         "live_burst": live,
         "probes": probes,
         "writer_impact": writer,

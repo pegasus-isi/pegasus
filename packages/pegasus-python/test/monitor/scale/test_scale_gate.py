@@ -51,6 +51,14 @@ def _assert_report(payload, *, strict_cardinality: bool) -> None:
         "display",
     }
     assert payload["stampede_refresh_seconds"]["count"] == config["refresh_samples"]
+    assert payload["stampede_transaction_seconds"]["count"] == config["refresh_samples"]
+    assert all(
+        sample >= 0.0 for sample in payload["stampede_transaction_seconds"]["samples"]
+    )
+    assert {
+        "stampede_transaction_p95_seconds",
+        "stampede_transaction_max_seconds",
+    } <= payload["budgets"].keys()
     assert payload["probes"]["job_count"] == config["jobs"]
     assert payload["call_counts"]["stampede_refresh"] == config["refresh_samples"]
     assert payload["writer_impact"]["wal"]["paired_trials"] == config["writer_trials"]

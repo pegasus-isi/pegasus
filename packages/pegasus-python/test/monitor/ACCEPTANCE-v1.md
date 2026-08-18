@@ -44,8 +44,8 @@ skip the extended profile.
 | 1M authoritative transitions | The runner executes `SELECT COUNT(*) FROM jobstate`; `observed.actual_database_transitions` must equal 1,000,000 |
 | Existing 1M-line tail plus live burst | The runner counts source-file newlines and requires `observed.actual_tail_lines_before_burst` to equal 1,000,000 before `LiveEventTail` attaches, then appends and observes 1,000 lines at 1,000 lines/second |
 | Post-boundary display latency | Each observed burst batch is reconciled, published, and rendered; `live_burst.display_latency_seconds.p95` must be below 1 second. Per-stage poll, ingest, publication, and display samples localize failures |
-| Forty Stampede samples | `stampede_refresh_seconds` retains all 40 raw samples plus min, median, p95, and max |
-| DB transaction budget | Refresh wall time conservatively encloses the read transaction; p95 must be below 500 ms and max below 2 seconds |
+| Forty Stampede samples | `stampede_refresh_seconds` retains all 40 end-to-end refresh samples; `stampede_transaction_seconds` separately retains the longest exact SQLite read-transaction interval from each refresh. Both include raw samples plus min, median, p95, and max |
+| DB transaction budget | Exact `stampede_transaction_seconds` p95 must be below 500 ms and max below 2 seconds; end-to-end refresh time remains diagnostic evidence and is not substituted for transaction-open duration |
 | Monitor CPU and memory | Fixture generation occurs in the parent; the separately spawned monitor worker records process CPU, average logical cores, and peak RSS. Average must be below one core and peak below 1 GiB |
 | Workflow writer impact | WAL and rollback-journal modes each run one warmup and nine phased, paired baseline/with-monitor trials at the production two-second DB cadence. Each full-mode median makespan impact must be below 2% |
 | Publication/display/stats/diagnostics over 100k jobs | Full mode runs three samples of each probe over the same 100k-job snapshot and records a descending hotspot list |
@@ -72,8 +72,8 @@ these conditions is false:
 - live display latency p95 is below 1 second;
 - monitor CPU averages below one logical core;
 - monitor peak RSS is below 1 GiB;
-- the conservative Stampede transaction upper bound has p95 below 500 ms and
-  no sample above 2 seconds;
+- exact Stampede read-transaction duration has p95 below 500 ms and no sample
+  above 2 seconds;
 - median writer makespan impact is below 2% independently for WAL and DELETE
   journal modes.
 
