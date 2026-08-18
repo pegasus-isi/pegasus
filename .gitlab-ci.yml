@@ -410,7 +410,7 @@ Tutorial Container:
   - docker push pegasus/tutorial:${PEGASUS_VERSION}
   - docker rmi --force pegasus/tutorial:${PEGASUS_VERSION}
   rules:
-  - if: $CI_PIPELINE_NAME != 'workflow'
+  - if: $CI_PIPELINE_NAME != 'workflow' && $CI_COMMIT_REF_PROTECTED == 'false'
   dependencies:
   - pre-job
   - "RHEL: [x86_64, rhel_9]"
