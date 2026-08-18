@@ -647,11 +647,13 @@ Single-workflow monitoring is the version 1 feature.
 invoked. `--no-live-events` is a diagnostic/fallback switch and does not disable
 DB polling.
 
-The complete v1 flag surface is: target, `--version`, `--interval`,
-`--all-jobs`, `--[no-]sort-by-activity`, `--events`, `--once`, `--why-idle`,
-`--remap-submit-dir`, `--diagnose`, `--no-condor`, `--no-live-events`,
-`--jobstate-path`, `--schedd`, `--collector`, `--token`, `--cert`, `--key`, and
-`--password-file`. The plugin-era `--condor-poll` flag is removed. WP7 adds
+The complete v1 flag surface is: target, `--version`/`-V`, `--interval`/`-i`,
+`--all-jobs`/`-a`, `--[no-]sort-by-activity`, `--events`/`-e`, `--once`,
+`--why-idle`, `--remap-submit-dir`, `--diagnose`, `--no-condor`,
+`--no-live-events`, `--jobstate-path`, `--schedd`, `--collector`, `--token`,
+`--cert`, `--key`, and `--password-file`. The plugin-era `--condor-poll` and
+`--no-condor-poll` flags are removed; neither is equivalent to the new
+hard-disable `--no-condor`. WP7 adds
 `--log`, `--replay`, `--speed`, `--min-free-mb`, `--max-log-mb`, `--serve`,
 `--serve-foreground`, `--stop-server`, `--remote`, `--sync-interval`,
 `--ssh-config`, and `--ssh-identity`; v1 does not expose placeholder forms of
