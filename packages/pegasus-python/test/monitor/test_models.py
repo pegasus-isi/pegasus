@@ -706,6 +706,8 @@ def test_authoritative_snapshot_consistency_allows_unsubmitted_and_overlay() -> 
         pending_tail=(TailTransitionIdentity(TAIL_GENERATION, 2),),
     )
     assert job_overlay.transition == job.transition
+    assert job_overlay.lifecycle is Lifecycle.HELD
+    assert job_overlay.is_compute
 
     unsubmitted = JobSnapshot(
         WORKFLOW,
@@ -722,6 +724,10 @@ def test_authoritative_snapshot_consistency_allows_unsubmitted_and_overlay() -> 
         Provenance.DB_CONFIRMED,
     )
     assert unsubmitted.lifecycle is Lifecycle.UNSUBMITTED
+    assert unsubmitted.is_compute
+    assert replace(unsubmitted, type_desc="CoMpUtE").is_compute
+    assert not replace(unsubmitted, type_desc="stage-in-tx").is_compute
+    assert "_lifecycle" not in unsubmitted.to_json_dict()
 
 
 def test_effective_snapshot_rejects_cross_workflow_jobs() -> None:

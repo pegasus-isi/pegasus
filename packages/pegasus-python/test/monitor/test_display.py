@@ -233,6 +233,34 @@ def test_visible_jobs_is_row_bounded_for_100k_jobs():
     assert jobs.iterations == 1
 
 
+def test_visible_jobs_preserves_activity_order_and_stable_ties():
+    jobs = [
+        _job("old", Lifecycle.QUEUED),
+        _job("running", Lifecycle.RUNNING),
+        _job("new_a", Lifecycle.FAILED),
+        _job("new_b", Lifecycle.FAILED),
+        _job("undated", Lifecycle.QUEUED),
+    ]
+    jobs[0].state_timestamp = Decimal("8")
+    jobs[1].state_timestamp = Decimal("1")
+    jobs[2].state_timestamp = Decimal("20")
+    jobs[3].state_timestamp = Decimal("20")
+    jobs[4].state_timestamp = None
+
+    visible, total = _visible_jobs(
+        tuple(jobs),
+        DisplayOptions(job_row_limit=4, sort_by_activity=True),
+    )
+
+    assert total == 5
+    assert [job.exec_job_id for job in visible] == [
+        "running",
+        "new_a",
+        "new_b",
+        "old",
+    ]
+
+
 def test_disabled_condor_is_explicit(tmp_path):
     text = render_text(
         _context(tmp_path),

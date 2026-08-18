@@ -298,7 +298,11 @@ _LIFECYCLES = {
 def job_lifecycle(state: str | None) -> Lifecycle:
     if state is None:
         return Lifecycle.UNSUBMITTED
-    return _LIFECYCLES.get(normalize_job_state(state), Lifecycle.OTHER)
+    return _job_lifecycle_from_normalized(normalize_job_state(state))
+
+
+def _job_lifecycle_from_normalized(state: str) -> Lifecycle:
+    return _LIFECYCLES.get(state, Lifecycle.OTHER)
 
 
 # Higher values win when sequence and timestamp are equal.  Unknown states are
@@ -1086,6 +1090,9 @@ class JobSnapshot:
     provenance: Provenance
     pending_tail: tuple[TailTransitionIdentity, ...] = ()
     scheduler: FrozenPayload = field(default_factory=FrozenPayload)
+    _lifecycle: Lifecycle = field(init=False, compare=False, repr=False)
+    _is_compute: bool = field(init=False, compare=False, repr=False)
+    _activity_sort_key: tuple[int, float] = field(init=False, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.job_id is not None:
@@ -1180,10 +1187,13 @@ class JobSnapshot:
                 or transition_attempt.job_submit_seq != self.transition.job_submit_seq
             ):
                 raise ValueError("job transition must match an included attempt")
+        normalized_state = (
+            normalize_job_state(self.state) if self.state is not None else None
+        )
         if self.provenance is Provenance.DB_CONFIRMED and self.transition is not None:
             if (
-                self.state is None
-                or normalize_job_state(self.state) != self.transition.normalized_state
+                normalized_state is None
+                or normalized_state != self.transition.normalized_state
             ):
                 raise ValueError("authoritative job state must match its transition")
             if self.state_timestamp != self.transition.identity.timestamp:
@@ -1199,10 +1209,38 @@ class JobSnapshot:
                 raise ValueError(
                     "authoritative transition must match the current attempt"
                 )
+        lifecycle = (
+            Lifecycle.UNSUBMITTED
+            if normalized_state is None
+            else _job_lifecycle_from_normalized(normalized_state)
+        )
+        activity_bucket = (
+            0
+            if lifecycle is Lifecycle.RUNNING
+            else 1
+            if self.state_timestamp is not None
+            else 2
+        )
+        activity_recency = (
+            -float(self.state_timestamp) if self.state_timestamp is not None else 0.0
+        )
+        object.__setattr__(self, "_lifecycle", lifecycle)
+        object.__setattr__(self, "_is_compute", self.type_desc.lower() == "compute")
+        object.__setattr__(
+            self, "_activity_sort_key", (activity_bucket, activity_recency)
+        )
 
     @property
     def lifecycle(self) -> Lifecycle:
-        return job_lifecycle(self.state)
+        return self._lifecycle
+
+    @property
+    def is_compute(self) -> bool:
+        return self._is_compute
+
+    @property
+    def activity_sort_key(self) -> tuple[int, float]:
+        return self._activity_sort_key
 
     def to_json_dict(self) -> dict[str, JSONValue]:
         return {

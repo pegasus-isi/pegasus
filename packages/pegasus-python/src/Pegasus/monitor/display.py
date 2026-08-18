@@ -18,7 +18,6 @@
 
 from __future__ import annotations
 
-import heapq
 import io
 import math
 from collections.abc import Mapping
@@ -287,16 +286,18 @@ def _scheduler_display(
     return status, request, host
 
 
-def _activity_key(
-    indexed: tuple[int, JobSnapshot, Lifecycle],
-) -> tuple[object, ...]:
-    index, job, lifecycle = indexed
+def _activity_sort_key(
+    index: int, job: JobSnapshot, lifecycle: Lifecycle
+) -> tuple[tuple[int, float], int]:
+    cached = getattr(job, "activity_sort_key", None)
+    if cached is not None:
+        return cached, index
     timestamp = float(job.state_timestamp) if job.state_timestamp is not None else -1.0
     if lifecycle is Lifecycle.RUNNING:
-        return (0, -timestamp, index)
+        return (0, -timestamp), index
     if job.state_timestamp is not None:
-        return (1, -timestamp, index)
-    return (2, 0.0, index)
+        return (1, -timestamp), index
+    return (2, 0.0), index
 
 
 def _visible_jobs(
@@ -319,12 +320,15 @@ def _job_roster(jobs: tuple[JobSnapshot, ...], options: DisplayOptions) -> _JobR
             lifecycle = job.lifecycle
             counts[lifecycle] += 1
             provenance_counts[job.provenance] += 1
-            if options.show_all_jobs or job.type_desc.lower() == "compute":
+            is_compute = getattr(job, "is_compute", None)
+            if is_compute is None:
+                is_compute = job.type_desc.lower() == "compute"
+            if options.show_all_jobs or is_compute:
                 total += 1
-                yield index, job, lifecycle
+                yield _activity_sort_key(index, job, lifecycle), job, lifecycle
 
     if options.sort_by_activity:
-        rows = heapq.nsmallest(options.job_row_limit, selected(), key=_activity_key)
+        rows = sorted(selected())[: options.job_row_limit]
     else:
         rows = []
         for item in selected():
