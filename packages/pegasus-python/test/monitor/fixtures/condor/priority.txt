@@ -1,0 +1,9 @@
+Name = "pegasus@example.org"
+EffectivePriority = 12.5
+RealPriority = 10.0
+ResourcesUsed = 4
+
+Name = "other@example.org"
+EffectivePriority = 8.0
+RealPriority = 7.0
+ResourcesUsed = 10

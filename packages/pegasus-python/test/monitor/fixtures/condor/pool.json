@@ -1,0 +1,49 @@
+[
+  {
+    "Name": "slot1@host-a",
+    "Machine": "host-a",
+    "SlotType": "Partitionable",
+    "PartitionableSlot": true,
+    "DynamicSlot": false,
+    "Cpus": 2,
+    "Memory": 4096,
+    "Disk": 500000,
+    "GPUs": 1,
+    "TotalSlotCpus": 8,
+    "TotalSlotMemory": 16384,
+    "TotalLoadAvg": 1.5,
+    "Activity": "Idle",
+    "State": "Unclaimed",
+    "OpSys": "LINUX",
+    "Arch": "X86_64"
+  },
+  {
+    "Name": "slot1_1@host-a",
+    "Machine": "host-a",
+    "SlotType": "Dynamic",
+    "PartitionableSlot": false,
+    "DynamicSlot": true,
+    "ParentSlotName": "slot1@host-a",
+    "Cpus": 4,
+    "Memory": 8192,
+    "Disk": 200000,
+    "GPUs": 0,
+    "Activity": "Busy",
+    "State": "Claimed",
+    "OpSys": "LINUX",
+    "Arch": "X86_64"
+  },
+  {
+    "Name": "slot1@host-b",
+    "Machine": "host-b",
+    "SlotType": "Static",
+    "Cpus": 4,
+    "Memory": 8192,
+    "Disk": 300000,
+    "GPUs": 1,
+    "Activity": "Idle",
+    "State": "Unclaimed",
+    "OpSys": "LINUX",
+    "Arch": "AARCH64"
+  }
+]
