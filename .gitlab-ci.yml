@@ -628,10 +628,9 @@ Workflow Tests:
       EXEC:
       - launch-bamboo-test
   script:
-  - python3 -m venv /tmp/pegasus-venv
-  - /tmp/pegasus-venv/bin/pip install --upgrade pip
-  - /tmp/pegasus-venv/bin/pip install dist/pegasus_wms-*.whl
-  - export PATH=/tmp/pegasus-venv/bin:${PATH}
+  - $HOME/.local/bin/uv venv --clear --python 3.12
+  - source .venv/bin/activate
+  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl
   - ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
@@ -672,10 +671,9 @@ Performance Tests:
       EXEC:
       - launch-bamboo-test-planner-only
   script:
-  - python3 -m venv /tmp/pegasus-venv
-  - /tmp/pegasus-venv/bin/pip install --upgrade pip
-  - /tmp/pegasus-venv/bin/pip install dist/pegasus_wms-*.whl
-  - export PATH=/tmp/pegasus-venv/bin:${PATH}
+  - $HOME/.local/bin/uv venv --clear --python 3.12
+  - source .venv/bin/activate
+  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
