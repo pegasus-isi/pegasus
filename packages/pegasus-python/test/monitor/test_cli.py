@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import io
 from dataclasses import replace
 from pathlib import Path
@@ -27,7 +28,12 @@ from types import SimpleNamespace
 import pytest
 
 from Pegasus.monitor import cli
-from Pegasus.monitor.display import DisplayAnalysis, DisplayContext, DisplayOptions
+from Pegasus.monitor.display import (
+    DisplayAnalysis,
+    DisplayContext,
+    DisplayOptions,
+    rendering_gc_guard,
+)
 from Pegasus.monitor.models import SchedulerQueryKind, WorkflowIdentity
 
 
@@ -219,6 +225,7 @@ def _runtime(
         analyze_why_idle,
         render_dashboard,
         lambda *_args, **_kwargs: "rendered\n",
+        rendering_gc_guard,
         Console,
         _Live,
         scheduler_factory,
@@ -542,6 +549,93 @@ def test_live_completion_and_cleanup(tmp_path):
     )
     assert calls.coordinator_closed == 1
     assert calls.scheduler_queries == [SchedulerQueryKind.HISTORY]
+
+
+def test_live_rendering_suspends_gc_and_restores_enabled_state(tmp_path):
+    observed_gc_states = []
+
+    def observe_render():
+        observed_gc_states.append(("dashboard", gc.isenabled()))
+
+    runtime, calls = _runtime(tmp_path, on_render=observe_render)
+
+    class Live(_Live):
+        def __enter__(self):
+            observed_gc_states.append(("live_enter", gc.isenabled()))
+            return super().__enter__()
+
+        def __exit__(self, *_args):
+            observed_gc_states.append(("live_exit", gc.isenabled()))
+            return super().__exit__(*_args)
+
+        def update(self, renderable, **kwargs):
+            observed_gc_states.append(("live_update", gc.isenabled()))
+            return super().update(renderable, **kwargs)
+
+    class Console(_Console):
+        def print(self, renderable):
+            observed_gc_states.append(("console_print", gc.isenabled()))
+            return super().print(renderable)
+
+    gc.enable()
+    runtime = replace(runtime, live_type=Live, console_type=Console)
+
+    assert cli.main([str(tmp_path)], runtime=runtime, stdout=_Output(tty=True)) == 0
+    assert observed_gc_states
+    assert all(not enabled for _operation, enabled in observed_gc_states)
+    assert gc.isenabled()
+    assert calls.coordinator_closed == 1
+
+
+def test_live_rendering_restores_gc_after_refresh_failure(tmp_path):
+    observed_gc_states = []
+
+    class Live(_Live):
+        def __exit__(self, *_args):
+            observed_gc_states.append(("live_exit", gc.isenabled()))
+            return super().__exit__(*_args)
+
+        def update(self, _renderable, **_kwargs):
+            observed_gc_states.append(("live_update", gc.isenabled()))
+            raise RuntimeError("refresh failed")
+
+    gc.enable()
+    runtime, calls = _runtime(tmp_path)
+    runtime = replace(runtime, live_type=Live)
+    errors = _Output()
+
+    assert (
+        cli.main(
+            [str(tmp_path)],
+            runtime=runtime,
+            stdout=_Output(tty=True),
+            stderr=errors,
+        )
+        == 1
+    )
+    assert "refresh failed" in errors.getvalue()
+    assert observed_gc_states == [("live_update", False), ("live_exit", False)]
+    assert gc.isenabled()
+    assert calls.coordinator_closed == 1
+
+
+def test_live_rendering_preserves_already_disabled_gc(tmp_path):
+    observed_gc_states = []
+
+    def observe_render():
+        observed_gc_states.append(gc.isenabled())
+
+    runtime, calls = _runtime(tmp_path, on_render=observe_render)
+    gc.disable()
+    try:
+        assert cli.main([str(tmp_path)], runtime=runtime, stdout=_Output(tty=True)) == 0
+        assert observed_gc_states
+        assert not any(observed_gc_states)
+        assert not gc.isenabled()
+    finally:
+        gc.enable()
+
+    assert calls.coordinator_closed == 1
 
 
 def test_tail_only_live_observation_exits_cleanly_on_interrupt(tmp_path, monkeypatch):

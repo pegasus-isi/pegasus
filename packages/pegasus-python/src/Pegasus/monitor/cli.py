@@ -203,6 +203,7 @@ class RuntimeComponents:
     analyze_why_idle: Callable[..., Any]
     render_dashboard: Callable[..., Any]
     render_text: Callable[..., str]
+    rendering_gc_guard: Callable[..., Any]
     console_type: type
     live_type: type
     scheduler_factory: Callable[..., Any]
@@ -229,6 +230,7 @@ def _load_runtime() -> RuntimeComponents:
         DisplayOptions,
         render_dashboard,
         render_text,
+        rendering_gc_guard,
     )
     from Pegasus.monitor.live_events import LiveEventTail
     from Pegasus.monitor.locator import WorkflowLocator
@@ -251,6 +253,7 @@ def _load_runtime() -> RuntimeComponents:
         analyze_why_idle,
         render_dashboard,
         render_text,
+        rendering_gc_guard,
         Console,
         Live,
         _scheduler_factory,
@@ -516,6 +519,36 @@ async def _query_once(coordinator: object, kinds: tuple[object, ...]) -> object:
     return coordinator.latest
 
 
+@contextmanager
+def _live_rendering_session(
+    runtime: RuntimeComponents,
+    renderable_factory: Callable[[], object],
+    *,
+    console: object,
+):
+    """Enter and leave Rich Live with GC bounded to its render operations."""
+
+    with runtime.rendering_gc_guard():
+        manager = runtime.live_type(
+            renderable_factory(),
+            console=console,
+            refresh_per_second=4,
+            transient=False,
+            screen=True,
+        )
+        live = manager.__enter__()
+    try:
+        yield live
+    except BaseException:
+        with runtime.rendering_gc_guard():
+            suppressed = manager.__exit__(*sys.exc_info())
+        if not suppressed:
+            raise
+    else:
+        with runtime.rendering_gc_guard():
+            manager.__exit__(None, None, None)
+
+
 async def _run_once(
     args: argparse.Namespace,
     coordinator: object,
@@ -588,12 +621,10 @@ async def _run_live(
         analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
         active_stall_key = _updated_active_stall(active_stall_key, analysis)
         analysis_sequence = snapshot.sequence
-        with runtime.live_type(
-            runtime.render_dashboard(context, snapshot, analysis, options),
+        with _live_rendering_session(
+            runtime,
+            lambda: runtime.render_dashboard(context, snapshot, analysis, options),
             console=console,
-            refresh_per_second=4,
-            transient=False,
-            screen=True,
         ) as live:
             while True:
                 current = coordinator.latest or snapshot
@@ -667,10 +698,11 @@ async def _run_live(
                     height=console.height,
                     live=True,
                 )
-                live.update(
-                    runtime.render_dashboard(context, current, analysis, options),
-                    refresh=True,
-                )
+                with runtime.rendering_gc_guard():
+                    live.update(
+                        runtime.render_dashboard(context, current, analysis, options),
+                        refresh=True,
+                    )
                 last_rendered_snapshot = current
                 if current.authoritative_complete:
                     if not args.no_condor:
@@ -697,10 +729,13 @@ async def _run_live(
                             runtime,
                         )
                         analysis_sequence = current.sequence
-                    live.update(
-                        runtime.render_dashboard(context, current, analysis, options),
-                        refresh=True,
-                    )
+                    with runtime.rendering_gc_guard():
+                        live.update(
+                            runtime.render_dashboard(
+                                context, current, analysis, options
+                            ),
+                            refresh=True,
+                        )
                     last_rendered_snapshot = current
                     return 0
                 await asyncio.sleep(0.25)
@@ -724,11 +759,12 @@ async def _run_live(
                 live=False,
                 final=True,
             )
-            console.print(
-                runtime.render_dashboard(
-                    context, final_snapshot, analysis, final_options
+            with runtime.rendering_gc_guard():
+                console.print(
+                    runtime.render_dashboard(
+                        context, final_snapshot, analysis, final_options
+                    )
                 )
-            )
 
 
 async def _run(

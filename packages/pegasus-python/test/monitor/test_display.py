@@ -18,9 +18,13 @@
 
 from __future__ import annotations
 
+import gc
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
+from rich.console import Console
 
 from Pegasus.monitor.display import (
     DisplayAnalysis,
@@ -210,6 +214,52 @@ def test_render_path_does_not_open_workflow_sources(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "open", forbidden)
     text = render_text(_context(tmp_path), _snapshot(), width=80)
     assert "Workflow Status" in text
+
+
+def test_render_text_suspends_gc_and_restores_enabled_state(tmp_path, monkeypatch):
+    original_print = Console.print
+    observed_gc_states = []
+
+    def print_spy(self, *args, **kwargs):
+        observed_gc_states.append(gc.isenabled())
+        return original_print(self, *args, **kwargs)
+
+    gc.enable()
+    monkeypatch.setattr(Console, "print", print_spy)
+
+    text = render_text(_context(tmp_path), _snapshot(), width=80)
+
+    assert "Workflow Status" in text
+    assert observed_gc_states == [False]
+    assert gc.isenabled()
+
+
+def test_render_text_restores_gc_after_render_failure(tmp_path, monkeypatch):
+    def fail_print(*_args, **_kwargs):
+        assert not gc.isenabled()
+        raise RuntimeError("render failed")
+
+    gc.enable()
+    monkeypatch.setattr(Console, "print", fail_print)
+
+    with pytest.raises(RuntimeError, match="render failed"):
+        render_text(_context(tmp_path), _snapshot(), width=80)
+
+    assert gc.isenabled()
+
+
+def test_render_text_preserves_already_disabled_gc_and_output(tmp_path):
+    gc.enable()
+    enabled_output = render_text(_context(tmp_path), _snapshot(), width=80)
+
+    gc.disable()
+    try:
+        disabled_output = render_text(_context(tmp_path), _snapshot(), width=80)
+        assert not gc.isenabled()
+    finally:
+        gc.enable()
+
+    assert disabled_output == enabled_output
 
 
 def test_visible_jobs_is_row_bounded_for_100k_jobs():

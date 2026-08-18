@@ -18,9 +18,11 @@
 
 from __future__ import annotations
 
+import gc
 import io
 import math
 from collections.abc import Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -79,6 +81,23 @@ _HEALTH_STYLE = {
     HealthState.UNAVAILABLE: "red",
     HealthState.DISABLED: "dim",
 }
+
+
+@contextmanager
+def rendering_gc_guard():
+    """Suspend cyclic GC for one bounded Rich rendering operation."""
+
+    # Rich creates a short-lived object graph large enough to trigger an
+    # unrelated generation-2 collection; keep that pause out of live display
+    # latency without changing the caller's GC policy.
+    gc_was_enabled = gc.isenabled()
+    if gc_was_enabled:
+        gc.disable()
+    try:
+        yield
+    finally:
+        if gc_was_enabled:
+            gc.enable()
 
 
 @dataclass(frozen=True, slots=True)
@@ -908,12 +927,13 @@ def render_text(
             live=False,
             final=selected.final,
         )
-    console = Console(
-        file=stream,
-        force_terminal=False,
-        color_system=None,
-        width=width,
-        legacy_windows=False,
-    )
-    console.print(render_dashboard(context, snapshot, analysis, selected))
-    return stream.getvalue()
+    with rendering_gc_guard():
+        console = Console(
+            file=stream,
+            force_terminal=False,
+            color_system=None,
+            width=width,
+            legacy_windows=False,
+        )
+        console.print(render_dashboard(context, snapshot, analysis, selected))
+        return stream.getvalue()
