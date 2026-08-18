@@ -358,6 +358,54 @@ class BlockingScheduler:
         self.release.set()
 
 
+class SerialScheduler:
+    """Record scheduler concurrency while holding the first query."""
+
+    def __init__(self) -> None:
+        self.first_started = threading.Event()
+        self.release_first = threading.Event()
+        self.requests = []
+        self.active = 0
+        self.max_active = 0
+        self.cancelled = 0
+        self.closed = 0
+        self._guard = threading.Lock()
+
+    def query(self, request):
+        with self._guard:
+            index = len(self.requests)
+            self.requests.append(request)
+            self.active += 1
+            self.max_active = max(self.max_active, self.active)
+        try:
+            if index == 0:
+                self.first_started.set()
+                self.release_first.wait(5.0)
+            source = {
+                SchedulerQueryKind.QUEUE: SourceName.CONDOR_QUEUE,
+                SchedulerQueryKind.HISTORY: SourceName.CONDOR_HISTORY,
+                SchedulerQueryKind.POOL: SourceName.CONDOR_POOL,
+                SchedulerQueryKind.PRIORITY: SourceName.CONDOR_PRIORITY,
+                SchedulerQueryKind.NEGOTIATOR: SourceName.CONDOR_NEGOTIATOR,
+            }[request.kind]
+            return SchedulerQueryResult(
+                request,
+                SourceHealth(source, HealthState.HEALTHY, request.clock.epoch),
+                0.0,
+            )
+        finally:
+            with self._guard:
+                self.active -= 1
+
+    def cancel(self) -> None:
+        self.cancelled += 1
+        self.release_first.set()
+
+    def close(self) -> None:
+        self.closed += 1
+        self.release_first.set()
+
+
 def run(coro):
     return asyncio.run(coro)
 
@@ -756,6 +804,96 @@ def test_hung_optional_scheduler_does_not_block_tail_or_database() -> None:
         ].scheduler.to_json_dict()
         assert scheduler_payload["queue"]["JobStatus"] == 2
         await coordinator.close()
+
+    run(scenario())
+
+
+def test_scheduler_loop_and_external_query_are_serialized_and_both_publish() -> None:
+    async def scenario() -> None:
+        calls: list[str] = []
+        scheduler = SerialScheduler()
+        coordinator = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(database((transition("SUBMIT", "100", 1),)), calls),
+            scheduler=scheduler,
+            config=CoordinatorConfig(
+                scheduler_intervals=((SchedulerQueryKind.QUEUE, 60.0),)
+            ),
+        )
+        initial = await coordinator.bootstrap()
+        coordinator._create_supervised(
+            coordinator._scheduler_loop, "test-scheduler-loop"
+        )
+        assert await asyncio.to_thread(scheduler.first_started.wait, 0.5)
+
+        history = asyncio.create_task(
+            coordinator.poll_scheduler_once(SchedulerQueryKind.HISTORY)
+        )
+        await asyncio.sleep(0)
+        assert not history.done()
+        assert [request.kind for request in scheduler.requests] == [
+            SchedulerQueryKind.QUEUE
+        ]
+
+        scheduler.release_first.set()
+        result = await asyncio.wait_for(history, 0.5)
+
+        assert result is not None
+        assert result.request.kind is SchedulerQueryKind.HISTORY
+        assert scheduler.max_active == 1
+        assert [request.kind for request in scheduler.requests[:2]] == [
+            SchedulerQueryKind.QUEUE,
+            SchedulerQueryKind.HISTORY,
+        ]
+        assert coordinator.latest is not None
+        assert coordinator.latest.sequence == initial.sequence + 2
+        assert {item.request.kind for item in coordinator.latest.scheduler_results} == {
+            SchedulerQueryKind.QUEUE,
+            SchedulerQueryKind.HISTORY,
+        }
+        await coordinator.close()
+
+    run(scenario())
+
+
+def test_scheduler_waiter_exits_without_query_or_publication_during_close() -> None:
+    async def scenario() -> None:
+        calls: list[str] = []
+        scheduler = SerialScheduler()
+        coordinator = MonitorCoordinator(
+            WORKFLOW,
+            FakeStampede(database((transition("SUBMIT", "100", 1),)), calls),
+            scheduler=scheduler,
+            config=CoordinatorConfig(
+                scheduler_intervals=((SchedulerQueryKind.QUEUE, 60.0),)
+            ),
+        )
+        initial = await coordinator.bootstrap()
+        coordinator._create_supervised(
+            coordinator._scheduler_loop, "test-scheduler-loop"
+        )
+        assert await asyncio.to_thread(scheduler.first_started.wait, 0.5)
+
+        history = asyncio.create_task(
+            coordinator.poll_scheduler_once(SchedulerQueryKind.HISTORY)
+        )
+        await asyncio.sleep(0)
+        assert not history.done()
+
+        await asyncio.wait_for(coordinator.close(), 0.5)
+        result = await asyncio.wait_for(history, 0.5)
+
+        assert result is None
+        assert scheduler.max_active == 1
+        assert [request.kind for request in scheduler.requests] == [
+            SchedulerQueryKind.QUEUE
+        ]
+        assert coordinator.latest is not None
+        assert coordinator.latest.sequence == initial.sequence
+        assert coordinator.latest.scheduler_results == ()
+        assert not coordinator._tasks
+        assert scheduler.cancelled == 1
+        assert scheduler.closed == 1
 
     run(scenario())
 

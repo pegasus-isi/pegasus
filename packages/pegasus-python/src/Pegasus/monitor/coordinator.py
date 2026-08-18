@@ -247,6 +247,7 @@ class MonitorCoordinator:
         self._closed = False
         self._publish_lock = asyncio.Lock()
         self._database_refresh_lock = asyncio.Lock()
+        self._scheduler_query_lock = asyncio.Lock()
         self._start_lock = asyncio.Lock()
 
     @property
@@ -427,37 +428,54 @@ class MonitorCoordinator:
     ) -> SchedulerQueryResult | None:
         if self.scheduler is None:
             return None
-        request = SchedulerQueryRequest(
-            workflow=self.workflow,
-            kind=kind,
-            clock=self._sample_clock(),
-            timeout_seconds=self.config.scheduler_timeout,
-            result_limit=self.config.scheduler_result_limit,
-        )
-        # The concrete provider is synchronous and process-bounded.  Moving it
-        # off the coordinator event loop keeps DB/tail/render progress intact.
-        try:
-            result = await asyncio.to_thread(self.scheduler.query, request)
-        except Exception as error:
-            result = SchedulerQueryResult(
-                request=request,
-                health=SourceHealth(
-                    _SCHEDULER_SOURCE[kind],
-                    HealthState.UNAVAILABLE,
-                    request.clock.epoch,
-                    consecutive_failures=1,
-                    error_code="scheduler_provider_exception",
-                    detail=_exception_detail(error),
-                ),
-                backoff_seconds=min(self.config.loop_retry_interval * 2.0, 300.0),
+        async with self._scheduler_query_lock:
+            # External final/on-demand queries share this gate with the cadence
+            # loop.  A waiter awakened by close must not start a new provider
+            # process or publish evidence after monitoring has stopped.
+            if self._stop_event.is_set():
+                return None
+            request = SchedulerQueryRequest(
+                workflow=self.workflow,
+                kind=kind,
+                clock=self._sample_clock(),
+                timeout_seconds=self.config.scheduler_timeout,
+                result_limit=self.config.scheduler_result_limit,
             )
-        if self._stop_event.is_set():
+            # The concrete provider is synchronous and process-bounded.  Moving
+            # it off the event loop keeps DB/tail/render progress intact.  Shield
+            # the executor future so task cancellation cannot release the gate
+            # while the synchronous provider is still returning.
+            query = asyncio.create_task(
+                asyncio.to_thread(self.scheduler.query, request)
+            )
+            try:
+                result = await asyncio.shield(query)
+            except asyncio.CancelledError:
+                try:
+                    await query
+                except BaseException:
+                    pass
+                raise
+            except Exception as error:
+                result = SchedulerQueryResult(
+                    request=request,
+                    health=SourceHealth(
+                        _SCHEDULER_SOURCE[kind],
+                        HealthState.UNAVAILABLE,
+                        request.clock.epoch,
+                        consecutive_failures=1,
+                        error_code="scheduler_provider_exception",
+                        detail=_exception_detail(error),
+                    ),
+                    backoff_seconds=min(self.config.loop_retry_interval * 2.0, 300.0),
+                )
+            if self._stop_event.is_set():
+                return result
+            self._scheduler_results[kind] = result
+            self.reconciler.update_scheduler(result)
+            if publish:
+                await self.publish()
             return result
-        self._scheduler_results[kind] = result
-        self.reconciler.update_scheduler(result)
-        if publish:
-            await self.publish()
-        return result
 
     async def publish(self) -> CoordinatorSnapshot:
         async with self._publish_lock:
@@ -735,7 +753,11 @@ class MonitorCoordinator:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self._tasks.clear()
-        self._call_capability(self.scheduler, "close")
+        # Drain an externally initiated query before closing the shared
+        # provider.  Queued waiters observe the stop event under the same gate
+        # and return without starting another process.
+        async with self._scheduler_query_lock:
+            self._call_capability(self.scheduler, "close")
         self._call_capability(self.tail, "close")
 
     async def __aenter__(self) -> MonitorCoordinator:
