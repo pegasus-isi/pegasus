@@ -1165,6 +1165,12 @@ artifact: track it on the feature branch while agents need a stable reference,
 then rewrite/squash it out of the submitted branch history and restore the local
 `.git/info/exclude` entry before opening the PR.
 
+Implementation freeze for Wave B:
+
+- workflow-monitor source baseline: `358d7ff22231882000e3741121a2ac92745831ef`;
+- WP0 baseline inventory merge: `184d60d88`;
+- frozen WP1 shared-model/provider interface: `b143659b1`.
+
 ### Agent handoff rules
 
 - One architecture/integration lead owns `models.py` contracts and approves
