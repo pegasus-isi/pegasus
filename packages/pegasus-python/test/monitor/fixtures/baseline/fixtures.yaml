@@ -1,0 +1,29 @@
+schema_version: 1
+license: Apache-2.0
+provenance: >-
+  Synthetic, sanitized minimal JSONL records modeled on the event vocabulary of
+  workflow-monitor canonical main at 358d7ff22231882000e3741121a2ac92745831ef.
+  No production
+  workflow data, usernames, hostnames, credentials, absolute paths, or real UUIDs.
+fixtures:
+  - file: normal.jsonl
+    case: normal
+    purpose: queued-to-running workflow with one compute job
+  - file: failed.jsonl
+    case: failed
+    purpose: terminal workflow failure and raw wait-status failure evidence
+  - file: held.jsonl
+    case: held
+    purpose: held job with a sanitized HTCondor hold reason
+  - file: retried.jsonl
+    case: retried
+    purpose: two attempts represented by distinct instance and submit sequence
+  - file: clustered.jsonl
+    case: clustered
+    purpose: one clustered compute record; task expansion belongs to Stampede fixtures
+  - file: nested.jsonl
+    case: nested
+    purpose: child workflow UUID distinguished from a root workflow UUID
+  - file: completed.jsonl
+    case: completed
+    purpose: successful terminal workflow and workflow_end summary
