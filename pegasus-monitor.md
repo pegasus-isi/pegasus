@@ -3,7 +3,7 @@
 Date: 2026-08-17
 
 Status: canonical plan, approved for implementation fanout — owner and
-implementation decisions 1-16 recorded 2026-08-17 (section 20)
+implementation decisions 1-17 recorded 2026-08-17 (section 20)
 
 ## 1. Outcome
 
@@ -1096,6 +1096,7 @@ Deliverables:
 - inject DB locks/replacement, tail replacement/gaps, and hung/broken Condor
   commands;
 - measure DB transaction duration, source call cadence, CPU, and memory;
+- enforce the fixed performance budgets in section 16.5;
 - verify monitor termination leaves no helpers and does not affect workflow
   processes;
 - produce the v1 acceptance evidence matrix;
@@ -1121,6 +1122,8 @@ Deliverables:
 - integrate WP7 plus its scoped WP6b CLI and WP8 documentation updates;
 - verify checkpoint size/cadence, gap recovery, stream replacement, replay,
   server, remote SSH, security, and final-state equivalence;
+- verify the fast-follow does not violate the section 16.5 CPU, memory, DB, or
+  workflow-impact budgets;
 - inject disk-guard gaps, torn records, process restarts, and stream replacement;
 - route defects to their owning WP and rerun affected gates.
 
@@ -1274,7 +1277,7 @@ Do not edit: <other agents' modules>.
 - 100k jobs and at least 1M state lines without quadratic rescans or unbounded
   memory; burst tests cover 500-1,000 appended lines/second.
 - Under the reference burst benchmark, post-boundary live-event display latency
-  targets p95 below one second.
+  must have p95 below one second.
 - Shared JSONL golden corpus across writer/replay/remote.
 - Initial, periodic, post-gap, replacement, and final checkpoints reconstruct
   the same DB-confirmed snapshot.
@@ -1288,9 +1291,12 @@ Do not edit: <other agents' modules>.
 - V1 parser exposes exactly the section 11 v1 flags, rejects WP7 flags rather
   than advertising placeholders, and has no `--condor-poll` option. WP7 tests
   add its recorded fast-follow flags without altering v1 semantics.
-- With and without monitor benchmark records workflow makespan and monitord
-  CPU/I/O; the release owner approves a measured impact budget (target median
-  makespan impact below 2%).
+- The with/without-monitor benchmark must keep median workflow makespan impact
+  below 2%.
+- During the 100k-job/1M-event benchmark, monitor CPU must average below one
+  logical core and peak RSS must remain below 1 GiB.
+- Stampede refresh transactions must have p95 duration below 500 ms and no
+  transaction may remain open longer than 2 seconds.
 
 ### 16.6 Packaging
 
@@ -1366,6 +1372,8 @@ Required: WP0-WP6b, WP8, and WP9a for live/once modes.
 8. Killing the monitor leaves no helper process and does not affect workflow
    execution.
 9. The Ant executable behaves correctly and preserves exit codes.
+10. The latency, workflow-impact, CPU, memory, and DB-transaction budgets in
+    section 16.5 all pass as release-blocking gates.
 
 ### Extended release
 
@@ -1392,7 +1400,7 @@ Required additionally: WP7, its scoped WP8 documentation update, and WP9b.
 
 ## 20. Owner and implementation decisions (recorded 2026-08-17)
 
-All sixteen decisions are recorded; the section 15 fanout gate is satisfied.
+All seventeen decisions are recorded; the section 15 fanout gate is satisfied.
 
 1. **Attribution — USC/ISI headers.** Absorbed workflow-monitor code is
    re-headered to the Pegasus tree's standard Apache-2.0/USC-ISI convention
@@ -1442,3 +1450,9 @@ All sixteen decisions are recorded; the section 15 fanout gate is satisfied.
     parallel WP uses a dedicated branch/worktree. The plan is temporarily
     tracked for stable development references, then removed from the final PR
     diff and commit history and restored to `.git/info/exclude` before submission.
+17. **Performance budgets — fixed release gates.** Post-boundary live-event
+    display latency must have p95 below one second; median workflow makespan
+    impact must remain below 2%; monitor CPU must average below one logical core;
+    peak RSS must remain below 1 GiB at 100k jobs/1M events; Stampede refresh
+    transactions must have p95 below 500 ms and no transaction may exceed 2
+    seconds.
