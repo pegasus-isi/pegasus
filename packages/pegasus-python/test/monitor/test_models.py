@@ -824,6 +824,7 @@ def test_effective_snapshot_has_ordered_mixed_event_feed_and_workflow_pending() 
         "db_workflow_transition",
     ]
     assert effective.to_json_dict()["events"][1]["provenance"] == "tail_pending"  # type: ignore[index]
+    assert effective.to_json_dict()["pending_overlay_count"] == 1
     with pytest.raises(ValueError, match="provenance"):
         EffectiveEvent(3, Provenance.DB_CONFIRMED, tail_workflow)
     with pytest.raises(ValueError, match="strictly increasing"):

@@ -293,6 +293,9 @@ class Reconciler:
         self._effective_jobs_pending: tuple[object, ...] = ()
         self._effective_jobs_scheduler_revision = -1
         self._effective_jobs_cache: tuple[JobSnapshot, ...] | None = None
+        self._effective_base_database: DatabaseSnapshot | None = None
+        self._effective_base_scheduler_revision = -1
+        self._effective_base_jobs: tuple[JobSnapshot, ...] = ()
         self._force_full_refresh = False
         self._database_rebootstrap = False
         self._publication_frozen = False
@@ -1244,7 +1247,39 @@ class Reconciler:
         ):
             return self._effective_jobs_cache
 
-        jobs = {job.exec_job_id: job for job in database.jobs}
+        if (
+            self._effective_base_database is not database
+            or self._effective_base_scheduler_revision != self._scheduler_jobs_revision
+        ):
+            # Sorting and scheduler enrichment depend only on the authoritative
+            # roster and scheduler evidence. Tail-only publications can reuse
+            # this base and apply their bounded overlay below.
+            ordered = tuple(
+                sorted(
+                    database.jobs,
+                    key=lambda job: (
+                        job.job_id is None,
+                        job.job_id if job.job_id is not None else 0,
+                        job.exec_job_id,
+                    ),
+                )
+            )
+            if self._scheduler_jobs_revision:
+                enriched: list[JobSnapshot] = []
+                for job in ordered:
+                    scheduler = self._scheduler_payload(job, job.exec_job_id)
+                    enriched.append(
+                        job
+                        if scheduler == job.scheduler
+                        else replace(job, scheduler=scheduler)
+                    )
+                ordered = tuple(enriched)
+            self._effective_base_database = database
+            self._effective_base_scheduler_revision = self._scheduler_jobs_revision
+            self._effective_base_jobs = ordered
+
+        overlays: dict[str, JobSnapshot] = {}
+        provisional: list[JobSnapshot] = []
         pending_by_job: dict[str, list[TailJobEvent]] = defaultdict(list)
         for event in self._pending_jobs:
             pending_by_job[event.exec_job_id].append(event)
@@ -1252,26 +1287,28 @@ class Reconciler:
         for exec_job_id, events in pending_by_job.items():
             final = events[-1]
             identities = tuple(event.identity for event in events)
-            base = jobs.get(exec_job_id)
+            base = self._database_jobs_by_exec_id.get(exec_job_id)
             if base is None:
-                jobs[exec_job_id] = JobSnapshot(
-                    workflow=self.workflow,
-                    job_id=None,
-                    exec_job_id=exec_job_id,
-                    type_desc="unknown",
-                    task_count=0,
-                    transformations=(),
-                    attempts=(),
-                    current_attempt=None,
-                    state=final.normalized_state,
-                    state_timestamp=final.event_timestamp,
-                    transition=None,
-                    provenance=Provenance.PROVISIONAL_JOB,
-                    pending_tail=identities,
-                    scheduler=self._scheduler_payload(None, exec_job_id),
+                provisional.append(
+                    JobSnapshot(
+                        workflow=self.workflow,
+                        job_id=None,
+                        exec_job_id=exec_job_id,
+                        type_desc="unknown",
+                        task_count=0,
+                        transformations=(),
+                        attempts=(),
+                        current_attempt=None,
+                        state=final.normalized_state,
+                        state_timestamp=final.event_timestamp,
+                        transition=None,
+                        provenance=Provenance.PROVISIONAL_JOB,
+                        pending_tail=identities,
+                        scheduler=self._scheduler_payload(None, exec_job_id),
+                    )
                 )
             else:
-                jobs[exec_job_id] = replace(
+                overlays[exec_job_id] = replace(
                     base,
                     state=final.normalized_state,
                     state_timestamp=final.event_timestamp,
@@ -1280,21 +1317,13 @@ class Reconciler:
                     scheduler=self._scheduler_payload(base, exec_job_id),
                 )
 
-        for exec_job_id, base in tuple(jobs.items()):
-            if exec_job_id not in pending_by_job:
-                scheduler = self._scheduler_payload(base, exec_job_id)
-                if scheduler != base.scheduler:
-                    jobs[exec_job_id] = replace(base, scheduler=scheduler)
-        result = tuple(
-            sorted(
-                jobs.values(),
-                key=lambda job: (
-                    job.job_id is None,
-                    job.job_id if job.job_id is not None else 0,
-                    job.exec_job_id,
-                ),
-            )
-        )
+        known: list[JobSnapshot] = []
+        unknown: list[JobSnapshot] = provisional
+        for base in self._effective_base_jobs:
+            effective = overlays.get(base.exec_job_id, base)
+            (unknown if effective.job_id is None else known).append(effective)
+        unknown.sort(key=lambda job: job.exec_job_id)
+        result = (*known, *unknown)
         self._effective_jobs_database = database
         self._effective_jobs_pending = pending_key
         self._effective_jobs_scheduler_revision = self._scheduler_jobs_revision

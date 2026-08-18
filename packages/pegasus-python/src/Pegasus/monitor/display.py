@@ -146,6 +146,14 @@ class DisplayAnalysis:
         object.__setattr__(self, "errors", tuple(self.errors))
 
 
+@dataclass(frozen=True, slots=True)
+class _JobRoster:
+    visible: tuple[JobSnapshot, ...]
+    selected_total: int
+    lifecycle_counts: Mapping[Lifecycle, int]
+    provenance_counts: Mapping[Provenance, int]
+
+
 def _duration(seconds: float | Decimal | None) -> str:
     if seconds is None:
         return "-"
@@ -279,10 +287,12 @@ def _scheduler_display(
     return status, request, host
 
 
-def _activity_key(indexed: tuple[int, JobSnapshot]) -> tuple[object, ...]:
-    index, job = indexed
+def _activity_key(
+    indexed: tuple[int, JobSnapshot, Lifecycle],
+) -> tuple[object, ...]:
+    index, job, lifecycle = indexed
     timestamp = float(job.state_timestamp) if job.state_timestamp is not None else -1.0
-    if job.lifecycle is Lifecycle.RUNNING:
+    if lifecycle is Lifecycle.RUNNING:
         return (0, -timestamp, index)
     if job.state_timestamp is not None:
         return (1, -timestamp, index)
@@ -292,14 +302,26 @@ def _activity_key(indexed: tuple[int, JobSnapshot]) -> tuple[object, ...]:
 def _visible_jobs(
     jobs: tuple[JobSnapshot, ...], options: DisplayOptions
 ) -> tuple[list[JobSnapshot], int]:
+    roster = _job_roster(jobs, options)
+    return list(roster.visible), roster.selected_total
+
+
+def _job_roster(jobs: tuple[JobSnapshot, ...], options: DisplayOptions) -> _JobRoster:
+    """Select bounded rows and aggregate the full roster in one traversal."""
+
     total = 0
+    counts = dict.fromkeys(Lifecycle, 0)
+    provenance_counts = dict.fromkeys(Provenance, 0)
 
     def selected():
         nonlocal total
         for index, job in enumerate(jobs):
+            lifecycle = job.lifecycle
+            counts[lifecycle] += 1
+            provenance_counts[job.provenance] += 1
             if options.show_all_jobs or job.type_desc.lower() == "compute":
                 total += 1
-                yield index, job
+                yield index, job, lifecycle
 
     if options.sort_by_activity:
         rows = heapq.nsmallest(options.job_row_limit, selected(), key=_activity_key)
@@ -308,8 +330,9 @@ def _visible_jobs(
         for item in selected():
             if len(rows) < options.job_row_limit:
                 rows.append(item)
-    visible = [job for _, job in rows]
-    return visible, total
+    return _JobRoster(
+        tuple(job for _, job, _ in rows), total, counts, provenance_counts
+    )
 
 
 def _header(
@@ -401,7 +424,11 @@ def _health_panel(snapshot: CoordinatorSnapshot, options: DisplayOptions) -> Pan
     return Panel(grid, title="Sources", padding=(0, 1))
 
 
-def _status_panel(snapshot: CoordinatorSnapshot, analysis: DisplayAnalysis) -> Panel:
+def _status_panel(
+    snapshot: CoordinatorSnapshot,
+    analysis: DisplayAnalysis,
+    roster: _JobRoster | None = None,
+) -> Panel:
     effective = snapshot.effective
     if effective is None:
         body = Text()
@@ -414,11 +441,10 @@ def _status_panel(snapshot: CoordinatorSnapshot, analysis: DisplayAnalysis) -> P
         return Panel(body, title="Workflow Status", padding=(0, 1))
 
     jobs = effective.jobs
-    counts = dict.fromkeys(Lifecycle, 0)
-    provenance_counts = dict.fromkeys(Provenance, 0)
-    for job in jobs:
-        counts[job.lifecycle] += 1
-        provenance_counts[job.provenance] += 1
+    if roster is None:
+        roster = _job_roster(jobs, DisplayOptions())
+    counts = roster.lifecycle_counts
+    provenance_counts = roster.provenance_counts
     succeeded = counts[Lifecycle.SUCCEEDED]
     failed = counts[Lifecycle.FAILED]
     done = succeeded + failed
@@ -457,11 +483,18 @@ def _status_panel(snapshot: CoordinatorSnapshot, analysis: DisplayAnalysis) -> P
     return Panel(Group(state, provenance), title="Workflow Status", padding=(0, 1))
 
 
-def _job_panel(snapshot: CoordinatorSnapshot, options: DisplayOptions) -> Panel | None:
+def _job_panel(
+    snapshot: CoordinatorSnapshot,
+    options: DisplayOptions,
+    roster: _JobRoster | None = None,
+) -> Panel | None:
     effective = snapshot.effective
     if effective is None:
         return None
-    jobs, total = _visible_jobs(effective.jobs, options)
+    if roster is None:
+        roster = _job_roster(effective.jobs, options)
+    jobs = roster.visible
+    total = roster.selected_total
     compact = options.width < 88
     wide = options.width >= 132
     table = Table(box=box.SIMPLE, expand=True, pad_edge=False)
@@ -801,10 +834,15 @@ def render_dashboard(
 
     selected_analysis = analysis or DisplayAnalysis()
     selected_options = options or DisplayOptions()
+    roster = (
+        _job_roster(snapshot.effective.jobs, selected_options)
+        if snapshot.effective is not None
+        else None
+    )
     panels: list[RenderableType] = [
         _header(context, snapshot, selected_options),
         _health_panel(snapshot, selected_options),
-        _status_panel(snapshot, selected_analysis),
+        _status_panel(snapshot, selected_analysis, roster),
     ]
     # Evidence and final summaries precede row-heavy detail so Rich clipping on
     # a bounded alternate screen cannot hide diagnostics with no scroll path.
@@ -834,7 +872,7 @@ def render_dashboard(
                 padding=(0, 1),
             )
         )
-    job_panel = _job_panel(snapshot, selected_options)
+    job_panel = _job_panel(snapshot, selected_options, roster)
     if job_panel is not None:
         panels.append(job_panel)
     panels.append(_events_panel(snapshot, selected_options))

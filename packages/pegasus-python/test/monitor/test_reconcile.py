@@ -32,12 +32,17 @@ from Pegasus.monitor.models import (
     DBTransitionIdentity,
     DBWorkflowTransition,
     DBWorkflowTransitionIdentity,
+    FrozenPayload,
     HealthState,
     JobAttempt,
     JobAttemptIdentity,
     JobSnapshot,
     JobTransitionWatermark,
     Provenance,
+    SchedulerEvidence,
+    SchedulerQueryKind,
+    SchedulerQueryRequest,
+    SchedulerQueryResult,
     SnapshotEpoch,
     SourceHealth,
     SourceName,
@@ -349,6 +354,31 @@ def effective(reconciler: Reconciler, epoch: int = 10):
     return snapshot
 
 
+def scheduler_result(status: int) -> SchedulerQueryResult:
+    kind = SchedulerQueryKind.QUEUE
+    request = SchedulerQueryRequest(WORKFLOW, kind, CLOCK, 1.0, 10)
+    return SchedulerQueryResult(
+        request,
+        SourceHealth(SourceName.CONDOR_QUEUE, HealthState.HEALTHY, CLOCK.epoch),
+        0.0,
+        (
+            SchedulerEvidence(
+                kind,
+                FrozenPayload.from_mapping(
+                    {
+                        "DAGNodeName": "compute_ID0000001",
+                        "ClusterId": 42,
+                        "ProcId": 0,
+                    }
+                ),
+                FrozenPayload.from_mapping(
+                    {"ClusterId": 42, "ProcId": 0, "JobStatus": status}
+                ),
+            ),
+        ),
+    )
+
+
 def test_initial_merge_suppresses_event_already_in_database() -> None:
     transition = job_transition("EXECUTE", "101", 2)
     reconciler = Reconciler(WORKFLOW)
@@ -376,6 +406,39 @@ def test_repeated_publication_reuses_job_roster_until_inputs_change() -> None:
 
     assert changed.jobs is not second.jobs
     assert changed.jobs[0].state == "EXECUTE"
+
+
+def test_database_object_replacement_invalidates_effective_base() -> None:
+    reconciler = Reconciler(WORKFLOW)
+    install(reconciler, database((job_transition("SUBMIT", "100", 1),)))
+    first = effective(reconciler, 10)
+
+    replacement = database((job_transition("EXECUTE", "101", 2),), epoch=2)
+    reconciler.apply_database(
+        db_result(
+            replacement,
+            mode=DBRefreshMode.CURRENT_SNAPSHOT,
+            prior=GENERATION,
+        )
+    )
+    second = effective(reconciler, 11)
+
+    assert second.jobs is not first.jobs
+    assert second.jobs[0].state == "EXECUTE"
+
+
+def test_scheduler_revision_rebuilds_enriched_authoritative_base() -> None:
+    reconciler = Reconciler(WORKFLOW)
+    install(reconciler, database((job_transition("SUBMIT", "100", 1),)))
+
+    reconciler.update_scheduler(scheduler_result(1))
+    idle = effective(reconciler, 10)
+    assert idle.jobs[0].scheduler.to_json_dict()["queue"]["JobStatus"] == 1
+
+    reconciler.update_scheduler(scheduler_result(2))
+    running = effective(reconciler, 11)
+    assert running.jobs is not idle.jobs
+    assert running.jobs[0].scheduler.to_json_dict()["queue"]["JobStatus"] == 2
 
 
 def test_pre_database_preview_migrates_to_confirmed_event_at_stable_order() -> None:
@@ -689,6 +752,26 @@ def test_provisional_job_is_replaced_without_duplicate_count() -> None:
     assert len(confirmed.jobs) == 1
     assert confirmed.jobs[0].job_id is not None
     assert confirmed.pending_overlay_count == 0
+
+
+def test_provisional_unknown_jobs_follow_known_jobs_in_stable_order() -> None:
+    reconciler = Reconciler(WORKFLOW)
+    install(reconciler, database((job_transition("SUBMIT", "100", 1),)))
+    reconciler.ingest_tail(
+        tail_result(
+            tail_job("SUBMIT", "101", 10, exec_job_id="unknown_z"),
+            tail_job("SUBMIT", "102", 20, exec_job_id="unknown_a"),
+        )
+    )
+
+    snapshot = effective(reconciler)
+
+    assert [job.exec_job_id for job in snapshot.jobs] == [
+        "compute_ID0000001",
+        "unknown_a",
+        "unknown_z",
+    ]
+    assert all(job.job_id is None for job in snapshot.jobs[1:])
 
 
 def test_retry_submit_sequence_overlays_and_replaces_one_database_job() -> None:

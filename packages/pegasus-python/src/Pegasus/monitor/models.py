@@ -1627,6 +1627,7 @@ class EffectiveSnapshot:
     published_at_monotonic: float = field(compare=False, repr=False)
     source_health: tuple[SourceHealth, ...] = ()
     events: tuple[EffectiveEvent, ...] = ()
+    pending_overlay_count: int = field(init=False)
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.published_at_epoch) or not math.isfinite(
@@ -1812,12 +1813,7 @@ class EffectiveSnapshot:
         object.__setattr__(self, "jobs", jobs)
         object.__setattr__(self, "source_health", health)
         object.__setattr__(self, "events", events)
-
-    @property
-    def pending_overlay_count(self) -> int:
-        return len(self.workflow.pending_tail) + sum(
-            len(job.pending_tail) for job in self.jobs
-        )
+        object.__setattr__(self, "pending_overlay_count", len(pending_identities))
 
     def to_json_dict(self) -> dict[str, JSONValue]:
         """Serialize epoch time only; monotonic time is process-local."""
