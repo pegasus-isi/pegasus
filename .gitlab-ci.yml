@@ -53,19 +53,22 @@ Python:
     - ARCH:
       - x86_64
       - arm64
+      PYTHON_VERSION:
+      - '3.10'
+      - '3.14'
       PACKAGE:
       - common
       - api
       - python
       - worker
-  image: python:3.14
+  image: python:${PYTHON_VERSION}
   before_script:
   - env
   - export USER=nobody
   - pip3 install --upgrade pip setuptools
   - pip3 install tox-uv
   script:
-  - cd packages/pegasus-${PACKAGE}; tox
+  - cd packages/pegasus-${PACKAGE}; tox --skip-missing-interpreters false -e py$(echo ${PYTHON_VERSION} | sed -E 's/([0-9]*).([0-9]*).*$/\1\2/g')
   coverage: '/Total coverage: \d+\.\d+%/'
   artifacts:
     when: always
@@ -81,6 +84,9 @@ Python:
       paths:
       - packages/pegasus-${PACKAGE}/src/**/*
       - packages/pegasus-${PACKAGE}/test/**/*
+      - packages/pegasus-${PACKAGE}/pyproject.toml
+      - packages/pegasus-${PACKAGE}/tox.ini
+      - .gitlab-ci.yml
   tags:
   - ${ARCH}
   - docker
@@ -182,6 +188,17 @@ Source:
   image: pegasus/buildenv:rhel_9
   script:
   - ant clean dist-source dist-python-source
+  - |
+    MONITOR_PYTHON=$(release-tools/get-system-python)
+    "$MONITOR_PYTHON" -m venv build/monitor-wheel-test
+    build/monitor-wheel-test/bin/pip install --no-deps dist/pegasus_wms-*.whl
+    build/monitor-wheel-test/bin/pegasus-monitor --help
+    if build/monitor-wheel-test/bin/pegasus-monitor --not-a-real-option; then
+      echo "pegasus-monitor unexpectedly accepted an invalid option"
+      exit 1
+    else
+      test "$?" -eq 2
+    fi
   artifacts:
     paths:
     - dist/pegasus-*.tar.gz
@@ -230,6 +247,15 @@ RHEL:
     ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
     # also try installing the generated RPM
     rpm -iv $(ls dist/*.rpm | grep -v src)
+    MONITOR=dist/pegasus-$(release-tools/getversion)/bin/pegasus-monitor
+    test -x "$MONITOR"
+    "$MONITOR" --help
+    if "$MONITOR" --not-a-real-option; then
+      echo "pegasus-monitor unexpectedly accepted an invalid option"
+      exit 1
+    else
+      test "$?" -eq 2
+    fi
   artifacts:
     paths:
     - dist/pegasus-binary*.tar.gz
@@ -372,6 +398,7 @@ Docs:
   - env
   script:
   - ant dist-doc
+  - test -f dist/pegasus-$(release-tools/getversion)/share/man/man1/pegasus-monitor.1
   artifacts:
     paths:
     - dist/pegasus-doc-*.tar.gz

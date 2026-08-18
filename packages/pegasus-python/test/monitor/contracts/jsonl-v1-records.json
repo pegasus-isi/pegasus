@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "contract_status": "draft-pending-wp4-reconciliation",
+  "record_types": {
+    "header": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "workflow",
+      "created_at_epoch",
+      "monitor_version",
+      "source_metadata",
+      "contract_status"
+    ],
+    "checkpoint": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "recorded_at_epoch",
+      "snapshot",
+      "reason"
+    ],
+    "job_transition": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "snapshot_epoch",
+      "recorded_at_epoch",
+      "confirmed",
+      "transition"
+    ],
+    "workflow_transition": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "snapshot_epoch",
+      "recorded_at_epoch",
+      "confirmed",
+      "transition"
+    ],
+    "enrichment": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "snapshot_epoch",
+      "recorded_at_epoch",
+      "source",
+      "target",
+      "payload",
+      "expires_at_epoch"
+    ],
+    "diagnostic_result": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "snapshot_epoch",
+      "recorded_at_epoch",
+      "target",
+      "code",
+      "severity",
+      "summary",
+      "evidence",
+      "changes_state"
+    ],
+    "gap": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "recorded_at_epoch",
+      "reason",
+      "first_missing_sequence",
+      "last_missing_sequence",
+      "next_checkpoint_required"
+    ]
+  },
+  "deferred_fields": [
+    "checkpoint.reconciliation_cursor",
+    "checkpoint.per_instance_suffix_window",
+    "gap.resume_checkpoint_sequence"
+  ]
+}
