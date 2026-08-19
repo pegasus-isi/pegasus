@@ -19,11 +19,14 @@
 from __future__ import annotations
 
 import builtins
+import gc
+import weakref
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from Pegasus.monitor import replay as replay_module
 from Pegasus.monitor.event_log import EventLogFormatError, encode_record
 from Pegasus.monitor.models import (
     CheckpointRecord,
@@ -484,3 +487,46 @@ def test_streaming_replay_enforces_record_limit_and_tolerates_bounded_torn_tail(
     path.write_bytes(header + checkpoint + b"{" + b"x" * (maximum + 1))
     with pytest.raises(EventLogFormatError, match="byte limit"):
         ReplayEngine(path, speed=0, max_record_bytes=maximum).replay()
+
+
+def test_streaming_iterator_releases_a_yielded_checkpoint_before_next_decode(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "events.jsonl"
+    line = b'{"record_type":"checkpoint"}\n'
+    path.write_bytes(line + line)
+    references = []
+
+    class DecodedRecord:
+        pass
+
+    def decode(_line):
+        record = DecodedRecord()
+        references.append(weakref.ref(record))
+        return record
+
+    monkeypatch.setattr(replay_module, "decode_json_line", decode)
+    state = replay_module._StreamState()
+    records = iter(replay_module._iter_jsonl_records(path, 1024, state))
+
+    assert next(records) is replay_module._CHECKPOINT_DECODE_BOUNDARY
+    first = next(records)
+    del first
+    assert next(records) is replay_module._CHECKPOINT_DECODE_BOUNDARY
+    gc.collect()
+    assert references[0]() is None
+
+
+def test_replay_identifies_checkpoint_without_materializing_json(monkeypatch) -> None:
+    header = _header("stream")
+    checkpoint = CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+
+    def reject_json_conversion(_record):
+        raise AssertionError("replay must not materialize checkpoint JSON")
+
+    monkeypatch.setattr(CheckpointRecord, "to_json_dict", reject_json_conversion)
+
+    result = replay_records((header, checkpoint))
+
+    assert result.complete is True
+    assert result.frames[-1].record_types == ("header", "checkpoint")
