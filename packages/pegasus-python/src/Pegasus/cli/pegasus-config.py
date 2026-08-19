@@ -7,6 +7,8 @@ import sys
 from glob import glob
 from os.path import abspath, dirname, exists, join, normpath
 
+from Pegasus import data
+
 
 def _python_hash(**kw):
     """."""
@@ -84,13 +86,14 @@ def _main(
     if python_lib.startswith("@"):
         python_lib = "lib/pegasus/python"
 
-    conf_dir = join(base_dir, "etc")
-    share_dir = join(base_dir, "share", "pegasus")
-    java_dir = join(share_dir, "java")
+    data_dir = data.__path__[0]
+    conf_dir = join(data_dir, "etc")
+    share_dir = join(data_dir, "share", "pegasus")
+    java_dir = join(data_dir, "java")
     python_dir = join(base_dir, python_lib)
     python_externals_dir = join(base_dir, lib, "pegasus", "externals", "python")
-    schema_dir = join(share_dir, "schema")
-    r_dir = "".join(sorted(glob(join(share_dir, "r", "*.tar.gz"))))
+    schema_dir = join(data_dir, "schema")
+    r_dir = "".join(sorted(glob(join(data_dir, "r", "*.tar.gz"))))
 
     # for development - running out of a source checkout
     test = join(base_dir, "build", "classes")
