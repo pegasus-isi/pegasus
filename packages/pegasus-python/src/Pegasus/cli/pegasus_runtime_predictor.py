@@ -214,10 +214,15 @@ def main():
             # Clustered job — aggregate predictions for all constituent tasks
             trans      = sub_info.get("cluster_transformation", "")
             task_count = count_cluster_tasks(sub_info["cluster_in_file"])
+            print(f"[pegasus-runtime-predictor] Cluster detected: job={caller_job_id}")
+            print(f"[pegasus-runtime-predictor]   .in file:        {sub_info['cluster_in_file']}")
+            print(f"[pegasus-runtime-predictor]   transformation:  {trans}")
+            print(f"[pegasus-runtime-predictor]   task count:      {task_count}")
             matching   = [
                 p for p in data.get("predictions", [])
                 if trans and trans in p.get("transformation", "")
             ][:task_count]
+            print(f"[pegasus-runtime-predictor]   matched preds:   {len(matching)}")
 
             if matching:
                 pred = {
