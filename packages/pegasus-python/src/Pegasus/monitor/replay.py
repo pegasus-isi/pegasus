@@ -64,6 +64,26 @@ _RECENT_JOB_LIMIT = 8192
 _RECENT_WORKFLOW_LIMIT = 64
 
 
+def _record_type(record: EventRecord) -> str:
+    """Return the canonical type name without materializing a JSON payload."""
+
+    if isinstance(record, StreamHeader):
+        return "header"
+    if isinstance(record, CheckpointRecord):
+        return "checkpoint"
+    if isinstance(record, JobTransitionRecord):
+        return "job_transition"
+    if isinstance(record, WorkflowTransitionRecord):
+        return "workflow_transition"
+    if isinstance(record, EnrichmentRecord):
+        return "enrichment"
+    if isinstance(record, DiagnosticRecord):
+        return "diagnostic_result"
+    if isinstance(record, GapRecord):
+        return "gap"
+    raise ReplayStreamError(f"unsupported replay record: {type(record).__name__}")
+
+
 class ReplayError(RuntimeError):
     """Base error for a semantically invalid replay stream."""
 
@@ -652,6 +672,7 @@ def _iter_jsonl_records(
                 record = decode_json_line(line)
                 line = ""
                 yield record
+                record = None
     except UnicodeDecodeError as error:
         raise EventLogFormatError("record is not valid UTF-8") from error
 
@@ -727,8 +748,7 @@ def _process_records(
             frame_second = second
             frame_time = timestamp
             frame_types = []
-        record_type = str(record.to_json_dict()["record_type"])
-        frame_types.append(record_type)
+        frame_types.append(_record_type(record))
         frame_changed = accumulator.consume(record) or frame_changed
     finish_frame()
     if accumulator.header is None:
