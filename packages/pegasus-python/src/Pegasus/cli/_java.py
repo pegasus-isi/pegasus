@@ -318,7 +318,17 @@ def run_java_tool(main_class, args=(), system_properties=None):
     cmd.extend(["-cp", classpath, main_class])
     cmd.extend(app_args)
 
-    result = subprocess.run(cmd)
+    # PEGASUS_BIN_DIR must be a real env var (not just the -Dpegasus.home.bindir
+    # system property) because SiteCatalogEntry.getPegasusHome()/getVDSHome() fall
+    # back to System.getenv("PEGASUS_BIN_DIR") for the "local" site. The old
+    # pegasus-config --sh-dump shell path used to export this; this is its
+    # replacement.
+    env = os.environ.copy()
+    bin_dir = (system_properties or {}).get("pegasus.home.bindir")
+    if bin_dir:
+        env["PEGASUS_BIN_DIR"] = bin_dir
+
+    result = subprocess.run(cmd, env=env)
     sys.exit(result.returncode)
 
 
