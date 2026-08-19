@@ -610,23 +610,38 @@ def _iter_jsonl_records(
 ) -> Iterable[EventRecord | _CheckpointDecodeBoundary]:
     """Yield complete records with one bounded allocation per JSONL line."""
 
-    with path.open("rb") as stream:
-        while True:
-            line = stream.readline(max_record_bytes + 1)
-            if not line:
-                return
-            if len(line) > max_record_bytes:
-                raise EventLogFormatError(
-                    "event-log record exceeds the configured replay byte limit"
-                )
-            if not line.endswith(b"\n"):
-                state.trailing_bytes = line
-                return
-            if b'"record_type":"checkpoint"' in line:
-                yield _CHECKPOINT_DECODE_BOUNDARY
-            record = decode_json_line(line)
-            line = b""
-            yield record
+    try:
+        with path.open("r", encoding="utf-8", errors="strict", newline="") as stream:
+            while True:
+                line = stream.readline(max_record_bytes + 1)
+                if not line:
+                    return
+                if _utf8_size(line, maximum=max_record_bytes) > max_record_bytes:
+                    raise EventLogFormatError(
+                        "event-log record exceeds the configured replay byte limit"
+                    )
+                if not line.endswith("\n"):
+                    state.trailing_bytes = line.encode("utf-8")
+                    return
+                if '"record_type":"checkpoint"' in line:
+                    yield _CHECKPOINT_DECODE_BOUNDARY
+                record = decode_json_line(line)
+                line = ""
+                yield record
+    except UnicodeDecodeError as error:
+        raise EventLogFormatError("record is not valid UTF-8") from error
+
+
+def _utf8_size(value: str, *, maximum: int) -> int:
+    """Count UTF-8 bytes with bounded temporary chunks and an early cutoff."""
+
+    total = 0
+    chunk_chars = 1024 * 1024
+    for offset in range(0, len(value), chunk_chars):
+        total += len(value[offset : offset + chunk_chars].encode("utf-8"))
+        if total > maximum:
+            return total
+    return total
 
 
 def _process_records(
