@@ -709,14 +709,48 @@ def scan_sub_files(submit_dir: str) -> dict:
         except OSError:
             continue
 
+        # Detect cluster jobs — Arguments line references a .in file
+        cluster_in_file = None
+        cluster_transformation = None
+        for line in sub_path.read_text().splitlines():
+            line = line.strip()
+            m = re.match(r'arguments\s*=\s*.*?(\S+\.in)\b', line, re.IGNORECASE)
+            if m:
+                in_path = sub_path.parent / m.group(1)
+                if in_path.exists():
+                    cluster_in_file = str(in_path)
+            m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+            if m:
+                cluster_transformation = m.group(1)
+
         if dax_job_id:
             result[dax_job_id] = {
-                "request_cpus":      req_cpus,
-                "request_memory_mb": req_memory,
-                "sub_path":          str(sub_path),
+                "request_cpus":        req_cpus,
+                "request_memory_mb":   req_memory,
+                "sub_path":            str(sub_path),
+                "cluster_in_file":     cluster_in_file,
+                "cluster_transformation": cluster_transformation,
             }
 
     return result
+
+
+def count_cluster_tasks(in_file_path: str) -> int:
+    """
+    Count the number of tasks in a Pegasus cluster .in file.
+
+    The .in file has one task per non-empty, non-comment line.
+    Comment lines start with # (e.g. #@ task_count=5).
+    Returns 1 if the file cannot be read (safe fallback).
+    """
+    try:
+        lines = Path(in_file_path).read_text().splitlines()
+        return max(1, sum(
+            1 for l in lines
+            if l.strip() and not l.strip().startswith("#")
+        ))
+    except OSError:
+        return 1
 
 
 # Keep old name as alias so existing code doesn't break
