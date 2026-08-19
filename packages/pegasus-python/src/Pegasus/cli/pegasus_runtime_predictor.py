@@ -118,6 +118,7 @@ def main():
         elif arg.startswith("--job-id="):
             caller_job_id = arg.split("=", 1)[1]
 
+    output_dir = str(Path(output_dir).resolve())
     os.makedirs(output_dir, exist_ok=True)
 
     suffix    = f"_L{target_level}" if target_level is not None else ""
