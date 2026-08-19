@@ -673,7 +673,7 @@ Performance Tests:
   script:
   - $HOME/.local/bin/uv venv --clear --python 3.12
   - source .venv/bin/activate
-  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl
+  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl pymysql
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
