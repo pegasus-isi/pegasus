@@ -26,6 +26,7 @@ from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.runtime.predictor import (
     RuntimePredictionConfig,
     WorkflowRuntimePredictor,
+    count_cluster_tasks,
     find_submit_dir,
     patch_sub_file,
     read_meta_sizes,
@@ -198,21 +199,44 @@ def main():
     if caller_job_id:
         with open(json_path) as fh:
             data = json.load(fh)
+
+        submit_dir = find_submit_dir(workflow_yml)
+        sub_scan   = scan_sub_files(submit_dir) if submit_dir else {}
+        sub_info   = sub_scan.get(caller_job_id)
+
+        # Direct match — individual (non-clustered) job
         pred = next(
             (p for p in data.get("predictions", []) if p.get("job_id") == caller_job_id),
             None,
         )
+
+        if pred is None and sub_info and sub_info.get("cluster_in_file"):
+            # Clustered job — aggregate predictions for all constituent tasks
+            trans      = sub_info.get("cluster_transformation", "")
+            task_count = count_cluster_tasks(sub_info["cluster_in_file"])
+            matching   = [
+                p for p in data.get("predictions", [])
+                if trans and trans in p.get("transformation", "")
+            ][:task_count]
+
+            if matching:
+                pred = {
+                    "predicted_runtime_s": sum(p["predicted_runtime_s"] for p in matching),
+                    "upper_bound_s":       sum(p["upper_bound_s"]       for p in matching),
+                    "lower_bound_s":       sum(p["lower_bound_s"]       for p in matching),
+                    "status": "CLUSTERED",
+                }
+                print(f"[pegasus-runtime-predictor] Cluster {caller_job_id}: "
+                      f"{len(matching)}/{task_count} tasks aggregated, "
+                      f"total={pred['predicted_runtime_s']:.1f}s")
+
         if pred:
-            submit_dir = find_submit_dir(workflow_yml)
-            if submit_dir:
-                sub_scan = scan_sub_files(submit_dir)
-                sub_info = sub_scan.get(caller_job_id)
-                if sub_info and sub_info.get("sub_path"):
-                    if patch_sub_file(sub_info["sub_path"], pred):
-                        print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
-                    else:
-                        print(f"[pegasus-runtime-predictor] Could not patch .sub for {caller_job_id}",
-                              file=sys.stderr)
+            if sub_info and sub_info.get("sub_path"):
+                if patch_sub_file(sub_info["sub_path"], pred):
+                    print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
+                else:
+                    print(f"[pegasus-runtime-predictor] Could not patch .sub for {caller_job_id}",
+                          file=sys.stderr)
         else:
             print(f"[pegasus-runtime-predictor] No prediction found for {caller_job_id}")
 
