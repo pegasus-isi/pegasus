@@ -633,7 +633,7 @@ Workflow Tests:
   - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl
   - ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - source .venv/bin/activate
   - |
     if [ "${EXEC}" == "launch-bamboo-test" ]; then
       pegasus-remove test/core/${TESTNAME}/submit
