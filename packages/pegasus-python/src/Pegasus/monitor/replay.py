@@ -301,6 +301,11 @@ class ReplayAccumulator:
         ]
         self._expire_enrichments(record.recorded_at_epoch)
 
+    def prepare_for_checkpoint_decode(self) -> None:
+        """Release the prior immutable graph before decoding its replacement."""
+
+        self._clear_snapshot_state()
+
     def _clear_snapshot_state(self) -> None:
         self._snapshot_cache = None
         self._epoch = None
@@ -560,6 +565,7 @@ class ReplayEngine:
         """
 
         stream_state = _StreamState()
+        accumulator = ReplayAccumulator()
         records = _iter_jsonl_records(self.path, self.max_record_bytes, stream_state)
         return _process_records(
             records,
@@ -568,6 +574,7 @@ class ReplayEngine:
             on_frame=on_frame,
             speed=self.speed,
             sleep=self._sleep,
+            accumulator=accumulator,
         )
 
 
@@ -588,9 +595,19 @@ class _StreamState:
     trailing_bytes: bytes = b""
 
 
+@dataclass(frozen=True, slots=True)
+class _CheckpointDecodeBoundary:
+    """Flush and release the prior frame before checkpoint decoding."""
+
+
+_CHECKPOINT_DECODE_BOUNDARY = _CheckpointDecodeBoundary()
+
+
 def _iter_jsonl_records(
-    path: Path, max_record_bytes: int, state: _StreamState
-) -> Iterable[EventRecord]:
+    path: Path,
+    max_record_bytes: int,
+    state: _StreamState,
+) -> Iterable[EventRecord | _CheckpointDecodeBoundary]:
     """Yield complete records with one bounded allocation per JSONL line."""
 
     with path.open("rb") as stream:
@@ -605,21 +622,26 @@ def _iter_jsonl_records(
             if not line.endswith(b"\n"):
                 state.trailing_bytes = line
                 return
-            yield decode_json_line(line)
+            if b'"record_type":"checkpoint"' in line:
+                yield _CHECKPOINT_DECODE_BOUNDARY
+            record = decode_json_line(line)
+            line = b""
+            yield record
 
 
 def _process_records(
-    records: Iterable[EventRecord],
+    records: Iterable[EventRecord | _CheckpointDecodeBoundary],
     *,
     trailing_bytes: Callable[[], bytes],
     retain_frames: bool,
     on_frame: Callable[[ReplayFrame], None] | None = None,
     speed: float = 0.0,
     sleep: Callable[[float], None] = time.sleep,
+    accumulator: ReplayAccumulator | None = None,
 ) -> ReplayResult:
     """Consume a possibly streaming record iterable and emit bounded frames."""
 
-    accumulator = ReplayAccumulator()
+    accumulator = accumulator or ReplayAccumulator()
     frames: list[ReplayFrame] = []
     frame_second: int | None = None
     frame_time = 0.0
@@ -650,6 +672,12 @@ def _process_records(
         frame_changed = False
 
     for record in records:
+        if record is _CHECKPOINT_DECODE_BOUNDARY:
+            finish_frame()
+            frame_second = None
+            frame_types = []
+            accumulator.prepare_for_checkpoint_decode()
+            continue
         timestamp = _recorded_at(record)
         second = math.floor(timestamp)
         if frame_second is None:
