@@ -53,6 +53,16 @@ def _positive_float(value: str) -> float:
     return result
 
 
+def _nonnegative_float(value: str) -> float:
+    try:
+        result = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be a number") from error
+    if not math.isfinite(result) or result < 0:
+        raise argparse.ArgumentTypeError("must be non-negative and finite")
+    return result
+
+
 def _nonnegative_int(value: str) -> int:
     try:
         result = int(value)
@@ -156,6 +166,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show bounded failure and stall diagnostics without a sidecar",
     )
     parser.add_argument(
+        "--log",
+        nargs="?",
+        const="auto",
+        metavar="PATH",
+        help="Write canonical JSONL (default: SUBMIT_DIR/workflow-events.jsonl)",
+    )
+    parser.add_argument(
+        "--replay",
+        metavar="PATH",
+        help="Replay canonical JSONL without querying workflow sources",
+    )
+    parser.add_argument(
+        "--speed",
+        type=_nonnegative_float,
+        default=1.0,
+        metavar="MULTIPLIER",
+        help="Replay speed (default: 1.0; 0 disables delays)",
+    )
+    parser.add_argument(
         "--no-condor",
         action="store_true",
         help="Never construct or invoke an HTCondor observer",
@@ -169,6 +198,63 @@ def build_parser() -> argparse.ArgumentParser:
         "--jobstate-path",
         metavar="PATH",
         help="Use an explicit jobstate.log path",
+    )
+
+    logging_guard = parser.add_argument_group("Logging safeguards")
+    logging_guard.add_argument(
+        "--min-free-mb",
+        type=_nonnegative_float,
+        default=200.0,
+        metavar="MB",
+        help="Pause logging below this free-space floor (default: 200)",
+    )
+    logging_guard.add_argument(
+        "--max-log-mb",
+        type=_positive_float,
+        default=None,
+        metavar="MB",
+        help="Hard maximum event-log size (default: unlimited)",
+    )
+
+    server = parser.add_argument_group("Server, replay, and remote options")
+    server.add_argument(
+        "--serve",
+        action="store_true",
+        help="Launch a detached headless monitor server",
+    )
+    server.add_argument(
+        "--serve-foreground",
+        action="store_true",
+        help="Run the headless monitor server in the foreground",
+    )
+    server.add_argument(
+        "--stop-server",
+        nargs="?",
+        const="auto",
+        metavar="PID_FILE",
+        help="Stop the server selected by TARGET or an explicit PID file",
+    )
+    server.add_argument(
+        "--remote",
+        metavar="USER@HOST:PATH",
+        help="Read and display a server JSONL stream over bounded SSH",
+    )
+    server.add_argument(
+        "--sync-interval",
+        type=_positive_float,
+        default=5.0,
+        metavar="SECONDS",
+        help="Remote synchronization interval (default: 5.0)",
+    )
+    server.add_argument(
+        "--ssh-config",
+        metavar="PATH",
+        help="SSH configuration file for --remote",
+    )
+    server.add_argument(
+        "--ssh-identity",
+        metavar="PATH",
+        help="SSH identity file for --remote",
     )
 
     condor = parser.add_argument_group("HTCondor options")
@@ -208,6 +294,25 @@ class RuntimeComponents:
     live_type: type
     scheduler_factory: Callable[..., Any]
     scheduler_kind: type
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayRuntime:
+    """Source-free replay/remote bundle loaded without workflow providers."""
+
+    replay_engine_type: type
+    replay_accumulator_type: type
+    remote_reader_type: type
+    remote_cursor_type: type
+    display_context_type: type
+    display_options_type: type
+    display_analysis_type: type
+    compute_stats: Callable[..., Any]
+    render_dashboard: Callable[..., Any]
+    render_text: Callable[..., str]
+    rendering_gc_guard: Callable[..., Any]
+    console_type: type
+    live_type: type
 
 
 def _scheduler_factory(**values: object) -> object:
@@ -261,6 +366,41 @@ def _load_runtime() -> RuntimeComponents:
     )
 
 
+def _load_replay_runtime() -> ReplayRuntime:
+    """Load only schema, presentation, and SSH transport code."""
+
+    from rich.console import Console
+    from rich.live import Live
+
+    from Pegasus.monitor.display import (
+        DisplayAnalysis,
+        DisplayContext,
+        DisplayOptions,
+        render_dashboard,
+        render_text,
+        rendering_gc_guard,
+    )
+    from Pegasus.monitor.remote import RemoteCursor, RemoteJSONLReader
+    from Pegasus.monitor.replay import ReplayAccumulator, ReplayEngine
+    from Pegasus.monitor.stats import compute_workflow_stats
+
+    return ReplayRuntime(
+        ReplayEngine,
+        ReplayAccumulator,
+        RemoteJSONLReader,
+        RemoteCursor,
+        DisplayContext,
+        DisplayOptions,
+        DisplayAnalysis,
+        compute_workflow_stats,
+        render_dashboard,
+        render_text,
+        rendering_gc_guard,
+        Console,
+        Live,
+    )
+
+
 def _load_display_context(location: object, runtime: RuntimeComponents) -> object:
     """Read the selected braindump once and freeze all presentation metadata."""
 
@@ -288,6 +428,325 @@ def _load_display_context(location: object, runtime: RuntimeComponents) -> objec
         root_wf_uuid=location.workflow.root_wf_uuid,
         dag_name=str(location.dag_name),
     )
+
+
+def _validate_mode_args(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
+    exclusive = [
+        bool(args.replay),
+        bool(args.remote),
+        bool(args.serve),
+        bool(args.serve_foreground),
+        args.stop_server is not None,
+    ]
+    if sum(exclusive) > 1:
+        parser.error(
+            "--replay, --remote, --serve, --serve-foreground, and "
+            "--stop-server are mutually exclusive"
+        )
+    if (args.replay or args.remote) and args.log is not None:
+        parser.error("--log cannot be combined with --replay or --remote")
+    if (args.serve or args.serve_foreground) and (args.once or args.why_idle):
+        parser.error("server modes cannot be combined with one-shot modes")
+    if args.stop_server is not None and args.log is not None:
+        parser.error("--stop-server cannot be combined with --log")
+    if not args.remote and (args.ssh_config or args.ssh_identity):
+        parser.error("--ssh-config and --ssh-identity require --remote")
+
+
+def _record_type_order(record: object) -> tuple[object, ...]:
+    from Pegasus.monitor.models import DBJobTransition
+
+    if isinstance(record, DBJobTransition):
+        return (
+            record.identity.timestamp,
+            1,
+            record.exec_job_id,
+            record.identity.jobstate_submit_seq,
+            record.identity.state,
+        )
+    return (
+        record.identity.timestamp,
+        0,
+        record.restart_count,
+        record.identity.state,
+    )
+
+
+def _replay_publication(
+    database: object,
+    *,
+    sequence: int,
+    recorded_at_epoch: float,
+    awaiting_checkpoint: bool = False,
+) -> object:
+    """Adapt a canonical DB checkpoint to the existing source-free renderer."""
+
+    from Pegasus.monitor.coordinator import CoordinatorSnapshot
+    from Pegasus.monitor.models import (
+        ClockSample,
+        EffectiveEvent,
+        EffectiveSnapshot,
+        FrozenPayload,
+        HealthState,
+        Provenance,
+        SourceHealth,
+        SourceName,
+    )
+
+    transitions = sorted(
+        database.recent_transitions + database.recent_workflow_transitions,
+        key=_record_type_order,
+    )
+    events = tuple(
+        EffectiveEvent(index, Provenance.DB_CONFIRMED, transition)
+        for index, transition in enumerate(transitions, 1)
+    )
+    state = HealthState.GAP if awaiting_checkpoint else HealthState.HEALTHY
+    health = (
+        SourceHealth(
+            SourceName.STAMPEDE,
+            state,
+            recorded_at_epoch,
+            last_success_epoch=(None if awaiting_checkpoint else recorded_at_epoch),
+            error_code=("event_log_gap" if awaiting_checkpoint else None),
+        ),
+        SourceHealth(
+            SourceName.LIVE_TAIL,
+            HealthState.DISABLED,
+            recorded_at_epoch,
+            error_code="replay_source_disabled",
+        ),
+    )
+    effective = EffectiveSnapshot(
+        database.epoch,
+        database.workflow,
+        database.jobs,
+        database.generation,
+        None,
+        recorded_at_epoch,
+        recorded_at_epoch,
+        health,
+        events,
+    )
+    complete = (
+        not awaiting_checkpoint
+        and database.workflow.state == "WORKFLOW_TERMINATED"
+        and database.workflow.status is not None
+    )
+    latest = events[-1] if events else None
+    return CoordinatorSnapshot(
+        max(1, sequence),
+        ClockSample(recorded_at_epoch, recorded_at_epoch),
+        effective,
+        health,
+        (),
+        0,
+        (),
+        None,
+        len(events),
+        latest,
+        True,
+        complete,
+        coordinator_errors=FrozenPayload(),
+    )
+
+
+def _replay_context(header: object, path: Path, runtime: ReplayRuntime) -> object:
+    metadata = header.source_metadata.to_json_dict()
+
+    def text_value(name: str, default: str) -> str:
+        value = metadata.get(name)
+        return value if isinstance(value, str) and value else default
+
+    submit_dir = Path(text_value("submit_dir", str(path.parent)))
+    basedir = Path(text_value("basedir", str(submit_dir.parent)))
+    return runtime.display_context_type(
+        label=text_value("label", header.workflow.wf_uuid),
+        owner=(
+            metadata.get("owner") if isinstance(metadata.get("owner"), str) else None
+        ),
+        planner_version=text_value("planner_version", header.monitor_version),
+        planning_timestamp=(
+            metadata.get("planning_timestamp")
+            if isinstance(metadata.get("planning_timestamp"), str)
+            else None
+        ),
+        submit_dir=submit_dir,
+        recorded_submit_dir=submit_dir,
+        basedir=basedir,
+        recorded_basedir=basedir,
+        root_submit_dir=Path(text_value("root_submit_dir", str(submit_dir))),
+        jobstate_path=Path(
+            text_value("jobstate_path", str(submit_dir / "jobstate.log"))
+        ),
+        database_path=None,
+        wf_uuid=header.workflow.wf_uuid,
+        root_wf_uuid=header.workflow.root_wf_uuid,
+        dag_name=text_value("dag_name", "workflow.dag"),
+    )
+
+
+def _replay_analysis(
+    publication: object,
+    diagnostics: tuple[object, ...],
+    runtime: ReplayRuntime,
+) -> object:
+    errors = tuple(
+        f"{item.severity.value}: {item.summary}" for item in diagnostics[-20:]
+    )
+    try:
+        stats = runtime.compute_stats(publication)
+    except (TypeError, ValueError, ArithmeticError):
+        stats = None
+    return runtime.display_analysis_type(stats=stats, errors=errors)
+
+
+def _replay_options(
+    args: argparse.Namespace,
+    runtime: ReplayRuntime,
+    *,
+    width: int,
+    live: bool,
+    final: bool = False,
+) -> object:
+    return runtime.display_options_type(
+        show_all_jobs=args.all_jobs,
+        sort_by_activity=args.sort_by_activity,
+        event_limit=args.events,
+        job_row_limit=20 if live else 100,
+        analysis_line_limit=8,
+        width=max(40, width),
+        condor_enabled=False,
+        expected_scheduler_sources=(),
+        live=live,
+        final=final,
+    )
+
+
+class _EventRecorder:
+    """Serialize immutable coordinator/DB pairs without the lossy publisher queue."""
+
+    def __init__(self, writer: object) -> None:
+        self.writer = writer
+        self._last_publication_sequence = 0
+        self._lock = asyncio.Lock()
+        self._closed = False
+
+    @property
+    def started(self) -> bool:
+        return bool(getattr(getattr(self.writer, "status", None), "started", False))
+
+    async def capture(
+        self,
+        coordinator: object,
+        publication: object,
+        *,
+        analysis: object | None = None,
+        force: bool = False,
+    ) -> None:
+        async with self._lock:
+            if self._closed:
+                return
+            # These references must be captured in the same event-loop turn.  The
+            # reconciler mutates only between awaits, and both objects are immutable.
+            database = coordinator.reconciler.database
+            selected = publication
+            if database is None:
+                return
+            if force or selected.sequence > self._last_publication_sequence:
+                cancelled = await self._call_writer(
+                    "record-publication",
+                    self.writer.record_publication,
+                    selected,
+                    database,
+                )
+                self._last_publication_sequence = max(
+                    self._last_publication_sequence, selected.sequence
+                )
+                if cancelled is not None:
+                    raise cancelled
+            diagnostics = getattr(analysis, "diagnostics", None)
+            if diagnostics is not None:
+                cancelled = await self._call_writer(
+                    "record-diagnostics",
+                    self.writer.record_diagnostics,
+                    diagnostics,
+                    snapshot_epoch=database.epoch,
+                    recorded_at_epoch=selected.clock.epoch,
+                )
+                if cancelled is not None:
+                    raise cancelled
+
+    async def close(self) -> None:
+        async with self._lock:
+            if self._closed:
+                return
+            self._closed = True
+            cancelled = await self._call_writer("close", self.writer.close)
+            if cancelled is not None:
+                raise cancelled
+
+    async def _call_writer(
+        self,
+        operation: str,
+        callback: Callable[..., object],
+        *args: object,
+        **kwargs: object,
+    ) -> asyncio.CancelledError | None:
+        """Shield one writer thread and drain it before propagating cancellation."""
+
+        worker = asyncio.create_task(
+            asyncio.to_thread(callback, *args, **kwargs),
+            name=f"pegasus-monitor-event-log-{operation}",
+        )
+        try:
+            await asyncio.shield(worker)
+        except asyncio.CancelledError as cancelled:
+            while not worker.done():
+                try:
+                    await asyncio.shield(worker)
+                except asyncio.CancelledError:
+                    continue
+            worker.result()
+            return cancelled
+        return None
+
+
+def _event_log_path(args: argparse.Namespace, submit_dir: Path) -> Path:
+    if args.log is None or args.log == "auto":
+        return submit_dir / "workflow-events.jsonl"
+    return Path(args.log).expanduser().absolute()
+
+
+def _make_event_recorder(
+    args: argparse.Namespace,
+    location: object,
+    context: object,
+) -> _EventRecorder:
+    from Pegasus.monitor.event_log import EventLogWriter
+
+    metadata = {
+        "label": context.label,
+        "owner": context.owner,
+        "planner_version": context.planner_version,
+        "planning_timestamp": context.planning_timestamp,
+        "submit_dir": str(context.submit_dir),
+        "basedir": str(context.basedir),
+        "root_submit_dir": str(context.root_submit_dir),
+        "jobstate_path": str(context.jobstate_path),
+        "dag_name": context.dag_name,
+    }
+    writer = EventLogWriter(
+        _event_log_path(args, Path(location.submit_dir)),
+        location.workflow,
+        _version(),
+        source_metadata=metadata,
+        min_free_mb=args.min_free_mb,
+        max_log_mb=args.max_log_mb,
+    )
+    return _EventRecorder(writer)
 
 
 def _make_scheduler(
@@ -521,7 +980,7 @@ async def _query_once(coordinator: object, kinds: tuple[object, ...]) -> object:
 
 @contextmanager
 def _live_rendering_session(
-    runtime: RuntimeComponents,
+    runtime: RuntimeComponents | ReplayRuntime,
     renderable_factory: Callable[[], object],
     *,
     console: object,
@@ -551,7 +1010,7 @@ def _live_rendering_session(
 
 
 def _refresh_live(
-    runtime: RuntimeComponents,
+    runtime: RuntimeComponents | ReplayRuntime,
     live: object,
     renderable_factory: Callable[[], object],
 ) -> None:
@@ -561,6 +1020,218 @@ def _refresh_live(
         live.update(renderable_factory(), refresh=True)
 
 
+def _read_replay_header(path: Path) -> object:
+    from Pegasus.monitor.event_log import EventLogFormatError, decode_json_line
+    from Pegasus.monitor.models import StreamHeader
+
+    with path.open("rb") as stream:
+        line = stream.readline(64 * 1024 + 1)
+    if len(line) > 64 * 1024:
+        raise EventLogFormatError("stream header exceeds 64 KiB")
+    record = decode_json_line(line)
+    if not isinstance(record, StreamHeader):
+        raise EventLogFormatError("event stream does not begin with a header")
+    return record
+
+
+def _run_replay_mode(
+    args: argparse.Namespace,
+    runtime: ReplayRuntime,
+    stdout: TextIO,
+) -> int:
+    path = Path(args.replay)
+    header = _read_replay_header(path)
+    context = _replay_context(header, path, runtime)
+    engine = runtime.replay_engine_type(
+        path,
+        speed=(0 if args.once else args.speed),
+        retain_frames=False,
+    )
+
+    if args.once:
+        result = engine.replay()
+        if not result.complete or result.snapshot is None:
+            raise RuntimeError("replay has no complete checkpoint")
+        publication = _replay_publication(
+            result.snapshot,
+            sequence=1,
+            recorded_at_epoch=result.snapshot.snapshot_at_epoch,
+            awaiting_checkpoint=result.awaiting_checkpoint,
+        )
+        analysis = _replay_analysis(publication, result.current_diagnostics, runtime)
+        width = getattr(stdout, "width", 120)
+        stdout.write(
+            runtime.render_text(
+                context,
+                publication,
+                analysis,
+                _replay_options(args, runtime, width=width, live=False, final=True),
+                width=max(40, width),
+            )
+        )
+        stdout.flush()
+        return 0
+
+    console = runtime.console_type(file=stdout)
+    manager = None
+    live = None
+    frame_sequence = 0
+
+    def display_frame(frame: object) -> None:
+        nonlocal manager, live, frame_sequence
+        frame_sequence += 1
+        publication = _replay_publication(
+            frame.snapshot,
+            sequence=frame_sequence,
+            recorded_at_epoch=frame.recorded_at_epoch,
+            awaiting_checkpoint=frame.awaiting_checkpoint,
+        )
+        analysis = _replay_analysis(publication, frame.diagnostics, runtime)
+        options = _replay_options(args, runtime, width=console.width, live=True)
+        renderable = runtime.render_dashboard(context, publication, analysis, options)
+        if manager is None:
+            manager = runtime.live_type(
+                renderable,
+                console=console,
+                refresh_per_second=4,
+                auto_refresh=False,
+                transient=False,
+                screen=True,
+            )
+            with runtime.rendering_gc_guard():
+                live = manager.__enter__()
+        else:
+            _refresh_live(runtime, live, lambda: renderable)
+
+    try:
+        result = engine.replay(display_frame)
+    finally:
+        if manager is not None:
+            with runtime.rendering_gc_guard():
+                manager.__exit__(*sys.exc_info())
+    if not result.complete:
+        raise RuntimeError("replay ended while awaiting a recovery checkpoint")
+    return 0
+
+
+async def _run_remote_mode(
+    args: argparse.Namespace,
+    runtime: ReplayRuntime,
+    stdout: TextIO,
+) -> int:
+    reader = runtime.remote_reader_type(
+        args.remote,
+        ssh_config=args.ssh_config,
+        ssh_identity=args.ssh_identity,
+    )
+    cursor = runtime.remote_cursor_type()
+    accumulator = runtime.replay_accumulator_type()
+    console = None if args.once else runtime.console_type(file=stdout)
+    manager = None
+    live = None
+    publication_sequence = 0
+    latest_publication = None
+    latest_analysis = None
+    context = None
+
+    try:
+        while True:
+            result = await asyncio.to_thread(reader.read, cursor)
+            cursor = result.cursor
+            if getattr(result, "stream_replaced", False):
+                latest_publication = None
+                latest_analysis = None
+                context = None
+                publication_sequence = 0
+            changed = False
+            last_timestamp = None
+            for record in result.records:
+                changed = accumulator.consume(record) or changed
+                last_timestamp = getattr(
+                    record,
+                    "recorded_at_epoch",
+                    getattr(record, "created_at_epoch", None),
+                )
+            if accumulator.header is not None and context is None:
+                context = _replay_context(
+                    accumulator.header, Path("workflow-events.jsonl"), runtime
+                )
+            if changed and accumulator.snapshot is not None and context is not None:
+                publication_sequence += 1
+                latest_publication = _replay_publication(
+                    accumulator.snapshot,
+                    sequence=publication_sequence,
+                    recorded_at_epoch=(
+                        float(last_timestamp)
+                        if last_timestamp is not None
+                        else accumulator.snapshot.snapshot_at_epoch
+                    ),
+                    awaiting_checkpoint=accumulator.awaiting_checkpoint,
+                )
+                latest_analysis = _replay_analysis(
+                    latest_publication, accumulator.diagnostics, runtime
+                )
+                if not args.once:
+                    options = _replay_options(
+                        args, runtime, width=console.width, live=True
+                    )
+                    renderable = runtime.render_dashboard(
+                        context, latest_publication, latest_analysis, options
+                    )
+                    if manager is None:
+                        manager = runtime.live_type(
+                            renderable,
+                            console=console,
+                            refresh_per_second=4,
+                            auto_refresh=False,
+                            transient=False,
+                            screen=True,
+                        )
+                        with runtime.rendering_gc_guard():
+                            live = manager.__enter__()
+                    else:
+                        _refresh_live(runtime, live, lambda: renderable)
+
+            if args.once:
+                if result.at_eof:
+                    if accumulator.snapshot is None or accumulator.awaiting_checkpoint:
+                        raise RuntimeError("remote stream has no complete checkpoint")
+                    break
+            elif (
+                accumulator.snapshot is not None
+                and not accumulator.awaiting_checkpoint
+                and latest_publication is not None
+                and latest_publication.authoritative_complete
+            ):
+                break
+
+            # A large checkpoint may need another bounded range immediately.
+            if not result.at_eof:
+                await asyncio.sleep(0)
+            else:
+                await asyncio.sleep(args.sync_interval)
+    finally:
+        if manager is not None:
+            with runtime.rendering_gc_guard():
+                manager.__exit__(*sys.exc_info())
+
+    if latest_publication is None or latest_analysis is None or context is None:
+        raise RuntimeError("remote stream has no complete checkpoint")
+    if args.once:
+        width = getattr(stdout, "width", 120)
+        stdout.write(
+            runtime.render_text(
+                context,
+                latest_publication,
+                latest_analysis,
+                _replay_options(args, runtime, width=width, live=False, final=True),
+                width=max(40, width),
+            )
+        )
+        stdout.flush()
+    return 0
+
+
 async def _run_once(
     args: argparse.Namespace,
     coordinator: object,
@@ -568,6 +1239,7 @@ async def _run_once(
     runtime: RuntimeComponents,
     stdout: TextIO,
     stderr: TextIO,
+    recorder: _EventRecorder | None = None,
 ) -> int:
     diagnostics_engine = runtime.diagnostics_engine_type() if args.diagnose else None
     snapshot = await coordinator.bootstrap()
@@ -583,6 +1255,8 @@ async def _run_once(
             kinds = (runtime.scheduler_kind.QUEUE,)
         snapshot = await _query_once(coordinator, kinds) or snapshot
     analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
+    if recorder is not None:
+        await recorder.capture(coordinator, snapshot, analysis=analysis, force=True)
     width = getattr(stdout, "width", 120)
     options = _display_options(args, runtime, width=width, live=False)
     stdout.write(
@@ -611,6 +1285,7 @@ async def _run_live(
     context: object,
     runtime: RuntimeComponents,
     stdout: TextIO,
+    recorder: _EventRecorder | None = None,
 ) -> int:
     diagnostics_engine = runtime.diagnostics_engine_type() if args.diagnose else None
     console = runtime.console_type(file=stdout)
@@ -631,6 +1306,8 @@ async def _run_live(
     try:
         snapshot = await coordinator.start()
         analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
+        if recorder is not None:
+            await recorder.capture(coordinator, snapshot, analysis=analysis)
         active_stall_key = _updated_active_stall(active_stall_key, analysis)
         analysis_sequence = snapshot.sequence
         with _live_rendering_session(
@@ -640,6 +1317,8 @@ async def _run_live(
         ) as live:
             while True:
                 current = coordinator.latest or snapshot
+                if recorder is not None:
+                    await recorder.capture(coordinator, current)
                 if analysis_task is not None and analysis_task.done():
                     try:
                         analysis = _preserve_analysis(
@@ -652,6 +1331,8 @@ async def _run_live(
                     analysis_sequence = scheduled_sequence
                     analysis_task = None
                     active_stall_key = _updated_active_stall(active_stall_key, analysis)
+                    if recorder is not None and current.sequence == analysis_sequence:
+                        await recorder.capture(coordinator, current, analysis=analysis)
                 if enrichment_task is not None and enrichment_task.done():
                     try:
                         enriched_idle = enrichment_task.result()
@@ -751,6 +1432,10 @@ async def _run_live(
                         ),
                     )
                     last_rendered_snapshot = current
+                    if recorder is not None:
+                        await recorder.capture(
+                            coordinator, current, analysis=analysis, force=True
+                        )
                     return 0
                 await asyncio.sleep(0.25)
     except asyncio.CancelledError:
@@ -803,21 +1488,42 @@ async def _run(
             )
             context = _load_display_context(location, runtime)
             coordinator = _make_coordinator(args, location, runtime)
+            recorder = (
+                _make_event_recorder(args, location, context)
+                if args.log is not None
+                else None
+            )
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(f"pegasus-monitor: {error}", file=stderr)
             return 1
 
         operation = asyncio.create_task(
             (
-                _run_once(args, coordinator, context, runtime, stdout, stderr)
+                _run_once(
+                    args,
+                    coordinator,
+                    context,
+                    runtime,
+                    stdout,
+                    stderr,
+                    recorder=recorder,
+                )
                 if args.once or args.why_idle
-                else _run_live(args, coordinator, context, runtime, stdout)
+                else _run_live(
+                    args,
+                    coordinator,
+                    context,
+                    runtime,
+                    stdout,
+                    recorder=recorder,
+                )
             ),
             name="pegasus-monitor-operation",
         )
         termination_waiter = asyncio.create_task(
             termination.wait(), name="pegasus-monitor-sigterm"
         )
+        result = 0
         try:
             done, _pending = await asyncio.wait(
                 (operation, termination_waiter),
@@ -826,24 +1532,258 @@ async def _run(
             if termination_waiter in done:
                 operation.cancel()
                 await asyncio.gather(operation, return_exceptions=True)
-                return 0
-            return await operation
+            else:
+                result = await operation
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(f"pegasus-monitor: {error}", file=stderr)
-            return 1
+            result = 1
         finally:
             if not operation.done():
                 operation.cancel()
             await asyncio.gather(operation, return_exceptions=True)
             termination_waiter.cancel()
             await asyncio.gather(termination_waiter, return_exceptions=True)
-            await coordinator.close()
+            cleanup_errors = await _close_monitor_resources(coordinator, recorder)
+            if cleanup_errors:
+                cancellation = next(
+                    (
+                        error
+                        for error in cleanup_errors
+                        if isinstance(error, asyncio.CancelledError)
+                    ),
+                    None,
+                )
+                if cancellation is not None:
+                    raise cancellation
+                print(f"pegasus-monitor: {cleanup_errors[0]}", file=stderr)
+                result = 1
+        return result
+
+
+async def _close_monitor_resources(
+    coordinator: object,
+    recorder: _EventRecorder | None,
+) -> tuple[BaseException, ...]:
+    """Attempt final capture and both closes, retaining errors in call order."""
+
+    errors: list[BaseException] = []
+    if recorder is not None and coordinator.latest is not None:
+        try:
+            await recorder.capture(coordinator, coordinator.latest, force=True)
+        except BaseException as error:
+            errors.append(error)
+    try:
+        await coordinator.close()
+    except BaseException as error:
+        errors.append(error)
+    if recorder is not None:
+        try:
+            await recorder.close()
+        except BaseException as error:
+            errors.append(error)
+    return tuple(errors)
+
+
+class _HeadlessMonitorLifecycle:
+    """Coordinator/event-log lifecycle used only by explicit server mode."""
+
+    def __init__(
+        self,
+        args: argparse.Namespace,
+        coordinator: object,
+        context: object,
+        runtime: RuntimeComponents,
+        recorder: _EventRecorder,
+    ) -> None:
+        self.args = args
+        self.coordinator = coordinator
+        self.context = context
+        self.runtime = runtime
+        self.recorder = recorder
+        self.ready = asyncio.Event()
+        self.stop = asyncio.Event()
+        self._closed = False
+
+    async def run(self) -> None:
+        diagnostics_engine = (
+            self.runtime.diagnostics_engine_type() if self.args.diagnose else None
+        )
+        publication = await self.coordinator.start()
+        last_sequence = 0
+        while not self.stop.is_set():
+            current = self.coordinator.latest or publication
+            if current.sequence > last_sequence:
+                await self.recorder.capture(
+                    self.coordinator,
+                    current,
+                    force=(current.authoritative_complete or not self.recorder.started),
+                )
+                if not self.recorder.started:
+                    await asyncio.sleep(0.1)
+                    continue
+                last_sequence = current.sequence
+                if not self.ready.is_set():
+                    self.ready.set()
+                analysis = await _analyze(
+                    current,
+                    self.context,
+                    self.args,
+                    self.runtime,
+                    diagnostics_engine,
+                )
+                latest = self.coordinator.latest or current
+                if latest.sequence == current.sequence:
+                    await self.recorder.capture(
+                        self.coordinator, current, analysis=analysis
+                    )
+                if current.authoritative_complete:
+                    return
+            try:
+                await asyncio.wait_for(self.stop.wait(), timeout=0.1)
+            except asyncio.TimeoutError:
+                pass
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        self.stop.set()
+        errors = await _close_monitor_resources(self.coordinator, self.recorder)
+        if errors:
+            raise errors[0]
+
+
+def _locate_for_server(args: argparse.Namespace, runtime: RuntimeComponents) -> object:
+    return runtime.locator_type().locate(
+        args.target,
+        remap_submit_dir=args.remap_submit_dir,
+        jobstate_path=args.jobstate_path,
+    )
+
+
+def _server_paths_for_log(log_path: Path) -> object:
+    from Pegasus.monitor.server import ServerPaths
+
+    return ServerPaths.from_log_path(log_path)
+
+
+async def _run_server_foreground_mode(
+    args: argparse.Namespace,
+    runtime: RuntimeComponents,
+) -> int:
+    from Pegasus.monitor.server import run_server_foreground
+
+    location = _locate_for_server(args, runtime)
+    context = _load_display_context(location, runtime)
+    coordinator = _make_coordinator(args, location, runtime)
+    recorder = _make_event_recorder(args, location, context)
+    lifecycle = _HeadlessMonitorLifecycle(args, coordinator, context, runtime, recorder)
+    paths = _server_paths_for_log(_event_log_path(args, Path(location.submit_dir)))
+    await run_server_foreground(
+        lifecycle,
+        paths,
+        readiness_probe=lifecycle.ready.wait,
+    )
+    return 0
+
+
+def _append_option(argv: list[str], name: str, value: object | None) -> None:
+    if value is not None:
+        argv.extend((name, str(value)))
+
+
+def _server_foreground_argv(
+    args: argparse.Namespace,
+    *,
+    target: str | None = None,
+    log_path: Path | None = None,
+) -> list[str]:
+    argv = [sys.executable, "-m", "Pegasus.monitor.cli", "--serve-foreground"]
+    _append_option(argv, "--interval", args.interval)
+    _append_option(argv, "--events", args.events)
+    _append_option(argv, "--remap-submit-dir", args.remap_submit_dir)
+    _append_option(argv, "--min-free-mb", args.min_free_mb)
+    _append_option(argv, "--max-log-mb", args.max_log_mb)
+    if args.all_jobs:
+        argv.append("--all-jobs")
+    if not args.sort_by_activity:
+        argv.append("--no-sort-by-activity")
+    if args.diagnose:
+        argv.append("--diagnose")
+    if args.no_condor:
+        argv.append("--no-condor")
+    if args.no_live_events:
+        argv.append("--no-live-events")
+    for name in ("schedd", "collector"):
+        _append_option(argv, f"--{name.replace('_', '-')}", getattr(args, name))
+    for name in ("jobstate_path", "token", "cert", "key", "password_file"):
+        value = getattr(args, name)
+        normalized = None if value is None else Path(value).expanduser().absolute()
+        _append_option(argv, f"--{name.replace('_', '-')}", normalized)
+    if args.log not in (None, "auto"):
+        _append_option(argv, "--log", log_path or args.log)
+    argv.append(target or args.target)
+    return argv
+
+
+def _run_server_launch_mode(
+    args: argparse.Namespace,
+    runtime: RuntimeComponents,
+    stdout: TextIO,
+) -> int:
+    from Pegasus.monitor.server import launch_server
+
+    location = _locate_for_server(args, runtime)
+    log_path = _event_log_path(args, Path(location.submit_dir))
+    result = launch_server(
+        _server_foreground_argv(
+            args,
+            target=str(location.submit_dir),
+            log_path=log_path,
+        ),
+        _server_paths_for_log(log_path),
+        cwd=Path(location.submit_dir),
+    )
+    print(
+        f"pegasus-monitor server pid {result.pid}; log {log_path}",
+        file=stdout,
+    )
+    return 0
+
+
+def _explicit_server_paths(metadata_path: Path) -> object:
+    from Pegasus.monitor.server import ServerPaths
+
+    lock_name = (
+        f"{metadata_path.name[:-4]}.lock"
+        if metadata_path.name.endswith(".pid")
+        else f"{metadata_path.name}.lock"
+    )
+    return ServerPaths(metadata_path, metadata_path.with_name(lock_name))
+
+
+def _run_stop_server_mode(
+    args: argparse.Namespace,
+    runtime: RuntimeComponents,
+    stdout: TextIO,
+) -> int:
+    from Pegasus.monitor.server import stop_server
+
+    if args.stop_server == "auto":
+        location = _locate_for_server(args, runtime)
+        log_path = Path(location.submit_dir) / "workflow-events.jsonl"
+        paths = _server_paths_for_log(log_path)
+    else:
+        paths = _explicit_server_paths(Path(args.stop_server))
+    result = stop_server(paths)
+    print(f"pegasus-monitor server: {result.status.value}", file=stdout)
+    return 0
 
 
 def main(
     argv: list[str] | None = None,
     *,
-    runtime: RuntimeComponents | None = None,
+    runtime: RuntimeComponents | ReplayRuntime | None = None,
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
 ) -> int:
@@ -851,16 +1791,52 @@ def main(
 
     parser = build_parser()
     args = parser.parse_args(argv)
+    _validate_mode_args(parser, args)
     output = stdout or sys.stdout
     errors = stderr or sys.stderr
+
+    if args.replay or args.remote:
+        one_shot = args.once
+        if not one_shot and not output.isatty():
+            print(
+                "pegasus-monitor: replay/remote live mode requires a TTY; use --once",
+                file=errors,
+            )
+            return 1
+        selected_replay = runtime or _load_replay_runtime()
+        try:
+            if args.replay:
+                return _run_replay_mode(args, selected_replay, output)
+            return asyncio.run(_run_remote_mode(args, selected_replay, output))
+        except KeyboardInterrupt:
+            return 0
+        except (OSError, TypeError, ValueError, RuntimeError) as error:
+            print(f"pegasus-monitor: {error}", file=errors)
+            return 1
+
+    server_action = args.stop_server is not None or args.serve or args.serve_foreground
     one_shot = args.once or args.why_idle
-    if not one_shot and not output.isatty():
+    if not server_action and not one_shot and not output.isatty():
         print(
             "pegasus-monitor: interactive live mode requires a TTY; use --once",
             file=errors,
         )
         return 1
+
     selected_runtime = runtime or _load_runtime()
+    try:
+        if args.stop_server is not None:
+            return _run_stop_server_mode(args, selected_runtime, output)
+        if args.serve:
+            return _run_server_launch_mode(args, selected_runtime, output)
+        if args.serve_foreground:
+            return asyncio.run(_run_server_foreground_mode(args, selected_runtime))
+    except KeyboardInterrupt:
+        return 0
+    except (OSError, TypeError, ValueError, RuntimeError) as error:
+        print(f"pegasus-monitor: {error}", file=errors)
+        return 1
+
     try:
         return asyncio.run(_run(args, selected_runtime, output, errors))
     except KeyboardInterrupt:

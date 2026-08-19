@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_status": "draft-pending-wp4-reconciliation",
+  "contract_status": "frozen",
   "record_types": {
     "header": [
       "schema_version",

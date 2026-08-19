@@ -236,7 +236,7 @@ def _runtime(
     return runtime, calls
 
 
-def test_parser_exposes_exact_v1_surface_and_rejects_follow_on_flags():
+def test_parser_preserves_v1_surface_and_rejects_deferred_flags():
     parser = cli.build_parser()
     parsed = parser.parse_args(
         [
@@ -276,10 +276,6 @@ def test_parser_exposes_exact_v1_surface_and_rejects_follow_on_flags():
     assert not parsed.sort_by_activity
     assert parsed.events == 7
     for unsupported in (
-        "--log",
-        "--serve",
-        "--replay",
-        "--remote",
         "--include-subworkflows",
         "--condor-poll",
         "--no-condor-poll",

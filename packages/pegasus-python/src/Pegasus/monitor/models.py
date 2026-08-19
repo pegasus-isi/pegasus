@@ -38,18 +38,17 @@ JSONScalar = type(None) | bool | int | float | str
 JSONValue = JSONScalar | list["JSONValue"] | dict[str, "JSONValue"]
 
 JSONL_V1_SCHEMA_VERSION = 1
-JSONL_V1_CONTRACT_STATUS = "draft-pending-wp4-reconciliation"
+JSONL_V1_CONTRACT_STATUS = "frozen"
 JSONL_V1_DEFERRED_FIELDS = (
     "checkpoint.reconciliation_cursor",
     "checkpoint.per_instance_suffix_window",
     "gap.resume_checkpoint_sequence",
 )
-"""Fields whose exact encoding waits for WP4 executable reconciliation tests.
+"""Cursor details deliberately deferred beyond the frozen schema-v1 contract.
 
-They are deliberately absent from the v1 record classes below.  The stable
-parts already guarantee DB-confirmed transitions, exact row identities,
-checkpoints, and post-gap checkpoint recovery without exposing a speculative
-cursor format.
+They remain absent from the v1 record classes below. DB-confirmed transitions,
+exact row identities, checkpoints, and post-gap checkpoint recovery provide the
+required semantics without exposing a second cursor representation.
 """
 
 MAX_HEALTH_DETAIL_CHARS = 512
