@@ -138,6 +138,7 @@ class ReplayAccumulator:
         self._diagnostics: list[DiagnosticRecord] = []
         self._enrichments: list[EnrichmentRecord] = []
         self._snapshot_cache: DatabaseSnapshot | None = None
+        self._indexed = False
         self._epoch = None
         self._generation = None
         self._snapshot_at_epoch = 0.0
@@ -308,6 +309,7 @@ class ReplayAccumulator:
 
     def _clear_snapshot_state(self) -> None:
         self._snapshot_cache = None
+        self._indexed = False
         self._epoch = None
         self._generation = None
         self._snapshot_at_epoch = 0.0
@@ -327,6 +329,31 @@ class ReplayAccumulator:
         self._generation = snapshot.generation
         self._snapshot_at_epoch = snapshot.snapshot_at_epoch
         self._workflow = snapshot.workflow
+        self._workflow_watermark = snapshot.workflow_watermark
+        self._snapshot_cache = snapshot
+        self._indexed = False
+        self._jobs.clear()
+        self._job_indexes.clear()
+        self._attempts_by_job.clear()
+        self._watermarks.clear()
+        self._recent_jobs.clear()
+        self._recent_job_heap.clear()
+        self._recent_workflows.clear()
+        self._recent_workflow_heap.clear()
+        if (
+            len(snapshot.recent_transitions) > self._recent_transition_limit
+            or len(snapshot.recent_workflow_transitions)
+            > self._recent_workflow_transition_limit
+        ):
+            self._ensure_indexed_state()
+            self._snapshot_cache = None
+
+    def _ensure_indexed_state(self) -> None:
+        if self._indexed:
+            return
+        snapshot = self._snapshot_cache
+        if snapshot is None:
+            raise ReplayStreamError("replay snapshot indexes are unavailable")
         self._jobs = list(snapshot.jobs)
         self._job_indexes = {
             job.exec_job_id: index for index, job in enumerate(snapshot.jobs)
@@ -369,12 +396,7 @@ class ReplayAccumulator:
         ]
         heapq.heapify(self._recent_workflow_heap)
         self._workflow_watermark = snapshot.workflow_watermark
-        if len(recent_jobs) == len(snapshot.recent_transitions) and len(
-            recent_workflows
-        ) == len(snapshot.recent_workflow_transitions):
-            self._snapshot_cache = snapshot
-        else:
-            self._snapshot_cache = None
+        self._indexed = True
 
     def _reject_incremental(self) -> bool:
         self.awaiting_checkpoint = True
@@ -427,6 +449,7 @@ class ReplayAccumulator:
             self._recent_workflows.pop(identity, None)
 
     def _apply_job_transition(self, record: JobTransitionRecord) -> bool:
+        self._ensure_indexed_state()
         transition = record.transition
         if self._workflow is None or transition.workflow != self._workflow.workflow:
             return self._reject_incremental()
@@ -488,6 +511,7 @@ class ReplayAccumulator:
         return True
 
     def _apply_workflow_transition(self, record: WorkflowTransitionRecord) -> bool:
+        self._ensure_indexed_state()
         transition = record.transition
         workflow = self._workflow
         if (
