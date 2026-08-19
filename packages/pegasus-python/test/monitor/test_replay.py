@@ -55,7 +55,12 @@ from Pegasus.monitor.models import (
     WorkflowTransitionRecord,
     WorkflowTransitionWatermark,
 )
-from Pegasus.monitor.replay import ReplayEngine, ReplayStreamError, replay_records
+from Pegasus.monitor.replay import (
+    ReplayAccumulator,
+    ReplayEngine,
+    ReplayStreamError,
+    replay_records,
+)
 
 WORKFLOW = WorkflowIdentity("wf-selected", "wf-root")
 GENERATION = DatabaseGeneration(1, 10, 20)
@@ -299,6 +304,74 @@ def test_same_sequence_transitions_have_deterministic_final_precedence() -> None
         failure.identity,
         success.identity,
     )
+
+
+def test_accumulator_bounds_incremental_transition_feeds_and_materializes_lazily() -> (
+    None
+):
+    accumulator = ReplayAccumulator(
+        recent_transition_limit=8,
+        recent_workflow_transition_limit=3,
+    )
+    assert accumulator.consume(_header("stream")) is False
+    initial = _snapshot()
+    assert (
+        accumulator.consume(CheckpointRecord(1, "stream", 1.0, initial, "initial"))
+        is True
+    )
+    assert accumulator.snapshot is initial
+
+    for sequence in range(2, 34):
+        transition = _job_transition(
+            "EXECUTE",
+            timestamp=str(sequence),
+            db_sequence=sequence,
+        )
+        assert accumulator.consume(
+            JobTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(sequence),
+                transition,
+            )
+        )
+        assert accumulator._snapshot_cache is None
+
+    snapshot = accumulator.snapshot
+    assert snapshot is not None
+    assert len(snapshot.recent_transitions) == 8
+    assert snapshot.recent_transitions[-1].identity.jobstate_submit_seq == 33
+    assert snapshot.jobs[0].transition is not None
+    assert snapshot.jobs[0].transition.identity.jobstate_submit_seq == 33
+
+
+def test_accumulator_bounds_workflow_transition_feed() -> None:
+    accumulator = ReplayAccumulator(recent_workflow_transition_limit=3)
+    accumulator.consume(_header("stream"))
+    accumulator.consume(CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"))
+
+    for sequence in range(2, 10):
+        transition = DBWorkflowTransition(
+            WORKFLOW,
+            DBWorkflowTransitionIdentity(1, "WORKFLOW_STARTED", Decimal(str(sequence))),
+            sequence - 1,
+            0,
+        )
+        assert accumulator.consume(
+            WorkflowTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(sequence),
+                transition,
+            )
+        )
+
+    snapshot = accumulator.snapshot
+    assert snapshot is not None
+    assert len(snapshot.recent_workflow_transitions) == 3
+    assert snapshot.workflow.restart_count == 8
 
 
 def test_torn_tail_is_retained_but_complete_malformed_record_fails(tmp_path) -> None:

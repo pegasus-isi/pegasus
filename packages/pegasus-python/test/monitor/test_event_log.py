@@ -30,6 +30,7 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
+from Pegasus.monitor import event_log
 from Pegasus.monitor.event_log import (
     EventLogFormatError,
     EventLogWriter,
@@ -37,6 +38,7 @@ from Pegasus.monitor.event_log import (
     UnsupportedEventLogVersion,
     decode_json_line,
     decode_jsonl,
+    decode_record,
     encode_record,
     read_jsonl,
 )
@@ -154,6 +156,68 @@ def _snapshot(
     )
 
 
+def _moderate_snapshot(job_count: int = 256) -> DatabaseSnapshot:
+    base = _snapshot()
+    jobs = []
+    transitions = []
+    watermarks = []
+    for index in range(job_count):
+        job_id = index + 1
+        job_instance_id = 10_000 + index
+        job_submit_seq = index + 1
+        timestamp = Decimal(job_submit_seq)
+        exec_job_id = f"compute_ID{job_id:07d}"
+        transition = DBJobTransition(
+            WORKFLOW,
+            exec_job_id,
+            job_submit_seq,
+            DBTransitionIdentity(
+                job_instance_id,
+                "SUBMIT",
+                timestamp,
+                1,
+            ),
+        )
+        attempt_identity = JobAttemptIdentity(
+            job_id,
+            job_instance_id,
+            job_submit_seq,
+        )
+        jobs.append(
+            JobSnapshot(
+                WORKFLOW,
+                job_id,
+                exec_job_id,
+                "compute",
+                1,
+                ("example::compute",),
+                (
+                    JobAttempt(
+                        attempt_identity,
+                        scheduler_id=f"{job_id}.0",
+                        site="local",
+                        submit_time=timestamp,
+                    ),
+                ),
+                attempt_identity,
+                "SUBMIT",
+                timestamp,
+                transition,
+                Provenance.DB_CONFIRMED,
+            )
+        )
+        transitions.append(transition)
+        watermarks.append(
+            JobTransitionWatermark(job_instance_id, 1, (transition.identity,))
+        )
+    return replace(
+        base,
+        jobs=tuple(jobs),
+        recent_transitions=tuple(transitions),
+        watermarks=tuple(watermarks),
+    )
+
+
 def _records(path: Path):
     return read_jsonl(path).records
 
@@ -189,6 +253,62 @@ def test_codec_round_trips_every_core_record() -> None:
         assert decode_json_line(encode_record(record)) == record
 
 
+def test_checkpoint_encoding_matches_legacy_canonical_bytes() -> None:
+    record = CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+    expected = (
+        json.dumps(
+            record.to_json_dict(),
+            ensure_ascii=False,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+        + b"\n"
+    )
+
+    assert encode_record(record) == expected
+
+
+def test_public_decode_record_does_not_mutate_parsed_payload() -> None:
+    record = CheckpointRecord(1, "stream", 1.0, _moderate_snapshot(3), "initial")
+    payload = record.to_json_dict()
+    original = json.loads(json.dumps(payload))
+
+    assert decode_record(payload) == record
+    assert payload == original
+
+
+def test_private_decode_progressively_releases_checkpoint_arrays(monkeypatch) -> None:
+    record = CheckpointRecord(1, "stream", 1.0, _moderate_snapshot(3), "initial")
+    payload = record.to_json_dict()
+    snapshot_payload = payload["snapshot"]
+    jobs = snapshot_payload["jobs"]
+    watermarks = snapshot_payload["watermarks"]
+    remaining_jobs = []
+    remaining_watermarks = []
+    decode_job = event_log._job_snapshot
+    decode_watermark = event_log._job_watermark
+
+    def observe_job(value):
+        remaining_jobs.append(sum(item is not None for item in jobs))
+        return decode_job(value)
+
+    def observe_watermark(value):
+        remaining_watermarks.append(sum(item is not None for item in watermarks))
+        return decode_watermark(value)
+
+    monkeypatch.setattr(event_log, "_job_snapshot", observe_job)
+    monkeypatch.setattr(event_log, "_job_watermark", observe_watermark)
+
+    assert event_log._decode_record(payload, destructive=True) == record
+    assert remaining_jobs == [3, 2, 1]
+    assert remaining_watermarks == [3, 2, 1]
+    assert jobs == []
+    assert watermarks == []
+    assert "snapshot" not in payload
+    assert "jobs" not in snapshot_payload
+    assert "watermarks" not in snapshot_payload
+
+
 def test_codec_tolerates_only_one_torn_trailing_line() -> None:
     header = encode_record(StreamHeader(0, "stream", WORKFLOW, 1.0, "6.0"))
     decoded = decode_jsonl(header + b'{"schema_version":1')
@@ -208,6 +328,10 @@ def test_codec_rejects_unsupported_versions_and_unconfirmed_records() -> None:
     }
     with pytest.raises(UnsupportedEventLogVersion):
         decode_json_line(json.dumps(unsupported) + "\n")
+
+    header = encode_record(StreamHeader(0, "s", WORKFLOW, 1.0, "6.0"))
+    with pytest.raises(EventLogFormatError, match="valid UTF-8"):
+        decode_json_line(b"\xef\xbb\xbf" + header)
 
     draft_header = StreamHeader(0, "s", WORKFLOW, 1.0, "6.0").to_json_dict()
     draft_header["contract_status"] = "draft"
@@ -244,6 +368,37 @@ def test_writer_starts_with_header_checkpoint_and_secure_permissions(tmp_path) -
     ]
     assert records[1].reason == "initial"
     assert os.stat(path).st_mode & 0o777 == 0o600
+
+
+def test_writer_streams_checkpoint_without_whole_snapshot_conversion(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "workflow-events.jsonl"
+    snapshot = _moderate_snapshot()
+
+    def fail_whole_record_conversion(_self):
+        raise AssertionError("whole-checkpoint conversion must not be used")
+
+    monkeypatch.setattr(DatabaseSnapshot, "to_json_dict", fail_whole_record_conversion)
+    monkeypatch.setattr(CheckpointRecord, "to_json_dict", fail_whole_record_conversion)
+    encoded = encode_record(CheckpointRecord(1, "stream", 10.0, snapshot, "initial"))
+    assert decode_json_line(encoded).snapshot == snapshot
+
+    writer = EventLogWriter(
+        path,
+        WORKFLOW,
+        "6.0",
+        min_free_mb=0,
+        stream_id="stream",
+    )
+
+    writer.record_snapshot(snapshot, recorded_at_epoch=10.0)
+    writer.close()
+
+    records = _records(path)
+    assert len(records) == 2
+    assert isinstance(records[1], CheckpointRecord)
+    assert records[1].snapshot == snapshot
 
 
 def test_new_writer_atomically_replaces_existing_torn_stream(tmp_path) -> None:
