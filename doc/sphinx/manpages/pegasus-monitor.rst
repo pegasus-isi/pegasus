@@ -71,7 +71,24 @@ Options
 
 **--diagnose**
    Add bounded failure, hold, kickstart, and stall diagnostics. Diagnostic
-   source failures degrade the report instead of changing workflow state.
+   source failures degrade the report instead of changing workflow state. When
+   event logging is active, redacted diagnostic results are also recorded as
+   derived evidence; they never change replayed workflow or job state.
+
+**--log** [*PATH*]
+   Write canonical schema-version-1 JSONL while monitoring locally. If *PATH*
+   is omitted, the file is ``SUBMIT_DIR/workflow-events.jsonl``. Because the
+   path is optional, place ``TARGET`` before a pathless ``--log`` invocation,
+   for example ``pegasus-monitor TARGET --log``.
+
+**--replay** *PATH*
+   Replay a canonical monitor JSONL file without querying Stampede,
+   ``jobstate.log``, kickstart output, or HTCondor. Replay requires a terminal
+   unless ``--once`` is also specified.
+
+**--speed** *MULTIPLIER*
+   Set replay speed. The default is 1.0; 0 disables replay delays. The value
+   must be finite and nonnegative.
 
 **--no-condor**
    Disable all HTCondor executable and binding use. Stampede and live event
@@ -82,6 +99,47 @@ Options
 
 **--jobstate-path** *PATH*
    Use an explicit live event file instead of the resolved ``jobstate.log``.
+
+**--min-free-mb** *MB*
+   Pause event-log writes when the target filesystem would fall below this
+   free-space floor. The default is 200 MB; 0 disables the floor. Local
+   monitoring continues while logging is paused.
+
+**--max-log-mb** *MB*
+   Set a hard maximum event-log size. The default is unlimited. The value must
+   be positive when specified; reaching the limit pauses logging without
+   stopping the monitor.
+
+**--serve**
+   Launch a detached, headless monitor that writes canonical JSONL. One server
+   may own a given event-log path at a time.
+
+**--serve-foreground**
+   Run the headless server in the foreground. This form is intended for
+   process supervisors and troubleshooting; most users should choose
+   ``--serve`` when a background server is desired.
+
+**--stop-server** [*PID_FILE*]
+   Stop a server after verifying its recorded process identity. With no
+   *PID_FILE*, the default server for ``TARGET`` is selected. Put ``TARGET``
+   before the option, for example ``pegasus-monitor TARGET --stop-server``.
+   Supply the adjacent hidden PID file explicitly for a server using a custom
+   log path.
+
+**--remote** *USER@HOST:PATH*
+   Read and display canonical server JSONL incrementally over bounded SSH.
+   Remote live display requires a terminal; ``--once`` reads through the
+   current end of file and prints the latest complete DB-confirmed state.
+
+**--sync-interval** *SECONDS*
+   Set the remote synchronization interval. The default is 5 seconds. The
+   value must be positive and finite.
+
+**--ssh-config** *PATH*
+   Use an explicit local SSH configuration file for ``--remote``.
+
+**--ssh-identity** *PATH*
+   Use an explicit local SSH identity file for ``--remote``.
 
 **--schedd** *NAME*
    Select the HTCondor schedd for optional observations.
@@ -122,14 +180,64 @@ execution, and failure backoff. Credentials are passed through a copied child
 environment and credential values are redacted from diagnostics.
 
 
+Event Log and Recovery
+======================
+
+``--log`` and ``--serve`` produce monitor JSONL; pegasus-monitord does not
+produce this stream. Every stream begins with a header containing its unique
+``stream_id`` and selected workflow identity, immediately followed by a full
+DB-confirmed checkpoint. Records have monotonically increasing sequence
+numbers. Workflow and job transitions enter the canonical stream only after
+Stampede confirmation, so the local TUI may temporarily be ahead of the log
+while it displays a provisional ``jobstate.log`` overlay.
+
+Additional DB-confirmed checkpoints are written periodically, every five
+minutes by default, and after recovery, database replacement or structural
+change, and authoritative workflow completion. A disk, size, or writer gap
+invalidates subsequent incremental reconstruction until the next checkpoint.
+When safe writing resumes, the writer records the gap and a recovery
+checkpoint. A replaced output file starts a new stream with a new
+``stream_id`` and complete checkpoint.
+
+Event logs, server metadata, and singleton state use restrictive permissions
+and reject unsafe symlink or non-regular-file targets. Logging failures and
+capacity guards do not modify or stop the workflow.
+
+
+Replay, Server, and Remote Modes
+================================
+
+Replay and remote consumers use the same typed schema and renderer. They
+tolerate an incomplete trailing line, reject unsupported schemas, and discard
+incomplete post-gap state until a checkpoint restores authority. Stream
+replacement is detected by ``stream_id``, not file size. Replay never opens
+workflow sources. Remote mode validates the SSH target and path, invokes SSH
+without a local shell, bounds each read and captured error output, and resumes
+by byte offset.
+
+``--serve`` creates atomic hidden PID metadata and a singleton lock adjacent to
+the selected JSONL path. The default files are
+``.workflow-events.jsonl.pid`` and ``.workflow-events.jsonl.lock`` in the
+submit directory. A custom log path has correspondingly named adjacent files.
+``--stop-server`` verifies process-birth identity before signaling a recorded
+PID and does not signal a reused or mismatched PID.
+
+``--replay``, ``--remote``, ``--serve``, ``--serve-foreground``, and
+``--stop-server`` are mutually exclusive. ``--log`` cannot be combined with
+``--replay``, ``--remote``, or ``--stop-server``. Server modes cannot be
+combined with ``--once`` or ``--why-idle``. ``--ssh-config`` and
+``--ssh-identity`` require ``--remote``.
+
+
 Return Value
 ============
 
 The command returns 0 after a successful one-shot report, authoritative live
-completion, help/version request, or clean interrupt. It returns 1 for target
-resolution, source initialization, runtime errors, non-TTY live invocation, or
-an unavailable authoritative Stampede snapshot in ``--once`` mode. Argument
-errors return the standard argparse status 2.
+completion, successful server launch or stop, help/version request, or clean
+interrupt. It returns 1 for target resolution, source initialization, replay,
+remote, or server runtime errors, non-TTY live invocation, or an unavailable
+authoritative checkpoint or Stampede snapshot in ``--once`` mode. Argument
+errors and invalid mode combinations return the standard argparse status 2.
 
 
 Examples
@@ -141,6 +249,13 @@ Examples
    pegasus-monitor --once --no-condor /workflows/montage/run0001
    pegasus-monitor --diagnose /workflows/montage/run0001
    pegasus-monitor --why-idle --collector collector.example.org run0001
+   pegasus-monitor /workflows/montage/run0001 --log
+   pegasus-monitor --serve --diagnose /workflows/montage/run0001
+   pegasus-monitor --remote user@submit.example:/workflows/montage/run0001/workflow-events.jsonl
+   pegasus-monitor --remote user@submit.example:/workflows/montage/run0001/workflow-events.jsonl --once
+   pegasus-monitor --replay workflow-events.jsonl --speed 0
+   pegasus-monitor /workflows/montage/run0001 --stop-server
+   pegasus-monitor --stop-server /logs/.montage-events.jsonl.pid
 
 
 Related Commands
