@@ -61,6 +61,9 @@ Commands
 **file-pattern-trigger** *ENSEMBLE* *TRIGGER* *INTERVAL* *WORKFLOW_SCRIPT* *FILE_PATTERN* [FILE_PATTERN ...] [-t TIMEOUT] [--args ARG1 [ARG2 ...]]
    Start a timed, file pattern workflow trigger.
 
+**triggers** *ENSEMBLE* [-l]
+   List the triggers in an ensemble.
+
 Common Options
 ==============
 
@@ -85,6 +88,14 @@ Create and Config Options
 
 Workflows Options
 =================
+
+**-l**; \ **--long**
+   Use long listing format.
+
+
+
+Triggers Options
+================
 
 **-l**; \ **--long**
    Use long listing format.
