@@ -25,6 +25,7 @@ network transport is imported or invoked here.
 
 from __future__ import annotations
 
+import heapq
 import math
 import time
 from dataclasses import dataclass, replace
@@ -35,6 +36,7 @@ from Pegasus.monitor.event_log import EventLogFormatError, EventRecord, decode_j
 from Pegasus.monitor.models import (
     CheckpointRecord,
     DatabaseSnapshot,
+    DBJobTransition,
     DBTransitionIdentity,
     DBWorkflowTransition,
     DBWorkflowTransitionIdentity,
@@ -55,6 +57,11 @@ from Pegasus.monitor.models import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+
+
+# Match CoordinatorConfig without importing the live coordinator/source graph.
+_RECENT_JOB_LIMIT = 8192
+_RECENT_WORKFLOW_LIMIT = 64
 
 
 class ReplayError(RuntimeError):
@@ -113,15 +120,80 @@ class ReplayResult:
 class ReplayAccumulator:
     """Incrementally reconstruct DB-confirmed state from typed stream records."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        recent_transition_limit: int = _RECENT_JOB_LIMIT,
+        recent_workflow_transition_limit: int = _RECENT_WORKFLOW_LIMIT,
+    ) -> None:
+        if recent_transition_limit <= 0 or recent_workflow_transition_limit <= 0:
+            raise ValueError("replay recent-transition limits must be positive")
         self.header: StreamHeader | None = None
-        self.snapshot: DatabaseSnapshot | None = None
         self.awaiting_checkpoint = True
         self.ignored_records = 0
         self.stream_replacements = 0
+        self._recent_transition_limit = recent_transition_limit
+        self._recent_workflow_transition_limit = recent_workflow_transition_limit
         self._last_sequence: int | None = None
         self._diagnostics: list[DiagnosticRecord] = []
         self._enrichments: list[EnrichmentRecord] = []
+        self._snapshot_cache: DatabaseSnapshot | None = None
+        self._epoch = None
+        self._generation = None
+        self._snapshot_at_epoch = 0.0
+        self._workflow: WorkflowSnapshot | None = None
+        self._jobs: list[JobSnapshot] = []
+        self._job_indexes: dict[str, int] = {}
+        self._attempts_by_job: dict[str, dict[tuple[int, int], object]] = {}
+        self._watermarks: dict[int, JobTransitionWatermark] = {}
+        self._recent_jobs: dict[DBTransitionIdentity, DBJobTransition] = {}
+        self._recent_job_heap: list[
+            tuple[tuple[object, ...], tuple[object, ...], DBTransitionIdentity]
+        ] = []
+        self._recent_workflows: dict[
+            DBWorkflowTransitionIdentity, DBWorkflowTransition
+        ] = {}
+        self._recent_workflow_heap: list[
+            tuple[
+                tuple[object, ...],
+                tuple[object, ...],
+                DBWorkflowTransitionIdentity,
+            ]
+        ] = []
+        self._workflow_watermark: WorkflowTransitionWatermark | None = None
+
+    @property
+    def snapshot(self) -> DatabaseSnapshot | None:
+        """Freeze indexed mutable state only when a consumer needs a frame."""
+
+        if self._epoch is None:
+            return None
+        if self._snapshot_cache is None:
+            assert self._generation is not None
+            assert self._workflow is not None
+            assert self._workflow_watermark is not None
+            self._snapshot_cache = DatabaseSnapshot(
+                self._epoch,
+                self._generation,
+                self._snapshot_at_epoch,
+                self._workflow,
+                tuple(self._jobs),
+                tuple(
+                    sorted(
+                        self._recent_jobs.values(),
+                        key=lambda item: item.recent_event_sort_key,
+                    )
+                ),
+                tuple(
+                    sorted(
+                        self._recent_workflows.values(),
+                        key=lambda item: item.authoritative_sort_key,
+                    )
+                ),
+                tuple(self._watermarks[key] for key in sorted(self._watermarks)),
+                self._workflow_watermark,
+            )
+        return self._snapshot_cache
 
     @property
     def diagnostics(self) -> tuple[DiagnosticRecord, ...]:
@@ -159,21 +231,19 @@ class ReplayAccumulator:
 
         if isinstance(record, GapRecord):
             self.awaiting_checkpoint = True
-            return self.snapshot is not None
+            return self._epoch is not None
         if isinstance(record, CheckpointRecord):
             self._consume_checkpoint(record)
             return True
-        if self.awaiting_checkpoint or self.snapshot is None:
+        if self.awaiting_checkpoint or self._epoch is None:
             self.ignored_records += 1
             return False
 
         self._expire_enrichments(record.recorded_at_epoch)
         if isinstance(record, JobTransitionRecord):
-            updated = _apply_job_transition(self.snapshot, record)
-            return self._accept_incremental_snapshot(updated)
+            return self._apply_job_transition(record)
         if isinstance(record, WorkflowTransitionRecord):
-            updated = _apply_workflow_transition(self.snapshot, record)
-            return self._accept_incremental_snapshot(updated)
+            return self._apply_workflow_transition(record)
         if isinstance(record, DiagnosticRecord):
             self._diagnostics.append(record)
             return True
@@ -197,7 +267,7 @@ class ReplayAccumulator:
         if self.header is not None:
             self.stream_replacements += 1
         self.header = header
-        self.snapshot = None
+        self._clear_snapshot_state()
         self.awaiting_checkpoint = True
         self._last_sequence = 0
         self._diagnostics.clear()
@@ -222,7 +292,7 @@ class ReplayAccumulator:
         assert self.header is not None
         if record.snapshot.workflow.workflow != self.header.workflow:
             raise ReplayStreamError("checkpoint workflow does not match stream header")
-        self.snapshot = record.snapshot
+        self._load_snapshot(record.snapshot)
         self.awaiting_checkpoint = False
         self._diagnostics = [
             item
@@ -231,15 +301,223 @@ class ReplayAccumulator:
         ]
         self._expire_enrichments(record.recorded_at_epoch)
 
-    def _accept_incremental_snapshot(self, updated: DatabaseSnapshot | None) -> bool:
-        if updated is None:
-            self.awaiting_checkpoint = True
-            self.ignored_records += 1
-            return False
-        self.snapshot = updated
-        self._diagnostics = [
-            item for item in self._diagnostics if item.snapshot_epoch == updated.epoch
+    def _clear_snapshot_state(self) -> None:
+        self._snapshot_cache = None
+        self._epoch = None
+        self._generation = None
+        self._snapshot_at_epoch = 0.0
+        self._workflow = None
+        self._jobs.clear()
+        self._job_indexes.clear()
+        self._attempts_by_job.clear()
+        self._watermarks.clear()
+        self._recent_jobs.clear()
+        self._recent_job_heap.clear()
+        self._recent_workflows.clear()
+        self._recent_workflow_heap.clear()
+        self._workflow_watermark = None
+
+    def _load_snapshot(self, snapshot: DatabaseSnapshot) -> None:
+        self._epoch = snapshot.epoch
+        self._generation = snapshot.generation
+        self._snapshot_at_epoch = snapshot.snapshot_at_epoch
+        self._workflow = snapshot.workflow
+        self._jobs = list(snapshot.jobs)
+        self._job_indexes = {
+            job.exec_job_id: index for index, job in enumerate(snapshot.jobs)
+        }
+        self._attempts_by_job = {
+            job.exec_job_id: {
+                (
+                    attempt.identity.job_instance_id,
+                    attempt.identity.job_submit_seq,
+                ): attempt.identity
+                for attempt in job.attempts
+            }
+            for job in snapshot.jobs
+        }
+        self._watermarks = {
+            watermark.job_instance_id: watermark for watermark in snapshot.watermarks
+        }
+        recent_jobs = snapshot.recent_transitions[-self._recent_transition_limit :]
+        self._recent_jobs = {item.identity: item for item in recent_jobs}
+        self._recent_job_heap = [
+            (
+                item.recent_event_sort_key,
+                _job_identity_order(item.identity),
+                item.identity,
+            )
+            for item in recent_jobs
         ]
+        heapq.heapify(self._recent_job_heap)
+        recent_workflows = snapshot.recent_workflow_transitions[
+            -self._recent_workflow_transition_limit :
+        ]
+        self._recent_workflows = {item.identity: item for item in recent_workflows}
+        self._recent_workflow_heap = [
+            (
+                item.authoritative_sort_key,
+                _workflow_identity_order(item.identity),
+                item.identity,
+            )
+            for item in recent_workflows
+        ]
+        heapq.heapify(self._recent_workflow_heap)
+        self._workflow_watermark = snapshot.workflow_watermark
+        if len(recent_jobs) == len(snapshot.recent_transitions) and len(
+            recent_workflows
+        ) == len(snapshot.recent_workflow_transitions):
+            self._snapshot_cache = snapshot
+        else:
+            self._snapshot_cache = None
+
+    def _reject_incremental(self) -> bool:
+        self.awaiting_checkpoint = True
+        self.ignored_records += 1
+        return False
+
+    def _advance_snapshot(
+        self, record: JobTransitionRecord | WorkflowTransitionRecord
+    ) -> None:
+        snapshot_epoch = record.snapshot_epoch
+        recorded_at_epoch = record.recorded_at_epoch
+        assert self._epoch is not None
+        self._epoch = max(self._epoch, snapshot_epoch)
+        self._snapshot_at_epoch = recorded_at_epoch
+        self._snapshot_cache = None
+        self._diagnostics = [
+            item for item in self._diagnostics if item.snapshot_epoch == self._epoch
+        ]
+
+    def _remember_job_transition(self, transition: DBJobTransition) -> None:
+        if transition.identity in self._recent_jobs:
+            return
+        self._recent_jobs[transition.identity] = transition
+        heapq.heappush(
+            self._recent_job_heap,
+            (
+                transition.recent_event_sort_key,
+                _job_identity_order(transition.identity),
+                transition.identity,
+            ),
+        )
+        while len(self._recent_jobs) > self._recent_transition_limit:
+            _key, _identity_key, identity = heapq.heappop(self._recent_job_heap)
+            self._recent_jobs.pop(identity, None)
+
+    def _remember_workflow_transition(self, transition: DBWorkflowTransition) -> None:
+        if transition.identity in self._recent_workflows:
+            return
+        self._recent_workflows[transition.identity] = transition
+        heapq.heappush(
+            self._recent_workflow_heap,
+            (
+                transition.authoritative_sort_key,
+                _workflow_identity_order(transition.identity),
+                transition.identity,
+            ),
+        )
+        while len(self._recent_workflows) > self._recent_workflow_transition_limit:
+            _key, _identity_key, identity = heapq.heappop(self._recent_workflow_heap)
+            self._recent_workflows.pop(identity, None)
+
+    def _apply_job_transition(self, record: JobTransitionRecord) -> bool:
+        transition = record.transition
+        if self._workflow is None or transition.workflow != self._workflow.workflow:
+            return self._reject_incremental()
+        matching_index = self._job_indexes.get(transition.exec_job_id)
+        if matching_index is None:
+            return self._reject_incremental()
+        matching_job = self._jobs[matching_index]
+        matching_attempt = self._attempts_by_job.get(transition.exec_job_id, {}).get(
+            (
+                transition.identity.job_instance_id,
+                transition.job_submit_seq,
+            )
+        )
+        if matching_attempt is None:
+            return self._reject_incremental()
+
+        self._remember_job_transition(transition)
+        watermark = self._watermarks.get(transition.identity.job_instance_id)
+        if watermark is None:
+            watermark = JobTransitionWatermark(
+                transition.identity.job_instance_id,
+                transition.identity.jobstate_submit_seq,
+                (transition.identity,),
+            )
+        elif (
+            transition.identity.jobstate_submit_seq
+            > watermark.highest_jobstate_submit_seq
+        ):
+            watermark = JobTransitionWatermark(
+                transition.identity.job_instance_id,
+                transition.identity.jobstate_submit_seq,
+                (transition.identity,),
+            )
+        elif (
+            transition.identity.jobstate_submit_seq
+            == watermark.highest_jobstate_submit_seq
+        ):
+            identities = set(watermark.identities_at_highest_seq)
+            identities.add(transition.identity)
+            watermark = JobTransitionWatermark(
+                watermark.job_instance_id,
+                watermark.highest_jobstate_submit_seq,
+                tuple(sorted(identities, key=_job_identity_order)),
+            )
+        self._watermarks[watermark.job_instance_id] = watermark
+
+        current = matching_job.transition
+        if matching_job.current_attempt == matching_attempt and (
+            current is None
+            or transition.authoritative_sort_key > current.authoritative_sort_key
+        ):
+            self._jobs[matching_index] = replace(
+                matching_job,
+                state=transition.identity.state,
+                state_timestamp=transition.identity.timestamp,
+                transition=transition,
+            )
+        self._advance_snapshot(record)
+        return True
+
+    def _apply_workflow_transition(self, record: WorkflowTransitionRecord) -> bool:
+        transition = record.transition
+        workflow = self._workflow
+        if (
+            workflow is None
+            or transition.workflow != workflow.workflow
+            or transition.identity.wf_id != workflow.wf_id
+        ):
+            return self._reject_incremental()
+        watermark = self._workflow_watermark
+        assert watermark is not None
+        self._remember_workflow_transition(transition)
+        if transition.restart_count > workflow.restart_count:
+            watermark = WorkflowTransitionWatermark(
+                WorkflowRestartIdentity(
+                    workflow.workflow, workflow.wf_id, transition.restart_count
+                ),
+                (transition.identity,),
+            )
+            workflow = _workflow_from_transition(workflow, transition, new_restart=True)
+        elif transition.restart_count == workflow.restart_count:
+            identities = set(watermark.identities)
+            identities.add(transition.identity)
+            watermark = WorkflowTransitionWatermark(
+                watermark.restart,
+                tuple(sorted(identities, key=_workflow_identity_order)),
+            )
+            current = workflow.transition
+            if (
+                current is None
+                or transition.authoritative_sort_key > current.authoritative_sort_key
+            ):
+                workflow = _workflow_from_transition(workflow, transition)
+        self._workflow = workflow
+        self._workflow_watermark = watermark
+        self._advance_snapshot(record)
         return True
 
     def _expire_enrichments(self, at_epoch: float) -> None:
@@ -406,155 +684,6 @@ def _recorded_at(record: EventRecord) -> float:
     if isinstance(record, StreamHeader):
         return record.created_at_epoch
     return record.recorded_at_epoch
-
-
-def _apply_job_transition(
-    snapshot: DatabaseSnapshot, record: JobTransitionRecord
-) -> DatabaseSnapshot | None:
-    transition = record.transition
-    if transition.workflow != snapshot.workflow.workflow:
-        return None
-    matching_index: int | None = None
-    matching_job: JobSnapshot | None = None
-    for index, job in enumerate(snapshot.jobs):
-        if job.exec_job_id == transition.exec_job_id:
-            matching_index = index
-            matching_job = job
-            break
-    if matching_job is None or matching_index is None:
-        return None
-    matching_attempt = next(
-        (
-            attempt.identity
-            for attempt in matching_job.attempts
-            if attempt.identity.job_instance_id == transition.identity.job_instance_id
-            and attempt.identity.job_submit_seq == transition.job_submit_seq
-        ),
-        None,
-    )
-    if matching_attempt is None:
-        return None
-
-    recent = {item.identity: item for item in snapshot.recent_transitions}
-    if transition.identity in recent:
-        return replace(
-            snapshot,
-            epoch=max(snapshot.epoch, record.snapshot_epoch),
-            snapshot_at_epoch=record.recorded_at_epoch,
-        )
-    recent[transition.identity] = transition
-
-    watermarks = {item.job_instance_id: item for item in snapshot.watermarks}
-    watermark = watermarks.get(transition.identity.job_instance_id)
-    if watermark is None:
-        watermark = JobTransitionWatermark(
-            transition.identity.job_instance_id,
-            transition.identity.jobstate_submit_seq,
-            (transition.identity,),
-        )
-    elif (
-        transition.identity.jobstate_submit_seq > watermark.highest_jobstate_submit_seq
-    ):
-        watermark = JobTransitionWatermark(
-            transition.identity.job_instance_id,
-            transition.identity.jobstate_submit_seq,
-            (transition.identity,),
-        )
-    elif (
-        transition.identity.jobstate_submit_seq == watermark.highest_jobstate_submit_seq
-    ):
-        identities = set(watermark.identities_at_highest_seq)
-        identities.add(transition.identity)
-        watermark = JobTransitionWatermark(
-            watermark.job_instance_id,
-            watermark.highest_jobstate_submit_seq,
-            tuple(sorted(identities, key=_job_identity_order)),
-        )
-    watermarks[watermark.job_instance_id] = watermark
-
-    jobs = list(snapshot.jobs)
-    current = matching_job.transition
-    if matching_job.current_attempt == matching_attempt and (
-        current is None
-        or transition.authoritative_sort_key > current.authoritative_sort_key
-    ):
-        jobs[matching_index] = replace(
-            matching_job,
-            state=transition.identity.state,
-            state_timestamp=transition.identity.timestamp,
-            transition=transition,
-        )
-
-    try:
-        return replace(
-            snapshot,
-            epoch=max(snapshot.epoch, record.snapshot_epoch),
-            snapshot_at_epoch=record.recorded_at_epoch,
-            jobs=tuple(jobs),
-            recent_transitions=tuple(
-                sorted(recent.values(), key=lambda item: item.recent_event_sort_key)
-            ),
-            watermarks=tuple(watermarks[key] for key in sorted(watermarks)),
-        )
-    except ValueError:
-        return None
-
-
-def _apply_workflow_transition(
-    snapshot: DatabaseSnapshot, record: WorkflowTransitionRecord
-) -> DatabaseSnapshot | None:
-    transition = record.transition
-    workflow = snapshot.workflow
-    if (
-        transition.workflow != workflow.workflow
-        or transition.identity.wf_id != workflow.wf_id
-    ):
-        return None
-    recent = {item.identity: item for item in snapshot.recent_workflow_transitions}
-    if transition.identity in recent:
-        return replace(
-            snapshot,
-            epoch=max(snapshot.epoch, record.snapshot_epoch),
-            snapshot_at_epoch=record.recorded_at_epoch,
-        )
-    recent[transition.identity] = transition
-
-    watermark = snapshot.workflow_watermark
-    if transition.restart_count > workflow.restart_count:
-        watermark = WorkflowTransitionWatermark(
-            WorkflowRestartIdentity(
-                workflow.workflow, workflow.wf_id, transition.restart_count
-            ),
-            (transition.identity,),
-        )
-        workflow = _workflow_from_transition(workflow, transition, new_restart=True)
-    elif transition.restart_count == workflow.restart_count:
-        identities = set(watermark.identities)
-        identities.add(transition.identity)
-        watermark = WorkflowTransitionWatermark(
-            watermark.restart,
-            tuple(sorted(identities, key=_workflow_identity_order)),
-        )
-        current = workflow.transition
-        if (
-            current is None
-            or transition.authoritative_sort_key > current.authoritative_sort_key
-        ):
-            workflow = _workflow_from_transition(workflow, transition)
-
-    try:
-        return replace(
-            snapshot,
-            epoch=max(snapshot.epoch, record.snapshot_epoch),
-            snapshot_at_epoch=record.recorded_at_epoch,
-            workflow=workflow,
-            recent_workflow_transitions=tuple(
-                sorted(recent.values(), key=lambda item: item.authoritative_sort_key)
-            ),
-            workflow_watermark=watermark,
-        )
-    except ValueError:
-        return None
 
 
 def _workflow_from_transition(

@@ -30,7 +30,7 @@ import re
 import shutil
 import stat
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeAlias
@@ -98,6 +98,12 @@ _SECRET_KEY_PARTS = frozenset(
         "token",
     }
 )
+_JSON_ENCODER = json.JSONEncoder(
+    ensure_ascii=False,
+    separators=(",", ":"),
+    allow_nan=False,
+)
+_STREAM_BUFFER_BYTES = 64 * 1024
 
 
 class EventLogError(RuntimeError):
@@ -148,6 +154,13 @@ class EventLogStatus:
 def encode_record(record: EventRecord) -> bytes:
     """Encode one canonical record as one compact UTF-8 JSONL line."""
 
+    encoded = bytearray()
+    for chunk in _iter_record_bytes(record):
+        encoded.extend(chunk)
+    return bytes(encoded)
+
+
+def _encode_small_record(record: EventRecord) -> bytes:
     try:
         payload = json.dumps(
             record.to_json_dict(),
@@ -160,23 +173,99 @@ def encode_record(record: EventRecord) -> bytes:
     return payload.encode("utf-8") + b"\n"
 
 
+def _iter_json_bytes(value: object) -> Iterator[bytes]:
+    for chunk in _JSON_ENCODER.iterencode(value):
+        yield chunk.encode("utf-8")
+
+
+def _iter_json_array(values: Iterable[object]) -> Iterator[bytes]:
+    yield b"["
+    separator = b""
+    for value in values:
+        yield separator
+        yield from _iter_json_bytes(value)
+        separator = b","
+    yield b"]"
+
+
+def _iter_snapshot_bytes(snapshot: DatabaseSnapshot) -> Iterator[bytes]:
+    """Yield canonical snapshot JSON while materializing one array item at a time."""
+
+    yield b'{"epoch":'
+    yield from _iter_json_bytes(snapshot.epoch.value)
+    yield b',"generation":'
+    yield from _iter_json_bytes(snapshot.generation.to_json_dict())
+    yield b',"snapshot_at_epoch":'
+    yield from _iter_json_bytes(snapshot.snapshot_at_epoch)
+    yield b',"workflow":'
+    yield from _iter_json_bytes(snapshot.workflow.to_json_dict())
+    yield b',"jobs":'
+    yield from _iter_json_array(job.to_json_dict() for job in snapshot.jobs)
+    yield b',"recent_transitions":'
+    yield from _iter_json_array(
+        transition.to_json_dict() for transition in snapshot.recent_transitions
+    )
+    yield b',"recent_workflow_transitions":'
+    yield from _iter_json_array(
+        transition.to_json_dict() for transition in snapshot.recent_workflow_transitions
+    )
+    yield b',"watermarks":'
+    yield from _iter_json_array(
+        watermark.to_json_dict() for watermark in snapshot.watermarks
+    )
+    yield b',"workflow_watermark":'
+    yield from _iter_json_bytes(snapshot.workflow_watermark.to_json_dict())
+    yield b"}"
+
+
+def _iter_checkpoint_bytes(record: CheckpointRecord) -> Iterator[bytes]:
+    yield b'{"schema_version":'
+    yield from _iter_json_bytes(JSONL_V1_SCHEMA_VERSION)
+    yield b',"record_type":"checkpoint","sequence":'
+    yield from _iter_json_bytes(record.sequence)
+    yield b',"stream_id":'
+    yield from _iter_json_bytes(record.stream_id)
+    yield b',"recorded_at_epoch":'
+    yield from _iter_json_bytes(record.recorded_at_epoch)
+    yield b',"snapshot":'
+    yield from _iter_snapshot_bytes(record.snapshot)
+    yield b',"reason":'
+    yield from _iter_json_bytes(record.reason)
+    yield b"}\n"
+
+
+def _iter_record_bytes(record: EventRecord) -> Iterator[bytes]:
+    try:
+        if isinstance(record, CheckpointRecord):
+            yield from _iter_checkpoint_bytes(record)
+        else:
+            yield _encode_small_record(record)
+    except (TypeError, ValueError) as error:
+        raise EventLogFormatError(str(error)) from error
+
+
+def _encoded_records_size(records: Sequence[EventRecord]) -> int:
+    return sum(len(chunk) for record in records for chunk in _iter_record_bytes(record))
+
+
 def decode_json_line(line: bytes | str) -> EventRecord:
     """Decode one complete JSON line into the shared immutable contracts."""
 
     if isinstance(line, bytes):
-        try:
-            text = line.decode("utf-8")
-        except UnicodeDecodeError as error:
-            raise EventLogFormatError("record is not valid UTF-8") from error
+        terminated = line.endswith(b"\n")
     else:
-        text = line
-    if not text.endswith("\n"):
+        terminated = line.endswith("\n")
+    if not terminated:
         raise EventLogFormatError("record is not newline terminated")
+    if isinstance(line, bytes) and json.detect_encoding(line) != "utf-8":
+        raise EventLogFormatError("record is not valid UTF-8")
     try:
-        payload = json.loads(text)
+        payload = json.loads(line)
+    except UnicodeDecodeError as error:
+        raise EventLogFormatError("record is not valid UTF-8") from error
     except json.JSONDecodeError as error:
         raise EventLogFormatError(f"invalid JSON record: {error.msg}") from error
-    return decode_record(payload)
+    return _decode_record(payload, destructive=True)
 
 
 def decode_jsonl(data: bytes, *, tolerate_torn_tail: bool = True) -> DecodedJSONL:
@@ -211,6 +300,12 @@ def read_jsonl(path: Path, *, tolerate_torn_tail: bool = True) -> DecodedJSONL:
 def decode_record(value: object) -> EventRecord:
     """Validate and decode one already-parsed JSON object."""
 
+    return _decode_record(value, destructive=False)
+
+
+def _decode_record(value: object, *, destructive: bool) -> EventRecord:
+    """Decode parsed JSON, optionally releasing private parser containers."""
+
     payload = _mapping(value, "record")
     version = _integer(payload.get("schema_version"), "schema_version")
     if version != JSONL_V1_SCHEMA_VERSION:
@@ -237,7 +332,10 @@ def decode_record(value: object) -> EventRecord:
                 sequence,
                 stream_id,
                 recorded,
-                _database_snapshot(payload.get("snapshot")),
+                _database_snapshot(
+                    _take(payload, "snapshot", destructive=destructive),
+                    destructive=destructive,
+                ),
                 _string(payload.get("reason"), "reason"),
             )
         if record_type == "gap":
@@ -687,21 +785,21 @@ class EventLogWriter:
                 self._mark_missing(sequence, GapReason.STREAM_REPLACED)
             self._abandon_replaced_stream()
             return False
-        encoded = encode_record(record)
-        capacity_reason = self._capacity_failure(len(encoded))
+        encoded_size = _encoded_records_size((record,))
+        capacity_reason = self._capacity_failure(encoded_size)
         if capacity_reason is not None:
             if sequence > 0:
                 self._mark_missing(sequence, capacity_reason)
             return False
         start = self._expected_size()
         try:
-            self._write_all(fd, encoded)
+            self._write_records(fd, (record,))
         except OSError:
             self._rollback_partial_write(fd, start)
             if sequence > 0:
                 self._mark_missing(sequence, GapReason.WRITER_ERROR)
             return False
-        self._set_expected_size(start + len(encoded))
+        self._set_expected_size(start + encoded_size)
         return True
 
     def _atomic_replace_stream(self, records: Sequence[EventRecord]) -> bool:
@@ -722,11 +820,11 @@ class EventLogWriter:
         try:
             self._validate_open_fd(fd, temp_path)
             os.fchmod(fd, 0o600)
-            encoded = b"".join(encode_record(record) for record in records)
-            reason = self._capacity_failure_for(fd, len(encoded), recovering=False)
+            encoded_size = _encoded_records_size(records)
+            reason = self._capacity_failure_for(fd, encoded_size, recovering=False)
             if reason is not None:
                 return False
-            self._write_all(fd, encoded)
+            self._write_records(fd, records)
             os.fsync(fd)
             self._require_unchanged_target(original)
             os.replace(temp_path, self.path)
@@ -756,22 +854,22 @@ class EventLogWriter:
         if not self._active_path_matches():
             self._abandon_replaced_stream()
             return False
-        encoded = b"".join(encode_record(record) for record in records)
-        capacity_reason = self._capacity_failure(len(encoded), recovering=True)
+        encoded_size = _encoded_records_size(records)
+        capacity_reason = self._capacity_failure(encoded_size, recovering=True)
         if capacity_reason is not None:
             self._reserve_gap(capacity_reason)
             return False
         start = self._expected_size()
         final_sequence = records[-1].sequence
         try:
-            self._write_all(fd, encoded)
+            self._write_records(fd, records)
         except OSError:
             self._rollback_partial_write(fd, start)
             self._sequence = final_sequence
             self._mark_missing(final_sequence, GapReason.WRITER_ERROR)
             return False
         self._sequence = final_sequence
-        self._set_expected_size(start + len(encoded))
+        self._set_expected_size(start + encoded_size)
         return True
 
     def _capacity_failure(
@@ -896,6 +994,24 @@ class EventLogWriter:
                 raise OSError("short event-log write")
             written += count
 
+    @classmethod
+    def _write_records(cls, fd: int, records: Sequence[EventRecord]) -> None:
+        buffer = bytearray()
+        for record in records:
+            for chunk in _iter_record_bytes(record):
+                if not chunk:
+                    continue
+                if len(buffer) + len(chunk) > _STREAM_BUFFER_BYTES:
+                    if buffer:
+                        cls._write_all(fd, bytes(buffer))
+                        buffer.clear()
+                    if len(chunk) >= _STREAM_BUFFER_BYTES:
+                        cls._write_all(fd, chunk)
+                        continue
+                buffer.extend(chunk)
+        if buffer:
+            cls._write_all(fd, bytes(buffer))
+
     def _rollback_partial_write(self, fd: int, start: int) -> None:
         try:
             os.ftruncate(fd, start)
@@ -971,10 +1087,43 @@ def _mapping(value: object, name: str) -> Mapping[str, object]:
     return value
 
 
+def _take(
+    value: Mapping[str, object],
+    key: str,
+    *,
+    destructive: bool,
+    default: object = None,
+) -> object:
+    if destructive and isinstance(value, dict):
+        return value.pop(key, default)
+    return value.get(key, default)
+
+
 def _sequence(value: object, name: str) -> Sequence[object]:
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
         raise EventLogFormatError(f"{name} must be an array")
     return value
+
+
+def _decode_items(
+    value: object,
+    name: str,
+    decoder: Callable[[object], object],
+    *,
+    destructive: bool,
+) -> tuple[object, ...]:
+    source = _sequence(value, name)
+    if not destructive or not isinstance(source, list):
+        return tuple(decoder(item) for item in source)
+
+    result: list[object] = []
+    try:
+        for index in range(len(source)):
+            result.append(decoder(source[index]))
+            source[index] = None
+    finally:
+        source.clear()
+    return tuple(result)
 
 
 def _string(value: object, name: str) -> str:
@@ -1179,33 +1328,46 @@ def _workflow_watermark(value: object) -> WorkflowTransitionWatermark:
     )
 
 
-def _database_snapshot(value: object) -> DatabaseSnapshot:
+def _database_snapshot(value: object, *, destructive: bool = False) -> DatabaseSnapshot:
     item = _mapping(value, "database snapshot")
+    jobs = _decode_items(
+        _take(item, "jobs", destructive=destructive, default=[]),
+        "jobs",
+        _job_snapshot,
+        destructive=destructive,
+    )
+    recent_transitions = _decode_items(
+        _take(item, "recent_transitions", destructive=destructive, default=[]),
+        "recent_transitions",
+        _job_transition,
+        destructive=destructive,
+    )
+    recent_workflow_transitions = _decode_items(
+        _take(
+            item,
+            "recent_workflow_transitions",
+            destructive=destructive,
+            default=[],
+        ),
+        "recent_workflow_transitions",
+        _workflow_transition,
+        destructive=destructive,
+    )
+    watermarks = _decode_items(
+        _take(item, "watermarks", destructive=destructive, default=[]),
+        "watermarks",
+        _job_watermark,
+        destructive=destructive,
+    )
     return DatabaseSnapshot(
         SnapshotEpoch(_integer(item.get("epoch"), "epoch")),
         _generation(item.get("generation")),
         _finite_float(item.get("snapshot_at_epoch"), "snapshot_at_epoch"),
         _workflow_snapshot(item.get("workflow")),
-        tuple(
-            _job_snapshot(entry) for entry in _sequence(item.get("jobs", []), "jobs")
-        ),
-        tuple(
-            _job_transition(entry)
-            for entry in _sequence(
-                item.get("recent_transitions", []), "recent_transitions"
-            )
-        ),
-        tuple(
-            _workflow_transition(entry)
-            for entry in _sequence(
-                item.get("recent_workflow_transitions", []),
-                "recent_workflow_transitions",
-            )
-        ),
-        tuple(
-            _job_watermark(entry)
-            for entry in _sequence(item.get("watermarks", []), "watermarks")
-        ),
+        jobs,
+        recent_transitions,
+        recent_workflow_transitions,
+        watermarks,
         _workflow_watermark(item.get("workflow_watermark")),
     )
 
