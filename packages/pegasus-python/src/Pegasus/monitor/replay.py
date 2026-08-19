@@ -62,6 +62,7 @@ if TYPE_CHECKING:
 # Match CoordinatorConfig without importing the live coordinator/source graph.
 _RECENT_JOB_LIMIT = 8192
 _RECENT_WORKFLOW_LIMIT = 64
+_CANONICAL_CHECKPOINT_PREFIX = '{"schema_version":1,"record_type":"checkpoint",'
 
 
 def _record_type(record: EventRecord) -> str:
@@ -667,7 +668,7 @@ def _iter_jsonl_records(
                 if not line.endswith("\n"):
                     state.trailing_bytes = line.encode("utf-8")
                     return
-                if '"record_type":"checkpoint"' in line:
+                if line.startswith(_CANONICAL_CHECKPOINT_PREFIX):
                     yield _CHECKPOINT_DECODE_BOUNDARY
                 record = decode_json_line(line)
                 line = ""

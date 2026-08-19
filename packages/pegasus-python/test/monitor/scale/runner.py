@@ -683,8 +683,11 @@ def run_worker(
         publication,
         publication.sequence,
     )
-    monitor_elapsed = time.perf_counter() - started_wall
     monitor_cpu_seconds = time.process_time() - started_cpu
+    # Read CPU before the enclosing wall clock so the measured CPU interval is
+    # nested inside the wall interval. The inverse order can report slightly
+    # more than one core for this single-threaded probe on very short runs.
+    monitor_elapsed = time.perf_counter() - started_wall
     cpu_cores = (
         monitor_cpu_seconds / monitor_elapsed if monitor_elapsed > 0 else float("inf")
     )

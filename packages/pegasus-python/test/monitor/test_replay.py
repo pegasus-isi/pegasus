@@ -493,7 +493,7 @@ def test_streaming_iterator_releases_a_yielded_checkpoint_before_next_decode(
     tmp_path, monkeypatch
 ) -> None:
     path = tmp_path / "events.jsonl"
-    line = b'{"record_type":"checkpoint"}\n'
+    line = b'{"schema_version":1,"record_type":"checkpoint","x":1}\n'
     path.write_bytes(line + line)
     references = []
 
@@ -515,6 +515,30 @@ def test_streaming_iterator_releases_a_yielded_checkpoint_before_next_decode(
     assert next(records) is replay_module._CHECKPOINT_DECODE_BOUNDARY
     gc.collect()
     assert references[0]() is None
+
+
+def test_checkpoint_text_inside_enrichment_does_not_reset_replay(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    header = _header("stream")
+    checkpoint = CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+    enrichment = EnrichmentRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        2.0,
+        SourceName.CONDOR_QUEUE,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        FrozenPayload.from_mapping({"record_type": "checkpoint"}),
+        None,
+    )
+    _write(path, header, checkpoint, enrichment)
+
+    result = ReplayEngine(path, speed=0).replay()
+
+    assert result.complete is True
+    assert result.snapshot is not None
+    assert result.ignored_records == 0
+    assert result.enrichments == (enrichment,)
 
 
 def test_replay_identifies_checkpoint_without_materializing_json(monkeypatch) -> None:
