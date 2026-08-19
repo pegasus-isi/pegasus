@@ -52,6 +52,7 @@ _MAX_METADATA_BYTES = 64 * 1024
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 _CLOEXEC = getattr(os, "O_CLOEXEC", 0)
 _DIRECTORY = getattr(os, "O_DIRECTORY", 0)
+_DEFAULT_STARTUP_TIMEOUT = 60.0
 
 
 class ServerError(RuntimeError):
@@ -821,7 +822,7 @@ def launch_server(
     *,
     cwd: str | os.PathLike[str] | None = None,
     env: Mapping[str, str] | None = None,
-    startup_timeout: float = 10.0,
+    startup_timeout: float = _DEFAULT_STARTUP_TIMEOUT,
     poll_interval: float = 0.05,
     stdout: int | IO[Any] = subprocess.DEVNULL,
     stderr: int | IO[Any] = subprocess.DEVNULL,

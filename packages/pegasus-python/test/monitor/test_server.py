@@ -529,6 +529,36 @@ def test_launch_uses_argv_detachment_and_atomic_metadata_handshake(
     assert kwargs["close_fds"] is True
 
 
+def test_launch_default_timeout_allows_slow_authoritative_bootstrap(
+    tmp_path: Path,
+) -> None:
+    paths = ServerPaths.for_submit_dir(tmp_path)
+    clock = FakeClock()
+    process = FakeProcess()
+    launched = metadata(pid=process.pid)
+    wrote_metadata = False
+
+    def sleep(seconds: float) -> None:
+        nonlocal wrote_metadata
+        clock.sleep(seconds)
+        if clock.now >= 30.0 and not wrote_metadata:
+            write_metadata(paths.metadata, launched)
+            wrote_metadata = True
+
+    result = launch_server(
+        ("pegasus-monitor", "--serve-foreground"),
+        paths,
+        poll_interval=5.0,
+        popen=lambda *_args, **_kwargs: process,  # type: ignore[arg-type]
+        identity_reader=lambda _pid: launched.process_identity,
+        monotonic=clock.monotonic,
+        sleep=sleep,
+    )
+
+    assert result.metadata == launched
+    assert 30.0 <= clock.now < 60.0
+
+
 def test_launch_failure_reaps_the_spawned_process(tmp_path: Path) -> None:
     paths = ServerPaths.for_submit_dir(tmp_path)
     process = FakeProcess(return_code=7)
