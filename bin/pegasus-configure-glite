@@ -23,6 +23,30 @@ if ! which condor_config_val >/dev/null 2>&1; then
     exit 1
 fi
 
+# Detect condor version to decide whether to install sfapi_* scripts.
+# sfapi_local_submit_attributes.sh is always installed regardless of version.
+CONDOR_VERSION=$(condor_version 2>/dev/null | awk '/CondorVersion/{print $2}')
+CONDOR_VERSION=${CONDOR_VERSION:-0.0.0}
+
+# Returns 0 (true) if version $1 is less than version $2
+version_lt() {
+    local IFS=.
+    local v1=($1) v2=($2)
+    local i
+    for ((i=0; i<${#v2[@]}; i++)); do
+        local a=${v1[i]:-0} b=${v2[i]:-0}
+        if ((10#$a < 10#$b)); then return 0; fi
+        if ((10#$a > 10#$b)); then return 1; fi
+    done
+    return 1
+}
+
+INSTALL_SFAPI_SCRIPTS=true
+if ! version_lt "$CONDOR_VERSION" "25.14.0"; then
+    echo "Condor version $CONDOR_VERSION >= 25.14.0: skipping sfapi_* scripts (sfapi_local_submit_attributes.sh always installed)"
+    INSTALL_SFAPI_SCRIPTS=false
+fi
+
 # PM-1897 BLAHP configuration naming/layout changed - the rest of this
 # script has a "new" and "old" way of handling the config
 BLAHPD_LOCATION=$(condor_config_val BLAHPD_LOCATION 2>/dev/null || true)
@@ -98,7 +122,13 @@ done
 
 # copy all the non local attributes.sh file into the libexec directory
 for f in `ls "$PEGASUS_GLITE_DIR"/*.{sh,py} | grep -v local_submit_attributes`; do
-    echo "Installing "`basename "$f"`" into $BLAHPD_LIBEXEC_DIR/"
+    base_f=$(basename "$f")
+    # sfapi_local_submit_attributes.sh is handled above; skip other sfapi_* if condor >= 25.14.0
+    if [[ "$base_f" == sfapi_* ]] && [ "$INSTALL_SFAPI_SCRIPTS" = "false" ]; then
+        echo "Skipping $base_f (condor >= 25.14.0)"
+        continue
+    fi
+    echo "Installing $base_f into $BLAHPD_LIBEXEC_DIR/"
     cp "$f" $BLAHPD_LIBEXEC_DIR/
 done
 
@@ -106,7 +136,7 @@ done
 echo "Adding moab and sfapi support to batch_gahp.config"
 BLAHPD_CONFIG_BAK=$BLAHPD_CONFIG.$(date +%F)
 cp $BLAHPD_CONFIG $BLAHPD_CONFIG_BAK
-awk '
+awk -v install_sfapi="$INSTALL_SFAPI_SCRIPTS" '
 BEGIN {
     FS="=";
     has_moab_binpath=0;
@@ -118,7 +148,7 @@ BEGIN {
         if (index($2,"moab")==0) {
             line=line",moab";
         }
-        if (index($2,"sfapi")==0) {
+        if (install_sfapi == "true" && index($2,"sfapi")==0) {
             line=line",sfapi";
         }
         print(line);
