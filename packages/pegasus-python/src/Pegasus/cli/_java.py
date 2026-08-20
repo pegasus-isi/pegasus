@@ -13,11 +13,12 @@ import resource
 import shutil
 import subprocess
 import sys
-import sysconfig
 from glob import glob
 from pathlib import Path
 
 import click
+
+from Pegasus.cli._paths import get_bin_dir
 
 
 def find_java():
@@ -352,19 +353,7 @@ def get_system_properties():
         base = data_dir.parent.parent  # share/pegasus -> root
         conf_dir = str(base / "etc")
 
-    # bindir must point to where Python console scripts are installed
-    # (the venv or system bin/ directory), not data/bin/ which only
-    # contains C binaries.  The Java planner constructs absolute paths
-    # to tools like pegasus-run, pegasus-exitcode, etc. from this.
-    #
-    # Prefer shutil.which("pegasus") to find the actual installed location,
-    # since sysconfig.get_path("scripts") can be wrong for --user installs
-    # and some conda setups.
-    pegasus_exe = shutil.which("pegasus")
-    if pegasus_exe:
-        bin_dir = str(Path(pegasus_exe).resolve().parent)
-    else:
-        bin_dir = sysconfig.get_path("scripts")
+    bin_dir = get_bin_dir()
 
     return {
         "pegasus.home.sysconfdir": conf_dir,
