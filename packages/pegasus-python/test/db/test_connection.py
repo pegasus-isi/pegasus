@@ -1,8 +1,13 @@
 import errno
 import os
 import re
+import sys
 import unittest
 import uuid
+from unittest.mock import patch
+
+import pymysql
+from sqlalchemy import create_engine
 
 from Pegasus.db import connection
 from Pegasus.db.admin.admin_loader import *
@@ -10,6 +15,16 @@ from Pegasus.db.schema import *
 
 
 class TestConnection(unittest.TestCase):
+    def test_mysql_uses_pymysql(self):
+        with patch.dict(sys.modules):
+            sys.modules.pop("MySQLdb", None)
+            sys.modules.pop("_mysql", None)
+
+            connection._validate("mysql://user@localhost/database")
+            engine = create_engine("mysql://user@localhost/database")
+
+            self.assertIs(engine.dialect.dbapi, pymysql)
+
     def test_non_existent_url(self):
         dburi = "jdbc:mysql://localhost/unknown-db"
         self.assertRaises(connection.ConnectionError, connection.connect, dburi)
