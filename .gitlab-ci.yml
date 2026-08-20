@@ -628,9 +628,9 @@ Workflow Tests:
       EXEC:
       - launch-bamboo-test
   script:
-  - $HOME/.local/bin/uv venv --clear --python 3.12
+  - uv venv --clear --python 3.12
   - source .venv/bin/activate
-  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl
+  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[cwl]"
   - ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
   - source .venv/bin/activate
@@ -671,9 +671,9 @@ Performance Tests:
       EXEC:
       - launch-bamboo-test-planner-only
   script:
-  - $HOME/.local/bin/uv venv --clear --python 3.12
+  - uv venv --clear --python 3.12
   - source .venv/bin/activate
-  - $HOME/.local/bin/uv pip install dist/pegasus_wms-*.whl pymysql
+  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[mysql]"
   - ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'

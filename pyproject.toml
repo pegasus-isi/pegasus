@@ -104,6 +104,7 @@ pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
 # No Python wrapper console_scripts entries are needed.
 
 [project.optional-dependencies]
+all = ["pegasus-wms[mysql,postgresql,cwl]"]
 postgresql = ["psycopg2"]
 mysql = ["pymysql"]
 cwl = ["cwl-utils>=0.11", "jsonschema>=3.2"]
