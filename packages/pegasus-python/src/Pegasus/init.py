@@ -21,13 +21,24 @@ PEGASUS_HOME = os.getenv("PEGASUS_HOME")
 #### Default data path ####
 pegasushub_data_path = os.path.expanduser("~/.pegasus/pegasushub")
 
+
+def _find_pegasus_version():
+    """Locate pegasus-version.
+
+    PEGASUS_HOME is only set for the tarball/RPM layout. For a wheel install
+    the console scripts are on PATH instead.
+    """
+    if PEGASUS_HOME:
+        candidate = os.path.join(PEGASUS_HOME, "bin", "pegasus-version")
+        if os.path.isfile(candidate):
+            return candidate
+
+    return shutil.which("pegasus-version") or "pegasus-version"
+
+
 #### Pegasus major_minor_version ####
 pegasus_major_minor_version = (
-    subprocess.check_output(
-        [os.path.join(PEGASUS_HOME, "bin", "pegasus-version"), "-m"]
-    )
-    .strip()
-    .decode("utf-8")
+    subprocess.check_output([_find_pegasus_version(), "-m"]).strip().decode("utf-8")
 )
 
 #### Url to Sites.py on pegasushub and Sites.py location ####
