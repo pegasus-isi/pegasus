@@ -592,7 +592,9 @@ def _validate(dburi):
             if dburi.startswith("postgresql:"):
                 import psycopg2  # noqa: F401
             if dburi.startswith("mysql:"):
-                import MySQLdb  # noqa: F401
+                import pymysql
+
+                pymysql.install_as_MySQLdb()
 
     except ImportError as e:
         raise ConnectionError(f"Missing Python module: {e} ({dburi})")
