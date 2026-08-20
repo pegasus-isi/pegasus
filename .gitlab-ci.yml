@@ -630,7 +630,7 @@ Workflow Tests:
   script:
   - uv venv --clear --python 3.12
   - source .venv/bin/activate
-  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[cwl]"
+  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[cwl]" astropy
   - ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
   - source .venv/bin/activate
