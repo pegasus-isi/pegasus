@@ -5,9 +5,10 @@ import argparse
 import os
 import sys
 from glob import glob
-from os.path import abspath, dirname, exists, join, normpath
+from os.path import dirname, join
 
 from Pegasus import data
+from Pegasus.cli._paths import get_bin_dir
 
 
 def _python_hash(**kw):
@@ -49,13 +50,16 @@ export CLASSPATH
     )
 
 
-def _get_bin_dir(exe):
-    bin_dir = normpath(join(dirname(abspath(exe)), "bin"))
+def _get_version():
+    """
+    Get version from package metadata
+    """
+    from importlib.metadata import PackageNotFoundError, version
 
-    while not exists(bin_dir):
-        bin_dir = normpath(join(bin_dir, "..", "..", "bin"))
-
-    return bin_dir
+    try:
+        return version("pegasus-wms")
+    except PackageNotFoundError:
+        return "unknown"
 
 
 def _main(
@@ -73,31 +77,24 @@ def _main(
     noeoln=False,
 ):
     """."""
-    _version = "5.2.0.dev0"
+    _version = _get_version()
 
-    bin_dir = _get_bin_dir(sys.argv[0])
+    # where the console scripts live - resolved from the install, not from
+    # sys.argv[0], which main._run_script rewrites to a bare script name
+    bin_dir = get_bin_dir()
     base_dir = dirname(bin_dir)
 
-    lib = "@LIBDIR@"  # lib64 for 64bit RPMS
-    if lib.startswith("@"):
-        lib = "lib"
-
-    python_lib = "@PYTHON_LIBDIR@"
-    if python_lib.startswith("@"):
-        python_lib = "lib/pegasus/python"
-
+    # <site-packages>/Pegasus/data, holding everything that used to live
+    # under $PEGASUS_HOME/{share/pegasus,etc}
     data_dir = data.__path__[0]
     conf_dir = join(data_dir, "etc")
-    share_dir = join(data_dir, "share", "pegasus")
+    share_dir = data_dir
     java_dir = join(data_dir, "java")
-    python_dir = join(base_dir, python_lib)
-    python_externals_dir = join(base_dir, lib, "pegasus", "externals", "python")
+    # the directory Pegasus itself is importable from
+    python_dir = dirname(dirname(data_dir))
+    python_externals_dir = python_dir
     schema_dir = join(data_dir, "schema")
     r_dir = "".join(sorted(glob(join(data_dir, "r", "*.tar.gz"))))
-
-    # for development - running out of a source checkout
-    test = join(base_dir, "build", "classes")
-    extra_classpath = test if exists(test) else ""
 
     # in native packaging mode, some directories move
     if base_dir == "/usr":
@@ -105,8 +102,6 @@ def _main(
 
     # classpath
     jars = sorted(glob(join(java_dir, "*.jar")))
-    if extra_classpath:
-        jars.insert(0, extra_classpath)
 
     _classpath = ":".join(jars)
     if "CLASSPATH" in os.environ:
