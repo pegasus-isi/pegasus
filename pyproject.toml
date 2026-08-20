@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
-dynamic = ["version"]
+version = "6.0.0.dev0"
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"
@@ -35,18 +35,20 @@ classifiers = [
 dependencies = [
     # Core
     "PyYAML",
-    "click>=8.0",
+    "pythonsed",          # For profile expression
+    "rich",               # Console/Markdown rendering for pegasus-analyzer
     # CLI / tools
-    "GitPython",
-    "pamela",
+    "click>=8.0",
     "pika",
     # Web service / dashboard
     "werkzeug<3.1.0",
     "Flask>=2.2,<3.0",
     "Flask-Caching",
     "requests",
+    "pamela",
     # Database
-    "sqlalchemy>=1.4",
+    "sqlalchemy",
+    "pymysql",
     # Worker runtime (transfer, s3, globus — pegasus-worker merged into this wheel)
     "boto3>1.12",
     "globus-sdk>=3.23.0,<4",
@@ -131,12 +133,6 @@ sdist.exclude = [
     "_cmake_build/",
     "_cmake_build_worker/",
     ".claude/",
-    ".gihub/"
+    ".agents/",
+    ".github/"
 ]
-
-# Reads the version from build.properties
-[[tool.dynamic-metadata]]
-provider = "scikit_build_core.metadata.regex"
-field = "version"
-input = "build.properties"
-regex = '''pegasus\.version\s*=\s*(?P<value>\S+)'''

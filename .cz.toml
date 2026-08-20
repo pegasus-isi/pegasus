@@ -5,6 +5,7 @@ version_scheme = "pep440"
 version = "6.0.0.dev0"
 version_files = [
     "build.properties",
+    "pyproject.toml:version",
     "packages/pegasus-common/pyproject.toml:version",
     "packages/pegasus-api/pyproject.toml:version",
     "packages/pegasus-python/pyproject.toml:version",
