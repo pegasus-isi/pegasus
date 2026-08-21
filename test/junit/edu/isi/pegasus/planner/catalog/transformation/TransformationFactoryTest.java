@@ -27,7 +27,6 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Text;
 import edu.isi.pegasus.planner.catalog.transformation.impl.YAML;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -54,8 +53,6 @@ import java.util.List;
  * @author Karan Vahi
  */
 public class TransformationFactoryTest {
-
-    private static final String FILE_CATALOG_TYPE = "Text";
 
     private static final String YAML_CATALOG_TYPE = "YAML";
 
@@ -93,41 +90,6 @@ public class TransformationFactoryTest {
 
     @AfterEach
     public void tearDown() {}
-
-    @Test
-    public void testWithTypeMentionedFile() throws Exception {
-        mLogger.logEventStart(
-                "test.catalog.transformation.factory",
-                "type-as-file",
-                Integer.toString(mTestNumber++));
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-
-        props.setProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY, FILE_CATALOG_TYPE);
-        props.setProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
-        assertThat(tc, instanceOf(Text.class));
-        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
-        mLogger.logEventCompletion();
-    }
-
-    @Test
-    public void testWithOnlyPathToFile() throws Exception {
-        mLogger.logEventStart(
-                "test.catalog.transformation.factory",
-                "only-file-path",
-                Integer.toString(mTestNumber++));
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        props.setProperty(
-                PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
-                new File(mTestSetup.getInputDirectory(), "sample.tc.text").getAbsolutePath());
-        TransformationCatalog tc = TransformationFactory.loadInstance(getPegasusBag(props));
-        assertThat(tc, instanceOf(Text.class));
-        assertThat("loaded catalog should not be transient", tc.isTransient(), is(false));
-        mLogger.logEventCompletion();
-    }
 
     @Test
     public void testWithTypeMentionedYAML() throws Exception {
@@ -209,47 +171,10 @@ public class TransformationFactoryTest {
     }
 
     @Test
-    public void testWithDefaultTextFile() throws Exception {
+    public void testWithEmptyTransientYAMLFile() throws Exception {
         mLogger.logEventStart(
                 "test.catalog.transformation.factory",
-                "default-text-file-test",
-                Integer.toString(mTestNumber++));
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        Path p = Files.createTempDirectory("pegasus");
-        File dir = p.toFile();
-        File text =
-                new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(text));
-        writer.write(
-                "tr black::analyze:1.0 {\n"
-                        + "        site isi {\n"
-                        + "                pfn \"/home/pegasus/2.0/bin/keg\"\n"
-                        + "                arch \"x86\"\n"
-                        + "                os \"LINUX\"\n"
-                        + "                type \"INSTALLED\"\n"
-                        + "        }\n"
-                        + "}");
-        writer.close();
-        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
-        try {
-            TransformationCatalog s = TransformationFactory.loadInstance(bag);
-            assertThat(s, instanceOf(Text.class));
-            assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
-        } finally {
-            text.delete();
-            dir.delete();
-        }
-        mLogger.logEventCompletion();
-    }
-
-    @Test
-    public void testWithEmptyTransientTextFile() throws Exception {
-        mLogger.logEventStart(
-                "test.catalog.transformation.factory",
-                "default-text-empty-file-test",
+                "default-yaml-empty-file-test",
                 Integer.toString(mTestNumber++));
         PegasusProperties props = PegasusProperties.nonSingletonInstance();
         props.setProperty("pegasus.catalog.transformation.transient", "true");
@@ -258,18 +183,17 @@ public class TransformationFactoryTest {
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
         Path p = Files.createTempDirectory("pegasus");
         File dir = p.toFile();
-        File text =
-                new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(text));
+        File yaml =
+                new File(dir, TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
         writer.close();
-        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
         try {
             TransformationCatalog s = TransformationFactory.loadInstance(bag);
-            assertThat(s, instanceOf(Text.class));
+            assertThat(s, instanceOf(YAML.class));
             assertThat(s.isTransient(), is(true));
         } finally {
-            text.delete();
+            yaml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();
@@ -310,60 +234,6 @@ public class TransformationFactoryTest {
             assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
         } finally {
             yaml.delete();
-            dir.delete();
-        }
-        mLogger.logEventCompletion();
-    }
-
-    @Test
-    public void testWithDefaultYAMLAndTextFiles() throws Exception {
-        mLogger.logEventStart(
-                "test.catalog.transformation.factory",
-                "default-yaml-xml-test",
-                Integer.toString(mTestNumber++));
-        PegasusProperties props = PegasusProperties.nonSingletonInstance();
-        PegasusBag bag = new PegasusBag();
-        bag.add(PegasusBag.PEGASUS_PROPERTIES, props);
-        bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-        Path p = Files.createTempDirectory("pegasus");
-        File dir = p.toFile();
-        File yaml =
-                new File(dir, TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(yaml));
-        writer.write(
-                "pegasus: \"5.0\"\n"
-                        + "transformations:\n"
-                        + "  - name: foo\n"
-                        + "    requires:\n"
-                        + "      - bar\n"
-                        + "    sites:\n"
-                        + "      - name: local\n"
-                        + "        pfn: /nfs/u2/ryan/bin/foo\n"
-                        + "        type: stageable\n"
-                        + "        arch: x86_64\n"
-                        + "        os.type: linux");
-        writer.close();
-        File xml =
-                new File(dir, TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
-        writer = new BufferedWriter(new FileWriter(xml));
-        writer.write(
-                "tr black::analyze:1.0 {\n"
-                        + "        site isi {\n"
-                        + "                pfn \"/home/pegasus/2.0/bin/keg\"\n"
-                        + "                arch \"x86\"\n"
-                        + "                os \"LINUX\"\n"
-                        + "                type \"INSTALLED\"\n"
-                        + "        }\n"
-                        + "}");
-        writer.close();
-        bag.add(PegasusBag.PLANNER_DIRECTORY, dir);
-        try {
-            TransformationCatalog s = TransformationFactory.loadInstance(bag);
-            assertThat(s, instanceOf(YAML.class));
-            assertThat("loaded catalog should not be transient", s.isTransient(), is(false));
-        } finally {
-            yaml.delete();
-            xml.delete();
             dir.delete();
         }
         mLogger.logEventCompletion();

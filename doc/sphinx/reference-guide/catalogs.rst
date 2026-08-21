@@ -1015,22 +1015,6 @@ in your properties
     The Python API provides a conveience function *add_site_profile*
     in the Properties class that facilitates this.
 
-Site Catalog Converter pegasus-sc-converter
--------------------------------------------
-
-The recommended and default format for Site Catalog is YAML now and
-we recommend users to use :ref:`cli-pegasus-sc-converter` to convert
-their existing catalogs to the yaml format.
-
-
-For example, to convert a Site Catalog file, ``sites.xml``, to YAML,
-use the following
-
-command::
-
-    pegasus-sc-converter -i sites.xml -o sites.yml
-
-
 .. _transformation:
 
 Executable Discovery (Transformation Catalog)
@@ -1042,13 +1026,7 @@ the transformation as to what system they are compiled for, what
 profiles or environment variables need to be set when the transformation
 is invoked etc.
 
-Pegasus currently supports a Text formatted Transformation Catalog
-
-1. **YAML:**\ A multi line text based Transformation Catalog (DEFAULT)
-
-2. **Text:**\ A multi line text based Transformation Catalog
-
-In this guide we will look at the format of the Multiline Text based TC.
+Pegasus supports a YAML formatted Transformation Catalog (DEFAULT).
 
 .. _tc-YAML:
 
@@ -1225,99 +1203,13 @@ behavior of this implementation.
    to pick up executables from a directory named **transformations** in the
    directory from which the planner is launched.
 
-.. _tc-Text:
-
-MultiLine Text based TC (Text)
-------------------------------
-
-The multiple line text based TC is the new default TC in Pegasus. This
-format allows you to define the transformations
-
-The file is read and cached in memory. Any modifications, as adding or
-deleting, causes an update of the memory and hence to the file
-underneath. All queries are done against the memory representation. The
-file sample.tc.text in the etc directory contains an example
-
-::
-
-   tr example::keg:1.0 {
-
-   #specify profiles that apply for all the sites for the transformation
-   #in each site entry the profile can be overridden
-
-     profile env "APP_HOME" "/tmp/myscratch"
-     profile env "JAVA_HOME" "/opt/java/1.6"
-
-     site isi {
-       profile env "HELLo" "WORLD"
-       profile condor "FOO" "bar"
-       profile env "JAVA_HOME" "/bin/java.1.6"
-       pfn "/path/to/keg"
-       arch "x86"
-       os "linux"
-       osrelease "fc"
-       osversion "4"
-       type "INSTALLED"
-     }
-
-     site wind {
-       profile env "CPATH" "/usr/cpath"
-       profile condor "universe" "condor"
-       pfn "file:///path/to/keg"
-       arch "x86"
-       os "linux"
-       osrelease "fc"
-       osversion "4"
-       type "STAGEABLE"
-     }
-   }
-
-The entries in this catalog have the following meaning
-
-1. **tr** tr - A transformation identifier. (Normally a
-   Namespace::Name:Version.. The Namespace and Version are optional.)
-
-2. **pfn** - URL or file path for the location of the executable. The
-   pfn is a file path if the transformation is of type INSTALLED and
-   generally a url (file:/// or http:// or gridftp://) if of type
-   STAGEABLE
-
-3. **site** - The site identifier for the site where the transformation
-   is available
-
-4. **type** - The type of transformation. Whether it is installed
-   ("INSTALLED") on the remote site or is available to stage
-   ("STAGEABLE").
-
-5. **arch, os, osrelease, osversion** - The arch/os/osrelease/osversion
-   of the transformation. osrelease and osversion are optional.
-
-   ARCH can have one of the following values x86, x86_64, sparcv7,
-   sparcv9, ppc, aix. The default value for arch is x86
-
-   OS can have one of the following values linux,sunos,macosx. The
-   default value for OS if none specified is linux
-
-6. **Profiles** - One or many profiles can be attached to a
-   transformation for all sites or to a transformation on a particular
-   site.
-
-To use this format of the Transformation Catalog you need to set the
-following properties
-
-1. **pegasus.catalog.transformation=Text**
-
-2. **pegasus.catalog.transformation.file=<path to the transformation
-   catalog file>**
-
 .. _tc-container:
 
 Containerized Applications in the Transformation Catalog
 --------------------------------------------------------
 
 Users can specify what container they want to use for running their
-application in the Transformation Catalog using the multi line text
-based format described in this section. Users can specify an optional
+application in the Transformation Catalog. Users can specify an optional
 attribute named container that refers to the container to be used for
 the application.
 
@@ -1431,47 +1323,3 @@ transformations can refer to the same container.
 #. **profiles** - One or many profiles can be attached to a
    transformation for all sites or to a transformation on a particular
    site. For containers, only env profiles are supported.
-
-Transformation Catalog Converter pegasus-tc-converter
------------------------------------------------------
-
-The recommended and default format for Site Catalog is YAML now and
-we recommend users to use :ref:`cli-pegasus-tc-converter` to convert
-their existing catalogs to the yaml format.
-
-
-For example, to convert a Site Catalog file, ``tc.txt``, to YAML,
-use the following
-
-command::
-
-    pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
-
-
-
-TC Converter Client pegasus-tc-converter
-----------------------------------------
-
-Pegasus 3.0 by default now parses a file based multi line textual format
-of a Transformation Catalog. The new Text format is explained in detail
-in the chapter on Catalogs.
-
-Pegasus 3.0 comes with a pegasus-tc-converter that will convert users
-old transformation catalog ( File ) to the Text format. Sample usage is
-given below.
-
-::
-
-   $ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
-
-   2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
-   2010.11.22 12:53:16.666 PST:   The output transformation catalog is in file  sample.tc.text
-
-To use the converted transformation catalog, in the properties do the
-following:
-
-1. unset pegasus.catalog.transformation or set
-   pegasus.catalog.transformation to Text
-
-2. point pegasus.catalog.transformation.file to the converted
-   transformation catalog

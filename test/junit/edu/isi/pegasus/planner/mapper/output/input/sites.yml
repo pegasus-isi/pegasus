@@ -1,0 +1,62 @@
+pegasus: "5.0"
+sites:
+  - name: local
+    arch: x86
+    os.type: linux
+    directories:
+      - type: sharedScratch
+        path: /test/junit/output/mapper/blackdiamond/work
+        fileServers:
+          - operation: all
+            url: file:///test/junit/output/mapper/blackdiamond/work
+      - type: sharedStorage
+        path: /test/junit/output/mapper/blackdiamond/outputs
+        fileServers:
+          - operation: put
+            url: file:///test/junit/output/mapper/blackdiamond/outputs
+          - operation: get
+            url: gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs
+    profiles:
+      pegasus:
+        clusters.num: "1"
+
+  - name: blueridge
+    arch: x86
+    os.type: linux
+    grids:
+      - type: batch
+        contact: vahi@br0.renci.org
+        scheduler: pbs
+        jobtype: compute
+      - type: batch
+        contact: vahi@br0.renci.org
+        scheduler: pbs
+        jobtype: auxillary
+    directories:
+      - type: sharedScratch
+        path: /home/vahi/shared-scratch
+        fileServers:
+          - operation: all
+            url: file:///home/vahi/shared-scratch
+    profiles:
+      env:
+        PEGASUS_HOME: /usr
+      pegasus:
+        style: ssh
+        change.dir: "true"
+      globus:
+        queue: quick
+        hostcount: "5"
+        count: "4"
+        maxwalltime: "30"
+      condor:
+        priority: "2"
+
+  - name: condorpool
+    arch: x86
+    os.type: linux
+    profiles:
+      condor:
+        universe: vanilla
+      pegasus:
+        style: condor

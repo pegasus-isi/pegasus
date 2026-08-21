@@ -1024,30 +1024,6 @@ public class PegasusProperties implements Cloneable {
     // pegasus.catalog.site.repo.file
     // pegasus.catalog.site.repo.interval
 
-    /**
-     * Returns the location of the schema for the DAX.
-     *
-     * <p>Referred to by the "pegasus.schema.sc" property.
-     *
-     * @return the location of pool schema if specified in properties file, else null.
-     */
-    public String getPoolSchemaLocation() {
-        return this.getPoolSchemaLocation(null);
-    }
-
-    /**
-     * Returns the location of the schema for the site catalog file.
-     *
-     * <p>Referred to by the "pegasus.schema.sc" property
-     *
-     * @param defaultLocation the default location where the schema should be if no other location
-     *     is specified.
-     * @return the location specified by the property, else defaultLocation.
-     */
-    public String getPoolSchemaLocation(String defaultLocation) {
-        return mProps.getProperty("pegasus.schema.sc", defaultLocation);
-    }
-
     // PROVENANCE CATALOG PROPERTIES
     /**
      * Returns the provenance store to use to log the refiner actions.
