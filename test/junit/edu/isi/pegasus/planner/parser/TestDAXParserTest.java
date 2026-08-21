@@ -97,7 +97,7 @@ public class TestDAXParserTest {
         Map metadata = DAXParserFactory.getDAXMetadata(bag, dax);
 
         assertThat(metadata.get("name"), is("diamond"));
-        assertThat(metadata.get("version"), is("3.6"));
+        assertThat(metadata.get("version"), is("5.0"));
         assertThat(metadata.get("count"), is("1"));
         assertThat(metadata.get("index"), is("0"));
         logger.logEventCompletion();
