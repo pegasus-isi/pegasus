@@ -141,6 +141,7 @@ BEGIN {
     FS="=";
     has_moab_binpath=0;
     has_sfapi_binpath=0;
+    has_child_poll_timeout=0;
 }
 {
     if ($1 == "supported_lrms") {
@@ -152,6 +153,9 @@ BEGIN {
             line=line",sfapi";
         }
         print(line);
+    } else if ($1 == "blah_child_poll_timeout") {
+        print("blah_child_poll_timeout=60");
+        has_child_poll_timeout=1;
     } else {
         print($0);
     }
@@ -163,6 +167,9 @@ BEGIN {
 END {
     if (!has_moab_binpath) {
         print("moab_binpath=`which msub 2>/dev/null|sed '\''s|/[^/]*$||'\''`")
+    }
+    if (!has_child_poll_timeout) {
+        print("blah_child_poll_timeout=60")
     }
 
 }
