@@ -10,6 +10,7 @@ text remain intact.  Java tools delegate to _java.run_java_tool().
 
 import os
 import runpy
+import shutil
 import sys
 from pathlib import Path
 
@@ -46,6 +47,20 @@ def _run_java(main_class: str, args) -> None:
     run_java_tool(main_class, args=args, system_properties=get_system_properties())
 
 
+def _exec_binary(binary_name: str, args) -> None:
+    """Exec a compiled (non-Python) CLI tool installed alongside this
+    interpreter — e.g. pegasus-transfer, which CMake installs directly into
+    <venv>/bin/ rather than exposing as a console_scripts wrapper (see
+    top-level CMakeLists.txt / packages/pegasus-transfer/CMakeLists.txt).
+    """
+    candidate = Path(sys.executable).parent / binary_name
+    path = str(candidate) if candidate.exists() else shutil.which(binary_name)
+    if not path:
+        click.echo(f"pegasus: {binary_name}: executable not found", err=True)
+        sys.exit(1)
+    os.execv(path, [path] + list(args))
+
+
 # ── Command factory helpers ──────────────────────────────────────────────────
 
 _PASSTHROUGH = {"ignore_unknown_options": True, "allow_extra_args": True}
@@ -63,6 +78,22 @@ def _script_cmd(name: str, script: str, help: str, *, worker: bool = False):
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)
     def _cmd(args):
         _run_script(script, args, search_worker=worker)
+
+    return _cmd
+
+
+def _binary_cmd(name: str, binary: str, help: str):
+    """Return a Click command that delegates to a compiled binary."""
+
+    @click.command(
+        name=name,
+        help=help,
+        add_help_option=False,
+        context_settings=_PASSTHROUGH,
+    )
+    @click.argument("args", nargs=-1, type=click.UNPROCESSED)
+    def _cmd(args):
+        _exec_binary(binary, args)
 
     return _cmd
 
@@ -174,17 +205,15 @@ cli.add_command(
 )
 
 # Worker subcommands (scripts live in packages/pegasus-worker/)
+#
+# pegasus-transfer is a compiled Go binary (see packages/pegasus-transfer/),
+# installed directly into <venv>/bin/ by CMake rather than as a Python
+# script — it delegates via _binary_cmd (exec), not _script_cmd (runpy).
+# pegasus-s3 has been retired: its S3 support was merged natively into
+# pegasus-transfer, so there is no longer a separate "s3" subcommand.
 cli.add_command(
-    _script_cmd(
-        "transfer",
-        "pegasus-transfer",
-        "Transfer files for a Pegasus workflow",
-        worker=True,
-    ),
+    _binary_cmd("transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow"),
     name="transfer",
-)
-cli.add_command(
-    _script_cmd("s3", "pegasus-s3", "Interact with S3 storage", worker=True), name="s3"
 )
 cli.add_command(
     _script_cmd(
@@ -546,14 +575,6 @@ def pegasus_halt():
 
 def pegasus_configure_glite():
     _do_configure_glite(sys.argv[1:])
-
-
-def pegasus_transfer():
-    _run_script("pegasus-transfer", sys.argv[1:], search_worker=True)
-
-
-def pegasus_s3():
-    _run_script("pegasus-s3", sys.argv[1:], search_worker=True)
 
 
 def pegasus_integrity():

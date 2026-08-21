@@ -55,9 +55,9 @@ PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.vers
 _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
 _JUNIT_REPORT_DIR  := $(BUILD_DIR)/tests/classes/junitreport
 
-.PHONY: build dev build-c build-java build-worker \
+.PHONY: build dev build-c build-java build-go build-worker \
         dist-deb dist-rpm \
-        clean clean-java clean-c clean-worker clean-test clean-doc \
+        clean clean-java clean-c clean-go clean-worker clean-test clean-doc \
         test test-python test-java test-c \
         doc doc-sphinx doc-java doc-schemas doc-dist help
 
@@ -77,31 +77,48 @@ build-c:
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DPEGASUS_BUILD_C=ON \
 	    -DPEGASUS_BUILD_JAVA=OFF \
+	    -DPEGASUS_BUILD_GO=OFF \
 	    -DPEGASUS_BUILD_WORKER=OFF \
 	    -DPEGASUS_BUILD_MPI=OFF
 	$(CMAKE) --build $(BUILD_DIR)
 
-# Re-build only Java JARs (skip C and worker)
+# Re-build only Java JARs (skip C, Go, and worker)
 build-java:
 	$(CMAKE) -B $(BUILD_DIR) -S . \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DPEGASUS_BUILD_C=OFF \
 	    -DPEGASUS_BUILD_JAVA=ON \
+	    -DPEGASUS_BUILD_GO=OFF \
+	    -DPEGASUS_BUILD_WORKER=OFF
+	$(CMAKE) --build $(BUILD_DIR)
+
+# Re-build only pegasus-transfer (skip C, Java, and worker). Requires network
+# access to resolve Go modules (no vendoring — see the project's decision
+# record on the Go rewrite).
+build-go:
+	$(CMAKE) -B $(BUILD_DIR) -S . \
+	    -DCMAKE_BUILD_TYPE=Release \
+	    -DPEGASUS_BUILD_C=OFF \
+	    -DPEGASUS_BUILD_JAVA=OFF \
+	    -DPEGASUS_BUILD_GO=ON \
 	    -DPEGASUS_BUILD_WORKER=OFF
 	$(CMAKE) --build $(BUILD_DIR)
 
 # Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz)
 # and stage it into the Python source tree so that `make build` includes it
 # in the wheel as Pegasus/data/worker-packages/<tarball>.
-# PEGASUS_BUILD_C must be ON: the tarball bundles pegasus-kickstart,
-# pegasus-cluster, pegasus-keg, and libinterpose.so alongside the Python
-# payload so it is self-contained on remote execution nodes.
-# Slow: runs pip install for external deps.
+# PEGASUS_BUILD_C and PEGASUS_BUILD_GO must be ON (GO defaults ON already):
+# the tarball bundles pegasus-kickstart, pegasus-cluster, pegasus-keg,
+# libinterpose.so, and the compiled pegasus-transfer binary alongside the
+# Python payload so it is self-contained on remote execution nodes.
+# Slow: runs pip install for external deps, and `go build` needs network
+# access to resolve modules (no vendoring).
 build-worker:
 	$(CMAKE) -B $(WORKER_BUILD_DIR) -S . \
 	    -DCMAKE_BUILD_TYPE=Release \
 	    -DPEGASUS_BUILD_C=ON \
 	    -DPEGASUS_BUILD_JAVA=OFF \
+	    -DPEGASUS_BUILD_GO=ON \
 	    -DPEGASUS_BUILD_WORKER=ON
 	$(CMAKE) --build $(WORKER_BUILD_DIR) --target build_worker_tarball
 	mkdir -p $(WORKER_DATA) dist
@@ -130,7 +147,11 @@ dist-wheel:
 
 # Remove worker build artifacts (cmake staging dir and the staged tarball in the
 # Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
+# The chmod is needed because the Go module cache under here (GOPATH/pkg/mod,
+# see packages/pegasus-transfer/CMakeLists.txt) is marked read-only by `go`
+# itself; a plain rm -rf fails partway through without it.
 clean-worker:
+	chmod -R u+w $(WORKER_BUILD_DIR) 2>/dev/null || true
 	rm -rf $(WORKER_BUILD_DIR)
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 
@@ -142,8 +163,20 @@ clean-java:
 	       $(BUILD_DIR)/CMakeFiles/pegasus_aws_batch_jar.dir
 
 # Remove only C build artifacts — forces recompilation on next build.
+# Note: this also clears out packages/pegasus-transfer's build dir (Go build
+# artifacts live alongside the C tools' under $(BUILD_DIR)/packages/), so a
+# clean-c also forces a Go rebuild; use clean-go for a narrower, Go-only clean.
+# The chmod is needed because Go's module cache marks files read-only.
 clean-c:
+	chmod -R u+w $(BUILD_DIR)/packages 2>/dev/null || true
 	rm -rf $(BUILD_DIR)/packages
+
+# Remove only Go build artifacts (pegasus-transfer) — forces recompilation
+# on next build. The chmod is needed because Go's module cache marks files
+# read-only, which a plain rm -rf chokes on.
+clean-go:
+	chmod -R u+w $(BUILD_DIR)/packages/pegasus-transfer 2>/dev/null || true
+	rm -rf $(BUILD_DIR)/packages/pegasus-transfer
 
 # Remove test output artifacts only (reports, coverage data, compiled test classes).
 # Does not remove tox virtualenvs — use 'make clean' to nuke everything.
@@ -159,7 +192,9 @@ clean-doc:
 	rm -rf $(_DOC_BUILD) doc/sphinx/python doc/sphinx/java $(_DOC_STAGE)
 
 # Remove all artifacts: cmake build dir, wheel output, egg-info, caches, docs, test reports, etc.
+# The chmods are needed because Go's module cache marks files read-only.
 clean: clean-test clean-doc
+	chmod -R u+w $(BUILD_DIR) $(WORKER_BUILD_DIR) 2>/dev/null || true
 	rm -rf $(BUILD_DIR) $(WORKER_BUILD_DIR) $(DIST_DIR)/ test-reports/
 	rm -f $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null; true

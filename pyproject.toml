@@ -49,8 +49,10 @@ dependencies = [
     # Database
     "sqlalchemy",
     "pymysql",
-    # Worker runtime (transfer, s3, globus — pegasus-worker merged into this wheel)
-    "boto3>1.12",
+    # Worker runtime (globus — pegasus-worker merged into this wheel).
+    # boto3 was dropped here: S3 support moved natively into the Go
+    # pegasus-transfer binary, and pegasus-s3 (its only Python consumer)
+    # has been retired.
     "globus-sdk>=3.23.0,<4",
 ]
 
@@ -90,8 +92,6 @@ pegasus-submitdir      = "Pegasus.cli.main:pegasus_submitdir"
 pegasus-cwl-converter  = "Pegasus.cli.main:pegasus_cwl_converter"
 pegasus-em             = "Pegasus.cli.main:pegasus_em"
 pegasus-config         = "Pegasus.cli.main:pegasus_config"
-pegasus-transfer       = "Pegasus.cli.main:pegasus_transfer"
-pegasus-s3             = "Pegasus.cli.main:pegasus_s3"
 pegasus-integrity      = "Pegasus.cli.main:pegasus_integrity"
 pegasus-checkpoint     = "Pegasus.cli.main:pegasus_checkpoint"
 pegasus-globus-online  = "Pegasus.cli.main:pegasus_globus_online"
@@ -99,8 +99,10 @@ pegasus-globus-online-init = "Pegasus.cli.main:pegasus_globus_online_init"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
 
-# C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) are now
-# installed directly to <venv>/bin/ by CMake via the wheel scripts section.
+# C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
+# pegasus-transfer binary are installed directly to <venv>/bin/ by CMake via
+# the wheel scripts section. pegasus-s3 has been retired; its S3 support was
+# merged natively into pegasus-transfer.
 # No Python wrapper console_scripts entries are needed.
 
 [project.optional-dependencies]

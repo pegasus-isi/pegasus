@@ -5,6 +5,7 @@ import logging.handlers
 import os
 import re
 import signal
+import subprocess
 import sys
 import tarfile
 import threading
@@ -18,8 +19,6 @@ if peg_path:
     for p in reversed(peg_path.split(":")):
         if p not in sys.path:
             sys.path.insert(0, p)
-
-from Pegasus.transfer import pegasus_transfer
 
 log = logging.getLogger("pegasus-checkpoint")
 
@@ -211,13 +210,34 @@ class CheckpointWorker(threading.Thread):
 
             CheckpointWorker.archive_and_compress(matched_files)
 
-            # TODO: add exception handling
-            pegasus_transfer(
-                max_attempts=3,
-                num_threads=8,
-                file=PEGASUS_TRANSFER_URL_FILE,
-                symlink=True,
-            )
+            # pegasus-transfer is now a compiled (Go) binary shipped
+            # alongside this script in the worker package's bin/, resolved
+            # via PATH exactly like every other worker-side tool callout.
+            # TODO: add exception handling (beyond the FileNotFoundError
+            # guard below, which only exists because a PATH lookup can fail
+            # in ways an in-process function call never could).
+            try:
+                result = subprocess.run(
+                    [
+                        "pegasus-transfer",
+                        "-m",
+                        "3",
+                        "-n",
+                        "8",
+                        "-f",
+                        PEGASUS_TRANSFER_URL_FILE,
+                        "-s",
+                    ]
+                )
+                if result.returncode != 0:
+                    CheckpointWorker.log.warning(
+                        "pegasus-transfer exited with code %d while staging checkpoint",
+                        result.returncode,
+                    )
+            except FileNotFoundError:
+                CheckpointWorker.log.error(
+                    "pegasus-transfer not found on PATH; unable to stage checkpoint"
+                )
 
             # clear the notification, so we can wait until it is set again
             self.notify.clear()

@@ -241,7 +241,7 @@ clients
    wget            staging files from a HTTP server
    cp              copying files from a POSIX filesystem
    ln              symlinking against input files
-   pegasus-s3      staging files to and from S3 buckets in Amazon Web Services, Open Storage Network (OSN)
+   (native)        staging files to and from S3 buckets in Amazon Web Services, Open Storage Network (OSN)
    gsutil          staging files to and from Google Storage buckets
    scp             staging files using scp
    gsiscp          staging files using gsiscp and X509
@@ -270,8 +270,9 @@ node, the job is executed, then the output files are transferred from
 the worker node back to S3. When the jobs are complete, Pegasus
 transfers the output data from S3 to the output site.
 
-In order to use S3, it is necessary to create a config file for the S3
-transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
+In order to use S3, it is necessary to create a config file for S3
+transfers, documented in the :ref:`pegasus-transfer <cli-pegasus-transfer>`
+manpage.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need create a Pegasus credentials files. See
@@ -288,8 +289,9 @@ Pegasus can be configured to use buckets in Open Storage Network (OSGN)
 as a staging site. OSN provides a S3 compatible interface to retrieve
 and put files in a bucket.
 
-In order to use S3, it is necessary to create a config file for the S3
-transfer client, :ref:`pegasus-s3 <cli-pegasus-s3>`.
+In order to use S3, it is necessary to create a config file for S3
+transfers, documented in the :ref:`pegasus-transfer <cli-pegasus-transfer>`
+manpage.
 You also need to specify :ref:`S3 as a staging site <non-shared-fs>`.
 
 Next, you need create a Pegasus credentials files. See
