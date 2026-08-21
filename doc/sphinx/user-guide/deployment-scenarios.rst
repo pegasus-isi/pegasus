@@ -1804,11 +1804,11 @@ To use AWS Batch for your workflows, we need two credential files
       aws_access_key_id = XXXXXXXXXXXX
       aws_secret_access_key = XXXXXXXXXXX
 
-2. **S3 Config File:** Pegasus workflows use pegasus-s3 command line
-   tool to stage-in input data required by the tasks to S3 and push data
-   output data generated to S3 when user application code runs. These
+2. **S3 Config File:** Pegasus workflows use pegasus-transfer to
+   stage-in input data required by the tasks to S3 and push output data
+   generated to S3 when user application code runs. These
    credentials are specified in ~/.pegasus/credentials.conf .
-   This format of the file is described in the :ref:`cli-pegasus-s3`
+   This format of the file is described in the :ref:`cli-pegasus-transfer`
    manpage. A minimalistic
    file is illustrated below
 

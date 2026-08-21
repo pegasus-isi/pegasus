@@ -34,7 +34,6 @@ Command Line Tools
     ../manpages/pegasus-rc-converter.rst
     ../manpages/pegasus-remove.rst
     ../manpages/pegasus-run.rst
-    ../manpages/pegasus-s3.rst
     ../manpages/pegasus-sc-converter.rst
     ../manpages/pegasus-service.rst
     ../manpages/pegasus-statistics.rst
