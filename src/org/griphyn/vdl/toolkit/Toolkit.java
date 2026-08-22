@@ -14,7 +14,6 @@
  */
 package org.griphyn.vdl.toolkit;
 
-import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
 

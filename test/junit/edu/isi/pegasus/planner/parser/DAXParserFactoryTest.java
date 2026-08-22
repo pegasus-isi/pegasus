@@ -26,9 +26,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
-import edu.isi.pegasus.planner.parser.dax.DAXParser3;
-import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
+import edu.isi.pegasus.planner.parser.dax.DAXParser5Test;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -56,7 +55,7 @@ public class DAXParserFactoryTest {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         // the input dir is from the dax subpackage
-        mTestSetup.setInputDirectory(DAXParser3Test.class);
+        mTestSetup.setInputDirectory(DAXParser5Test.class);
 
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
         PegasusProperties properties = PegasusProperties.nonSingletonInstance();
@@ -69,17 +68,6 @@ public class DAXParserFactoryTest {
     }
 
     @Test
-    public void testXMLDAXLoad() {
-
-        mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
-        String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        DAXParser parser =
-                DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
-        assertThat(parser, instanceOf(DAXParser3.class));
-        mLogger.logEventCompletion();
-    }
-
-    @Test
     public void testYAMLDAXLoad() {
 
         mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
@@ -87,18 +75,6 @@ public class DAXParserFactoryTest {
         DAXParser parser =
                 DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
         assertThat(parser, instanceOf(DAXParser5.class));
-        mLogger.logEventCompletion();
-    }
-
-    @Test
-    public void testXMLDAXMetadata() {
-        mLogger.logEventStart("test.planner.parser.DAXParserFactory", "load", "0");
-        String dax = new File(mTestSetup.getInputDirectory(), "blackdiamond.dax").getAbsolutePath();
-        Map map = DAXParserFactory.getDAXMetadata(mBag, dax);
-        assertThat(map.get("count"), is("1"));
-        assertThat(map.get("name"), is("diamond"));
-        assertThat(map.get("index"), is("0"));
-        assertThat(map.get("version"), is("3.6"));
         mLogger.logEventCompletion();
     }
 

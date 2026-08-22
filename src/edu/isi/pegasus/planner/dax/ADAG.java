@@ -25,7 +25,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -198,15 +197,6 @@ public class ADAG {
     /** The "official" namespace URI of the site catalog schema. */
     public static final String SCHEMA_NAMESPACE = "https://pegasus.isi.edu/schema/DAX";
 
-    /** XSI SCHEMA NAMESPACE */
-    public static final String SCHEMA_NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
-
-    /** The "not-so-official" location URL of the DAX schema definition. */
-    public static final String SCHEMA_LOCATION = "https://pegasus.isi.edu/schema/dax-3.6.xsd";
-
-    /** The version to report. */
-    public static final String SCHEMA_VERSION = "3.6";
-
     public static final String PEGASUS_VENDOR_EXTENSION_KEY = "x-pegasus";
 
     public static final String PEGASUS_YAML_ABSTRACT_WF_VERSION = "5.0.4";
@@ -226,8 +216,7 @@ public class ADAG {
 
     /** Enum to indicate how the generated dax file should be formatted */
     public static enum FORMAT {
-        yaml,
-        xml
+        yaml
     };
 
     /** The default format to use for writing out the Abstract Workflow. */
@@ -293,9 +282,6 @@ public class ADAG {
 
     /** The metadata attributes associated with the whole workflow. */
     private Set<MetaData> mMetaDataAttributes;
-
-    /** Handle the XML writer */
-    private XMLWriter mWriter;
 
     private LogManager mLogger;
 
@@ -1077,12 +1063,6 @@ public class ADAG {
             }
 
             switch (format) {
-                case xml:
-                    mWriter = new XMLWriter(writer);
-                    toXML(mWriter);
-                    mWriter.close();
-                    break;
-
                 case yaml:
                     // default starting 5.0 is yaml format
                     ObjectMapper mapper =
@@ -1121,21 +1101,6 @@ public class ADAG {
     }
 
     /**
-     * Generate a DAX representation and pipe it into the Writer
-     *
-     * @param writer A Writer object
-     * @param close Whether writer should be closed on return.
-     * @deprecated
-     */
-    public void writeToWriter(Writer writer, boolean close) {
-        mWriter = new XMLWriter(writer);
-        toXML(mWriter);
-        if (close) {
-            mWriter.close();
-        }
-    }
-
-    /**
      * Generates the YAML representation of a workflow.
      *
      * @return YAML representation of this ADAG as a String
@@ -1144,78 +1109,6 @@ public class ADAG {
         StringWriter writer = new StringWriter();
         this.writeTo(writer, FORMAT.yaml);
         return writer.toString();
-    }
-
-    /**
-     * Generates a DAX representation.
-     *
-     * @param writer the xml writer
-     */
-    public void toXML(XMLWriter writer) {
-        int indent = 0;
-        writer.startElement("adag");
-        writer.writeAttribute("xmlns", SCHEMA_NAMESPACE);
-        writer.writeAttribute("xmlns:xsi", SCHEMA_NAMESPACE_XSI);
-        writer.writeAttribute("xsi:schemaLocation", SCHEMA_NAMESPACE + " " + SCHEMA_LOCATION);
-        writer.writeAttribute("version", SCHEMA_VERSION);
-        writer.writeAttribute("name", mName);
-        writer.writeAttribute("index", Integer.toString(mIndex));
-        writer.writeAttribute("count", Integer.toString(mCount));
-
-        // add metadata attributes
-        writer.writeXMLComment(
-                "Section 1: Metadata attributes for the workflow (can be empty) ", true);
-        for (MetaData md : this.mMetaDataAttributes) {
-            md.toXML(writer, indent + 1);
-        }
-
-        // print notification invokes
-        writer.writeXMLComment(
-                "Section 2: Invokes - Adds notifications for a workflow (can be empty)", true);
-        for (Invoke i : mInvokes) {
-            i.toXML(writer, indent + 1);
-        }
-        // print file
-        writer.writeXMLComment("Section 3: Files - Acts as a Replica Catalog (can be empty)", true);
-        for (File f : mFiles) {
-            f.toXML(writer, indent + 1);
-        }
-
-        // print executable
-        writer.writeXMLComment(
-                "Section 4: Executables - Acts as a Transformation Catalog (can be empty)", true);
-        for (Executable e : mExecutables) {
-            e.toXML(writer, indent + 1);
-        }
-
-        // print transformation
-        writer.writeXMLComment(
-                "Section 5: Transformations - Aggregates executables and Files (can be empty)",
-                true);
-        for (Transformation t : mTransformations) {
-            t.toXML(writer, indent + 1);
-        }
-        // print jobs, daxes and dags
-        writer.writeXMLComment(
-                "Section 6: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (At least 1"
-                        + " required)",
-                true);
-        for (AbstractJob j : mJobs.values()) {
-            j.toXML(writer, indent + 1);
-        }
-        // print dependencies
-        writer.writeXMLComment(
-                "Section 7: Dependencies - Parent Child relationships (can be empty)", true);
-
-        for (String child : mDependencies.keySet()) {
-            writer.startElement("child", indent + 1).writeAttribute("ref", child);
-            for (Edge e : mDependencies.get(child)) {
-                e.toXMLParent(writer, indent + 2);
-            }
-            writer.endElement(indent + 1);
-        }
-        // end adag
-        writer.endElement();
     }
 
     /**

@@ -137,6 +137,5 @@ test/
 ├── unit/      # Unit tests
 ├── core/      # Integration/core tests
 ├── common/    # Common test utilities
-├── scripts/   # Test scripts
-└── visualize/ # Visualization tests
+└── scripts/   # Test scripts
 ```

@@ -1570,14 +1570,6 @@ being online.
     +----------------------------------------------------+------------------------------------------------------------+
     | Key Attributes                                     | Description                                                |
     +====================================================+============================================================+
-    | | Property Key: pegasus.schema.dax                 | | This file is a copy of the XML schema that describes     |
-    | | Profile Key : N/A                                | | abstract DAG files that are the result of the abstract   |
-    | | Scope : Properties                               | | planning process, and input into any concrete planning.  |
-    | | Since : 2.0                                      | | Providing a copy of the schema enables the parser to use |
-    | | Type :file path                                  | | the local copy instead of reaching out to the Internet,  |
-    | | Default : ${pegasus.home.sysconfdir}/dax-3.4.xsd | | and obtaining the latest version from the Pegasus        |
-    |                                                    | | website dynamically.                                     |
-    +----------------------------------------------------+------------------------------------------------------------+
     | | Property Key:pegasus.schema.sc                   | | This file is a copy of the XML schema that describes     |
     | | Profile Key:N/A                                  | | the xml description of the site catalog. Providing a     |
     | | Scope : Properties                               | | copy of the schema enables the parser to use the local   |
@@ -3471,14 +3463,6 @@ Miscellaneous Properties
     |                                                   | | and reside at the submit host (“site” local), are         |
     |                                                   | | selected as sources for staging the executables to the    |
     |                                                   | | remote execution sites.                                   |
-    +---------------------------------------------------+-------------------------------------------------------------+
-    | | Property Key:                                   | | The DAX Parser normally does not preserve line breaks     |
-    | |   pegasus.parser.dax.preserver.linebreaks       | | while parsing the CDATA section that appears in the       |
-    | | Profile Key:N/A                                 | | arguments section of the job element in the DAX.          |
-    | | Scope : Properties                              | | On setting this to true, the DAX Parser preserves any     |
-    | | Since : 2.2.0                                   | | line line breaks that appear in the CDATA section.        |
-    | | Type :Boolean                                   |                                                             |
-    | | Default : false                                 |                                                             |
     +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key:                                   | | If this property is set to true, then the planner         |
     | |     pegasus.parser.dax.data.dependencies        | | will automatically add edges between jobs in the          |
