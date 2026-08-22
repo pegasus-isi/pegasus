@@ -594,24 +594,42 @@ public class YAML extends Abstract implements TransformationCatalog {
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public int insert(TransformationCatalogEntry entry, boolean write) throws Exception {
-        if (this.addTCEntry(
-                entry.getLogicalNamespace(),
-                entry.getLogicalName(),
-                entry.getLogicalVersion(),
-                entry.getPhysicalTransformation(),
-                entry.getType(),
-                entry.getResourceId(),
-                null,
-                entry.getProfiles(),
-                entry.getSysInfo(),
-                entry.getNotifications(),
-                entry.getContainer(),
-                write)) {
-            return 1;
-        } else {
-            throw new RuntimeException(
-                    "Failed to add TransformationCatalogEntry " + entry.getLogicalName());
+        // PM-1386 use the entry as is (via clone) instead of decomposing it into
+        // individual fields and reconstructing via addTCEntry(), which drops
+        // attributes such as the bypass staging flag that aren't part of that
+        // method's parameter list
+        List<TransformationCatalogEntry> existing =
+                this.lookup(
+                        entry.getLogicalNamespace(),
+                        entry.getLogicalName(),
+                        entry.getLogicalVersion(),
+                        entry.getResourceId(),
+                        entry.getType());
+
+        boolean add = true;
+
+        if (existing != null) {
+            // check to see if entries match
+            for (TransformationCatalogEntry e : existing) {
+                if (e.equals(entry)) {
+                    add = false;
+                    break;
+                }
+            }
         }
+
+        if (add) {
+            mTCStore.addEntry((TransformationCatalogEntry) entry.clone());
+        } else {
+            mLogger.log("TC Entry already exists. Skipping", LogManager.DEBUG_MESSAGE_LEVEL);
+        }
+
+        // if entry needs to be added and flushed to the backend
+        // set to flag to true.
+        if (write && add) {
+            mFlushOnClose = true;
+        }
+        return 1;
     }
 
     /**
