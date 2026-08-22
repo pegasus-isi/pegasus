@@ -3,6 +3,8 @@ Tests for the pegasus-monitord plugin system (Pegasus.monitoring.plugin) and
 its host sink (Pegasus.monitoring.event_output.PluginHostEventSink).
 """
 
+import asyncio
+import copy
 import importlib.metadata
 import logging
 import queue
@@ -15,6 +17,8 @@ from Pegasus.monitoring.plugin import (
     MONITORD_PLUGIN_ENTRY_POINT_GROUP,
     MonitordEventPlugin,
     MonitordPluginManager,
+    _PluginWorker,
+    _snapshot_payload,
     enabled_plugin_names,
 )
 from Pegasus.tools import properties
@@ -1688,3 +1692,734 @@ def test_factory_threads_restart_through_multiplex_to_plugins(monkeypatch, tmp_p
     assert isinstance(host, eo.PluginHostEventSink)
     assert host._manager._workers[0][1].restart_seen is True
     sink.close()
+
+
+# --------------------------------------------------------------------------- #
+# concurrency invariants pinned directly (load-bearing for any future
+# asynchrony work; previously only inferred indirectly)
+# --------------------------------------------------------------------------- #
+
+
+class MutexProbePlugin(MonitordEventPlugin):
+    """
+    Gated first handle_event plus a thread-ident audit of both hooks, to pin
+    the handle_event/tick mutual-exclusion contract directly: both hooks must
+    only ever run on the one worker thread, and no tick may fire while the
+    worker is provably parked inside handle_event.
+    """
+
+    def __init__(self):
+        self.entered = threading.Event()
+        self.release = threading.Event()
+        self.ticks = []
+        self.hook_threads = set()
+
+    def handle_event(self, event, kw):
+        self.hook_threads.add(threading.get_ident())
+        self.entered.set()
+        self.release.wait(timeout=5)
+
+    def tick(self):
+        self.hook_threads.add(threading.get_ident())
+        self.ticks.append(time.monotonic())
+
+
+class _PutRecordingQueue(queue.Queue):
+    """queue.Queue that records the thread ident of every enqueue
+    (put_nowait routes through put, so both are captured)."""
+
+    def __init__(self, maxsize=0):
+        super().__init__(maxsize)
+        self.put_idents = []
+
+    def put(self, item, block=True, timeout=None):
+        self.put_idents.append(threading.get_ident())
+        return super().put(item, block=block, timeout=timeout)
+
+
+class _ThreadRecordingProbe:
+    """Payload value that records the thread ident of every deepcopy."""
+
+    def __init__(self):
+        self.copy_idents = []
+
+    def __deepcopy__(self, memo):
+        self.copy_idents.append(threading.get_ident())
+        return self
+
+
+def test_tick_never_runs_concurrently_with_handle_event(monkeypatch):
+    _patch_entry_points(monkeypatch, {"mx": MutexProbePlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.mx.enabled": "true",
+            "pegasus.monitord.plugins.mx.tick_interval": "0.02",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    # ticking is provably live before the handler is pinned
+    assert _wait_for(lambda: len(plugin.ticks) >= 1)
+
+    mgr.dispatch("stampede.block", {})
+    assert plugin.entered.wait(timeout=2)
+    ticks_before = len(plugin.ticks)
+    # the worker is parked inside handle_event; a concurrent tick would have
+    # to fire from some other thread. Several intervals of silence prove the
+    # exclusion (negative assertion, same style as the no-tick-after-sentinel
+    # check in test_stop_all_drains_and_joins_ticking_plugin).
+    time.sleep(0.15)
+    assert len(plugin.ticks) == ticks_before
+    plugin.release.set()
+    # ticks resume once the handler returns
+    assert _wait_for(lambda: len(plugin.ticks) > ticks_before)
+    mgr.stop_all()
+    # both hooks only ever ran on the single worker thread
+    assert len(plugin.hook_threads) == 1
+    assert threading.get_ident() not in plugin.hook_threads
+
+
+def test_single_producer_all_enqueues_on_dispatching_thread():
+    """
+    Pins the single-producer invariant the drop-oldest bounded retry relies
+    on: every queue put (events, evict-then-requeue, shutdown sentinel) and
+    every payload snapshot happens synchronously on the dispatching thread;
+    the worker thread only ever get()s.
+    """
+    plugin = GatedRecordingPlugin()
+    worker = _PluginWorker(
+        "sp",
+        plugin,
+        queue_size=1,
+        join_timeout=2.0,
+        overflow_policy="drop-oldest",
+    )
+    recording = _PutRecordingQueue(maxsize=1)
+    worker._queue = recording  # swapped before start(); _run reads it live
+    worker.start()
+    producer = threading.get_ident()
+    probe = _ThreadRecordingProbe()
+
+    # e0 is dequeued and pins the worker inside handle_event
+    worker.submit("stampede.e0", {"probe": probe})
+    assert plugin.entered.wait(timeout=2)
+    # e1 fills the single queue slot; e2 forces the drop-oldest bounded
+    # retry (get_nowait eviction + put_nowait requeue) on this thread
+    worker.submit("stampede.e1", {"probe": probe})
+    worker.submit("stampede.e2", {"probe": probe})
+    # the drop is already visible to the producer when submit returns --
+    # the counter write happened synchronously on this thread
+    assert worker._dropped == 1
+
+    plugin.release.set()
+    assert worker.close() is True
+
+    # drop-oldest kept the newest event
+    assert [e for e, _kw in plugin.events] == ["stampede.e0", "stampede.e2"]
+    # every enqueue attempt -- e0, e1, e2's rejected overflow put, e2's
+    # requeue after eviction, and the sentinel -- came from the dispatching
+    # thread; the worker thread never put anything
+    assert set(recording.put_idents) == {producer}
+    assert len(recording.put_idents) == 5
+    # every payload snapshot ran synchronously on the dispatching thread
+    assert set(probe.copy_idents) == {producer}
+
+
+# --------------------------------------------------------------------------- #
+# parallel lifecycle — plugins start and stop concurrently, in discovery order
+# --------------------------------------------------------------------------- #
+
+
+class BarrierStartPlugin(MonitordEventPlugin):
+    """start() blocks until BOTH instances are inside start() -- possible
+    only when the manager runs plugin startups concurrently."""
+
+    barrier = None  # threading.Barrier(2), installed by the test
+
+    def __init__(self):
+        self.stopped = False
+
+    def start(self, props=None):
+        type(self).barrier.wait(timeout=5)  # BrokenBarrierError under serial
+
+    def stop(self):
+        self.stopped = True
+
+
+class BarrierStopPlugin(MonitordEventPlugin):
+    """stop() blocks until BOTH instances are inside stop()."""
+
+    barrier = None
+
+    def __init__(self):
+        self.stopped = False
+
+    def stop(self):
+        type(self).barrier.wait(timeout=5)
+        self.stopped = True
+
+
+class WaitsForPeerStartPlugin(MonitordEventPlugin):
+    """start() completes only after the peer plugin's start() has finished."""
+
+    peer_done = None  # threading.Event, installed by the test
+
+    def start(self, props=None):
+        type(self).peer_done.wait(timeout=5)
+
+
+class SignalsPeerStartPlugin(MonitordEventPlugin):
+    peer_done = None
+
+    def start(self, props=None):
+        type(self).peer_done.set()
+
+
+def test_plugins_start_concurrently(monkeypatch):
+    BarrierStartPlugin.barrier = threading.Barrier(2)
+    _patch_entry_points(
+        monkeypatch, {"p1": BarrierStartPlugin, "p2": BarrierStartPlugin}
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.p1.enabled": "true",
+            "pegasus.monitord.plugins.p2.enabled": "true",
+            # keeps the failure mode fast if startup regresses to serial
+            "pegasus.monitord.plugins.p1.start_timeout": "1",
+            "pegasus.monitord.plugins.p2.start_timeout": "1",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    # serial startup would break the barrier and start at most one plugin
+    assert mgr.discover_and_start() == 2
+    assert [name for name, _p, _w in mgr._workers] == ["p1", "p2"]
+    mgr.stop_all()
+
+
+def test_plugins_stop_concurrently(monkeypatch):
+    BarrierStopPlugin.barrier = threading.Barrier(2)
+    _patch_entry_points(monkeypatch, {"p1": BarrierStopPlugin, "p2": BarrierStopPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.p1.enabled": "true",
+            "pegasus.monitord.plugins.p2.enabled": "true",
+            "pegasus.monitord.plugins.p1.join_timeout": "2",
+            "pegasus.monitord.plugins.p2.join_timeout": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 2
+    plugins = [p for _n, p, _w in mgr._workers]
+
+    start = time.monotonic()
+    mgr.stop_all()
+    elapsed = time.monotonic() - start
+    # serial teardown would park p1's stop() on the barrier for the full
+    # 2s join_timeout before p2's stop() could release it
+    assert elapsed < 1.0, f"stop_all took {elapsed:.2f}s; teardown ran serially?"
+    assert all(p.stopped for p in plugins)
+
+
+def test_workers_keep_discovery_order_regardless_of_completion(monkeypatch):
+    gate = threading.Event()
+    WaitsForPeerStartPlugin.peer_done = gate
+    SignalsPeerStartPlugin.peer_done = gate
+    # discovery order: pa first -- but its start() finishes only after pb's
+    _patch_entry_points(
+        monkeypatch,
+        {"pa": WaitsForPeerStartPlugin, "pb": SignalsPeerStartPlugin},
+    )
+    props = _props(
+        {
+            "pegasus.monitord.plugins.pa.enabled": "true",
+            "pegasus.monitord.plugins.pb.enabled": "true",
+            "pegasus.monitord.plugins.pa.start_timeout": "2",
+            "pegasus.monitord.plugins.pb.start_timeout": "2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 2
+    # completion order was pb-then-pa; _workers order must stay pa, pb
+    assert [name for name, _p, _w in mgr._workers] == ["pa", "pb"]
+    mgr.stop_all()
+
+
+# --------------------------------------------------------------------------- #
+# startup-failure cleanup must not race a still-running worker
+# --------------------------------------------------------------------------- #
+
+
+def test_cleanup_failed_start_skips_stop_when_worker_wedged(caplog):
+    plugin = StopRecordingBlockingPlugin()
+    worker = _PluginWorker("wedge", plugin, join_timeout=0.01)
+    worker.start()
+    worker.submit("stampede.block", {})
+    assert plugin.entered.wait(timeout=2)
+
+    mgr = MonitordPluginManager(_props())
+    with caplog.at_level(logging.WARNING):
+        mgr._cleanup_failed_start("wedge", plugin, worker, 0.01)
+
+    # stop() must be skipped, exactly like stop_all does for a wedged worker
+    assert plugin.stopped is False
+    assert any(
+        "skipping plugin 'wedge' stop() during startup cleanup" in r.message
+        for r in caplog.records
+    )
+    plugin.release.set()
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
+def test_cleanup_failed_start_stops_plugin_after_worker_exit():
+    plugin = StopRecordingBlockingPlugin()
+    worker = _PluginWorker("clean", plugin, join_timeout=2.0)
+    worker.start()
+
+    mgr = MonitordPluginManager(_props())
+    mgr._cleanup_failed_start("clean", plugin, worker, 2.0)
+
+    # idle worker exits within the bound, so cleanup still runs stop()
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
+
+
+# --------------------------------------------------------------------------- #
+# shape-aware payload snapshot — scalars shared by reference, containers
+# deep-copied; observable isolation semantics identical to a blanket deepcopy
+# --------------------------------------------------------------------------- #
+
+
+class _MutableStr(str):
+    """A str subclass can carry mutable state, so the exact-type scalar
+    gate must NOT share it by reference."""
+
+
+class _ExplodingValue:
+    def __deepcopy__(self, memo):
+        raise RuntimeError("cannot copy this value")
+
+
+def test_snapshot_payload_semantics():
+    src = {
+        "s": "str",
+        "i": 7,
+        "f": 1.5,
+        "b": True,
+        "by": b"x",
+        "n": None,
+        "lst": [1, {"k": "v"}],
+        "d": {"nested": [2]},
+    }
+    snap = _snapshot_payload(src)
+    assert snap == src
+    assert snap is not src  # new outer dict: producer key rebinding is safe
+    # containers are deep-copied, all the way down
+    assert snap["lst"] is not src["lst"]
+    assert snap["lst"][1] is not src["lst"][1]
+    assert snap["d"] is not src["d"]
+    assert snap["d"]["nested"] is not src["d"]["nested"]
+
+
+def test_snapshot_preserves_aliases_and_cycles_across_top_level_values():
+    shared = []
+    src = {"a": shared, "b": shared}
+    src["self"] = src
+
+    snap = _snapshot_payload(src)
+
+    assert snap["a"] is snap["b"]
+    assert snap["a"] is not shared
+    assert snap["self"] is snap
+
+
+def test_snapshot_skips_deepcopy_machinery_for_scalars(monkeypatch):
+    deepcopied = []
+    real_deepcopy = copy.deepcopy
+
+    def recording_deepcopy(obj, *args, **kwargs):
+        deepcopied.append(obj)
+        return real_deepcopy(obj, *args, **kwargs)
+
+    monkeypatch.setattr(copy, "deepcopy", recording_deepcopy)
+
+    # an all-scalar payload (the overwhelmingly common shape) never touches
+    # deepcopy at all
+    _snapshot_payload({"xwf__id": "abc", "exitcode": 0, "site": None})
+    assert deepcopied == []
+
+    # only the non-scalar values go through deepcopy, not the outer dict
+    nested = {"attempts": [1]}
+    _snapshot_payload({"xwf__id": "abc", "multipart": nested})
+    assert deepcopied == [nested]
+
+
+def test_snapshot_copies_scalar_subclasses():
+    tainted = _MutableStr("looks like a str")
+    tainted.attached = ["mutable state"]
+    snap = _snapshot_payload({"v": tainted})
+    assert snap["v"] is not tainted
+    assert snap["v"] == tainted
+    assert snap["v"].attached is not tainted.attached
+
+
+def test_snapshot_failure_counts_as_drop_and_never_raises(monkeypatch):
+    _patch_entry_points(monkeypatch, {"rec": RecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.rec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    # a payload value that cannot be snapshotted is a counted drop, never an
+    # exception into the dispatching (parse) loop
+    mgr.dispatch("stampede.bad", {"boom": _ExplodingValue()})
+    assert worker._dropped == 1
+
+    # and the worker is unharmed: the next event flows normally
+    mgr.dispatch("stampede.good", {"xwf__id": "abc"})
+    assert _wait_for(lambda: len(plugin.events) == 1)
+    mgr.stop_all()
+    assert plugin.events == [("stampede.good", {"xwf__id": "abc"})]
+
+
+# --------------------------------------------------------------------------- #
+# async plugins — opt-in coroutine handlers, event_timeout cancellation,
+# async stop(); the sync contract pinned elsewhere in this file is untouched
+# --------------------------------------------------------------------------- #
+
+
+class AsyncRecordingPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+        self.ticks = []
+        self.stopped = False
+
+    async def handle_event(self, event, kw):
+        await asyncio.sleep(0)
+        self.events.append((event, dict(kw)))
+
+    async def tick(self):
+        await asyncio.sleep(0)
+        self.ticks.append(time.monotonic())
+
+    def stop(self):
+        self.stopped = True
+
+
+class AsyncFlakyPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.bad":
+            raise ValueError("bad async event")
+        self.events.append(event)
+
+
+class AsyncHangingPlugin(MonitordEventPlugin):
+    """handle_event for the designated event awaits an asyncio.Event that is
+    never set by the plugin itself (a test can release it cross-thread via
+    loop.call_soon_threadsafe for cleanup)."""
+
+    def __init__(self):
+        self.entered = threading.Event()
+        self.events = []
+        self.cancelled = 0
+        self.finally_ran = 0
+        self.stopped = False
+        self.loop = None
+        self.release = None
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.hang":
+            self.loop = asyncio.get_running_loop()
+            self.release = asyncio.Event()
+            self.entered.set()
+            try:
+                await self.release.wait()
+            except asyncio.CancelledError:
+                self.cancelled += 1
+                raise
+            finally:
+                self.finally_ran += 1
+        else:
+            self.events.append(event)
+
+    def stop(self):
+        self.stopped = True
+
+
+class AsyncStopPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.stopped = False
+
+    async def stop(self):
+        await asyncio.sleep(0)
+        self.stopped = True
+
+
+class HangingAsyncStopPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.stop_entered = threading.Event()
+        self.stop_cancelled = threading.Event()
+
+    async def stop(self):
+        self.stop_entered.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            self.stop_cancelled.set()
+            raise
+
+
+class SyncReturnsCoroutinePlugin(MonitordEventPlugin):
+    """The author forgot 'async def': a sync-declared handler returning a
+    coroutine object."""
+
+    def __init__(self):
+        self.ran = threading.Event()
+
+    def handle_event(self, event, kw):
+        async def never():
+            self.ran.set()
+
+        return never()
+
+
+class AsyncSelfCancellingPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.events = []
+
+    async def handle_event(self, event, kw):
+        if event == "stampede.cancel":
+            raise asyncio.CancelledError
+        self.events.append(event)
+
+
+class AsyncSelfCancellingTickPlugin(MonitordEventPlugin):
+    def __init__(self):
+        self.tick_calls = 0
+
+    async def tick(self):
+        self.tick_calls += 1
+        if self.tick_calls == 1:
+            raise asyncio.CancelledError
+
+
+def test_async_events_delivered_verbatim_in_order(monkeypatch):
+    _patch_entry_points(monkeypatch, {"arec": AsyncRecordingPlugin})
+    props = _props({"pegasus.monitord.plugins.arec.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    sent = [
+        ("stampede.wf.plan", {"xwf__id": "abc", "dax__label": "diamond"}),
+        ("stampede.job_inst.main.end", {"xwf__id": "abc", "exitcode": 0}),
+    ]
+    for event, kw in sent:
+        mgr.dispatch(event, kw)
+
+    assert _wait_for(lambda: len(plugin.events) == len(sent))
+    mgr.stop_all()
+    # same FIFO delivery contract as the sync mirror of this test
+    assert plugin.events == sent
+    assert plugin.stopped is True
+
+
+def test_async_handler_exception_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"aflaky": AsyncFlakyPlugin})
+    props = _props({"pegasus.monitord.plugins.aflaky.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.bad", {})  # raises inside the coroutine
+    mgr.dispatch("stampede.good", {})
+
+    assert _wait_for(lambda: plugin.events == ["stampede.good"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_handler_cancelled_error_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"acancel": AsyncSelfCancellingPlugin})
+    props = _props({"pegasus.monitord.plugins.acancel.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.cancel", {})
+    mgr.dispatch("stampede.after", {})
+
+    assert _wait_for(lambda: plugin.events == ["stampede.after"])
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_tick_cancelled_error_is_swallowed(monkeypatch):
+    _patch_entry_points(monkeypatch, {"atcancel": AsyncSelfCancellingTickPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.atcancel.enabled": "true",
+            "pegasus.monitord.plugins.atcancel.tick_interval": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    assert _wait_for(lambda: plugin.tick_calls >= 2)
+    assert worker._thread.is_alive()
+    mgr.stop_all()
+
+
+def test_async_ticks_interleave_and_events_flow(monkeypatch):
+    _patch_entry_points(monkeypatch, {"atick": AsyncRecordingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.atick.enabled": "true",
+            "pegasus.monitord.plugins.atick.tick_interval": "0.05",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    assert _wait_for(lambda: len(plugin.ticks) >= 1)  # idle async ticks fire
+    n = 5
+    for i in range(n):
+        mgr.dispatch(f"stampede.e{i}", {})
+    assert _wait_for(lambda: len(plugin.events) == n)
+    mgr.stop_all()
+    assert [e for e, _kw in plugin.events] == [f"stampede.e{i}" for i in range(n)]
+    assert plugin.stopped is True
+
+
+def test_event_timeout_cancels_hung_async_handler_and_worker_survives(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ahang": AsyncHangingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.ahang.enabled": "true",
+            "pegasus.monitord.plugins.ahang.event_timeout": "0.2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.hang", {})
+    assert plugin.entered.wait(timeout=2)
+    mgr.dispatch("stampede.after", {})
+
+    # the hung handler is cancelled and the worker moves on to the next event
+    assert _wait_for(lambda: plugin.events == ["stampede.after"], timeout=5.0)
+    assert plugin.cancelled == 1
+    assert plugin.finally_ran == 1
+
+    # and shutdown completes fully: sentinel drains, worker exits, stop()
+    # runs -- the recovery a wedged sync handler can never get
+    mgr.stop_all()
+    assert plugin.stopped is True
+    assert not worker._thread.is_alive()
+    assert worker._timed_out == 1
+
+
+def test_async_handler_without_event_timeout_wedges_like_sync(monkeypatch):
+    _patch_entry_points(monkeypatch, {"ahang": AsyncHangingPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.ahang.enabled": "true",
+            "pegasus.monitord.plugins.ahang.join_timeout": "0.01",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    worker = mgr._workers[0][2]
+
+    mgr.dispatch("stampede.hang", {})
+    assert plugin.entered.wait(timeout=2)
+
+    mgr.stop_all()
+    # default event_timeout=0: exactly today's abandonment semantics
+    # (mirror of test_stop_is_skipped_when_worker_misses_join_timeout)
+    assert worker._thread.is_alive()
+    assert plugin.stopped is False
+
+    # test hygiene: release the coroutine cross-thread so the worker drains
+    # the already-enqueued sentinel and exits
+    plugin.loop.call_soon_threadsafe(plugin.release.set)
+    assert _wait_for(lambda: not worker._thread.is_alive())
+
+
+def test_sync_handler_returning_coroutine_logged_once_never_runs(monkeypatch, caplog):
+    _patch_entry_points(monkeypatch, {"oops": SyncReturnsCoroutinePlugin})
+    props = _props({"pegasus.monitord.plugins.oops.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    with caplog.at_level(logging.ERROR):
+        mgr.dispatch("stampede.e0", {})
+        mgr.dispatch("stampede.e1", {})
+        mgr.stop_all()  # drains both events ahead of the sentinel
+
+    complaints = [r for r in caplog.records if "returned a coroutine" in r.message]
+    assert len(complaints) == 1  # logged once per worker, not per event
+    assert not plugin.ran.is_set()  # closed, never executed
+
+
+def test_async_stop_runs_to_completion(monkeypatch):
+    _patch_entry_points(monkeypatch, {"astop": AsyncStopPlugin})
+    props = _props({"pegasus.monitord.plugins.astop.enabled": "true"})
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+    mgr.stop_all()
+    assert plugin.stopped is True
+
+
+def test_async_stop_cancelled_at_timeout(monkeypatch):
+    _patch_entry_points(monkeypatch, {"astophang": HangingAsyncStopPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.astophang.enabled": "true",
+            "pegasus.monitord.plugins.astophang.join_timeout": "0.2",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    mgr.discover_and_start()
+    plugin = mgr._workers[0][1]
+
+    mgr.stop_all()
+    # Cancellation is complete before stop_all returns, rather than racing a
+    # same-length outer join and happening later on an abandoned daemon thread.
+    assert plugin.stop_entered.is_set()
+    assert plugin.stop_cancelled.is_set()
+    assert not any(
+        t.name == "monitord-plugin-astophang-stop" and t.is_alive()
+        for t in threading.enumerate()
+    )
+
+
+def test_invalid_event_timeout_skips_plugin_before_start(monkeypatch):
+    CountingStartPlugin.started = 0
+    CountingStartPlugin.stopped = 0
+    _patch_entry_points(monkeypatch, {"badet": CountingStartPlugin})
+    props = _props(
+        {
+            "pegasus.monitord.plugins.badet.enabled": "true",
+            "pegasus.monitord.plugins.badet.event_timeout": "-1",
+        }
+    )
+    mgr = MonitordPluginManager(props)
+    assert mgr.discover_and_start() == 0
+    assert mgr._workers == []
+    assert CountingStartPlugin.started == 0
