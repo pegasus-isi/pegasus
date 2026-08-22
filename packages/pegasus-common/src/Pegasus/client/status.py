@@ -358,7 +358,7 @@ class Status:
                 self.K_FAILED: 0,
                 self.K_PERCENT_DONE: 0.0,
                 self.K_TOTAL: 0,
-                self.K_DAGSTATE: None,
+                self.K_DAGSTATE: self.DAG_OK,
             }
             return None
 
@@ -390,7 +390,7 @@ class Status:
                 self.K_PERCENT_DONE: 0.0,
                 self.K_TOTAL: 0,
                 self.K_DAGNAME: dag_name,
-                self.K_DAGSTATE: None,
+                self.K_DAGSTATE: self.DAG_OK,
             }
             self.parse_dagman_file(dagman_file, dag_name, dag_dict)
 
@@ -467,7 +467,7 @@ class Status:
                         self.K_SUCCEEDED: int(temp_values[2]),
                         self.K_FAILED: int(temp_values[8]),
                         self.K_PERCENT_DONE: float(
-                            f"{(int(temp_values[2])/int(total_nodes))*100:.2f}"
+                            f"{(int(temp_values[2]) / int(total_nodes)) * 100:.2f}"
                         ),
                         self.K_TOTAL: int(total_nodes),
                         self.K_DAGNAME: dag_name,
@@ -481,7 +481,6 @@ class Status:
 
                     # Else Zero exitcode shows DAG_OK status
                     else:
-
                         # Check for Success DAG status
                         if (
                             self.status_output["dags"][dag_dict][self.K_PERCENT_DONE]
@@ -607,7 +606,6 @@ class Status:
             )
 
         else:
-
             if self.is_hierarchical:
                 total_name = "TOTALS({} jobs)".format(values["totals"]["total"])
                 self.dag_tree_struct.append(("totals", total_name))
