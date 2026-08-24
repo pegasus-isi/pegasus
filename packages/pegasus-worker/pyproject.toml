@@ -50,9 +50,7 @@ build-backend = "setuptools.build_meta"
 #   "Topic :: Scientific/Engineering",
 #   "Topic :: Utilities",
 # ]
-# dependencies = [
-#   "globus-sdk>=3.23.0,<4;python_version>='3.7'",
-# ]
+# dependencies = []
 # keywords=["scientific workflows"]
 
 # [project.urls]

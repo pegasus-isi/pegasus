@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-`pegasus-wms.worker` — Worker-side execution tools for the Pegasus Workflow Management System. Part of a four-package Python namespace (`Pegasus`) sharing code across pegasus-api, pegasus-common, pegasus-python, and pegasus-worker. The `__init__.py` files use `pkgutil.extend_path` for namespace package support.
+`pegasus-wms.worker` — historically, worker-side execution tools for the Pegasus Workflow Management System. Part of a four-package Python namespace (`Pegasus`) sharing code across pegasus-api, pegasus-common, pegasus-python, and pegasus-worker. The `__init__.py` files use `pkgutil.extend_path` for namespace package support.
 
-This package is distributed in two ways:
+**As of the Go rewrite (see `packages/pegasus-transfer/CLAUDE.md` for the decision record), this package ships no CLI tools at all.** Every tool that used to live here — `pegasus-transfer`/`pegasus-s3`, `pegasus-checkpoint`, `pegasus-integrity`, `pegasus-globus-online`/`pegasus-globus-online-init` — has been rewritten in Go as its own package (`packages/pegasus-transfer/`, `packages/pegasus-checkpoint/`, `packages/pegasus-integrity/`, `packages/pegasus-globus-online/`) and is installed as a compiled binary instead. This package is now just namespace-package boilerplate (`src/Pegasus/__init__.py`, `src/Pegasus/cli/__init__.py`) plus a placeholder test (`test/test_namespace.py`) asserting that boilerplate still works.
 
-1. **Merged into the `pegasus-wms` wheel** via CMake `install(DIRECTORY)` — so `pegasus transfer`, `pegasus s3`, etc. work after `pip install pegasus-wms`.
-1. **Bundled into the self-contained worker tarball** (`pegasus-worker-VERSION-PLATFORM.tar.gz`) via `make build-worker` — staged to remote execution nodes by the planner at runtime.
+It's still distributed the same two ways as before (merged into the `pegasus-wms` wheel; bundled into the worker tarball), but has nothing left to contribute to either beyond the namespace merge itself — the worker tarball (`make build-worker`) contains no Python at all now, only compiled binaries (C tools + the five Go tools above).
+
+**This package is a candidate for outright retirement** — nothing currently requires `Pegasus.tools` or `Pegasus.cli` from this specific package to exist as a separate distribution; the namespace merge could plausibly move into `pegasus-common` instead. Not done in this session since it wasn't the stated goal, but worth revisiting.
 
 ## Build and Test Commands
 
@@ -20,15 +21,6 @@ tox
 # Run tests for a specific Python version
 tox -e py310
 
-# Run a single test file
-pytest test/test_pegasus_transfer.py
-
-# Run a single test function
-pytest test/test_pegasus_transfer.py::TestClassName::test_method -v
-
-# Run tests with coverage report
-pytest --cov --cov-branch --cov-report term test/
-
 # Lint and format (local — applies fixes in-place)
 tox -e lint
 
@@ -38,41 +30,23 @@ CI=true tox -e lint
 
 ## Code Formatting
 
-- **black** (v19.10b0): target py35, line length 88. CLI files under `Pegasus/cli/` are formatted but excluded from isort/black config patterns.
+- **black** (v19.10b0): target py35, line length 88.
 - **isort**: black profile, `Pegasus` as known first-party.
 - **flake8**: max line length 88, ignores W503.
 - **autoflake**: removes unused imports/variables.
 - **pyupgrade**: `--py36-plus` syntax upgrades.
 
-The lint environment runs these in order: autoflake → pyupgrade → isort → black → flake8.
+The lint environment runs these in order: autoflake → pyupgrade → isort → black → flake8. The historical `Pegasus/cli` isort/black exclude patterns are now moot (there's nothing left under `src/Pegasus/cli/` besides `__init__.py`) but haven't been cleaned up from the tox/pyproject config — harmless dead config, not a correctness issue.
 
 ## Architecture
 
-### Core Modules
-
-- **`src/Pegasus/transfer.py`** (~5,500 lines) — Multi-protocol file transfer engine. Defines `TransferHandlerBase` with protocol-specific subclasses (FileHandler, HttpHandler, S3Handler, GridFtpHandler, GlobusOnlineHandler, IRodsHandler, ScpHandler, WebdavHandler, etc.). Uses a thread pool (`WorkThread`) for parallel transfers. Reads transfer specs in JSON format. Credentials loaded from `~/.pegasus/credentials.conf` (or `PEGASUS_CREDENTIALS` env var) with strict file permission checks.
-
-- **`src/Pegasus/s3.py`** (~1,000 lines) — S3 operations (ls, get, put, cp, mkdir, rm) using boto3. Parses S3 URIs via `S3URI` class. Config from `~/.pegasus/credentials.conf` or `S3CFG` env var.
-
-- **`src/Pegasus/tools/worker_utils.py`** (~325 lines) — `TimedCommand` for subprocess execution with configurable timeout (default 6 hours). `Tools` singleton for finding executables in PATH and caching version info.
-
-### CLI Entry Points (under `src/Pegasus/cli/`)
-
-`pegasus-transfer.py`, `pegasus-s3.py`, `pegasus-integrity.py`, `pegasus-checkpoint.py`, `pegasus-globus-online.py`, `pegasus-globus-online-init.py`. These are standalone scripts, not regular modules — isort/black exclude patterns don't fully apply to them.
-
-## Key Environment Variables
-
-- `PEGASUS_CREDENTIALS` — Path to credentials file
-- `S3CFG` — S3 configuration file path
-- `KICKSTART_MON_ENDPOINT_URL` — Real-time monitoring (Panorama) endpoint
+`src/Pegasus/__init__.py`, `src/Pegasus/cli/__init__.py` — namespace-package (`pkgutil.extend_path`) boilerplate only. No other modules.
 
 ## Dependencies
 
-Runtime: `boto3>1.12`, `globus-sdk>=3.23.0,<4`. Python >=3.6 required (kept low: worker runs on remote nodes that may have older Python).
+None. `install_requires` in `setup.py` is empty — the last runtime dependency (`globus-sdk`) was removed when `pegasus-globus-online`/`pegasus-globus-online-init` were ported to Go.
 
 ## Testing Notes
 
-- Coverage minimum: 20% (enforced by `--cov-fail-under 20.0`)
-- Test resources (fixtures) live in `test/resources/`
-- `pytest-resource-path` is used for accessing test resource files
-- `pytest-mock` available for mocking
+- `test/test_namespace.py` is the only test: it exists so `tox`/`pytest test/` doesn't fail with "no tests collected" now that every real test (transfer, s3, checkpoint, integrity) has moved to its respective Go package's `go test ./...`.
+- Coverage minimum (`--cov-fail-under 20.0`) is trivially met since there's almost no Python left to cover.

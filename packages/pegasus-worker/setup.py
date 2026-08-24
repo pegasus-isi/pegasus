@@ -13,9 +13,12 @@ from setuptools import setup
 src_dir = os.path.dirname(__file__)
 home_dir = os.path.abspath(os.path.join(src_dir, "../.."))
 
-install_requires = [
-    "globus-sdk>=3.23.0,<4;python_version>='3.7'",
-]
+# No runtime dependencies: every CLI tool that used to live in this package
+# (transfer, s3, checkpoint, integrity, globus-online(-init)) has been
+# rewritten in Go — see packages/pegasus-transfer/CLAUDE.md for the
+# decision record. This package is left with only namespace-package
+# boilerplate.
+install_requires = []
 
 
 #

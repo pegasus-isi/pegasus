@@ -99,9 +99,13 @@ set(ETC_DEST     "${_data_base}/etc")
 
 # Python sub-packages: merge pegasus-common, pegasus-api, and pegasus-worker
 # into the wheel alongside pegasus-python (handled by wheel.packages).
-# pegasus-worker Python is included here for local CLI access (pegasus transfer,
-# pegasus s3, etc.). The isolated worker tarball for remote hosts is built
-# separately by the worker_package CMake target.
+# pegasus-worker's Python content here is now just namespace-package
+# boilerplate (see packages/pegasus-worker/CLAUDE.md) — every CLI tool that
+# used to live in pegasus-worker (transfer, s3, checkpoint, integrity,
+# globus-online(-init)) has been rewritten in Go and is installed as a
+# compiled binary further down instead. The isolated, Python-free worker
+# tarball for remote hosts is built separately by the build_worker_tarball
+# CMake target below.
 if(DEFINED SKBUILD_PLATLIB_DIR)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-common/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
@@ -144,6 +148,9 @@ endif()
 # tarball below stage the compiled binary alongside pegasus-kickstart.
 if(PEGASUS_BUILD_GO)
     add_subdirectory(packages/pegasus-transfer)
+    add_subdirectory(packages/pegasus-checkpoint)
+    add_subdirectory(packages/pegasus-integrity)
+    add_subdirectory(packages/pegasus-globus-online)
 endif()
 
 # ── Java JARs ─────────────────────────────────────────────────────────────────
@@ -254,62 +261,34 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/etc/"
         DESTINATION "${ETC_DEST}")
 
 # ── Worker tarball ────────────────────────────────────────────────────────────
-# Bundles packages/pegasus-worker + its runtime dep (globus-sdk) and the
-# compiled pegasus-transfer Go binary into a self-contained platform tarball
-# that the planner stages to remote worker nodes.
+# Bundles the compiled C tools and Go binaries into a self-contained
+# platform tarball that the planner stages to remote worker nodes.
+#
+# As of the Go rewrite of pegasus-transfer/pegasus-checkpoint/
+# pegasus-integrity/pegasus-globus-online(-init) (see
+# packages/pegasus-transfer/CLAUDE.md for the decision record), the worker
+# package contains NO Python at all: no `pip install`, no interpreter
+# dependency, no runtime deps (globus-sdk included) — completing the
+# original goal of pegasus-isi/pegasus#2237. Every worker-side tool is now a
+# statically-linked binary staged directly into bin/, the same way
+# pegasus-kickstart always was.
 if(PEGASUS_BUILD_WORKER)
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
     set(_worker_tarball "pegasus-worker-${PEGASUS_VERSION}-${PEGASUS_PLATFORM}.tar.gz")
     set(_worker_pkg_name "pegasus-${PEGASUS_VERSION}")
     set(_worker_staging "${CMAKE_BINARY_DIR}/worker_staging")
     set(_worker_payload "${_worker_staging}/${_worker_pkg_name}")
     set(_worker_bin "${_worker_payload}/bin")
 
-    # CLI tools bundled with packages/pegasus-worker as standalone scripts
-    # under Pegasus/cli/ (not console_scripts entry points, since the worker
-    # tarball has to run on remote nodes without a `pip install` of Pegasus
-    # itself). Each gets a bin/<tool> wrapper generated from
-    # release-tools/pegasus-worker-python-wrapper, mirroring how the old ant
-    # `dist-worker` target used release-tools/update-python-tools.
-    #
-    # pegasus-transfer and pegasus-s3 are NOT in this list: pegasus-transfer
-    # is now the compiled Go binary staged below (no Python wrapper needed),
-    # and pegasus-s3 has been retired — its S3 support was merged into
-    # pegasus-transfer natively.
-    set(_worker_wrapper_template "${CMAKE_SOURCE_DIR}/release-tools/pegasus-worker-python-wrapper")
-    set(_worker_cli_tools
-        pegasus-integrity
-        pegasus-checkpoint
-        pegasus-globus-online
-        pegasus-globus-online-init)
-
-    set(_worker_wrapper_commands)
-    foreach(_tool ${_worker_cli_tools})
-        list(APPEND _worker_wrapper_commands
-            COMMAND sh -c "sed 's/%%BASE_NAME%%/${_tool}/' '${_worker_wrapper_template}' > '${_worker_bin}/${_tool}' && chmod 755 '${_worker_bin}/${_tool}'")
-    endforeach()
-
     # PegasusLite (share/pegasus/sh/pegasus-lite-common.sh) requires the
     # worker tarball to contain a single top-level directory so it can be
     # renamed per-system after extraction; tarring "." directly would leave
-    # payload files at the tarball root and break that logic.
+    # payload files at the tarball root and break that logic. The actual
+    # tar happens in a POST_BUILD step below, after every available binary
+    # has been staged into bin/ by the C/Go blocks that follow.
     add_custom_target(build_worker_tarball ALL
         COMMENT "Building worker package tarball"
         COMMAND ${CMAKE_COMMAND} -E rm -rf "${_worker_staging}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_payload}"
-        COMMAND "${Python3_EXECUTABLE}" -m pip install
-                --no-deps --target "${_worker_payload}"
-                "${CMAKE_SOURCE_DIR}/packages/pegasus-worker"
-        COMMAND "${Python3_EXECUTABLE}" -m pip install
-                --target "${_worker_payload}"
-                "globus-sdk>=3.23.0,<4"
-        COMMAND find "${_worker_payload}" -name "__pycache__" -type d -exec rm -rf {} +
-        COMMAND find "${_worker_payload}" -name "*.dist-info" -type d -exec rm -rf {} +
         COMMAND ${CMAKE_COMMAND} -E make_directory "${_worker_bin}"
-        ${_worker_wrapper_commands}
-        COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
-                "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         VERBATIM)
 
@@ -343,9 +322,10 @@ if(PEGASUS_BUILD_WORKER)
         endif()
     endif()
 
-    # Stage the compiled pegasus-transfer Go binary, same as the C tools
-    # above. PEGASUS_TRANSFER_GO_BIN/_TARGET are set by
-    # packages/pegasus-transfer/CMakeLists.txt when PEGASUS_BUILD_GO is ON.
+    # Stage the compiled Go binaries, same as the C tools above.
+    # PEGASUS_*_GO_BIN/_TARGET are set by each package's own CMakeLists.txt
+    # (packages/pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
+    # pegasus-globus-online) when PEGASUS_BUILD_GO is ON.
     if(PEGASUS_BUILD_GO)
         add_dependencies(build_worker_tarball "${PEGASUS_TRANSFER_GO_TARGET}")
         add_custom_command(TARGET build_worker_tarball POST_BUILD
@@ -353,17 +333,38 @@ if(PEGASUS_BUILD_WORKER)
                     "${PEGASUS_TRANSFER_GO_BIN}" "${_worker_bin}/"
             COMMAND chmod 755 "${_worker_bin}/pegasus-transfer"
             COMMENT "Staging pegasus-transfer (Go) into worker package")
+
+        add_dependencies(build_worker_tarball "${PEGASUS_CHECKPOINT_GO_TARGET}")
+        add_custom_command(TARGET build_worker_tarball POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${PEGASUS_CHECKPOINT_GO_BIN}" "${_worker_bin}/"
+            COMMAND chmod 755 "${_worker_bin}/pegasus-checkpoint"
+            COMMENT "Staging pegasus-checkpoint (Go) into worker package")
+
+        add_dependencies(build_worker_tarball "${PEGASUS_INTEGRITY_GO_TARGET}")
+        add_custom_command(TARGET build_worker_tarball POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${PEGASUS_INTEGRITY_GO_BIN}" "${_worker_bin}/"
+            COMMAND chmod 755 "${_worker_bin}/pegasus-integrity"
+            COMMENT "Staging pegasus-integrity (Go) into worker package")
+
+        add_dependencies(build_worker_tarball "${PEGASUS_GLOBUS_ONLINE_GO_TARGET}")
+        add_custom_command(TARGET build_worker_tarball POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${PEGASUS_GLOBUS_ONLINE_GO_BIN}" "${PEGASUS_GLOBUS_ONLINE_INIT_GO_BIN}" "${_worker_bin}/"
+            COMMAND chmod 755 "${_worker_bin}/pegasus-globus-online" "${_worker_bin}/pegasus-globus-online-init"
+            COMMENT "Staging pegasus-globus-online(-init) (Go) into worker package")
     endif()
 
-    # Re-tar now that any compiled binaries have been added on top of the
-    # Python payload staged by the target's own build step above.
-    if(PEGASUS_BUILD_C OR PEGASUS_BUILD_GO)
-        add_custom_command(TARGET build_worker_tarball POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
-                    "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
-            COMMENT "Re-packing worker package tarball with compiled binaries"
-            VERBATIM)
-    endif()
+    # Tar up whatever ended up in bin/ — the C and Go blocks above populate
+    # it via POST_BUILD hooks, which must all run before this final step,
+    # hence this being POST_BUILD too (POST_BUILD hooks on the same target
+    # run in the order they were added).
+    add_custom_command(TARGET build_worker_tarball POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E chdir "${_worker_staging}"
+                "${CMAKE_COMMAND}" -E tar czf "${CMAKE_BINARY_DIR}/${_worker_tarball}" "${_worker_pkg_name}"
+        COMMENT "Packing worker package tarball"
+        VERBATIM)
 
     install(FILES "${CMAKE_BINARY_DIR}/${_worker_tarball}"
             DESTINATION "${WORKER_DEST}")

@@ -11,8 +11,6 @@ Generates and verifies data integrity with checksums
                         [--generate file]
                         [--generate-yaml file]
                         [--generate-fullstat-yaml file]
-                        [--generate-xmls file]
-                        [--generate-fullstat-xmls file]
                         [--verify file]
                         [--print-timings]
                         [--debug]
@@ -47,18 +45,11 @@ Options
    Generate hashes for the given file, output to kickstart yaml,
    with file stat records.
 
-**--generate-xmls** *files*
-   Generate hashes for the given file, output to kickstart xml.
-
-**--generate-fullstat-xmls** files
-   Generate hashes for the given file, output to kickstart xml
-   with file stat records.
-
 **--verify** *file*
    Verifies a file checksum as compared to what is provided in metadata.
 
 **--print-timings**
    Display timing data after verifying files
 
-**-d**; \ **--debug**
+**--debug**
    Enables debugging output.

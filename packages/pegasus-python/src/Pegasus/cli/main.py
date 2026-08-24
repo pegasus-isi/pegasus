@@ -204,47 +204,39 @@ cli.add_command(
     name="submitdir",
 )
 
-# Worker subcommands (scripts live in packages/pegasus-worker/)
-#
-# pegasus-transfer is a compiled Go binary (see packages/pegasus-transfer/),
-# installed directly into <venv>/bin/ by CMake rather than as a Python
-# script — it delegates via _binary_cmd (exec), not _script_cmd (runpy).
-# pegasus-s3 has been retired: its S3 support was merged natively into
-# pegasus-transfer, so there is no longer a separate "s3" subcommand.
+# Worker subcommands — all five are now compiled Go binaries (see
+# packages/pegasus-transfer/, packages/pegasus-checkpoint/,
+# packages/pegasus-integrity/, packages/pegasus-globus-online/), installed
+# directly into <venv>/bin/ by CMake rather than as Python scripts — they
+# delegate via _binary_cmd (exec), not _script_cmd (runpy). pegasus-s3 has
+# been retired: its S3 support was merged natively into pegasus-transfer,
+# so there is no longer a separate "s3" subcommand. packages/pegasus-worker/
+# no longer ships any CLI tools at all (see its CLAUDE.md).
 cli.add_command(
     _binary_cmd("transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow"),
     name="transfer",
 )
 cli.add_command(
-    _script_cmd(
-        "integrity",
-        "pegasus-integrity",
-        "Check file integrity for a workflow",
-        worker=True,
-    ),
+    _binary_cmd("integrity", "pegasus-integrity", "Check file integrity for a workflow"),
     name="integrity",
 )
 cli.add_command(
-    _script_cmd(
-        "checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow", worker=True
+    _binary_cmd(
+        "checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow"
     ),
     name="checkpoint",
 )
 cli.add_command(
-    _script_cmd(
-        "globus-online",
-        "pegasus-globus-online",
-        "Transfer files via Globus Online",
-        worker=True,
+    _binary_cmd(
+        "globus-online", "pegasus-globus-online", "Transfer files via Globus Online"
     ),
     name="globus-online",
 )
 cli.add_command(
-    _script_cmd(
+    _binary_cmd(
         "globus-online-init",
         "pegasus-globus-online-init",
         "Initialize Globus Online credentials",
-        worker=True,
     ),
     name="globus-online-init",
 )
@@ -575,19 +567,3 @@ def pegasus_halt():
 
 def pegasus_configure_glite():
     _do_configure_glite(sys.argv[1:])
-
-
-def pegasus_integrity():
-    _run_script("pegasus-integrity", sys.argv[1:], search_worker=True)
-
-
-def pegasus_checkpoint():
-    _run_script("pegasus-checkpoint", sys.argv[1:], search_worker=True)
-
-
-def pegasus_globus_online():
-    _run_script("pegasus-globus-online", sys.argv[1:], search_worker=True)
-
-
-def pegasus_globus_online_init():
-    _run_script("pegasus-globus-online-init", sys.argv[1:], search_worker=True)

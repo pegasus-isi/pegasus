@@ -784,3 +784,16 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
+
+# The toptal-generated C++/Fortran boilerplate above ignores *.mod / *.mod*
+# for kernel-module and Fortran-module build artifacts — but Go's module
+# manifest is also named go.mod, and this repo has several Go modules
+# (packages/pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
+# pegasus-globus-online). Un-ignore those explicitly (must come after the
+# ignoring patterns above — gitignore negations only take effect if they're
+# the LAST matching rule) so `git add`/sdist packaging actually picks them
+# up. This was a real, silent bug: go.mod was never tracked, breaking
+# `python -m build`'s sdist-based wheel build — though not a plain in-tree
+# `go build`/CMake build, which reads the file straight off disk regardless
+# of git's tracking state.
+!**/go.mod

@@ -187,7 +187,7 @@ clean-java:
 	       $(BUILD_DIR)/CMakeFiles/pegasus_aws_batch_jar.dir
 
 # Remove only C build artifacts — forces recompilation on next build.
-# Note: this also clears out packages/pegasus-transfer's build dir (Go build
+# Note: this also clears out the Go modules' build dirs (their build
 # artifacts live alongside the C tools' under $(BUILD_DIR)/packages/), so a
 # clean-c also forces a Go rebuild; use clean-go for a narrower, Go-only clean.
 # The chmod is needed because Go's module cache marks files read-only.
@@ -195,12 +195,13 @@ clean-c:
 	chmod -R u+w $(BUILD_DIR)/packages 2>/dev/null || true
 	rm -rf $(BUILD_DIR)/packages
 
-# Remove only Go build artifacts (pegasus-transfer) — forces recompilation
-# on next build. The chmod is needed because Go's module cache marks files
-# read-only, which a plain rm -rf chokes on.
+# Remove only Go build artifacts (pegasus-transfer, pegasus-checkpoint,
+# pegasus-integrity) — forces recompilation on next build. The chmod is
+# needed because Go's module cache marks files read-only, which a plain
+# rm -rf chokes on.
 clean-go:
-	chmod -R u+w $(BUILD_DIR)/packages/pegasus-transfer 2>/dev/null || true
-	rm -rf $(BUILD_DIR)/packages/pegasus-transfer
+	chmod -R u+w $(BUILD_DIR)/packages/pegasus-transfer $(BUILD_DIR)/packages/pegasus-checkpoint $(BUILD_DIR)/packages/pegasus-integrity 2>/dev/null || true
+	rm -rf $(BUILD_DIR)/packages/pegasus-transfer $(BUILD_DIR)/packages/pegasus-checkpoint $(BUILD_DIR)/packages/pegasus-integrity
 
 # Remove test output artifacts only (reports, coverage data, compiled test classes).
 # Does not remove tox virtualenvs — use 'make clean' to nuke everything.
