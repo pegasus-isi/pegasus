@@ -213,17 +213,19 @@ cli.add_command(
 # so there is no longer a separate "s3" subcommand. packages/pegasus-worker/
 # no longer ships any CLI tools at all (see its CLAUDE.md).
 cli.add_command(
-    _binary_cmd("transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow"),
+    _binary_cmd(
+        "transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow"
+    ),
     name="transfer",
 )
 cli.add_command(
-    _binary_cmd("integrity", "pegasus-integrity", "Check file integrity for a workflow"),
+    _binary_cmd(
+        "integrity", "pegasus-integrity", "Check file integrity for a workflow"
+    ),
     name="integrity",
 )
 cli.add_command(
-    _binary_cmd(
-        "checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow"
-    ),
+    _binary_cmd("checkpoint", "pegasus-checkpoint", "Checkpoint a Pegasus workflow"),
     name="checkpoint",
 )
 cli.add_command(
