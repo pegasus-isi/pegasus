@@ -16,7 +16,7 @@ RUN_ID = "black-diamond-integrity-checking-condorio-5.0api-" + datetime.now().st
     "%s"
 )
 TOP_DIR = Path(Path.cwd())
-WORK_DIR = TOP_DIR / "work"
+WORK_DIR = TOP_DIR / "submit"
 
 try:
     Path.mkdir(WORK_DIR)
