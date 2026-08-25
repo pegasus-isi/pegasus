@@ -4,7 +4,6 @@ set -e
 set -o  pipefail
 
 TOPDIR=`pwd`
-#TESTNAME=`basename $1
 TESTNAME="$1"
 
 echo "Running test $TOPDIR -> $TESTNAME"

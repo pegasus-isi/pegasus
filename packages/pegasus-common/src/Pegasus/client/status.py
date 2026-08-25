@@ -392,6 +392,12 @@ class Status:
     def get_progress(self, submit_dir: str) -> dict:
         """Internal method to get workflow progress by parsing dagman.out file."""
         dagman_list = self.get_all_dagmans(Path(submit_dir))
+        # GH-2205: default an unreported DAG state to DAG_OK, same fallback
+        # show_job_progress() uses for display. TODO: this can't tell a DAG
+        # that's merely slow to start from one whose DAGMan job never started
+        # at all (submission failed, or held/removed before writing anything
+        # to dagman.out) - such a workflow would report as "Running"
+        # indefinitely instead of surfacing as a failure.
         # if wrong submit_dir is given or no dagman files found
         if not dagman_list:
             self.status_output["dags"]["root"] = {
@@ -404,7 +410,7 @@ class Status:
                 self.K_FAILED: 0,
                 self.K_PERCENT_DONE: 0.0,
                 self.K_TOTAL: 0,
-                self.K_DAGSTATE: None,
+                self.K_DAGSTATE: self.DAG_OK,
             }
             return None
 
@@ -436,7 +442,7 @@ class Status:
                 self.K_PERCENT_DONE: 0.0,
                 self.K_TOTAL: 0,
                 self.K_DAGNAME: dag_name,
-                self.K_DAGSTATE: None,
+                self.K_DAGSTATE: self.DAG_OK,
             }
             self.parse_dagman_file(dagman_file, dag_name, dag_dict)
 

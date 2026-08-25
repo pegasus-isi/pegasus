@@ -197,7 +197,7 @@ wf.add_jobs(preprocess_job, findrange_1_job, findrange_2_job, analyze_job)
 
 try:
     wf.plan(
-        dir="work",
+        dir="submit",
         verbose=3,
         sites=["local"],
         output_sites=["local"],

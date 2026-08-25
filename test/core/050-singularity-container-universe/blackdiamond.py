@@ -17,7 +17,9 @@ PEGASUS_VERSION = utils.backticks("pegasus-version").strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:
-    logging.error("ERROR: workflow generator requires testname to invoke as an argument")
+    logging.error(
+        "ERROR: workflow generator requires testname to invoke as an argument"
+    )
     sys.exit(1)
 
 TEST_NAME = sys.argv[1]
@@ -26,7 +28,6 @@ TEST_NAME = sys.argv[1]
 RUN_ID = "black-diamond-5.0-" + datetime.now().strftime("%s")
 TOP_DIR = Path.cwd()
 WORK_DIR = TOP_DIR / "work" / PEGASUS_VERSION / TEST_NAME
-SUBMIT_DIR = TOP_DIR / TEST_NAME / "submit"
 
 try:
     Path.mkdir(WORK_DIR, parents=True)
@@ -211,7 +212,7 @@ try:
         .add_outputs(fd, register_replica=True),
     ).plan(
         conf=PEGASUS_CONF,
-        dir=f"{SUBMIT_DIR}",
+        dir="submit",
         verbose=3,
         sites=[COMPUTE],
         staging_sites={COMPUTE: STAGING},
