@@ -652,7 +652,7 @@ Workflow Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
-  - ./test/scripts/${EXEC} ${TESTNAME}
+  - exec ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
   - |
@@ -696,7 +696,7 @@ Performance Tests:
   - tar xzf pegasus-binary-*-x86_64*.tar.gz
   - cd ..
   - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
-  - ./test/scripts/${EXEC} ${TESTNAME}
+  - exec ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:

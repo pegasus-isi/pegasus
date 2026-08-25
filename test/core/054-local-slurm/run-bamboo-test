@@ -27,6 +27,8 @@ if [ "x$WORK_DIR" = "x" ]; then
     exit 1
 fi
 echo "work directory is $WORK_DIR"
+cd $START_DIR
+ln -s $TEST_DIR/submit submit
 cd $WORK_DIR
 
 # now we are good to submit
