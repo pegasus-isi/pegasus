@@ -9,7 +9,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, make, cmake, openssl-devel, systemd-rpm-macros
+BuildRequires:  gcc, gcc-c++, make, cmake, golang, openssl-devel, systemd-rpm-macros
 Requires:       which, graphviz, %{?systemd_requires}
 
 %global debug_package %{nil}
