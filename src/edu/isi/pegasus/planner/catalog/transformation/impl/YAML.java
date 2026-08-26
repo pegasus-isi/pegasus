@@ -166,7 +166,7 @@ public class YAML extends Abstract implements TransformationCatalog {
 
             if (f.exists() && f.length() > 0) {
                 File schemaDir = this.mProps.getSchemaDir();
-                yamlParser = new TransformationCatalogYAMLParser(mBag, schemaDir);
+                yamlParser = new TransformationCatalogYAMLParser(mBag, props, schemaDir);
                 mTCStore = yamlParser.parse(mTCFile, modifyFileURL);
             } else {
                 // empty TCStore

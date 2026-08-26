@@ -17,15 +17,18 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Properties;
 
 /**
  * Parses the input stream and generates the TransformationStore as output.
@@ -95,19 +98,28 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
     /** Schema File Object; */
     private static File SCHEMA_FILENAME = null;
 
+    /** Boolean indicating whether to do variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /**
      * Initializes the parser with an input stream to read from.
      *
      * @param bag
+     * @param connectProps the connection properties without the transformation catalog prefix
      * @param schemaDir
      * @throws IOException
      * @throws ScannerException
      */
-    public TransformationCatalogYAMLParser(PegasusBag bag, File schemaDir)
+    public TransformationCatalogYAMLParser(PegasusBag bag, Properties connectProps, File schemaDir)
             throws IOException, ScannerException {
         super(bag);
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+
+        mDoVariableExpansion =
+                Boolean.parseBoolean(
+                        connectProps.getProperty(
+                                TransformationCatalog.VARIABLE_EXPANSION_KEY, "true"));
 
         mLogger.log(
                 "Maximum supported size for parsing transformation catalog "
@@ -139,7 +151,10 @@ public class TransformationCatalogYAMLParser extends YAMLParser {
             // first attempt to validate
             if (validate(f, SCHEMA_FILENAME, "transformation")) {
                 // validation succeeded. load.
-                Reader reader = new VariableExpansionReader(new FileReader(f), this.mProps);
+                Reader reader =
+                        mDoVariableExpansion
+                                ? new VariableExpansionReader(new FileReader(file), this.mProps)
+                                : new BufferedReader(new FileReader(file));
 
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties
