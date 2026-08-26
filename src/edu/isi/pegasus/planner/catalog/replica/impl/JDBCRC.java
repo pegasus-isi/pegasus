@@ -18,6 +18,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusDBAdmin;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -224,6 +225,16 @@ public class JDBCRC implements ReplicaCatalog {
         mConnection = null;
         mStatements = null;
         mLogger = LogManagerFactory.loadSingletonInstance();
+    }
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mLogger = bag.getLogger();
     }
 
     /**

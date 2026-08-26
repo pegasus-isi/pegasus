@@ -134,6 +134,7 @@ public class YAML extends Abstract implements TransformationCatalog {
      *
      * @param bag the bag of Pegasus initialization objects.
      */
+    @Override
     public void initialize(PegasusBag bag) {
         super.initialize(bag);
         mBag = bag;

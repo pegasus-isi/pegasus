@@ -13,9 +13,12 @@
  */
 package edu.isi.pegasus.planner.catalog.replica.impl;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Escape;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -55,6 +58,26 @@ public class FlushedCache implements ReplicaCatalog {
     /** Set buffer size i.e. The no of lines that the implementation will buffer. */
     public void setBufferSize(int bufferSize) {
         m_buffer_size = bufferSize;
+    }
+
+    /**
+     * The LogManager object which is used to log all the messages. It's values are set in the
+     * CPlanner (the main toolkit) class.
+     */
+    protected LogManager mLogger;
+
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mLogger = bag.getLogger();
+        mProps = bag.getPegasusProperties();
     }
 
     /**
