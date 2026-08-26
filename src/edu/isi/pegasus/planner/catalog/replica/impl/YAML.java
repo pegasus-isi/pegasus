@@ -32,16 +32,17 @@ import com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Escape;
-import edu.isi.pegasus.common.util.VariableExpander;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogJsonDeserializer;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusJsonSerializer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -52,6 +53,7 @@ import edu.isi.pegasus.planner.parser.YAMLSchemaValidator;
 
 import org.yaml.snakeyaml.LoaderOptions;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -165,13 +167,22 @@ public class YAML implements ReplicaCatalog {
     /** A boolean indicating whether the catalog is read only or not. */
     boolean m_readonly;
 
-    /** Handle to pegasus variable expander */
-    private VariableExpander mVariableExpander;
-
     /** The version for the Replica Catalog */
     private String mVersion;
 
     private int mMAXParsedDocSize;
+
+    /** whether to do any variable expansion or not */
+    private boolean mDoVariableExpansion;
+
+    /**
+     * The LogManager object which is used to log all the messages. It's values are set in the
+     * CPlanner (the main toolkit) class.
+     */
+    protected LogManager mLogger;
+
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
 
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
@@ -186,7 +197,6 @@ public class YAML implements ReplicaCatalog {
         mLFNPattern = null;
         mFilename = null;
         m_readonly = false;
-        mVariableExpander = new VariableExpander();
         mVersion = YAML.DEFAULT_REPLICA_CATALOG_VERSION;
 
         PegasusProperties props = PegasusProperties.getInstance();
@@ -194,6 +204,17 @@ public class YAML implements ReplicaCatalog {
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILE = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
         mMAXParsedDocSize = props.getMaxSupportedYAMLDocSize();
+    }
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mLogger = bag.getLogger();
+        mProps = bag.getPegasusProperties();
     }
 
     /**
@@ -258,6 +279,7 @@ public class YAML implements ReplicaCatalog {
      * @return true if connected, false if failed to connect.
      * @throws Error subclasses for runtime errors in the class loader.
      */
+    @Override
     public boolean connect(Properties props) {
         // quote mode
         mQuote = Boolean.parse(props.getProperty("quote"));
@@ -271,6 +293,10 @@ public class YAML implements ReplicaCatalog {
                     Integer.parseInt(
                             props.getProperty(ReplicaCatalog.PARSER_DOCUMENT_SIZE_PROPERTY_KEY));
         }
+
+        mDoVariableExpansion =
+                Boolean.parse(props.getProperty(ReplicaCatalog.VARIABLE_EXPANSION_KEY), true);
+
         if (props.containsKey("file")) return connect(props.getProperty("file"));
         return false;
     }
@@ -286,7 +312,10 @@ public class YAML implements ReplicaCatalog {
         boolean validate = true;
         Reader reader = null;
         try {
-            reader = new VariableExpansionReader(new FileReader(f), null);
+            reader =
+                    mDoVariableExpansion
+                            ? new VariableExpansionReader(new FileReader(f), mProps)
+                            : new BufferedReader(new FileReader(f));
         } catch (IOException ioe) {
             throw new ReplicaCatalogException(ioe);
         }
