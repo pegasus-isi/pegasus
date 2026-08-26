@@ -22,10 +22,12 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.io.Reader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -62,13 +65,17 @@ public class SiteCatalogYAMLParser extends YAMLParser {
     /** File object of the schema.. */
     private final File SCHEMA_FILENAME;
 
+    /** Boolean indicating whether to do variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /**
      * The constructor.
      *
      * @param bag the bag of initialization objects.
+     * @param connectProps the connection properties without the site catalog prefix
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogYAMLParser(PegasusBag bag, List<String> sites) {
+    public SiteCatalogYAMLParser(PegasusBag bag, Properties connectProps, List<String> sites) {
         super(bag);
         mSites = new HashSet<String>();
         for (Iterator<String> it = sites.iterator(); it.hasNext(); ) {
@@ -78,6 +85,10 @@ public class SiteCatalogYAMLParser extends YAMLParser {
         File schemaDir = this.mProps.getSchemaDir();
         File yamlSchemaDir = new File(schemaDir, "yaml");
         SCHEMA_FILENAME = new File(yamlSchemaDir, new File(SCHEMA_URI).getName());
+
+        mDoVariableExpansion =
+                Boolean.parseBoolean(
+                        connectProps.getProperty(SiteCatalog.VARIABLE_EXPANSION_KEY, "true"));
 
         mLogger.log(
                 "Maximum supported size for parsing site catalog " + mMAXParsedDocSize + " MB",
@@ -120,7 +131,10 @@ public class SiteCatalogYAMLParser extends YAMLParser {
             // first attempt to validate
             if (validate(f, SCHEMA_FILENAME, "site")) {
                 // validation succeeded. load.
-                Reader reader = new VariableExpansionReader(new FileReader(f), this.mProps);
+                Reader reader =
+                        mDoVariableExpansion
+                                ? new VariableExpansionReader(new FileReader(file), this.mProps)
+                                : new BufferedReader(new FileReader(file));
 
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties
