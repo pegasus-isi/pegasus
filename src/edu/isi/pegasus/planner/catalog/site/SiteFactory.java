@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.DynamicLoader;
-import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
@@ -65,18 +64,12 @@ public class SiteFactory {
     // value in seconds
     public static final long DEFAULT_UPDATE_INTERVAL_TO_DOWNLOAD_FROM_REPO = 24 * 60 * 60;
 
-    /** For 4.2, the original XML3 class was renamed XML and it supports different schemas. */
-    private static final String XML_IMPLEMENTING_CLASS_BASENAME = "XML";
-
     private static final String YAML_IMPLEMENTING_CLASS_BASENAME = "YAML";
 
     public static final String DEFAULT_SITE_CATALOG_IMPLEMENTOR = "YAML";
 
     /** The default basename of the yaml site catalog file. */
     public static final String DEFAULT_YAML_SITE_CATALOG_BASENAME = "sites.yml";
-
-    /** The default basename of the site catalog file. */
-    public static final String DEFAULT_XML_SITE_CATALOG_BASENAME = "sites.xml";
 
     /**
      * @param sites list of sites
@@ -317,20 +310,15 @@ public class SiteFactory {
             if (endpoint == null) {
                 // PM-1486 check for default files
                 File defaultYAML = new File(dir, SiteFactory.DEFAULT_YAML_SITE_CATALOG_BASENAME);
-                File defaultXML = new File(dir, SiteFactory.DEFAULT_XML_SITE_CATALOG_BASENAME);
                 if (exists(defaultYAML)) {
                     catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
                     connect.setProperty("file", defaultYAML.getAbsolutePath());
-                } else if (exists(defaultXML)) {
-                    catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
-                    connect.setProperty("file", defaultXML.getAbsolutePath());
                 } else {
                     // then just set to default implementor and let the implementing class load
                     catalogImplementor = SiteFactory.DEFAULT_SITE_CATALOG_IMPLEMENTOR;
                 }
             } else {
-                // detect type based on contents
-                catalogImplementor = detectType(endpoint);
+                catalogImplementor = SiteFactory.YAML_IMPLEMENTING_CLASS_BASENAME;
             }
         }
 
@@ -398,27 +386,6 @@ public class SiteFactory {
         }
 
         return catalog;
-    }
-
-    /**
-     * Detect the type of endpoint usually a file
-     *
-     * @param endpoint
-     * @return
-     */
-    private static String detectType(String endpoint) {
-        String implementor = null;
-        File file = new File(endpoint);
-        if (file.exists() && file.canRead()) {
-            // detect type of file
-            implementor =
-                    FileDetector.isTypeXML(file)
-                            ? XML_IMPLEMENTING_CLASS_BASENAME
-                            : YAML_IMPLEMENTING_CLASS_BASENAME;
-        } else {
-            throw new SiteFactoryException("Unable to read file" + file);
-        }
-        return implementor;
     }
 
     /**

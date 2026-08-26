@@ -17,7 +17,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.DynamicLoader;
-import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.Directory;
@@ -52,9 +51,6 @@ public class TransformationFactory {
     public static final String YAML_CATALOG_IMPLEMENTOR =
             edu.isi.pegasus.planner.catalog.transformation.impl.YAML.class.getCanonicalName();
 
-    public static final String TEXT_CATALOG_IMPLEMENTOR =
-            edu.isi.pegasus.planner.catalog.transformation.impl.Text.class.getCanonicalName();
-
     public static final String DIRECTORY_CATALOG_IMPLEMENTOR =
             edu.isi.pegasus.planner.catalog.transformation.impl.Directory.class.getCanonicalName();
 
@@ -65,9 +61,6 @@ public class TransformationFactory {
      * The default directory from which transformations are picked up if using directory backend.
      */
     public static final String DEFAULT_TRANSFORMATION_CATALOG_DIRECTORY = "transformations";
-
-    /** The default basename of the transformation catalog file. */
-    public static final String DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME = "tc.txt";
 
     /**
      * Connects the interface with the transformation catalog implementation. The choice of backend
@@ -179,7 +172,7 @@ public class TransformationFactory {
         if (catalog == null) {
             File f = null;
             try {
-                f = File.createTempFile("tc.", ".txt");
+                f = File.createTempFile("tc.", ".yml");
                 bag.getLogger()
                         .log(
                                 "Created a temporary transformation catalog backend " + f,
@@ -193,7 +186,7 @@ public class TransformationFactory {
             PegasusProperties props = PegasusProperties.nonSingletonInstance();
             props.setProperty(
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY,
-                    TransformationFactory.TEXT_CATALOG_IMPLEMENTOR);
+                    TransformationFactory.YAML_CATALOG_IMPLEMENTOR);
             props.setProperty(
                     PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY,
                     f.getAbsolutePath());
@@ -245,13 +238,7 @@ public class TransformationFactory {
         if (catalogImplementor == null) {
             // check if file is specified in properties
             if (props.containsKey("file")) {
-                // PM-1518 check for type of file
-                if (FileDetector.isTypeYAML(
-                        props.getProperty("file"), properties.getMaxSupportedYAMLDocSize())) {
-                    catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
-                } else {
-                    catalogImplementor = TEXT_CATALOG_IMPLEMENTOR;
-                }
+                catalogImplementor = YAML_CATALOG_IMPLEMENTOR;
             } else {
                 // catalogImplementor = DEFAULT_CATALOG_IMPLEMENTOR;
                 // PM-1486 check for default files
@@ -259,16 +246,9 @@ public class TransformationFactory {
                         new File(
                                 dir,
                                 TransformationFactory.DEFAULT_YAML_TRANSFORMATION_CATALOG_BASENAME);
-                File defaultText =
-                        new File(
-                                dir,
-                                TransformationFactory.DEFAULT_TEXT_TRANSFORMATION_CATALOG_BASENAME);
                 if (exists(defaultYAML)) {
                     catalogImplementor = TransformationFactory.YAML_CATALOG_IMPLEMENTOR;
                     props.setProperty("file", defaultYAML.getAbsolutePath());
-                } else if (exists(defaultText)) {
-                    catalogImplementor = TransformationFactory.TEXT_CATALOG_IMPLEMENTOR;
-                    props.setProperty("file", defaultText.getAbsolutePath());
                 } else {
                     // then just set to default implementor and let the implementing class load
                     catalogImplementor = TransformationFactory.DEFAULT_CATALOG_IMPLEMENTOR;

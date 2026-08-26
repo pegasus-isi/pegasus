@@ -194,6 +194,28 @@ public class YAMLTest {
     }
 
     @Test
+    public void testInsertPreservesBypassStaging() throws Exception {
+        mLogger.logEventStart(
+                "test.catalog.transformation.impl.YAML",
+                "insert-preserves-bypass-staging",
+                Integer.toString(mTestNumber++));
+        TransformationCatalogEntry entry =
+                new TransformationCatalogEntry("pegasus", "bypass-test", "1.0");
+        entry.setResourceId("condorpool");
+        entry.setPhysicalTransformation("/usr/bin/bypass-test");
+        entry.setType(edu.isi.pegasus.planner.catalog.transformation.classes.TCType.STAGEABLE);
+        entry.setForBypassStaging(true);
+
+        mCatalog.insert(entry, true);
+
+        List<TransformationCatalogEntry> entries =
+                mCatalog.lookup("pegasus", "bypass-test", "1.0", "condorpool", null);
+        assertThat(entries.size(), is(1));
+        assertThat(entries.get(0).bypassStaging(), is(true));
+        mLogger.logEventCompletion();
+    }
+
+    @Test
     public void testErrorYAMLFile() {
         PegasusBag mBag = new PegasusBag();
         PegasusProperties mErrorProps =

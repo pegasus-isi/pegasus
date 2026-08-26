@@ -1578,13 +1578,6 @@ being online.
     | | Default : ${pegasus.home.sysconfdir}/dax-3.4.xsd | | and obtaining the latest version from the Pegasus        |
     |                                                    | | website dynamically.                                     |
     +----------------------------------------------------+------------------------------------------------------------+
-    | | Property Key:pegasus.schema.sc                   | | This file is a copy of the XML schema that describes     |
-    | | Profile Key:N/A                                  | | the xml description of the site catalog. Providing a     |
-    | | Scope : Properties                               | | copy of the schema enables the parser to use the local   |
-    | | Since : 2.0                                      | | copy instead of reaching out to the internet, and        |
-    | | Type :file path                                  | | obtaining the latest version from the GriPhyN website    |
-    | | Default : ${pegasus.home.sysconfdir}/sc-4.0.xsd  | | dynamically.                                             |
-    +----------------------------------------------------+------------------------------------------------------------+
 
 .. _db-props:
 

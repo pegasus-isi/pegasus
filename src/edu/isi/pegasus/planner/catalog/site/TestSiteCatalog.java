@@ -36,7 +36,7 @@ import java.util.Set;
  * is picked from the Properties. The following properties need to be set
  *
  * <pre>
- *      pegasus.catalog.site       Text|XML|XML3
+ *      pegasus.catalog.site       YAML
  *      pegasus.catalog.site.file  path to the site catalog.
  *  </pre>
  *

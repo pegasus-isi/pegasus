@@ -201,11 +201,10 @@ Site Catalog
 Prior to the 5.0 release, the Site Catalog has been written in XML. Although the
 format has changed from XML to YAML, the overall structure of this catalog remains unchanged.
 
-To convert an existing Site Catalog from XML to YAML use :doc:`/manpages/pegasus-sc-converter`.
-For example, to convert a Site Catalog file, ``sites.xml``, to YAML, use the following
-command::
-
-    pegasus-sc-converter -i sites.xml -o sites.yml
+Pegasus no longer reads XML Site Catalogs or ships a ``pegasus-sc-converter`` tool.
+If you still have an XML Site Catalog, convert it to YAML using a Pegasus release
+prior to 6.0 (which included ``pegasus-sc-converter``) before upgrading, or hand-convert
+it following the structure below.
 
 The following illustrates how :py:class:`Pegasus.api.site_catalog.SiteCatalog` can
 be used to generate a new Site Catalog programmatically based on an existing XML based Site Catalog.
@@ -346,12 +345,11 @@ Replica Catalog.
 Transformation Catalog
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The Transformation Catalog has been moved from a text based format to YAML. To convert
-an existing Transformation Catalog from the text based file format to YAML, use
-:doc:`/manpages/pegasus-tc-converter`. For example, to convert a Transformation Catalog
-file, ``tc.txt``, to YAML, use the following command::
-
-    pegasus-tc-converter -i tc.txt -I Text -O YAML -o transformations.yml
+The Transformation Catalog has been moved from a text based format to YAML. Pegasus no
+longer reads the text based Transformation Catalog or ships a ``pegasus-tc-converter``
+tool. If you still have a text based Transformation Catalog, convert it to YAML using a
+Pegasus release prior to 6.0 (which included ``pegasus-tc-converter``) before upgrading,
+or hand-convert it following the structure below.
 
 The following illustrates how :py:class:`Pegasus.api.transformation_catalog.TransformationCatalog` can
 be used to generate a new Transformation Catalog programmatically based on an
