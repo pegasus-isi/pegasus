@@ -36,6 +36,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.namespace.Metadata;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -119,6 +120,9 @@ public class Meta implements ReplicaCatalog {
 
     private final int mMAXParsedDocSize;
 
+    /** whether to do any variable expansion or not */
+    private boolean mDoVariableExpansion;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -155,7 +159,11 @@ public class Meta implements ReplicaCatalog {
         if (replicaFile.exists()) {
             Reader reader = null;
             try {
-                reader = new VariableExpansionReader(new FileReader(filename), null);
+                reader =
+                        mDoVariableExpansion
+                                ? new VariableExpansionReader(new FileReader(filename), null)
+                                : new BufferedReader(new FileReader(filename));
+
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties
                 LoaderOptions loaderOptions = new LoaderOptions();
@@ -198,6 +206,7 @@ public class Meta implements ReplicaCatalog {
      * @return true if connected, false if failed to connect.
      * @throws Error subclasses for runtime errors in the class loader.
      */
+    @Override
     public boolean connect(Properties props) {
         // quote mode
         mQuote = Boolean.parse(props.getProperty("quote"));
@@ -205,6 +214,10 @@ public class Meta implements ReplicaCatalog {
         if (props.containsKey(YAML.READ_ONLY_KEY)) {
             m_readonly = Boolean.parse(props.getProperty(YAML.READ_ONLY_KEY), false);
         }
+
+        mDoVariableExpansion =
+                Boolean.parse(props.getProperty(ReplicaCatalog.VARIABLE_EXPANSION_KEY), true);
+
         if (props.containsKey("file")) return connect(props.getProperty("file"));
         return false;
     }
