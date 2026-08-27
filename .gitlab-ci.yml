@@ -209,8 +209,9 @@ Alpine:
       - alpine_3
   image: pegasus/buildenv:${OS}
   script:
-  - python3 -m pip install --upgrade auditwheel patchelf
-  - make build repair-wheel
+  - python3 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -233,8 +234,9 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - python3.12 -m pip install --upgrade auditwheel patchelf
-  - PYTHON=python3.12 make build dist-rpm repair-wheel
+  - python3.12 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build dist-rpm repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -257,8 +259,9 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - python3.14 -m pip install --upgrade auditwheel patchelf
-  - PYTHON=python3.14 make build dist-rpm repair-wheel
+  - python3.14 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build dist-rpm repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -283,8 +286,9 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - python3.11 -m pip install --upgrade auditwheel patchelf
-  - PYTHON=python3.11 make build repair-wheel
+  - python3.11 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -310,8 +314,9 @@ Debian:
   - apt-get update
   - DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv
   script:
-  - python3 -m pip install --upgrade auditwheel patchelf
-  - make build dist-deb repair-wheel
+  - python3 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build dist-deb repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -336,8 +341,9 @@ Ubuntu:
       - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
-  - python3 -m pip install --upgrade auditwheel patchelf
-  - make build dist-deb repair-wheel
+  - python3 -m venv /tmp/build-venv
+  - /tmp/build-venv/bin/pip install --upgrade pip auditwheel patchelf
+  - PYTHON=/tmp/build-venv/bin/python make build dist-deb repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
