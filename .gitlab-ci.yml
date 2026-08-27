@@ -168,7 +168,7 @@ C:
   # pegasus-integrity symlink step resolves. Use a separate build-dir so the
   # scikit-build (Ninja) configure does not clobber make's _cmake_build cache.
   - python3.12 -m venv /tmp/pegasus-venv
-  - /tmp/pegasus-venv/bin/pip install --upgrade pip ninja
+  - /tmp/pegasus-venv/bin/pip install --upgrade pip
   - /tmp/pegasus-venv/bin/pip install .
   - PYTHON=/tmp/pegasus-venv/bin/python make test-c
   rules:
@@ -209,9 +209,7 @@ Alpine:
       - alpine_3
   image: pegasus/buildenv:${OS}
   script:
-  - python3 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build repair-wheel
+  - PYTHON=python3 make build repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -234,9 +232,7 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - python3.12 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build dist-rpm repair-wheel
+  - PYTHON=python3.12 make build dist-rpm repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -259,9 +255,7 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - python3.14 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build dist-rpm repair-wheel
+  - PYTHON=python3.14 make build dist-rpm repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -286,9 +280,7 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - python3.11 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build repair-wheel
+  - PYTHON=python3.11 make build repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -310,13 +302,8 @@ Debian:
       - deb_12
       - deb_13
   image: pegasus/buildenv:${OS}
-  before_script:
-  - apt-get update
-  - DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv
   script:
-  - python3 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build dist-deb repair-wheel
+  - PYTHON=python3 make build dist-deb repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -341,9 +328,7 @@ Ubuntu:
       - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
-  - python3 -m venv /tmp/build-venv
-  - /tmp/build-venv/bin/pip install --upgrade pip build scikit-build-core ninja auditwheel patchelf
-  - PYTHON=/tmp/build-venv/bin/python make build dist-deb repair-wheel
+  - PYTHON=python3 make build dist-deb repair-wheel
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz

@@ -130,26 +130,19 @@ dist-wheel:
 
 # Repair wheels
 # auditwheel also enforces the -march baseline pinned in CMakeLists.txt.
-# Requires auditwheel and patchelf to be installed for $(PYTHON); the CI jobs
-# install them alongside the other build dependencies.
 repair-wheel:
 	@[ "$$(uname -s)" = Linux ] || { echo "repair-wheel: skipping on $$(uname -s)"; exit 0; }
-	@$(PYTHON) -c "import auditwheel" 2>/dev/null || { \
-	    echo "repair-wheel: auditwheel is not installed for $(PYTHON)." >&2; \
-	    echo "              $(PYTHON) -m pip install auditwheel patchelf" >&2; \
-	    exit 1; \
-	}
 	@set -e; \
 	for whl in $(DIST_DIR)/*.whl; do \
 	    echo "==> repairing $$whl"; \
-	    $(PYTHON) -m auditwheel show "$$whl"; \
-	    $(PYTHON) -m auditwheel repair --wheel-dir $(DIST_DIR)/wheelhouse "$$whl"; \
+	    auditwheel show "$$whl"; \
+	    auditwheel repair --wheel-dir $(DIST_DIR)/wheelhouse "$$whl"; \
 	    rm -f "$$whl"; \
 	done
 	@# Nothing should be vendored. auditwheel would place copies in
 	@# pegasus_wms.libs/ at the wheel root and rewrite RPATHs relative to the
 	@# ZIP layout - but our binaries live under .data/, which pip relocates on
-	@# install, so those RPATHs would be wrong at runtime.
+	@# install.
 	@if unzip -l $(DIST_DIR)/wheelhouse/*.whl | grep -q "pegasus_wms\.libs/"; then \
 	    echo "ERROR: auditwheel vendored libraries into pegasus_wms.libs/;" >&2; \
 	    echo "       RPATHs under .data/ would be wrong at runtime." >&2; \
