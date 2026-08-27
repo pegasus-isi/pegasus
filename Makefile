@@ -55,7 +55,7 @@ PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.vers
 _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
 _JUNIT_REPORT_DIR  := $(BUILD_DIR)/tests/classes/junitreport
 
-.PHONY: build dev build-c build-java build-worker \
+.PHONY: build dev build-c build-java build-worker repair-wheel \
         dist-deb dist-rpm \
         clean clean-java clean-c clean-worker clean-test clean-doc \
         test test-python test-java test-c \
@@ -127,6 +127,37 @@ dist-source:
 # Build a wheel distribution of the package. (Creates a .whl file in dist/)
 dist-wheel:
 	$(PYTHON) -m build --wheel
+
+# Repair wheels
+# auditwheel also enforces the -march baseline pinned in CMakeLists.txt.
+# Requires auditwheel and patchelf to be installed for $(PYTHON); the CI jobs
+# install them alongside the other build dependencies.
+repair-wheel:
+	@[ "$$(uname -s)" = Linux ] || { echo "repair-wheel: skipping on $$(uname -s)"; exit 0; }
+	@$(PYTHON) -c "import auditwheel" 2>/dev/null || { \
+	    echo "repair-wheel: auditwheel is not installed for $(PYTHON)." >&2; \
+	    echo "              $(PYTHON) -m pip install auditwheel patchelf" >&2; \
+	    exit 1; \
+	}
+	@set -e; \
+	for whl in $(DIST_DIR)/*.whl; do \
+	    echo "==> repairing $$whl"; \
+	    $(PYTHON) -m auditwheel show "$$whl"; \
+	    $(PYTHON) -m auditwheel repair --wheel-dir $(DIST_DIR)/wheelhouse "$$whl"; \
+	    rm -f "$$whl"; \
+	done
+	@# Nothing should be vendored. auditwheel would place copies in
+	@# pegasus_wms.libs/ at the wheel root and rewrite RPATHs relative to the
+	@# ZIP layout - but our binaries live under .data/, which pip relocates on
+	@# install, so those RPATHs would be wrong at runtime.
+	@if unzip -l $(DIST_DIR)/wheelhouse/*.whl | grep -q "pegasus_wms\.libs/"; then \
+	    echo "ERROR: auditwheel vendored libraries into pegasus_wms.libs/;" >&2; \
+	    echo "       RPATHs under .data/ would be wrong at runtime." >&2; \
+	    exit 1; \
+	fi
+	mv $(DIST_DIR)/wheelhouse/*.whl $(DIST_DIR)/
+	rmdir $(DIST_DIR)/wheelhouse
+	@echo "==> repaired wheels:"; ls -1 $(DIST_DIR)/*.whl
 
 # Remove worker build artifacts (cmake staging dir and the staged tarball in the
 # Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
@@ -304,6 +335,7 @@ help:
 	@echo "  dist-rpm      Build .rpm package on this host → dist/rpm/ (RHEL/Rocky)"
 	@echo "  dist-source   Build a source distribution of the package. (Creates a .tar.gz file in dist/)"
 	@echo "  dist-wheel    Build a wheel distribution of the package. (Creates a .whl file in dist/)"
+	@echo "  repair-wheel  Retag dist/*.whl as manylinux/musllinux via auditwheel (Linux only)"
 	@echo "  clean         Remove all artifacts"
 	@echo "  clean-test    Remove test output (reports, coverage, compiled test classes)"
 	@echo "  clean-doc     Remove documentation build artifacts (Sphinx + staged doc tree)"

@@ -124,7 +124,15 @@ fi
 
 $PYTHON -m venv pegasus-$VERSION-$NOW
 pegasus-$VERSION-$NOW/bin/pip install --upgrade pip
-pegasus-$VERSION-$NOW/bin/pip install $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*-py3-none-linux_x86_64.whl
+# Wheels are auditwheel-repaired in CI, so the tag is <manylinux|musllinux>_<glibc>_x86_64
+# Pick manylinux with the lowest GLIBC floor on scitech for compatibility
+WHEEL=$(ls $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*-manylinux*_x86_64.whl 2>/dev/null | sort -V | head -1)
+if [ "X$WHEEL" = "X" ]; then
+    echo "No manylinux x86_64 wheel found in $TOPDIR/dist/$DOWNLOADS - was repair-wheel run?" >&2
+    exit 1
+fi
+echo "Installing shared workflow-test install from $WHEEL"
+pegasus-$VERSION-$NOW/bin/pip install "$WHEEL"
 
 # update symlink
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION

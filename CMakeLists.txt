@@ -43,6 +43,21 @@ if("$ENV{PEGASUS_NO_WORKER}" STREQUAL "1")
     set(PEGASUS_BUILD_WORKER OFF)
 endif()
 
+# Pin the x86-64 baseline so the artifacts run on any x86-64 CPU.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+    add_compile_options(-march=x86-64 -mtune=generic)
+
+    # Record the ISA level the code actually requires in the ELF's GNU property
+    # note.
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        include(CheckCCompilerFlag)
+        check_c_compiler_flag("-mneeded" PEGASUS_HAVE_MNEEDED)
+        if(PEGASUS_HAVE_MNEEDED)
+            add_compile_options(-mneeded)
+        endif()
+    endif()
+endif()
+
 # Install destinations.
 # When invoked by scikit-build-core the SKBUILD_* variables are set and map
 # directly into the wheel layout.  For standalone `cmake --install` builds
