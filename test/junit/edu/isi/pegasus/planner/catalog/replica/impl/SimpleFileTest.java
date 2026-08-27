@@ -20,7 +20,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -32,6 +35,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Properties;
 
 /**
@@ -54,6 +58,7 @@ public class SimpleFileTest {
     private File mExpandedSubstitutionInput;
 
     protected static final String EXPANDED_USER = "bamboo";
+    private LogManager mLogger;
 
     public SimpleFileTest() {}
 
@@ -78,6 +83,11 @@ public class SimpleFileTest {
                 mExpandedSubstitutionInput.toPath(),
                 raw.replace("${USER}", EXPANDED_USER),
                 StandardCharsets.UTF_8);
+        mLogger =
+                mTestSetup.loadLogger(
+                        mTestSetup.loadPropertiesFromFile(".properties", new LinkedList()));
+        mLogger.setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventStart("test.pegasus.url", "setup", "0");
     }
 
     @Test
@@ -145,7 +155,12 @@ public class SimpleFileTest {
     }
 
     private void setupCatalog(String file, boolean readOnly) {
+
+        PegasusBag bag = new PegasusBag();
+        bag.add(PegasusBag.PEGASUS_LOGMANAGER, this.mLogger);
+        bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         mCatalog = new SimpleFile();
+        mCatalog.initialize(bag);
         // mRCFile  = new File( mTestSetup.getInputDirectory(), file );
         System.out.println("Input Test File is " + file);
         Properties props = new Properties();
