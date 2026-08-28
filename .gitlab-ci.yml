@@ -232,7 +232,10 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.12 make build dist-rpm repair-wheel
+  - PYTHON=python3.12 make build dist-rpm
+  # Only the rhel_8 wheel is published: it has the lowest glibc of any build
+  # image and an x86-64-v1 baseline.
+  - if [ "${OS}" = "rhel_8" ]; then make repair-wheel; else rm -f dist/pegasus_wms-*.whl; fi
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -255,11 +258,10 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.14 make build dist-rpm repair-wheel
+  - PYTHON=python3.14 make build dist-rpm
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
-    - dist/pegasus_wms-*.whl
     - dist/rpm/*.rpm
   dependencies: []
   tags:
@@ -280,11 +282,10 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.11 make build repair-wheel
+  - PYTHON=python3.11 make build
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
-    - dist/pegasus_wms-*.whl
   dependencies: []
   tags:
   - ${ARCH}
@@ -303,11 +304,10 @@ Debian:
       - deb_13
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3 make build dist-deb repair-wheel
+  - PYTHON=python3 make build dist-deb
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
-    - dist/pegasus_wms-*.whl
     - dist/deb/*.deb
     - dist/deb/*.changes
   dependencies: []
@@ -328,11 +328,10 @@ Ubuntu:
       - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3 make build dist-deb repair-wheel
+  - PYTHON=python3 make build dist-deb
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
-    - dist/pegasus_wms-*.whl
     - dist/deb/*.deb
     - dist/deb/*.changes
   dependencies: []
@@ -447,7 +446,8 @@ Release:
       password = ${TEST_PYPI_TOKEN}
     EOT
   script:
-  # Publish to PyPI
+  # Publish to PyPI. Build jobs: only rhel_8 (manylinux, lowest glibc + x86-64-v1), Alpine (musllinux) and macOS
+  # export a wheel artifact.
   - |
     twine upload \
       --repository $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "test-pypi" || echo "pypi") \

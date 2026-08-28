@@ -128,8 +128,8 @@ dist-source:
 dist-wheel:
 	$(PYTHON) -m build --wheel
 
-# Repair wheels
-# auditwheel also enforces the -march baseline pinned in CMakeLists.txt.
+# Repairs wheel with auditwheel
+# PatternL <manylinux|musllinux>_<glibc>
 repair-wheel:
 	@[ "$$(uname -s)" = Linux ] || { echo "repair-wheel: skipping on $$(uname -s)"; exit 0; }
 	@set -e; \
