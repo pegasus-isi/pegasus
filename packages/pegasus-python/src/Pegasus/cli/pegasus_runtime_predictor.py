@@ -98,7 +98,7 @@ def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
     return size_map
 
 
-def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float) -> None:
+def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float, level) -> None:
     """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
     timing_csv = os.path.join(output_dir, "prescript_timings.csv")
     header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
@@ -106,8 +106,8 @@ def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float) ->
         fcntl.flock(fh, fcntl.LOCK_EX)
         try:
             if header_needed:
-                fh.write("job_id,prescript_duration_s\n")
-            fh.write(f"{job_id},{duration_s:.3f}\n")
+                fh.write("job_id,dag_level,prescript_duration_s\n")
+            fh.write(f"{job_id},{level if level is not None else ''},{duration_s:.3f}\n")
         finally:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
@@ -265,7 +265,7 @@ def main():
     # ── Record how long this prescript invocation took ─────────────────────
     if caller_job_id:
         prescript_duration_s = time.time() - _start_time
-        _append_prescript_timing(output_dir, caller_job_id, prescript_duration_s)
+        _append_prescript_timing(output_dir, caller_job_id, prescript_duration_s, target_level)
         print(f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
               f"{prescript_duration_s:.3f}s")
 
