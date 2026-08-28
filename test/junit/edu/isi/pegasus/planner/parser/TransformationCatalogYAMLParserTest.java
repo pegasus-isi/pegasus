@@ -51,7 +51,7 @@ public class TransformationCatalogYAMLParserTest {
     public void testConstructorSetsSchemaFile() throws Exception {
         File schemaDir = new File("share/pegasus/schema");
         TransformationCatalogYAMLParser parser =
-                new TransformationCatalogYAMLParser(createBag(), schemaDir);
+                new TransformationCatalogYAMLParser(createBag(), new Properties(), schemaDir);
 
         Field schemaField =
                 TransformationCatalogYAMLParser.class.getDeclaredField("SCHEMA_FILENAME");
@@ -69,7 +69,8 @@ public class TransformationCatalogYAMLParserTest {
     @Test
     public void testParseMissingFileReturnsEmptyStore() throws Exception {
         TransformationCatalogYAMLParser parser =
-                new TransformationCatalogYAMLParser(createBag(), new File("share/pegasus/schema"));
+                new TransformationCatalogYAMLParser(
+                        createBag(), new Properties(), new File("share/pegasus/schema"));
 
         TransformationStore store =
                 parser.parse("test/junit/does-not-exist-transformation-catalog.yml", false);
@@ -85,7 +86,8 @@ public class TransformationCatalogYAMLParserTest {
     @Test
     public void testParseEmptyFileReturnsEmptyStore() throws Exception {
         TransformationCatalogYAMLParser parser =
-                new TransformationCatalogYAMLParser(createBag(), new File("share/pegasus/schema"));
+                new TransformationCatalogYAMLParser(
+                        createBag(), new Properties(), new File("share/pegasus/schema"));
         Path file = Files.createTempFile("transformation-catalog-empty-", ".yml");
 
         try {
@@ -102,7 +104,8 @@ public class TransformationCatalogYAMLParserTest {
     @Test
     public void testParseValidMinimalCatalogReturnsEntries() throws Exception {
         TransformationCatalogYAMLParser parser =
-                new TransformationCatalogYAMLParser(createBag(), new File("share/pegasus/schema"));
+                new TransformationCatalogYAMLParser(
+                        createBag(), new Properties(), new File("share/pegasus/schema"));
         Path file = Files.createTempFile("transformation-catalog-", ".yml");
 
         String yaml =
