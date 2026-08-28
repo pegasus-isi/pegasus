@@ -8,6 +8,8 @@ TOPDIR=$(pwd)
 echo
 echo "Available artifacts are:"
 ls -lh dist/
+ls -lh dist/deb
+ls -lh dist/rpm
 echo
 
 VERSION=`./release-tools/getversion`
@@ -23,12 +25,10 @@ tar xzf pegasus-doc-*.tar.gz -C docs
 
 DOWNLOADS=pegasus/$VERSION
 mkdir -p $DOWNLOADS
-mv pegasus-$VERSION.tar.gz $DOWNLOADS/
-mv pegasus-binary-*.tar.gz $DOWNLOADS/
 mv pegasus-worker-*.tar.gz $DOWNLOADS/
 mv pegasus-doc-*.tar.gz $DOWNLOADS/
-mv *.deb $DOWNLOADS/
-mv *.rpm $DOWNLOADS/
+mv deb/*.deb $DOWNLOADS/
+mv rpm/*.rpm $DOWNLOADS/
 mv pegasus_wms*.tar.gz $DOWNLOADS/
 mv pegasus_wms*.whl $DOWNLOADS/
 
@@ -63,8 +63,8 @@ done
 
 # standard filesnames for DEBs
 cd $TOPDIR/dist/$DOWNLOADS
-for TIMESTAMPED in $(ls *dev.020*.deb 2>&1); do
-    SIMPLE=`echo $TIMESTAMPED | sed -E 's/~-dev.020[0-9]+/-dev/'`
+for TIMESTAMPED in $(ls *dev020*.deb 2>&1); do
+    SIMPLE=`echo $TIMESTAMPED | sed -E 's/~-dev020[0-9]+/-dev/'`
     if [ ! -e $SIMPLE ]; then
         cp $TIMESTAMPED $SIMPLE
     fi
@@ -72,8 +72,6 @@ done
 
 # rhel
 cd $TOPDIR/dist
-mkdir -p $DOWNLOADS/rhel/src
-cp $DOWNLOADS/pegasus-*.src.rpm $DOWNLOADS/rhel/src/
 
 for OSARCH in aarch64 x86_64; do
     for OSVER in $(seq 7 12); do
@@ -111,7 +109,30 @@ mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 
 NOW=$(date +'%s')
-tar -xz --transform="s/^pegasus-$VERSION/pegasus-$VERSION-$NOW/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+# The wheel requires Python >=3.10 (globus-sdk>=3.23.0 needs Python >=3.8)
+PYTHON=
+for CANDIDATE in python3.14 python3.13 python3.12 python3.11 python3.10; do
+    if command -v $CANDIDATE >/dev/null 2>&1; then
+        PYTHON=$CANDIDATE
+        break
+    fi
+done
+if [ "X$PYTHON" = "X" ]; then
+    echo "Unable to find a Python >=3.10 interpreter to build the venv! Exiting..."
+    exit 1
+fi
+
+$PYTHON -m venv pegasus-$VERSION-$NOW
+pegasus-$VERSION-$NOW/bin/pip install --upgrade pip
+# Wheels are auditwheel-repaired in CI, so the tag is <manylinux|musllinux>_<glibc>_x86_64
+# Pick manylinux with the lowest GLIBC floor on scitech for compatibility
+WHEEL=$(ls $TOPDIR/dist/$DOWNLOADS/pegasus_wms-*-manylinux*_x86_64.whl 2>/dev/null | sort -V | head -1)
+if [ "X$WHEEL" = "X" ]; then
+    echo "No manylinux x86_64 wheel found in $TOPDIR/dist/$DOWNLOADS - was repair-wheel run?" >&2
+    exit 1
+fi
+echo "Installing shared workflow-test install from $WHEEL"
+pegasus-$VERSION-$NOW/bin/pip install "$WHEEL"
 
 # update symlink
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION

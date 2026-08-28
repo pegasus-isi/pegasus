@@ -13,11 +13,9 @@ make                    # Build pegasus-mpi-cluster (requires mpicxx in PATH)
 make test               # Build + run unit tests + cppcheck + integration tests (test/test.sh)
 make clean              # Remove .o files, test binaries, version.h, depends.mk
 make distclean          # clean + remove pegasus-mpi-cluster binary
-make install            # Install to $(PEGASUS_HOME)/bin (or override with prefix=)
 
-# From repo root
-ant compile-pegasus-mpi-cluster   # Build via ant
-ant test-pmc                      # Run PMC tests via ant
+# From repo root (MPI cluster is opt-in; disabled by default)
+cmake -B _cmake_build -DPEGASUS_BUILD_MPI=ON && cmake --build _cmake_build --target pegasus-mpi-cluster
 ```
 
 The compiler is `mpicxx` by default. Override with `CXX=<path-to-mpi-compiler> make`.

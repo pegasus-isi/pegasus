@@ -1,14 +1,12 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-JAVA_HOME := $(firstword $(wildcard /usr/lib/jvm/java-11-openjdk-$(DEB_HOST_ARCH)) $(wildcard /usr/lib/jvm/java-8-openjdk-$(DEB_HOST_ARCH)) )
-PATH := ${JAVA_HOME}/bin:${PATH}
+PYTHON3 := python3
 
 
-# make sure packages are compatible with out repo tools
+# Build .deb with gzip compression (compatible with older apt)
 # https://stackoverflow.com/questions/71196872/how-do-i-build-a-deb-without-zstd-compression-in-ubuntu-21-10
 override_dh_builddeb:
 	dh_builddeb -- -Zgzip
@@ -19,9 +17,12 @@ build: build-stamp
 
 build-stamp:
 	dh_testdir
-	ant dist-release
-	rm -f dist/*.tar.gz
-	mv dist/pegasus-* dist/pegasus
+
+	# Install build tooling into a temporary virtualenv (not available as distro packages)
+	$(PYTHON3) -m venv _build_venv
+	_build_venv/bin/pip install --upgrade pip scikit-build-core build
+	PYTHON=_build_venv/bin/python make build-worker dist-wheel
+
 	touch build-stamp
 
 
@@ -31,35 +32,56 @@ install: build
 	dh_prep
 	dh_installdirs
 
-	# /etc/pegasus
-	mkdir -p debian/pegasus/etc/pegasus
-	cp -a dist/pegasus/etc/* debian/pegasus/etc/pegasus/
+	# Build a self-contained venv holding Pegasus + all runtime dependencies, the
+	# CLI entry-point scripts, the C binaries and the JARs. Nothing is installed
+	# into the system dist-packages, so the bundled deps (Flask, sqlalchemy,
+	# boto3, globus-sdk, ...) cannot conflict with or shadow distro packages.
+	$(PYTHON3) -m venv debian/pegasus/usr/lib/pegasus/venv
+	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --upgrade pip
+	debian/pegasus/usr/lib/pegasus/venv/bin/pip install dist/pegasus_wms-*.whl
 
-	# /usr/bin
-	mkdir -p debian/pegasus/usr
-	cp -r dist/pegasus/bin debian/pegasus/usr/
-	strip debian/pegasus/usr/bin/pegasus-cluster
-	strip debian/pegasus/usr/bin/pegasus-keg
-	strip debian/pegasus/usr/bin/pegasus-kickstart
+	# The venv was created under debian/pegasus; strip that build-time prefix from
+	# the generated script shebangs and pyvenv.cfg so paths are correct once
+	# installed. (bin/python is a symlink to the system interpreter, already ok.)
+	grep -rlI '$(CURDIR)/debian/pegasus' debian/pegasus/usr/lib/pegasus/venv/bin \
+	    | xargs -r sed -i 's|$(CURDIR)/debian/pegasus||g'
+	sed -i 's|$(CURDIR)/debian/pegasus||g' debian/pegasus/usr/lib/pegasus/venv/pyvenv.cfg
 
-	# /usr/share/
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/share debian/pegasus/usr/
-	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
-	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
-	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
-	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
+	# Strip C executables (they live in the venv's bin/)
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-kickstart
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-cluster
+	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-keg
 
-	# /usr/lib
-	mkdir -p debian/pegasus/usr
-	cp -a dist/pegasus/lib debian/pegasus/usr/
+	# Put the CLI + C binaries on PATH via symlinks into /usr/bin
+	mkdir -p debian/pegasus/usr/bin
+	for f in debian/pegasus/usr/lib/pegasus/venv/bin/pegasus*; do \
+	    ln -s /usr/lib/pegasus/venv/bin/$$(basename $$f) \
+	        debian/pegasus/usr/bin/$$(basename $$f); \
+	done
 
-	# remove stuff we don't need
-	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
+	# Make `import Pegasus` work from the system python3 WITHOUT exposing the
+	# bundled runtime deps. A .pth adds a curated dir that symlinks only the
+	# Pegasus package and its single API-surface dep (PyYAML); the heavy deps
+	# stay private to the venv.
+	mkdir -p debian/pegasus/usr/lib/pegasus/site debian/pegasus/usr/lib/python3/dist-packages
+	venv_site=$$(debian/pegasus/usr/lib/pegasus/venv/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))"); \
+	venv_site=$${venv_site#$(CURDIR)/debian/pegasus}; \
+	for item in Pegasus pegasus_wms-*.dist-info yaml _yaml _yaml*.so PyYAML-*.dist-info pyyaml-*.dist-info; do \
+	    for src in debian/pegasus$$venv_site/$$item; do \
+	        [ -e "$$src" ] || continue; \
+	        ln -s $$venv_site/$$(basename $$src) debian/pegasus/usr/lib/pegasus/site/; \
+	    done; \
+	done
+	echo /usr/lib/pegasus/site > debian/pegasus/usr/lib/python3/dist-packages/pegasus.pth
 
-	# no pyc files in debian packages
-	find debian/pegasus/ -name \*.pyc -exec rm {} \;
-	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \;
+	# Install systemd service unit from source tree
+	install -d debian/pegasus/lib/systemd/system
+	install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \
+	    debian/pegasus/lib/systemd/system/
+
+	# Remove pyc files and __pycache__
+	find debian/pegasus/ -name \*.pyc -delete
+	find debian/pegasus/ -depth -name __pycache__ -exec rm -rf {} \; 2>/dev/null || true
 
 
 # Build architecture-independent files here.
@@ -89,9 +111,8 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-	ant clean
-	rm -f src/externals/._boto*
-	rm -rf dist
+	make clean
+	rm -rf _build_venv
 	dh_clean
 
 
@@ -100,4 +121,4 @@ clean:
 	exit 1
 
 
-.PHONY: build  binary-indep binary-arch binary install clean
+.PHONY: build binary-indep binary-arch binary install clean
