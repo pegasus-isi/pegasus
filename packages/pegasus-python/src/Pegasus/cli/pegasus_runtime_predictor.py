@@ -98,6 +98,20 @@ def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
     return size_map
 
 
+def _append_level_timing(output_dir: str, level, num_jobs: int, duration_s: float) -> None:
+    """Record how long it took to compute predictions for one DAG level."""
+    timing_csv = os.path.join(output_dir, "level_prediction_timings.csv")
+    header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
+    with open(timing_csv, "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            if header_needed:
+                fh.write("dag_level,num_jobs,prediction_duration_s\n")
+            fh.write(f"{level if level is not None else 'all'},{num_jobs},{duration_s:.3f}\n")
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
 def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float, level) -> None:
     """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
     timing_csv = os.path.join(output_dir, "prescript_timings.csv")
@@ -178,14 +192,18 @@ def main():
             for jid, info in sub_scan.items()
         }
 
+        _pred_start = time.time()
         results = predictor.predict(wf, sub_resources=sub_resources)
+        _pred_duration = time.time() - _pred_start
 
         if target_level is not None and results:
             level_results = [r for r in results if r.get("dag_level") == target_level]
-            print(f"[pegasus-runtime-predictor] Level {target_level}: {len(level_results)} job(s) predicted")
+            print(f"[pegasus-runtime-predictor] Level {target_level}: {len(level_results)} job(s) predicted in {_pred_duration:.3f}s")
         else:
             level_results = results
-            print(f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted")
+            print(f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted in {_pred_duration:.3f}s")
+
+        _append_level_timing(output_dir, target_level, len(level_results), _pred_duration)
 
         import pandas as pd
 
