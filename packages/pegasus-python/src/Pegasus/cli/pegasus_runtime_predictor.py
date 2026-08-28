@@ -13,6 +13,7 @@ Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
     pegasus-runtime-predictor <workflow.yml> <output_dir> [--level=N] [--job-id=ID]
 """
 
+import fcntl
 import json
 import os
 import sys
@@ -97,7 +98,23 @@ def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
     return size_map
 
 
+def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float) -> None:
+    """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
+    timing_csv = os.path.join(output_dir, "prescript_timings.csv")
+    header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
+    with open(timing_csv, "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            if header_needed:
+                fh.write("job_id,prescript_duration_s\n")
+            fh.write(f"{job_id},{duration_s:.3f}\n")
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
 def main():
+    _start_time = time.time()
+
     if len(sys.argv) < 3:
         print(
             f"Usage: {sys.argv[0]} <workflow.yml> <output_dir> [--level=N] [--job-id=ID]",
@@ -244,6 +261,13 @@ def main():
                           file=sys.stderr)
         else:
             print(f"[pegasus-runtime-predictor] No prediction found for {caller_job_id}")
+
+    # ── Record how long this prescript invocation took ─────────────────────
+    if caller_job_id:
+        prescript_duration_s = time.time() - _start_time
+        _append_prescript_timing(output_dir, caller_job_id, prescript_duration_s)
+        print(f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
+              f"{prescript_duration_s:.3f}s")
 
 
 def _run():
