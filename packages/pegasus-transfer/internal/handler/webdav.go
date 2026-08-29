@@ -40,7 +40,18 @@ func NewWebdavHandler(hooks Hooks, credentials *creds.INI) *WebdavHandler {
 		},
 		Hooks:       hooks,
 		Credentials: credentials,
-		Client:      &http.Client{},
+		Client: &http.Client{
+			// Go's default redirect handling downgrades any non-GET/HEAD
+			// method to GET on a 301/302/303 (net/http's redirectBehavior).
+			// Apache's mod_dav sends exactly such a redirect on MKCOL/DELETE
+			// against a collection whose path is missing its trailing slash
+			// -- silently following it would turn a PUT into a GET and
+			// "succeed" without ever uploading. Disable auto-follow so every
+			// method sees the real status code and callers decide.
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		},
 		createdDirs: map[string]bool{},
 	}
 }
@@ -111,8 +122,15 @@ func (h *WebdavHandler) createDir(ctx context.Context, dirURL, user, pass string
 			return err
 		}
 		resp.Body.Close()
-		// 201 Created, or 405 Method Not Allowed (already exists) are both fine.
-		if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusMethodNotAllowed {
+		// 201 Created is a fresh collection. 405 Method Not Allowed is the
+		// usual "already exists". Some servers (observed on Apache mod_dav)
+		// instead answer MKCOL on an existing collection with a 301/302 to
+		// the trailing-slash canonical form -- also "already exists", not
+		// followed since CheckRedirect above disables that.
+		switch resp.StatusCode {
+		case http.StatusCreated, http.StatusMethodNotAllowed, http.StatusMovedPermanently, http.StatusFound:
+			// already exists or freshly created; continue
+		default:
 			return fmt.Errorf("MKCOL %s: HTTP %s", u, resp.Status)
 		}
 	}
