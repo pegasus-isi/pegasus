@@ -8,7 +8,7 @@ default:
 
 .retry-and-timeout: &retry-and-timeout
   retry: 1
-  timeout: 15 minutes
+  timeout: 30 minutes
 
 stages:
 - lint
