@@ -1,15 +1,17 @@
 import logging
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 from Pegasus.api import *
-from Pegasus.tools import worker_utils as utils
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = utils.backticks("which pegasus-keg").strip()
+PEGASUS_LOCATION = subprocess.check_output(
+    "which pegasus-keg", shell=True, text=True
+).strip()
 
 
 # --- Work Dir Setup -----------------------------------------------------------

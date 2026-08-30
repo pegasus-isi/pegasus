@@ -143,6 +143,42 @@ func TestWebdavHandler_Remove(t *testing.T) {
 	}
 }
 
+// TestWebdavHandler_RemoveFollowsRedirectAsSuccess covers a mod_dav server
+// answering DELETE on a collection with a 301 to the trailing-slash
+// canonical form (the same redirect createDir already treats as "already
+// exists" for MKCOL) -- CheckRedirect stops it from being auto-followed, but
+// it must still count as a successful remove rather than an error.
+func TestWebdavHandler_RemoveFollowsRedirectAsSuccess(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, _, ok := r.BasicAuth(); !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if r.Method == http.MethodDelete {
+			w.Header().Set("Location", r.URL.String()+"/")
+			w.WriteHeader(http.StatusMovedPermanently)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	defer srv.Close()
+	host := strings.TrimPrefix(srv.URL, "http://")
+	credsIni := webdavCreds(t, host, "alice", "secret")
+
+	target, err := model.NewPegasusURL("webdav://"+host+"/coll", "", "remote", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := NewWebdavHandler(Hooks{}, credsIni)
+	res := h.DoRemoves(context.Background(), []*model.Remove{{Target: target}})
+	if len(res.Failed) != 0 {
+		t.Fatalf("expected 301 to be treated as success, got failures: %v", res.Failed)
+	}
+	if len(res.Succeeded) != 1 {
+		t.Fatalf("expected 1 succeeded, got %+v", res)
+	}
+}
+
 // sanity check that basic auth headers are actually base64(user:pass) as
 // net/http's SetBasicAuth produces, guarding against a future refactor
 // accidentally sending credentials some other way.

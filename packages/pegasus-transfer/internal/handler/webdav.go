@@ -267,12 +267,20 @@ func (h *WebdavHandler) DoRemoves(ctx context.Context, removes []*model.Remove) 
 			continue
 		}
 		resp.Body.Close()
-		if resp.StatusCode < 200 || resp.StatusCode >= 300 && resp.StatusCode != http.StatusNotFound {
+		// 404 means it's already gone -- treat as success. 301 is the same
+		// mod_dav "missing trailing slash" redirect handled in createDir:
+		// CheckRedirect above stops it from being followed, but the redirect
+		// itself confirms the collection exists and would have been deleted
+		// had the client followed it, so it's also a success here.
+		switch {
+		case resp.StatusCode >= 200 && resp.StatusCode < 300,
+			resp.StatusCode == http.StatusMovedPermanently,
+			resp.StatusCode == http.StatusNotFound:
+			res.Succeeded = append(res.Succeeded, r)
+		default:
 			h.logger().Error("webdav delete failed", "url", url, "status", resp.Status)
 			res.Failed = append(res.Failed, r)
-			continue
 		}
-		res.Succeeded = append(res.Succeeded, r)
 	}
 	return res
 }
