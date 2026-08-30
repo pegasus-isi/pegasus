@@ -664,56 +664,50 @@ def read_meta_sizes(submit_dir: str) -> dict:
 
 def scan_sub_files(submit_dir: str) -> dict:
     """
-    Single-pass scan of all HTCondor .sub files in *submit_dir*.
+    Parallel scan of all HTCondor .sub files in *submit_dir*.
 
-    For each file that belongs to a user job (has a non-null
-    ``+pegasus_wf_dax_job_id`` ClassAd) this extracts:
+    Reads each file exactly once using a thread pool (32 workers) to
+    amortise NFS latency. For each file belonging to a user job (non-null
+    ``+pegasus_wf_dax_job_id``) extracts:
 
-    - ``request_cpus``    — CPUs requested in the .sub file
-    - ``request_memory_mb`` — memory requested in the .sub file (MB)
-    - ``sub_path``        — absolute path to the .sub file (for later patching)
+    - ``request_cpus``          — CPUs requested
+    - ``request_memory_mb``     — memory requested (MB)
+    - ``sub_path``              — absolute path (for patching)
+    - ``cluster_in_file``       — path to .in file if clustered job
+    - ``cluster_transformation``— transformation name for clustered job
 
-    Infrastructure jobs (stage-in, cleanup, create-dir, etc.) have
-    ``+pegasus_wf_dax_job_id = "null"`` and are skipped.
-
-    Returns
-    -------
-    dict
-        ``{dax_job_id: {"request_cpus": int|None,
-                        "request_memory_mb": float|None,
-                        "sub_path": str}}``
+    Infrastructure jobs (``+pegasus_wf_dax_job_id = "null"``) are skipped.
     """
-    result  = {}
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     sub_dir = Path(submit_dir)
     if not sub_dir.is_dir():
-        return result
+        return {}
 
-    for sub_path in sub_dir.rglob("*.sub"):  # recursive — finds jobs in 00/00/
-        dax_job_id = None
-        req_cpus   = None
-        req_memory = None
-        try:
-            for line in sub_path.read_text().splitlines():
-                line = line.strip()
-                m = re.match(
-                    r'\+pegasus_wf_dax_job_id\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE
-                )
-                if m and m.group(1).lower() != "null":
-                    dax_job_id = m.group(1)
-                m = re.match(r'request_cpus\s*=\s*(\d+)', line, re.IGNORECASE)
-                if m:
-                    req_cpus = int(m.group(1))
-                m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
-                if m:
-                    req_memory = float(m.group(1))
-        except OSError:
-            continue
+    sub_paths = list(sub_dir.rglob("*.sub"))
 
-        # Detect cluster jobs — Arguments line references a .in file
-        cluster_in_file = None
+    def _parse_one(sub_path: Path):
+        dax_job_id           = None
+        req_cpus             = None
+        req_memory           = None
+        cluster_in_file      = None
         cluster_transformation = None
-        for line in sub_path.read_text().splitlines():
-            line = line.strip()
+        try:
+            lines = sub_path.read_text().splitlines()
+        except OSError:
+            return None, None
+
+        for raw in lines:
+            line = raw.strip()
+            m = re.match(r'\+pegasus_wf_dax_job_id\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+            if m and m.group(1).lower() != "null":
+                dax_job_id = m.group(1)
+            m = re.match(r'request_cpus\s*=\s*(\d+)', line, re.IGNORECASE)
+            if m:
+                req_cpus = int(m.group(1))
+            m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
+            if m:
+                req_memory = float(m.group(1))
             m = re.match(r'arguments\s*=\s*.*?(\S+\.in)\b', line, re.IGNORECASE)
             if m:
                 in_path = sub_path.parent / m.group(1)
@@ -723,14 +717,24 @@ def scan_sub_files(submit_dir: str) -> dict:
             if m:
                 cluster_transformation = m.group(1)
 
-        if dax_job_id:
-            result[dax_job_id] = {
-                "request_cpus":        req_cpus,
-                "request_memory_mb":   req_memory,
-                "sub_path":            str(sub_path),
-                "cluster_in_file":     cluster_in_file,
-                "cluster_transformation": cluster_transformation,
-            }
+        if not dax_job_id:
+            return None, None
+
+        return dax_job_id, {
+            "request_cpus":           req_cpus,
+            "request_memory_mb":      req_memory,
+            "sub_path":               str(sub_path),
+            "cluster_in_file":        cluster_in_file,
+            "cluster_transformation": cluster_transformation,
+        }
+
+    result = {}
+    with ThreadPoolExecutor(max_workers=32) as executor:
+        futures = {executor.submit(_parse_one, p): p for p in sub_paths}
+        for future in as_completed(futures):
+            job_id, info = future.result()
+            if job_id:
+                result[job_id] = info
 
     return result
 
