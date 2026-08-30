@@ -62,6 +62,7 @@ func (h *GSIScpHandler) DoTransfers(ctx context.Context, transfers []*model.Tran
 			argv = []string{"gsiscp", "-P", extractPort(t.SrcHost()), extractHostname(t.SrcHost()) + ":" + t.SrcPath(), t.DstPath()}
 		} else {
 			if !VerifyLocalFile(t.SrcPath()) {
+				h.logger().Error("source file does not exist or is not readable", "src", t.SrcPath())
 				h.PostTransferAttempt(t, false, start)
 				res.Failed = append(res.Failed, t)
 				continue

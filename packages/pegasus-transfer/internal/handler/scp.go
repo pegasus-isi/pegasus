@@ -119,6 +119,7 @@ func (h *ScpHandler) DoTransfers(ctx context.Context, transfers []*model.Transfe
 			argv = append(argv, extractHostname(t.SrcHost())+":"+t.SrcPath(), t.DstPath())
 		} else {
 			if !VerifyLocalFile(t.SrcPath()) {
+				h.logger().Error("source file does not exist or is not readable", "src", t.SrcPath())
 				h.PostTransferAttempt(t, false, start)
 				res.Failed = append(res.Failed, t)
 				continue

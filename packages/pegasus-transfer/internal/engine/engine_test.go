@@ -179,6 +179,68 @@ func TestSubTransferRotation_RetriedWithinSameAttempt(t *testing.T) {
 	}
 }
 
+// TestRun_TwoStageSplit reproduces the reported bug: a src/dst protocol pair
+// with no direct handler (mirroring scp->s3s) but which two registered
+// handlers can bridge via a local temp file (scp->file, then file->s3s).
+// Before dispatchTwoStage existed, this failed every attempt with "no
+// handler found for protocol pair" even though transfer.py handled it via
+// its split-transfer fallback.
+func TestRun_TwoStageSplit(t *testing.T) {
+	down := newFakeHandler([]string{"scp->file"}, 0)
+	up := newFakeHandler([]string{"file->s3s"}, 0)
+	reg := handler.NewRegistry(down, up)
+
+	entries := []model.Entry{mustTransfer(t, "scp://host/path/a", "s3s://bucket/key/a")}
+
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if !ok {
+		t.Fatal("expected the two-stage split to succeed")
+	}
+	if down.transferCalls.Load() != 1 {
+		t.Errorf("expected the download leg to run once, got %d calls", down.transferCalls.Load())
+	}
+	if up.transferCalls.Load() != 1 {
+		t.Errorf("expected the upload leg to run once, got %d calls", up.transferCalls.Load())
+	}
+}
+
+// TestRun_TwoStageSplit_OnlyOneLegAvailable makes sure a partial bridge (only
+// src->file, no file->dst) still fails cleanly with "no handler found"
+// rather than silently dropping data or panicking.
+func TestRun_TwoStageSplit_OnlyOneLegAvailable(t *testing.T) {
+	down := newFakeHandler([]string{"scp->file"}, 0)
+	reg := handler.NewRegistry(down)
+
+	entries := []model.Entry{mustTransfer(t, "scp://host/path/a", "s3s://bucket/key/a")}
+
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if ok {
+		t.Fatal("expected failure when only one leg of the bridge has a handler")
+	}
+	if down.transferCalls.Load() != 0 {
+		t.Errorf("expected the download leg to never run without an upload leg, got %d calls", down.transferCalls.Load())
+	}
+}
+
+// TestRun_TwoStageSplit_DownloadFails makes sure a failed download leg never
+// attempts the upload leg, and the original transfer is reported failed
+// (not the synthetic per-leg transfer).
+func TestRun_TwoStageSplit_DownloadFails(t *testing.T) {
+	down := newFakeHandler([]string{"scp->file"}, 100) // always fails
+	up := newFakeHandler([]string{"file->s3s"}, 0)
+	reg := handler.NewRegistry(down, up)
+
+	entries := []model.Entry{mustTransfer(t, "scp://host/path/a", "s3s://bucket/key/a")}
+
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if ok {
+		t.Fatal("expected failure when the download leg fails")
+	}
+	if up.transferCalls.Load() != 0 {
+		t.Errorf("expected the upload leg to never run after a failed download, got %d calls", up.transferCalls.Load())
+	}
+}
+
 type recordingHandler struct {
 	handler.Base
 	seen *[]string

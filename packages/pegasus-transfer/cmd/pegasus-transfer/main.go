@@ -84,8 +84,7 @@ func setupLogger(debug bool) *slog.Logger {
 	if debug {
 		level = slog.LevelDebug
 	}
-	h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})
-	return slog.New(h)
+	return slog.New(newPlainHandler(os.Stderr, level))
 }
 
 // pegasusTransfer is the library-style entry point, matching transfer.py's

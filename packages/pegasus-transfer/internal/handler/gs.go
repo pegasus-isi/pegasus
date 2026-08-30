@@ -141,6 +141,7 @@ func (h *GSHandler) DoTransfers(ctx context.Context, transfers []*model.Transfer
 			src, dst = t.SrcURL(), t.DstPath()
 		default:
 			if !VerifyLocalFile(t.SrcPath()) {
+				h.logger().Error("source file does not exist or is not readable", "src", t.SrcPath())
 				h.PostTransferAttempt(t, false, start)
 				res.Failed = append(res.Failed, t)
 				continue

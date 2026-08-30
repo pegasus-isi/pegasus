@@ -2,7 +2,9 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"os"
 	"sort"
 
 	"github.com/pegasus-isi/pegasus/packages/pegasus-transfer/internal/handler"
@@ -97,7 +99,10 @@ func groupEntries(entries []model.Entry, maxPerGroup int) [][]model.Entry {
 }
 
 // dispatch finds the handler for a group's protocol pair and runs the
-// appropriate Do* method, matching main()'s per-SimilarWorkSet handling.
+// appropriate Do* method, matching main()'s per-SimilarWorkSet handling. When
+// no single handler bridges an incompatible src/dst pair directly, it falls
+// back to a two-stage transfer via a local temp file (see dispatchTwoStage),
+// matching transfer.py's TransferHandlerHandle split-transfer fallback.
 func dispatch(ctx context.Context, registry *handler.Registry, group []model.Entry, log *slog.Logger) (succeeded, failed []model.Entry) {
 	if len(group) == 0 {
 		return nil, nil
@@ -105,6 +110,13 @@ func dispatch(ctx context.Context, registry *handler.Registry, group []model.Ent
 	src, dst := protoPair(group[0])
 	h := registry.Find(src, dst)
 	if h == nil {
+		if _, ok := group[0].(*model.Transfer); ok {
+			if down, up := findTwoStageHandlers(registry, src, dst); down != nil && up != nil {
+				log.Debug("no direct handler for protocol pair, splitting via local temp file",
+					"src", src, "dst", dst, "downHandler", down.Name(), "upHandler", up.Name())
+				return dispatchTwoStage(ctx, down, up, group, log)
+			}
+		}
 		log.Error("no handler found for protocol pair", "src", src, "dst", dst)
 		return nil, group
 	}
@@ -113,24 +125,132 @@ func dispatch(ctx context.Context, registry *handler.Registry, group []model.Ent
 	case *model.Transfer:
 		transfers := make([]*model.Transfer, len(group))
 		for i, e := range group {
-			transfers[i] = e.(*model.Transfer)
+			t := e.(*model.Transfer)
+			transfers[i] = t
+			log.Info("transferring", "src", t.SrcURL(), "dst", t.DstURL())
 		}
 		res := h.DoTransfers(ctx, transfers)
 		return res.Succeeded, res.Failed
 	case *model.Mkdir:
 		mkdirs := make([]*model.Mkdir, len(group))
 		for i, e := range group {
-			mkdirs[i] = e.(*model.Mkdir)
+			m := e.(*model.Mkdir)
+			mkdirs[i] = m
+			log.Info("creating directory", "target", m.URL())
 		}
 		res := h.DoMkdirs(ctx, mkdirs)
 		return res.Succeeded, res.Failed
 	case *model.Remove:
 		removes := make([]*model.Remove, len(group))
 		for i, e := range group {
-			removes[i] = e.(*model.Remove)
+			r := e.(*model.Remove)
+			removes[i] = r
+			log.Info("removing", "target", r.URL())
 		}
 		res := h.DoRemoves(ctx, removes)
 		return res.Succeeded, res.Failed
 	}
 	return nil, group
+}
+
+// findTwoStageHandlers looks for a pair of handlers that can bridge an
+// incompatible src->dst pair via a local temporary file: one that accepts
+// src->file (the "down" leg) and one that accepts file->dst (the "up" leg),
+// matching transfer.py's TransferHandlerHandle.__init__ split-transfer
+// fallback (the search it falls into once no single handler answers
+// protocol_check(src_proto, dst_proto) directly). "symlink" as a destination
+// is looked up as "file" instead, matching transfer.py's dst_proto override
+// right before that secondary-handler search -- the actual transfer built in
+// dispatchTwoStage still targets the real symlink:// destination.
+func findTwoStageHandlers(registry *handler.Registry, srcProto, dstProto string) (down, up handler.Handler) {
+	lookupDst := dstProto
+	if lookupDst == "symlink" {
+		lookupDst = "file"
+	}
+	down = registry.Find(srcProto, "file")
+	up = registry.Find("file", lookupDst)
+	if down == nil || up == nil {
+		return nil, nil
+	}
+	return down, up
+}
+
+// dispatchTwoStage runs every transfer in group as two legs -- src to a local
+// temp file, then that temp file to dst -- matching transfer.py's
+// TransferHandlerHandle.do_transfers "self._secondary_handler is not None"
+// branch.
+//
+// SIMPLIFICATION: transfer.py allocates a single temp file per
+// TransferHandlerHandle (i.e. per SimilarWorkSet) and reuses it across every
+// transfer in the set sequentially -- safe there only because a WorkThread
+// processes its set one transfer at a time. This uses one temp file per
+// transfer instead: simpler, and no less correct, since two-stage entries are
+// already handled one at a time here.
+func dispatchTwoStage(ctx context.Context, down, up handler.Handler, group []model.Entry, log *slog.Logger) (succeeded, failed []model.Entry) {
+	for _, e := range group {
+		t := e.(*model.Transfer)
+		log.Info("transferring", "src", t.SrcURL(), "dst", t.DstURL(), "via", "local temp file")
+		ok, err := runTwoStageTransfer(ctx, down, up, t)
+		if err != nil {
+			log.Error("two-stage transfer setup failed", "lfn", t.LFN, "error", err)
+		}
+		if ok {
+			succeeded = append(succeeded, t)
+		} else {
+			failed = append(failed, t)
+		}
+	}
+	return succeeded, failed
+}
+
+// runTwoStageTransfer downloads t's source to a local temp file via down,
+// then uploads that temp file to t's destination via up, matching
+// transfer.py's t_one/t_two split (transfer.py's
+// TransferHandlerHandle.do_transfers, "we have a two stage transfer" branch).
+// generate_checksum is carried onto the download leg only, so a successful
+// download checksums the now-local copy -- exactly like transfer.py only
+// setting t_one.generate_checksum.
+func runTwoStageTransfer(ctx context.Context, down, up handler.Handler, t *model.Transfer) (bool, error) {
+	tmp, err := os.CreateTemp("", "pegasus-transfer-*.data")
+	if err != nil {
+		return false, fmt.Errorf("creating temp file for two-stage transfer: %w", err)
+	}
+	tmpName := tmp.Name()
+	tmp.Close()
+	defer os.Remove(tmpName)
+
+	downLeg := model.NewTransfer()
+	downLeg.LFN = t.LFN
+	downLeg.GenerateChecksum = t.GenerateChecksum
+	if err := downLeg.AddSrc(t.SrcSiteLabel(), t.SrcURL(), t.SrcType(), nil); err != nil {
+		return false, err
+	}
+	if err := downLeg.AddDst("local", "file://"+tmpName, "", nil); err != nil {
+		return false, err
+	}
+
+	downRes := down.DoTransfers(ctx, []*model.Transfer{downLeg})
+	if len(downRes.Succeeded) != 1 {
+		return false, nil
+	}
+
+	// Open the permissions up to make sure the upload leg (potentially
+	// running under different assumptions about inherited permissions) gets
+	// sane access, matching transfer.py's os.chmod(tmp_name, 0o0644) between
+	// legs.
+	if err := os.Chmod(tmpName, 0o644); err != nil {
+		return false, fmt.Errorf("chmod temp file for two-stage transfer: %w", err)
+	}
+
+	upLeg := model.NewTransfer()
+	upLeg.LFN = t.LFN
+	if err := upLeg.AddSrc("local", "file://"+tmpName, "", nil); err != nil {
+		return false, err
+	}
+	if err := upLeg.AddDst(t.DstSiteLabel(), t.DstURL(), t.DstType(), nil); err != nil {
+		return false, err
+	}
+
+	upRes := up.DoTransfers(ctx, []*model.Transfer{upLeg})
+	return len(upRes.Succeeded) == 1, nil
 }

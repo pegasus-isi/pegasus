@@ -57,6 +57,7 @@ func (h *FileHandler) DoTransfers(ctx context.Context, transfers []*model.Transf
 		}
 
 		if !VerifyLocalFile(t.SrcPath()) {
+			h.logger().Error("source file does not exist or is not readable", "src", t.SrcPath())
 			res.Failed = append(res.Failed, t)
 			h.PostTransferAttempt(t, false, start)
 			continue
