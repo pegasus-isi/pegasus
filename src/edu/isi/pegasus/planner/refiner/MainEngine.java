@@ -13,6 +13,11 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
@@ -25,7 +30,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -388,6 +395,10 @@ public class MainEngine extends Engine {
                         LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
+
+        // write out the in memory combined instance of site catalog
+        // and transformation catalogs also into the catalogs directory
+        serialize(siteStore, new File(directory, "sites-combined.yml"));
     }
 
     /**
@@ -459,5 +470,36 @@ public class MainEngine extends Engine {
         }
 
         return p;
+    }
+
+    /**
+     * Serializes an object to it's yaml representation.
+     *
+     * @param store
+     * @param file
+     */
+    private void serialize(Object store, File file) {
+        try {
+            // in case of yaml we write it directly to the output file so we are
+            // returning null..
+            ObjectMapper mapper =
+                    new ObjectMapper(
+                            new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+            mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+            String out = mapper.writeValueAsString(store);
+            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+            bw.write(out);
+            bw.close();
+        } catch (JsonProcessingException ex) {
+            mLogger.log(
+                    "Unable to serialize object in yaml representation to " + file,
+                    ex,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (IOException ioe) {
+            mLogger.log(
+                    "Unable to write out serialized object to " + file,
+                    ioe,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        }
     }
 }
