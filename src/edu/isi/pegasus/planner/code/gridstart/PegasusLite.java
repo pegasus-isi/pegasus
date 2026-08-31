@@ -813,7 +813,13 @@ public class PegasusLite implements GridStart {
 
             // PM-1192 update job to source a setup script in pegasus lite if set
             if (associateSetupScriptWithJob(job)) {
-                sb.append(".").append(" ").append("$").append(ENV.PEGASUS_LITE_ENV_SOURCE_KEY);
+                sb.append(".")
+                        .append(" ")
+                        .append("$")
+                        .append(ENV.PEGASUS_LITE_ENV_SOURCE_KEY)
+                        .append(" ")
+                        .append("1>&2")
+                        .append('\n');
             }
 
             // PM-1541 for dax jobs (that are setting up pegasus-plan prescript) set
