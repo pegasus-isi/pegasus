@@ -17,6 +17,10 @@ fi
 CONDA_VERSION=$1
 shift
 
+# Deactivate any venvs setup up by GitLab - we want to install the wheel into
+# the PyCBC conda environment
+deactivate || bin true
+
 mkdir -p $TEST_DIR
 cd $TEST_DIR
 
@@ -32,8 +36,9 @@ conda install anaconda::mkl --yes
 pip3 install --upgrade pip
 pip3 install --upgrade pip setuptools
 
-# install the pegasus python dependencies
-#pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+# install pegasus - how do we pick the right whl?
+ls -l $(START_DIR)/../../../dist/
+pip3 install $(START_DIR)/../../../dist/pegasus_wms*x86_64.whl
 
 # install pycbc
 git clone https://github.com/gwastro/pycbc.git
