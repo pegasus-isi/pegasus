@@ -56,15 +56,6 @@ for TARGET in \
     done
 done
 
-# standard filesnames for DEBs
-cd $TOPDIR/dist/$DOWNLOADS
-for TIMESTAMPED in $(ls *dev020*.deb 2>&1); do
-    SIMPLE=`echo $TIMESTAMPED | sed -E 's/~-dev020[0-9]+/-dev/'`
-    if [ ! -e $SIMPLE ]; then
-        cp $TIMESTAMPED $SIMPLE
-    fi
-done
-
 # rhel
 cd $TOPDIR/dist
 
