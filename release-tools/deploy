@@ -34,13 +34,8 @@ mv pegasus_wms*.whl $DOWNLOADS/
 
 # debian / ubuntu
 for TARGET in \
-    "deb10::buster" \
-    "deb11::bullseye" \
-    "deb12::bookworm" \
-    "deb13::trixie" \
-    "ubuntu18::bionic" \
-    "ubuntu20::focal" \
-    "ubuntu22::jammy" \
+    "debian12::bookworm" \
+    "debian13::trixie" \
     "ubuntu24::noble" \
     "ubuntu26::resolute" \
 ; do

@@ -17,15 +17,7 @@ if [ ! -e pyproject.toml ]; then
     exit 1
 fi
 
-VERSION=$(grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
-BASEVER=$(echo "$VERSION" | perl -pe 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-EXTRAVER=$(echo "$VERSION" | perl -pe 's/[0-9]+\.[0-9]+\.[0-9]+//')
-if [ -n "$EXTRAVER" ]; then
-    EXTRAVER="${EXTRAVER}$(date +'%Y%m%d%H%M')"
-    PACKAGE_VERSION="${BASEVER}~${EXTRAVER}"
-else
-    PACKAGE_VERSION="$VERSION"
-fi
+PACKAGE_VERSION=$(grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
 
 # Derive OSID (e.g. debian12, ubuntu24) from /etc/os-release. Avoid lsb_release,
 # which is not installed in the buildenv images.
