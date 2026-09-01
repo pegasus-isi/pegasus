@@ -20,6 +20,7 @@ shift
 # Deactivate any venvs setup up by GitLab - we want to install the wheel into
 # the PyCBC conda environment
 deactivate || true
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
 echo ==========
 env
 echo ==========
@@ -40,8 +41,8 @@ pip3 install --upgrade pip
 pip3 install --upgrade pip setuptools
 
 # install pegasus - how do we pick the right whl?
-ls -l $(START_DIR)/../../../dist/
-pip3 install $(START_DIR)/../../../dist/pegasus_wms*x86_64.whl
+ls -l ${START_DIR}/../../../dist/
+pip3 install ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
 
 # install pycbc
 git clone https://github.com/gwastro/pycbc.git
