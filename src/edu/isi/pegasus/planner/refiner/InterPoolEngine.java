@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DataFlowJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -99,12 +98,10 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     /** Handle to the estimator. */
     private Estimator mEstimator;
-
     /**
      * Handle to the transformation store that stores the transformation catalog entries picked up
      * from the transformations directory.
      */
-    private TransformationStore mDirectoriesTransformationStore;
 
     /**
      * Default constructor.
