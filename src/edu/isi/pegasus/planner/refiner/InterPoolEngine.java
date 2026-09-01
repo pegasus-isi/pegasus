@@ -98,6 +98,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     /** Handle to the estimator. */
     private Estimator mEstimator;
+
     /**
      * Handle to the transformation store that stores the transformation catalog entries picked up
      * from the transformations directory.
