@@ -19,7 +19,10 @@ shift
 
 # Deactivate any venvs setup up by GitLab - we want to install the wheel into
 # the PyCBC conda environment
-deactivate || bin true
+deactivate || true
+echo ==========
+env
+echo ==========
 
 mkdir -p $TEST_DIR
 cd $TEST_DIR
