@@ -83,12 +83,10 @@ public class TransformationStoreTest {
      * serialization must emit the container definition exactly once.
      */
     @Test
-    public void testSerializeContainerOnceWhenSharedByMultipleTransformations()
-            throws IOException {
+    public void testSerializeContainerOnceWhenSharedByMultipleTransformations() throws IOException {
         Container container = createDockerContainer("centos-pegasus");
 
-        TransformationCatalogEntry entry1 =
-                new TransformationCatalogEntry("example", "keg", "1.0");
+        TransformationCatalogEntry entry1 = new TransformationCatalogEntry("example", "keg", "1.0");
         entry1.setPhysicalTransformation("/usr/bin/keg");
         entry1.setResourceId("isi");
         entry1.setContainer(new Container("centos-pegasus"));
@@ -124,8 +122,7 @@ public class TransformationStoreTest {
     public void testSerializeContainerFromEntryNotRegisteredInStore() throws IOException {
         Container container = createDockerContainer("centos-pegasus");
 
-        TransformationCatalogEntry entry =
-                new TransformationCatalogEntry("example", "keg", "1.0");
+        TransformationCatalogEntry entry = new TransformationCatalogEntry("example", "keg", "1.0");
         entry.setPhysicalTransformation("/usr/bin/keg");
         entry.setResourceId("isi");
         entry.setContainer(container);
@@ -137,7 +134,8 @@ public class TransformationStoreTest {
         ObjectMapper mapper = getObjectMapper();
         String yaml = mapper.writeValueAsString(store);
 
-        assertTrue(yaml.contains("containers"), "Serialized YAML must contain a containers section");
+        assertTrue(
+                yaml.contains("containers"), "Serialized YAML must contain a containers section");
 
         TransformationStore deserialized = mapper.readValue(yaml, TransformationStore.class);
         assertEquals(
@@ -156,8 +154,7 @@ public class TransformationStoreTest {
             throws IOException {
         Container container = createDockerContainer("centos-pegasus");
 
-        TransformationCatalogEntry entry1 =
-                new TransformationCatalogEntry("example", "keg", "1.0");
+        TransformationCatalogEntry entry1 = new TransformationCatalogEntry("example", "keg", "1.0");
         entry1.setPhysicalTransformation("/usr/bin/keg");
         entry1.setResourceId("isi");
         entry1.setContainer(container);
