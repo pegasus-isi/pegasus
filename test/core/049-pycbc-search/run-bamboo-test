@@ -21,9 +21,6 @@ shift
 # the PyCBC conda environment
 deactivate || true
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
-echo ==========
-env
-echo ==========
 
 mkdir -p $TEST_DIR
 cd $TEST_DIR
@@ -48,13 +45,17 @@ pip3 install ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
 git clone https://github.com/gwastro/pycbc.git
 cd pycbc
 pip3 install pylib-fftw3
+
+# remove references to any pegasus packages
+sed -i 's/^pegasus.*//' requirements.txt
 pip3 install -r requirements.txt
+
 pip3 install -r companion.txt
 pip3 install  .
 
-# we are using mixed environment from our conda env
-export PYTHONPATH=$(pegasus-config --python)
-export PEGASUS_UPDATE_PYTHONPATH=0
+# remove old pegasus packages - temp fix until pycbc depends on Pegasus 6.0
+pip3 uninstall -y pegasus-wms-api pegasus-wms-common || true
+pip3 install --force-reinstall ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
 
 # run workflow
 cd examples/search/
