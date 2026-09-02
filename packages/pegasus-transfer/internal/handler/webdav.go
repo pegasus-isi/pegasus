@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pegasus-isi/pegasus/packages/pegasus-transfer/internal/creds"
@@ -28,6 +29,7 @@ type WebdavHandler struct {
 	Credentials *creds.INI
 	Client      *http.Client
 
+	mu          sync.Mutex
 	createdDirs map[string]bool
 }
 
@@ -94,7 +96,10 @@ func (h *WebdavHandler) do(ctx context.Context, method, url, user, pass string, 
 // createDir walks path, MKCOL'ing each missing segment, mirroring
 // WebdavHandler._create_dir.
 func (h *WebdavHandler) createDir(ctx context.Context, dirURL, user, pass string) error {
-	if h.createdDirs[dirURL] {
+	h.mu.Lock()
+	done := h.createdDirs[dirURL]
+	h.mu.Unlock()
+	if done {
 		return nil
 	}
 	scheme := "http"
@@ -134,7 +139,9 @@ func (h *WebdavHandler) createDir(ctx context.Context, dirURL, user, pass string
 			return fmt.Errorf("MKCOL %s: HTTP %s", u, resp.Status)
 		}
 	}
+	h.mu.Lock()
 	h.createdDirs[dirURL] = true
+	h.mu.Unlock()
 	return nil
 }
 

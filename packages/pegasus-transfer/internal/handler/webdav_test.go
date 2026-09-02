@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/pegasus-isi/pegasus/packages/pegasus-transfer/internal/creds"
@@ -19,6 +21,7 @@ import (
 // GET/PUT/MKCOL/DELETE + Basic Auth to exercise WebdavHandler.
 func fakeWebdavServer(t *testing.T, user, pass string) (*httptest.Server, map[string][]byte) {
 	t.Helper()
+	var mu sync.Mutex
 	store := map[string][]byte{}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u, p, ok := r.BasicAuth()
@@ -31,21 +34,30 @@ func fakeWebdavServer(t *testing.T, user, pass string) (*httptest.Server, map[st
 			w.WriteHeader(http.StatusCreated)
 		case http.MethodPut:
 			data, _ := io.ReadAll(r.Body)
+			mu.Lock()
 			store[r.URL.Path] = data
+			mu.Unlock()
 			w.WriteHeader(http.StatusCreated)
 		case http.MethodGet:
+			mu.Lock()
 			data, ok := store[r.URL.Path]
+			mu.Unlock()
 			if !ok {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
 			w.Write(data)
 		case http.MethodDelete:
-			if _, ok := store[r.URL.Path]; !ok {
+			mu.Lock()
+			_, ok := store[r.URL.Path]
+			if ok {
+				delete(store, r.URL.Path)
+			}
+			mu.Unlock()
+			if !ok {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			delete(store, r.URL.Path)
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -182,6 +194,49 @@ func TestWebdavHandler_RemoveFollowsRedirectAsSuccess(t *testing.T) {
 // sanity check that basic auth headers are actually base64(user:pass) as
 // net/http's SetBasicAuth produces, guarding against a future refactor
 // accidentally sending credentials some other way.
+// TestWebdavHandler_ConcurrentCreateDir reproduces a real "larger transfer":
+// the engine (internal/engine.Run) fans work out to NumThreads worker
+// goroutines that all call DoTransfers -> transferOne -> createDir on the
+// *same* shared WebdavHandler instance (one handler per protocol pair,
+// built once in cmd/pegasus-transfer/main.go's buildRegistry). Multiple
+// goroutines racing on h.createdDirs without synchronization triggers Go's
+// "fatal error: concurrent map writes" -- run with -race to catch it even
+// on a single lucky pass.
+func TestWebdavHandler_ConcurrentCreateDir(t *testing.T) {
+	srv, _ := fakeWebdavServer(t, "alice", "secret")
+	defer srv.Close()
+	host := strings.TrimPrefix(srv.URL, "http://")
+	credsIni := webdavCreds(t, host, "alice", "secret")
+
+	dir := t.TempDir()
+	h := NewWebdavHandler(Hooks{}, credsIni)
+
+	const n = 50
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			src := filepath.Join(dir, fmt.Sprintf("src%d.txt", i))
+			if err := os.WriteFile(src, []byte("x"), 0o644); err != nil {
+				t.Error(err)
+				return
+			}
+			put := model.NewTransfer()
+			put.AddSrc("local", "file://"+src, "", nil)
+			// Same destination directory across all goroutines -- every one
+			// races on the same h.createdDirs entry, as they would in a
+			// real transfer of many files into one directory.
+			put.AddDst("remote", fmt.Sprintf("webdav://%s/shared-dir/dst%d.txt", host, i), "", nil)
+			res := h.DoTransfers(context.Background(), []*model.Transfer{put})
+			if len(res.Failed) != 0 {
+				t.Errorf("put %d failed: %v", i, res.Failed)
+			}
+		}(i)
+	}
+	wg.Wait()
+}
+
 func TestBasicAuthEncoding(t *testing.T) {
 	req, _ := http.NewRequest("GET", "http://x", nil)
 	req.SetBasicAuth("alice", "secret")
