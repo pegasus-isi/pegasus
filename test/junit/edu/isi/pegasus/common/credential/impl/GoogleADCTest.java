@@ -109,16 +109,13 @@ public class GoogleADCTest {
     public void testAccessorMethodsExposeCurrentConstantsAndFormatting() {
         GoogleADC credential = new GoogleADC();
         GoogleADC baseNameCredential = new GoogleADC();
-        baseNameCredential.initialize(
-                createBagWithLocalSite("/tmp/google/credential.json", null));
+        baseNameCredential.initialize(createBagWithLocalSite("/tmp/google/credential.json", null));
 
         assertThat(credential.getProfileKey(), is("GOOGLE_APPLICATION_CREDENTIALS"));
         assertThat(
                 credential.getEnvironmentVariable("google-batch"),
                 is("GOOGLE_APPLICATION_CREDENTIALS_google_batch"));
-        assertThat(
-                credential.getDescription(),
-                is("Google Application Credentials File Handler"));
+        assertThat(credential.getDescription(), is("Google Application Credentials File Handler"));
         assertThat(baseNameCredential.getBaseName("missing-site"), is("credential.json"));
     }
 

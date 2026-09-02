@@ -23,9 +23,9 @@ import java.io.File;
 import java.util.Map;
 
 /**
- * A convenience class that allows us to determine the path to the user's Google service account
- * key file, as referenced by the GOOGLE_APPLICATION_CREDENTIALS environment variable used by
- * gcloud and the Google Cloud client libraries.
+ * A convenience class that allows us to determine the path to the user's Google service account key
+ * file, as referenced by the GOOGLE_APPLICATION_CREDENTIALS environment variable used by gcloud and
+ * the Google Cloud client libraries.
  *
  * @author Mats Rynge
  * @version $Revision$
@@ -86,7 +86,8 @@ public class GoogleADC extends Abstract implements CredentialHandler {
                                         .getProfiles()
                                         .get(Profiles.NAMESPACES.pegasus)
                                         .get(
-                                                GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
+                                                GoogleADC
+                                                        .GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
                                                         .toLowerCase());
 
         return (path == null)
@@ -102,8 +103,8 @@ public class GoogleADC extends Abstract implements CredentialHandler {
      * <p>- If a GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE is specified in the site
      * catalog entry as a Pegasus Profile that is used, else the corresponding env profile for
      * backward support - Else GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE Pegasus
-     * Profile specified in the properties, else the corresponding env profile for backward
-     * support - Else the one pointed to by the environment variable
+     * Profile specified in the properties, else the corresponding env profile for backward support
+     * - Else the one pointed to by the environment variable
      * GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
      *
      * @param site the site catalog entry object.
@@ -120,7 +121,9 @@ public class GoogleADC extends Abstract implements CredentialHandler {
                                 siteEntry
                                         .getProfiles()
                                         .get(Profiles.NAMESPACES.pegasus)
-                                        .get(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
+                                        .get(
+                                                GoogleADC
+                                                        .GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
         if (cred == null && siteEntry != null) {
             // try to check for an env profile in the site entry
             cred =
@@ -135,7 +138,10 @@ public class GoogleADC extends Abstract implements CredentialHandler {
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);
-            cred = (String) profiles.get(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
+            cred =
+                    (String)
+                            profiles.get(
+                                    GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
         }
         if (cred == null) {
             // load the env profile from the  property file
