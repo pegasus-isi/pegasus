@@ -658,10 +658,24 @@ public class TransformationStore {
             }
             gen.writeEndArray();
 
-            if (!store.getAllContainers().isEmpty()) {
+            // Collect containers to serialize: start with those explicitly registered
+            // in the store, then add any containers referenced by entries that are not
+            // already present (handles stores built without a top-level containers block).
+            // Using TreeMap keeps the output deterministically ordered by name.
+            Map<String, Container> containersToWrite = new TreeMap<>();
+            for (Container c : store.getAllContainers()) {
+                containersToWrite.put(c.getName(), c);
+            }
+            for (TransformationCatalogEntry entry : store.getAllEntries()) {
+                Container c = entry.getContainer();
+                if (c != null && !containersToWrite.containsKey(c.getName())) {
+                    containersToWrite.put(c.getName(), c);
+                }
+            }
+            if (!containersToWrite.isEmpty()) {
                 gen.writeArrayFieldStart(
                         TransformationCatalogKeywords.CONTAINERS.getReservedName());
-                for (Container c : store.getAllContainers()) {
+                for (Container c : containersToWrite.values()) {
                     gen.writeObject(c);
                 }
                 gen.writeEndArray();
