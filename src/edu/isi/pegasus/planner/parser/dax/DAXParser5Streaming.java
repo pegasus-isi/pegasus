@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
+import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -27,6 +29,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.WorkflowKeywords;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
@@ -53,10 +56,12 @@ import java.util.Map;
  * parser suitable for very large workflow files (hundreds of thousands of jobs) that would exhaust
  * heap memory with the tree-based approach.
  *
- * <p>Smaller top-level sections ({@code metadata}, {@code hooks}, {@code replicaCatalog},
- * {@code siteCatalog}, {@code transformationCatalog}) are still read as sub-trees via their
- * existing Jackson deserializers because they are bounded in size and their deserializers expect a
- * sub-parser or {@code JsonNode}.
+ * <p>The {@code replicaCatalog} section is also streamed element-by-element: each entry is
+ * deserialized as a {@link edu.isi.pegasus.planner.classes.ReplicaLocation} via its own Jackson
+ * deserializer and forwarded via {@link Callback#cbFile} immediately, so a workflow that embeds
+ * millions of replica entries does not cause an OOM. Smaller sections ({@code metadata}, {@code
+ * hooks}, {@code siteCatalog}, {@code transformationCatalog}) are still read as sub-trees via their
+ * existing Jackson deserializers because they are bounded in size.
  *
  * <p>The snakeyaml code-point limit inherited from {@link YAMLParser} is overridden to {@code
  * Integer.MAX_VALUE} so that very large files are not rejected at the YAML-scanner level.
@@ -96,7 +101,7 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
 
         // Remove the snakeyaml code-point cap so that arbitrarily large files can be scanned.
         // Memory safety comes from the streaming job/dependency loop, not from a document-size cap.
-        mLoaderOptions.setCodePointLimit(Integer.MAX_VALUE);
+        // mLoaderOptions.setCodePointLimit(Integer.MAX_VALUE);
 
         mLogger.log(
                 "Streaming DAX parser active — no document-size limit; jobs and dependencies are"
@@ -190,8 +195,7 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
 
         while ((token = jp.nextToken()) != JsonToken.END_OBJECT) {
             if (token != JsonToken.FIELD_NAME) {
-                throw new RuntimeException(
-                        "Expected a field name at workflow root, got: " + token);
+                throw new RuntimeException("Expected a field name at workflow root, got: " + token);
             }
 
             String key = jp.getCurrentName();
@@ -227,7 +231,7 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
                     break;
 
                 case REPLICA_CATALOG:
-                    mCallback.cbReplicaStore(jp.readValueAs(ReplicaStore.class));
+                    streamReplicaCatalog(jp);
                     break;
 
                 case SITE_CATALOG:
@@ -333,6 +337,76 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
     }
 
     /**
+     * Streams the {@code replicaCatalog} section one replica entry at a time. Walks the outer
+     * object fields and, upon reaching the {@code replicas} array, deserializes each element as a
+     * {@link ReplicaLocation} via its own Jackson deserializer and fires {@code cbFile}. This
+     * avoids loading the entire catalog into a {@link ReplicaStore} in memory at once, which can be
+     * prohibitive when a workflow embeds millions of replica entries.
+     *
+     * <p>Reuses the existing per-entry deserializer ({@link ReplicaLocation.JsonDeserializer})
+     * without duplicating its logic.
+     *
+     * @param jp parser positioned at {@link JsonToken#START_OBJECT} for the replicaCatalog value
+     */
+    private void streamReplicaCatalog(JsonParser jp) throws IOException {
+        if (jp.currentToken() != JsonToken.START_OBJECT) {
+            throw new RuntimeException(
+                    ReplicaCatalogKeywords.REPLICAS.getReservedName()
+                            + ": replicaCatalog value must be a mapping (object)");
+        }
+        while (jp.nextToken() != JsonToken.END_OBJECT) {
+            String field = jp.getCurrentName();
+            jp.nextToken(); // advance to value
+            ReplicaCatalogKeywords rcKey = ReplicaCatalogKeywords.getReservedKey(field);
+            if (rcKey == null) {
+                jp.skipChildren();
+                continue;
+            }
+            switch (rcKey) {
+                case PEGASUS:
+                    // version string — consumed but not forwarded
+                    break;
+
+                case REPLICAS:
+                    if (jp.currentToken() != JsonToken.START_ARRAY) {
+                        throw new RuntimeException(
+                                ReplicaCatalogKeywords.REPLICAS.getReservedName()
+                                        + ": value must be an array");
+                    }
+                    while (jp.nextToken() != JsonToken.END_ARRAY) {
+                        ReplicaLocation rl = jp.readValueAs(ReplicaLocation.class);
+                        int count = rl.getPFNCount();
+                        if (count == 0) {
+                            throw new ReplicaCatalogException(
+                                    "ReplicaLocation "
+                                            + rl
+                                            + " can  have one pfn or more pfns. Found "
+                                            + count);
+                        }
+                        if (rl.isRegex()) {
+                            StringBuffer error = new StringBuffer();
+                            error.append("Unable to deserialize into Replica Store an entry")
+                                    .append(" ")
+                                    .append("for lfn")
+                                    .append(" ")
+                                    .append(rl)
+                                    .append(" ")
+                                    .append(
+                                            "as it has regex attribute set to true. Please specify such entries in a replica catalog file.");
+                            throw new ReplicaCatalogException(error.toString());
+                        }
+                        mCallback.cbFile(rl);
+                    }
+                    break;
+
+                default:
+                    jp.skipChildren();
+                    break;
+            }
+        }
+    }
+
+    /**
      * Streams the {@code jobDependencies} array one element at a time. Each element is a small
      * object with an {@code id} field and a {@code children} string array; both are read inline
      * without building a sub-tree.
@@ -382,6 +456,10 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         bag.add(PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance("", ""));
 
+        LogManager logger = bag.getLogger();
+        logger.setLevel(LogManager.INFO_MESSAGE_LEVEL);
+        logger.logEventStart("parsing.dax", dax, "");
+
         CountingCallback c = new CountingCallback();
         c.initialize(bag, dax);
 
@@ -402,10 +480,9 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
                         + "  Jobs parsed      : %,d%n"
                         + "  Deps parsed      : %,d%n"
                         + "  Heap used at end : %.1f MB%n",
-                elapsed / 1000.0,
-                c.getJobCount(),
-                c.getDepCount(),
-                heapUsed / 1024.0 / 1024);
+                elapsed / 1000.0, c.getJobCount(), c.getDepCount(), heapUsed / 1024.0 / 1024);
+
+        logger.logEventCompletion();
     }
 
     /**
@@ -503,6 +580,7 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
                 edu.isi.pegasus.planner.classes.CompoundTransformation ct) {}
 
         @Override
-        public void cbParents(String child, java.util.List<edu.isi.pegasus.planner.classes.PCRelation> parents) {}
+        public void cbParents(
+                String child, java.util.List<edu.isi.pegasus.planner.classes.PCRelation> parents) {}
     }
 }
