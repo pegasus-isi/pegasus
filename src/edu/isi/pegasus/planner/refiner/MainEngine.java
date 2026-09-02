@@ -414,7 +414,9 @@ public class MainEngine extends Engine {
 
         // write out the in memory combined instance of site catalog
         // and transformation catalogs also into the catalogs directory
-        serialize(siteStore, new File(directory, COMBINED_SC_BASENAME));
+        if (siteStore != null && !siteStore.isEmpty()) {
+            serialize(siteStore, new File(directory, COMBINED_SC_BASENAME));
+        }
         serialize(transformationCatalog, new File(directory, COMBINED_TC_BASENAME));
     }
 
@@ -505,6 +507,10 @@ public class MainEngine extends Engine {
             List<TransformationCatalogEntry> entries = catalog.getContents();
             for (TransformationCatalogEntry site : entries) {
                 result.addEntry(site);
+            }
+            if (result.isEmpty()) {
+                // empty catalog. nothing to serialize
+                return;
             }
             this.serialize(result, file);
         } catch (Exception ex) {
