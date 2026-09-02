@@ -14,7 +14,9 @@ import (
 )
 
 // GSHandler transfers file<->gs (Google Cloud Storage) via the `gcloud
-// storage` CLI, mirroring transfer.py's GSHandler.
+// storage` CLI, authenticating with a Google service account key referenced
+// by GOOGLE_APPLICATION_CREDENTIALS (JSON key files, the replacement for the
+// deprecated PKCS12/boto-based auth transfer.py's GSHandler used to use).
 type GSHandler struct {
 	Base
 	Hooks
@@ -33,65 +35,62 @@ func NewGSHandler(hooks Hooks) *GSHandler {
 
 var reGSBucket = regexp.MustCompile(`(gs://[\w-]+/)[/\w-]*`)
 
-// gcloudEnv mirrors GSHandler._gcloud_env: resolve BOTO_CONFIG[_site] and
-// GOOGLE_PKCS12[_site], then rewrite a copy of the boto config so its
-// Credentials.gs_service_key_file points at the resolved PKCS12 key.
-func gcloudEnv(siteLabel string) (map[string]string, error) {
-	boto, ok := creds.SiteEnv("BOTO_CONFIG", siteLabel)
+// gcloudEnv resolves GOOGLE_APPLICATION_CREDENTIALS[_site] (a Google service
+// account JSON key file) and activates it as the active gcloud identity in
+// an ephemeral, per-call gcloud config directory (via CLOUDSDK_CONFIG), so
+// concurrent pegasus-transfer invocations never share - or race on - a
+// single ~/.config/gcloud. The returned env also carries
+// GOOGLE_APPLICATION_CREDENTIALS itself, since the `gcloud storage` client
+// libraries fall back to it directly as Application Default Credentials.
+func gcloudEnv(ctx context.Context, h *GSHandler, siteLabel string) (map[string]string, error) {
+	keyFile, ok := creds.SiteEnv("GOOGLE_APPLICATION_CREDENTIALS", siteLabel)
 	if !ok {
-		return nil, fmt.Errorf("at least one of BOTO_CONFIG_%s or BOTO_CONFIG must be set", siteLabel)
+		return nil, fmt.Errorf(
+			"at least one of GOOGLE_APPLICATION_CREDENTIALS_%s or GOOGLE_APPLICATION_CREDENTIALS must be set",
+			siteLabel)
 	}
-	pkcs12, ok := creds.SiteEnv("GOOGLE_PKCS12", siteLabel)
-	if !ok {
-		return nil, fmt.Errorf("at least one of GOOGLE_PKCS12_%s or GOOGLE_PKCS12 must be set", siteLabel)
-	}
-	if _, err := creds.EnsureFSPermissions(boto); err != nil {
-		return nil, err
-	}
-	if _, err := creds.EnsureFSPermissions(pkcs12); err != nil {
+	if _, err := creds.EnsureFSPermissions(keyFile); err != nil {
 		return nil, err
 	}
 
-	data, err := os.ReadFile(boto)
+	configDir, err := os.MkdirTemp("", "pegasus-transfer-gcloud-*")
 	if err != nil {
-		return nil, err
-	}
-	ini, err := creds.ParseINI(data)
-	if err != nil {
-		return nil, err
-	}
-	ini.Set("Credentials", "gs_service_key_file", pkcs12)
-
-	tmp, err := os.CreateTemp("", "pegasus-transfer-*.boto")
-	if err != nil {
-		return nil, fmt.Errorf("unable to create tmp file for gs boto config: %w", err)
-	}
-	if _, err := tmp.WriteString(ini.Dump()); err != nil {
-		tmp.Close()
-		return nil, err
-	}
-	tmp.Close()
-	if err := os.Chmod(tmp.Name(), 0o600); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create tmp gcloud config dir: %w", err)
 	}
 
-	return map[string]string{
-		"PYTHONPATH":    "",
-		"BOTO_CONFIG":   tmp.Name(),
-		"GOOGLE_PKCS12": pkcs12,
-	}, nil
+	env := map[string]string{
+		"GOOGLE_APPLICATION_CREDENTIALS": keyFile,
+		"CLOUDSDK_CONFIG":                configDir,
+	}
+
+	if _, err := h.runCallout(
+		ctx,
+		[]string{"gcloud", "auth", "activate-service-account", "--key-file=" + keyFile},
+		env,
+	); err != nil {
+		os.RemoveAll(configDir)
+		return nil, fmt.Errorf("gcloud auth activate-service-account failed: %w", err)
+	}
+
+	return env, nil
+}
+
+func cleanupGcloudConfig(env map[string]string) {
+	if path, ok := env["CLOUDSDK_CONFIG"]; ok {
+		_ = os.RemoveAll(path)
+	}
 }
 
 func (h *GSHandler) DoMkdirs(ctx context.Context, mkdirs []*model.Mkdir) Result {
 	if len(mkdirs) == 0 {
 		return Result{}
 	}
-	env, err := gcloudEnv(mkdirs[0].SiteLabel())
+	env, err := gcloudEnv(ctx, h, mkdirs[0].SiteLabel())
 	if err != nil {
 		h.logger().Error("gs mkdir: credential setup failed", "error", err)
 		return Result{Failed: entriesOf(mkdirs)}
 	}
-	defer cleanupBotoConfig(env)
+	defer cleanupGcloudConfig(env)
 
 	var res Result
 	for _, m := range mkdirs {
@@ -118,12 +117,12 @@ func (h *GSHandler) DoTransfers(ctx context.Context, transfers []*model.Transfer
 	if transfers[0].SrcProto() == "gs" {
 		siteLabel = transfers[0].SrcSiteLabel()
 	}
-	env, err := gcloudEnv(siteLabel)
+	env, err := gcloudEnv(ctx, h, siteLabel)
 	if err != nil {
 		h.logger().Error("gs transfer: credential setup failed", "error", err)
 		return Result{Failed: entriesOfTransfers(transfers)}
 	}
-	defer cleanupBotoConfig(env)
+	defer cleanupGcloudConfig(env)
 
 	var res Result
 	for _, t := range transfers {
@@ -165,12 +164,12 @@ func (h *GSHandler) DoRemoves(ctx context.Context, removes []*model.Remove) Resu
 	if len(removes) == 0 {
 		return Result{}
 	}
-	env, err := gcloudEnv(removes[0].SiteLabel())
+	env, err := gcloudEnv(ctx, h, removes[0].SiteLabel())
 	if err != nil {
 		h.logger().Error("gs remove: credential setup failed", "error", err)
 		return Result{Failed: entriesOf(removes)}
 	}
-	defer cleanupBotoConfig(env)
+	defer cleanupGcloudConfig(env)
 
 	var res Result
 	for _, r := range removes {
@@ -188,10 +187,4 @@ func (h *GSHandler) DoRemoves(ctx context.Context, removes []*model.Remove) Resu
 		res.Succeeded = append(res.Succeeded, r)
 	}
 	return res
-}
-
-func cleanupBotoConfig(env map[string]string) {
-	if path, ok := env["BOTO_CONFIG"]; ok {
-		_ = os.Remove(path)
-	}
 }

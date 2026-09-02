@@ -35,35 +35,40 @@ import java.util.Properties;
 /**
  * @author Rajiv Mayani
  */
-public class GoogleP12Test {
+public class GoogleADCTest {
 
     @Test
     public void testInitializeUsesLocalSitePegasusProfileForLocalCredentialPath() throws Exception {
-        GoogleP12 credential = new GoogleP12();
-        PegasusBag bag = createBagWithLocalSite("/site/google/local.p12", null);
+        GoogleADC credential = new GoogleADC();
+        PegasusBag bag = createBagWithLocalSite("/site/google/local.json", null);
 
         credential.initialize(bag);
 
         assertThat(
                 ReflectionTestUtils.getField(credential, "mLocalCredentialPath"),
-                is("/site/google/local.p12"));
-        assertThat(credential.getPath(), is("/site/google/local.p12"));
+                is("/site/google/local.json"));
+        assertThat(credential.getPath(), is("/site/google/local.json"));
     }
 
     @Test
     public void testGetPathPrefersSiteSpecificPegasusProfileOverLocalFallback() {
-        GoogleP12 credential = new GoogleP12();
+        GoogleADC credential = new GoogleADC();
         SiteStore store = new SiteStore();
 
         SiteCatalogEntry local = new SiteCatalogEntry("local");
         local.getProfiles()
-                .addProfile(Profiles.NAMESPACES.pegasus, "google_pkcs12", "/site/google/local.p12");
+                .addProfile(
+                        Profiles.NAMESPACES.pegasus,
+                        "google_application_credentials",
+                        "/site/google/local.json");
         store.addEntry(local);
 
         SiteCatalogEntry remote = new SiteCatalogEntry("gce");
         remote.getProfiles()
                 .addProfile(
-                        Profiles.NAMESPACES.pegasus, "google_pkcs12", "/site/google/remote.p12");
+                        Profiles.NAMESPACES.pegasus,
+                        "google_application_credentials",
+                        "/site/google/remote.json");
         store.addEntry(remote);
 
         PegasusBag bag = new PegasusBag();
@@ -73,23 +78,23 @@ public class GoogleP12Test {
 
         credential.initialize(bag);
 
-        assertThat(credential.getPath("gce"), is("/site/google/remote.p12"));
-        assertThat(credential.getPath("unknown-site"), is("/site/google/local.p12"));
+        assertThat(credential.getPath("gce"), is("/site/google/remote.json"));
+        assertThat(credential.getPath("unknown-site"), is("/site/google/local.json"));
     }
 
     @Test
     public void testGetLocalPathFallsBackToLocalEnvProfileWhenPegasusProfileMissing() {
-        GoogleP12 credential = new GoogleP12();
-        PegasusBag bag = createBagWithLocalSite(null, "/site/google/from-env.p12");
+        GoogleADC credential = new GoogleADC();
+        PegasusBag bag = createBagWithLocalSite(null, "/site/google/from-env.json");
 
         credential.initialize(bag);
 
-        assertThat(credential.getLocalPath(), is("/site/google/from-env.p12"));
+        assertThat(credential.getLocalPath(), is("/site/google/from-env.json"));
     }
 
     @Test
     public void testGetLocalPathReturnsNullWhenNoProfilesOrEnvironmentAreAvailable() {
-        GoogleP12 credential = new GoogleP12();
+        GoogleADC credential = new GoogleADC();
         PegasusBag bag = new PegasusBag();
         bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
         bag.add(PegasusBag.SITE_STORE, new SiteStore());
@@ -102,16 +107,19 @@ public class GoogleP12Test {
 
     @Test
     public void testAccessorMethodsExposeCurrentConstantsAndFormatting() {
-        GoogleP12 credential = new GoogleP12();
-        GoogleP12 baseNameCredential = new GoogleP12();
-        baseNameCredential.initialize(createBagWithLocalSite("/tmp/google/credential.p12", null));
+        GoogleADC credential = new GoogleADC();
+        GoogleADC baseNameCredential = new GoogleADC();
+        baseNameCredential.initialize(
+                createBagWithLocalSite("/tmp/google/credential.json", null));
 
-        assertThat(credential.getProfileKey(), is("GOOGLE_PKCS12"));
+        assertThat(credential.getProfileKey(), is("GOOGLE_APPLICATION_CREDENTIALS"));
         assertThat(
                 credential.getEnvironmentVariable("google-batch"),
-                is("GOOGLE_PKCS12_google_batch"));
-        assertThat(credential.getDescription(), is("Google PKCS12 File Credential Handler"));
-        assertThat(baseNameCredential.getBaseName("missing-site"), is("credential.p12"));
+                is("GOOGLE_APPLICATION_CREDENTIALS_google_batch"));
+        assertThat(
+                credential.getDescription(),
+                is("Google Application Credentials File Handler"));
+        assertThat(baseNameCredential.getBaseName("missing-site"), is("credential.json"));
     }
 
     private PegasusBag createBagWithLocalSite(
@@ -121,13 +129,15 @@ public class GoogleP12Test {
         if (localPegasusCredential != null) {
             local.getProfiles()
                     .addProfile(
-                            Profiles.NAMESPACES.pegasus, "google_pkcs12", localPegasusCredential);
+                            Profiles.NAMESPACES.pegasus,
+                            "google_application_credentials",
+                            localPegasusCredential);
         }
         if (localEnvCredential != null) {
             local.getProfiles()
                     .addProfile(
                             Profiles.NAMESPACES.env,
-                            GoogleP12.GOOGLEP12_FILE_VARIABLE,
+                            GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE,
                             localEnvCredential);
         }
         store.addEntry(local);

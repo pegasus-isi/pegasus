@@ -817,8 +817,7 @@ public class Job extends Data implements GraphNodeContent {
             }
             this.addCredentialType(site, CredentialHandler.TYPE.ssh);
         } else if (url.startsWith("gs")) {
-            this.addCredentialType(site, CredentialHandler.TYPE.boto);
-            this.addCredentialType(site, CredentialHandler.TYPE.googlep12);
+            this.addCredentialType(site, CredentialHandler.TYPE.googleadc);
         } else if (url.startsWith("irods")) {
             this.addCredentialType(site, CredentialHandler.TYPE.irods);
         } else if (url.startsWith("scp")) {
