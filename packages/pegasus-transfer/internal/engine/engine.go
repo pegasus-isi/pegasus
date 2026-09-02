@@ -63,6 +63,14 @@ func Run(ctx context.Context, entries []model.Entry, cfg Config) bool {
 	attempt := 0
 	tooManyFailures := false
 
+	// completedTotal is a running count of every entry that has ever
+	// succeeded over the life of this Run call -- it is never reset,
+	// matching transfer.py's completed_q, which is created once before the
+	// attempt loop and never replaced. This is what keeps the excessive-
+	// failures short circuit from tripping on a handful of failures once a
+	// workflow has racked up a healthy number of successes.
+	var completedTotal int
+
 	for {
 		attempt++
 		log.Info(fmt.Sprintf("Starting transfers - attempt %d", attempt))
@@ -90,6 +98,10 @@ func Run(ctx context.Context, entries []model.Entry, cfg Config) bool {
 			var mu sync.Mutex
 			var roundFailed []model.Entry
 			shortCircuited := false
+			// batchFailed is scoped to this single pass over groupCh, matching
+			// transfer.py's failed_q, which gets replaced with a fresh Queue
+			// after every such pass (main(), the "failed_q_updated" swap).
+			batchFailed := 0
 
 			for i := 0; i < threadsToStart; i++ {
 				wg.Add(1)
@@ -110,15 +122,26 @@ func Run(ctx context.Context, entries []model.Entry, cfg Config) bool {
 							continue
 						}
 						succeeded, gFailed := dispatch(ctx, cfg.Registry, g, log)
-						_ = succeeded
+						mu.Lock()
+						completedTotal += len(succeeded)
 						if len(gFailed) > 0 {
-							mu.Lock()
 							roundFailed = append(roundFailed, gFailed...)
-							if excessiveFailures(len(gFailed), len(g)) {
-								shortCircuited = true
-							}
-							mu.Unlock()
+							batchFailed += len(gFailed)
 						}
+						// Matches SimilarWorkSet.do_transfers' excessive_failures
+						// check: only trip once at least 10 outcomes have been
+						// seen (completedTotal is cumulative for the whole run;
+						// batchFailed only for this pass), and only once more
+						// than 80% of them failed. This is a global-ratio
+						// signal, not "did this one group fail outright" --
+						// with small transfer counts a group is often a single
+						// entry, and treating any single failure as "excessive"
+						// aborted the whole run after the very first bad URL.
+						total := completedTotal + batchFailed
+						if total > 10 && float64(batchFailed)/float64(total) > 0.8 {
+							shortCircuited = true
+						}
+						mu.Unlock()
 					}
 				}()
 			}
@@ -137,7 +160,7 @@ func Run(ctx context.Context, entries []model.Entry, cfg Config) bool {
 			}
 			failed = stillFailed
 
-			if len(ready) > 0 && len(failed) > 0 {
+			if shortCircuited {
 				log.Error("Too many failures to continue trying - exiting early")
 				tooManyFailures = true
 				break
@@ -190,11 +213,4 @@ func min64(a, b int) int {
 		return a
 	}
 	return b
-}
-
-// excessiveFailures mirrors SimilarWorkSet.excessive_failures's role: if an
-// entire group failed, treat it as a signal to short-circuit remaining
-// queued work this round rather than keep burning through it.
-func excessiveFailures(failedCount, groupSize int) bool {
-	return groupSize > 0 && failedCount == groupSize
 }

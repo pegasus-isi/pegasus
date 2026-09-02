@@ -226,7 +226,7 @@ public abstract class Abstract implements CondorStyle {
                     case irods:
                     case s3:
                     case boto:
-                    case googlep12:
+                    case googleadc:
                     case ssh:
                         if (credentialPath != null) {
                             // transfer using condor file transfer, and advertise in env
@@ -308,7 +308,7 @@ public abstract class Abstract implements CondorStyle {
                     case irods:
                     case s3:
                     case boto:
-                    case googlep12:
+                    case googleadc:
                     case ssh:
                         applyCredentialForLocalExec(handler, credType, job, siteHandle);
                         break;

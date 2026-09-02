@@ -23,27 +23,34 @@ import java.io.File;
 import java.util.Map;
 
 /**
- * A convenience class that allows us to determine the path to the user's Google PKCS12 file.
+ * A convenience class that allows us to determine the path to the user's Google service account key
+ * file, as referenced by the GOOGLE_APPLICATION_CREDENTIALS environment variable used by gcloud and
+ * the Google Cloud client libraries.
  *
  * @author Mats Rynge
  * @version $Revision$
  */
-public class GoogleP12 extends Abstract implements CredentialHandler {
+public class GoogleADC extends Abstract implements CredentialHandler {
 
-    /** The name of the environment variable that specifies the path to the s3cfg file. */
-    public static final String GOOGLEP12_FILE_VARIABLE = "GOOGLE_PKCS12";
+    /**
+     * The name of the environment variable that specifies the path to the Google service account
+     * key file.
+     */
+    public static final String GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE =
+            "GOOGLE_APPLICATION_CREDENTIALS";
 
-    private static final String GOOGLEP12_PEGASUS_PROFILE_KEY =
-            GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase(); // has to be lowercased
+    private static final String GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY =
+            GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
+                    .toLowerCase(); // has to be lowercased
 
     /** The description */
-    private static final String DESCRIPTION = "Google PKCS12 File Credential Handler";
+    private static final String DESCRIPTION = "Google Application Credentials File Handler";
 
     /** The local path to the credential */
     private String mLocalCredentialPath;
 
     /** The default constructor. */
-    public GoogleP12() {
+    public GoogleADC() {
         super();
     }
 
@@ -59,18 +66,17 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
     }
 
     /**
-     * Returns the path to the PKCS12 file . The order of preference is as follows
+     * Returns the path to the service account key file. The order of preference is as follows
      *
-     * <p>- If a GOOGLEP12 is specified as a Pegasus Profile in the site catalog - Else the path on
-     * the local site
+     * <p>- If a GOOGLE_APPLICATION_CREDENTIALS is specified as a Pegasus Profile in the site
+     * catalog - Else the path on the local site
      *
      * @param site the site handle
-     * @return the path to GoogleP12.GOOGLEP12_FILE_VARIABLE for the site.
+     * @return the path to GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE for the site.
      */
     public String getPath(String site) {
 
         SiteCatalogEntry siteEntry = mSiteStore.lookup(site);
-        // mLogger.log("FOO: " + siteEntry, LogManager.DEBUG_MESSAGE_LEVEL);
         // check if one is specified in site catalog entry
         String path =
                 (siteEntry == null)
@@ -79,11 +85,10 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
                                 siteEntry
                                         .getProfiles()
                                         .get(Profiles.NAMESPACES.pegasus)
-                                        .get(GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase());
-        // mLogger.log("BAR: " + path, LogManager.DEBUG_MESSAGE_LEVEL);
-        // mLogger.log("BAR1: " + site, LogManager.DEBUG_MESSAGE_LEVEL);
-        // mLogger.log("BAR2: " + GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase(),
-        // LogManager.DEBUG_MESSAGE_LEVEL);
+                                        .get(
+                                                GoogleADC
+                                                        .GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
+                                                        .toLowerCase());
 
         return (path == null)
                 ?
@@ -95,11 +100,12 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
     /**
      * Returns the path to user cred on the local site. The order of preference is as follows
      *
-     * <p>- If a GoogleP12.GOOGLEP12_FILE_VARIABLE is specified in the site catalog entry as a
-     * Pegasus Profile that is used, else the corresponding env profile for backward support - Else
-     * GoogleP12.GOOGLEP12_FILE_VARIABLE Pegasus Profile specified in the properties, else the
-     * corresponding env profile for backward support - Else the one pointed to by the environment
-     * variable GoogleP12.GOOGLEP12_FILE_VARIABLE
+     * <p>- If a GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE is specified in the site
+     * catalog entry as a Pegasus Profile that is used, else the corresponding env profile for
+     * backward support - Else GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE Pegasus
+     * Profile specified in the properties, else the corresponding env profile for backward support
+     * - Else the one pointed to by the environment variable
+     * GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
      *
      * @param site the site catalog entry object.
      * @return the path to user cred.
@@ -115,7 +121,9 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
                                 siteEntry
                                         .getProfiles()
                                         .get(Profiles.NAMESPACES.pegasus)
-                                        .get(GoogleP12.GOOGLEP12_PEGASUS_PROFILE_KEY);
+                                        .get(
+                                                GoogleADC
+                                                        .GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
         if (cred == null && siteEntry != null) {
             // try to check for an env profile in the site entry
             cred =
@@ -123,26 +131,29 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
                             siteEntry
                                     .getProfiles()
                                     .get(Profiles.NAMESPACES.env)
-                                    .get(GoogleP12.GOOGLEP12_FILE_VARIABLE);
+                                    .get(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE);
         }
 
         // try from properties file
         if (cred == null) {
             // load the pegasus profile from property file
             Namespace profiles = mProps.getProfiles(Profiles.NAMESPACES.pegasus);
-            cred = (String) profiles.get(GoogleP12.GOOGLEP12_PEGASUS_PROFILE_KEY);
+            cred =
+                    (String)
+                            profiles.get(
+                                    GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_PEGASUS_PROFILE_KEY);
         }
         if (cred == null) {
             // load the env profile from the  property file
             Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
-            cred = (String) env.get(GoogleP12.GOOGLEP12_FILE_VARIABLE);
+            cred = (String) env.get(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE);
         }
 
         if (cred == null) {
-            // check if GOOGLE_PKCS12 is specified in the environment
+            // check if GOOGLE_APPLICATION_CREDENTIALS is specified in the environment
             Map<String, String> envs = System.getenv();
-            if (envs.containsKey(GoogleP12.GOOGLEP12_FILE_VARIABLE)) {
-                cred = envs.get(GoogleP12.GOOGLEP12_FILE_VARIABLE);
+            if (envs.containsKey(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE)) {
+                cred = envs.get(GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE);
             }
         }
 
@@ -165,7 +176,7 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
      * @return the name of the environment variable.
      */
     public String getProfileKey() {
-        return GoogleP12.GOOGLEP12_FILE_VARIABLE;
+        return GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE;
     }
 
     /**
@@ -175,7 +186,9 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable(String site) {
-        return GoogleP12.GOOGLEP12_FILE_VARIABLE + "_" + this.getSiteNameForEnvironmentKey(site);
+        return GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE
+                + "_"
+                + this.getSiteNameForEnvironmentKey(site);
     }
 
     /**
@@ -184,6 +197,6 @@ public class GoogleP12 extends Abstract implements CredentialHandler {
      * @return description
      */
     public String getDescription() {
-        return GoogleP12.DESCRIPTION;
+        return GoogleADC.DESCRIPTION;
     }
 }

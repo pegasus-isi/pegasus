@@ -242,7 +242,7 @@ clients
    cp              copying files from a POSIX filesystem
    ln              symlinking against input files
    (native)        staging files to and from S3 buckets in Amazon Web Services, Open Storage Network (OSN)
-   gsutil          staging files to and from Google Storage buckets
+   gcloud          staging files to and from Google Storage buckets
    scp             staging files using scp
    gsiscp          staging files using gsiscp and X509
    iget            staging files to and from iRODS servers
@@ -524,6 +524,11 @@ Once configured, you should be able to use URLs such as
 Google Storage (gs://)
 ----------------------
 
+Pegasus stages data to and from Google Storage buckets using the
+``gcloud storage`` command line tool, authenticating with a Google
+service account JSON key. See :ref:`gs-cred` for how to generate the
+key and make it available to the workflow.
+
 .. _transfer-http:
 
 HTTP (http:// , https://)
@@ -804,45 +809,33 @@ Google Storage
 --------------
 
 If a workflow is using gs:// URLs, Pegasus needs access to a Google
-Storage service account. First generate the credential by following the
-instructions at:
+Storage service account. First create a service account and download
+its key in JSON format by following the instructions at:
 
-https://cloud.google.com/storage/docs/authentication#service_accounts
+https://cloud.google.com/iam/docs/keys-create-delete
 
-Download the credential in PKCS12 format, and then use "gsutil config
--e" to generate a .boto file. For example:
+Then activate the key with the ``gcloud`` CLI to confirm it works:
 
 ::
 
-   $ gsutil config -e
-   This command will create a boto config file at /home/username/.boto
-   containing your credentials, based on your responses to the following
-   questions.
-   What is your service account email address? some-identifier@developer.gserviceaccount.com
-   What is the full path to your private key file? /home/username/my-cred.p12
-   What is the password for your service key file [if you haven't set one
-   explicitly, leave this line blank]?
+   $ export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.google.key
+   $ gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 
-   Please navigate your browser to https://cloud.google.com/console#/project,
-   then find the project you will use, and copy the Project ID string from the
-   second column. Older projects do not have Project ID strings. For such projects,
-   click the project and then copy the Project Number listed under that project.
-
-   What is your project-id? your-project-id
-
-   Boto config file "/home/username/.boto" created. If you need to use a
-   proxy to access the Internet please see the instructions in that file.
-
-
-Pegasus has to be told where to find both the .boto file as well as the
-PKCS12 file. For the files to be picked up by the workflow, set the
-``BOTO_CONFIG`` and ``GOOGLE_PKCS12`` profiles for the storage site.
+Pegasus has to be told where to find the key file. For the file to be
+picked up by the workflow and shipped along with the jobs that need it,
+set the ``GOOGLE_APPLICATION_CREDENTIALS`` profile for the storage site.
 Site catalog example:
 
 ::
 
-   <profile namespace="pegasus" key="BOTO_CONFIG" >/home/user/.boto</profile>
-   <profile namespace="pegasus" key="GOOGLE_PKCS12" >/home/user/.google-service-account.p12</profile>
+   <profile namespace="pegasus" key="GOOGLE_APPLICATION_CREDENTIALS" >/home/user/.google.key</profile>
+
+.. note::
+
+   Older versions of Pegasus used a PKCS12 service account key together
+   with the ``BOTO_CONFIG`` and ``GOOGLE_PKCS12`` profiles. Google has
+   deprecated PKCS12 service account keys, and Pegasus 5.2.0 and later
+   only supports JSON keys via ``GOOGLE_APPLICATION_CREDENTIALS``.
 
 .. _irods-cred:
 

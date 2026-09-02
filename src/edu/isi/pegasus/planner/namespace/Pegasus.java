@@ -14,7 +14,7 @@
 package edu.isi.pegasus.planner.namespace;
 
 import edu.isi.pegasus.common.credential.impl.BotoConfig;
-import edu.isi.pegasus.common.credential.impl.GoogleP12;
+import edu.isi.pegasus.common.credential.impl.GoogleADC;
 import edu.isi.pegasus.common.credential.impl.Irods;
 import edu.isi.pegasus.common.credential.impl.PegasusCredentials;
 import edu.isi.pegasus.common.credential.impl.Proxy;
@@ -436,7 +436,8 @@ public class Pegasus extends Namespace {
     private static final String IRODSENVFILE = Irods.IRODSENVFILE.toLowerCase();
     private static final String X509_USER_PROXY_KEY = Proxy.X509_USER_PROXY_KEY.toLowerCase();
     private static final String BOTOCONFIG = BotoConfig.BOTO_CONFIG_FILE_VARIABLE.toLowerCase();
-    private static final String GOOGLEP12 = GoogleP12.GOOGLEP12_FILE_VARIABLE.toLowerCase();
+    private static final String GOOGLE_APPLICATION_CREDENTIALS =
+            GoogleADC.GOOGLE_APPLICATION_CREDENTIALS_FILE_VARIABLE.toLowerCase();
 
     /** Static Handle to the delimiter aggregator. */
     private static Aggregator ERROR_MESSAGE_AGGREGATOR = new UniqueMerge();
@@ -627,7 +628,7 @@ public class Pegasus extends Namespace {
                         || key.compareTo(GRIDSTART_ARGUMENTS_KEY) == 0
                         || key.compareTo(GRIDSTART_LAUNCHER_KEY) == 0
                         || key.compareTo(GRIDSTART_LAUNCHER_ARGUMENTS_KEY) == 0
-                        || key.compareTo(GOOGLEP12) == 0
+                        || key.compareTo(GOOGLE_APPLICATION_CREDENTIALS) == 0
                         || key.compareTo(GPUS_KEY) == 0
                         || key.compareTo(GLITE_ARGUMENTS_KEY) == 0) {
                     res = VALID_KEY;

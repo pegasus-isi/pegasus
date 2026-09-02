@@ -1710,14 +1710,16 @@ You can choose to host the central manager / submit host inside the
 cloud or outside. The compute VMs will have HTCondor installed and
 configured to join the pool managed by the central manager.
 
-Google Storage is supported using gsutil. First, create a .boto file by
-running:
+Google Storage is supported using the ``gcloud`` CLI. First, create a
+service account and download its key in JSON format (see
+:ref:`gs-cred`), then set and activate it:
 
 ::
 
-   gsutil config
+   export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.google.key
+   gcloud auth activate-service-account
 
-Then, use a site catalog which specifies which .boto file to use. You
+Then, use a site catalog which specifies which key file to use. You
 can then use gs:// URLs in your workflow. Example:
 
 ::
@@ -1733,7 +1735,7 @@ can then use gs:// URLs in your workflow. Example:
         operation: all
     profiles:
       env:
-        PATH: /opt/gsutil:/usr/bin:/bin
+        PATH: /opt/google-cloud-sdk/bin:/usr/bin:/bin
   # Compute site
   - name: condorpool
     directories: []
@@ -1757,7 +1759,7 @@ can then use gs:// URLs in your workflow. Example:
         operation: all
     profiles:
       pegasus:
-        BOTO_CONFIG: /home/myuser/.boto
+        GOOGLE_APPLICATION_CREDENTIALS: /home/myuser/.google.key
 
 .. _aws-batch:
 

@@ -47,7 +47,7 @@ public class CredentialHandlerFactory {
 
     private static final String BOTO_IMPLEMENTING_CLASS = "BotoConfig";
 
-    private static final String GOOGLEP12_IMPLEMENTING_CLASS = "GoogleP12";
+    private static final String GOOGLEADC_IMPLEMENTING_CLASS = "GoogleADC";
 
     private static final String SSH_IMPLEMENTING_CLASS = "Ssh";
 
@@ -72,7 +72,7 @@ public class CredentialHandlerFactory {
             // mImplementingClassNameTable.put(CredentialHandler.TYPE.s3, S3_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.boto, BOTO_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(
-                    CredentialHandler.TYPE.googlep12, GOOGLEP12_IMPLEMENTING_CLASS);
+                    CredentialHandler.TYPE.googleadc, GOOGLEADC_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put(CredentialHandler.TYPE.ssh, SSH_IMPLEMENTING_CLASS);
         }
         return mImplementingClassNameTable;

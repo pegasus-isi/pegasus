@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -238,6 +239,77 @@ func TestRun_MultipleSourcesSomeNonExistent(t *testing.T) {
 	if last := seen[len(seen)-1]; last != good {
 		t.Errorf("expected the final, successful attempt to be %s, got %s", good, last)
 	}
+}
+
+// TestRun_FewEntriesOneFailsOutright_DoesNotShortCircuitSiblings reproduces a
+// bug report: with fewer entries than NumThreads, groupEntries hands out
+// single-entry groups, so a naive "did this whole group fail" excessive-
+// failures check trips on literally the first bad URL and abandons every
+// other queued entry without ever attempting it (transfer.py's real
+// excessive_failures check instead requires a cumulative, global >80%
+// failure rate across more than 10 outcomes -- a handful of entries can
+// never trip it). Four independent single-source entries here, one src
+// missing: all four must still be attempted and the ones with good sources
+// must still succeed.
+func TestRun_FewEntriesOneFailsOutright_DoesNotShortCircuitSiblings(t *testing.T) {
+	bad := mustTransfer(t, "file:///bad-1", "file:///dst-1")
+	good1 := mustTransfer(t, "file:///good-1", "file:///dst-2")
+	good2 := mustTransfer(t, "file:///good-2", "file:///dst-3")
+	good3 := mustTransfer(t, "file:///good-3", "file:///dst-4")
+
+	fh := &selectiveHandler{Base: handler.Base{HandlerName: "file", ProtocolMap: []string{"file->file"}}, failSrc: "file:///bad-1"}
+	reg := handler.NewRegistry(fh)
+
+	entries := []model.Entry{bad, good1, good2, good3}
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 8, Registry: reg, Log: silentLogger()})
+	if ok {
+		t.Fatal("expected overall failure since one entry has no valid source")
+	}
+	seen := fh.seenSrcs()
+	for _, e := range []string{"file:///bad-1", "file:///good-1", "file:///good-2", "file:///good-3"} {
+		if !seen[e] {
+			t.Errorf("expected %s to be attempted, but it was short-circuited away; all attempts: %v", e, seen)
+		}
+	}
+}
+
+// selectiveHandler fails only transfers whose source matches failSrc,
+// recording every source it was asked to transfer (safe for concurrent use
+// since the engine dispatches one group per goroutine, but DoTransfers calls
+// themselves are serialized under a mutex here for simplicity).
+type selectiveHandler struct {
+	handler.Base
+	failSrc string
+	mu      sync.Mutex
+	seen    map[string]bool
+}
+
+func (h *selectiveHandler) DoTransfers(ctx context.Context, transfers []*model.Transfer) handler.Result {
+	h.mu.Lock()
+	if h.seen == nil {
+		h.seen = map[string]bool{}
+	}
+	var res handler.Result
+	for _, t := range transfers {
+		h.seen[t.SrcURL()] = true
+		if t.SrcURL() == h.failSrc {
+			res.Failed = append(res.Failed, t)
+		} else {
+			res.Succeeded = append(res.Succeeded, t)
+		}
+	}
+	h.mu.Unlock()
+	return res
+}
+
+func (h *selectiveHandler) seenSrcs() map[string]bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	out := make(map[string]bool, len(h.seen))
+	for k, v := range h.seen {
+		out[k] = v
+	}
+	return out
 }
 
 // TestRun_TwoStageSplit reproduces the reported bug: a src/dst protocol pair
