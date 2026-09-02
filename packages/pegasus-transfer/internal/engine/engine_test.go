@@ -179,6 +179,67 @@ func TestSubTransferRotation_RetriedWithinSameAttempt(t *testing.T) {
 	}
 }
 
+// TestRun_MultipleSourcesSomeNonExistent mirrors a real planner-generated
+// transfer definition: several candidate src_urls for one destination, most
+// of them pointing at locations that don't exist. This was a valid, common
+// case in transfer.py (the Python predecessor) — pegasus-transfer tries each
+// src_url in turn, via move_to_next_sub_transfer, until one succeeds, all
+// within the same attempt, rather than failing as soon as any one source is
+// unreachable. The list mixes protocols (file:// then several http://
+// candidates) just like a real workflow's fallback source list, with only
+// the last URL actually resolving.
+func TestRun_MultipleSourcesSomeNonExistent(t *testing.T) {
+	nonExistent := []string{
+		"file:///non-existent.txt",
+		"http://data.isi.edu/non-existant-1.txt",
+		"http://data.isi.edu/non-existant-2.txt",
+		"http://data.isi.edu/non-existant-3.txt",
+		"http://data.isi.edu/non-existant-4.txt",
+		"http://data.isi.edu/non-existant-5.txt",
+		"http://data.isi.edu/non-existant-6.txt",
+		"http://data.isi.edu/non-existant-7.txt",
+	}
+	good := "http://data.isi.edu/exists.txt"
+
+	tr := model.NewTransfer()
+	highPriority, lowPriority := 100, 0
+	if err := tr.AddSrc("condorpool", nonExistent[0], "", &highPriority); err != nil {
+		t.Fatal(err)
+	}
+	for _, u := range nonExistent[1:] {
+		if err := tr.AddSrc("condorpool", u, "", &lowPriority); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tr.AddSrc("condorpool", good, "", &lowPriority); err != nil {
+		t.Fatal(err)
+	}
+	if err := tr.AddDst("condorpool", "file:///tmp/f.a.3", "", nil); err != nil {
+		t.Fatal(err)
+	}
+
+	var seen []string
+	fileH := &multiSourceHandler{Base: handler.Base{HandlerName: "file", ProtocolMap: []string{"file->file"}}, seen: &seen, goodURL: good}
+	httpH := &multiSourceHandler{Base: handler.Base{HandlerName: "http", ProtocolMap: []string{"http->file"}}, seen: &seen, goodURL: good}
+	reg := handler.NewRegistry(fileH, httpH)
+
+	ok := Run(context.Background(), []model.Entry{tr}, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if !ok {
+		t.Fatalf("expected overall success once a working source URL was reached; attempted order: %v", seen)
+	}
+	if len(seen) != len(nonExistent)+1 {
+		t.Fatalf("expected all %d non-existent sources to be tried before the working one, got %d attempts: %v", len(nonExistent), len(seen), seen)
+	}
+	for i, u := range nonExistent {
+		if seen[i] != u {
+			t.Errorf("attempt %d: expected src %s, got %s", i, u, seen[i])
+		}
+	}
+	if last := seen[len(seen)-1]; last != good {
+		t.Errorf("expected the final, successful attempt to be %s, got %s", good, last)
+	}
+}
+
 // TestRun_TwoStageSplit reproduces the reported bug: a src/dst protocol pair
 // with no direct handler (mirroring scp->s3s) but which two registered
 // handlers can bridge via a local temp file (scp->file, then file->s3s).
@@ -251,6 +312,29 @@ func (r *recordingHandler) DoTransfers(ctx context.Context, transfers []*model.T
 	for _, t := range transfers {
 		*r.seen = append(*r.seen, t.SrcPath())
 		res.Failed = append(res.Failed, t)
+	}
+	return res
+}
+
+// multiSourceHandler simulates real-world source availability: only a
+// transfer whose current source URL equals goodURL succeeds; every other
+// source (a stand-in for "doesn't exist") fails. Every attempted source URL
+// is recorded, in order, into seen.
+type multiSourceHandler struct {
+	handler.Base
+	seen    *[]string
+	goodURL string
+}
+
+func (h *multiSourceHandler) DoTransfers(ctx context.Context, transfers []*model.Transfer) handler.Result {
+	var res handler.Result
+	for _, t := range transfers {
+		*h.seen = append(*h.seen, t.SrcURL())
+		if t.SrcURL() == h.goodURL {
+			res.Succeeded = append(res.Succeeded, t)
+		} else {
+			res.Failed = append(res.Failed, t)
+		}
 	}
 	return res
 }
