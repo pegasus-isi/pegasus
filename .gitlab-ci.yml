@@ -663,8 +663,9 @@ Performance Tests:
     - TESTNAME:
       - 014-planner-performance
       - 014-planner-performance-100k
-      - 014-planner-performance-ahope
-      - 014-planner-performance-hcc
+      # TODO: Enable after converting XML DAXs to YAML workflow
+      # - 014-planner-performance-ahope
+      # - 014-planner-performance-hcc
       EXEC:
       - launch-bamboo-test-planner-only
   script:

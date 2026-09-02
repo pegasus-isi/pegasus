@@ -152,7 +152,7 @@ The steps involved in creating a DAX using the API are
 10. Add all dependencies to the *ADAG* object.
 
 11. Call the *writeToFile()* method on the *ADAG* object to render the
-    XML DAX file.
+    workflow to a YAML file.
 
 An example Java code that generates the diamond dax show above is listed
 below. This same code can be found in the Pegasus distribution in the

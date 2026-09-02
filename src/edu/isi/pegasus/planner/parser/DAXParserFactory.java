@@ -13,16 +13,11 @@
  */
 package edu.isi.pegasus.planner.parser;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.DynamicLoader;
-import edu.isi.pegasus.common.util.FileDetector;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.*;
 
-import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -45,20 +40,6 @@ public class DAXParserFactory {
 
     /** Package to prefix "just" class names with. */
     public static final String DEFAULT_CALLBACK_PACKAGE_NAME = "edu.isi.pegasus.planner.parser.dax";
-
-    /*
-     * Predefined Constant for DAX version 3.2.0
-     */
-    public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue("3.2.0");
-
-    /** The default DAXParser classname */
-    public static final String DEFAULT_DAX_PARSER_CLASS = "DAXParser3";
-
-    /** The DAXParser3 classname */
-    public static final String DAX_PARSER2_CLASS = "DAXParser2";
-
-    /** The DAXParser3 classname */
-    public static final String DAX_PARSER3_CLASS = "DAXParser3";
 
     /** The YAML_DAX_PARSER_CLASS classname */
     public static final String YAML_DAX_PARSER_CLASS = "DAXParser5";
@@ -108,95 +89,7 @@ public class DAXParserFactory {
             throw new RuntimeException("Invalid properties passed");
         }
 
-        // PM-1511
-        if (FileDetector.isTypeXML(daxFile)) {
-            return DAXParserFactory.loadXMLDAXParser(bag, cb, daxFile);
-        } else {
-            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, cb);
-        }
-    }
-
-    /**
-     * Loads the appropriate DAXParser looking at the dax schema that is specified in the DAX file.
-     *
-     * @param bag bag of Pegasus initialization objects
-     * @param c the dax callback.
-     * @param daxFile the dax file to parser
-     * @return the DAXParser loaded.
-     * @exception DAXParserFactoryException that nests any error that might occur during the
-     *     instantiation
-     * @see #DEFAULT_CALLBACK_PACKAGE_NAME
-     */
-    public static DAXParser loadXMLDAXParser(PegasusBag bag, Callback c, String daxFile)
-            throws DAXParserFactoryException {
-
-        String daxClass = DAXParserFactory.DEFAULT_DAX_PARSER_CLASS;
-        LogManager logger = bag.getLogger();
-        PegasusProperties properties = bag.getPegasusProperties();
-        String daxSchema = properties.getDAXSchemaLocation();
-
-        // sanity check
-        if (properties == null) {
-            throw new RuntimeException("Invalid properties passed");
-        }
-        if (logger == null) {
-            throw new RuntimeException("Invalid logger passed");
-        }
-
-        // try to figure out the schema version by parsing the dax file
-        String schemaVersion = null;
-
-        try {
-            if (daxFile != null && !daxFile.isEmpty()) {
-                Map m = getXMLDAXMetadata(bag, daxFile);
-                if (m.containsKey("version")
-                        && (schemaVersion = (String) m.get("version")) != null) {
-
-                    logger.log(
-                            "DAX Version as determined from DAX file " + schemaVersion,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                }
-            }
-
-            // try to figure out the schema from the schema in properties
-            // in case unable to determine from the dax file
-            if (schemaVersion == null && daxSchema != null) {
-                // try to determine the version of dax schema
-                daxSchema = new File(daxSchema).getName();
-                if (daxSchema.startsWith("dax-") && daxSchema.endsWith(".xsd")) {
-                    schemaVersion =
-                            daxSchema.substring(
-                                    daxSchema.indexOf("dax-") + 4, daxSchema.lastIndexOf(".xsd"));
-
-                    logger.log(
-                            "DAX Version as determined from schema property " + schemaVersion,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                }
-            }
-
-            if (schemaVersion == null) {
-                throw new DAXParserFactoryException(
-                        "Unable to determine the DAX version from the DAX " + daxFile);
-            }
-
-            // append .0 to the version number
-            // to be able to convert to numeric value
-            if (CondorVersion.numericValue(schemaVersion + ".0")
-                    < DAXParserFactory.DAX_VERSION_3_2_0) {
-                daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
-            } else {
-                daxClass = DAXParserFactory.DAX_PARSER3_CLASS;
-            }
-
-        } catch (Exception e) {
-            logger.log(
-                    "Problem while determining the version of dax",
-                    e,
-                    LogManager.ERROR_MESSAGE_LEVEL);
-        }
-        logger.log("DAX Parser Class to be loaded is " + daxClass, LogManager.CONFIG_MESSAGE_LEVEL);
-
-        return loadDAXParser(daxClass, schemaVersion, bag, c);
+        return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, cb);
     }
 
     /**
@@ -249,51 +142,7 @@ public class DAXParserFactory {
      * @return Map containing the metadata, else an empty map
      */
     public static Map getDAXMetadata(PegasusBag bag, String dax) {
-        // PM-1511
-        if (FileDetector.isTypeXML(dax)) {
-            return DAXParserFactory.getXMLDAXMetadata(bag, dax);
-        }
-
         return YAMLDAX2Metadata.getMetadata(bag, dax);
-    }
-
-    /**
-     * Returns the metadata stored in the root adag element in the DAX
-     *
-     * @param bag the bag of initialization objects
-     * @param dax the dax file.
-     * @return Map containing the metadata, else an empty map
-     */
-    private static Map getXMLDAXMetadata(PegasusBag bag, String dax) {
-        Callback cb = DAXParserFactory.loadDAXParserCallback(bag, dax, "DAX2Metadata");
-
-        LogManager logger = bag.getLogger();
-        if (logger != null) {
-            logger.log(
-                    "Retrieving Metadata from the DAX file " + dax, LogManager.DEBUG_MESSAGE_LEVEL);
-        }
-
-        try {
-            XMLParser p =
-                    (XMLParser)
-                            DAXParserFactory.loadDAXParser(
-                                    DAXParserFactory.DAX_PARSER2_CLASS, "2.0", bag, cb);
-
-            // while determining the metadata we are just parsing adag element
-            // we want the parser validation to be turned off.
-            p.setParserFeature("http://xml.org/sax/features/validation", false);
-            p.setParserFeature("http://apache.org/xml/features/validation/schema", false);
-            p.startParser(dax);
-        } catch (RuntimeException e) {
-            // check explicitly for file not found exception
-            if (e.getCause() != null && e.getCause() instanceof java.io.IOException) {
-                // rethrow
-                throw e;
-            }
-        }
-
-        Map result = (Map) cb.getConstructedObject();
-        return (result == null) ? new HashMap() : result;
     }
 
     /**

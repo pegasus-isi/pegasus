@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.Container;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
+import edu.isi.pegasus.planner.parser.dax.DAXParser5Test;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -53,7 +53,7 @@ public class StagedTest {
         mTestSetup = new DefaultTestSetup();
         mBag = new PegasusBag();
         // the input dir is from the dax subpackage
-        mTestSetup.setInputDirectory(DAXParser3Test.class);
+        mTestSetup.setInputDirectory(DAXParser5Test.class);
 
         System.out.println("Input Test Dir is " + mTestSetup.getInputDirectory());
         PegasusProperties properties = PegasusProperties.nonSingletonInstance();

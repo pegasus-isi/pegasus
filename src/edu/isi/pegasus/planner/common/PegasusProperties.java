@@ -663,30 +663,6 @@ public class PegasusProperties implements Cloneable {
 
     // PROPERTIES RELATED TO SCHEMAS
     /**
-     * Returns the location of the schema for the DAX.
-     *
-     * <p>Referred to by the "pegasus.schema.dax" property.
-     *
-     * @return location to the DAX schema.
-     */
-    public String getDAXSchemaLocation() {
-        return this.getDAXSchemaLocation(null);
-    }
-
-    /**
-     * Returns the location of the schema for the DAX.
-     *
-     * <p>Referred to by the "pegasus.schema.dax" property.
-     *
-     * @param defaultLocation the default location to the schema.
-     * @return location to the DAX schema specified in the properties file, else the default
-     *     location if no value specified.
-     */
-    public String getDAXSchemaLocation(String defaultLocation) {
-        return mProps.getProperty("pegasus.schema.dax", defaultLocation);
-    }
-
-    /**
      * Returns the location of the schema for the PDAX.
      *
      * <p>Referred to by the "pegasus.schema.pdax" property
@@ -2109,18 +2085,6 @@ public class PegasusProperties implements Cloneable {
             return Integer.parseInt(DEFAULT_DOCUMENT_PARSER_SIZE);
         }
         return val;
-    }
-
-    /**
-     * Returns a boolean indicating whether to preserver line breaks.
-     *
-     * <p>Referred to by the "pegasus.parser.dax.preserve.linebreaks" property.
-     *
-     * @return boolean value in the properties file, else false if not specified or an invalid value
-     *     specified.
-     */
-    public boolean preserveParserLineBreaks() {
-        return Boolean.parse(mProps.getProperty("pegasus.parser.dax.preserve.linebreaks"), false);
     }
 
     /**
