@@ -79,8 +79,8 @@ Python:
   rules:
   - changes:
       paths:
-      - packages/pegasus-${PACKAGE}/src
-      - packages/pegasus-${PACKAGE}/test
+      - packages/pegasus-${PACKAGE}/src/**/*
+      - packages/pegasus-${PACKAGE}/test/**/*
   tags:
   - ${ARCH}
   - docker
@@ -120,8 +120,8 @@ Python Worker:
   rules:
   - changes:
       paths:
-      - packages/pegasus-${PACKAGE}/src
-      - packages/pegasus-${PACKAGE}/test
+      - packages/pegasus-${PACKAGE}/src/**/*
+      - packages/pegasus-${PACKAGE}/test/**/*
   tags:
   - ${ARCH}
   - docker
@@ -146,8 +146,8 @@ Java:
   rules:
   - changes:
       paths:
-        - src
-        - test/junit
+        - src/**/*
+        - test/junit/**/*
   tags:
   - ${ARCH}
   - docker
@@ -174,10 +174,10 @@ C:
   rules:
   - changes:
       paths:
-      - packages/pegasus-kickstart
+      - packages/pegasus-kickstart/**/*
       # pegasus-transfer
-      - packages/pegasus-worker/src
-      - packages/pegasus-worker/test
+      - packages/pegasus-worker/src/**/*
+      - packages/pegasus-worker/test/**/*
   tags:
   - ${ARCH}
   - docker
