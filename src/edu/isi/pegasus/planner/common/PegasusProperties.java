@@ -2111,6 +2111,18 @@ public class PegasusProperties implements Cloneable {
     /**
      * Returns a boolean indicating whether to preserver line breaks.
      *
+     * <p>Referred to by the "pegasus.parser.dax.yaml.stream" property.
+     *
+     * @return boolean value in the properties file, else false if not specified or an invalid value
+     *     specified.
+     */
+    public boolean useYAMLStreamingParserForDAX() {
+        return Boolean.parse(mProps.getProperty("pegasus.parser.dax.yaml.stream"), false);
+    }
+
+    /**
+     * Returns a boolean indicating whether to preserver line breaks.
+     *
      * <p>Referred to by the "pegasus.parser.dax.preserve.linebreaks" property.
      *
      * @return boolean value in the properties file, else false if not specified or an invalid value
