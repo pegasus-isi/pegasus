@@ -1,6 +1,10 @@
 import os
+import shutil
+import sys
+import tempfile
 import time
 import unittest
+from unittest import mock
 
 from Pegasus.tools import utils
 
@@ -257,6 +261,54 @@ class TestFindExec(unittest.TestCase):
             )
             is not None
         )
+
+
+class TestPegasusVersion(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)
+
+        self.fake_bin = os.path.join(self.tmpdir, "pegasus-version")
+        with open(self.fake_bin, "w") as f:
+            f.write("#!/bin/sh\necho 5.2.0dev\n")
+        os.chmod(self.fake_bin, 0o755)
+
+        # Isolate from whatever the real environment/argv/executable happen
+        # to be, so these tests don't depend on how they were invoked.
+        env = dict(os.environ)
+        env.pop("PEGASUS_HOME", None)
+        self.env_patcher = mock.patch.dict(os.environ, env, clear=True)
+        self.env_patcher.start()
+        self.addCleanup(self.env_patcher.stop)
+
+    def testFindsBinaryViaPegasusHome(self):
+        "Should find pegasus-version under $PEGASUS_HOME/bin, regardless of argv/executable"
+        home = os.path.join(self.tmpdir, "home")
+        os.makedirs(os.path.join(home, "bin"))
+        shutil.copy(self.fake_bin, os.path.join(home, "bin", "pegasus-version"))
+        os.environ["PEGASUS_HOME"] = home
+
+        with mock.patch.object(sys, "argv", ["pegasus-analyzer"]):
+            with mock.patch.object(sys, "executable", "/nonexistent/python3"):
+                self.assertEqual(utils.pegasus_version(), "5.2.0dev")
+
+    def testFindsBinaryViaInterpreterDirWhenArgv0HasNoDirectory(self):
+        """Should fall back to sys.executable's directory when sys.argv[0] has
+        no directory component -- as happens when the unified `pegasus
+        <subcommand>` CLI (Pegasus.cli.main) rewrites sys.argv[0] to a bare
+        script name before delegating via runpy. Regression test for the
+        client_version: null 422 seen from the Pegasus Agent service."""
+        with mock.patch.object(sys, "argv", ["pegasus-analyzer"]):
+            with mock.patch.object(
+                sys, "executable", os.path.join(self.tmpdir, "python3")
+            ):
+                self.assertEqual(utils.pegasus_version(), "5.2.0dev")
+
+    def testReturnsNoneWhenBinaryNotFound(self):
+        "Should return None, not raise, when pegasus-version can't be located anywhere"
+        with mock.patch.object(sys, "argv", ["pegasus-analyzer"]):
+            with mock.patch.object(sys, "executable", "/nonexistent/python3"):
+                self.assertIsNone(utils.pegasus_version())
 
 
 if __name__ == "__main__":

@@ -31,7 +31,10 @@ class AgentClient:
         else:
             self.token = "default"
 
-        self.client_version = utils.pegasus_version()
+        # The service requires client_version to be a JSON string; pegasus_version()
+        # can return None if the pegasus-version binary can't be located, which the
+        # service rejects with a 422 (Unprocessable Content) rather than a null.
+        self.client_version = utils.pegasus_version() or "unknown"
 
     def analyze(self, workflow_id, analyze_stdout):
         """Analyze a workflow using the Pegasus Agent service.

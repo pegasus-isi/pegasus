@@ -791,9 +791,18 @@ def pegasus_version():
             pegasus_version = f
 
     if not pegasus_version:
-        f = os.path.join(os.path.dirname(sys.argv[0]), "pegasus-version")
-        if os.path.isfile(f):
-            pegasus_version = f
+        # sys.argv[0] is not reliable here: the unified `pegasus <subcommand>`
+        # CLI (Pegasus.cli.main) rewrites it to a bare script name (e.g.
+        # "pegasus-analyzer", with no directory component) before delegating
+        # to the per-tool script via runpy, so os.path.dirname(sys.argv[0])
+        # resolves to "" and the lookup below would silently miss. Also try
+        # the running interpreter's own directory, where console-script
+        # siblings like pegasus-version are installed alongside it.
+        for directory in (os.path.dirname(sys.argv[0]), os.path.dirname(sys.executable)):
+            f = os.path.join(directory, "pegasus-version")
+            if os.path.isfile(f):
+                pegasus_version = f
+                break
 
     if pegasus_version:
         child = subprocess.Popen(
