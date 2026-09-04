@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5;
+import edu.isi.pegasus.planner.parser.dax.DAXParser5Streaming;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
 
@@ -86,7 +87,7 @@ public class DAXParserFactoryTest {
         String dax = new File(mTestSetup.getInputDirectory(), "workflow.yml").getAbsolutePath();
         DAXParser parser =
                 DAXParserFactory.loadDAXParser(mBag, DAXParserFactory.DEFAULT_CALLBACK_CLASS, dax);
-        assertThat(parser, instanceOf(DAXParser5.class));
+        assertThat(parser, instanceOf(DAXParser5Streaming.class));
         mLogger.logEventCompletion();
     }
 
