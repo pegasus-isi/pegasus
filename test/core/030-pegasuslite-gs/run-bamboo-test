@@ -60,8 +60,7 @@ sites:
       url: "gs://pegasus-wms-test-030/scratch"
   profiles:
     pegasus:
-      boto_config: "$HOME/.boto.service"
-      google_pkcs12: "$HOME/gstorage/pegasus-wms-b4bcec935cba.json"
+      GOOGLE_APPLICATION_CREDENTIALS: "$HOME/.google.key"
  -
   name: "local"
   arch: "x86_64"
