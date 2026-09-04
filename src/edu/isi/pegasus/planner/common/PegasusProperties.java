@@ -2116,11 +2116,11 @@ public class PegasusProperties implements Cloneable {
      *
      * <p>Referred to by the "pegasus.parser.dax.yaml.stream" property.
      *
-     * @return boolean value in the properties file, else false if not specified or an invalid value
+     * @return boolean value in the properties file, else true if not specified or an invalid value
      *     specified.
      */
     public boolean useYAMLStreamingParserForDAX() {
-        return Boolean.parse(mProps.getProperty("pegasus.parser.dax.yaml.stream"), false);
+        return Boolean.parse(mProps.getProperty("pegasus.parser.dax.yaml.stream"), true);
     }
 
     /**

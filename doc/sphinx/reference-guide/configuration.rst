@@ -3502,8 +3502,8 @@ Miscellaneous Properties
     | | Profile Key: N/A                                | | large workflows getting around the deserialization limit  |
     | | Scope : Properties                              | | in the underlying snakeyaml library.                      |
     | | Since : 5.1.3                                   | |                                                           |
-    | | Type : Boolean                                  | |                                                           |
-    | | Default : False                                 | |                                                           |
+    | | Type : Boolean                                  | | Starting 6.0.0 release this defaults to True.             |
+    | | Default : True                                  | |                                                           |
     +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key: pegasus.credential.encrypt        | | If this property is set to true, then the planner         |
     | |                                                 | | will turn ON the encryption of credential when            |
