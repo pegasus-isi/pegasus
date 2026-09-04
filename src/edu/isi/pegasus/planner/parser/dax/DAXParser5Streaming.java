@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogKeywords;
@@ -36,6 +37,7 @@ import edu.isi.pegasus.planner.common.VariableExpansionReader;
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.parser.YAMLParser;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -392,7 +394,8 @@ public class DAXParser5Streaming extends YAMLParser implements DAXParser {
                                     .append(rl)
                                     .append(" ")
                                     .append(
-                                            "as it has regex attribute set to true. Please specify such entries in a replica catalog file.");
+                                            "as it has regex attribute set to true. Please specify"
+                                                    + " such entries in a replica catalog file.");
                             throw new ReplicaCatalogException(error.toString());
                         }
                         mCallback.cbFile(rl);
