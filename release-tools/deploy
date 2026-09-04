@@ -113,8 +113,9 @@ cd /scitech/shared/scratch-90-days/bamboo/installs
 NOW=$(date +'%s')
 tar -xz --transform="s/^pegasus-$VERSION/pegasus-$VERSION-$NOW/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
 
-# update symlink
+# update symlinks
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
+ln -s -n -f pegasus-$VERSION-$NOW pegasus-$CI_COMMIT_BRANCH
 
 # only keep so many installs
 find . -maxdepth 1 -type d -mtime +10 -exec rm -rf {} \;

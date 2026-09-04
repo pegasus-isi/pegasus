@@ -29,7 +29,7 @@ export CLASSPATH=.:$(pegasus-config --classpath)
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+java BlackDiamondDAX /scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -46,7 +46,7 @@ cat >sites.xml <<EOF
 		<file-server  operation="all" url="scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs">
 		</file-server>
 	</directory>
-	<profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+	<profile namespace="env" key="PEGASUS_HOME" >/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH</profile>
 	<profile namespace="condor" key="universe" >vanilla</profile>
 	<profile namespace="pegasus" key="style" >condor</profile>
   <profile namespace="pegasus" key="ssh_private_key" >/scitech/shared/home/bamboo/.ssh/workflow_id_rsa</profile>
