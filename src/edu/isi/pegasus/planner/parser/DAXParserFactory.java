@@ -62,6 +62,9 @@ public class DAXParserFactory {
     /** The YAML_DAX_PARSER_CLASS classname */
     public static final String YAML_DAX_PARSER_CLASS = "DAXParser5";
 
+    /** The streaming counterpart YAML_DAX_PARSER_CLASS classname */
+    public static final String STREAMING_YAML_DAX_PARSER_CLASS = "DAXParser5Streaming";
+
     /**
      * Loads the appropriate DAXParser looking at the dax schema that is specified by the user.
      *
@@ -111,7 +114,12 @@ public class DAXParserFactory {
         if (FileDetector.isTypeXML(daxFile)) {
             return DAXParserFactory.loadXMLDAXParser(bag, cb, daxFile);
         } else {
-            return DAXParserFactory.loadDAXParser(YAML_DAX_PARSER_CLASS, "5.0", bag, cb);
+            // GH-2243 figure our whether to load streaming version or not
+            String parserClass =
+                    properties.useYAMLStreamingParserForDAX()
+                            ? DAXParserFactory.STREAMING_YAML_DAX_PARSER_CLASS
+                            : DAXParserFactory.YAML_DAX_PARSER_CLASS;
+            return DAXParserFactory.loadDAXParser(parserClass, "5.0", bag, cb);
         }
     }
 
