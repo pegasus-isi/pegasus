@@ -106,7 +106,6 @@ sites:
      -
       operation: "all"
       url: "file://$TOPDIR/scratch"
-
 EOF
 
 # plan and submit the  workflow

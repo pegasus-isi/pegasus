@@ -49,7 +49,7 @@ sites:
       url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
   profiles:
     env:
-      PEGASUS_HOME: "/usr"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH"
     condor:
       universe: "vanilla"
     pegasus:

@@ -120,8 +120,9 @@ fi
 echo "Installing shared workflow-test install from $WHEEL"
 pegasus-$VERSION-$NOW/bin/pip install "$WHEEL"
 
-# update symlink
+# update symlinks
 ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
+ln -s -n -f pegasus-$VERSION-$NOW pegasus-$CI_COMMIT_BRANCH
 
 # only keep so many installs
 find . -maxdepth 1 -type d -mtime +10 -exec rm -rf {} \;
