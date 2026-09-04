@@ -3497,6 +3497,14 @@ Miscellaneous Properties
     | | Default : 500                                   | |                                                           |
     | | Maximum : 2047                                  | |                                                           |
     +---------------------------------------------------+-------------------------------------------------------------+
+    | | Property Key: pegasus.parser.dax.yaml.stream    | | For parsing YAML documents, this property triggers a      |
+    | |                                                 | | streaming YAML parser that allows for parsing large       |
+    | | Profile Key: N/A                                | | large workflows getting around the deserialization limit  |
+    | | Scope : Properties                              | | in the underlying snakeyaml library.                      |
+    | | Since : 5.1.3                                   | |                                                           |
+    | | Type : Boolean                                  | |                                                           |
+    | | Default : False                                 | |                                                           |
+    +---------------------------------------------------+-------------------------------------------------------------+
     | | Property Key: pegasus.credential.encrypt        | | If this property is set to true, then the planner         |
     | |                                                 | | will turn ON the encryption of credential when            |
     | | Profile Key: N/A                                | | transferring the credential using HTCondor while          |
