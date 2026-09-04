@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -121,6 +122,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
      * @param file the path to the YAML file you want to parse.
      */
     public void parse(String file) {
+        mLogger.logEventStart(LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file);
         Reader reader;
         try {
             reader = new VariableExpansionReader(new FileReader(file), this.mProps);
@@ -140,6 +142,7 @@ public class DAXParser5 extends YAMLParser implements DAXParser {
         } catch (IOException ex) {
             throw new RuntimeException("Exception while parsing yaml file " + file, ex);
         }
+        mLogger.logEventCompletion();
     }
 
     /**
