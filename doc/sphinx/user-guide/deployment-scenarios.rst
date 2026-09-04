@@ -1116,12 +1116,17 @@ down option in the IP presets that allows you to select your IP.
 
 .. code-block:: console
 
-    $ python3 -m venv ~/superfacility-env
+    $ python3.11 -m venv ~/superfacility-env
     $ source ~/superfacility-env/bin/activate
-    (superfacility-env) $ pip install sfapi_client
+    (superfacility-env) $ pip3 install sfapi_client
 
 The virtual environment must be at ``~/superfacility-env``. The HTCondor blahp bindings
 activate this enviornment when interacting with sfapi
+
+.. note::
+
+      This virtualenv should be created with Python3.11 or higher. Job submission is known
+      to fail with Python3.9 created virtualenv.
 
 **3. Pegasus SFAPI BLAHP scripts**
 
