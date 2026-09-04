@@ -798,7 +798,10 @@ def pegasus_version():
         # resolves to "" and the lookup below would silently miss. Also try
         # the running interpreter's own directory, where console-script
         # siblings like pegasus-version are installed alongside it.
-        for directory in (os.path.dirname(sys.argv[0]), os.path.dirname(sys.executable)):
+        for directory in (
+            os.path.dirname(sys.argv[0]),
+            os.path.dirname(sys.executable),
+        ):
             f = os.path.join(directory, "pegasus-version")
             if os.path.isfile(f):
                 pegasus_version = f

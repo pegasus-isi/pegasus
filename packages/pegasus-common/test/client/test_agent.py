@@ -147,9 +147,7 @@ def test_url_and_token_come_from_properties(mocker):
             "pegasus.agent.token": "mytoken",
         }.get(key),
     )
-    mocker.patch(
-        "Pegasus.client.agent.utils.pegasus_version", return_value="5.2.0dev"
-    )
+    mocker.patch("Pegasus.client.agent.utils.pegasus_version", return_value="5.2.0dev")
     mock_post = mocker.patch(
         "Pegasus.client.agent.requests.post",
         return_value=_FakeResponse(200, {"message": "ok"}),
