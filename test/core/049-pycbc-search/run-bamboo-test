@@ -4,7 +4,7 @@
 # dir to be on a shared filesystem visible to the condorpool
 # nodes, since the site catalog is constructed w.r.t it.
 
-set -e
+set -euo pipefail
 
 START_DIR=$(pwd)
 TEST_DIR=/scitech/shared/scratch2-90-days/bamboo/$(uuidgen)
@@ -47,15 +47,18 @@ cd pycbc
 pip3 install pylib-fftw3
 
 # remove references to any pegasus packages
-sed -i 's/^pegasus.*//' requirements.txt
+#sed -i 's/^pegasus-wms >= 5.1.1/pegasus-wms >= 6.0.0.dev0/' requirements.txt
+#sed -i 's/^pegasus\..*//' requirements.txt
 pip3 install -r requirements.txt
 
 pip3 install -r companion.txt
+
+#sed -i 's/pegasus-wms.api >= 5.1.1/pegasus-wms >= 6.0.0.dev0/' setup.py
 pip3 install  .
 
 # remove old pegasus packages - temp fix until pycbc depends on Pegasus 6.0
 pip3 uninstall -y pegasus-wms-api pegasus-wms-common || true
-pip3 install --force-reinstall ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
+pip3 install --force-reinstall ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl 2>&1 | grep -v "ERROR: pip's dependency resolver does not"
 
 # run workflow
 cd examples/search/
