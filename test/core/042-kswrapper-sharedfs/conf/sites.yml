@@ -32,7 +32,7 @@ sites:
             url: scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/${TEST_NAME}
     profiles:
       env:
-        PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-${CI_COMMIT_BRANCH}"
+        PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-${CI_COMMIT_SHORT_SHA}"
       condor:
         universe: vanilla
       pegasus:

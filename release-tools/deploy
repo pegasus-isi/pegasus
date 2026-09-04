@@ -110,13 +110,10 @@ scp -i ~/.ssh/deployment -r docs/pegasus-*/share/doc/pegasus/wordpress/* bamboo@
 mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 
-NOW=$(date +'%s')
-tar -xz --transform="s/^pegasus-$VERSION/pegasus-$VERSION-$NOW/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+tar -xz --transform="s/^pegasus-$VERSION/pegasus-$CI_COMMIT_SHORT_SHA/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
 
 # update symlinks
-ln -s -n -f pegasus-$VERSION-$NOW pegasus-$VERSION
-ln -s -n -f pegasus-$VERSION-$NOW pegasus-$CI_COMMIT_BRANCH
+ln -s -n -f pegasus-$CI_COMMIT_SHORT_SHA pegasus-$VERSION
 
 # only keep so many installs
 find . -maxdepth 1 -type d -mtime +10 -exec rm -rf {} \;
-

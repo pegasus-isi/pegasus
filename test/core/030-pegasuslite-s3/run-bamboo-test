@@ -11,7 +11,11 @@ if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
     exit 1
 fi
 
-export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
 
 # build the dax generator
 PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $REMOTE_PEGASUS_HOME > blackdiamond.dax
