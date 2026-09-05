@@ -8,6 +8,10 @@ if [ X${testdir} = "X" ]; then
     export testdir
 fi
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
 TOPDIR=`pwd`
 
 CONDOR_POOL_SHARED_FS=/scitech/shared/scratch-90-days/bamboo
@@ -21,8 +25,10 @@ echo "This is sample input to KEG" > $CONDOR_POOL_SHARED_FS/inputs/f.a1
 mkdir -p outputs
 mkdir -p work
 
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
+
 # build the dax generator
-PYTHONPATH=$(pegasus-config --python) $testdir/blackdiamond.py /usr $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
+PYTHONPATH=$(pegasus-config --python) $testdir/blackdiamond.py $REMOTE_PEGASUS_HOME $CONDOR_POOL_SHARED_FS/inputs > blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF

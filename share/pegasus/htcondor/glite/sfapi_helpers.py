@@ -1,13 +1,13 @@
 from sfapi_client import Client, StatusValue
 from sfapi_client.compute import Machine
-from sfapi_client.jobs import JobCommand, JobState
 
-from datetime import datetime
 import argparse
 import shutil
 import sys
 from pathlib import Path
-from authlib.jose import JsonWebKey
+
+from joserfc import jwk
+
 import json
 from io import BytesIO
 import os
@@ -21,6 +21,7 @@ client_secret = None
 class SfApiHelperError(Exception):
     """Raised for errors encountered in sfapi_helpers operations."""
     pass
+
 
 def submit_remote_slurm_job(job_name, job_script, input_files):
     """
@@ -59,7 +60,7 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
 #SBATCH --output={remote_stdout}
 #SBATCH --error={remote_stderr}
 #SBATCH --chdir={remote_dir}
-"""     + job_script
+""" + job_script
 
         print("Submitting job \n" + job_name)
 
@@ -70,6 +71,7 @@ def submit_remote_slurm_job(job_name, job_script, input_files):
         job_id = job.jobid
         print(f"Started {job_id} with stdout: {remote_stdout} stderr: {remote_stderr}")
         return job_id, remote_dir, remote_stdout, remote_stderr
+
 
 def retrieve_remote_stdout_stderr(job_id, remote_stdout, remote_stderr):
     """
@@ -89,7 +91,6 @@ def retrieve_remote_stdout_stderr(job_id, remote_stdout, remote_stderr):
 
     download_file(remote_stdout, f"{job_id}.out")
     download_file(remote_stderr, f"{job_id}.err")
-
 
 
 def download_file(source, destination):
@@ -116,6 +117,7 @@ def download_file(source, destination):
             with open(destination, 'w') as f:
                 shutil.copyfileobj(buffer, f)
                 print(f"Downloaded File: {os.path.abspath(destination)}")
+
 
 def download_job_outputs(blahp_job_id):
     """
@@ -229,10 +231,9 @@ def upload_file(directory, file):
                 buf.filename = os.path.basename(file)
                 uploaded_file = remote_dir.upload(buf)
                 print(f"Uploaded file to {uploaded_file}")
-                #print(f"Now there's {len(dtns.ls(remote_dir))} files in the directory")
+                # print(f"Now there's {len(dtns.ls(remote_dir))} files in the directory")
 
     return uploaded_file
-
 
 
 def create_remote_blahp_directory(name):
@@ -280,6 +281,7 @@ def check_nersc_status(resource_name):
             f"Resource {resource_name} is not active: {resource_status.description}"
         )
 
+
 def check_job_status(jobid):
     """
     Query and print the current Slurm state of a job on Perlmutter.
@@ -294,6 +296,7 @@ def check_job_status(jobid):
         perlmutter = client.compute(Machine.perlmutter)
         job = perlmutter.job(jobid=args.value)
     print(f"Job {args.value} state: {job.state}")
+
 
 def print_nersc_status():
     """
@@ -334,9 +337,13 @@ def load_sflapi_client_secret():
     print(f"User client id for superfacility is {client_id}")
 
     sfapi_key = sf_key_dir / "priv_key.jwk"
-    client_secret = JsonWebKey.import_key(json.loads(sfapi_key.read_text()))
 
-    print(f"Client secret for superfacility is {client_secret}")
+    with open(sfapi_key, "r") as f:
+        jwk_data = json.load(f)
+        # joserfc automatically identifies the type (e.g., RSA, EC, OKP) from the dict
+        client_secret = jwk.import_key(jwk_data)
+
+    # print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
 
 
@@ -352,7 +359,6 @@ def main():
     print_nersc_status()
     client_id, client_secret = load_sflapi_client_secret()
 
-
     # all the projects user has
     N = 10000
     with Client(client_id, client_secret) as client:
@@ -361,12 +367,11 @@ def main():
         print(user)
         projects = user.projects()
 
-
     print("Project name |        Hours Given | Hours Remaining")
     for project in projects:
         print("=" * 51)
         print(
-             f"{project.repo_name: <13}| {project.hours_given:>12.2f} Hours | {project.hours_given - project.hours_used:>8.2f} Hours"
+            f"{project.repo_name: <13}| {project.hours_given:>12.2f} Hours | {project.hours_given - project.hours_used:>8.2f} Hours"
         )
 
     # create an input file
@@ -397,7 +402,6 @@ python -c "import numpy as np; numbers = np.random.normal(size={N}); [print(n) f
     """
     job_id, remote_stdout, remote_stderr = submit_remote_slurm_job(None, job_script, [input_file])
     retrieve_remote_stdout_stderr(job_id, remote_stdout, remote_stderr)
-
 
 
 def _cmd_submit(args):

@@ -28,7 +28,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3;
 import edu.isi.pegasus.planner.parser.dax.DAXParser3Test;
-import edu.isi.pegasus.planner.parser.dax.DAXParser5;
 import edu.isi.pegasus.planner.parser.dax.DAXParser5Streaming;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;

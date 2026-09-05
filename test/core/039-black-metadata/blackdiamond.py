@@ -1,4 +1,6 @@
 #!/usr/bin/env python3.12
+
+import sys
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -7,7 +9,11 @@ from Pegasus.api import *
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = "/usr/bin/pegasus-keg"
+if len(sys.argv) != 2:
+    print("Usage: %s PEGASUS_HOME" % (sys.argv[0]))
+    sys.exit(1)
+
+PEGASUS_LOCATION = sys.argv[1] + "/bin/pegasus-keg"
 
 # --- Work Dir Setup -----------------------------------------------------------
 RUN_ID = "black-diamond-metadata-" + datetime.now().strftime("%s")

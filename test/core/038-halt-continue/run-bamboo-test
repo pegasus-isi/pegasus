@@ -2,6 +2,10 @@
 
 set -e
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
 function update_status
 {
    STATUS=`pegasus-status --noqueue . | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
@@ -36,7 +40,7 @@ mkdir -p outputs
 CLASSPATH=.:$(pegasus-config --classpath) javac HierarchicalDiamonds.java
 
 # generate the dax
-CLASSPATH=.:$(pegasus-config --classpath) java HierarchicalDiamonds /usr
+CLASSPATH=.:$(pegasus-config --classpath) java HierarchicalDiamonds /scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -48,7 +52,7 @@ sites:
   os.type: "linux"
   profiles:
     env:
-      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA"
     condor:
       universe: "vanilla"
     pegasus:

@@ -3,6 +3,10 @@
 set -e
 set -v
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
 TOPDIR=`pwd`
 
 CONFIG=`basename $1`
@@ -42,11 +46,11 @@ echo "This is sample input to KEG" > ${input_file}
 mkdir -p outputs
 mkdir -p staging-site
 
-export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-`pegasus-version`
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
 
 # build the dax generator
 if [[ "${CONFIG}" == *"sharedfs"*  ]]; then
-    PEGASUS_HOME="/usr"
+    PEGASUS_HOME="$REMOTE_PEGASUS_HOME"
 else
     PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
 fi

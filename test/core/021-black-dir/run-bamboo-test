@@ -3,10 +3,13 @@
 set -e
 set -v
 
-
 if [ X${testdir} = "X" ]; then
     testdir=`dirname  $0`
     export testdir
+fi
+
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
 fi
 
 TOPDIR=`pwd`
@@ -29,7 +32,7 @@ export CLASSPATH=.:$(pegasus-config --classpath)
 javac $testdir/BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX /scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH blackdiamond.dax
+java BlackDiamondDAX /scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA blackdiamond.dax
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -58,7 +61,7 @@ sites:
       url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
   profiles:
     env:
-      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
     condor:
       universe: "vanilla"
     pegasus:

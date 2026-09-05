@@ -2,10 +2,13 @@
 
 set -e
 
-
 if [ X${testdir} = "X" ]; then
     testdir=`dirname  $0`
     export testdir
+fi
+
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
 fi
 
 TOPDIR=`pwd`
@@ -60,7 +63,7 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      PEGASUS_HOME: "/usr"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA"
     pegasus:
       change.dir: "true"
       clusters.num: "1"

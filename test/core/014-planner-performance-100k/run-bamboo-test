@@ -19,7 +19,7 @@ set -e
 
 TOPDIR=`pwd`
 
-PYTHONPATH=$(pegasus-config --python) ./100k.py $REMOTE_PEGASUS_HOME > 100k.dax
+PYTHONPATH=$(pegasus-config --python) ./100k.py > 100k.dax
 
 # create the site catalog
 cat > sites.yml <<EOF
@@ -31,7 +31,7 @@ sites:
   os.type: "linux"
   profiles:
     env:
-      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_BRANCH"
+      PEGASUS_HOME: "/usr"
     condor:
       universe: "vanilla"
     pegasus:
