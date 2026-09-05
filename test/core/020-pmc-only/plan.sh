@@ -35,9 +35,9 @@ echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --dir submit \
-    --dax dax.xml \
     --sites local \
     --output-sites local \
-    --cleanup leaf
+    --cleanup leaf \
+    dax.xml
 
 exit $?
