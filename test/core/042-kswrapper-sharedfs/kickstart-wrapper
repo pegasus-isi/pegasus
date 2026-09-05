@@ -1,7 +1,8 @@
-#! /bin/bash 
+#!/bin/bash
 
-set -e 
+set -e
 
-export JIRA_ITEM="PM-1097" 
+export JIRA_ITEM="PM-1097"
 
-pegasus-kickstart $@ 
+PEGASUS_KICKSTART="`dirname "$0"`/pegasus-kickstart"
+$PEGASUS_KICKSTART $@
