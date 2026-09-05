@@ -292,7 +292,6 @@ test: test-python test-java test-c
 test-python:
 	cd packages/pegasus-common && tox -e $(PY_VERSION)
 	cd packages/pegasus-api    && tox -e $(PY_VERSION)
-	cd packages/pegasus-worker && tox -e $(PY_VERSION)
 	cd packages/pegasus-python && tox -e $(PY_VERSION)
 
 # Run Java unit tests (JUnit 5).

@@ -43,7 +43,6 @@ make test-python   # runs tox for all four packages
 cd packages/pegasus-python && tox -e py310
 cd packages/pegasus-api && tox -e py310
 cd packages/pegasus-common && tox -e py310
-cd packages/pegasus-worker && tox -e py310
 
 # Java unit tests (JUnit 5) — requires make build-java first
 make test-java
@@ -64,7 +63,6 @@ Test framework is pytest for Python. Reports go to `test-reports/`.
 cd packages/pegasus-python && tox -e lint
 cd packages/pegasus-api && tox -e lint
 cd packages/pegasus-common && tox -e lint
-cd packages/pegasus-worker && tox -e lint
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
@@ -122,12 +120,11 @@ Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, 
 
 Four namespace packages sharing the `Pegasus` namespace:
 
-| Package           | What it provides                                                            |
-| ----------------- | --------------------------------------------------------------------------- |
-| `pegasus-api/`    | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs)       |
-| `pegasus-common/` | Shared utilities (`braindump`, YAML/JSON handling, client utils)            |
-| `pegasus-python/` | CLI tools, monitoring daemon, database layer, dashboard, statistics         |
-| `pegasus-worker/` | Worker-side execution: data transfer (`transfer.py`, `s3.py`), worker utils |
+| Package           | What it provides                                                      |
+| ----------------- | --------------------------------------------------------------------- |
+| `pegasus-api/`    | Workflow definition API (`Workflow`, `Job`, `File`, `Site`, catalogs) |
+| `pegasus-common/` | Shared utilities (`braindump`, YAML/JSON handling, client utils)      |
+| `pegasus-python/` | CLI tools, monitoring daemon, database layer, dashboard, statistics   |
 
 Python source lives under `packages/<pkg>/src/Pegasus/`.
 
@@ -139,6 +136,15 @@ Python source lives under `packages/<pkg>/src/Pegasus/`.
 | `pegasus-cluster/`     | C        | Groups multiple jobs into clustered execution         |
 | `pegasus-keg/`         | C++      | Synthetic job generator for testing                   |
 | `pegasus-mpi-cluster/` | C++      | MPI-based distributed job clustering                  |
+
+### Go — `packages/`
+
+| Package                          | Language | Purpose                                       |
+| -------------------------------- | -------- | --------------------------------------------- |
+| `packages/pegasus-transfer`      | Go       | Tool to transfer files for a Pegasus workflow |
+| `packages/pegasus-globus-online` | Go       | Globus Online integration                     |
+| `packages/pegasus-checkpoint`    | Go       | Pegasus job checkpointing                     |
+| `packages/pegasus-integrity`     | Go       | Pegasus integrity checking                    |
 
 ### CLI Entry Points
 

@@ -17,13 +17,6 @@ from pathlib import Path
 import click
 
 _CLI_DIR = Path(__file__).parent
-_WORKER_CLI_DIR = (
-    _CLI_DIR.parent.parent.parent.parent  # packages/
-    / "pegasus-worker"
-    / "src"
-    / "Pegasus"
-    / "cli"
-)
 
 
 # ── Low-level helpers ────────────────────────────────────────────────────────
@@ -32,8 +25,6 @@ _WORKER_CLI_DIR = (
 def _run_script(script_name: str, args, *, search_worker: bool = False) -> None:
     """Run a hyphenated CLI script as __main__ via runpy."""
     path = _CLI_DIR / f"{script_name}.py"
-    if not path.exists() and search_worker:
-        path = _WORKER_CLI_DIR / f"{script_name}.py"
     if not path.exists():
         click.echo(f"pegasus: {script_name}: script not found at {path}", err=True)
         sys.exit(1)

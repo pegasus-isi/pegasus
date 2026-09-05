@@ -12,7 +12,6 @@ REQUIREMENTS="$DIR/src/requirements.txt"
 
 WORKER_PACKAGE=(packages/pegasus-worker)
 PACKAGES=(
-    packages/pegasus-worker
     packages/pegasus-python
     packages/pegasus-api
     packages/pegasus-common

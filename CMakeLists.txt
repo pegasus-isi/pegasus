@@ -97,7 +97,7 @@ set(WORKER_DEST  "${_data_base}/worker-packages")
 set(SCHEMA_DEST  "${_data_base}/schema")
 set(ETC_DEST     "${_data_base}/etc")
 
-# Python sub-packages: merge pegasus-common, pegasus-api, and pegasus-worker
+# Python sub-packages: merge pegasus-common, and pegasus-api
 # into the wheel alongside pegasus-python (handled by wheel.packages).
 # pegasus-worker's Python content here is now just namespace-package
 # boilerplate (see packages/pegasus-worker/CLAUDE.md) — every CLI tool that
