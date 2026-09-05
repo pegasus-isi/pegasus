@@ -52,7 +52,6 @@ Python:
       - common
       - api
       - python
-      - worker
   image: python:3.14
   before_script:
   - env
@@ -61,47 +60,6 @@ Python:
   - pip3 install tox-uv
   script:
   - cd packages/pegasus-${PACKAGE}; tox
-  coverage: '/Total coverage: \d+\.\d+%/'
-  artifacts:
-    when: always
-    reports:
-      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
-    paths:
-    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
-  rules:
-  - changes:
-      paths:
-      - packages/pegasus-${PACKAGE}/src/**/*
-      - packages/pegasus-${PACKAGE}/test/**/*
-  tags:
-  - ${ARCH}
-  - docker
-
-# Only for Python versions not supported by uv
-Python Worker:
-  <<: *retry-and-timeout
-  stage: test
-  parallel:
-    matrix:
-    - ARCH:
-      - x86_64
-      - arm64
-      PYTHON_VERSION:
-      - '3.6'
-      - '3.7'
-      PACKAGE:
-      - worker
-  image: python:${PYTHON_VERSION}
-  before_script:
-  - env
-  - export USER=nobody
-  - pip3 install --upgrade pip setuptools
-  - pip3 install tox
-  script:
-  - cd packages/pegasus-${PACKAGE}; tox -e py$(echo ${PYTHON_VERSION} | sed -E 's/([0-9]*).([0-9]*).*$/\1\2/g')
   coverage: '/Total coverage: \d+\.\d+%/'
   artifacts:
     when: always
@@ -170,9 +128,6 @@ C:
   - changes:
       paths:
       - packages/pegasus-kickstart/**/*
-      # pegasus-transfer
-      - packages/pegasus-worker/src/**/*
-      - packages/pegasus-worker/test/**/*
   tags:
   - ${ARCH}
   - docker

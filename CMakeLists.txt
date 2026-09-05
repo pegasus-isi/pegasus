@@ -111,8 +111,6 @@ if(DEFINED SKBUILD_PLATLIB_DIR)
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-api/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-worker/src/Pegasus/"
-            DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
 endif()
 
 # Static runtime data — always installed regardless of Java/C build flags.
