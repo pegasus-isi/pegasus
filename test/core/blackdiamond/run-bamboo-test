@@ -50,7 +50,7 @@ export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegas
 
 # build the dax generator
 if [[ "${CONFIG}" == *"sharedfs"*  ]]; then
-    PEGASUS_HOME="/usr"
+    PEGASUS_HOME="$REMOTE_PEGASUS_HOME"
 else
     PEGASUS_HOME="$(dirname $(dirname $(which pegasus-version)))"
 fi

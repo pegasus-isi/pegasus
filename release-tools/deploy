@@ -111,6 +111,7 @@ mkdir -p /scitech/shared/scratch-90-days/bamboo/installs
 cd /scitech/shared/scratch-90-days/bamboo/installs
 
 tar -xz --transform="s/^pegasus-$VERSION/pegasus-$CI_COMMIT_SHORT_SHA/" -f $TOPDIR/dist/$DOWNLOADS/pegasus-binary-*-x86_64_rhel_8.tar.gz
+scp -i ~/.ssh/deployment test/core/042-kswrapper-nonsharedfs/kickstart-wrapper pegasus-$CI_COMMIT_SHORT_SHA/bin
 
 # update symlinks
 ln -s -n -f pegasus-$CI_COMMIT_SHORT_SHA pegasus-$VERSION
