@@ -854,7 +854,9 @@ public class SiteCatalogEntry extends AbstractSiteData {
                 Directory toAdd = entry.getDirectory(type);
                 if (toAdd != null) {
                     if (this.getDirectory(type) == null || overwrite) {
-                        this.addDirectory(toAdd);
+                        // instead of adding, we should replace as it is
+                        // overwrite sematics
+                        this.mDirectories.put(toAdd.getType(), toAdd);
                     }
                 }
             }
