@@ -132,6 +132,28 @@ C:
   - ${ARCH}
   - docker
 
+Go:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+  image: pegasus/buildenv:rhel_9
+  script:
+  - make test-go
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-transfer/**/*
+      - packages/pegasus-checkpoint/**/*
+      - packages/pegasus-integrity/**/*
+      - packages/pegasus-globus-online/**/*
+  tags:
+  - ${ARCH}
+  - docker
+
 # Build packages
 
 Source:

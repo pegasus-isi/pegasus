@@ -33,6 +33,16 @@ JAR_TOOL ?= jar
 JAVADOC  ?= javadoc
 endif
 
+GO ?= go
+
+# The Go tooling ports (see build-go/clean-go above) each live in their own
+# standalone Go module (own go.mod), matching pegasus-transfer's precedent —
+# so tests run per-module rather than from a single root module.
+_GO_MODULES := packages/pegasus-transfer \
+               packages/pegasus-checkpoint \
+               packages/pegasus-integrity \
+               packages/pegasus-globus-online
+
 # Project version (read from build.properties)
 VERSION := $(shell grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
 
@@ -58,7 +68,7 @@ _JUNIT_REPORT_DIR  := $(BUILD_DIR)/tests/classes/junitreport
 .PHONY: build dev build-c build-java build-go build-worker repair-wheel \
         dist-deb dist-rpm \
         clean clean-java clean-c clean-go clean-worker clean-test clean-doc \
-        test test-python test-java test-c \
+        test test-python test-java test-c test-go \
         doc doc-sphinx doc-java doc-schemas doc-dist help
 
 # Build a distributable wheel.  scikit-build-core drives cmake internally.
@@ -282,10 +292,10 @@ doc-dist: doc
 	tar czf $(DIST_DIR)/pegasus-doc-$(VERSION).tar.gz -C $(DIST_DIR) \
 	    pegasus-$(VERSION)/share/man pegasus-$(VERSION)/share/doc
 
-# Run all tests (Python + Java + C).
+# Run all tests (Python + Java + C + Go).
 # Java tests require: make build-java
 # C tests require:    make build-c
-test: test-python test-java test-c
+test: test-python test-java test-c test-go
 
 # Run Python test suites for all four packages via tox.
 # Each package manages its own virtualenv; no prior install needed.
@@ -351,6 +361,30 @@ test-c: build-c
 		echo "Skipping mpi-cluster tests: requires mpicxx and 'make build-c' with -DPEGASUS_BUILD_MPI=ON"; \
 	fi
 
+# Run Go unit tests for pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
+# and pegasus-globus-online(-init) -- run per-module (see _GO_MODULES above),
+# since each is its own standalone Go module rather than one root module.
+# A few tests are opt-in integration checks against real infrastructure (a
+# live S3 bucket, a live WebDAV host, live Globus Auth); they self-skip when
+# the operator's ~/.pegasus credentials aren't present, so this target is
+# still safe to run without that access.
+# Requires a Go toolchain, and (like build-go) network access to resolve
+# modules the first time, since nothing is vendored.
+# GOCACHE/GOPATH are pointed inside $(BUILD_DIR) for the same reason build-go
+# does: $HOME may not exist/be writable in minimal build containers.
+test-go:
+	@if ! command -v $(GO) >/dev/null 2>&1; then \
+		echo "Skipping Go tests: no Go toolchain found (set GO=/path/to/go, or install go)"; \
+		exit 0; \
+	fi; \
+	for mod in $(_GO_MODULES); do \
+		echo "--- $$mod (go test) ---"; \
+		( cd "$$mod" && \
+		  GOCACHE="$(CURDIR)/$(BUILD_DIR)/go-cache" \
+		  GOPATH="$(CURDIR)/$(BUILD_DIR)/go-path" \
+		  $(GO) test ./... ) || exit 1; \
+	done
+
 help:
 	@echo "Pegasus WMS build targets (scikit-build-core / CMake):"
 	@echo ""
@@ -379,16 +413,18 @@ help:
 	@echo "  doc-dist      Package staged docs into dist/pegasus-doc-VERSION.tar.gz"
 	@echo ""
 	@echo "Test targets:"
-	@echo "  test          Run all tests (Python + Java + C)"
+	@echo "  test          Run all tests (Python + Java + C + Go)"
 	@echo "  test-python   Run tox test suites for all four Python packages"
 	@echo "  test-java     Run Java unit tests via JUnit 5 (needs 'make build-java')"
 	@echo "  test-c        Run C integration tests (needs 'make build-c')"
+	@echo "  test-go       Run Go unit tests (pegasus-transfer, -checkpoint, -integrity, -globus-online)"
 	@echo ""
 	@echo "Variables:"
 	@echo "  PYTHON=$(PYTHON)     (override with PYTHON=/path/to/python)"
 	@echo "  CMAKE=$(CMAKE)       (override with CMAKE=/path/to/cmake)"
 	@echo "  JAVA=$(JAVA)         (override with JAVA=/path/to/java)"
 	@echo "  JAVADOC=$(JAVADOC)   (override with JAVADOC=/path/to/javadoc)"
+	@echo "  GO=$(GO)           (override with GO=/path/to/go)"
 	@echo "  BUILD_DIR=$(BUILD_DIR)  (cmake build directory)"
 	@echo "  VERSION=$(VERSION)   (from build.properties)"
 	@echo ""
