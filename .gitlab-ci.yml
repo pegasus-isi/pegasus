@@ -42,7 +42,7 @@ Lint:
   before_script:
   - env
   - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
-  - apt update
+  - apt update || true # expired Debian security repo
   - DEBIAN_FRONTEND=noninteractive apt install -y ant python3-pip
   script:
   - export bamboo_buildKey='value-irrelevant'
