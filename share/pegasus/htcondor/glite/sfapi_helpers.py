@@ -8,6 +8,8 @@ from pathlib import Path
 
 from joserfc import jwk
 
+import base64
+from datetime import datetime, timezone
 import json
 from io import BytesIO
 import os
@@ -294,8 +296,89 @@ def check_job_status(jobid):
     load_sflapi_client_secret()
     with Client(client_id, client_secret) as client:
         perlmutter = client.compute(Machine.perlmutter)
-        job = perlmutter.job(jobid=args.value)
-    print(f"Job {args.value} state: {job.state}")
+        job = perlmutter.job(jobid=jobid)
+    print(f"Job {jobid} state: {job.state}")
+
+
+def check_token_validity(token_path):
+    """
+    Check whether an SFAPI private key can successfully authenticate with NERSC.
+
+    Loads the JWK private key from ``token_path`` and the client ID from
+    ``~/.superfacility/clientid.txt``, then calls ``Client.token`` to fetch a
+    bearer token from the NERSC OIDC endpoint.  A successful fetch confirms
+    that the key is well-formed, the client ID matches, and the credentials
+    are accepted by NERSC — without duplicating any REST calls directly.
+
+    :param token_path: Path to the JWK private key file
+                       (e.g. ~/.superfacility/priv_key.jwk).
+    :raises SfApiHelperError: If the key file is missing or unparseable, the
+                              client ID file is missing, or authentication fails.
+    """
+    key_path = Path(token_path).expanduser().resolve()
+    if not key_path.exists():
+        raise SfApiHelperError(f"Token key file not found: {key_path}")
+
+    # Parse the JWK to catch format errors before hitting the network.
+    try:
+        with open(key_path, "r") as f:
+            jwk_data = json.load(f)
+        key = jwk.import_key(jwk_data)
+    except (json.JSONDecodeError, ValueError, KeyError) as e:
+        raise SfApiHelperError(f"Failed to parse token key file {key_path}: {e}")
+
+    # Load the matching client ID from the standard location.
+    client_id_file = Path.home() / ".superfacility" / "clientid.txt"
+    if not client_id_file.exists():
+        raise SfApiHelperError(f"Client ID file not found: {client_id_file}")
+    cid = client_id_file.read_text().strip()
+
+    # Attempt to fetch a bearer token — this is the sfapi_client's own
+    # mechanism for verifying credentials without calling REST directly.
+    try:
+        with Client(cid, key) as client:
+            bearer = client.token
+    except Exception as e:
+        raise SfApiHelperError(
+            f"Token authentication failed for client_id {cid} "
+            f"using key {key_path}: {e}"
+        )
+
+    print(f"Token is valid. client_id: {cid}")
+
+    # Decode the JWT payload (middle segment) to read the exp claim.
+    # No signature verification is needed here — we just fetched this token
+    # successfully from NERSC, so we know it's genuine.
+    try:
+        payload_b64 = bearer.split(".")[1]
+        # Restore base64url padding before decoding.
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+
+        exp_ts = payload.get("exp")
+        if exp_ts is not None:
+            exp_dt = datetime.fromtimestamp(exp_ts, tz=timezone.utc)
+            now = datetime.now(tz=timezone.utc)
+            delta = exp_dt - now
+            total_seconds = int(delta.total_seconds())
+
+            if total_seconds <= 0:
+                print(f"Token EXPIRED {-total_seconds // 60}m {-total_seconds % 60}s ago "
+                      f"(at {exp_dt.strftime('%Y-%m-%d %H:%M:%S %Z')})")
+            else:
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                if hours > 0:
+                    human = f"{hours}h {minutes}m {seconds}s"
+                else:
+                    human = f"{minutes}m {seconds}s"
+                print(f"Token expires in {human} "
+                      f"(at {exp_dt.strftime('%Y-%m-%d %H:%M:%S %Z')})")
+        else:
+            print("Token has no expiry claim (exp not present in JWT payload)")
+    except Exception:
+        # Non-fatal: we already confirmed the token is valid above.
+        print("Token is valid (could not decode expiry from JWT payload)")
 
 
 def print_nersc_status():
@@ -452,12 +535,22 @@ def _cmd_cancel(args):
     cancel_job(args.job_id)
 
 
+_DEFAULT_TOKEN_PATH = "~/.superfacility/priv_key.jwk"
+
+
 def _cmd_status(args):
     """Handler for the 'status' subcommand."""
     if args.type == "resource":
+        if not args.value:
+            raise SystemExit("error: --value is required when --type=resource")
         check_nersc_status(args.value)
     elif args.type == "job":
+        if not args.value:
+            raise SystemExit("error: --value is required when --type=job")
         check_job_status(args.value)
+    elif args.type == "token":
+        token_path = args.value if args.value else _DEFAULT_TOKEN_PATH
+        check_token_validity(token_path)
 
 
 """
@@ -515,17 +608,20 @@ if __name__ == '__main__':
     st.add_argument(
         "-t", "--type",
         metavar="TYPE",
-        choices=["resource", "job"],
+        choices=["resource", "job", "token"],
         required=True,
         help="What to query: 'resource' to check a NERSC system status, "
-             "'job' to check a submitted job state",
+             "'job' to check a submitted job state, "
+             "'token' to verify that an SFAPI private key can authenticate",
     )
     st.add_argument(
         "-v", "--value",
         metavar="VALUE",
-        required=True,
-        help="Resource name (e.g. 'perlmutter') when --type=resource, "
-             "or job ID when --type=job",
+        default=None,
+        help="Resource name (e.g. 'perlmutter') when --type=resource; "
+             "job ID when --type=job; "
+             "path to the JWK private key file when --type=token "
+             f"(default: {_DEFAULT_TOKEN_PATH})",
     )
 
     # --- download subcommand ---
