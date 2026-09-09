@@ -44,6 +44,10 @@ pip3 install ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
 # install pycbc
 git clone https://github.com/gwastro/pycbc.git
 cd pycbc
+
+# for now, patch pycbc
+patch -p1 <$START_DIR/pycbc.patch
+
 pip3 install pylib-fftw3
 
 # remove references to any pegasus packages
