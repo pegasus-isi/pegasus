@@ -5,7 +5,7 @@ index 5224e487..6ee294e1 100644
 @@ -90,6 +90,9 @@ def add_condorpool_symlink_site(sitecat, cp):
      site = Site("condorpool_symlink", arch=Arch.X86_64, os_type=OS.LINUX)
      add_site_pegasus_profile(site, cp)
- 
+
 +    # PATH needs to be carried forward for jobs needing pegasus-plan
 +    site.add_profiles(Namespace.ENV, key="PATH", value=os.environ.get("PATH"))
 +
