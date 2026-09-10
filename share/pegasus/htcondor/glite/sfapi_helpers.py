@@ -6,8 +6,6 @@ import shutil
 import sys
 from pathlib import Path
 
-from joserfc import jwk
-
 import base64
 from datetime import datetime, timezone
 import json
@@ -322,8 +320,8 @@ def check_token_validity(token_path):
     # Parse the JWK to catch format errors before hitting the network.
     try:
         with open(key_path, "r") as f:
-            jwk_data = json.load(f)
-        key = jwk.import_key(jwk_data)
+            key  = json.load(f)
+
     except (json.JSONDecodeError, ValueError, KeyError) as e:
         raise SfApiHelperError(f"Failed to parse token key file {key_path}: {e}")
 
@@ -422,9 +420,7 @@ def load_sflapi_client_secret():
     sfapi_key = sf_key_dir / "priv_key.jwk"
 
     with open(sfapi_key, "r") as f:
-        jwk_data = json.load(f)
-        # joserfc automatically identifies the type (e.g., RSA, EC, OKP) from the dict
-        client_secret = jwk.import_key(jwk_data)
+        client_secret = json.load(f)
 
     # print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
