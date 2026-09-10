@@ -50,7 +50,8 @@ public class SiteCatalogYAMLParserTest {
     @Test
     public void testConstructorInitializesSchemaAndSiteSelectionState() throws Exception {
         SiteCatalogYAMLParser parser =
-                new SiteCatalogYAMLParser(createBag(), Arrays.asList("*", "local"));
+                new SiteCatalogYAMLParser(
+                        createBag(), new Properties(), Arrays.asList("*", "local"));
 
         assertThat(
                 "Schema URI constant should match the parser definition",
@@ -76,7 +77,8 @@ public class SiteCatalogYAMLParserTest {
     @Test
     public void testGetSiteStoreRequiresCompletedParsing() {
         SiteCatalogYAMLParser parser =
-                new SiteCatalogYAMLParser(createBag(), Collections.singletonList("*"));
+                new SiteCatalogYAMLParser(
+                        createBag(), new Properties(), Collections.singletonList("*"));
 
         RuntimeException exception =
                 assertThrows(
@@ -92,7 +94,8 @@ public class SiteCatalogYAMLParserTest {
     @Test
     public void testStartParserMissingFileReturnsEmptyStore() {
         SiteCatalogYAMLParser parser =
-                new SiteCatalogYAMLParser(createBag(), Collections.singletonList("*"));
+                new SiteCatalogYAMLParser(
+                        createBag(), new Properties(), Collections.singletonList("*"));
 
         parser.startParser("test/junit/does-not-exist-site-catalog.yml");
         SiteStore store = parser.getSiteStore();
@@ -107,7 +110,8 @@ public class SiteCatalogYAMLParserTest {
     @Test
     public void testNiceString() {
         SiteCatalogYAMLParser parser =
-                new SiteCatalogYAMLParser(createBag(), Collections.singletonList("*"));
+                new SiteCatalogYAMLParser(
+                        createBag(), new Properties(), Collections.singletonList("*"));
 
         assertThat("Null input should stay null", parser.niceString(null), nullValue());
         assertThat(

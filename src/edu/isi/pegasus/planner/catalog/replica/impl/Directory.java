@@ -107,6 +107,15 @@ public class Directory implements ReplicaCatalog {
     protected String mURLPrefix;
 
     /**
+     * The LogManager object which is used to log all the messages. It's values are set in the
+     * CPlanner (the main toolkit) class.
+     */
+    protected LogManager mLogger;
+
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
+
+    /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
      *
@@ -120,6 +129,17 @@ public class Directory implements ReplicaCatalog {
         mConstructFlatLFN = false;
         mSiteHandle = Directory.DEFAULT_SITE_HANDLE;
         mURLPrefix = Directory.DEFAULT_URL_PREFIX;
+    }
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mLogger = bag.getLogger();
+        mProps = bag.getPegasusProperties();
     }
 
     /**

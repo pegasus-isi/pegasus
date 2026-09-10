@@ -62,6 +62,9 @@ public class YAML implements SiteCatalog {
     /** The bag of Pegasus Initialization objects */
     private PegasusBag mBag;
 
+    /** Connection properties to connect to the backend. */
+    private Properties mConnectionProperties;
+
     /** The default constructor. */
     public YAML() {}
 
@@ -73,6 +76,7 @@ public class YAML implements SiteCatalog {
     public void initialize(PegasusBag bag) {
         mBag = bag;
         mLogger = bag.getLogger();
+        mConnectionProperties = new Properties();
     }
 
     /**
@@ -85,6 +89,7 @@ public class YAML implements SiteCatalog {
      * @throws SiteCatalogException
      */
     public boolean connect(Properties props) throws SiteCatalogException {
+        mConnectionProperties = props;
         if (props.containsKey("file")) {
             return connect(props.getProperty("file"));
         }
@@ -155,7 +160,7 @@ public class YAML implements SiteCatalog {
             throw new SiteCatalogException("Need to connect to site catalog before loading");
         }
 
-        mParser = new SiteCatalogYAMLParser(this.mBag, sites);
+        mParser = new SiteCatalogYAMLParser(this.mBag, this.mConnectionProperties, sites);
 
         mLogger.logEventStart(
                 LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,

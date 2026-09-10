@@ -86,10 +86,27 @@ public class MRC implements ReplicaCatalog {
     /** The handle to the logging manager. */
     protected LogManager mLogger;
 
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
+
+    private PegasusBag mBAG;
+
     /** The default constructor. */
     public MRC() {
         mRCList = new LinkedList();
         mLogger = LogManagerFactory.loadSingletonInstance();
+    }
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mBAG = bag;
+        mLogger = bag.getLogger();
+        mProps = bag.getPegasusProperties();
     }
 
     /**
@@ -210,13 +227,12 @@ public class MRC implements ReplicaCatalog {
         // try and connect
         ReplicaCatalog catalog = null;
         try {
-
-            PegasusBag bag = new PegasusBag();
-            bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
-            // PM-1486 to be fixed when we update ReplicaCatalog interface  to take
-            // PegasusBag
-            bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
-            catalog = ReplicaFactory.loadInstance(type, bag, properties);
+            /**
+             * PegasusBag bag = new PegasusBag(); bag.add(PegasusBag.PEGASUS_LOGMANAGER, mLogger);
+             * // PM-1486 to be fixed when we update ReplicaCatalog interface to take // PegasusBag
+             * bag.add(PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance());
+             */
+            catalog = ReplicaFactory.loadInstance(type, this.mBAG, properties);
         } catch (Exception e) {
             // log the connection error
             mLogger.log(

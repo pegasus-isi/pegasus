@@ -48,7 +48,7 @@ public class CredentialHandlerTest {
                         CredentialHandler.TYPE.x509,
                         CredentialHandler.TYPE.s3,
                         CredentialHandler.TYPE.boto,
-                        CredentialHandler.TYPE.googlep12,
+                        CredentialHandler.TYPE.googleadc,
                         CredentialHandler.TYPE.irods,
                         CredentialHandler.TYPE.ssh));
     }

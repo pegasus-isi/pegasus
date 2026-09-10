@@ -53,6 +53,6 @@ This package shares the `Pegasus` Python namespace with three sibling packages (
 
 ### Key Conventions
 
-- Python 3.6+ compatibility required (the `setup.py` targets `>=3.6`; `pyupgrade` enforces `--py36-plus`).
+- Python 3.6+ compatibility required (`pyupgrade` enforces `--py36-plus`). Note: this package is merged into the `pegasus-wms` wheel (Python ≥3.10) but its source targets 3.6 for compatibility with the worker tarball environment.
 - Use `Pegasus.yaml` and `Pegasus.json` instead of raw PyYAML/json for consistent Pegasus-specific serialization behavior.
 - The client module is a thin wrapper around CLI subprocess calls, not a reimplementation of planner logic.

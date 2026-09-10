@@ -15,24 +15,19 @@ make distclean          # Full clean including binary
 **From parent repo root (`pegasus/`):**
 
 ```bash
-ant compile-pegasus-kickstart   # Compile kickstart only
-ant compile-c                   # Compile all C tools
-ant test-kickstart              # Run kickstart tests (builds first, sets PEGASUS_BIN_DIR)
-ant test-c                      # Run all C tests (kickstart + PMC)
+make build-c                    # Build all C tools via CMake (kickstart, cluster, keg)
+cmake --build _cmake_build --target pegasus-kickstart  # Build kickstart only
 ```
-
-The `ant test-kickstart` target is the standard way to run tests — it builds the full distribution first and sets the required `PEGASUS_BIN_DIR` environment variable automatically.
 
 ## Testing
 
 Tests are shell-based integration tests in `test/test.sh`. Each test function invokes `pegasus-kickstart` and validates the YAML output. Tests require `PEGASUS_BIN_DIR` pointing to a built Pegasus `bin/` directory (needed for `pegasus-integrity` and `yaml-validator`).
 
 ```bash
-# Preferred: from repo root
-ant test-kickstart
-
-# Manual: from this directory (after ant dist)
-cd test && PEGASUS_BIN_DIR=../../../dist/pegasus-*/bin ./test.sh
+# From repo root: build then test
+make build-c
+cd packages/pegasus-kickstart/test
+PEGASUS_BIN_DIR=$(pwd)/../../../_cmake_build/packages/pegasus-kickstart ./test.sh
 ```
 
 Some tests are Linux-only (ptrace-based tracing: `lotsofprocs_trace`, `lotsofprocs_trace_buffer`).
@@ -73,7 +68,7 @@ Pegasus-kickstart wraps job execution to capture metadata (timing, resource usag
 - **Linux**: reads `/proc/` filesystem for CPU, memory, load, boot time
 - **Darwin**: uses `sysctl` calls for system info
 
-Conditional compilation via `-DLINUX` or `-DDARWIN` (auto-detected by Makefile from `uname -s`).
+Conditional compilation via `-DLINUX` or `-DDARWIN` (auto-detected by CMake from `CMAKE_SYSTEM_NAME`; also supported by the standalone Makefile via `uname -s`).
 
 ### Conditional Features
 

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ public class ReplicaCatalogTest {
 
         private boolean mClosed = true;
         private boolean mReadOnly = false;
+        private PegasusBag mBag = null;
         private final Map<String, Collection<ReplicaCatalogEntry>> mStore = new HashMap<>();
 
         @Override
@@ -285,6 +287,11 @@ public class ReplicaCatalogTest {
 
         boolean isReadOnly() {
             return mReadOnly;
+        }
+
+        @Override
+        public void initialize(PegasusBag bag) {
+            this.mBag = bag;
         }
     }
 
@@ -925,6 +932,6 @@ public class ReplicaCatalogTest {
 
     @Test
     public void testReplicaCatalogDeclaresExpectedNumberOfMethods() {
-        assertEquals(25, ReplicaCatalog.class.getDeclaredMethods().length);
+        assertEquals(26, ReplicaCatalog.class.getDeclaredMethods().length);
     }
 }

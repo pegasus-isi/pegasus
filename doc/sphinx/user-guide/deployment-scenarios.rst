@@ -1116,12 +1116,17 @@ down option in the IP presets that allows you to select your IP.
 
 .. code-block:: console
 
-    $ python3 -m venv ~/superfacility-env
+    $ python3.11 -m venv ~/superfacility-env
     $ source ~/superfacility-env/bin/activate
-    (superfacility-env) $ pip install sfapi_client
+    (superfacility-env) $ pip3 install sfapi_client
 
 The virtual environment must be at ``~/superfacility-env``. The HTCondor blahp bindings
 activate this environment when interacting with sfapi
+
+.. note::
+
+      This virtualenv should be created with Python3.11 or higher. Job submission is known
+      to fail with Python3.9 created virtualenv.
 
 **3. Pegasus SFAPI BLAHP scripts**
 
@@ -1710,14 +1715,16 @@ You can choose to host the central manager / submit host inside the
 cloud or outside. The compute VMs will have HTCondor installed and
 configured to join the pool managed by the central manager.
 
-Google Storage is supported using gsutil. First, create a .boto file by
-running:
+Google Storage is supported using the ``gcloud`` CLI. First, create a
+service account and download its key in JSON format (see
+:ref:`gs-cred`), then set and activate it:
 
 ::
 
-   gsutil config
+   export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.google.key
+   gcloud auth activate-service-account
 
-Then, use a site catalog which specifies which .boto file to use. You
+Then, use a site catalog which specifies which key file to use. You
 can then use gs:// URLs in your workflow. Example:
 
 ::
@@ -1733,7 +1740,7 @@ can then use gs:// URLs in your workflow. Example:
         operation: all
     profiles:
       env:
-        PATH: /opt/gsutil:/usr/bin:/bin
+        PATH: /opt/google-cloud-sdk/bin:/usr/bin:/bin
   # Compute site
   - name: condorpool
     directories: []
@@ -1757,7 +1764,7 @@ can then use gs:// URLs in your workflow. Example:
         operation: all
     profiles:
       pegasus:
-        BOTO_CONFIG: /home/myuser/.boto
+        GOOGLE_APPLICATION_CREDENTIALS: /home/myuser/.google.key
 
 .. _aws-batch:
 
@@ -1804,11 +1811,11 @@ To use AWS Batch for your workflows, we need two credential files
       aws_access_key_id = XXXXXXXXXXXX
       aws_secret_access_key = XXXXXXXXXXX
 
-2. **S3 Config File:** Pegasus workflows use pegasus-s3 command line
-   tool to stage-in input data required by the tasks to S3 and push data
-   output data generated to S3 when user application code runs. These
+2. **S3 Config File:** Pegasus workflows use pegasus-transfer to
+   stage-in input data required by the tasks to S3 and push output data
+   generated to S3 when user application code runs. These
    credentials are specified in ~/.pegasus/credentials.conf .
-   This format of the file is described in the :ref:`cli-pegasus-s3`
+   This format of the file is described in the :ref:`cli-pegasus-transfer`
    manpage. A minimalistic
    file is illustrated below
 

@@ -20,8 +20,8 @@ make distclean          # Remove object files and built binary
 From the top-level Pegasus repo:
 
 ```bash
-ant compile-c           # Builds keg along with kickstart and cluster
-ant test-c              # Runs C test suite
+make build-c                                          # Build all C tools via CMake
+cmake --build _cmake_build --target pegasus-keg       # Build keg only
 ```
 
 ## Running Tests
@@ -49,7 +49,7 @@ Single main source file with platform-specific modules:
 ## Key Design Decisions
 
 - **Avoids libstdc++ linking**: Uses `malloc`/`free` and a custom `DirtyVector` class instead of STL containers and `new`/`delete`, keeping the binary lightweight.
-- **Platform detection via Makefile**: `uname -s` sets `-DDARWIN`, `-DLINUX`, or `-DGNUKFREEBSD`; the `MACHINE_SPECIFIC` macro selects the right headers.
+- **Platform detection via CMake**: `CMAKE_SYSTEM_NAME` sets `-DDARWIN`, `-DLINUX`, or `-DGNUKFREEBSD`; the `MACHINE_SPECIFIC` macro selects the right headers. The standalone Makefile uses `uname -s` for the same purpose.
 - **MPI variant**: Same source (`pegasus-keg.cc`) compiled with `-DWITH_MPI` and linked via `mpicc`.
 - **Skipped on musl libc**: Build is a no-op on Alpine Linux (detected via `gcc -dumpmachine | grep musl`).
 

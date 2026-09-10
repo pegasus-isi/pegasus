@@ -27,12 +27,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.classes.ReplicaCatalogJsonDeserializer;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.VariableExpansionReader;
@@ -40,6 +42,7 @@ import edu.isi.pegasus.planner.namespace.Metadata;
 
 import org.yaml.snakeyaml.LoaderOptions;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -122,6 +125,18 @@ public class Meta implements ReplicaCatalog {
 
     private final int mMAXParsedDocSize;
 
+    /** whether to do any variable expansion or not */
+    private boolean mDoVariableExpansion;
+
+    /**
+     * The LogManager object which is used to log all the messages. It's values are set in the
+     * CPlanner (the main toolkit) class.
+     */
+    protected LogManager mLogger;
+
+    /** The handle to the properties object. */
+    protected PegasusProperties mProps;
+
     /**
      * Default empty constructor creates an object that is not yet connected to any database. You
      * must use support methods to connect before this instance becomes usable.
@@ -137,6 +152,17 @@ public class Meta implements ReplicaCatalog {
         PegasusProperties props = PegasusProperties.getInstance();
 
         mMAXParsedDocSize = props.getMaxSupportedYAMLDocSize();
+    }
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    @Override
+    public void initialize(PegasusBag bag) {
+        mLogger = bag.getLogger();
+        mProps = bag.getPegasusProperties();
     }
 
     /**
@@ -158,7 +184,11 @@ public class Meta implements ReplicaCatalog {
         if (replicaFile.exists()) {
             Reader reader = null;
             try {
-                reader = new VariableExpansionReader(new FileReader(filename), null);
+                reader =
+                        mDoVariableExpansion
+                                ? new VariableExpansionReader(new FileReader(filename), mProps)
+                                : new BufferedReader(new FileReader(filename));
+
                 // GH-2113 load the yaml factory with the right loader option
                 // as picked up from properties
                 LoaderOptions loaderOptions = new LoaderOptions();
@@ -201,6 +231,7 @@ public class Meta implements ReplicaCatalog {
      * @return true if connected, false if failed to connect.
      * @throws Error subclasses for runtime errors in the class loader.
      */
+    @Override
     public boolean connect(Properties props) {
         // quote mode
         mQuote = Boolean.parse(props.getProperty("quote"));
@@ -208,6 +239,10 @@ public class Meta implements ReplicaCatalog {
         if (props.containsKey(YAML.READ_ONLY_KEY)) {
             m_readonly = Boolean.parse(props.getProperty(YAML.READ_ONLY_KEY), false);
         }
+
+        mDoVariableExpansion =
+                Boolean.parse(props.getProperty(ReplicaCatalog.VARIABLE_EXPANSION_KEY), true);
+
         if (props.containsKey("file")) return connect(props.getProperty("file"));
         return false;
     }

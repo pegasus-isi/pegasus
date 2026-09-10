@@ -97,10 +97,15 @@ public class DeployWorkerPackage extends Engine {
      * Store the regular expressions necessary to parse the basename from the worker package url to
      * retrieve the version of pegasus.
      *
-     * <p>pegasus-worker-4.6.0dev-x86_64_macos_10.tar.gz
+     * <p>The version segment follows PEP 440 (e.g. {@code 5.2.0}, {@code 5.2.0.dev0}, {@code
+     * 5.2.0.dev20260723}, {@code 5.2.0rc1}), matching how the build now names the tarball from
+     * build.properties: pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz
+     *
+     * <p>Group indices are relied upon elsewhere (version=3, architecture=6, os release=7, os
+     * version=8), so the version sub-pattern keeps exactly two nested groups to preserve them.
      */
     private static final String mRegexExpression =
-            "(pegasus-)(binary|worker)-([0-9]+\\.[0-9]+\\.[0-9]+(-(dev|alpha|beta|rc)\\.[0-9]+)?)-(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
+            "(pegasus-)(binary|worker)-([0-9]+\\.[0-9]+\\.[0-9]+([._]?(dev|alpha|beta|rc|a|b|c|post|preview)[0-9]+)*)-(x86|x86_64|ia64|ppc|ppc64le|aarch64)_([a-zA-Z0-9]*)_([0-9]*).tar.gz";
 
     /** The path to be set for create dir jobs. */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";

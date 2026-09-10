@@ -4,7 +4,7 @@
 # dir to be on a shared filesystem visible to the condorpool
 # nodes, since the site catalog is constructed w.r.t it.
 
-set -e
+set -euo pipefail
 
 START_DIR=$(pwd)
 TEST_DIR=/scitech/shared/scratch2-90-days/bamboo/$(uuidgen)
@@ -16,6 +16,11 @@ if [ "x$1" = "x" ]; then
 fi
 CONDA_VERSION=$1
 shift
+
+# Deactivate any venvs setup up by GitLab - we want to install the wheel into
+# the PyCBC conda environment
+deactivate || true
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
 
 mkdir -p $TEST_DIR
 cd $TEST_DIR
@@ -32,20 +37,32 @@ conda install anaconda::mkl --yes
 pip3 install --upgrade pip
 pip3 install --upgrade pip setuptools
 
-# install the pegasus python dependencies
-#pip3 install boto3 certifi GitPython pyjwt pyyaml s3transfer six urllib3
+# install pegasus - how do we pick the right whl?
+ls -l ${START_DIR}/../../../dist/
+pip3 install ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl
 
 # install pycbc
 git clone https://github.com/gwastro/pycbc.git
 cd pycbc
+
+# for now, patch pycbc
+patch -p1 <$START_DIR/pycbc.patch
+
 pip3 install pylib-fftw3
+
+# remove references to any pegasus packages
+#sed -i 's/^pegasus-wms >= 5.1.1/pegasus-wms >= 6.0.0.dev0/' requirements.txt
+#sed -i 's/^pegasus\..*//' requirements.txt
 pip3 install -r requirements.txt
+
 pip3 install -r companion.txt
+
+#sed -i 's/pegasus-wms.api >= 5.1.1/pegasus-wms >= 6.0.0.dev0/' setup.py
 pip3 install  .
 
-# we are using mixed environment from our conda env
-export PYTHONPATH=$(pegasus-config --python)
-export PEGASUS_UPDATE_PYTHONPATH=0
+# remove old pegasus packages - temp fix until pycbc depends on Pegasus 6.0
+pip3 uninstall -y pegasus-wms-api pegasus-wms-common || true
+pip3 install --force-reinstall ${START_DIR}/../../../dist/pegasus_wms*x86_64.whl 2>&1 | grep -v "ERROR: pip's dependency resolver does not"
 
 # run workflow
 cd examples/search/

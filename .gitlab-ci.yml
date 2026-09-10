@@ -8,7 +8,7 @@ default:
 
 .retry-and-timeout: &retry-and-timeout
   retry: 1
-  timeout: 15 minutes
+  timeout: 30 minutes
 
 stages:
 - lint
@@ -18,15 +18,6 @@ stages:
 - release
 - e2e-tests
 - performance-tests
-
-
-pre-job:
-  stage: .pre
-  script:
-  - echo "PEGASUS_VERSION=`release-tools/getversion`" > .env
-  artifacts:
-    reports:
-      dotenv: .env
 
 # Code quality
 
@@ -39,7 +30,11 @@ Lint:
   - apt update
   - DEBIAN_FRONTEND=noninteractive apt install -y openjdk-25-jdk-headless
   script:
+  - echo "PEGASUS_VERSION=`release-tools/getversion`" > .env
   - pre-commit run --show-diff-on-failure --color=always --all-files
+  artifacts:
+    reports:
+      dotenv: .env
   tags:
   - docker
 
@@ -60,7 +55,6 @@ Python:
       - common
       - api
       - python
-      - worker
   image: python:${PYTHON_VERSION}
   before_script:
   - env
@@ -91,47 +85,6 @@ Python:
   - ${ARCH}
   - docker
 
-# Only for Python versions not supported by uv
-Python Worker:
-  <<: *retry-and-timeout
-  stage: test
-  parallel:
-    matrix:
-    - ARCH:
-      - x86_64
-      - arm64
-      PYTHON_VERSION:
-      - '3.6'
-      - '3.7'
-      PACKAGE:
-      - worker
-  image: python:${PYTHON_VERSION}
-  before_script:
-  - env
-  - export USER=nobody
-  - pip3 install --upgrade pip setuptools
-  - pip3 install tox
-  script:
-  - cd packages/pegasus-${PACKAGE}; tox -e py$(echo ${PYTHON_VERSION} | sed -E 's/([0-9]*).([0-9]*).*$/\1\2/g')
-  coverage: '/Total coverage: \d+\.\d+%/'
-  artifacts:
-    when: always
-    reports:
-      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
-    paths:
-    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
-  rules:
-  - changes:
-      paths:
-      - packages/pegasus-${PACKAGE}/src/**/*
-      - packages/pegasus-${PACKAGE}/test/**/*
-  tags:
-  - ${ARCH}
-  - docker
-
 Java:
   <<: *retry-and-timeout
   stage: test
@@ -142,13 +95,13 @@ Java:
       - arm64
   image: pegasus/buildenv:rhel_9
   script:
-  - ant test-java
+  - make test-java
   artifacts:
     when: always
     reports:
-      junit: build/tests/classes/junitreport/*.xml
+      junit: _cmake_build/tests/classes/junitreport/*.xml
     paths:
-    - build/tests/classes/junitreport/*.xml
+    - _cmake_build/tests/classes/junitreport/*.xml
   rules:
   - changes:
       paths:
@@ -168,14 +121,41 @@ C:
       - arm64
   image: pegasus/buildenv:rhel_9
   script:
-  - ant test-kickstart test-transfer
+  # kickstart integrity tests need the pegasus-integrity CLI on PATH. Install
+  # pegasus into a venv (Python entry points only — C/Java/worker are skipped;
+  # test-c builds the C tools itself) and point make at that interpreter so its
+  # pegasus-integrity symlink step resolves. Use a separate build-dir so the
+  # scikit-build (Ninja) configure does not clobber make's _cmake_build cache.
+  - python3.12 -m venv /tmp/pegasus-venv
+  - /tmp/pegasus-venv/bin/pip install --upgrade pip
+  - /tmp/pegasus-venv/bin/pip install .
+  - PYTHON=/tmp/pegasus-venv/bin/python make test-c
   rules:
   - changes:
       paths:
       - packages/pegasus-kickstart/**/*
-      # pegasus-transfer
-      - packages/pegasus-worker/src/**/*
-      - packages/pegasus-worker/test/**/*
+  tags:
+  - ${ARCH}
+  - docker
+
+Go:
+  <<: *retry-and-timeout
+  stage: test
+  parallel:
+    matrix:
+    - ARCH:
+      - x86_64
+      - arm64
+  image: pegasus/buildenv:rhel_9
+  script:
+  - make test-go
+  rules:
+  - changes:
+      paths:
+      - packages/pegasus-transfer/**/*
+      - packages/pegasus-checkpoint/**/*
+      - packages/pegasus-integrity/**/*
+      - packages/pegasus-globus-online/**/*
   tags:
   - ${ARCH}
   - docker
@@ -187,23 +167,10 @@ Source:
   stage: build
   image: pegasus/buildenv:rhel_9
   script:
-  - ant clean dist-source dist-python-source
-  - |
-    MONITOR_PYTHON=$(release-tools/get-system-python)
-    "$MONITOR_PYTHON" -m venv build/monitor-wheel-test
-    build/monitor-wheel-test/bin/pip install --no-deps dist/pegasus_wms-*.whl
-    build/monitor-wheel-test/bin/pegasus-monitor --help
-    if build/monitor-wheel-test/bin/pegasus-monitor --not-a-real-option; then
-      echo "pegasus-monitor unexpectedly accepted an invalid option"
-      exit 1
-    else
-      test "$?" -eq 2
-    fi
+  - PYTHON=python3.12 make dist-source
   artifacts:
     paths:
-    - dist/pegasus-*.tar.gz
-    - dist/pegasus_wms*.tar.gz
-    - dist/pegasus_wms*.whl
+    - dist/pegasus_wms-*.tar.gz
   dependencies: []
   tags:
   - docker
@@ -220,11 +187,11 @@ Alpine:
       - alpine_3
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release
+  - PYTHON=python3 make build repair-wheel
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus-worker-*.tar.gz
+    - dist/pegasus_wms-*.whl
   dependencies: []
   tags:
   - ${ARCH}
@@ -243,24 +210,28 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
+  - PYTHON=python3.12 make build dist-rpm
+  # Smoke-test the pegasus-monitor console script from the freshly built wheel.
   - |
-    ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
-    # also try installing the generated RPM
-    rpm -iv $(ls dist/*.rpm | grep -v src)
-    MONITOR=dist/pegasus-$(release-tools/getversion)/bin/pegasus-monitor
-    test -x "$MONITOR"
-    "$MONITOR" --help
-    if "$MONITOR" --not-a-real-option; then
+    python3.12 -m venv _monitor_smoke
+    _monitor_smoke/bin/pip install --quiet dist/pegasus_wms-*.whl
+    _monitor_smoke/bin/pegasus-monitor --help
+    _monitor_smoke/bin/pegasus monitor --help
+    if _monitor_smoke/bin/pegasus-monitor --not-a-real-option; then
       echo "pegasus-monitor unexpectedly accepted an invalid option"
       exit 1
     else
       test "$?" -eq 2
     fi
+    rm -rf _monitor_smoke
+  # Only the rhel_8 wheel is published: it has the lowest glibc of any build
+  # image and an x86-64-v1 baseline.
+  - if [ "${OS}" = "rhel_8" ]; then make repair-wheel; else rm -f dist/pegasus_wms-*.whl; fi
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus-*.rpm
+    - dist/pegasus-worker-*.tar.gz
+    - dist/pegasus_wms-*.whl
+    - dist/rpm/*.rpm
   dependencies: []
   tags:
   - ${ARCH}
@@ -278,15 +249,11 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - |
-    ant dist-rpm compile-pegasus-mpi-cluster dist-worker dist-release
-    # also try installing the generated RPM
-    rpm -iv $(ls dist/*.rpm | grep -v src)
+  - PYTHON=python3.14 make build dist-rpm
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus-*.rpm
+    - dist/pegasus-worker-*.tar.gz
+    - dist/rpm/*.rpm
   dependencies: []
   tags:
   - ${ARCH}
@@ -306,11 +273,10 @@ SUSE:
       - suse_15
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release
+  - PYTHON=python3.11 make build
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus-worker-*.tar.gz
   dependencies: []
   tags:
   - ${ARCH}
@@ -329,12 +295,12 @@ Debian:
       - deb_13
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release dist-deb
+  - PYTHON=python3 make build dist-deb
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus*.deb
+    - dist/pegasus-worker-*.tar.gz
+    - dist/deb/*.deb
+    - dist/deb/*.changes
   dependencies: []
   tags:
   - ${ARCH}
@@ -353,12 +319,12 @@ Ubuntu:
       - ubuntu_26
   image: pegasus/buildenv:${OS}
   script:
-  - ant dist-worker dist-release dist-deb
+  - PYTHON=python3 make build dist-deb
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
-    - dist/pegasus*.deb
+    - dist/pegasus-worker-*.tar.gz
+    - dist/deb/*.deb
+    - dist/deb/*.changes
   dependencies: []
   tags:
   - ${ARCH}
@@ -378,12 +344,14 @@ macOS:
   before_script:
   - env
   - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
+  - brew install make cmake
+  - python3 -m pip install --break-system-packages --upgrade build scikit-build-core
   script:
-  - ant dist-worker dist-release
+  - make build
   artifacts:
     paths:
-    - dist/pegasus-binary*.tar.gz
-    - dist/pegasus-worker*.tar.gz
+    - dist/pegasus-worker-*.tar.gz
+    - dist/pegasus_wms-*.whl
   dependencies: []
   tags:
   - ${ARCH}
@@ -397,7 +365,7 @@ Docs:
   before_script:
   - env
   script:
-  - ant dist-doc
+  - make clean build-java doc-dist
   - test -f dist/pegasus-$(release-tools/getversion)/share/man/man1/pegasus-monitor.1
   artifacts:
     paths:
@@ -423,7 +391,7 @@ Tutorial Container:
   stage: deploy
   script:
   - if [ "X${PEGASUS_VERSION}" = "X" ]; then echo "Unable to determine Pegasus version! Exiting..."; exit 1; fi
-  - cp dist/pegasus-*-*.rpm tutorial/docker
+  - cp dist/rpm/*.rpm tutorial/docker
   - cd tutorial/docker
   - echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USER}" --password-stdin
   - docker build --no-cache --build-arg CACHEBUST=$(date +"%Y%m%d%H%M%S") --build-arg PEGASUS_VERSION=${PEGASUS_VERSION} --tag pegasus/tutorial:${PEGASUS_VERSION} --progress plain .
@@ -432,10 +400,10 @@ Tutorial Container:
   rules:
   - if: $CI_PIPELINE_NAME != 'workflow' && $CI_COMMIT_REF_PROTECTED == 'true'
   dependencies:
-  - pre-job
+  - Lint
   - "RHEL: [x86_64, rhel_9]"
   needs:
-  - pre-job
+  - Lint
   - "RHEL: [x86_64, rhel_9]"
   tags:
   - x86_64
@@ -470,7 +438,8 @@ Release:
       password = ${TEST_PYPI_TOKEN}
     EOT
   script:
-  # Publish to PyPI
+  # Publish to PyPI. Build jobs: only rhel_8 (manylinux, lowest glibc + x86-64-v1), Alpine (musllinux) and macOS
+  # export a wheel artifact.
   - |
     twine upload \
       --repository $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "test-pypi" || echo "pypi") \
@@ -487,11 +456,11 @@ Release:
       --discussion-category "announcements" \
       $([ $(echo ${PEGASUS_VERSION} | grep -E "[^0-9.]") ] && echo "--prerelease") \
       ${PEGASUS_VERSION} \
-      dist/*.rpm dist/*.deb dist/pegasus-binary-*.tar.gz dist/pegasus-worker-*.tar.gz
+      dist/rpm/*.rpm dist/deb/*.deb dist/pegasus-worker-*.tar.gz
   rules:
   - if: $CI_COMMIT_TAG
   dependencies:
-  - pre-job
+  - Lint
   - Source
   - Alpine
   - RHEL
@@ -648,13 +617,12 @@ Workflow Tests:
       EXEC:
       - launch-bamboo-test
   script:
-  - cd dist
-  - tar xzf pegasus-binary-*-x86_64*.tar.gz
-  - cd ..
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - uv venv --clear --python 3.12
+  - source .venv/bin/activate
+  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[cwl]" astropy
   - exec ./test/scripts/${EXEC} ${TESTNAME}
   after_script:
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - source .venv/bin/activate
   - |
     if [ "${EXEC}" == "launch-bamboo-test" ]; then
       pegasus-remove test/core/${TESTNAME}/submit
@@ -666,7 +634,7 @@ Workflow Tests:
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
-  - pre-job
+  - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
   - bamboo
@@ -692,18 +660,17 @@ Performance Tests:
       EXEC:
       - launch-bamboo-test-planner-only
   script:
-  - cd dist
-  - tar xzf pegasus-binary-*-x86_64*.tar.gz
-  - cd ..
-  - export PATH=$PWD/dist/pegasus-${PEGASUS_VERSION}/bin:${PATH}
+  - uv venv --clear --python 3.12
+  - source .venv/bin/activate
+  - WHEEL=(dist/*.whl) && uv pip install "${WHEEL}[mysql]"
   - exec ./test/scripts/${EXEC} ${TESTNAME}
   rules:
   - if: $CI_PIPELINE_NAME == 'workflow'
   dependencies:
-  - pre-job
+  - Lint
   - "RHEL: [x86_64, rhel_8]"
   needs:
-  - pre-job
+  - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
   - bamboo

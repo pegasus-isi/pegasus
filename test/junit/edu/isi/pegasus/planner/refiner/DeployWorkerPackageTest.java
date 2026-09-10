@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -95,5 +96,43 @@ public class DeployWorkerPackageTest {
         // any site other than local disables reliance on PATH
         String actual = dwp.defaultUntarPath("remote");
         assertThat(actual, is("/bin/tar"));
+    }
+
+    /**
+     * The build names the worker tarball using the PEP 440 version from build.properties (e.g.
+     * pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz). The name parser must handle that scheme
+     * in addition to plain and legacy release names.
+     */
+    @Test
+    public void testDetermineSysInfoPep440DevVersion() {
+        DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
+
+        SysInfo info = dwp.determineSysInfo("pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz");
+        assertThat(info.getArchitecture(), is(SysInfo.Architecture.x86_64));
+        assertThat(info.getOS(), is(SysInfo.OS.linux));
+        assertThat(info.getOSRelease(), is("ubuntu"));
+        assertThat(info.getOSVersion(), is("24"));
+    }
+
+    @Test
+    public void testDetermineSysInfoPlainReleaseVersion() {
+        DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
+
+        SysInfo info = dwp.determineSysInfo("pegasus-worker-5.2.0-aarch64_rhel_9.tar.gz");
+        assertThat(info.getArchitecture(), is(SysInfo.Architecture.aarch64));
+        assertThat(info.getOS(), is(SysInfo.OS.linux));
+        assertThat(info.getOSRelease(), is("rhel"));
+        assertThat(info.getOSVersion(), is("9"));
+    }
+
+    @Test
+    public void testGetRootDirectoryNameForPegasusPep440DevVersion() {
+        DeployWorkerPackage dwp = new DeployWorkerPackage(this.mBag);
+
+        String actual =
+                dwp.getRootDirectoryNameForPegasus(
+                        "http://example.org/pegasus-worker-5.2.0.dev0-x86_64_ubuntu_24.tar.gz");
+        // must match the directory the tarball unpacks into: pegasus-<version>
+        assertThat(actual, is("pegasus-5.2.0.dev0"));
     }
 }

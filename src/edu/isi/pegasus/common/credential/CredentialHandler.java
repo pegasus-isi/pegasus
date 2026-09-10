@@ -34,7 +34,7 @@ public interface CredentialHandler {
         x509,
         s3,
         boto,
-        googlep12,
+        googleadc,
         irods,
         ssh
     };

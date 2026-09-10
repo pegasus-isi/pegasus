@@ -19,8 +19,8 @@ make distclean        # Remove .o files and built binaries
 From the top-level Pegasus repository:
 
 ```bash
-ant compile-pegasus-cluster   # Build via Ant
-ant test-c                    # Run all C tests (kickstart + PMC)
+make build-c                                               # Build all C tools via CMake
+cmake --build _cmake_build --target pegasus-cluster        # Build cluster only
 ```
 
 ## Source Architecture

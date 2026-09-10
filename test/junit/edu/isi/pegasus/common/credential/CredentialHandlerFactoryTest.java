@@ -67,7 +67,7 @@ public class CredentialHandlerFactoryTest {
                         CredentialHandler.TYPE.x509,
                         CredentialHandler.TYPE.irods,
                         CredentialHandler.TYPE.boto,
-                        CredentialHandler.TYPE.googlep12,
+                        CredentialHandler.TYPE.googleadc,
                         CredentialHandler.TYPE.ssh));
     }
 

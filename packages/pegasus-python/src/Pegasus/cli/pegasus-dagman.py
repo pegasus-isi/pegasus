@@ -63,6 +63,24 @@ def find_prog(prog, dir=[]):
     return None
 
 
+def monitord_search_dirs():
+    """Extra directories to look in for pegasus-monitord, ahead of PATH.
+
+    PEGASUS_HOME is only set for the tarball/RPM layout, where the old
+    bin/pegasus-python-wrapper exported it. For a wheel install the console
+    scripts sit next to the interpreter.
+    """
+    dirs = []
+
+    pegasus_home = os.getenv("PEGASUS_HOME")
+    if pegasus_home:
+        dirs.append(os.path.join(pegasus_home, "bin"))
+
+    dirs.append(os.path.dirname(os.path.abspath(sys.executable)))
+
+    return dirs
+
+
 logger = logging.getLogger("pegasus-dagman")
 
 # Use pegasus-config to find our lib path
@@ -129,7 +147,9 @@ def monitord_launch(monitord_bin, arguments=[]):
         except OSError as err:
             logger.error("Could not launch Monitord.", err)
     else:
-        logger.error("pegausus-monitord not found")
+        logger.error(
+            "pegasus-monitord not found on PATH - the workflow database will not be populated"
+        )
     return None
 
 
@@ -208,7 +228,7 @@ if __name__ == "__main__":
     dagman = dagman_launch(dagman_bin, sys.argv[1:])
 
     # Find monitord Binary
-    monitord_bin = find_prog("pegasus-monitord", [os.getenv("PEGASUS_HOME") + "/bin"])
+    monitord_bin = find_prog("pegasus-monitord", monitord_search_dirs())
 
     # Launch Monitord
     monitord = monitord_launch(monitord_bin)
@@ -216,7 +236,8 @@ if __name__ == "__main__":
     monitord_launch_attempts += 1
 
     dagman.poll()
-    monitord.poll()
+    if monitord:
+        monitord.poll()
 
     while (monitord and monitord.returncode is None) or dagman.returncode is None:
         if dagman.returncode is None and (monitord and monitord.returncode is not None):
@@ -258,7 +279,7 @@ if __name__ == "__main__":
                 monitord = None
 
         # PM-767 if in shutdown mode, check to see if we need to kill monitord
-        if monitord_shutdown_mode:
+        if monitord_shutdown_mode and monitord:
             t = time.time()
             if t - monitord_shutdown_time > MONITORD_KILL_TIME:
                 logger.info(
@@ -275,10 +296,22 @@ if __name__ == "__main__":
     # Dagman and Monitord have exited. Lets exit pegasus-dagman with
     # a merged returncode
     logger.info(f"Dagman exited with code {dagman.returncode:d}")
-    logger.info(
-        f"Monitord exited with code {monitord_return_code or monitord.returncode:d} with a total of {monitord_launch_attempts:d} launch attempts on the workflow"
-    )
+    if monitord_return_code is None and monitord:
+        monitord_return_code = monitord.returncode
+    if monitord_return_code is None:
+        # monitord was never launched - see the error logged by monitord_launch.
+        # Report dagman's code as-is rather than folding a synthetic value into
+        # the bitwise merge below, which could mask a dagman failure.
+        logger.error(
+            f"Monitord did not run on the workflow after {monitord_launch_attempts:d} launch attempts"
+        )
+        exit_code = dagman.returncode
+    else:
+        logger.info(
+            f"Monitord exited with code {monitord_return_code:d} with a total of {monitord_launch_attempts:d} launch attempts on the workflow"
+        )
+        exit_code = dagman.returncode & monitord_return_code
     if copy_to_spool:
         logger.info(f"Removing copied condor_dagman from submit directory {dagman_bin}")
         os.remove(dagman_bin)
-    sys.exit(dagman.returncode & monitord.returncode)
+    sys.exit(exit_code)

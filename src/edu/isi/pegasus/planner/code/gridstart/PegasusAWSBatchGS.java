@@ -63,7 +63,7 @@ public class PegasusAWSBatchGS implements GridStart {
 
     private static final String[] CREDENTIALS_ENV_VARIABLE_PREFIXES = {
         "BOTO_CONFIG",
-        "GOOGLE_PKCS12",
+        "GOOGLE_APPLICATION_CREDENTIALS",
         "IRODS_ENVIRONMENT_FILE",
         "S3CFG",
         "SSH_PRIVATE_KEY",
@@ -430,8 +430,8 @@ public class PegasusAWSBatchGS implements GridStart {
             String value = (String) job.envVariables.get(key);
             int ch = key.charAt(0);
             switch (ch) {
-                // "BOTO_CONFIG", "GOOGLE_PKCS12", "IRODS_ENVIRONMENT_FILE", "S3CFG",
-                // "SSH_PRIVATE_KEY", "X509_USER_PROXY"
+                // "BOTO_CONFIG", "GOOGLE_APPLICATION_CREDENTIALS", "IRODS_ENVIRONMENT_FILE",
+                // "S3CFG", "SSH_PRIVATE_KEY", "X509_USER_PROXY"
                 case 'B':
                     if (key.startsWith("BOTO_CONFIG") || key.startsWith("BOTO_CONFIG_")) {
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket));
@@ -439,7 +439,8 @@ public class PegasusAWSBatchGS implements GridStart {
                     break;
 
                 case 'G':
-                    if (key.startsWith("GOOGLE_PKCS12") || key.startsWith("GOOGLE_PKCS12_")) {
+                    if (key.startsWith("GOOGLE_APPLICATION_CREDENTIALS")
+                            || key.startsWith("GOOGLE_APPLICATION_CREDENTIALS_")) {
                         updatedCredentialEnvs.put(key, rewriteValue(value, bucket));
                     }
                     break;

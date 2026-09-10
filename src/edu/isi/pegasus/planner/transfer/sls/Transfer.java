@@ -563,9 +563,13 @@ public class Transfer implements SLS {
                     mLogger.log(
                             "Using file url for lfn " + lfn + " " + url,
                             LogManager.TRACE_MESSAGE_LEVEL);
-                    if (containerLFN != null) {
+
+                    if (containerLFN != null && c.getType() != Container.TYPE.shifter) {
                         // PM-1893 if running inside a container then make sure
                         // staging site directory gets mounted
+                        // GH-2244 we dont need to mount the staging site directory
+                        // into shifter containers as it already automatically
+                        // automounted into the container by shifter
                         mLogger.log(
                                 "Adding mount point " + stagingSiteDirectory + " to container " + c,
                                 LogManager.TRACE_MESSAGE_LEVEL);

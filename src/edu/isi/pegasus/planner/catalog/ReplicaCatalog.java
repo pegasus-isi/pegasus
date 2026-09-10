@@ -14,6 +14,7 @@
 package edu.isi.pegasus.planner.catalog;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.util.*;
 
@@ -71,6 +72,13 @@ public interface ReplicaCatalog extends Catalog {
 
     /** The name of the key that indicates property prefixes for pegasus-db-admin to connect with */
     public static final String PREFIX_KEY = "prefix";
+
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     *
+     * @param bag the bag of Pegasus initialization objects.
+     */
+    public void initialize(PegasusBag bag);
 
     /**
      * Retrieves the entry for a given filename and resource handle from the replica catalog.

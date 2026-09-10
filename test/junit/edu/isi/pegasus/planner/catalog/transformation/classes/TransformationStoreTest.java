@@ -21,6 +21,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.test.DefaultTestSetup;
 import edu.isi.pegasus.planner.test.TestSetup;
@@ -30,6 +35,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import java.io.IOException;
 
 /**
  * @author Karan Vahi
@@ -51,6 +58,124 @@ public class TransformationStoreTest {
     //
     // @Test
     // public void hello() {}
+
+    private ObjectMapper getObjectMapper() {
+        ObjectMapper mapper =
+                new ObjectMapper(
+                        new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+        mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+        return mapper;
+    }
+
+    private Container createDockerContainer(String name) {
+        Container c = new Container(name);
+        c.setImageURL("docker:///pegasus/centos-pegasus:latest");
+        c.setType(Container.TYPE.docker);
+        return c;
+    }
+
+    /**
+     * GH-2242: when multiple transformations share a container registered in mContainers,
+     * serialization must emit the container definition exactly once.
+     */
+    @Test
+    public void testSerializeContainerOnceWhenSharedByMultipleTransformations() throws IOException {
+        Container container = createDockerContainer("centos-pegasus");
+
+        TransformationCatalogEntry entry1 = new TransformationCatalogEntry("example", "keg", "1.0");
+        entry1.setPhysicalTransformation("/usr/bin/keg");
+        entry1.setResourceId("isi");
+        entry1.setContainer(new Container("centos-pegasus"));
+
+        TransformationCatalogEntry entry2 =
+                new TransformationCatalogEntry("example", "other", "1.0");
+        entry2.setPhysicalTransformation("/usr/bin/other");
+        entry2.setResourceId("isi");
+        entry2.setContainer(new Container("centos-pegasus"));
+
+        TransformationStore store = new TransformationStore();
+        store.addEntry(entry1);
+        store.addEntry(entry2);
+        store.addContainer(container);
+
+        ObjectMapper mapper = getObjectMapper();
+        String yaml = mapper.writeValueAsString(store);
+
+        TransformationStore deserialized = mapper.readValue(yaml, TransformationStore.class);
+        assertEquals(
+                1,
+                deserialized.getAllContainers().size(),
+                "Container shared by multiple transformations must appear exactly once");
+        assertNotNull(deserialized.getContainer("centos-pegasus"));
+    }
+
+    /**
+     * GH-2242: when an entry has a fully-specified Container attached directly but the container is
+     * NOT registered in mContainers, serialization must still emit the container definition so that
+     * the output YAML is self-contained.
+     */
+    @Test
+    public void testSerializeContainerFromEntryNotRegisteredInStore() throws IOException {
+        Container container = createDockerContainer("centos-pegasus");
+
+        TransformationCatalogEntry entry = new TransformationCatalogEntry("example", "keg", "1.0");
+        entry.setPhysicalTransformation("/usr/bin/keg");
+        entry.setResourceId("isi");
+        entry.setContainer(container);
+
+        TransformationStore store = new TransformationStore();
+        store.addEntry(entry);
+        // intentionally NOT calling store.addContainer(container)
+
+        ObjectMapper mapper = getObjectMapper();
+        String yaml = mapper.writeValueAsString(store);
+
+        assertTrue(
+                yaml.contains("containers"), "Serialized YAML must contain a containers section");
+
+        TransformationStore deserialized = mapper.readValue(yaml, TransformationStore.class);
+        assertEquals(
+                1,
+                deserialized.getAllContainers().size(),
+                "Container attached to entry (not in mContainers) must be serialized");
+        assertNotNull(deserialized.getContainer("centos-pegasus"));
+    }
+
+    /**
+     * GH-2242: when multiple entries each carry the same Container object directly (not via
+     * mContainers), serialization must deduplicate and emit the container definition only once.
+     */
+    @Test
+    public void testSerializeContainerDeduplicatedWhenMultipleEntriesAttachSameContainer()
+            throws IOException {
+        Container container = createDockerContainer("centos-pegasus");
+
+        TransformationCatalogEntry entry1 = new TransformationCatalogEntry("example", "keg", "1.0");
+        entry1.setPhysicalTransformation("/usr/bin/keg");
+        entry1.setResourceId("isi");
+        entry1.setContainer(container);
+
+        TransformationCatalogEntry entry2 =
+                new TransformationCatalogEntry("example", "other", "1.0");
+        entry2.setPhysicalTransformation("/usr/bin/other");
+        entry2.setResourceId("isi");
+        entry2.setContainer(container);
+
+        TransformationStore store = new TransformationStore();
+        store.addEntry(entry1);
+        store.addEntry(entry2);
+        // intentionally NOT calling store.addContainer(container)
+
+        ObjectMapper mapper = getObjectMapper();
+        String yaml = mapper.writeValueAsString(store);
+
+        TransformationStore deserialized = mapper.readValue(yaml, TransformationStore.class);
+        assertEquals(
+                1,
+                deserialized.getAllContainers().size(),
+                "Container must be deduplicated when multiple entries attach the same container");
+        assertNotNull(deserialized.getContainer("centos-pegasus"));
+    }
 
     @Test
     public void testDifferentTXNameWithDockerContainer() {

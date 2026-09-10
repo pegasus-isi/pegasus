@@ -16,7 +16,7 @@ namespaces = true
 [project]
 
 name = "pegasus-wms"
-version = "6.0.0-dev.0"
+version = "6.0.0.dev0"
 authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 description = "Pegasus Workflow Management System Python API"
@@ -65,10 +65,6 @@ keywords = ["scientific workflows"]
 postgresql = ["psycopg2"]
 mysql = ["pymysql"]
 cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
-
-[project.scripts]
-
-pegasus-monitor = "Pegasus.monitor.cli:main"
 
 [project.urls]
 
@@ -156,7 +152,11 @@ forced-separate = ["Pegasus"]
 
 pythonpath = ["src"]
 testpaths = ["test"]
-filterwarnings = ["ignore:.*Decimal.*natively:sqlalchemy.exc.SAWarning"]
+filterwarnings = [
+    "ignore:.*Decimal.*natively:sqlalchemy.exc.SAWarning",
+    "ignore:unclosed database:ResourceWarning",
+    "ignore:Enable tracemalloc:ResourceWarning",
+]
 
 "resource-path.directory-name-tests" = "test"
 "resource-path.directory-name-test-resources" = "resources"

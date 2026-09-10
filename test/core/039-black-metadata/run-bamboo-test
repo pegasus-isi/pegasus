@@ -2,5 +2,11 @@
 
 set -e
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
+
 # generate the dax
-PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py
+PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $REMOTE_PEGASUS_HOME

@@ -16,7 +16,7 @@ namespaces = true
 [project]
 
 name = "pegasus-wms.api"
-version = "6.0.0-dev.0"
+version = "6.0.0.dev0"
 authors = [{ name = "Pegasus Team", email = "pegasus@isi.edu" }]
 maintainers = [{ name = "Rajiv Mayani", email = "mayani@isi.edu" }]
 description = "Pegasus Workflow Management System Python API"
@@ -118,6 +118,10 @@ forced-separate = ["Pegasus"]
 
 pythonpath = ["src"]
 testpaths = ["test"]
+filterwarnings = [
+    "ignore:unclosed database:ResourceWarning",
+    "ignore:Enable tracemalloc:ResourceWarning",
+]
 
 
 [tool.coverage.run]

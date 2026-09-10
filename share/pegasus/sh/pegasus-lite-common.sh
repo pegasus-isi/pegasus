@@ -449,7 +449,7 @@ container_env()
     inside_work_dir=$1
 
     # copy credentials into the pwd as this will become the container directory
-    for base in PEGASUS_CREDENTIALS X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_PKCS12 _CONDOR_CREDS ; do
+    for base in PEGASUS_CREDENTIALS X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_APPLICATION_CREDENTIALS _CONDOR_CREDS ; do
         for key in `(env | grep -i ^${base} | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
             if [ "X${val}" = "X" ]; then
@@ -616,7 +616,7 @@ pegasus_lite_init()
     fi
 
     # for staged credentials, expand the paths and set strict permissions
-    for base in PEGASUS_CREDENTIALS X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_PKCS12 ; do
+    for base in PEGASUS_CREDENTIALS X509_USER_PROXY S3CFG BOTO_CONFIG SSH_PRIVATE_KEY IRODS_ENVIRONMENT_FILE GOOGLE_APPLICATION_CREDENTIALS ; do
         for key in `(env | grep -i ^$base | sed 's/=.*//') 2>/dev/null`; do
             eval val="\$$key"
             # expand the path

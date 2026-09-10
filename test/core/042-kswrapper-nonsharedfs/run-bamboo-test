@@ -13,6 +13,10 @@ if [ X${testdir} = "X" ]; then
     export testdir
 fi
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
 # determine TEST_NAME to setup site catalog
 TESTDIR=$(cd $testdir && pwd)
 TEST_NAME=`basename $TESTDIR`
@@ -27,11 +31,13 @@ export PEGASUS_LOCAL_BIN_DIR
 export HOSTNAME=`hostname -f`
 echo "This is sample input to KEG" >f.a
 
+export REMOTE_PEGASUS_HOME=/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA
+
 # generate the dax
 PYTHONPATH=$(pegasus-config --python) ./blackdiamond.py $BIN_DIR > blackdiamond.dax
 
 # kickstart wrapper location
-KS_WRAPPER=/scitech/shared/software/bamboo/kickstart-wrapper
+KS_WRAPPER=$REMOTE_PEGASUS_HOME/bin/kickstart-wrapper
 export KS_WRAPPER
 
 # plan and submit the  workflow

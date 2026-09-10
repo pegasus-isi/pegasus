@@ -4,8 +4,12 @@ set -e
 
 CONFIG=`basename $1`
 
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
 if [[ "${CONFIG}" == *"-sharedfs"*  ]]; then
-    PEGASUS_KEG="/usr/bin/pegasus-keg"
+    PEGASUS_KEG="/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA/bin/pegasus-keg"
 else
     PEGASUS_KEG=`which pegasus-keg`
 fi

@@ -40,7 +40,7 @@ fi
 
 STATUS=$?
 if [ $STATUS != 0 ]; then
-   echo "Workflow submission failed"
+   echo "run-bamboo-test failed with exit code $STATUS"
    exit $STATUS
 fi
 

@@ -261,6 +261,7 @@ public class ReplicaFactory {
 
         DynamicLoader dl = new DynamicLoader(catalogImplementor);
         result = (ReplicaCatalog) dl.instantiate(new Object[0]);
+        result.initialize(bag);
         if (result == null) throw new RuntimeException("Unable to load " + catalogImplementor);
 
         if (!result.connect(connectProps))

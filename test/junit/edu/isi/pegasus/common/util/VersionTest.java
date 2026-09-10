@@ -27,7 +27,7 @@ public class VersionTest {
     public void testVersion() {
         String version = ver.getVersion();
         assertThat(version, is(notNullValue()));
-        assertThat(version.matches("\\d+[.]\\d+[.]\\d+(-(dev|alpha|beta|rc).\\d+)?"), is(true));
+        assertThat(version.matches("\\d+[.]\\d+[.]\\d+((a|b|rc)\\d+)?([.]dev\\d+)?"), is(true));
     }
 
     @Test
@@ -42,7 +42,7 @@ public class VersionTest {
 
         String patch = ver.getPatch();
         assertThat(patch, is(notNullValue()));
-        assertThat(patch.matches("\\d+(-(dev|alpha|beta|rc).\\d+)?"), is(true));
+        assertThat(patch.matches("\\d+((a|b|rc)\\d+)?([.]dev\\d+)?"), is(true));
 
         String version = ver.getVersion();
         assertThat(version, is(major + "." + minor + "." + patch));

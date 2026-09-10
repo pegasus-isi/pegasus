@@ -399,3 +399,76 @@ def test_initialize_output_dir(mocker, output_dir):
         m.assert_called_once_with("statistics", delete_if_exists=False)
     else:
         m.assert_called_once_with("statistics", delete_if_exists=True)
+
+
+def test_ai_output_calls_agent_statistics(mocker, tmp_path, capsys):
+    """ai_output() must feed the AI agent client the workflow uuid and the
+    summary/breakdown stats text -- this is the same Pegasus Agent service
+    call used by pegasus-analyzer (see
+    packages/pegasus-common/test/client/test_agent.py), so it is just as
+    exposed to the client_version-validation 422 fixed there."""
+    (tmp_path / "summary.txt").write_text("SUMMARY DATA\n")
+    (tmp_path / "breakdown.txt").write_text("BREAKDOWN DATA\n")
+
+    p = PegasusStatistics(output_dir=str(tmp_path))
+    p.file_extn = "txt"
+    p.wf_uuids = ["wf-abc-123"]
+
+    mock_client = mocker.Mock()
+    mock_client.statistics.return_value = "AI summary"
+    mocker.patch("Pegasus.statistics.agent.AgentClient", return_value=mock_client)
+
+    p.ai_output()
+
+    mock_client.statistics.assert_called_once_with(
+        "wf-abc-123", "SUMMARY DATA\nBREAKDOWN DATA\n"
+    )
+    assert "AI summary" in capsys.readouterr().out
+
+
+def test_ai_output_falls_back_to_unknown_uuid(mocker, tmp_path):
+    "When no workflow uuid was resolved, ai_output() must still send a non-empty id"
+    (tmp_path / "summary.txt").write_text("SUMMARY DATA\n")
+
+    p = PegasusStatistics(output_dir=str(tmp_path))
+    p.file_extn = "txt"
+    p.wf_uuids = ""
+
+    mock_client = mocker.Mock()
+    mock_client.statistics.return_value = "AI summary"
+    mocker.patch("Pegasus.statistics.agent.AgentClient", return_value=mock_client)
+
+    p.ai_output()
+
+    mock_client.statistics.assert_called_once_with("unknown", "SUMMARY DATA\n")
+
+
+def test_ai_output_skips_agent_call_when_no_stats_data(mocker, tmp_path):
+    "No summary/breakdown files means nothing to send -- the agent must not be called"
+    p = PegasusStatistics(output_dir=str(tmp_path))
+    p.file_extn = "txt"
+    p.wf_uuids = ["wf-abc-123"]
+
+    mock_agent_client_cls = mocker.patch("Pegasus.statistics.agent.AgentClient")
+
+    p.ai_output()
+
+    mock_agent_client_cls.assert_not_called()
+
+
+def test_ai_output_reports_service_errors(mocker, tmp_path, capsys):
+    """A RuntimeError from AgentClient (e.g. the 422 seen from the live
+    service) must be caught and reported, not raised."""
+    (tmp_path / "summary.txt").write_text("SUMMARY DATA\n")
+
+    p = PegasusStatistics(output_dir=str(tmp_path))
+    p.file_extn = "txt"
+    p.wf_uuids = ["wf-abc-123"]
+
+    mock_client = mocker.Mock()
+    mock_client.statistics.side_effect = RuntimeError("422 Client Error")
+    mocker.patch("Pegasus.statistics.agent.AgentClient", return_value=mock_client)
+
+    p.ai_output()
+
+    assert "422 Client Error" in capsys.readouterr().out

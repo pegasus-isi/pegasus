@@ -3,17 +3,21 @@
 import json
 import logging
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 from Pegasus.api import *
-from Pegasus.tools import worker_utils as utils
 
 logging.basicConfig(level=logging.DEBUG)
 
-PEGASUS_LOCATION = utils.backticks("which pegasus-keg").strip()
-PEGASUS_VERSION = utils.backticks("pegasus-version").strip()
+PEGASUS_LOCATION = subprocess.check_output(
+    "which pegasus-keg", shell=True, text=True
+).strip()
+PEGASUS_VERSION = subprocess.check_output(
+    "pegasus-version", shell=True, text=True
+).strip()
 
 # figure out test name from arguments
 if len(sys.argv) != 2:

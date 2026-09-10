@@ -552,6 +552,7 @@ class ProfileMixin:
         project="project",
         project_expr="project.expr",
         boto_config="BOTO_CONFIG",
+        google_application_credentials="GOOGLE_APPLICATION_CREDENTIALS",
         container_arguments="container.arguments",
         container_launcher="container.launcher",
         container_launcher_arguments="container.launcher.arguments",
@@ -615,6 +616,7 @@ class ProfileMixin:
         project: str = None,
         project_expr: str = None,
         boto_config: str = None,
+        google_application_credentials: str = None,
         container_arguments: str = None,
         container_launcher: str = None,
         container_launcher_arguments: str = None,
@@ -728,6 +730,8 @@ class ProfileMixin:
         :type project_expr: str, optional
         :param boto_config: Specified which :code:`.boto` file to use (e.g. :code:`"/home/myuser/.boto"`)
         :type boto_config: str, optional
+        :param google_application_credentials: path to the Google service account key (JSON format) to use for :code:`gs://` transfers (e.g. :code:`"/home/myuser/.google.key"`)
+        :type google_application_credentials: str, optional
         :param container_arguments: additional cli arguments that will be added to the :code:`docker container run` or :code:`singularity exec` command
         :type container_arguments: str, optional
         :param container_launcher: wrapper to launch the container invocation in PegasusLite for running the container e.g.  :code:`srun singularity exec` command

@@ -13,12 +13,20 @@
  */
 package edu.isi.pegasus.planner.refiner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.FileUtils;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -26,10 +34,13 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -49,6 +60,19 @@ public class MainEngine extends Engine {
     public static final String CLEANUP_DIR = "cleanup";
 
     public static String CATALOGS_DIR_BASENAME = "catalogs";
+
+    /**
+     * Basename of the file to which we write out planners working site catalog, with variables
+     * expanded.
+     */
+    public static final String COMBINED_SC_BASENAME = "sites-combined.yml";
+
+    /**
+     * Basename of the file to which we write out planners working transformation catalog with
+     * variables expanded. This includes entries from various sources directories, catalog backend
+     * and workflow yaml file.
+     */
+    public static final String COMBINED_TC_BASENAME = "transformations-combined.yml";
 
     /** The Original Dag object which is constructed by parsing the dag file. */
     private ADag mOriginalDag;
@@ -389,6 +413,13 @@ public class MainEngine extends Engine {
                         LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
+
+        // write out the in memory combined instance of site catalog
+        // and transformation catalogs also into the catalogs directory
+        if (siteStore != null && !siteStore.isEmpty()) {
+            serialize(siteStore, new File(directory, COMBINED_SC_BASENAME));
+        }
+        serialize(transformationCatalog, new File(directory, COMBINED_TC_BASENAME));
     }
 
     /**
@@ -460,5 +491,67 @@ public class MainEngine extends Engine {
         }
 
         return p;
+    }
+
+    /**
+     * Serializes transformation catalog contents to a YAML formatted file
+     *
+     * @param catalog
+     * @param file
+     */
+    private void serialize(TransformationCatalog catalog, File file) {
+        if (catalog == null) {
+            return;
+        }
+
+        TransformationStore result = new TransformationStore();
+        try {
+            List<TransformationCatalogEntry> entries = catalog.getContents();
+            for (TransformationCatalogEntry site : entries) {
+                result.addEntry(site);
+            }
+            if (result.isEmpty()) {
+                // empty catalog. nothing to serialize
+                return;
+            }
+            this.serialize(result, file);
+        } catch (Exception ex) {
+            // only log. don't throw
+            mLogger.log(
+                    "Unable to serialize transformation catalog to " + file,
+                    ex,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        }
+    }
+
+    /**
+     * Serializes an object to it's yaml representation.
+     *
+     * @param store
+     * @param file
+     */
+    private void serialize(Object store, File file) {
+        try {
+            // in case of yaml we write it directly to the output file so we are
+            // returning null..
+            ObjectMapper mapper =
+                    new ObjectMapper(
+                            new YAMLFactory().configure(YAMLGenerator.Feature.INDENT_ARRAYS, true));
+            mapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false);
+            String out = mapper.writeValueAsString(store);
+            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+            bw.write(out);
+            bw.close();
+        } catch (JsonProcessingException ex) {
+            mLogger.log(
+                    "Unable to serialize object in yaml representation to " + file,
+                    ex,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        } catch (Exception ex) {
+            mLogger.log(
+                    "Unable to write out serialized object to " + file,
+                    ex,
+                    LogManager.ERROR_MESSAGE_LEVEL);
+        }
     }
 }

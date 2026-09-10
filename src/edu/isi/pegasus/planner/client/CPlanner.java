@@ -1806,7 +1806,7 @@ public class CPlanner extends Executable {
         for (String site : result.list()) {
             SiteCatalogEntry entry = result.lookup(site);
             try {
-                mLogger.log(entry.toYAML(), LogManager.TRACE_MESSAGE_LEVEL);
+                mLogger.log(entry.toYAML(), LogManager.DEBUG_MESSAGE_LEVEL);
             } catch (JsonProcessingException ex) {
                 mLogger.log(
                         "Unable to convert to yaml site catalog entry for site - " + site,
