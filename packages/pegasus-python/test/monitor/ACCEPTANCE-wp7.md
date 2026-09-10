@@ -2,8 +2,20 @@
 
 This file is the reproducible acceptance index for the extended
 `pegasus-monitor` release. The minimum native v1 release remains the immutable
-`feature/pegasus-monitor-v1` baseline at `751ffc7d1`. WP7 and WP9b are a stacked
-fast-follow and do not replace or supersede v1.
+v1 baseline at commit `751ffc7d1`. WP7 and WP9b are a stacked fast-follow and
+do not replace or supersede v1.
+
+## Branch history
+
+The evidence below was recorded on the `feature/pegasus-monitor-wp9b` branch.
+On 2026-09-10 that branch was merged with `main` (which had replaced the ant
+build with CMake/scikit-build-core and moved console scripts into the root
+`pyproject.toml` behind the unified `pegasus` CLI) and renamed to
+`feature/pegasus-monitor`. The earlier `feature/pegasus-monitor` (WIP history)
+and `feature/pegasus-monitor-v1` (squashed v1) branches were deleted; the v1
+baseline commit `751ffc7d1` remains reachable from `feature/pegasus-monitor`.
+References to `feature/pegasus-monitor-wp9b` and to `wp9b`-named paths in this
+document are historical and identify the retained evidence, not a live branch.
 
 ## Candidate composition
 
@@ -229,11 +241,15 @@ Environment and retained evidence:
 
 Functional local and FABRIC acceptance is complete for `71723fc41`. An
 evidence-only documentation commit may advance and be pushed on
-`feature/pegasus-monitor-wp9b`. Submission or merge remains blocked pending:
+`feature/pegasus-monitor` (formerly `feature/pegasus-monitor-wp9b`; see
+"Branch history"). Submission or merge remains blocked pending:
 
 1. an actual GitLab pipeline on `scitech-gitlab.isi.edu`; and
 1. an explicit Pegasus maintainer waiver for the inherited repository-wide
-   `ant dist-doc` failures.
+   documentation build failures. These were observed with `ant dist-doc`
+   before the CMake migration; the equivalent target on the merged branch is
+   `make doc-dist`, and whether the failures persist there has not been
+   re-verified.
 
 WP9b remains a stacked fast-follow extended release. It does not replace or
 supersede the immutable v1 baseline.
