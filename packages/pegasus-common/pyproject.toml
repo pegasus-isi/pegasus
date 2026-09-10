@@ -126,3 +126,9 @@ filterwarnings = [
 [tool.coverage.run]
 
 source = ["src"]
+
+
+[tool.coverage.report]
+
+# Was --cov-fail-under in this package's tox.ini
+fail_under = 48

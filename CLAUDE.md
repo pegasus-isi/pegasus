@@ -37,12 +37,15 @@ Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLA
 # Run all tests (Python + Java + C)
 make test
 
-# Python tests — each package has its own tox.ini
-make test-python   # runs tox for all four packages
-# or individually:
-cd packages/pegasus-python && tox -e py310
-cd packages/pegasus-api && tox -e py310
-cd packages/pegasus-common && tox -e py310
+# Python tests — all three envs are defined in the root tox.toml
+make test-python   # runs tox for all three packages
+# or individually, from the repo root:
+tox -e python
+tox -e api
+tox -e common
+
+# Pin the interpreter (env names carry no pyNNN factor):
+TOX_BASE_PYTHON=python3.11 tox -e api
 
 # Java unit tests (JUnit 5) — requires make build-java first
 make test-java
@@ -59,10 +62,9 @@ Test framework is pytest for Python. Reports go to `test-reports/`.
 ## Code Formatting
 
 ```bash
-# Python (run from each package directory)
-cd packages/pegasus-python && tox -e lint
-cd packages/pegasus-api && tox -e lint
-cd packages/pegasus-common && tox -e lint
+# Python (from the repo root)
+tox -m lint          # ruff over pegasus-python, pegasus-api, pegasus-common
+tox -e lint-python   # or one package at a time (lint-api, lint-common)
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
@@ -80,7 +82,7 @@ make doc-dist      # Package staged docs → dist/pegasus-doc-VERSION.tar.gz
 make clean-doc     # Remove doc/sphinx/_build/, doc/sphinx/python/, dist/pegasus-VERSION/
 ```
 
-Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by `tox -e docs` in `packages/pegasus-python/`. PDF generation requires `latexmk`; skipped automatically when not installed.
+Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by the `docs` env in the root `tox.toml`. PDF generation requires `latexmk`; skipped automatically when not installed (the Makefile then runs `tox -e docs -- html man`).
 
 ## Architecture
 
@@ -118,7 +120,7 @@ Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, 
 
 ### Python — `packages/`
 
-Four namespace packages sharing the `Pegasus` namespace:
+Three namespace packages sharing the `Pegasus` namespace:
 
 | Package           | What it provides                                                      |
 | ----------------- | --------------------------------------------------------------------- |

@@ -54,9 +54,12 @@ dependencies = [
     "sqlalchemy",
     "pythonsed",          # For profile expression
     "rich",               # Console/Markdown rendering for pegasus-analyzer
-    "pegasus-wms.api",
-    "pegasus-wms.common",
-    "pegasus-wms.worker",
+    # No pegasus-wms.api/.common/.worker here.  Those were separate
+    # distributions before the scikit-build-core overhaul; CMake now merges the
+    # three src/Pegasus/ trees into the single pegasus-wms wheel, so a
+    # dependency edge between them describes a topology that no longer ships --
+    # and the names still resolve to 5.1.2 on PyPI.  Test envs install the
+    # siblings from local paths (see tox.toml).
 ]
 keywords = ["scientific workflows"]
 
@@ -165,3 +168,9 @@ filterwarnings = [
 [tool.coverage.run]
 
 source = ["src"]
+
+
+[tool.coverage.report]
+
+# Was --cov-fail-under in this package's tox.ini
+fail_under = 25.5

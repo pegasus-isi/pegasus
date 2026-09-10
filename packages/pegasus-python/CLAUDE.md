@@ -4,44 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-This is `pegasus-wms` (pegasus-python), the largest of four Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It depends on the three sibling packages: `pegasus-wms.common`, `pegasus-wms.api`, and `pegasus-wms.worker`.
+This is `pegasus-wms` (pegasus-python), the largest of three Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It shares the `Pegasus` namespace with two sibling packages, `pegasus-common` and `pegasus-api`, which CMake merges with it into the single `pegasus-wms` wheel.
 
 ## Build & Install
 
-```bash
-# Install in development mode (from this directory)
-pip install -e .
+**Do not run `pip install -e .` from this directory.** This package is not a
+standalone distribution any more — the whole repo builds one `pegasus-wms`
+wheel. Install from the repo root instead:
 
-# Install with optional extras
-pip install -e ".[cwl]"        # CWL converter support
-pip install -e ".[postgresql]"  # PostgreSQL support
+```bash
+make dev                  # editable install of the full distribution
+pip install ".[cwl]"      # from the repo root; extras live in the root pyproject
 ```
 
-Sibling packages must be installed first (or simultaneously): `../pegasus-common`, `../pegasus-api`, `../pegasus-worker`.
+Sibling packages (`../pegasus-common`, `../pegasus-api`)
+are merged into that single wheel by CMake, so there is nothing to install
+separately. Test environments install them from local paths — see the root
+`tox.toml`.
 
 ## Testing
 
 ```bash
-# Run all tests (from this directory)
-tox -e py310                    # Replace py310 with your Python version
+# Run all tests (from the REPO ROOT — envs live in the root tox.toml)
+tox -e python
 
-# Run a single test file
-pytest test/test_statistics.py
-
-# Run a single test
-pytest test/test_statistics.py::TestPegasusStatistics::test_initialize -v
-
-# Run tests with coverage
-pytest --cov --cov-branch --cov-report term --cov-fail-under 25.5
+# Run a single test file, or a single test
+tox -e python -- test/test_statistics.py
+tox -e python -- test/test_statistics.py::TestPegasusStatistics::test_initialize -v
 ```
 
-Test dependencies are managed by tox.ini. Key test deps: pytest, pytest-mock, pytest-cov, pytest-resource-path, jsonschema, cwl-utils.
+Test dependencies are managed by the root `tox.toml`. Key test deps: pytest, pytest-mock, pytest-cov, pytest-resource-path, jsonschema, cwl-utils.
+
+The coverage floor (25.5%) lives in `[tool.coverage.report] fail_under` in this package's `pyproject.toml`.
 
 ## Code Formatting
 
 ```bash
-# Run linting/formatting (from this directory)
-tox -e lint
+# Run linting/formatting (from the repo root)
+tox -e lint-python
 ```
 
 Uses ruff for checking and formatting. The `tox -e lint` environment runs autoflake, pyupgrade, isort, black, and flake8. Line length is 88. Files in `src/Pegasus/cli/` are excluded from isort/black formatting.
@@ -78,7 +78,7 @@ The `SABase` class in `schema.py` provides `commit_to_db()` and `merge_to_db()` 
 
 ### Namespace Package Convention
 
-All four Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
+All three Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
 
 ```python
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)

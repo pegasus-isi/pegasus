@@ -40,7 +40,10 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Utilities",
 ]
-dependencies = ["pegasus-wms.common"]
+# No pegasus-wms.common here: the four packages are merged into a single
+# pegasus-wms wheel by CMake, and the name still resolves to 5.1.2 on PyPI.
+# Test envs install the siblings from local paths (see tox.toml).
+dependencies = []
 keywords = ["scientific workflows"]
 
 [project.urls]
@@ -127,3 +130,9 @@ filterwarnings = [
 [tool.coverage.run]
 
 source = ["src"]
+
+
+[tool.coverage.report]
+
+# Was --cov-fail-under in this package's tox.ini
+fail_under = 99
