@@ -97,15 +97,13 @@ set(WORKER_DEST  "${_data_base}/worker-packages")
 set(SCHEMA_DEST  "${_data_base}/schema")
 set(ETC_DEST     "${_data_base}/etc")
 
-# Python sub-packages: merge pegasus-common, and pegasus-api
-# into the wheel alongside pegasus-python (handled by wheel.packages).
-# pegasus-worker's Python content here is now just namespace-package
-# boilerplate (see packages/pegasus-worker/CLAUDE.md) — every CLI tool that
-# used to live in pegasus-worker (transfer, s3, checkpoint, integrity,
-# globus-online(-init)) has been rewritten in Go and is installed as a
-# compiled binary further down instead. The isolated, Python-free worker
-# tarball for remote hosts is built separately by the build_worker_tarball
-# CMake target below.
+# Python sub-packages: merge pegasus-common and pegasus-api into the wheel
+# alongside pegasus-python (handled by wheel.packages). The former
+# pegasus-worker Python package is gone — every CLI tool it held (transfer,
+# s3, checkpoint, integrity, globus-online(-init)) was rewritten in Go and is
+# installed as a compiled binary further down instead. The isolated,
+# Python-free worker tarball for remote hosts is built separately by the
+# build_worker_tarball CMake target below.
 if(DEFINED SKBUILD_PLATLIB_DIR)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-common/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")

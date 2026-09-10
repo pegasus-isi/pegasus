@@ -43,7 +43,7 @@ Runs `ruff check` then `ruff format` (which rewrites files in place), using the 
 
 ### Namespace Package
 
-This package shares the `Pegasus` Python namespace with three sibling packages (`pegasus-api`, `pegasus-python`, `pegasus-worker`) using `pkgutil.extend_path`. All source lives under `src/Pegasus/`. The `__init__.py` must preserve the `extend_path` call or imports across sibling packages will break.
+This package shares the `Pegasus` Python namespace with two sibling packages (`pegasus-api`, `pegasus-python`) using `pkgutil.extend_path`. All source lives under `src/Pegasus/`. The `__init__.py` must preserve the `extend_path` call or imports across sibling packages will break.
 
 ### Modules
 
@@ -54,6 +54,6 @@ This package shares the `Pegasus` Python namespace with three sibling packages (
 
 ### Key Conventions
 
-- Python 3.6+ compatibility required (`pyupgrade` enforces `--py36-plus`). Note: this package is merged into the `pegasus-wms` wheel (Python ≥3.10) but its source targets 3.6 for compatibility with the worker tarball environment.
+- Targets Python ≥3.10, like the `pegasus-wms` wheel it is merged into (ruff `target-version = "py310"`). The old Python 3.6 floor existed for the worker tarball environment, which no longer ships any Python.
 - Use `Pegasus.yaml` and `Pegasus.json` instead of raw PyYAML/json for consistent Pegasus-specific serialization behavior.
 - The client module is a thin wrapper around CLI subprocess calls, not a reimplementation of planner logic.

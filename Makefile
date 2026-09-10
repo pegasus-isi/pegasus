@@ -294,9 +294,9 @@ doc-dist: doc
 # C tests require:    make build-c
 test: test-python test-java test-c test-go
 
-# Run Python test suites for all four packages via tox.
+# Run Python test suites for all three packages via tox.
 # Envs are defined in the root tox.toml; each chdirs into its package.
-# Run a single package with 'tox -e api' (or common/worker/python).
+# Run a single package with 'tox -e api' (or common/python).
 test-python:
 	TOX_BASE_PYTHON=$(PYTHON) tox
 
@@ -410,7 +410,7 @@ help:
 	@echo ""
 	@echo "Test targets:"
 	@echo "  test          Run all tests (Python + Java + C + Go)"
-	@echo "  test-python   Run tox test suites for all four Python packages"
+	@echo "  test-python   Run tox test suites for all three Python packages"
 	@echo "  test-java     Run Java unit tests via JUnit 5 (needs 'make build-java')"
 	@echo "  test-c        Run C integration tests (needs 'make build-c')"
 	@echo "  test-go       Run Go unit tests (pegasus-transfer, -checkpoint, -integrity, -globus-online)"
