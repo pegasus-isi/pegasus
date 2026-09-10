@@ -59,7 +59,7 @@ Python:
   - pip3 install --upgrade pip setuptools
   - pip3 install tox-uv
   script:
-  - cd packages/pegasus-${PACKAGE}; tox
+  - tox -e ${PACKAGE}
   coverage: '/Total coverage: \d+\.\d+%/'
   artifacts:
     when: always

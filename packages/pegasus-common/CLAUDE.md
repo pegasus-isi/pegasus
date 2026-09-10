@@ -9,8 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test
 
 ```bash
-# Run full test suite with coverage (94% minimum required)
-tox -e py310
+# Run full test suite with coverage (from the REPO ROOT; envs live in tox.toml)
+tox -e common
 
 # Run pytest directly (from package root)
 pytest test/
@@ -27,16 +27,17 @@ pytest test/client/test_client.py
 pytest test/test_braindump.py::TestBraindump::test_load -v
 ```
 
-Coverage must stay at or above **94%** (`--cov-fail-under 94` in tox.ini).
+Coverage must stay at or above **48%** — `[tool.coverage.report] fail_under` in
+this package's `pyproject.toml`. (Actual coverage is currently ~89%.)
 
 ## Linting & Formatting
 
 ```bash
-# Run all linters/formatters via tox
-tox -e lint
+# Run all linters/formatters via tox, from the repo root
+tox -e lint-common
 ```
 
-The lint environment runs, in order: autoflake, pyupgrade (--py36-plus), isort, black (target py36), flake8. Configure these in `pyproject.toml`.
+Runs `ruff check` then `ruff format` (which rewrites files in place), using the `[tool.ruff]` config in this package's `pyproject.toml`.
 
 ## Architecture
 
