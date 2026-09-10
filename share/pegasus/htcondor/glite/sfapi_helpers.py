@@ -17,6 +17,9 @@ import os
 client_id = None
 client_secret = None
 
+_DEFAULT_PRIVATE_JWK_KEY_FILE = Path.home() / ".superfacility" / "priv_key.jwk"
+_DEFAULT_CLIENT_ID_FILE = Path.home() / ".superfacility" / "clientid.txt"
+
 
 class SfApiHelperError(Exception):
     """Raised for errors encountered in sfapi_helpers operations."""
@@ -298,38 +301,29 @@ def check_job_status(jobid):
     print(f"Job {jobid} state: {job.state}")
 
 
-def check_token_validity(token_path):
+def check_token_validity(key_path):
     """
     Check whether an SFAPI private key can successfully authenticate with NERSC.
 
-    Loads the JWK private key from ``token_path`` and the client ID from
-    ``~/.superfacility/clientid.txt``, then calls ``Client.token`` to fetch a
-    bearer token from the NERSC OIDC endpoint.  A successful fetch confirms
-    that the key is well-formed, the client ID matches, and the credentials
-    are accepted by NERSC — without duplicating any REST calls directly.
+    Loads the JWK private key from ``key_path`` and the client ID from
+    file named ``clientid.txt`` from the directory where key exists,
+    then calls ``Client.token`` to fetch a bearer token from the NERSC
+    OIDC endpoint.  A successful fetch confirms that the key is well-formed,
+    the client ID matches, and the credentials are accepted by NERSC — without
+    duplicating any REST calls directly.
 
-    :param token_path: Path to the JWK private key file
+    :param key_path: Path to the JWK private key file
                        (e.g. ~/.superfacility/priv_key.jwk).
     :raises SfApiHelperError: If the key file is missing or unparseable, the
                               client ID file is missing, or authentication fails.
     """
-    key_path = Path(token_path).expanduser().resolve()
+
     if not key_path.exists():
         raise SfApiHelperError(f"Token key file not found: {key_path}")
 
-    # Parse the JWK to catch format errors before hitting the network.
-    try:
-        with open(key_path, "r") as f:
-            key  = json.load(f)
-
-    except (json.JSONDecodeError, ValueError, KeyError) as e:
-        raise SfApiHelperError(f"Failed to parse token key file {key_path}: {e}")
-
-    # Load the matching client ID from the standard location.
-    client_id_file = Path.home() / ".superfacility" / "clientid.txt"
-    if not client_id_file.exists():
-        raise SfApiHelperError(f"Client ID file not found: {client_id_file}")
-    cid = client_id_file.read_text().strip()
+    # Load the matching client ID from the same location as where key exists
+    client_id_file = Path(key_path).parent / "clientid.txt"
+    cid, key = load_sflapi_client_secret(key_path, client_id_file)
 
     # Attempt to fetch a bearer token — this is the sfapi_client's own
     # mechanism for verifying credentials without calling REST directly.
@@ -399,30 +393,46 @@ def print_nersc_status():
         print(f"{name: <22}| {status.description: <25}| {status.status}")
 
 
-def load_sflapi_client_secret():
+def load_sflapi_client_secret(key_path=None, clientid_path=None):
     """
     Loads the SFAPI client_id and client_secret from ~/.superfacility/ and
     sets them as module globals so all helper functions can use them.
+
+    :param key_path: Path to the JWK private key file
+                       (defaults to ~/.superfacility/priv_key.jwk).
+
+    :param clientid_path: Path to the JWK private key file
+                       (defaults to ~/.superfacility/clientid.txt).
 
     :return: client_id, client_secret
     """
     global client_id, client_secret
 
-    sf_key_dir = Path().home() / ".superfacility"
+    if key_path is None:
+        key_path = _DEFAULT_PRIVATE_JWK_KEY_FILE
 
-    for sf_file in sf_key_dir.iterdir():
-        if sf_file.is_file():
-            sf_file.chmod(0o600)
+    if clientid_path is None:
+        clientid_path = _DEFAULT_CLIENT_ID_FILE
 
-    client_id = (sf_key_dir / "clientid.txt").read_text().strip()
-    print(f"User client id for superfacility is {client_id}")
+    if not key_path.exists():
+        raise SfApiHelperError(f"JSON Web Token Key file not found: {key_path}")
 
-    sfapi_key = sf_key_dir / "priv_key.jwk"
+    if not clientid_path.exists():
+        raise SfApiHelperError(f"Clientid file not found: {clientid_path}")
 
-    with open(sfapi_key, "r") as f:
+        # Parse the JWK to catch format errors before hitting the network.
+    try:
+        with open(key_path, "r") as f:
+            client_secret = json.load(f)
+    except (json.JSONDecodeError, ValueError, KeyError) as e:
+        raise SfApiHelperError(f"Failed to parse token key file {key_path}: {e}")
+
+    client_id = clientid_path.read_text().strip()
+    # print(f"User client id for superfacility is {client_id}")
+
+    with open(key_path, "r") as f:
         client_secret = json.load(f)
 
-    # print(f"Client secret for superfacility is {client_secret}")
     return client_id, client_secret
 
 
@@ -531,9 +541,6 @@ def _cmd_cancel(args):
     cancel_job(args.job_id)
 
 
-_DEFAULT_TOKEN_PATH = "~/.superfacility/priv_key.jwk"
-
-
 def _cmd_status(args):
     """Handler for the 'status' subcommand."""
     if args.type == "resource":
@@ -544,8 +551,8 @@ def _cmd_status(args):
         if not args.value:
             raise SystemExit("error: --value is required when --type=job")
         check_job_status(args.value)
-    elif args.type == "token":
-        token_path = args.value if args.value else _DEFAULT_TOKEN_PATH
+    elif args.type == "key":
+        token_path = args.value if args.value else _DEFAULT_PRIVATE_JWK_KEY_FILE
         check_token_validity(token_path)
 
 
@@ -604,7 +611,7 @@ if __name__ == '__main__':
     st.add_argument(
         "-t", "--type",
         metavar="TYPE",
-        choices=["resource", "job", "token"],
+        choices=["resource", "job", "key"],
         required=True,
         help="What to query: 'resource' to check a NERSC system status, "
              "'job' to check a submitted job state, "
@@ -616,8 +623,8 @@ if __name__ == '__main__':
         default=None,
         help="Resource name (e.g. 'perlmutter') when --type=resource; "
              "job ID when --type=job; "
-             "path to the JWK private key file when --type=token "
-             f"(default: {_DEFAULT_TOKEN_PATH})",
+             "path to the JWK private key file when --type=key; "
+             f"(default: {_DEFAULT_PRIVATE_JWK_KEY_FILE})",
     )
 
     # --- download subcommand ---
