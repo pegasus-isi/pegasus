@@ -37,13 +37,12 @@ Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLA
 # Run all tests (Python + Java + C)
 make test
 
-# Python tests — all four envs are defined in the root tox.toml
-make test-python   # runs tox for all four packages
+# Python tests — all three envs are defined in the root tox.toml
+make test-python   # runs tox for all three packages
 # or individually, from the repo root:
 tox -e python
 tox -e api
 tox -e common
-tox -e worker
 
 # Pin the interpreter (env names carry no pyNNN factor):
 TOX_BASE_PYTHON=python3.11 tox -e api
@@ -66,10 +65,6 @@ Test framework is pytest for Python. Reports go to `test-reports/`.
 # Python (from the repo root)
 tox -m lint          # ruff over pegasus-python, pegasus-api, pegasus-common
 tox -e lint-python   # or one package at a time (lint-api, lint-common)
-
-# pegasus-worker still uses the legacy autoflake/pyupgrade/isort/black/flake8
-# stack, which stays in its own tox.ini:
-cd packages/pegasus-worker && tox -e lint
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
@@ -125,7 +120,7 @@ Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, 
 
 ### Python — `packages/`
 
-Four namespace packages sharing the `Pegasus` namespace:
+Three namespace packages sharing the `Pegasus` namespace:
 
 | Package           | What it provides                                                      |
 | ----------------- | --------------------------------------------------------------------- |

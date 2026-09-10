@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-This is `pegasus-wms` (pegasus-python), the largest of four Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It depends on the three sibling packages: `pegasus-wms.common`, `pegasus-wms.api`, and `pegasus-wms.worker`.
+This is `pegasus-wms` (pegasus-python), the largest of three Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It shares the `Pegasus` namespace with two sibling packages, `pegasus-common` and `pegasus-api`, which CMake merges with it into the single `pegasus-wms` wheel.
 
 ## Build & Install
 
@@ -17,7 +17,7 @@ make dev                  # editable install of the full distribution
 pip install ".[cwl]"      # from the repo root; extras live in the root pyproject
 ```
 
-Sibling packages (`../pegasus-common`, `../pegasus-api`, `../pegasus-worker`)
+Sibling packages (`../pegasus-common`, `../pegasus-api`)
 are merged into that single wheel by CMake, so there is nothing to install
 separately. Test environments install them from local paths — see the root
 `tox.toml`.
@@ -78,7 +78,7 @@ The `SABase` class in `schema.py` provides `commit_to_db()` and `merge_to_db()` 
 
 ### Namespace Package Convention
 
-All four Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
+All three Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
 
 ```python
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)

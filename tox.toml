@@ -2,7 +2,7 @@
 #
 # This file replaces the per-package tox.ini files so env definitions live in one place.
 #
-#   tox                          test all four packages with $TOX_BASE_PYTHON
+#   tox                          test all three packages with $TOX_BASE_PYTHON
 #   tox -e api                   test one package
 #   tox -e common -- -k braindump            pass args through to pytest
 #   tox -m lint                  run every lint env
@@ -10,14 +10,10 @@
 #
 # Every env chdirs into its package, so pytest, coverage and ruff keep reading
 # that package's own [tool.*] config from its pyproject.toml
-#
-# NOTE: packages/pegasus-worker/tox.ini deliberately survives.  It is the only
-# package still tested on Python 3.6/3.7 (the "Python Worker" CI job), and the
-# tox that runs on those interpreters is tox 3, which cannot read tox.toml.
 
 # 4.21.0 added tox.toml
 requires = ["tox>=4.21.1"]
-env_list = ["common", "api", "worker", "python"]
+env_list = ["common", "api", "python"]
 
 [labels]
 lint = ["lint-common", "lint-api", "lint-python"]
@@ -26,7 +22,7 @@ lint = ["lint-common", "lint-api", "lint-python"]
 # {env_name} maps 1:1 onto the package directory: common -> pegasus-common.
 change_dir = "packages/pegasus-{env_name}"
 
-# The four packages are installed explicitly from local paths below, so there
+# The three packages are installed explicitly from local paths below, so there
 # is no root project for tox to build (that would drag in CMake, Java and C).
 skip_install = true
 
@@ -35,7 +31,7 @@ base_python = ["{env:TOX_BASE_PYTHON:python3}"]
 
 pass_env = ["USER", "CPATH"]
 
-# All four packages are installed in every env: they share the `Pegasus`
+# All three packages are installed in every env: they share the `Pegasus`
 # namespace and the suites cross-import (pegasus-common's tests import
 # Pegasus.db, which lives in pegasus-python).
 deps = [
@@ -49,7 +45,6 @@ deps = [
     "pymysql<=0.10.1",
     "{tox_root}/packages/pegasus-common",
     "{tox_root}/packages/pegasus-api",
-    "{tox_root}/packages/pegasus-worker",
     "{tox_root}/packages/pegasus-python",
 ]
 
@@ -74,15 +69,10 @@ commands = [
 PYTHONUNBUFFERED = "yes"
 PYTHONHASHSEED = "3104489401"
 USER = "{env:USER:nobody}"
-# Both are required: uv ignores PIP_CONSTRAINT, and CI uses tox-uv.
-PIP_CONSTRAINT = "{tox_root}/test-constraints.txt"
-UV_CONSTRAINT = "{tox_root}/test-constraints.txt"
 
 # --- lint -------------------------------------------------------------------
 # Each env chdirs into its package so ruff picks up that package's [tool.ruff]
 # config (per-file-ignores and isort settings differ between them).
-# pegasus-worker's lint env still runs the legacy autoflake/pyupgrade/isort/
-# black/flake8 stack and stays in packages/pegasus-worker/tox.ini.
 
 [env.lint-common]
 change_dir = "packages/pegasus-common"
@@ -131,7 +121,6 @@ deps = [
     "sphinx-click",
     "{tox_root}/packages/pegasus-common",
     "{tox_root}/packages/pegasus-api",
-    "{tox_root}/packages/pegasus-worker",
     "{tox_root}/packages/pegasus-python",
 ]
 commands_pre = [
