@@ -40,7 +40,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Utilities",
 ]
-# No pegasus-wms.common here: the four packages are merged into a single
+# No pegasus-wms.common here: the three packages are merged into a single
 # pegasus-wms wheel by CMake, and the name still resolves to 5.1.2 on PyPI.
 # Test envs install the siblings from local paths (see tox.toml).
 dependencies = []

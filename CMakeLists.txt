@@ -154,8 +154,8 @@ endif()
 
 # ── pegasus-transfer (Go) ────────────────────────────────────────────────────
 # A single static (CGO_ENABLED=0) binary implementing all pegasus-transfer
-# protocols, replacing the old Python packages/pegasus-worker/src/Pegasus/
-# transfer.py + s3.py. Installed to bin/ like the C tools; PEGASUS_TRANSFER_GO_BIN
+# protocols, replacing the old Python Pegasus/transfer.py + s3.py from the
+# removed pegasus-worker package. Installed to bin/ like the C tools; PEGASUS_TRANSFER_GO_BIN
 # / PEGASUS_TRANSFER_GO_TARGET (set by the subdirectory) let the worker
 # tarball below stage the compiled binary alongside pegasus-kickstart.
 if(PEGASUS_BUILD_GO)

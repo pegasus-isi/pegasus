@@ -201,8 +201,8 @@ cli.add_command(
 # directly into <venv>/bin/ by CMake rather than as Python scripts — they
 # delegate via _binary_cmd (exec), not _script_cmd (runpy). pegasus-s3 has
 # been retired: its S3 support was merged natively into pegasus-transfer,
-# so there is no longer a separate "s3" subcommand. packages/pegasus-worker/
-# no longer ships any CLI tools at all (see its CLAUDE.md).
+# so there is no longer a separate "s3" subcommand. The pegasus-worker Python
+# package that used to hold these tools has been removed.
 cli.add_command(
     _binary_cmd(
         "transfer", "pegasus-transfer", "Transfer files for a Pegasus workflow"
