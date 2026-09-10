@@ -10,23 +10,26 @@ pegasus-wms.api — Python API for defining Pegasus scientific workflows. This i
 
 ### Testing
 
+Run these from the **repo root** — envs live in the root `tox.toml`:
+
 ```bash
-tox -e py310                    # Run full test suite (Python 3.10)
-tox -e py310 -- test/api/test_workflow.py  # Run a single test file
-tox -e py310 -- test/api/test_workflow.py::TestWorkflow::test_add_jobs  # Run a single test
-tox -e py310 -- -k "test_add_jobs"  # Run tests matching a pattern
+tox -e api                                       # Run full test suite
+tox -e api -- test/api/test_workflow.py          # Run a single test file
+tox -e api -- test/api/test_workflow.py::TestWorkflow::test_add_jobs
+tox -e api -- -k "test_add_jobs"                 # Run tests matching a pattern
 ```
 
-Coverage minimum is 99.5% (enforced by pytest-cov). Reports go to `test-reports/`.
+Coverage minimum is 99% — set in `[tool.coverage.report] fail_under` in this
+package's `pyproject.toml`. Reports go to `test-reports/`.
 
 ### Linting and Formatting
 
 ```bash
-tox -e lint              # Check formatting (CI mode, no changes)
-tox -e lint -- CI=false  # Auto-fix formatting issues
+tox -e lint-api    # from the repo root
 ```
 
-Lint pipeline runs: autoflake → pyupgrade (py36+) → isort (black profile) → black (target py36) → flake8 (max-line-length=88).
+Runs `ruff check` then `ruff format` (which rewrites files in place), using the
+`[tool.ruff]` config in this package's `pyproject.toml`.
 
 ## Architecture
 
