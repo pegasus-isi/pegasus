@@ -617,7 +617,7 @@ Workflow Tests:
   - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
-  - bamboo
+  - submit
   retry: 0
   timeout: 5 hour 00 minutes
 
@@ -653,6 +653,6 @@ Performance Tests:
   - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
-  - bamboo
+  - submit
   retry: 0
   timeout: 45 minutes
