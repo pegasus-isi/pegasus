@@ -42,8 +42,8 @@ version_lt() {
 }
 
 INSTALL_SFAPI_SCRIPTS=true
-if ! version_lt "$CONDOR_VERSION" "25.14.1"; then
-    echo "Condor version $CONDOR_VERSION >= 25.14.1: skipping sfapi_* scripts (sfapi_local_submit_attributes.sh always installed)"
+if ! version_lt "$CONDOR_VERSION" "25.15.0"; then
+    echo "Condor version $CONDOR_VERSION >= 25.15.0: skipping sfapi_* scripts (sfapi_local_submit_attributes.sh always installed)"
     INSTALL_SFAPI_SCRIPTS=false
 fi
 
@@ -123,9 +123,9 @@ done
 # copy all the non local attributes.sh file into the libexec directory
 for f in `ls "$PEGASUS_GLITE_DIR"/*.{sh,py} | grep -v local_submit_attributes`; do
     base_f=$(basename "$f")
-    # sfapi_local_submit_attributes.sh is handled above; skip other sfapi_* if condor >= 25.14.0
+    # sfapi_local_submit_attributes.sh is handled above; skip other sfapi_* if condor >= 25.15.0
     if [[ "$base_f" == sfapi_* ]] && [ "$INSTALL_SFAPI_SCRIPTS" = "false" ]; then
-        echo "Skipping $base_f (condor >= 25.14.0)"
+        echo "Skipping $base_f (condor >= 25.15.0)"
         continue
     fi
     echo "Installing $base_f into $BLAHPD_LIBEXEC_DIR/"
