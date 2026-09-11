@@ -1204,7 +1204,7 @@ Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID 
 username respectively.
 
 You can always find the latest uptodate version of the NERSC entry
-`here <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`__
+`here. <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`__
 
 The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
 :ref:`glite-mappings`.
