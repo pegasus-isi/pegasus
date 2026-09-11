@@ -1219,6 +1219,32 @@ Please refer to
 for instructions on how to build a shifter container at NERSC from a docker container.
 
 
+Data Transfers to NERSC
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Normally, since NERSC has two-factor authentication, you cannot use `scp` as
+a way to transfer files to NERSC as part of the workflow.
+
+However, NERSC now provides a service called
+`SSH Proxy <https://docs.nersc.gov/connect/mfa/#sshproxy>`__ that allows you to use SCP to
+transfer files to NERSC as part of workflows without doing the two factor.
+The service `sshproxy` allows you to use MFA to get an SSH key that is
+valid for a limited time (24 hours by default). It provides a type of
+single-sign-on capability for SSH to NERSC systems.
+
+In order to use it, generate the SSH key on your submit host using
+`sshproxy` command, that will generate a key named `~/.ssh/nersc`.
+You can specify in your site catalog for your local site by
+specifiying the property.
+
+::
+
+   pegasus.catalog.site.sites.local.profiles.pegasus.SSH_PRIVATE_KEY = ~/.ssh/nersc
+
+Or you can specify it as a `pegasus` profile named `SSH_PRIVATE_KEY`
+in your site catalog for **local** site.
+
+
 
 .. _pyglidein:
 
