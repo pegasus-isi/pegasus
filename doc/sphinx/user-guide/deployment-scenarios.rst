@@ -1173,22 +1173,38 @@ standard glite/BOSCO site are:
         scheduler: slurm
         jobtype: compute
       profiles:
-        condor:
-          grid_resource: batch sfapi
-        env:
-          PEGASUS_HOME: /global/cfs/cdirs/<NERSC_PROJECT>/software/install/pegasus/default
-        pegasus:
-          style: glite
-          queue: debug           # Slurm partition (debug, regular, …)
-          project: <NERSC_PROJECT>
-          data.configuration: sharedfs
-          nodes: 1
-          cores: 1
-          runtime: 1800          # seconds
-          clusters.num: 2        # cluster jobs together to reduce queue overhead
+        #    only uncomment if trying to run in shared fs configuration with no containers.
+        #    env:
+        #      PEGASUS_HOME: /global/common/software/m4144/software/install/pegasus/default/bin/..
+      pegasus:
+        style: glite
+        queue: shared
+        project: ${RESOURCE_PROJECT}
+        memory: 1024
+        runtime: 1800
+        clusters.num: 2
+        data.configuration: nonsharedfs
+        glite.arguments: -C cpu
+      x-tags:
+      - name: gpu
+        profiles:
+          pegasus:
+            glite.arguments: -C gpu
+            gpus: 1
+            queue: regular
+      - name: cpu
+        profiles:
+          pegasus:
+            cores: 1
+            glite.arguments: -C cpu
+            queue: shared
+            container.arguments: --module none
 
 Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID and
 username respectively.
+
+You can always find the latest uptodate version of the NERSC entry
+`here <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`__
 
 The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
 :ref:`glite-mappings`.
