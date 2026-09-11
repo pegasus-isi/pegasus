@@ -1,60 +1,60 @@
 ## Pegasus 5.1.x Series
 
-### Pegasus 5.1.3 
+### Pegasus 5.1.3
 
 **Release Date:** September 12th, 2026
 
-We are happy to announce the release of Pegasus 5.1.3. It is a minor release in the 5.1 branch. 
-We invite our users to give it a try. 
+We are happy to announce the release of Pegasus 5.1.3. It is a minor release in the 5.1 branch.
+We invite our users to give it a try.
 
 The release can be downloaded from:
 <https://pegasus.isi.edu/downloads>
 
 
-#### Highlights of the Release 
+#### Highlights of the Release
 
 1) Support for NERSC Superfacility API
 
-   This release of Pegasus has support for NERSC Superfacility API, enabling scientists to 
+   This release of Pegasus has support for NERSC Superfacility API, enabling scientists to
    submit and manage workflows on the Perlmutter supercomputer directly from their submit host
-   — no SSH tunnels, no batch system logins required. 
-   Futher details about generating SFAPI tokens and configuring Pegasus can be found in the 
+   — no SSH tunnels, no batch system logins required.
+   Futher details about generating SFAPI tokens and configuring Pegasus can be found in the
    [documentation](https://pegasus.isi.edu/docs/5.1.3/user-guide/deployment-scenarios.html#nersc-perlmutter-via-sfapi)
-   
-   The training notebooks for [ACCESS Pegasus](https://github.com/pegasus-isi/ACCESS-Pegasus-Examples) 
-   also have been updated to be able to submit to NERSC from the 
+
+   The training notebooks for [ACCESS Pegasus](https://github.com/pegasus-isi/ACCESS-Pegasus-Examples)
+   also have been updated to be able to submit to NERSC from the
    [ACCESS Pegasus endpoint](https://pegasus.access-ci.org/)
-   
+
 2) Hosted Site Catalogs
-  
-   With 5.1.3 release, users now have an option to get the planner to download the site catalog from a 
+
+   With 5.1.3 release, users now have an option to get the planner to download the site catalog from a
    [GitHub repository](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#centrally-hosted-site-catalogs)
-   that hosts catalog entries for the various compute infrastructures. 
-   
-   To specify the file to download from the GitHub repository, you have to set the following property, 
+   that hosts catalog entries for the various compute infrastructures.
+
+   To specify the file to download from the GitHub repository, you have to set the following property,
    and have Pegasus plan for site named `compute`.
 
    pegasus.catalog.site.repo.file=\<basename of the file to download\>
- 
-   Full details on this can be found [here.](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#centrally-hosted-site-catalogs) 
+
+   Full details on this can be found [here.](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#centrally-hosted-site-catalogs)
 
 3) Job Tagging
 
-   [Job tagging](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#job-tagging) 
-   is a new feature that allows users to associate `tags` with their jobs in the  
+   [Job tagging](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#job-tagging)
+   is a new feature that allows users to associate `tags` with their jobs in the
    inout abstract worklow. The planner uses to look up and overlay additional profiles from the
-   Site Catalog. This allows you to associate different set of profiles for jobs running at 
+   Site Catalog. This allows you to associate different set of profiles for jobs running at
    the same site. For e.g. when running against a HPC cluster, this can be used to set
-   different profiles depending on whether the job is tagged CPU or GPU.  
+   different profiles depending on whether the job is tagged CPU or GPU.
 
 4) Profile Expressions
 
-   Pegasus supports profile expressions — Python expressions that are evaluated when a 
-   job fails and is about to be retried. These expressions allow you to dynamically 
-   change resource requirements (memory, cores, GPUs, runtime, queue, project, etc.) 
-   based on the actual execution metrics collected from the previous attempt, 
+   Pegasus supports profile expressions — Python expressions that are evaluated when a
+   job fails and is about to be retried. These expressions allow you to dynamically
+   change resource requirements (memory, cores, GPUs, runtime, queue, project, etc.)
+   based on the actual execution metrics collected from the previous attempt,
    enabling smarter retry strategies without manual intervention.
- 
+
    Full details on this can be found [here.](https://pegasus.isi.edu/docs/5.1.3/reference-guide/profile-expressions.html)
 
 #### New Features and Improvements
