@@ -13,7 +13,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
+      url: "scp://bamboo@submit.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}"
  -
   name: "condorpool"
   arch: "x86_64"
@@ -26,7 +26,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/${TEST_NAME}"
   profiles:
     condor:
       universe: "vanilla"

@@ -41,7 +41,7 @@ transformations:
             foo: bar
 
 containers:
-  - image: scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif
+  - image: scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif
     image.site: local
     profiles:
       env:

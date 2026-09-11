@@ -44,12 +44,12 @@ sc = SiteCatalog().add_sites(
     .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + shared_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + shared_scratch_dir, Operation.ALL
             )
         ),
         Directory(Directory.SHARED_STORAGE, shared_storage_dir).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + shared_storage_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + shared_storage_dir, Operation.ALL
             )
         ),
     )
@@ -78,7 +78,7 @@ fa = File("f.a")
 rc = ReplicaCatalog().add_replica(
     LOCAL,
     fa,
-    "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/"
+    "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/043-integrity-bypass-staging-b/"
     + fa.lfn,
     checksum={"sha256": readable_hash},
 )
@@ -97,7 +97,7 @@ tc = TransformationCatalog()
 tools_container = Container(
     "ospool-rocky-9",
     Container.SINGULARITY,
-    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    image="scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     checksum={"sha256": readable_hash},
     mounts=["${PEGASUS_SHARED_BIN_DIR}:${PEGASUS_SHARED_BIN_DIR}"],
     bypass_staging=True,

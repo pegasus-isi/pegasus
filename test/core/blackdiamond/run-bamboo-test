@@ -82,7 +82,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch"
+      url: "scp://bamboo@submit.isi.edu${TOPDIR}/staging-site/scratch"
   profiles:
     pegasus:
       SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa

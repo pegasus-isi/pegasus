@@ -87,7 +87,7 @@ if SHARED:
             shared_file_system=SHARED,
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + condorpool_scratch_dir, Operation.ALL
             )
         )
     )
@@ -144,7 +144,7 @@ base_container = Container(
     "ospool-rocky-9",
     Container.SINGULARITY,
     image_site="condorpool",
-    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    image="scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
     **container_mounts,
 )

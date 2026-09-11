@@ -29,7 +29,7 @@ sites:
         path: ${TOPDIR}/staging-site/scratch/${TEST_NAME}
         fileServers:
           - operation: all
-            url: scp://bamboo@bamboo.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}
+            url: scp://bamboo@submit.isi.edu/${TOPDIR}/staging-site/scratch/${TEST_NAME}
 
   - name: condorpool
     arch: x86_64

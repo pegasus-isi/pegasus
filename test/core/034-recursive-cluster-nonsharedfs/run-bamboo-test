@@ -43,7 +43,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID/outputs"
    -
     type: "sharedScratch"
     path: "/scitech/shared/scratch-90-days/bamboo/$UUID/scratch"
@@ -68,14 +68,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/$TOPDIR/outputs"
+      url: "scp://bamboo@submit.isi.edu/$TOPDIR/outputs"
    -
     type: "sharedScratch"
     path: "$TOPDIR/work"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/$TOPDIR/work"
+      url: "scp://bamboo@submit.isi.edu/$TOPDIR/work"
   profiles:
     pegasus:
       clusters.num: "1"

@@ -46,7 +46,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch"
+      url: "scp://bamboo@submit.isi.edu/${CONDOR_POOL_SHARED_FS}/shared-scratch"
   profiles:
     condor:
       universe: "vanilla"

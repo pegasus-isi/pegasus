@@ -39,14 +39,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
    -
     type: "sharedStorage"
     path: "/scitech/shared/scratch-90-days/bamboo/outputs"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"

@@ -34,7 +34,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"
+      url: "scp://bamboo@submit.isi.edu${TOPDIR}/staging-site/scratch/043-integrity-synthetic-with-errors"
   profiles:
     pegasus:
       ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"

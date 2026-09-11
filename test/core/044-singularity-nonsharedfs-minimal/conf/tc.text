@@ -75,7 +75,7 @@ cont python3-minimal {
 
      # URL to image in a docker hub or a url to an existing
      # singularity image file
-     image "scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif"
+     image "scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif"
 
      # optional site attribute to tell pegasus which site tar file
      # exists. useful for handling file URL's correctly
