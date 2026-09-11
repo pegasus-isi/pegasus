@@ -1,9 +1,129 @@
 ## Pegasus 5.1.x Series
 
+### Pegasus 5.1.3 
+
+**Release Date:** September 12th, 2026
+
+We are happy to announce the release of Pegasus 5.1.3. It is a minor release in the 5.1 branch. 
+We invite our users to give it a try. 
+
+The release can be downloaded from:
+<https://pegasus.isi.edu/downloads>
+
+
+#### Highlights of the Release 
+
+1) Support for NERSC Superfacility API
+
+   This release of Pegasus has support for NERSC Superfacility API, enabling scientists to 
+   submit and manage workflows on the Perlmutter supercomputer directly from their submit host
+   — no SSH tunnels, no batch system logins required. 
+   Futher details about generating SFAPI tokens and configuring Pegasus can be found in the 
+   [documentation](https://pegasus.isi.edu/docs/5.1.3/user-guide/deployment-scenarios.html#nersc-perlmutter-via-sfapi)
+   
+   The training notebooks for [ACCESS Pegasus](https://github.com/pegasus-isi/ACCESS-Pegasus-Examples) 
+   also have been updated to be able to submit to NERSC from the 
+   [ACCESS Pegasus endpoint](https://pegasus.access-ci.org/)
+   
+2) Hosted Site Catalogs
+  
+   With 5.1.3 release, users now have an option to get the planner to download the site catalog from a 
+   [GitHub repository](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#centrally-hosted-site-catalogs)
+   that hosts catalog entries for the various compute infrastructures. 
+   
+   To specify the file to download from the GitHub repository, you have to set the following property, 
+   and have Pegasus plan for site named `compute`.
+
+   pegasus.catalog.site.repo.file=\<basename of the file to download\>
+ 
+   Full details on this can be found [here.](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#centrally-hosted-site-catalogs) 
+
+3) Job Tagging
+
+   [Job tagging](https://pegasus.isi.edu/docs/5.1.3/reference-guide/catalogs.html#job-tagging) 
+   is a new feature that allows users to associate `tags` with their jobs in the  
+   inout abstract worklow. The planner uses to look up and overlay additional profiles from the
+   Site Catalog. This allows you to associate different set of profiles for jobs running at 
+   the same site. For e.g. when running against a HPC cluster, this can be used to set
+   different profiles depending on whether the job is tagged CPU or GPU.  
+
+4) Profile Expressions
+
+   Pegasus supports profile expressions — Python expressions that are evaluated when a 
+   job fails and is about to be retried. These expressions allow you to dynamically 
+   change resource requirements (memory, cores, GPUs, runtime, queue, project, etc.) 
+   based on the actual execution metrics collected from the previous attempt, 
+   enabling smarter retry strategies without manual intervention.
+ 
+   Full details on this can be found [here.](https://pegasus.isi.edu/docs/5.1.3/reference-guide/profile-expressions.html)
+
+#### New Features and Improvements
+
+1) Create a Streaming based YAML DAXParser [\#2243](https://github.com/pegasus-isi/pegasus/issues/2243)
+2) Exit with a specific exitcode in case of plite failure [\#2225](https://github.com/pegasus-isi/pegasus/issues/2225)
+3) when running in a condor style, container universe should only be associated with a job if the Pegasus job has a container associated with it [\#2224](https://github.com/pegasus-isi/pegasus/issues/2224)
+4) Streamline Pegasus properties loading [\#2223](https://github.com/pegasus-isi/pegasus/issues/2223)
+5) add a load function to  python api Properties class [\#2210](https://github.com/pegasus-isi/pegasus/issues/2210)
+6) allow for variable expansion to happen via properties file [\#2207](https://github.com/pegasus-isi/pegasus/issues/2207)
+7) allow jobs to have tags that then map to set of profiles in the site entry for a job [\#2192](https://github.com/pegasus-isi/pegasus/issues/2192)
+8) SFAPI support in Pegasus and HTCondor [\#2186](https://github.com/pegasus-isi/pegasus/issues/2186)
+9) Use pegasus classad variables to define values of request\_\* keys in condor submit files [\#2174](https://github.com/pegasus-isi/pegasus/issues/2174)
+10) composite event to include information about resources requested in a job [\#2171](https://github.com/pegasus-isi/pegasus/issues/2171)
+11) update default site logic in the planner [\#2164](https://github.com/pegasus-isi/pegasus/issues/2164)
+12) \[PM-1973\] Catalogs copied in submit dir should have their variables substituted [\#2079](https://github.com/pegasus-isi/pegasus/issues/2079)
+13) \[PM-1808\] Provide a way to specify site independent transformations [\#1921](https://github.com/pegasus-isi/pegasus/issues/1921)
+14) \[PM-1749\] provide an interface for user defined triggers [\#1863](https://github.com/pegasus-isi/pegasus/issues/1863)
+15) \[PM-1677\] add status command to see running triggers [\#1791](https://github.com/pegasus-isi/pegasus/issues/1791)
+16) \[PM-1653\] Set when\_to\_transfer\_output = ON\_SUCCESS [\#1767](https://github.com/pegasus-isi/pegasus/issues/1767)
+17) \[PM-1536\] pegasus-rc-converter to take in new yaml textual format [\#1650](https://github.com/pegasus-isi/pegasus/issues/1650)
+18) \[PM-1103\] Allow for notifications to run p-statistics at event at\_end [\#1217](https://github.com/pegasus-isi/pegasus/issues/1217)
+19) \[PM-1080\] Monitord should ignore Exceptions reported due to duplicate events being inserted [\#1194](https://github.com/pegasus-isi/pegasus/issues/1194)
+20) \[PM-876\] Add support for 'halt' to ensemble manager [\#994](https://github.com/pegasus-isi/pegasus/issues/994)
+21) update Pegasus API and planner to support sfapi as a grid gateway type [\#2187](https://github.com/pegasus-isi/pegasus/issues/2187)
+22) Update documentation on how profiles expressions work [\#2184](https://github.com/pegasus-isi/pegasus/issues/2184)
+23) update planner to accept expr pegasus profile keys [\#2183](https://github.com/pegasus-isi/pegasus/issues/2183)
+24) Update Python Workflow API to allow expression keys to be specified corresponding to the profiles key [\#2182](https://github.com/pegasus-isi/pegasus/issues/2182)
+25) change job resource requirements on job failures [\#2180](https://github.com/pegasus-isi/pegasus/issues/2180)
+26) support units for certain profiles [\#2178](https://github.com/pegasus-isi/pegasus/issues/2178)
+27) Use pegasus classad variables in remote\_ce\_requirements and remote\_environment to define values for glite/ssh job submissions [\#2176](https://github.com/pegasus-isi/pegasus/issues/2176)
+28) use native supported htcondor keys for glite/ssh job submissions [\#2175](https://github.com/pegasus-isi/pegasus/issues/2175)
+29) generate +pegasus classads for memory and disk [\#2170](https://github.com/pegasus-isi/pegasus/issues/2170)
+30) warn if a user specifies condor resource profiles [\#2169](https://github.com/pegasus-isi/pegasus/issues/2169)
+31) Revisit default values for request\_ [\#2167](https://github.com/pegasus-isi/pegasus/issues/2167)
+32) composite event to include wf\_name and metrics app name [\#2166](https://github.com/pegasus-isi/pegasus/issues/2166)
+33) composite events improvements for Pegasus AI [\#2165](https://github.com/pegasus-isi/pegasus/issues/2165)
+34) implement transfer input files for shell code generator [\#2161](https://github.com/pegasus-isi/pegasus/issues/2161)
+35) Convenience class to provide resource defaults [\#2160](https://github.com/pegasus-isi/pegasus/issues/2160)
+36) Support for directory inputs [\#2159](https://github.com/pegasus-isi/pegasus/issues/2159)
+37) pegasus-kickstart to expand variable names passed to the -s and -S options [\#2156](https://github.com/pegasus-isi/pegasus/issues/2156)
+38) composite event to include total input and output file sizes for a job [\#2155](https://github.com/pegasus-isi/pegasus/issues/2155)
+39) host site catalogs in a central GitHub repository to be pulled down when workflows are planned [\#2154](https://github.com/pegasus-isi/pegasus/issues/2154)
+40) include invocation data in composite events [\#2149](https://github.com/pegasus-isi/pegasus/issues/2149)
+41) \[PM-1972\] DAX used in performance test should be YAML and not XML [\#2078](https://github.com/pegasus-isi/pegasus/issues/2078)
+42) \[PM-1919\] PEP 668 / non-os Python dependencies [\#2032](https://github.com/pegasus-isi/pegasus/issues/2032)
+
+
+
+#### Bugs Fixed
+
+1) Remove getenv=True for subdax [\#2221](https://github.com/pegasus-isi/pegasus/issues/2221)
+2) pegasus-configure-glite does not create symlinks for local\_submit\_attributes.sh file [\#2191](https://github.com/pegasus-isi/pegasus/issues/2191)
+3) data transfers broken between compute\(job\) generating an abstract workflow for the pegasusWorkflow job [\#2179](https://github.com/pegasus-isi/pegasus/issues/2179)
+4) pegasus tries to mount a relative directory into the container [\#2173](https://github.com/pegasus-isi/pegasus/issues/2173)
+5) Resource mapping issue on Slurm [\#2172](https://github.com/pegasus-isi/pegasus/issues/2172)
+6) pegasus\_gpus classad in jobs is always set to 1 when no value is specified [\#2168](https://github.com/pegasus-isi/pegasus/issues/2168)
+7) .lof files not distributed correctly for merged tasks [\#2163](https://github.com/pegasus-isi/pegasus/issues/2163)
+8) unable to mount workflow directory on the shared filesystem into the shifter container [\#2244](https://github.com/pegasus-isi/pegasus/issues/2244)
+9) container description in the TC is not serialized [\#2242](https://github.com/pegasus-isi/pegasus/issues/2242)
+10) enforce numeric values for pegasus profiles memory and diskspace [\#2177](https://github.com/pegasus-isi/pegasus/issues/2177)
+11) \[PM-1071\] Workflow leaf cleanup job fails \(rm of \<dir\>/.\) when relative dir is '.' [\#1185](https://github.com/pegasus-isi/pegasus/issues/1185)
+
+
+
+
 ### Pegasus 5.1.2
 
 **Release Date:**  Feb 3rd, 2026
-
 
 We are happy to announce the release of Pegasus 5.1.2. It is a minor release in the 5.1 branch.  We invite our users to give it a
 try. 
