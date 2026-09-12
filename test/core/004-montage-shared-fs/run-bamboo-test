@@ -4,7 +4,7 @@ set -e
 
 TOP_DIR=`pwd`
 
-export PATH=/scitech/shared/software/el8/montage/current/bin:$PATH
+export PATH=/scitech/shared/software/el10/montage/current/bin:$PATH
 
 rm -rf montage-workflow-v3
 git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
@@ -49,7 +49,7 @@ sites:
       url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
   profiles:
     env:
-      MONTAGE_HOME: "/scitech/shared/software/el8/montage/current"
+      MONTAGE_HOME: "/scitech/shared/software/el10/montage/current"
       PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
       http_proxy: "workflow.isi.edu:3128"
     condor:
