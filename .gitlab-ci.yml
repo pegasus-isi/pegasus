@@ -42,6 +42,9 @@ Lint:
   before_script:
   - env
   - \[ "${LANGUAGE}" = 'python' ] && pip3 install tox
+  - sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+  - sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+  - sed -i '/stretch-updates/d' /etc/apt/sources.list
   - apt update || true # expired Debian security repo
   - DEBIAN_FRONTEND=noninteractive apt install -y ant python3-pip
   script:
