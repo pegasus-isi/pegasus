@@ -28,7 +28,7 @@ NOTE: Do not copy and paste the commands below without double checking.
 
 5.  Open branch for new checkins with new version:
 
-       vim build.properties
+       cz bump --yes --files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --files-only 5.1.2-dev.0
        git commit -a -m "Branch reopen for checkins"
 
 6.  Bring the branch back to master, but ignore the commits.
