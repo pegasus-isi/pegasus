@@ -1,0 +1,136 @@
+# Tox configuration for the Pegasus Python test suites.
+#
+# This file replaces the per-package tox.ini files so env definitions live in one place.
+#
+#   tox                          test all three packages with $TOX_BASE_PYTHON
+#   tox -e api                   test one package
+#   tox -e common -- -k braindump            pass args through to pytest
+#   tox -m lint                  run every lint env
+#   TOX_BASE_PYTHON=python3.11 tox -e api    pin the interpreter
+#
+# Every env chdirs into its package, so pytest, coverage and ruff keep reading
+# that package's own [tool.*] config from its pyproject.toml
+
+# 4.21.0 added tox.toml
+requires = ["tox>=4.21.1"]
+env_list = ["common", "api", "python"]
+
+[labels]
+lint = ["lint-common", "lint-api", "lint-python"]
+
+[env_run_base]
+# {env_name} maps 1:1 onto the package directory: common -> pegasus-common.
+change_dir = "packages/pegasus-{env_name}"
+
+# The three packages are installed explicitly from local paths below, so there
+# is no root project for tox to build (that would drag in CMake, Java and C).
+skip_install = true
+
+# Env names carry no pyNNN factor, so the interpreter comes from here.
+base_python = ["{env:TOX_BASE_PYTHON:python3}"]
+
+pass_env = ["USER", "CPATH"]
+
+# All three packages are installed in every env: they share the `Pegasus`
+# namespace and the suites cross-import (pegasus-common's tests import
+# Pegasus.db, which lives in pegasus-python).
+deps = [
+    "pytest",
+    "pytest-mock",
+    "pytest-cov",
+    "pytest-resource-path",
+    "coverage",
+    "jsonschema",
+    "cwl-utils==0.11",
+    "pymysql<=0.10.1",
+    "{tox_root}/packages/pegasus-common",
+    "{tox_root}/packages/pegasus-api",
+    "{tox_root}/packages/pegasus-python",
+]
+
+# Identical for every package.  The per-package coverage floors that used to
+# live here as --cov-fail-under now sit in each pyproject.toml under
+# [tool.coverage.report] fail_under, next to the rest of that package's
+# coverage config.
+commands = [
+    [
+        "pytest",
+        "--junit-xml", "test-reports/pyunit.xml",
+        "--cov", "--cov-branch",
+        "--cov-report", "term",
+        "--cov-report", "html:test-reports/htmlcov",
+        "--cov-report", "xml:test-reports/coverage.xml",
+        "--no-cov-on-fail",
+        { replace = "posargs", default = ["test"], extend = true },
+    ],
+]
+
+[env_run_base.set_env]
+PYTHONUNBUFFERED = "yes"
+PYTHONHASHSEED = "3104489401"
+USER = "{env:USER:nobody}"
+
+# --- lint -------------------------------------------------------------------
+# Each env chdirs into its package so ruff picks up that package's [tool.ruff]
+# config (per-file-ignores and isort settings differ between them).
+
+[env.lint-common]
+change_dir = "packages/pegasus-common"
+skip_install = true
+base_python = ["{env:TOX_BASE_PYTHON:python3}"]
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "--target-version", "py310"],
+    ["ruff", "format", "--target-version", "py310"],
+]
+
+[env.lint-api]
+change_dir = "packages/pegasus-api"
+skip_install = true
+base_python = ["{env:TOX_BASE_PYTHON:python3}"]
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "--target-version", "py310"],
+    ["ruff", "format", "--target-version", "py310"],
+]
+
+[env.lint-python]
+change_dir = "packages/pegasus-python"
+skip_install = true
+base_python = ["{env:TOX_BASE_PYTHON:python3}"]
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "--target-version", "py310"],
+    ["ruff", "format", "--target-version", "py310"],
+]
+
+# --- docs -------------------------------------------------------------------
+# Was [testenv:docs] in packages/pegasus-python/tox.ini; driven by `make doc-sphinx`.
+
+[env.docs]
+change_dir = "doc/sphinx"
+skip_install = true
+base_python = ["{env:TOX_BASE_PYTHON:python3}"]
+allowlist_externals = ["make"]
+deps = [
+    "sphinx",
+    "recommonmark",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-openapi",
+    "sphinx_tabs",
+    "sphinx-click",
+    "{tox_root}/packages/pegasus-common",
+    "{tox_root}/packages/pegasus-api",
+    "{tox_root}/packages/pegasus-python",
+]
+commands_pre = [
+    [
+        "sphinx-apidoc",
+        "--force",
+        "--implicit-namespaces",
+        "--output-dir", "python",
+        "{tox_root}/packages/pegasus-api/src/Pegasus",
+    ],
+]
+# `make doc-sphinx` passes `-- html man` when latexmk is not installed.
+commands = [["make", { replace = "posargs", default = ["html", "man", "latexpdf"], extend = true }]]

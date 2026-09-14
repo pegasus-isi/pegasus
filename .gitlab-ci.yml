@@ -59,7 +59,7 @@ Python:
   - pip3 install --upgrade pip setuptools
   - pip3 install tox-uv
   script:
-  - cd packages/pegasus-${PACKAGE}; tox
+  - tox -e ${PACKAGE}
   coverage: '/Total coverage: \d+\.\d+%/'
   artifacts:
     when: always
@@ -322,6 +322,8 @@ macOS:
       VERSION:
       - 12
       - 13
+  variables:
+    MACOSX_DEPLOYMENT_TARGET: "12.0"
   before_script:
   - env
   - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -329,6 +331,7 @@ macOS:
   - python3 -m pip install --break-system-packages --upgrade build scikit-build-core
   script:
   - make build
+  - if [ "${VERSION}" != "12" ]; then rm -f dist/pegasus_wms-*.whl; fi
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
