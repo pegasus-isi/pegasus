@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -35,6 +36,25 @@ func NewGSHandler(hooks Hooks) *GSHandler {
 
 var reGSBucket = regexp.MustCompile(`(gs://[\w-]+/)[/\w-]*`)
 
+// gcloudProjectID extracts the project_id field from a Google service
+// account JSON key file, for use as CLOUDSDK_CORE_PROJECT.
+func gcloudProjectID(keyFile string) (string, error) {
+	data, err := os.ReadFile(keyFile)
+	if err != nil {
+		return "", fmt.Errorf("unable to read %s: %w", keyFile, err)
+	}
+	var key struct {
+		ProjectID string `json:"project_id"`
+	}
+	if err := json.Unmarshal(data, &key); err != nil {
+		return "", fmt.Errorf("unable to parse %s as a service account key: %w", keyFile, err)
+	}
+	if key.ProjectID == "" {
+		return "", fmt.Errorf("%s has no project_id", keyFile)
+	}
+	return key.ProjectID, nil
+}
+
 // gcloudEnv resolves GOOGLE_APPLICATION_CREDENTIALS[_site] (a Google service
 // account JSON key file) and activates it as the active gcloud identity in
 // an ephemeral, per-call gcloud config directory (via CLOUDSDK_CONFIG), so
@@ -53,6 +73,11 @@ func gcloudEnv(ctx context.Context, h *GSHandler, siteLabel string) (map[string]
 		return nil, err
 	}
 
+	projectID, err := gcloudProjectID(keyFile)
+	if err != nil {
+		return nil, err
+	}
+
 	configDir, err := os.MkdirTemp("", "pegasus-transfer-gcloud-*")
 	if err != nil {
 		return nil, fmt.Errorf("unable to create tmp gcloud config dir: %w", err)
@@ -61,6 +86,9 @@ func gcloudEnv(ctx context.Context, h *GSHandler, siteLabel string) (map[string]
 	env := map[string]string{
 		"GOOGLE_APPLICATION_CREDENTIALS": keyFile,
 		"CLOUDSDK_CONFIG":                configDir,
+		// gcloud storage subcommands (e.g. buckets create) require an active
+		// project; activate-service-account alone does not set one.
+		"CLOUDSDK_CORE_PROJECT": projectID,
 	}
 
 	if _, err := h.runCallout(
@@ -99,8 +127,12 @@ func (h *GSHandler) DoMkdirs(ctx context.Context, mkdirs []*model.Mkdir) Result 
 			bucket = bm[1]
 		}
 		result, err := h.runCallout(ctx, []string{"gcloud", "storage", "buckets", "create", bucket}, env)
-		if err != nil && (result == nil || !strings.Contains(result.Output, "previous request to create the named bucket succeeded")) {
-			h.logger().Error("gs mkdir failed", "bucket", bucket, "error", err)
+		var output string
+		if result != nil {
+			output = result.Output
+		}
+		if err != nil && !strings.Contains(output, "previous request to create the named bucket succeeded") {
+			h.logger().Error("gs mkdir failed", "bucket", bucket, "error", err, "output", output)
 			res.Failed = append(res.Failed, m)
 			continue
 		}
