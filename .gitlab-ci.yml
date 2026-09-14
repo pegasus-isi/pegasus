@@ -204,7 +204,7 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.12 make build dist-rpm
+  - PEGASUS_BUILD_MPI=1 PYTHON=python3.12 make build dist-rpm
   # Only the rhel_8 wheel is published: it has the lowest glibc of any build
   # image and an x86-64-v1 baseline.
   - if [ "${OS}" = "rhel_8" ]; then make repair-wheel; else rm -f dist/pegasus_wms-*.whl; fi
@@ -230,7 +230,7 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.14 make build dist-rpm
+  - PEGASUS_BUILD_MPI=1 PYTHON=python3.14 make build dist-rpm
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
