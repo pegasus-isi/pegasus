@@ -10,6 +10,15 @@ default:
   retry: 1
   timeout: 30 minutes
 
+workflow:
+  rules:
+    # 1. Do not trigger pipelines on fresh branch creation (all zeros)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+
+    # 2. Allow all other normal pipeline triggers (pushes, merge requests, etc.)
+    - when: always
+
 stages:
 - lint
 - test
@@ -396,6 +405,7 @@ Tutorial Container:
 Release:
   stage: release
   image: rockylinux:9
+  when: manual
   before_script:
   - env
   - curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo | tee /etc/yum.repos.d/github-cli.repo
