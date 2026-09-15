@@ -9,8 +9,8 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 
 Source:         pegasus-%{version}.tar.gz
 
-BuildRequires:  gcc, gcc-c++, make, cmake, golang, openssl-devel, systemd-rpm-macros
-Requires:       which, graphviz, %{?systemd_requires}
+BuildRequires:  gcc, gcc-c++, make, cmake, golang, openssl-devel, systemd-rpm-macros, mpich-devel
+Requires:       which, graphviz, mpich, %{?systemd_requires}
 
 %global debug_package %{nil}
 
@@ -45,6 +45,16 @@ Requires:       java-21-openjdk-headless, python3
 
 # Disables the automatic dependency generator (deps are bundled in the venv)
 %{?python_disable_dependency_generator}
+
+# pegasus-mpi-cluster links against libmpi/libmpicxx, but distro MPI packages
+# (e.g. EPEL's mpich) provide those SONAMEs qualified per-implementation
+# (libmpi.so.12()(64bit)(mpich-x86_64)), which never satisfies the plain
+# unqualified Requires the ELF dependency generator would emit. Drop it: the
+# binary's RUNPATH (/usr/lib64/mpich/lib, baked in at link time) resolves the
+# library at runtime as long as some MPI implementation is installed; which
+# one is up to the admin, same as the wheel (see auditwheel --exclude in
+# Makefile's repair-wheel).
+%global __requires_exclude ^lib(mpi|mpicxx)\\.so\\.12.*$
 
 # Turn off automatic Python bytecompilation
 %undefine __brp_python_bytecompile
