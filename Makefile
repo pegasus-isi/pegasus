@@ -163,13 +163,17 @@ repair-wheel:
 	for whl in $(DIST_DIR)/*.whl; do \
 	    echo "==> repairing $$whl"; \
 	    auditwheel show "$$whl"; \
-	    auditwheel repair --wheel-dir $(DIST_DIR)/wheelhouse "$$whl"; \
+	    auditwheel repair --wheel-dir $(DIST_DIR)/wheelhouse \
+	        --exclude libmpi.so.12 --exclude libmpicxx.so.12 \
+	        "$$whl"; \
 	    rm -f "$$whl"; \
 	done
 	@# Nothing should be vendored. auditwheel would place copies in
 	@# pegasus_wms.libs/ at the wheel root and rewrite RPATHs relative to the
 	@# ZIP layout - but our binaries live under .data/, which pip relocates on
-	@# install.
+	@# install. libmpi/libmpicxx are excluded above instead of vendored: PMC
+	@# must load whatever MPI runtime the user launches it with (mpirun), so
+	@# it depends on a system MPI install rather than bundling one.
 	@if unzip -l $(DIST_DIR)/wheelhouse/*.whl | grep -q "pegasus_wms\.libs/"; then \
 	    echo "ERROR: auditwheel vendored libraries into pegasus_wms.libs/;" >&2; \
 	    echo "       RPATHs under .data/ would be wrong at runtime." >&2; \
