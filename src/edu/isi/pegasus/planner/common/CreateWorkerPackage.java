@@ -23,10 +23,9 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Helper class to call out to pegasus-worker-create to create a pegasus worker package on the
@@ -94,16 +93,11 @@ public class CreateWorkerPackage {
 
             if (!directory.exists()) directory.createNewFile();
 
-            FileChannel fcSrc = null;
-            FileChannel fcDst = null;
-            try {
-                fcSrc = new FileInputStream(workerPackage).getChannel();
-                fcDst = new FileOutputStream(destFile).getChannel();
-                fcDst.transferFrom(fcSrc, 0, fcSrc.size());
-            } finally {
-                if (fcSrc != null) fcSrc.close();
-                if (fcDst != null) fcDst.close();
-            }
+            // use Files.copy instead of FileChannel.transferFrom, which is not
+            // guaranteed to transfer the whole file in one call and can silently
+            // truncate the destination on some filesystems (e.g. NFS)
+            Files.copy(
+                    workerPackage.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Unable to copy worker package "
