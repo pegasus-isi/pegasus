@@ -19,9 +19,11 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
+#include <wchar.h>
 
 extern void yamlquote(FILE *out, const char* msg, size_t msglen);
 extern void yamldump(FILE *in, FILE *out, const int indent);
+extern int yamlgetutf8(FILE *in, wint_t *out);
 extern char* fmtisodate(time_t seconds, long micros);
 extern double doubletime(const struct timeval t);
 extern void now(struct timeval* t);

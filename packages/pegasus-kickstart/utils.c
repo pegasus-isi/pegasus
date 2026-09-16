@@ -85,6 +85,86 @@ void yamlquote(FILE *out, const char* msg, size_t msglen) {
     }
 }
 
+int yamlgetutf8(FILE *in, wint_t *out) {
+    /* purpose: read the next code point from a byte stream, decoding UTF-8
+     *          by hand instead of relying on the locale-aware fgetwc(). Under
+     *          a C/POSIX locale, glibc's fgetwc() treats any byte >= 0x80 as
+     *          an invalid multibyte sequence and returns WEOF -- indistin-
+     *          guishable from real end-of-file -- which silently truncates
+     *          callers that loop on it (see GH-2250).
+     * paramtr: in (IO): stream to read from
+     *          out (OUT): decoded code point; the raw leading byte if this
+     *                     call returns 2
+     * returns: 0 at end of stream, 1 if a code point was decoded, 2 if the
+     *          leading byte started an invalid/incomplete UTF-8 sequence
+     *          (the caller should skip it and keep reading)
+     */
+    int b0 = fgetc(in);
+    if (b0 == EOF) return 0;
+
+    if ((b0 & 0x80) == 0x00) {
+        *out = (wint_t) b0;
+        return 1;
+    }
+
+    int extra, i, b;
+    wint_t c, min;
+    if ((b0 & 0xE0) == 0xC0)      { extra = 1; min = 0x80;    c = b0 & 0x1F; }
+    else if ((b0 & 0xF0) == 0xE0) { extra = 2; min = 0x800;   c = b0 & 0x0F; }
+    else if ((b0 & 0xF8) == 0xF0) { extra = 3; min = 0x10000; c = b0 & 0x07; }
+    else {
+        *out = (wint_t) b0;
+        return 2;
+    }
+
+    for (i = 0; i < extra; ++i) {
+        b = fgetc(in);
+        if (b == EOF || (b & 0xC0) != 0x80) {
+            if (b != EOF) ungetc(b, in);
+            *out = (wint_t) b0;
+            return 2;
+        }
+        c = (c << 6) | (b & 0x3F);
+    }
+
+    if (c < min || c > 0x10FFFF || (c >= 0xD800 && c <= 0xDFFF)) {
+        /* overlong encoding, out of Unicode range, or a surrogate half
+         * (surrogates are never valid in UTF-8 -- only CESU-8/WTF-8 encode
+         * them, and yamlprintable() would silently drop them anyway) */
+        *out = (wint_t) b0;
+        return 2;
+    }
+
+    *out = c;
+    return 1;
+}
+
+static void yamlpututf8(FILE *out, wint_t c) {
+    /* purpose: write a code point to the stream as UTF-8, by hand, instead
+     *          of relying on the locale-aware fprintf("%lc", ...), which
+     *          under a C/POSIX locale cannot encode anything outside ASCII
+     *          and silently drops it.
+     * paramtr: out (IO): stream to write to
+     *          c (IN): code point to encode
+     * returns: nada
+     */
+    if (c < 0x80) {
+        fputc((int) c, out);
+    } else if (c < 0x800) {
+        fputc((int) (0xC0 | (c >> 6)), out);
+        fputc((int) (0x80 | (c & 0x3F)), out);
+    } else if (c < 0x10000) {
+        fputc((int) (0xE0 | (c >> 12)), out);
+        fputc((int) (0x80 | ((c >> 6) & 0x3F)), out);
+        fputc((int) (0x80 | (c & 0x3F)), out);
+    } else {
+        fputc((int) (0xF0 | (c >> 18)), out);
+        fputc((int) (0x80 | ((c >> 12) & 0x3F)), out);
+        fputc((int) (0x80 | ((c >> 6) & 0x3F)), out);
+        fputc((int) (0x80 | (c & 0x3F)), out);
+    }
+}
+
 void yamldump(FILE *in, FILE *out, const int indent) {
     /* purpose: write a stream to yaml as a literal`
      * paramtr: out (IO): stream to write the quoted xml to
@@ -95,7 +175,12 @@ void yamldump(FILE *in, FILE *out, const int indent) {
      */
     wint_t c;
     int first_line = 1;
-    while ((c = fgetwc(in)) != WEOF) {
+    int status;
+    while ((status = yamlgetutf8(in, &c)) != 0) {
+        /* undecodable byte: skip it, but keep dumping the rest of the
+         * stream instead of stopping there (see GH-2250) */
+        if (status == 2) continue;
+
         /* first line can not have leading white spaces */
         if (first_line && (
               c == 0x20 ||
@@ -104,12 +189,16 @@ void yamldump(FILE *in, FILE *out, const int indent) {
             continue;
         }
 
-        /* newline or cr maps to a new line */
-        if (c == 0xA || c == 0xD) {
+        /* newline or cr maps to a new line. YAML 1.1 (unlike 1.2) also
+         * treats NEL (U+0085), LS (U+2028) and PS (U+2029) as line breaks;
+         * passing them through raw would let a job emit one of these and
+         * de-indent whatever follows right out of this literal block, so
+         * they get the same re-indented newline treatment as LF/CR. */
+        if (c == 0xA || c == 0xD || c == 0x85 || c == 0x2028 || c == 0x2029) {
             fprintf(out, "\n%*s", indent, "");
         }
         else if (yamlprintable(c)) {
-            fprintf(out, "%lc", c);
+            yamlpututf8(out, c);
             first_line = 0;
         }
     }
