@@ -10,7 +10,7 @@ Packager:       Pegasus Development Team <pegasus-support@isi.edu>
 Source:         pegasus-%{version}.tar.gz
 
 BuildRequires:  gcc, gcc-c++, make, cmake, golang, openssl-devel, systemd-rpm-macros, mpich-devel
-Requires:       which, graphviz, mpich, %{?systemd_requires}
+Requires:       which, graphviz, mpich, tar, sed, gawk, grep, %{?systemd_requires}
 
 %global debug_package %{nil}
 
@@ -30,6 +30,12 @@ Requires:       java-21-openjdk-headless, python3.12
 BuildRequires:  java-21-openjdk-devel, python3-devel, python3-pip
 Requires:       java-21-openjdk-headless, python3
 %define pegasus_python 3.12
+%endif
+
+%if 0%{?suse_version} == 1500
+BuildRequires:  java-17-openjdk-devel, python311-devel, python311-pip
+Requires:       java-17-openjdk-headless, python311
+%define pegasus_python 3.11
 %endif
 
 # System interpreter's site-packages dir — used only to drop the pegasus.pth
