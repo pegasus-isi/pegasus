@@ -18,7 +18,7 @@ The release can be downloaded from:
    This release of Pegasus has support for NERSC Superfacility API, enabling scientists to
    submit and manage workflows on the Perlmutter supercomputer directly from their submit host
    — no SSH tunnels, no batch system logins required.
-   Futher details about generating SFAPI tokens and configuring Pegasus can be found in the
+   Further details about generating SFAPI tokens and configuring Pegasus can be found in the
    [documentation](https://pegasus.isi.edu/docs/5.1.3/user-guide/deployment-scenarios.html#nersc-perlmutter-via-sfapi)
 
    The training notebooks for [ACCESS Pegasus](https://github.com/pegasus-isi/ACCESS-Pegasus-Examples)
