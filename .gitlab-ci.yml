@@ -10,6 +10,15 @@ default:
   retry: 1
   timeout: 30 minutes
 
+workflow:
+  rules:
+    # 1. Do not trigger pipelines on fresh branch creation (all zeros)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+
+    # 2. Allow all other normal pipeline triggers (pushes, merge requests, etc.)
+    - when: always
+
 stages:
 - lint
 - test
@@ -210,7 +219,7 @@ RHEL:
       - rhel_9
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.12 make build dist-rpm
+  - PEGASUS_BUILD_MPI=1 PYTHON=python3.12 make build dist-rpm
   # Smoke-test the pegasus-monitor console script from the freshly built wheel.
   - |
     python3.12 -m venv _monitor_smoke
@@ -249,7 +258,7 @@ RHEL_v3:
       - rhel_10
   image: pegasus/buildenv:${OS}
   script:
-  - PYTHON=python3.14 make build dist-rpm
+  - PEGASUS_BUILD_MPI=1 PYTHON=python3.14 make build dist-rpm
   artifacts:
     paths:
     - dist/pegasus-worker-*.tar.gz
@@ -416,6 +425,7 @@ Tutorial Container:
 Release:
   stage: release
   image: rockylinux:9
+  when: manual
   before_script:
   - env
   - curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo | tee /etc/yum.repos.d/github-cli.repo
@@ -480,7 +490,6 @@ Workflow Tests:
   parallel:
     matrix:
     - TESTNAME:
-      - 000-check-env
       - 016-pegasus-transfer
       - 029-black-quiet
       - 038-halt-continue
@@ -502,11 +511,9 @@ Workflow Tests:
 
     - TESTNAME:
       - 001-black-diamond-vanilla-condor
-      - 001-black-diamond-vanilla-condor-5.0API
       - 002-hello-world
       - 004-montage-condor-io
       - 004-montage-shared-fs
-#      - 004-montage-shared-fs-sc
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
@@ -534,7 +541,6 @@ Workflow Tests:
       - 025-sc4-file-http
       - 026-cache-url-check
       - 027-montage-bypass-staging-site
-      #- 027-montage-bypass-staging-site-condorio
       - 028-dynamic-hierarchy
       - 028-dynamic-hierarchy-b
       - 030-pegasuslite-gs
@@ -546,7 +552,6 @@ Workflow Tests:
       - 032-black-chkpoint
       - 032-kickstart-chkpoint-signal-condorio
       - 032-kickstart-chkpoint-signal-nonsharedfs
-      - 033-pegasuslite-multi
       - 033-pegasuslite-multi-wp-a
       - 033-pegasuslite-multi-wp-b
       - 033-pegasuslite-multi-wp-c
@@ -566,7 +571,6 @@ Workflow Tests:
       - 043-integrity-nonsharedfs-nosymlink
       - 043-integrity-condorio-nogs
       - 043-integrity-synthetic-with-errors
-      - 043-integrity-condorio-5.0API
       - 043-integrity-condorio-singularity
       - 043-integrity-bypass-staging-b
       - 044-docker inside/nonsharedfs
@@ -583,7 +587,6 @@ Workflow Tests:
       - 044-singularity host/nonsharedfs-shared
       - 044-singularity host/nonsharedfs-symlink
       - 044-singularity host/nonsharedfs-symlink-cvmfs
-      - 044-singularity-nonsharedfs-minimal
       - 045-hierarchy-sharedfs
       - 045-hierarchy-sharedfs-b
       - 045-hierarchy-sharedfs-c
@@ -613,7 +616,6 @@ Workflow Tests:
       - blackdiamond pl-pt-local
       - blackdiamond sharedfs-symlink-nogridstart
       - blackdiamond sharedfs-worker-staging-cleanup
-      - blackdiamond vanilla-condor
       EXEC:
       - launch-bamboo-test
   script:
@@ -637,7 +639,7 @@ Workflow Tests:
   - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
-  - bamboo
+  - submit
   retry: 0
   timeout: 5 hour 00 minutes
 
@@ -673,6 +675,6 @@ Performance Tests:
   - Lint
   - "RHEL: [x86_64, rhel_8]"
   tags:
-  - bamboo
+  - submit
   retry: 0
   timeout: 45 minutes

@@ -27,7 +27,7 @@ if(NOT PEGASUS_PLATFORM)
     set(PEGASUS_PLATFORM "unknown")
 endif()
 
-# Feature flags; honour PEGASUS_NO_C / PEGASUS_NO_JAVA / PEGASUS_NO_GO / PEGASUS_NO_WORKER
+# Feature flags; honour PEGASUS_NO_C / PEGASUS_NO_JAVA / PEGASUS_NO_GO / PEGASUS_NO_WORKER / PEGASUS_BUILD_MPI
 option(PEGASUS_BUILD_C      "Compile C execution tools"               ON)
 option(PEGASUS_BUILD_JAVA   "Compile Java planner JARs"               ON)
 option(PEGASUS_BUILD_GO     "Compile pegasus-transfer (Go)"           ON)
@@ -45,6 +45,9 @@ if("$ENV{PEGASUS_NO_GO}" STREQUAL "1")
 endif()
 if("$ENV{PEGASUS_NO_WORKER}" STREQUAL "1")
     set(PEGASUS_BUILD_WORKER OFF)
+endif()
+if("$ENV{PEGASUS_BUILD_MPI}" STREQUAL "1")
+    set(PEGASUS_BUILD_MPI ON)
 endif()
 
 # Pin the x86-64 baseline so the artifacts run on any x86-64 CPU.

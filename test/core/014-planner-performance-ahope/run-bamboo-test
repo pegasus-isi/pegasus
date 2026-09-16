@@ -33,7 +33,7 @@ wget -nv -O  conf/output_map.dat http://pegasus.isi.edu/static/bamboo/014-planne
 START_TS=`/bin/date +'%s'`
 
 # plan the workflow
-/usr/bin/time pegasus-plan \
+time pegasus-plan \
     -v \
     --conf pegasusrc \
     --sites local \

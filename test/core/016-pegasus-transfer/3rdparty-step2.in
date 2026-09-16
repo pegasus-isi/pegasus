@@ -1,4 +1,4 @@
 # src 1 ISI_Workflow prio 0
 gsiftp://workflow.isi.edu/local-scratch/ptesting/transfer-tests/large-file.dat
 # dst 1 ISI_Bamboo
-gsiftp://bamboo.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat
+gsiftp://submit.isi.edu/lfs1/pegasus-transfer-testing/tmp/large-file.dat

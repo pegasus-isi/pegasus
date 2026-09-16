@@ -1173,22 +1173,38 @@ standard glite/BOSCO site are:
         scheduler: slurm
         jobtype: compute
       profiles:
-        condor:
-          grid_resource: batch sfapi
-        env:
-          PEGASUS_HOME: /global/cfs/cdirs/<NERSC_PROJECT>/software/install/pegasus/default
-        pegasus:
-          style: glite
-          queue: debug           # Slurm partition (debug, regular, …)
-          project: <NERSC_PROJECT>
-          data.configuration: sharedfs
-          nodes: 1
-          cores: 1
-          runtime: 1800          # seconds
-          clusters.num: 2        # cluster jobs together to reduce queue overhead
+        #    only uncomment if trying to run in shared fs configuration with no containers.
+        #    env:
+        #      PEGASUS_HOME: /global/common/software/m4144/software/install/pegasus/default/bin/..
+      pegasus:
+        style: glite
+        queue: shared
+        project: ${RESOURCE_PROJECT}
+        memory: 1024
+        runtime: 1800
+        clusters.num: 2
+        data.configuration: nonsharedfs
+        glite.arguments: -C cpu
+      x-tags:
+      - name: gpu
+        profiles:
+          pegasus:
+            glite.arguments: -C gpu
+            gpus: 1
+            queue: regular
+      - name: cpu
+        profiles:
+          pegasus:
+            cores: 1
+            glite.arguments: -C cpu
+            queue: shared
+            container.arguments: --module none
 
 Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID and
 username respectively.
+
+You can always find the latest uptodate version of the NERSC entry
+`here. <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`__
 
 The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
 :ref:`glite-mappings`.
@@ -1217,6 +1233,32 @@ catalog. You can find details on how to do that at :ref:`shifter_containers_stag
 Please refer to
 `NERSC Shifter documentation <https://docs.nersc.gov/development/containers/shifter/how-to-use/>`__
 for instructions on how to build a shifter container at NERSC from a docker container.
+
+
+Data Transfers to NERSC
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Normally, since NERSC has two-factor authentication, you cannot use `scp` as
+a way to transfer files to NERSC as part of the workflow.
+
+However, NERSC now provides a service called
+`SSH Proxy <https://docs.nersc.gov/connect/mfa/#sshproxy>`__ that allows you to use SCP to
+transfer files to NERSC as part of workflows without doing the two factor.
+The service `sshproxy` allows you to use MFA to get an SSH key that is
+valid for a limited time (24 hours by default). It provides a type of
+single-sign-on capability for SSH to NERSC systems.
+
+In order to use it, generate the SSH key on your submit host using
+`sshproxy` command, that will generate a key named `~/.ssh/nersc`.
+You can specify in your site catalog for your local site by
+specifiying the property.
+
+::
+
+   pegasus.catalog.site.sites.local.profiles.pegasus.SSH_PRIVATE_KEY = ~/.ssh/nersc
+
+Or you can specify it as a `pegasus` profile named `SSH_PRIVATE_KEY`
+in your site catalog for **local** site.
 
 
 

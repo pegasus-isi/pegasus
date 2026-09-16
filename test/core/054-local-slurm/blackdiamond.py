@@ -110,7 +110,7 @@ if SHARED:
             shared_file_system=True,
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + slurm_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + slurm_scratch_dir, Operation.ALL
             )
         )
     )
@@ -172,7 +172,7 @@ if CONTAINERS:
         "ospool-rocky-9-singularity",
         Container.SINGULARITY,
         image_site="local",
-        image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+        image="scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
         bypass_staging=False,
     )
     singularity_container.add_env("APP_HOME", "/tmp/myscratch")

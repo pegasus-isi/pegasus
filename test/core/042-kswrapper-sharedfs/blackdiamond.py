@@ -27,7 +27,7 @@ diamond.add_metadata(createdby="Karan Vahi")
 a = File("f.a")
 a.add_metadata(size="1024")
 a.add_metadata(raw_input="true")
-rc.add_replica("local", a.lfn, "scp://bamboo@bamboo.isi.edu" + os.getcwd() + "/f.a")
+rc.add_replica("local", a.lfn, "scp://bamboo@submit.isi.edu" + os.getcwd() + "/f.a")
 
 # Add executables to the DAX-level replica catalog
 e_preprocess = Transformation(

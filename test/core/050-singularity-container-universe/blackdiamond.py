@@ -90,7 +90,7 @@ if SHARED:
             shared_file_system=SHARED,
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + condorpool_scratch_dir, Operation.ALL
             )
         )
     )
@@ -111,7 +111,7 @@ SiteCatalog().add_sites(
     Site("workflow-webdav", arch=Arch.X86_64, os_type=OS.LINUX).add_directories(
         Directory(Directory.SHARED_SCRATCH, staging_scratch_dir).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + staging_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + staging_scratch_dir, Operation.ALL
             )
         )
     ),
@@ -146,7 +146,7 @@ base_container = Container(
     "ospool-rocky-9",
     Container.SINGULARITY,
     image_site="local",
-    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    image="scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
 )
 

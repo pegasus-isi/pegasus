@@ -89,7 +89,7 @@ if SHARED:
             shared_file_system=SHARED,
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + condorpool_scratch_dir, Operation.ALL
             )
         )
     )
@@ -151,7 +151,7 @@ base_container = Container(
     image_site="condorpool" if CONTAINER_ON_CVMFS else "local",
     image="file:///cvmfs/singularity.opensciencegrid.org/htc/rocky:9"
     if CONTAINER_ON_CVMFS
-    else "scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    else "scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     bypass_staging=False,
     **container_mounts,
 )

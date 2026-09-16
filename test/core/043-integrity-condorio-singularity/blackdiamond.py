@@ -90,7 +90,7 @@ with open(
 tools_container = Container(
     "ospool-rocky-9",
     Container.SINGULARITY,
-    image="scp://bamboo@bamboo.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
+    image="scp://bamboo@submit.isi.edu/scitech/shared/projects/Pegasus/test-containers/ospool-rocky-9.sif",
     checksum={"sha256": readable_hash},
 )
 

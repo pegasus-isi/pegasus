@@ -40,7 +40,7 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/$UUID"
   profiles:
     condor:
       universe: "vanilla"

@@ -86,7 +86,7 @@ if SHARED:
             shared_file_system=SHARED,
         ).add_file_servers(
             FileServer(
-                "scp://bamboo@bamboo.isi.edu/" + condorpool_scratch_dir, Operation.ALL
+                "scp://bamboo@submit.isi.edu/" + condorpool_scratch_dir, Operation.ALL
             )
         )
     )

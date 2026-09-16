@@ -89,14 +89,14 @@ sites:
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu:$TOP_DIR/outputs"
+      url: "scp://bamboo@submit.isi.edu:$TOP_DIR/outputs"
    -
     type: "sharedScratch"
     path: "$TOP_DIR/scratch"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@bamboo.isi.edu:$TOP_DIR/scratch"
+      url: "scp://bamboo@submit.isi.edu:$TOP_DIR/scratch"
   profiles:
     env:
       PEGASUS_BIN_DIR: "$PEGASUS_BIN_DIR"

@@ -62,7 +62,7 @@ cartman_data_site.add_directories(
         directory_type=Directory.SHARED_SCRATCH, path=TOP_DIR / "staging-site/scratch"
     ).add_file_servers(
         FileServer(
-            url="scp://bamboo@bamboo.isi.edu" + str(TOP_DIR / "staging-site/scratch"),
+            url="scp://bamboo@submit.isi.edu" + str(TOP_DIR / "staging-site/scratch"),
             operation_type=Operation.ALL,
         )
     )
