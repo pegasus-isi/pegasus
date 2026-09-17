@@ -11,36 +11,31 @@ NOTE: Do not copy and paste the commands below without double checking.
        cd pegasus
        git checkout N.M
 
-2.  Set the version number:
-
-       # Install cz: https://commitizen-tools.github.io/commitizen/#installation
-       cz bump --yes --files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --files-only 5.1.2-dev.0
-       git commit -a -m "Setting version for tag"
-
-3.  Update the Release Date in the release notes doc:
+2.  Update the Release Date in the release notes doc:
 
        vim ./doc/sphinx/release-notes/release_N.M.x.md
-       git commit -a -m "Setting Release Date for release"
+       git commit -a -m "Setting release date for release"
 
-4.  Tag. Example:
+3.  Set the version number, commit, and tag:
 
-        git tag -a -m "Created tag for N.M.O" N.M.O
+       # Install cz: https://commitizen-tools.github.io/commitizen/#installation
+       cz bump --yes <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes 6.0.0
+
+4.  git push --tags
 
 5.  Open branch for new checkins with new version:
 
-       cz bump --yes --files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --files-only 5.1.2-dev.0
+       cz bump --yes --allow-no-commit --version-files-only <MAJOR>.<MINOR>.<PATCH>-(dev|alpha|beta|rc).<BUILD> # Example: cz bump --yes --allow-no-commit --version-files-only 6.0.1.dev0
        git commit -a -m "Branch reopen for checkins"
 
-6.  Bring the branch back to master, but ignore the commits.
+6.  Bring the branch back to main, but ignore the commits.
 
-       git checkout master
+       git checkout main
        git merge --no-commit N.M
     (edit build.properties)
        git commit -a -m "Merged N.M"
 
-7.  git push --tags
-
-8.  Build with GitLab CI
+8.  Build with GitLab CI. If all is well, the manually trigger the Release job in the pipeline.
 
 9.  Build dnf/apt repos. First copy the debs and rpms into
     their final place in the debian/rhel/ubuntu top level
