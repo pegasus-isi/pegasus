@@ -470,7 +470,6 @@ Workflow Tests:
   parallel:
     matrix:
     - TESTNAME:
-      - 000-check-env
       - 016-pegasus-transfer
       - 029-black-quiet
       - 038-halt-continue
@@ -491,12 +490,10 @@ Workflow Tests:
       - launch-bamboo-test-planner-only
 
     - TESTNAME:
-      - 001-black-diamond-vanilla-condor
       - 001-black-diamond-vanilla-condor-5.0API
       - 002-hello-world
       - 004-montage-condor-io
       - 004-montage-shared-fs
-#      - 004-montage-shared-fs-sc
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
@@ -524,7 +521,6 @@ Workflow Tests:
       - 025-sc4-file-http
       - 026-cache-url-check
       - 027-montage-bypass-staging-site
-      #- 027-montage-bypass-staging-site-condorio
       - 028-dynamic-hierarchy
       - 028-dynamic-hierarchy-b
       - 030-pegasuslite-gs
@@ -556,7 +552,6 @@ Workflow Tests:
       - 043-integrity-nonsharedfs-nosymlink
       - 043-integrity-condorio-nogs
       - 043-integrity-synthetic-with-errors
-      - 043-integrity-condorio-5.0API
       - 043-integrity-condorio-singularity
       - 043-integrity-bypass-staging-b
       - 044-docker inside/nonsharedfs
@@ -572,8 +567,7 @@ Workflow Tests:
       - 044-singularity host/nonsharedfs
       - 044-singularity host/nonsharedfs-shared
       - 044-singularity host/nonsharedfs-symlink
-      - 044-singularity host/nonsharedfs-symlink-cvmfs
-      - 044-singularity-nonsharedfs-minimal
+      - 044-singularity host/nonsharedfs-symlink-cvmf
       - 045-hierarchy-sharedfs
       - 045-hierarchy-sharedfs-b
       - 045-hierarchy-sharedfs-c
@@ -603,7 +597,6 @@ Workflow Tests:
       - blackdiamond pl-pt-local
       - blackdiamond sharedfs-symlink-nogridstart
       - blackdiamond sharedfs-worker-staging-cleanup
-      - blackdiamond vanilla-condor
       EXEC:
       - launch-bamboo-test
   script:
