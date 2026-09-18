@@ -333,7 +333,7 @@ macOS:
       - 13
   before_script:
   - env
-  - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
+  - \[ "${ARCH}" = 'arm64' ] && eval "$(/opt/homebrew/bin/brew shellenv)"
   - brew install make cmake
   - python3 -m pip install --break-system-packages --upgrade build scikit-build-core
   script:
