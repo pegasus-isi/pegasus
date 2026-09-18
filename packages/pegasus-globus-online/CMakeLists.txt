@@ -35,7 +35,7 @@ add_custom_command(
             "GOCACHE=${_pgo_gocache}"
             "GOPATH=${_pgo_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -o "${_pgo_bin}" ./cmd/pegasus-globus-online
+            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pgo_bin}" ./cmd/pegasus-globus-online
     WORKING_DIRECTORY "${_pgo_src_dir}"
     DEPENDS ${_pgo_sources} "${_pgo_src_dir}/go.mod" "${_pgo_src_dir}/go.sum"
     COMMENT "Building pegasus-globus-online (Go)"
@@ -47,7 +47,7 @@ add_custom_command(
             "GOCACHE=${_pgo_gocache}"
             "GOPATH=${_pgo_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -o "${_pgo_init_bin}" ./cmd/pegasus-globus-online-init
+            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pgo_init_bin}" ./cmd/pegasus-globus-online-init
     WORKING_DIRECTORY "${_pgo_src_dir}"
     DEPENDS ${_pgo_sources} "${_pgo_src_dir}/go.mod" "${_pgo_src_dir}/go.sum"
     COMMENT "Building pegasus-globus-online-init (Go)"

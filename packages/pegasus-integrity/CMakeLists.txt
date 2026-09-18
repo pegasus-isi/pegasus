@@ -33,7 +33,7 @@ add_custom_command(
             "GOCACHE=${_pi_gocache}"
             "GOPATH=${_pi_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -o "${_pi_bin}" ./cmd/pegasus-integrity
+            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pi_bin}" ./cmd/pegasus-integrity
     WORKING_DIRECTORY "${_pi_src_dir}"
     DEPENDS ${_pi_sources} "${_pi_src_dir}/go.mod"
     COMMENT "Building pegasus-integrity (Go)"

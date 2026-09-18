@@ -32,7 +32,7 @@ add_custom_command(
             "GOCACHE=${_pc_gocache}"
             "GOPATH=${_pc_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -o "${_pc_bin}" ./cmd/pegasus-checkpoint
+            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pc_bin}" ./cmd/pegasus-checkpoint
     WORKING_DIRECTORY "${_pc_src_dir}"
     DEPENDS ${_pc_sources} "${_pc_src_dir}/go.mod"
     COMMENT "Building pegasus-checkpoint (Go)"
