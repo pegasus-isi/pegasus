@@ -33,7 +33,7 @@ add_custom_command(
             "GOCACHE=${_pt_gocache}"
             "GOPATH=${_pt_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -o "${_pt_bin}" ./cmd/pegasus-transfer
+            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pt_bin}" ./cmd/pegasus-transfer
     WORKING_DIRECTORY "${_pt_src_dir}"
     DEPENDS ${_pt_sources} "${_pt_src_dir}/go.mod" "${_pt_src_dir}/go.sum"
     COMMENT "Building pegasus-transfer (Go)"
