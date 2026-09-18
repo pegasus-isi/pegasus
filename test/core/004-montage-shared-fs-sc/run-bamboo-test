@@ -1,0 +1,100 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+export PATH=/scitech/shared/software/el10/montage/current/bin:$PATH
+
+rm -rf montage-workflow-v3
+git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
+
+echo
+echo
+
+cd montage-workflow-v3
+./montage-workflow.py --center "275.196290 -16.171530" \
+                      --degrees 0.5 \
+                      --band 2mass:j:green \
+                      --band 2mass:h:blue \
+                      --band 2mass:k:red
+
+export PEGASUS_VERSION=`pegasus-version`
+
+# site catalog
+echo
+echo "Creating the site catalog..."
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "CCG"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/scitech/shared/scratch-90-days/bamboo/work"
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/work"
+   -
+    type: "sharedStorage"
+    path: "/scitech/shared/scratch-90-days/bamboo/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
+  profiles:
+    env:
+      MONTAGE_HOME: "/scitech/shared/software/el10/montage/current"
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
+      http_proxy: "workflow.isi.edu:3128"
+    condor:
+      requirements: "(TARGET.FileSystemDomain =!= \"\")"
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "$PWD/scratch"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$PWD/scratch"
+   -
+    type: "sharedStorage"
+    path: "$PWD/outputs"
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$PWD/outputs"
+  grids:
+   -
+    type: "gt5"
+    contact: "localhost/jobmanager-fork"
+    scheduler: "fork"
+    jobtype: "auxillary"
+  profiles:
+    env:
+      http_proxy: "workflow.isi.edu:3128"
+    pegasus:
+      SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa
+EOF
+
+cp ../pegasus.properties .
+
+echo "Planning and submitting the workflow..."
+pegasus-plan \
+    --dir submit \
+    --sites CCG \
+    --output-sites CCG \
+    --cleanup constraint \
+    --submit \
+    data/montage-workflow.yml \
+    | tee $TOP_DIR/plan.out

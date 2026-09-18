@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+echo "Running black-diamond-setup.py"
+PYTHONPATH=$(pegasus-config --python) python3.12 black-diamond-setup.py
