@@ -27,13 +27,21 @@ file(GLOB_RECURSE _pi_sources
 set(_pi_gocache "${CMAKE_CURRENT_BINARY_DIR}/go-cache")
 set(_pi_gopath  "${CMAKE_CURRENT_BINARY_DIR}/go-path")
 
+# PEGASUS_GO_MACOS_LDFLAG is probed once by the top-level CMakeLists.txt
+# (Go version >=1.27 required; see the comment there) and is empty/undefined
+# wherever it doesn't apply.
+set(_pi_ldflags "-s -w")
+if(DEFINED PEGASUS_GO_MACOS_LDFLAG)
+    string(APPEND _pi_ldflags " ${PEGASUS_GO_MACOS_LDFLAG}")
+endif()
+
 add_custom_command(
     OUTPUT "${_pi_bin}"
     COMMAND ${CMAKE_COMMAND} -E env
             "GOCACHE=${_pi_gocache}"
             "GOPATH=${_pi_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pi_bin}" ./cmd/pegasus-integrity
+            "${GO_EXECUTABLE}" build -ldflags "${_pi_ldflags}" -o "${_pi_bin}" ./cmd/pegasus-integrity
     WORKING_DIRECTORY "${_pi_src_dir}"
     DEPENDS ${_pi_sources} "${_pi_src_dir}/go.mod"
     COMMENT "Building pegasus-integrity (Go)"

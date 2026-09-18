@@ -29,13 +29,21 @@ file(GLOB_RECURSE _pgo_sources
 set(_pgo_gocache "${CMAKE_CURRENT_BINARY_DIR}/go-cache")
 set(_pgo_gopath  "${CMAKE_CURRENT_BINARY_DIR}/go-path")
 
+# PEGASUS_GO_MACOS_LDFLAG is probed once by the top-level CMakeLists.txt
+# (Go version >=1.27 required; see the comment there) and is empty/undefined
+# wherever it doesn't apply.
+set(_pgo_ldflags "-s -w")
+if(DEFINED PEGASUS_GO_MACOS_LDFLAG)
+    string(APPEND _pgo_ldflags " ${PEGASUS_GO_MACOS_LDFLAG}")
+endif()
+
 add_custom_command(
     OUTPUT "${_pgo_bin}"
     COMMAND ${CMAKE_COMMAND} -E env
             "GOCACHE=${_pgo_gocache}"
             "GOPATH=${_pgo_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pgo_bin}" ./cmd/pegasus-globus-online
+            "${GO_EXECUTABLE}" build -ldflags "${_pgo_ldflags}" -o "${_pgo_bin}" ./cmd/pegasus-globus-online
     WORKING_DIRECTORY "${_pgo_src_dir}"
     DEPENDS ${_pgo_sources} "${_pgo_src_dir}/go.mod" "${_pgo_src_dir}/go.sum"
     COMMENT "Building pegasus-globus-online (Go)"
@@ -47,7 +55,7 @@ add_custom_command(
             "GOCACHE=${_pgo_gocache}"
             "GOPATH=${_pgo_gopath}"
             "CGO_ENABLED=0"
-            "${GO_EXECUTABLE}" build -ldflags "-s -w" -o "${_pgo_init_bin}" ./cmd/pegasus-globus-online-init
+            "${GO_EXECUTABLE}" build -ldflags "${_pgo_ldflags}" -o "${_pgo_init_bin}" ./cmd/pegasus-globus-online-init
     WORKING_DIRECTORY "${_pgo_src_dir}"
     DEPENDS ${_pgo_sources} "${_pgo_src_dir}/go.mod" "${_pgo_src_dir}/go.sum"
     COMMENT "Building pegasus-globus-online-init (Go)"
