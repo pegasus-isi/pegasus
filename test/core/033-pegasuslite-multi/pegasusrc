@@ -8,3 +8,5 @@ pegasus.condor.logs.symlink = false
 # we want to make sure worker package gets staged
 # correctly both for sharedfs and condorio
 pegasus.transfer.worker.package true
+
+pegasus.data.configuration sharedfs
