@@ -1143,6 +1143,11 @@ signal.signal(signal.SIGHUP, prog_sighup_handler)
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
 
+# Also exit gracefully on a plain "kill": SIGTERM's default action would skip
+# the atexit handlers that drain and close the event sinks (stampede DB flush,
+# monitord event plugins)
+signal.signal(signal.SIGTERM, prog_sigint_handler)
+
 # Permit dynamic changes of debug level
 signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
 signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
