@@ -567,7 +567,7 @@ Workflow Tests:
       - 044-singularity host/nonsharedfs
       - 044-singularity host/nonsharedfs-shared
       - 044-singularity host/nonsharedfs-symlink
-      - 044-singularity host/nonsharedfs-symlink-cvmf
+      - 044-singularity host/nonsharedfs-symlink-cvmfs
       - 045-hierarchy-sharedfs
       - 045-hierarchy-sharedfs-b
       - 045-hierarchy-sharedfs-c
