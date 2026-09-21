@@ -10,7 +10,7 @@ Can be used to find installed Pegasus tools and libraries.
       pegasus-config [-h] [--help] [-V] [--version] [--noeoln]
                      [--python-dump] [--sh-dump]
                      [--bin] [--conf] [--java] [--python]
-                     [--python-externals] [--r] [--schema] [--classpath]
+                     [--python-externals] [--schema] [--classpath]
 
 
 
@@ -52,9 +52,6 @@ Options
 
 **--python-externals**
    Print the directory to the external Python libraries.
-
-**--r**
-   Print the path to the R DAX API source package.
 
 **--schema**
    Print the directory containing schemas.

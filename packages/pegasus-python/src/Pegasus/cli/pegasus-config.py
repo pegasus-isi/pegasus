@@ -72,7 +72,6 @@ def _main(
     python=False,
     python_externals=False,
     schema=False,
-    r=False,
     classpath=False,
     noeoln=False,
 ):
@@ -94,7 +93,6 @@ def _main(
     python_dir = dirname(dirname(data_dir))
     python_externals_dir = python_dir
     schema_dir = join(data_dir, "schema")
-    r_dir = "".join(sorted(glob(join(data_dir, "r", "*.tar.gz"))))
 
     # in native packaging mode, some directories move
     if base_dir == "/usr":
@@ -148,8 +146,6 @@ def _main(
         print(python_externals_dir, end=eol)
     elif schema:
         print(schema_dir, end=eol)
-    elif r:
-        print(r_dir, end=eol)
     elif classpath:
         print(_classpath, end=eol)
     else:
@@ -210,11 +206,6 @@ def main():
         "--schema",
         action="store_true",
         help="Print the directory containing schemas.",
-    )
-    parser.add_argument(
-        "--r",
-        action="store_true",
-        help="Print the path to the R DAX API source package.",
     )
     parser.add_argument(
         "--classpath",
