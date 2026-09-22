@@ -14,10 +14,9 @@ cd montage-workflow-v3
 
 apptainer exec \
             --bind $PWD \
-            https://data.isi.edu/montage/images/montage-workflow-v3.sif \
-            $PWD/montage-workflow.py \
+            https://download.pegasus.isi.edu/containers/montage/montage-workflow-v3-20260810.sif \
+            python3.12 $PWD/montage-workflow.py \
                 --work-dir $PWD \
-                --tc-target container \
                 --center "275.196290 -16.171530" \
                 --degrees 0.3 \
                 --band 2mass:j:green \

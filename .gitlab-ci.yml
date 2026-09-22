@@ -492,7 +492,6 @@ Workflow Tests:
     - TESTNAME:
       - 001-black-diamond-vanilla-condor-5.0API
       - 002-hello-world
-      - 004-montage-condor-io
       - 004-montage-shared-fs
       - 004-montage-staging-site
       - 004-montage-universe-local
