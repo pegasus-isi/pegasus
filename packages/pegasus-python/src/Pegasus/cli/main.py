@@ -16,6 +16,8 @@ from pathlib import Path
 
 import click
 
+from Pegasus.cli._paths import get_bin_dir
+
 _CLI_DIR = Path(__file__).parent
 
 
@@ -40,11 +42,11 @@ def _run_java(main_class: str, args) -> None:
 
 def _exec_binary(binary_name: str, args) -> None:
     """Exec a compiled (non-Python) CLI tool installed alongside this
-    interpreter — e.g. pegasus-transfer, which CMake installs directly into
-    <venv>/bin/ rather than exposing as a console_scripts wrapper (see
-    top-level CMakeLists.txt / packages/pegasus-transfer/CMakeLists.txt).
+    install's console scripts — e.g. pegasus-transfer, which CMake installs
+    directly into <venv>/bin/ rather than exposing as a console_scripts wrapper
+    (see top-level CMakeLists.txt / packages/pegasus-transfer/CMakeLists.txt).
     """
-    candidate = Path(sys.executable).parent / binary_name
+    candidate = Path(get_bin_dir()) / binary_name
     path = str(candidate) if candidate.exists() else shutil.which(binary_name)
     if not path:
         click.echo(f"pegasus: {binary_name}: executable not found", err=True)
