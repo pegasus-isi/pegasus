@@ -40,31 +40,12 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Utilities",
 ]
-dependencies = [
-    # Utils
-    # DAX/Workflow
-    "PyYAML",
-    "pamela",
-    "pika",
-    "werkzeug<3.1.0",
-    "Flask>1.1,<2.3",
-    "Flask-Caching",
-    "requests",
-    "pymysql",
-    "sqlalchemy",
-    "pythonsed",          # For profile expression
-    "rich",               # Console/Markdown rendering for pegasus-analyzer
-    "pegasus-wms.api",
-    "pegasus-wms.common",
-    "pegasus-wms.worker",
-]
+# No dependencies or optional-dependencies here.  This directory is not a
+# standalone distribution: CMake merges it with pegasus-common and pegasus-api
+# into the single pegasus-wms wheel, whose runtime dependencies and extras are
+# declared once, in the repo-root pyproject.toml.  The tests run against that
+# wheel (see tox.toml).
 keywords = ["scientific workflows"]
-
-[project.optional-dependencies]
-
-postgresql = ["psycopg2"]
-mysql = ["pymysql"]
-cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
 
 [project.urls]
 
@@ -148,20 +129,5 @@ known-third-party = [
 forced-separate = ["Pegasus"]
 
 
-[tool.pytest.ini_options]
-
-pythonpath = ["src"]
-testpaths = ["test"]
-filterwarnings = [
-    "ignore:.*Decimal.*natively:sqlalchemy.exc.SAWarning",
-    "ignore:unclosed database:ResourceWarning",
-    "ignore:Enable tracemalloc:ResourceWarning",
-]
-
-"resource-path.directory-name-tests" = "test"
-"resource-path.directory-name-test-resources" = "resources"
-
-
-[tool.coverage.run]
-
-source = ["src"]
+# pytest and coverage are configured once, in the repo-root pyproject.toml:
+# the suites run together from the root against the pegasus-wms wheel.

@@ -6,11 +6,16 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 import yaml
-from conftest import _tojson
 from jsonschema import validate
 
 from Pegasus.api.errors import DuplicateError
 from Pegasus.api.replica_catalog import _PFN, File, ReplicaCatalog, _ReplicaCatalogEntry
+from Pegasus.api.writable import _CustomEncoder
+
+
+def _tojson(obj):
+    """Returns dict representation of obj using writable._CustomEncoder"""
+    return json.loads(json.dumps(obj, cls=_CustomEncoder))
 
 
 class Test_PFN:

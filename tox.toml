@@ -1,0 +1,145 @@
+# Tox configuration for the Pegasus Python test suites.
+#
+# pegasus-common, pegasus-api and pegasus-python ship as ONE pegasus-wms wheel,
+# so every test env installs that wheel and runs from the repo root.  All envs
+# on the same interpreter share one venv (env_dir below).
+#
+#   tox                            full suite on 3.10 .. 3.14, then lint
+#   tox -e 3.12,3.13,lint          full suite on 3.12 and 3.13, then lint
+#   tox -e py                      full suite on the interpreter running tox
+#   tox -m common                  one package's suite (also: api, python)
+#   tox -e 3.11 -- packages/pegasus-api/test -k test_add_job    ad-hoc selection
+#
+# tox-uv downloads interpreters that are not installed; if it cannot, that
+# version is skipped (CI passes --skip-missing-interpreters false).
+#
+# Envs that share an interpreter share a venv: do not run them with `tox -p`.
+# Reports land in test-reports/<env>/ (pyunit.xml, coverage.xml, htmlcov/).
+
+requires = ["tox>=4.22", "tox-uv>=1.16"]
+env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "lint"]
+skip_missing_interpreters = true
+
+[labels]
+common = ["common"]
+api = ["api"]
+python = ["python"]
+
+# --- test -------------------------------------------------------------------
+
+[env_run_base]
+description = "all Python suites against the pegasus-wms wheel"
+package = "wheel"
+# The wheel is py3-none: one build env serves every interpreter.
+wheel_build_env = ".pkg"
+# One venv per interpreter, shared by 3.12, py, common, api, python, ...
+env_dir = "{work_dir}/py{py_dot_ver}"
+dependency_groups = ["test"]
+pass_env = ["USER", "CPATH"]
+set_env = { PYTHONUNBUFFERED = "yes", PYTHONHASHSEED = "3104489401", USER = "{env:USER:nobody}", COVERAGE_FILE = "{env_tmp_dir}/.coverage" }
+commands_pre = [["python", "-m", "coverage", "erase"]]
+# `python -m`: Pegasus.db.admin looks for pegasus-version next to sys.argv[0];
+# the wheel's pegasus-version needs the Java JARs this build omits.
+commands = [
+    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", { replace = "posargs", extend = true }],
+]
+# commands_post runs even when the tests fail, so CI always gets reports.
+commands_post = [
+    ["python", "-m", "coverage", "combine", "--quiet"],
+    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml"],
+    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov"],
+    ["python", "-m", "coverage", "report", "--fail-under=42"],
+]
+
+# Per-package envs: same venv, one suite, coverage floor on that tree only.
+
+[env.common]
+description = "pegasus-common suite against the pegasus-wms wheel"
+commands = [
+    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-common/test", { replace = "posargs", extend = true }],
+]
+commands_post = [
+    ["python", "-m", "coverage", "combine", "--quiet"],
+    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-common/*"],
+    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-common/*"],
+    ["python", "-m", "coverage", "report", "--include=packages/pegasus-common/*", "--fail-under=48"],
+]
+
+[env.api]
+description = "pegasus-api suite against the pegasus-wms wheel"
+commands = [
+    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-api/test", { replace = "posargs", extend = true }],
+]
+commands_post = [
+    ["python", "-m", "coverage", "combine", "--quiet"],
+    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-api/*"],
+    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-api/*"],
+    ["python", "-m", "coverage", "report", "--include=packages/pegasus-api/*", "--fail-under=99"],
+]
+
+[env.python]
+description = "pegasus-python suite against the pegasus-wms wheel"
+commands = [
+    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-python/test", { replace = "posargs", extend = true }],
+]
+commands_post = [
+    ["python", "-m", "coverage", "combine", "--quiet"],
+    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-python/*"],
+    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-python/*"],
+    ["python", "-m", "coverage", "report", "--include=packages/pegasus-python/*", "--fail-under=25.5"],
+]
+
+# --- wheel build ------------------------------------------------------------
+# Python half of the wheel only; its own CMake build dir so `make`'s
+# _cmake_build cache is not clobbered by a feature-disabled configure.
+
+[env.".pkg".set_env]
+PEGASUS_NO_C = "1"
+PEGASUS_NO_JAVA = "1"
+PEGASUS_NO_GO = "1"
+PEGASUS_NO_WORKER = "1"
+SKBUILD_BUILD_DIR = "{work_dir}/.pkg-cmake-build"
+
+# --- lint -------------------------------------------------------------------
+# One env: ruff applies the closest [tool.ruff] to each file, so every package
+# keeps its own config.  Pin matches .pre-commit-config.yaml.
+
+[env.lint]
+description = "ruff check + format --check"
+env_dir = "{work_dir}/{env_name}"
+skip_install = true
+deps = ["ruff==0.15.15"]
+commands_pre = []
+commands_post = []
+commands = [
+    ["ruff", "check", "packages/pegasus-common", "packages/pegasus-api", "packages/pegasus-python"],
+    ["ruff", "format", "--check", "packages/pegasus-common", "packages/pegasus-api", "packages/pegasus-python"],
+]
+
+# --- docs -------------------------------------------------------------------
+# Driven by `make doc-sphinx`.
+
+[env.docs]
+description = "Sphinx user guide"
+env_dir = "{work_dir}/{env_name}"
+change_dir = "doc/sphinx"
+allowlist_externals = ["make"]
+deps = [
+    "sphinx",
+    "recommonmark",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-openapi",
+    "sphinx_tabs",
+    "sphinx-click",
+]
+commands_pre = [
+    [
+        "sphinx-apidoc",
+        "--force",
+        "--implicit-namespaces",
+        "--output-dir", "python",
+        "{tox_root}/packages/pegasus-api/src/Pegasus",
+    ],
+]
+commands_post = []
+commands = [["make", { replace = "posargs", default = ["html", "man", "latexpdf"], extend = true }]]

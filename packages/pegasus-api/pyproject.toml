@@ -40,7 +40,9 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Utilities",
 ]
-dependencies = ["pegasus-wms.common"]
+# No dependencies here: CMake merges this package into the single pegasus-wms
+# wheel, whose runtime dependencies are declared once, in the repo-root
+# pyproject.toml.  The tests run against that wheel (see tox.toml).
 keywords = ["scientific workflows"]
 
 [project.urls]
@@ -114,16 +116,5 @@ known-third-party = ["yaml"]
 forced-separate = ["Pegasus"]
 
 
-[tool.pytest.ini_options]
-
-pythonpath = ["src"]
-testpaths = ["test"]
-filterwarnings = [
-    "ignore:unclosed database:ResourceWarning",
-    "ignore:Enable tracemalloc:ResourceWarning",
-]
-
-
-[tool.coverage.run]
-
-source = ["src"]
+# pytest and coverage are configured once, in the repo-root pyproject.toml:
+# the suites run together from the root against the pegasus-wms wheel.
