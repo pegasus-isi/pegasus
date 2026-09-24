@@ -248,10 +248,10 @@ doc-sphinx:
 	$(SED_I) 's/^version = .*/version = "$(VERSION)"/' doc/sphinx/conf.py
 	$(SED_I) 's/^release = .*/release = "$(VERSION)"/' doc/sphinx/conf.py
 	@if command -v latexmk >/dev/null 2>&1; then \
-	    TOX_BASE_PYTHON=$(PYTHON) tox -e docs; \
+	    tox -e docs; \
 	else \
 	    echo "latexmk not found — skipping PDF, building HTML + man only"; \
-	    TOX_BASE_PYTHON=$(PYTHON) tox -e docs -- html man; \
+	    tox -e docs -- html man; \
 	fi
 	$(SED_I) 's/^version = .*/version = "5.0.0dev"/' doc/sphinx/conf.py
 	$(SED_I) 's/^release = .*/release = "5.0.0dev"/' doc/sphinx/conf.py

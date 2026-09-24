@@ -16,7 +16,6 @@
 # Envs that share an interpreter share a venv: do not run them with `tox -p`.
 # Reports land in test-reports/<env>/ (pyunit.xml, coverage.xml, htmlcov/).
 
-# 4.22 added dependency_groups; tox-uv 1.16 is the oldest that works with it.
 requires = ["tox>=4.22", "tox-uv>=1.16"]
 env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "lint"]
 skip_missing_interpreters = true
@@ -118,12 +117,10 @@ commands = [
 ]
 
 # --- docs -------------------------------------------------------------------
-# Driven by `make doc-sphinx`, which pins the interpreter via TOX_BASE_PYTHON.
-# Own venv: its deps differ from the test envs'.
+# Driven by `make doc-sphinx`.
 
 [env.docs]
 description = "Sphinx user guide"
-base_python = ["{env:TOX_BASE_PYTHON:python3}"]
 env_dir = "{work_dir}/{env_name}"
 change_dir = "doc/sphinx"
 allowlist_externals = ["make"]
