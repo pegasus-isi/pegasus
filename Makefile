@@ -304,11 +304,11 @@ doc-dist: doc
 # C tests require:    make build-c
 test: test-python test-java test-c test-go
 
-# Run Python test suites for all three packages via tox.
-# Envs are defined in the root tox.toml; each chdirs into its package.
-# Run a single package with 'tox -e api' (or common/python).
+# Run the Python test suites for all three packages via tox, against the root
+# pegasus-wms wheel, on the Python version of $(PYTHON) (see tox.toml).
+# One package: 'tox -m api'.  Other versions: 'tox -e 3.11,3.13'.
 test-python:
-	TOX_BASE_PYTHON=$(PYTHON) tox
+	tox -e $(shell $(PYTHON) -c 'import sys; print("%d.%d" % sys.version_info[:2])')
 
 # Run Java unit tests (JUnit 5).
 # Requires: make build-java   (produces $(BUILD_DIR)/jars/pegasus.jar)

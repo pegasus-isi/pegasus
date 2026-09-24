@@ -40,10 +40,9 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Utilities",
 ]
-# No pegasus-wms.common here: the three packages are merged into a single
-# pegasus-wms wheel by CMake, and the name still resolves to 5.1.2 on PyPI.
-# Test envs install the siblings from local paths (see tox.toml).
-dependencies = []
+# No dependencies here: CMake merges this package into the single pegasus-wms
+# wheel, whose runtime dependencies are declared once, in the repo-root
+# pyproject.toml.  The tests run against that wheel (see tox.toml).
 keywords = ["scientific workflows"]
 
 [project.urls]
@@ -117,22 +116,5 @@ known-third-party = ["yaml"]
 forced-separate = ["Pegasus"]
 
 
-[tool.pytest.ini_options]
-
-pythonpath = ["src"]
-testpaths = ["test"]
-filterwarnings = [
-    "ignore:unclosed database:ResourceWarning",
-    "ignore:Enable tracemalloc:ResourceWarning",
-]
-
-
-[tool.coverage.run]
-
-source = ["src"]
-
-
-[tool.coverage.report]
-
-# Was --cov-fail-under in this package's tox.ini
-fail_under = 99
+# pytest and coverage are configured once, in the repo-root pyproject.toml:
+# the suites run together from the root against the pegasus-wms wheel.

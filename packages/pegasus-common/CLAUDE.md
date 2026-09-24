@@ -8,36 +8,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Test
 
+Run from the **repo root**. Tests run against the installed pegasus-wms wheel;
+pytest and coverage are configured in the root `pyproject.toml` (see the root
+`tox.toml`).
+
 ```bash
-# Run full test suite with coverage (from the REPO ROOT; envs live in tox.toml)
-tox -e common
+# Run this package's suite with coverage
+tox -m common
 
-# Run pytest directly (from package root)
-pytest test/
+# Run tests matching a pattern
+tox -m common -- -k braindump
 
-# Run a single test file
-pytest test/test_braindump.py
-pytest test/test_yaml.py
-pytest test/test_json.py
-pytest test/test_condor.py
-pytest test/test_status.py
-pytest test/client/test_client.py
-
-# Run a single test function
-pytest test/test_braindump.py::TestBraindump::test_load -v
+# Run a single test file or function (any interpreter: 3.10 .. 3.14, py)
+tox -e py -- packages/pegasus-common/test/test_braindump.py
+tox -e py -- packages/pegasus-common/test/test_braindump.py::TestBraindump::test_load -v
 ```
 
-Coverage must stay at or above **48%** — `[tool.coverage.report] fail_under` in
-this package's `pyproject.toml`. (Actual coverage is currently ~89%.)
+Coverage for `tox -m common` must stay at or above **48%** (the `common` env in
+the root `tox.toml`). Actual coverage is currently ~91%. Reports go to
+`test-reports/common/` at the repo root.
 
 ## Linting & Formatting
 
 ```bash
-# Run all linters/formatters via tox, from the repo root
-tox -e lint-common
+# From the repo root; lints all three Python packages
+tox -e lint
 ```
 
-Runs `ruff check` then `ruff format` (which rewrites files in place), using the `[tool.ruff]` config in this package's `pyproject.toml`.
+Runs `ruff check` then `ruff format --check`, using the `[tool.ruff]` config in this package's `pyproject.toml`. To fix formatting, run `ruff format` (or pre-commit).
 
 ## Architecture
 

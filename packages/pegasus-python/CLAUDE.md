@@ -19,32 +19,33 @@ pip install ".[cwl]"      # from the repo root; extras live in the root pyprojec
 
 Sibling packages (`../pegasus-common`, `../pegasus-api`)
 are merged into that single wheel by CMake, so there is nothing to install
-separately. Test environments install them from local paths — see the root
+separately. Runtime dependencies are declared only in the repo-root
+`pyproject.toml`, and the tests run against the built wheel — see the root
 `tox.toml`.
 
 ## Testing
 
 ```bash
-# Run all tests (from the REPO ROOT — envs live in the root tox.toml)
-tox -e python
+# Run this package's suite (from the REPO ROOT, against the pegasus-wms wheel)
+tox -m python
 
-# Run a single test file, or a single test
-tox -e python -- test/test_statistics.py
-tox -e python -- test/test_statistics.py::TestPegasusStatistics::test_initialize -v
+# Run a single test file, or a single test (any interpreter: 3.10 .. 3.14, py)
+tox -e py -- packages/pegasus-python/test/test_statistics.py
+tox -e py -- packages/pegasus-python/test/test_statistics.py::TestPegasusStatistics::test_initialize -v
 ```
 
-Test dependencies are managed by the root `tox.toml`. Key test deps: pytest, pytest-mock, pytest-cov, pytest-resource-path, jsonschema, cwl-utils.
+pytest and coverage are configured in the root `pyproject.toml`; test dependencies are its `test` dependency group (pytest, pytest-mock, coverage, pytest-resource-path, jsonschema, cwl-utils).
 
-The coverage floor (25.5%) lives in `[tool.coverage.report] fail_under` in this package's `pyproject.toml`.
+The coverage floor for `tox -m python` (25.5%) lives in the `python` env in the root `tox.toml`. Reports go to `test-reports/python/` at the repo root.
 
 ## Code Formatting
 
 ```bash
-# Run linting/formatting (from the repo root)
-tox -e lint-python
+# Lint all three Python packages (from the repo root)
+tox -e lint
 ```
 
-Uses ruff for checking and formatting. The `tox -e lint` environment runs autoflake, pyupgrade, isort, black, and flake8. Line length is 88. Files in `src/Pegasus/cli/` are excluded from isort/black formatting.
+Uses ruff (`ruff check` then `ruff format --check`) with the `[tool.ruff]` config in this package's `pyproject.toml`. Line length is 88. Files in `src/Pegasus/cli/` and `src/Pegasus/netlogger/` have extra per-file ignores.
 
 ## Architecture
 
@@ -93,7 +94,7 @@ Tests mirror the source layout. The `conftest.py` provides session-scoped Flask 
 ## Key Constraints
 
 - SQLAlchemy pinned to `>=1.4` (not compatible with 2.x)
-- Flask pinned to `>=2.2,<3.0`
+- Flask pinned to `>=2.2,<2.3` (root `pyproject.toml`): 2.3 removed `flask.json.JSONEncoder`, which `Pegasus.service._encoder` subclasses
 - Python 3.10+ required (set in root `pyproject.toml`)
 - Version is `6.0.0-dev0`, defined in root `build.properties` and `pyproject.toml`
 - This package is not installed standalone — it ships as part of the `pegasus-wms` wheel built from the repo root

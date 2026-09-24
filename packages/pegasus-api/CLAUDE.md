@@ -10,26 +10,29 @@ pegasus-wms.api — Python API for defining Pegasus scientific workflows. This i
 
 ### Testing
 
-Run these from the **repo root** — envs live in the root `tox.toml`:
+Run these from the **repo root**. Tests run against the installed pegasus-wms
+wheel, with pytest and coverage configured in the root `pyproject.toml`
+(see the root `tox.toml`):
 
 ```bash
-tox -e api                                       # Run full test suite
-tox -e api -- test/api/test_workflow.py          # Run a single test file
-tox -e api -- test/api/test_workflow.py::TestWorkflow::test_add_jobs
-tox -e api -- -k "test_add_jobs"                 # Run tests matching a pattern
+tox -m api                                        # Run this package's suite
+tox -m api -- -k "test_add_job"                   # Run tests matching a pattern
+tox -e 3.12 -- packages/pegasus-api/test/api/test_workflow.py            # A single file (any interpreter)
+tox -e 3.12 -- packages/pegasus-api/test/api/test_workflow.py::TestWorkflow::test_add_job
 ```
 
-Coverage minimum is 99% — set in `[tool.coverage.report] fail_under` in this
-package's `pyproject.toml`. Reports go to `test-reports/`.
+Coverage minimum for `tox -m api` is 99% (the `api` env in the root `tox.toml`).
+Reports go to `test-reports/api/` at the repo root.
 
 ### Linting and Formatting
 
 ```bash
-tox -e lint-api    # from the repo root
+tox -e lint    # from the repo root; lints all three Python packages
 ```
 
-Runs `ruff check` then `ruff format` (which rewrites files in place), using the
-`[tool.ruff]` config in this package's `pyproject.toml`.
+Runs `ruff check` then `ruff format --check`, using the `[tool.ruff]` config in
+this package's `pyproject.toml`. To fix formatting, run `ruff format` (or
+pre-commit).
 
 ## Architecture
 

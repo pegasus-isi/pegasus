@@ -42,7 +42,7 @@ dependencies = [
     "pika",
     # Web service / dashboard
     "werkzeug<3.1.0",
-    "Flask>=2.2,<3.0",
+    "Flask>=2.2,<2.3",    # 2.3 removed flask.json.JSONEncoder (Pegasus.service._encoder)
     "Flask-Caching",
     "requests",
     "pamela",
@@ -136,3 +136,50 @@ sdist.exclude = [
     ".agents/",
     ".github/"
 ]
+
+# --- tests -------------------------------------------------------------------
+# The three Python suites run as one pytest session from the repo root against
+# the installed pegasus-wms wheel (see tox.toml).  No `pythonpath = src`: that
+# would shadow the wheel with the source tree of the package under test.
+
+[dependency-groups]
+test = [
+    "pytest",
+    "pytest-mock",
+    "pytest-resource-path",
+    "coverage",
+    "jsonschema",
+    "cwl-utils==0.11",
+    "pymysql<=0.10.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/pegasus-common/test",
+    "packages/pegasus-api/test",
+    "packages/pegasus-python/test",
+]
+# importlib: the suites share module basenames (test_workflow.py, ...) and must
+# not put their directories on sys.path.
+addopts = ["--import-mode=importlib"]
+filterwarnings = [
+    "ignore:.*Decimal.*natively:sqlalchemy.exc.SAWarning",
+    "ignore:unclosed database:ResourceWarning",
+    "ignore:Enable tracemalloc:ResourceWarning",
+]
+"resource-path.directory-name-tests" = "test"
+"resource-path.directory-name-test-resources" = "resources"
+
+[tool.coverage.run]
+parallel = true
+source_pkgs = ["Pegasus"]
+branch = true
+relative_files = true
+
+# The wheel merges three source trees into one site-packages/Pegasus.  Map each
+# measured file back to the tree it came from (coverage skips a mapping whose
+# target does not exist), so reports point at repo paths.
+[tool.coverage.paths]
+common = ["packages/pegasus-common/src/Pegasus", "*/site-packages/Pegasus"]
+api = ["packages/pegasus-api/src/Pegasus", "*/site-packages/Pegasus"]
+python = ["packages/pegasus-python/src/Pegasus", "*/site-packages/Pegasus"]

@@ -37,15 +37,15 @@ Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLA
 # Run all tests (Python + Java + C)
 make test
 
-# Python tests — all three envs are defined in the root tox.toml
-make test-python   # runs tox for all three packages
-# or individually, from the repo root:
-tox -e python
-tox -e api
-tox -e common
-
-# Pin the interpreter (env names carry no pyNNN factor):
-TOX_BASE_PYTHON=python3.11 tox -e api
+# Python tests — run from the repo root against the pegasus-wms wheel; every
+# env on the same interpreter shares one venv (see tox.toml)
+make test-python                 # all three suites on $(PYTHON)'s version
+tox                              # all suites on 3.10 .. 3.14, then lint
+tox -e 3.12,3.13,lint            # chosen interpreters
+tox -e py                        # the interpreter running tox
+tox -m api                       # one package's suite (common, api, python)
+tox -m api -- -k test_add_job    # extra args go to pytest
+tox -e 3.11 -- packages/pegasus-api/test/api/test_workflow.py
 
 # Java unit tests (JUnit 5) — requires make build-java first
 make test-java
@@ -57,14 +57,13 @@ cd packages/pegasus-kickstart/test
 PEGASUS_BIN_DIR=$(pwd)/../../../_cmake_build/packages/pegasus-kickstart ./test.sh
 ```
 
-Test framework is pytest for Python. Reports go to `test-reports/`.
+Test framework is pytest for Python, configured once in the root `pyproject.toml` (`[tool.pytest.ini_options]`, `[tool.coverage.*]`, test deps in `[dependency-groups] test`). Reports go to `test-reports/<tox env>/`. Coverage floors live in `tox.toml`: one for the full run, one per package for `tox -m <pkg>`. Don't run envs that share an interpreter with `tox -p`.
 
 ## Code Formatting
 
 ```bash
 # Python (from the repo root)
-tox -m lint          # ruff over pegasus-python, pegasus-api, pegasus-common
-tox -e lint-python   # or one package at a time (lint-api, lint-common)
+tox -e lint          # ruff check + format --check over pegasus-python, pegasus-api, pegasus-common
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`

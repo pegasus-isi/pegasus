@@ -57,33 +57,43 @@ Python:
     - ARCH:
       - x86_64
       - arm64
-      PACKAGE:
-      - common
-      - api
-      - python
-  image: python:3.14
+      PY:
+      - "3.10"
+      - "3.11"
+      - "3.12"
+      - "3.13"
+      - "3.14"
+  image: python:${PY}
   before_script:
   - env
   - export USER=nobody
   - pip3 install --upgrade pip setuptools
   - pip3 install tox-uv
   script:
-  - tox -e ${PACKAGE}
-  coverage: '/Total coverage: \d+\.\d+%/'
+  # All three suites against the pegasus-wms wheel on this job's interpreter
+  # (see tox.toml).  Fail rather than skip if the interpreter is missing.
+  - tox -e ${PY} --skip-missing-interpreters false
+  coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
     reports:
-      junit: packages/pegasus-${PACKAGE}/test-reports/pyunit.xml
+      junit: test-reports/${PY}/pyunit.xml
       coverage_report:
         coverage_format: cobertura
-        path: packages/pegasus-${PACKAGE}/test-reports/coverage.xml
+        path: test-reports/${PY}/coverage.xml
     paths:
-    - packages/pegasus-${PACKAGE}/test-reports/htmlcov
+    - test-reports/${PY}/htmlcov
   rules:
   - changes:
       paths:
-      - packages/pegasus-${PACKAGE}/src/**/*
-      - packages/pegasus-${PACKAGE}/test/**/*
+      - packages/pegasus-common/src/**/*
+      - packages/pegasus-common/test/**/*
+      - packages/pegasus-api/src/**/*
+      - packages/pegasus-api/test/**/*
+      - packages/pegasus-python/src/**/*
+      - packages/pegasus-python/test/**/*
+      - pyproject.toml
+      - tox.toml
   tags:
   - ${ARCH}
   - docker
