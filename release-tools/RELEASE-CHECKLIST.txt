@@ -42,12 +42,14 @@ NOTE: Do not copy and paste the commands below without double checking.
     trees, and then run pegasus-update-prod-repos as the
     bamboo user on download.pegasus.isi.edu
 
-10. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+10. Update `get_pegasus` in repo https://github.com/pegasus-isi/get-pegasus.git.
 
-11. Change the symbolic link for the latest documentation to point
+11. Update Homebrew formula in repo https://github.com/pegasus-isi/homebrew-tools.git.
+
+12. Change the symbolic link for the latest documentation to point
     to latest stable release
     https://pegasus.isi.edu/documentation/
 
-12. Send announce email to pegasus-announce@mailman.isi.edu
+13. Send announce email to pegasus-announce@mailman.isi.edu
 
-13. Add release notes to the GitHub Release (https://github.com/pegasus-isi/pegasus/releases) and Discussions (https://github.com/pegasus-isi/pegasus/discussions)
+14. Add release notes to the GitHub Release (https://github.com/pegasus-isi/pegasus/releases) and Discussions (https://github.com/pegasus-isi/pegasus/discussions)
