@@ -14,7 +14,7 @@ PYTHON=.venv/bin/python make build
 make dev
 
 # Targeted partial rebuilds
-make build-c       # Rebuild only C tools (pegasus-kickstart, cluster, keg)
+make build-c       # Rebuild only C tools (pegasus-kickstart, cluster)
 make build-java    # Rebuild only Java JARs (pegasus.jar, pegasus-aws-batch.jar)
 make build-worker  # Build self-contained worker tarball + stage it for the wheel (slow)
 
@@ -87,7 +87,8 @@ Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed 
 ```
 Java (Planner)     — Workflow planning, mapping, site selection, code generation
 Python (Tools)     — CLI tools, workflow API, monitoring, dashboard, statistics
-C/C++ (Execution)  — Job wrappers (kickstart), clustering, test job generation (keg)
+C/C++ (Execution)  — Job wrappers (kickstart), clustering
+Go (Execution)     — Transfers, checkpointing, integrity, test job generation (keg)
 ```
 
 ## Source Locations
@@ -134,7 +135,6 @@ Python source lives under `packages/<pkg>/src/Pegasus/`.
 | ---------------------- | -------- | ----------------------------------------------------- |
 | `pegasus-kickstart/`   | C        | Job execution wrapper, metadata capture, checksumming |
 | `pegasus-cluster/`     | C        | Groups multiple jobs into clustered execution         |
-| `pegasus-keg/`         | C++      | Synthetic job generator for testing                   |
 | `pegasus-mpi-cluster/` | C++      | MPI-based distributed job clustering                  |
 
 ### Go — `packages/`
@@ -145,6 +145,7 @@ Python source lives under `packages/<pkg>/src/Pegasus/`.
 | `packages/pegasus-globus-online` | Go       | Globus Online integration                     |
 | `packages/pegasus-checkpoint`    | Go       | Pegasus job checkpointing                     |
 | `packages/pegasus-integrity`     | Go       | Pegasus integrity checking                    |
+| `packages/pegasus-keg`           | Go       | Synthetic job generator for testing           |
 
 ### CLI Entry Points
 
@@ -152,7 +153,7 @@ Installed as pip console scripts by `pyproject.toml`. After `pip install .` or `
 
 - `pegasus <subcommand>` — unified Click CLI (`Pegasus.cli.main:cli`)
 - `pegasus-plan`, `pegasus-status`, `pegasus-rc-client`, etc. — legacy entry points (same functions, backward-compatible names)
-- C binaries (`pegasus-kickstart`, `pegasus-cluster`, `pegasus-keg`) — installed to `<venv>/bin/` directly by CMake via the wheel scripts section
+- C and Go binaries (`pegasus-kickstart`, `pegasus-cluster`, `pegasus-keg`, `pegasus-transfer`, ...) — installed to `<venv>/bin/` directly by CMake via the wheel scripts section
 
 ## Configuration and Catalogs
 

@@ -41,7 +41,8 @@ GO ?= go
 _GO_MODULES := packages/pegasus-transfer \
                packages/pegasus-checkpoint \
                packages/pegasus-integrity \
-               packages/pegasus-globus-online
+               packages/pegasus-globus-online \
+               packages/pegasus-keg
 
 # Project version (read from build.properties)
 VERSION := $(shell grep '^pegasus.version' build.properties | cut -d= -f2 | tr -d ' ')
@@ -108,7 +109,7 @@ build-java:
 	    -DPEGASUS_BUILD_WORKER=OFF
 	$(CMAKE) --build $(BUILD_DIR)
 
-# Re-build only pegasus-transfer (skip C, Java, and worker). Requires network
+# Re-build only the Go tools in _GO_MODULES (skip C, Java, and worker). Requires network
 # access to resolve Go modules (no vendoring — see the project's decision
 # record on the Go rewrite).
 build-go:
@@ -124,8 +125,8 @@ build-go:
 # and stage it into the Python source tree so that `make build` includes it
 # in the wheel as Pegasus/data/worker-packages/<tarball>.
 # PEGASUS_BUILD_C and PEGASUS_BUILD_GO must be ON (GO defaults ON already):
-# the tarball bundles pegasus-kickstart, pegasus-cluster, pegasus-keg,
-# libinterpose.so, and the compiled pegasus-transfer binary alongside the
+# the tarball bundles pegasus-kickstart, pegasus-cluster, libinterpose.so,
+# and the compiled Go binaries (pegasus-transfer, pegasus-keg, ...) alongside the
 # Python payload so it is self-contained on remote execution nodes.
 # Slow: runs pip install for external deps, and `go build` needs network
 # access to resolve modules (no vendoring).
@@ -215,13 +216,12 @@ clean-c:
 	chmod -R u+w $(BUILD_DIR)/packages 2>/dev/null || true
 	rm -rf $(BUILD_DIR)/packages
 
-# Remove only Go build artifacts (pegasus-transfer, pegasus-checkpoint,
-# pegasus-integrity) — forces recompilation on next build. The chmod is
-# needed because Go's module cache marks files read-only, which a plain
-# rm -rf chokes on.
+# Remove only Go build artifacts (every module in _GO_MODULES) — forces
+# recompilation on next build. The chmod is needed because Go's module cache
+# marks files read-only, which a plain rm -rf chokes on.
 clean-go:
-	chmod -R u+w $(BUILD_DIR)/packages/pegasus-transfer $(BUILD_DIR)/packages/pegasus-checkpoint $(BUILD_DIR)/packages/pegasus-integrity 2>/dev/null || true
-	rm -rf $(BUILD_DIR)/packages/pegasus-transfer $(BUILD_DIR)/packages/pegasus-checkpoint $(BUILD_DIR)/packages/pegasus-integrity
+	chmod -R u+w $(addprefix $(BUILD_DIR)/,$(_GO_MODULES)) 2>/dev/null || true
+	rm -rf $(addprefix $(BUILD_DIR)/,$(_GO_MODULES))
 
 # Remove test output artifacts only (reports, coverage data, compiled test classes).
 # Does not remove tox virtualenvs — use 'make clean' to nuke everything.
@@ -371,8 +371,7 @@ test-c: build-c
 		echo "Skipping mpi-cluster tests: requires mpicxx and 'make build-c' with -DPEGASUS_BUILD_MPI=ON"; \
 	fi
 
-# Run Go unit tests for pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
-# and pegasus-globus-online(-init) -- run per-module (see _GO_MODULES above),
+# Run Go unit tests for every module in _GO_MODULES -- run per-module,
 # since each is its own standalone Go module rather than one root module.
 # A few tests are opt-in integration checks against real infrastructure (a
 # live S3 bucket, a live WebDAV host, live Globus Auth); they self-skip when
@@ -400,7 +399,7 @@ help:
 	@echo ""
 	@echo "  build         Build a wheel and source distribution into dist/"
 	@echo "  dev           Editable install (Python live; C/Java compile on first run)"
-	@echo "  build-c       Re-build only C tools (pegasus-kickstart, cluster, keg)"
+	@echo "  build-c       Re-build only C tools (pegasus-kickstart, cluster)"
 	@echo "  build-java    Re-build only Java JARs (pegasus.jar, pegasus-aws-batch.jar)"
 	@echo "  build-worker  Build worker package tarball (slow: runs pip install)"
 	@echo "  dist-deb      Build .deb package on this host → dist/deb/ (Ubuntu/Debian)"
@@ -427,7 +426,7 @@ help:
 	@echo "  test-python   Run tox test suites for all four Python packages"
 	@echo "  test-java     Run Java unit tests via JUnit 5 (needs 'make build-java')"
 	@echo "  test-c        Run C integration tests (needs 'make build-c')"
-	@echo "  test-go       Run Go unit tests (pegasus-transfer, -checkpoint, -integrity, -globus-online)"
+	@echo "  test-go       Run Go unit tests (every module in _GO_MODULES)"
 	@echo ""
 	@echo "Variables:"
 	@echo "  PYTHON=$(PYTHON)     (override with PYTHON=/path/to/python)"
