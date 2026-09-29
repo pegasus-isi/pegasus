@@ -24,29 +24,6 @@
 #include <sys/sockio.h>
 #endif
 
-#ifdef MACHINE_SPECIFIC
-#ifdef DARWIN
-#include "darwin.hh"
-extern char **environ;
-#endif // DARWIN
-
-#if defined(SUNOS) || defined(SOLARIS)
-#include "sunos.hh"
-#endif // SUNOS || SOLARIS
-
-#ifdef LINUX
-#include "basic.hh"
-#include "linux.hh"
-#endif // LINUX
-
-#ifdef GNUKFREEBSD
-#include "basic.hh"
-#include "linux.hh"
-#endif // GNUKFREEBSD
-#endif // MACHINE_SPECIFIC
-
-#include "version.h"
-
 #ifdef WITH_MPI
 #include <mpi.h>
 #endif

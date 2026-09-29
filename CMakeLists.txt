@@ -143,7 +143,6 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/htcondor/"
 if(PEGASUS_BUILD_C)
     add_subdirectory(packages/pegasus-kickstart)
     add_subdirectory(packages/pegasus-cluster)
-    add_subdirectory(packages/pegasus-keg)
     if(PEGASUS_BUILD_MPI)
         find_package(MPI)
         if(MPI_CXX_FOUND)
@@ -184,6 +183,7 @@ if(PEGASUS_BUILD_GO)
     add_subdirectory(packages/pegasus-checkpoint)
     add_subdirectory(packages/pegasus-integrity)
     add_subdirectory(packages/pegasus-globus-online)
+    add_subdirectory(packages/pegasus-keg)
 endif()
 
 # ── Java JARs ─────────────────────────────────────────────────────────────────
@@ -325,16 +325,11 @@ if(PEGASUS_BUILD_WORKER)
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         VERBATIM)
 
-    # Bundle the compiled execution wrappers (pegasus-kickstart, pegasus-cluster,
-    # pegasus-keg) so the worker package is self-contained on remote nodes,
+    # Bundle the compiled execution wrappers (pegasus-kickstart, pegasus-cluster)
+    # so the worker package is self-contained on remote nodes,
     # matching the old ant dist-worker target (which depended on compile-c).
     if(PEGASUS_BUILD_C)
-        # pegasus-keg is skipped on musl libc (Alpine), so its target may not
-        # exist; only stage it into the worker package when it was built.
         set(_worker_c_tools pegasus-kickstart pegasus-cluster)
-        if(TARGET pegasus-keg)
-            list(APPEND _worker_c_tools pegasus-keg)
-        endif()
         add_dependencies(build_worker_tarball ${_worker_c_tools})
         foreach(_c_tool ${_worker_c_tools})
             add_custom_command(TARGET build_worker_tarball POST_BUILD
@@ -358,7 +353,7 @@ if(PEGASUS_BUILD_WORKER)
     # Stage the compiled Go binaries, same as the C tools above.
     # PEGASUS_*_GO_BIN/_TARGET are set by each package's own CMakeLists.txt
     # (packages/pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
-    # pegasus-globus-online) when PEGASUS_BUILD_GO is ON.
+    # pegasus-globus-online, pegasus-keg) when PEGASUS_BUILD_GO is ON.
     if(PEGASUS_BUILD_GO)
         add_dependencies(build_worker_tarball "${PEGASUS_TRANSFER_GO_TARGET}")
         add_custom_command(TARGET build_worker_tarball POST_BUILD
@@ -387,6 +382,13 @@ if(PEGASUS_BUILD_WORKER)
                     "${PEGASUS_GLOBUS_ONLINE_GO_BIN}" "${PEGASUS_GLOBUS_ONLINE_INIT_GO_BIN}" "${_worker_bin}/"
             COMMAND chmod 755 "${_worker_bin}/pegasus-globus-online" "${_worker_bin}/pegasus-globus-online-init"
             COMMENT "Staging pegasus-globus-online(-init) (Go) into worker package")
+
+        add_dependencies(build_worker_tarball "${PEGASUS_KEG_GO_TARGET}")
+        add_custom_command(TARGET build_worker_tarball POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${PEGASUS_KEG_GO_BIN}" "${_worker_bin}/"
+            COMMAND chmod 755 "${_worker_bin}/pegasus-keg"
+            COMMENT "Staging pegasus-keg (Go) into worker package")
     endif()
 
     # Tar up whatever ended up in bin/ — the C and Go blocks above populate

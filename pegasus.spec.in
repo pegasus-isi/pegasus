@@ -102,7 +102,7 @@ grep -rlI '%{buildroot}' %{buildroot}%{pegasus_venv}/bin \
 sed -i 's|%{buildroot}||g' %{buildroot}%{pegasus_venv}/pyvenv.cfg
 
 # Strip the C executables (they live in the venv's bin/).
-for bin in pegasus-kickstart pegasus-cluster pegasus-keg; do
+for bin in pegasus-kickstart pegasus-cluster; do
     test -f %{buildroot}%{pegasus_venv}/bin/$bin && strip %{buildroot}%{pegasus_venv}/bin/$bin || true
 done
 

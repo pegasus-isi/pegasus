@@ -25,7 +25,10 @@ related issues.
 It works in the same way as the sequential version of **pegasus-keg**
 but it is intended to be executed as an MPI task. **pegasus-mpi-keg**
 accepts the same parameters as **pegasus-keg**, so please refer to the
-**pegasus-keg** manual page for more details.
+**pegasus-keg** manual page for more details. Note that **pegasus-mpi-keg**
+is still built from the original C++ source, so it does not have the fixes
+made in the Go rewrite of **pegasus-keg** (e.g. combining **-s** with
+**-t** or **-T** can make it sleep for a very long time).
 
 
 
