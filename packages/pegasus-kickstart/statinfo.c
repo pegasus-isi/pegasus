@@ -502,39 +502,51 @@ size_t printYAMLStatInfo(FILE *out, int indent, const char* id,
         info->error == 0 &&
         fsize > 0 && dsize > 0) {
 
-        fprintf(out, "%*sdata_truncated: %s\n", indent+2, "",
-                (fsize > dsize ? "true" : "false"));
-        fprintf(out, "%*sdata: |\n", indent+2, "");
-        if (fsize > 0) {
+        wint_t c;
+        int status;
+        size_t ccount = 0;
+        size_t cskip = 0;
+        int truncated = (fsize > dsize);
+        int fd = dup(info->file.descriptor);
+
+        if (fd != -1 && lseek(fd, 0, SEEK_SET) != -1) {
+            /* as utf8 can be multibyte, we have to walk the file twice - once
+             * to figure out how many characters to skip, and once to output.
+             * this first pass also detects bytes that don't decode as UTF-8,
+             * which yamldump() will skip over -- that also counts as
+             * truncation, since it means the reported data is incomplete. */
+            FILE *in = fdopen(fd, "r");
+            while ((status = yamlgetutf8(in, &c)) != 0) {
+                if (status == 2)
+                    truncated = 1;
+                ccount++;
+            }
+            if (ccount > dsize)
+                cskip = ccount - dsize;
+
+            fprintf(out, "%*sdata_truncated: %s\n", indent+2, "",
+                    (truncated ? "true" : "false"));
+            fprintf(out, "%*sdata: |\n", indent+2, "");
             /* initial indent */
             fprintf(out, "%*s", indent+4, "");
 
-            wint_t c;
-            size_t ccount = 0;
-            size_t cskip = 0;
-            int fd = dup(info->file.descriptor);
-            if (fd != -1) {
-                /* as utf8 can be multibyte, we have to walk the file twice - once
-                * to figure out how many characters to skip, and once to output */
-                if (lseek(fd, 0, SEEK_SET) != -1) {
-                    FILE *in = fdopen(fd, "r");
-                    while ((c = fgetwc(in)) != WEOF)
-                        ccount++;
-                    if (ccount > dsize)
-                        cskip = ccount - dsize;
-                    /* reset and start skipping */
-                    ccount = 0;
-                    lseek(fd, 0, SEEK_SET);
-                    in = fdopen(fd, "r");
-                    while (ccount < cskip && (c = fgetwc(in)) != WEOF)
-                        ccount++;
-                    /* the rest of the file can be dumped to the yaml output */
-                    yamldump(in, out, indent+4);
-                }
-                close(fd);
-            }
+            /* reset and start skipping */
+            ccount = 0;
+            lseek(fd, 0, SEEK_SET);
+            in = fdopen(fd, "r");
+            while (ccount < cskip && yamlgetutf8(in, &c) != 0)
+                ccount++;
+            /* the rest of the file can be dumped to the yaml output */
+            yamldump(in, out, indent+4);
             /* final newline */
             fprintf(out, "\n");
+
+            close(fd);
+        } else {
+            if (fd != -1) close(fd);
+            fprintf(out, "%*sdata_truncated: %s\n", indent+2, "",
+                    (truncated ? "true" : "false"));
+            fprintf(out, "%*sdata: |\n", indent+2, "");
         }
     }
 

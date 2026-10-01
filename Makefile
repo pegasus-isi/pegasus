@@ -50,6 +50,12 @@ VERSION := $(shell grep '^pegasus.version' build.properties | cut -d= -f2 | tr -
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 SED_I   := sed -i ''
+# Wheels built here embed C/Go binaries pinned to this deployment target via
+# CMAKE_OSX_DEPLOYMENT_TARGET (see CMakeLists.txt). Export the same value so
+# the wheel's own platform tag (macosx_X_Y_arm64) matches instead of
+# defaulting to whichever macOS version happens to be running on the build
+# machine. `?=` lets an explicit env var override this.
+export MACOSX_DEPLOYMENT_TARGET ?= 14.0
 else
 SED_I   := sed -i
 endif

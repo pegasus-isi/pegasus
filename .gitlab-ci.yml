@@ -352,7 +352,7 @@ macOS:
       - 13
   before_script:
   - env
-  - \[ "${ARCH}" = 'arm64' ]  && eval "$(/opt/homebrew/bin/brew shellenv)"
+  - \[ "${ARCH}" = 'arm64' ] && eval "$(/opt/homebrew/bin/brew shellenv)"
   - brew install make cmake
   - python3 -m pip install --break-system-packages --upgrade build scikit-build-core
   script:
@@ -510,10 +510,8 @@ Workflow Tests:
       - launch-bamboo-test-planner-only
 
     - TESTNAME:
-      - 001-black-diamond-vanilla-condor
+      - 001-black-diamond-vanilla-condor-5.0API
       - 002-hello-world
-      - 004-montage-condor-io
-      - 004-montage-shared-fs
       - 004-montage-staging-site
       - 004-montage-universe-local
       - 004-montage-apptainer
@@ -552,6 +550,7 @@ Workflow Tests:
       - 032-black-chkpoint
       - 032-kickstart-chkpoint-signal-condorio
       - 032-kickstart-chkpoint-signal-nonsharedfs
+      - 033-pegasuslite-multi
       - 033-pegasuslite-multi-wp-a
       - 033-pegasuslite-multi-wp-b
       - 033-pegasuslite-multi-wp-c

@@ -1203,7 +1203,7 @@ standard glite/BOSCO site are:
 Replace ``<NERSC_PROJECT>`` and ``<NERSC_USERNAME>`` with your NERSC project ID and
 username respectively.
 
-You can always find the latest uptodate version of the NERSC entry
+You can always find the latest up-to-date version of the NERSC entry
 `here. <https://github.com/pegasushub/pegasus-site-catalogs/tree/main/conf>`__
 
 The full list of supported Pegasus profiles and their ``#SBATCH`` mapping is described in
@@ -1251,7 +1251,7 @@ single-sign-on capability for SSH to NERSC systems.
 In order to use it, generate the SSH key on your submit host using
 `sshproxy` command, that will generate a key named `~/.ssh/nersc`.
 You can specify in your site catalog for your local site by
-specifiying the property.
+specifying the property.
 
 ::
 

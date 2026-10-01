@@ -49,65 +49,101 @@ public class BlackDiamondDAX {
         File fc1 = new File("f.c1");
         File fc2 = new File("f.c2");
         File fd = new File("f.d");
+        File fe1 = new File("f.e1");
+        File fe2 = new File("f.e2");
+
         fd.setRegister(true);
+        fe1.setRegister(true);
+        fe2.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
-        preprocess.setArchitecture(Executable.ARCH.x86_64).setOS(Executable.OS.LINUX);
-        preprocess.setInstalled(true);
-        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        preprocess.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
+        preprocess.setInstalled(false);
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
-        findrange.setArchitecture(Executable.ARCH.x86_64).setOS(Executable.OS.LINUX);
-        findrange.setInstalled(true);
-        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        findrange.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
+        findrange.setInstalled(false);
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
-        analyze.setArchitecture(Executable.ARCH.x86_64).setOS(Executable.OS.LINUX);
-        analyze.setInstalled(true);
-        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
+        analyze.setInstalled(false);
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
+
+        Executable postanalyze = new Executable("pegasus", "post-analyze", "4.0");
+        postanalyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
+        postanalyze.setInstalled(false);
+        postanalyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+        dax.addExecutable(postanalyze);
 
         // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
-        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
-        j1.addArgument(" ").addArgument(fb2);
+        j1.addArgument(" -o ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
+
         dax.addJob(j1);
 
         // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
-        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
+        j2.addProfile("pegasus", "label", "cluster1");
+
         dax.addJob(j2);
 
         // Add right Findrange job
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
-        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-a findrange -T 10 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
+        j3.addProfile("pegasus", "label", "cluster1");
         dax.addJob(j3);
 
         // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument("-a analyze -T 10 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
+        j4.addProfile("pegasus", "label", "cluster1");
         dax.addJob(j4);
+
+        // add left post-analyze job
+        Job j5 = new Job("j5", "pegasus", "post-analyze", "4.0");
+        j5.addArgument("-a findrange -T 10 -i ").addArgument(fd);
+        j5.addArgument("-o ").addArgument(fe1);
+        j5.uses(fd, File.LINK.INPUT);
+        j5.uses(fe1, File.LINK.OUTPUT);
+        j5.addProfile("pegasus", "label", "cluster2");
+        dax.addJob(j5);
+
+        // add right post-analyze job
+        Job j6 = new Job("j6", "pegasus", "post-analyze", "4.0");
+        j6.addArgument("-a findrange -T 10 -i ").addArgument(fd);
+        j6.addArgument("-o ").addArgument(fe2);
+        j6.uses(fd, File.LINK.INPUT);
+        j6.uses(fe2, File.LINK.OUTPUT);
+        j6.addProfile("pegasus", "label", "cluster2");
+        dax.addJob(j6);
 
         dax.addDependency("j1", "j2");
         dax.addDependency("j1", "j3");
         dax.addDependency("j2", "j4");
         dax.addDependency("j3", "j4");
+        dax.addDependency("j4", "j5");
+        dax.addDependency("j4", "j6");
+
         return dax;
     }
 }

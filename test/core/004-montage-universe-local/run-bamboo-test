@@ -13,8 +13,6 @@ DEGREES=0.5
 
 TOP_DIR=`pwd`
 
-export PATH=/scitech/shared/software/el10/montage/current/bin:$PATH
-
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
 RUN_DIR=`pwd`/submit/$RUN_ID
@@ -24,8 +22,11 @@ git clone --depth 1 https://github.com/pegasus-isi/montage-workflow-v3.git
 
 echo
 cd montage-workflow-v3
-PYTHONPATH=$(pegasus-config --python) \
-    python3.12 ./montage-workflow.py --center "275.196290 -16.171530" \
+apptainer exec \
+            --bind $PWD \
+            https://download.pegasus.isi.edu/containers/montage/montage-workflow-v3-20260810.sif \
+            python3.12 $PWD/montage-workflow.py \
+                      --center "275.196290 -16.171530" \
                       --degrees 0.1 \
                       --band 2mass:j:green \
                       --band 2mass:h:blue \

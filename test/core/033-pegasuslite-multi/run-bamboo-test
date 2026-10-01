@@ -1,0 +1,129 @@
+#!/bin/bash
+
+set -e
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+if [[ -z "$CI_COMMIT_SHORT_SHA" ]]; then
+    CI_COMMIT_SHORT_SHA=`git rev-parse --short HEAD`
+fi
+
+TOPDIR=`pwd`
+
+# determine TEST_NAME to setup site catalog
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
+
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export CLASSPATH=$testdir:$(pegasus-config --classpath)
+
+javac $testdir/BlackDiamondDAX.java
+
+# generate the dax
+java BlackDiamondDAX "$(dirname $(dirname $(which pegasus-version)))" blackdiamond.dax
+
+VERSION=`pegasus-version`
+
+# create the site catalog
+cat > sites.yml <<EOF
+pegasus: "5.0"
+sites:
+ -
+  name: "eclair"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedScratch"
+    path: "/nas/home/rynge/tmp/${TEST_NAME}/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://rynge@eclair-sub-01.isi.edu/nas/home/rynge/tmp/${TEST_NAME}/scratch"
+  grids:
+   -
+    type: "batch"
+    contact: "rynge@eclair-sub-01.isi.edu:22"
+    scheduler: "slurm"
+    jobtype: "compute"
+   -
+    type: "batch"
+    contact: "rynge@eclair-sub-01.isi.edu:22"
+    scheduler: "slurm"
+    jobtype: "auxillary"
+  profiles:
+    env:
+      PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA"
+    pegasus:
+      change.dir: "true"
+      clusters.num: "1"
+      data.configuration: "sharedfs"
+      glite.arguments: "--cpus-per-task=1"
+      memory: "1024"
+      project: "eclair"
+      queue: "scavenge"
+      runtime: "600"
+      ssh_private_key: "/scitech/shared/home/bamboo/.ssh/workflow_id_rsa"
+      style: "ssh"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    condor:
+      universe: "vanilla"
+    pegasus:
+      clusters.num: "1"
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  os.release: "rhel"
+  os.version: "7"
+  directories:
+   -
+    type: "localStorage"
+    path: "$TOPDIR/outputs"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/outputs"
+   -
+    type: "sharedScratch"
+    path: "$TOPDIR/scratch"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file://$TOPDIR/scratch"
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf $testdir/pegasusrc \
+    --sites condorpool,eclair \
+    --dir submit \
+    --output-sites local \
+    --cluster horizontal \
+    blackdiamond.dax  | tee $TOPDIR/plan.out
+
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
+cd $WORK_DIR
+
+echo
+echo
+echo "Starting the workflow..."
+pegasus-run $WORK_DIR

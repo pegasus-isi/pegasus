@@ -1,0 +1,70 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the metadata from this
+  file, and cite the paper listed under "preferred-citation" describing
+  Pegasus. If your work was supported by Pegasus, please also include the
+  acknowledgment statement described at
+  https://pegasus.isi.edu/about/acknowledge/.
+type: software
+title: Pegasus Workflow Management System
+abstract: >-
+  Pegasus is a workflow management system for mapping and executing
+  scientific workflow-based applications across a variety of computing
+  environments, including desktops, campus clusters, grids, and clouds.
+authors:
+  - family-names: Deelman
+    given-names: Ewa
+  - family-names: Vahi
+    given-names: Karan
+  - family-names: Rynge
+    given-names: Mats
+  - family-names: Mayani
+    given-names: Rajiv
+  - family-names: Ferreira da Silva
+    given-names: Rafael
+  - family-names: Papadimitriou
+    given-names: George
+  - family-names: Livny
+    given-names: Miron
+version: 6.0.0.dev0
+license: Apache-2.0
+repository-code: "https://github.com/pegasus-isi/pegasus"
+url: "https://pegasus.isi.edu/"
+contact:
+  - name: "Pegasus Development Team"
+    email: pegasus-support@isi.edu
+keywords:
+  - scientific workflows
+  - workflow management system
+  - distributed computing
+  - high throughput computing
+  - HTCondor
+preferred-citation:
+  type: article
+  title: "The Evolution of the Pegasus Workflow Management Software"
+  authors:
+    - family-names: Deelman
+      given-names: Ewa
+    - family-names: Vahi
+      given-names: Karan
+    - family-names: Rynge
+      given-names: Mats
+    - family-names: Mayani
+      given-names: Rajiv
+    - family-names: Ferreira da Silva
+      given-names: Rafael
+    - family-names: Papadimitriou
+      given-names: George
+    - family-names: Livny
+      given-names: Miron
+  journal: "Computing in Science & Engineering"
+  volume: 21
+  issue: 4
+  start: 22
+  end: 36
+  year: 2019
+  month: 7
+  doi: "10.1109/MCSE.2019.2919690"
+  issn: "1521-9615"
+  publisher:
+    name: "IEEE"

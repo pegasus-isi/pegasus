@@ -1,4 +1,17 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Minimum macOS version for compiled C/C++ binaries (ignored on other
+# platforms). Must be set before project() to take effect. Overridable via
+# the MACOSX_DEPLOYMENT_TARGET env var — the same one Python's build backend
+# reads for the wheel's own platform tag (see Makefile) — so both stay in
+# sync instead of silently disagreeing.
+if(DEFINED ENV{MACOSX_DEPLOYMENT_TARGET})
+    set(PEGASUS_MACOSX_DEPLOYMENT_TARGET "$ENV{MACOSX_DEPLOYMENT_TARGET}")
+else()
+    set(PEGASUS_MACOSX_DEPLOYMENT_TARGET "14.0")
+endif()
+set(CMAKE_OSX_DEPLOYMENT_TARGET "${PEGASUS_MACOSX_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
+
 project(pegasus-wms LANGUAGES C CXX)
 
 include(GNUInstallDirs)
@@ -148,6 +161,25 @@ endif()
 # / PEGASUS_TRANSFER_GO_TARGET (set by the subdirectory) let the worker
 # tarball below stage the compiled binary alongside pegasus-kickstart.
 if(PEGASUS_BUILD_GO)
+    # The linker's -macos ldflag (sets a Go binary's minimum macOS version
+    # under internal linking, matching CMAKE_OSX_DEPLOYMENT_TARGET for the
+    # C/C++ tools above) was only added in Go 1.27; the "go 1.24" floor in
+    # each package's go.mod (and the Go toolchain in the Linux build
+    # containers) predates it, so probe the toolchain version once here and
+    # let each Go subdirectory below pick up the result instead of every one
+    # of them probing (and potentially disagreeing) independently.
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        find_program(_pegasus_go_probe go)
+        if(_pegasus_go_probe)
+            execute_process(COMMAND "${_pegasus_go_probe}" env GOVERSION
+                OUTPUT_VARIABLE _pegasus_go_version OUTPUT_STRIP_TRAILING_WHITESPACE)
+            string(REGEX REPLACE "^go([0-9]+\\.[0-9]+).*" "\\1" _pegasus_go_version "${_pegasus_go_version}")
+            if(_pegasus_go_version VERSION_GREATER_EQUAL "1.27")
+                set(PEGASUS_GO_MACOS_LDFLAG "-macos=${PEGASUS_MACOSX_DEPLOYMENT_TARGET}")
+            endif()
+        endif()
+    endif()
+
     add_subdirectory(packages/pegasus-transfer)
     add_subdirectory(packages/pegasus-checkpoint)
     add_subdirectory(packages/pegasus-integrity)
