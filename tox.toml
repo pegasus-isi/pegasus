@@ -17,7 +17,7 @@
 # Reports land in test-reports/<env>/ (pyunit.xml, coverage.xml, htmlcov/).
 
 requires = ["tox>=4.22", "tox-uv>=1.16"]
-env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "lint"]
+env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "lint"]
 skip_missing_interpreters = true
 
 [labels]
