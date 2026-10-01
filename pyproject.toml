@@ -47,7 +47,7 @@ dependencies = [
     "requests",
     "pamela",
     # Database
-    "sqlalchemy",
+    "sqlalchemy!=2.1.0",  # 2.1.0 sdist has duplicate extras in pyproject.toml; uv refuses to build it
     "pymysql",
     # Note: there is no more worker-runtime Python dependency here.
     # boto3 (S3) and globus-sdk (Globus Online) were both dropped once
