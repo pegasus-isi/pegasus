@@ -96,7 +96,7 @@ cd /scitech/shared/scratch-90-days/bamboo/installs
 
 # The wheel requires Python >=3.10 (globus-sdk>=3.23.0 needs Python >=3.8)
 PYTHON=
-for CANDIDATE in python3.14 python3.13 python3.12 python3.11 python3.10; do
+for CANDIDATE in python3.15 python3.14 python3.13 python3.12 python3.11 python3.10; do
     if command -v $CANDIDATE >/dev/null 2>&1; then
         PYTHON=$CANDIDATE
         break
