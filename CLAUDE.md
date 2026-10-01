@@ -37,12 +37,15 @@ Java source/target compatibility: 1.8 (`--release 8` via `CMAKE_JAVA_COMPILE_FLA
 # Run all tests (Python + Java + C)
 make test
 
-# Python tests — each package has its own tox.ini
-make test-python   # runs tox for all four packages
-# or individually:
-cd packages/pegasus-python && tox -e py310
-cd packages/pegasus-api && tox -e py310
-cd packages/pegasus-common && tox -e py310
+# Python tests — run from the repo root against the pegasus-wms wheel; every
+# env on the same interpreter shares one venv (see tox.toml)
+make test-python                 # all three suites on $(PYTHON)'s version
+tox                              # all suites on 3.10 .. 3.14, then lint
+tox -e 3.12,3.13,lint            # chosen interpreters
+tox -e py                        # the interpreter running tox
+tox -m api                       # one package's suite (common, api, python)
+tox -m api -- -k test_add_job    # extra args go to pytest
+tox -e 3.11 -- packages/pegasus-api/test/api/test_workflow.py
 
 # Java unit tests (JUnit 5) — requires make build-java first
 make test-java
@@ -54,15 +57,13 @@ cd packages/pegasus-kickstart/test
 PEGASUS_BIN_DIR=$(pwd)/../../../_cmake_build/packages/pegasus-kickstart ./test.sh
 ```
 
-Test framework is pytest for Python. Reports go to `test-reports/`.
+Test framework is pytest for Python, configured once in the root `pyproject.toml` (`[tool.pytest.ini_options]`, `[tool.coverage.*]`, test deps in `[dependency-groups] test`). Reports go to `test-reports/<tox env>/`. Coverage floors live in `tox.toml`: one for the full run, one per package for `tox -m <pkg>`. Don't run envs that share an interpreter with `tox -p`.
 
 ## Code Formatting
 
 ```bash
-# Python (run from each package directory)
-cd packages/pegasus-python && tox -e lint
-cd packages/pegasus-api && tox -e lint
-cd packages/pegasus-common && tox -e lint
+# Python (from the repo root)
+tox -e lint          # ruff check + format --check over pegasus-python, pegasus-api, pegasus-common
 ```
 
 - **Python**: ruff (check + format), configured in `.pre-commit-config.yaml`
@@ -80,7 +81,7 @@ make doc-dist      # Package staged docs → dist/pegasus-doc-VERSION.tar.gz
 make clean-doc     # Remove doc/sphinx/_build/, doc/sphinx/python/, dist/pegasus-VERSION/
 ```
 
-Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by `tox -e docs` in `packages/pegasus-python/`. PDF generation requires `latexmk`; skipped automatically when not installed.
+Sphinx deps (sphinx, sphinx_rtd_theme, sphinxcontrib-openapi, etc.) are managed by the `docs` env in the root `tox.toml`. PDF generation requires `latexmk`; skipped automatically when not installed (the Makefile then runs `tox -e docs -- html man`).
 
 ## Architecture
 
@@ -118,7 +119,7 @@ Other Java packages: `edu.isi.pegasus.common.*`, `edu.isi.pegasus.aws.batch.*`, 
 
 ### Python — `packages/`
 
-Four namespace packages sharing the `Pegasus` namespace:
+Three namespace packages sharing the `Pegasus` namespace:
 
 | Package           | What it provides                                                      |
 | ----------------- | --------------------------------------------------------------------- |

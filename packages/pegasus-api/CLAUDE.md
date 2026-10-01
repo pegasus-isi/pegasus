@@ -10,23 +10,29 @@ pegasus-wms.api — Python API for defining Pegasus scientific workflows. This i
 
 ### Testing
 
+Run these from the **repo root**. Tests run against the installed pegasus-wms
+wheel, with pytest and coverage configured in the root `pyproject.toml`
+(see the root `tox.toml`):
+
 ```bash
-tox -e py310                    # Run full test suite (Python 3.10)
-tox -e py310 -- test/api/test_workflow.py  # Run a single test file
-tox -e py310 -- test/api/test_workflow.py::TestWorkflow::test_add_jobs  # Run a single test
-tox -e py310 -- -k "test_add_jobs"  # Run tests matching a pattern
+tox -m api                                        # Run this package's suite
+tox -m api -- -k "test_add_job"                   # Run tests matching a pattern
+tox -e 3.12 -- packages/pegasus-api/test/api/test_workflow.py            # A single file (any interpreter)
+tox -e 3.12 -- packages/pegasus-api/test/api/test_workflow.py::TestWorkflow::test_add_job
 ```
 
-Coverage minimum is 99.5% (enforced by pytest-cov). Reports go to `test-reports/`.
+Coverage minimum for `tox -m api` is 99% (the `api` env in the root `tox.toml`).
+Reports go to `test-reports/api/` at the repo root.
 
 ### Linting and Formatting
 
 ```bash
-tox -e lint              # Check formatting (CI mode, no changes)
-tox -e lint -- CI=false  # Auto-fix formatting issues
+tox -e lint    # from the repo root; lints all three Python packages
 ```
 
-Lint pipeline runs: autoflake → pyupgrade (py36+) → isort (black profile) → black (target py36) → flake8 (max-line-length=88).
+Runs `ruff check` then `ruff format --check`, using the `[tool.ruff]` config in
+this package's `pyproject.toml`. To fix formatting, run `ruff format` (or
+pre-commit).
 
 ## Architecture
 

@@ -809,7 +809,7 @@ def test_get_braindump_invalid_dir(mocker, status):
     submit_dir = "some/random/directory"
     with pytest.raises(FileNotFoundError) as err:
         status.get_braindump(submit_dir) == ""
-    assert "Unable to load braindump file" in str(err)
+    assert "Unable to load braindump file" in str(err.value)
 
 
 def test_debug_mode(mocker, status, capsys):

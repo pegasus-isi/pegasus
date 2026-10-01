@@ -4,47 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-This is `pegasus-wms` (pegasus-python), the largest of four Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It depends on the three sibling packages: `pegasus-wms.common`, `pegasus-wms.api`, and `pegasus-wms.worker`.
+This is `pegasus-wms` (pegasus-python), the largest of three Python namespace packages in the Pegasus WMS. It provides CLI tools, a monitoring daemon, a Flask-based dashboard/REST API, a SQLAlchemy database layer, and statistics generation. It shares the `Pegasus` namespace with two sibling packages, `pegasus-common` and `pegasus-api`, which CMake merges with it into the single `pegasus-wms` wheel.
 
 ## Build & Install
 
-```bash
-# Install in development mode (from this directory)
-pip install -e .
+**Do not run `pip install -e .` from this directory.** This package is not a
+standalone distribution any more — the whole repo builds one `pegasus-wms`
+wheel. Install from the repo root instead:
 
-# Install with optional extras
-pip install -e ".[cwl]"        # CWL converter support
-pip install -e ".[postgresql]"  # PostgreSQL support
+```bash
+make dev                  # editable install of the full distribution
+pip install ".[cwl]"      # from the repo root; extras live in the root pyproject
 ```
 
-Sibling packages must be installed first (or simultaneously): `../pegasus-common`, `../pegasus-api`, `../pegasus-worker`.
+Sibling packages (`../pegasus-common`, `../pegasus-api`)
+are merged into that single wheel by CMake, so there is nothing to install
+separately. Runtime dependencies are declared only in the repo-root
+`pyproject.toml`, and the tests run against the built wheel — see the root
+`tox.toml`.
 
 ## Testing
 
 ```bash
-# Run all tests (from this directory)
-tox -e py310                    # Replace py310 with your Python version
+# Run this package's suite (from the REPO ROOT, against the pegasus-wms wheel)
+tox -m python
 
-# Run a single test file
-pytest test/test_statistics.py
-
-# Run a single test
-pytest test/test_statistics.py::TestPegasusStatistics::test_initialize -v
-
-# Run tests with coverage
-pytest --cov --cov-branch --cov-report term --cov-fail-under 25.5
+# Run a single test file, or a single test (any interpreter: 3.10 .. 3.14, py)
+tox -e py -- packages/pegasus-python/test/test_statistics.py
+tox -e py -- packages/pegasus-python/test/test_statistics.py::TestPegasusStatistics::test_initialize -v
 ```
 
-Test dependencies are managed by tox.ini. Key test deps: pytest, pytest-mock, pytest-cov, pytest-resource-path, jsonschema, cwl-utils.
+pytest and coverage are configured in the root `pyproject.toml`; test dependencies are its `test` dependency group (pytest, pytest-mock, coverage, pytest-resource-path, jsonschema, cwl-utils).
+
+The coverage floor for `tox -m python` (25.5%) lives in the `python` env in the root `tox.toml`. Reports go to `test-reports/python/` at the repo root.
 
 ## Code Formatting
 
 ```bash
-# Run linting/formatting (from this directory)
+# Lint all three Python packages (from the repo root)
 tox -e lint
 ```
 
-Uses ruff for checking and formatting. The `tox -e lint` environment runs autoflake, pyupgrade, isort, black, and flake8. Line length is 88. Files in `src/Pegasus/cli/` are excluded from isort/black formatting.
+Uses ruff (`ruff check` then `ruff format --check`) with the `[tool.ruff]` config in this package's `pyproject.toml`. Line length is 88. Files in `src/Pegasus/cli/` and `src/Pegasus/netlogger/` have extra per-file ignores.
 
 ## Architecture
 
@@ -78,7 +79,7 @@ The `SABase` class in `schema.py` provides `commit_to_db()` and `merge_to_db()` 
 
 ### Namespace Package Convention
 
-All four Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
+All three Pegasus packages share the `Pegasus` namespace. Each `src/Pegasus/__init__.py` contains:
 
 ```python
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
@@ -93,7 +94,7 @@ Tests mirror the source layout. The `conftest.py` provides session-scoped Flask 
 ## Key Constraints
 
 - SQLAlchemy pinned to `>=1.4` (not compatible with 2.x)
-- Flask pinned to `>=2.2,<3.0`
+- Flask pinned to `>=2.2,<2.3` (root `pyproject.toml`): 2.3 removed `flask.json.JSONEncoder`, which `Pegasus.service._encoder` subclasses
 - Python 3.10+ required (set in root `pyproject.toml`)
 - Version is `6.0.0-dev0`, defined in root `build.properties` and `pyproject.toml`
 - This package is not installed standalone — it ships as part of the `pegasus-wms` wheel built from the repo root

@@ -64,10 +64,6 @@ _DOC_BUILD := doc/sphinx/_build
 _DOC_STAGE := $(DIST_DIR)/pegasus-$(VERSION)
 _DOC_SHARE := $(_DOC_STAGE)/share
 _DOC_OUT   := $(_DOC_SHARE)/doc/pegasus
-
-# Derive tox environment name from the active Python (e.g. py313)
-PY_VERSION  := $(shell $(PYTHON) -c "import sys; print('py{}{}'.format(*sys.version_info[:2]))")
-
 _JAVA_TEST_CLASSES := $(BUILD_DIR)/java-test-classes
 _JUNIT_REPORT_DIR  := $(BUILD_DIR)/tests/classes/junitreport
 
@@ -228,6 +224,7 @@ clean-go:
 clean-test:
 	rm -rf $(_JAVA_TEST_CLASSES) $(BUILD_DIR)/jars/pegasus-test.jar $(_JUNIT_REPORT_DIR) test-reports/
 	rm -f packages/pegasus-*/.coverage
+	rm -rf .tox
 	rm -rf packages/pegasus-*/.tox
 	rm -rf packages/pegasus-*/test-reports
 	find packages -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null; true
@@ -246,15 +243,15 @@ clean: clean-test clean-doc
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; true
 
 # Build Sphinx user guide: HTML + man pages, plus PDF if latexmk is available.
-# Dependencies managed by tox -e docs in packages/pegasus-python.
+# Dependencies managed by the docs env in the root tox.toml.
 doc-sphinx:
 	$(SED_I) 's/^version = .*/version = "$(VERSION)"/' doc/sphinx/conf.py
 	$(SED_I) 's/^release = .*/release = "$(VERSION)"/' doc/sphinx/conf.py
 	@if command -v latexmk >/dev/null 2>&1; then \
-	    cd packages/pegasus-python && tox -e docs; \
+	    tox -e docs; \
 	else \
 	    echo "latexmk not found — skipping PDF, building HTML + man only"; \
-	    cd packages/pegasus-python && tox -e docs -- html man; \
+	    tox -e docs -- html man; \
 	fi
 	$(SED_I) 's/^version = .*/version = "5.0.0dev"/' doc/sphinx/conf.py
 	$(SED_I) 's/^release = .*/release = "5.0.0dev"/' doc/sphinx/conf.py
@@ -307,12 +304,11 @@ doc-dist: doc
 # C tests require:    make build-c
 test: test-python test-java test-c test-go
 
-# Run Python test suites for all four packages via tox.
-# Each package manages its own virtualenv; no prior install needed.
+# Run the Python test suites for all three packages via tox, against the root
+# pegasus-wms wheel, on the Python version of $(PYTHON) (see tox.toml).
+# One package: 'tox -m api'.  Other versions: 'tox -e 3.11,3.13'.
 test-python:
-	cd packages/pegasus-common && tox -e $(PY_VERSION)
-	cd packages/pegasus-api    && tox -e $(PY_VERSION)
-	cd packages/pegasus-python && tox -e $(PY_VERSION)
+	tox -e $(shell $(PYTHON) -c 'import sys; print("%d.%d" % sys.version_info[:2])')
 
 # Run Java unit tests (JUnit 5).
 # Requires: make build-java   (produces $(BUILD_DIR)/jars/pegasus.jar)
@@ -424,7 +420,7 @@ help:
 	@echo ""
 	@echo "Test targets:"
 	@echo "  test          Run all tests (Python + Java + C + Go)"
-	@echo "  test-python   Run tox test suites for all four Python packages"
+	@echo "  test-python   Run tox test suites for all three Python packages"
 	@echo "  test-java     Run Java unit tests via JUnit 5 (needs 'make build-java')"
 	@echo "  test-c        Run C integration tests (needs 'make build-c')"
 	@echo "  test-go       Run Go unit tests (pegasus-transfer, -checkpoint, -integrity, -globus-online)"
