@@ -17,7 +17,7 @@
 # Reports land in test-reports/<env>/ (pyunit.xml, coverage.xml, htmlcov/).
 
 requires = ["tox>=4.22", "tox-uv>=1.16"]
-env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "lint"]
+env_list = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
 skip_missing_interpreters = true
 
 [labels]
@@ -41,14 +41,49 @@ commands_pre = [["python", "-m", "coverage", "erase"]]
 # `python -m`: Pegasus.db.admin looks for pegasus-version next to sys.argv[0];
 # the wheel's pegasus-version needs the Java JARs this build omits.
 commands = [
-    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", { replace = "posargs", extend = true }],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "run",
+        "-m",
+        "pytest",
+        "--junit-xml=test-reports/{env_name}/pyunit.xml",
+        { replace = "posargs", extend = true },
+    ],
 ]
 # commands_post runs even when the tests fail, so CI always gets reports.
 commands_post = [
-    ["python", "-m", "coverage", "combine", "--quiet"],
-    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml"],
-    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov"],
-    ["python", "-m", "coverage", "report", "--fail-under=42"],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "combine",
+        "--quiet",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "xml",
+        "-o",
+        "test-reports/{env_name}/coverage.xml",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "html",
+        "-d",
+        "test-reports/{env_name}/htmlcov",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "report",
+        "--fail-under=42",
+    ],
 ]
 
 # Per-package envs: same venv, one suite, coverage floor on that tree only.
@@ -56,37 +91,154 @@ commands_post = [
 [env.common]
 description = "pegasus-common suite against the pegasus-wms wheel"
 commands = [
-    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-common/test", { replace = "posargs", extend = true }],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "run",
+        "-m",
+        "pytest",
+        "--junit-xml=test-reports/{env_name}/pyunit.xml",
+        "packages/pegasus-common/test",
+        { replace = "posargs", extend = true },
+    ],
 ]
 commands_post = [
-    ["python", "-m", "coverage", "combine", "--quiet"],
-    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-common/*"],
-    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-common/*"],
-    ["python", "-m", "coverage", "report", "--include=packages/pegasus-common/*", "--fail-under=48"],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "combine",
+        "--quiet",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "xml",
+        "-o",
+        "test-reports/{env_name}/coverage.xml",
+        "--include=packages/pegasus-common/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "html",
+        "-d",
+        "test-reports/{env_name}/htmlcov",
+        "--include=packages/pegasus-common/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "report",
+        "--include=packages/pegasus-common/*",
+        "--fail-under=48",
+    ],
 ]
 
 [env.api]
 description = "pegasus-api suite against the pegasus-wms wheel"
 commands = [
-    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-api/test", { replace = "posargs", extend = true }],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "run",
+        "-m",
+        "pytest",
+        "--junit-xml=test-reports/{env_name}/pyunit.xml",
+        "packages/pegasus-api/test",
+        { replace = "posargs", extend = true },
+    ],
 ]
 commands_post = [
-    ["python", "-m", "coverage", "combine", "--quiet"],
-    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-api/*"],
-    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-api/*"],
-    ["python", "-m", "coverage", "report", "--include=packages/pegasus-api/*", "--fail-under=99"],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "combine",
+        "--quiet",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "xml",
+        "-o",
+        "test-reports/{env_name}/coverage.xml",
+        "--include=packages/pegasus-api/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "html",
+        "-d",
+        "test-reports/{env_name}/htmlcov",
+        "--include=packages/pegasus-api/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "report",
+        "--include=packages/pegasus-api/*",
+        "--fail-under=99",
+    ],
 ]
 
 [env.python]
 description = "pegasus-python suite against the pegasus-wms wheel"
 commands = [
-    ["python", "-m", "coverage", "run", "-m", "pytest", "--junit-xml=test-reports/{env_name}/pyunit.xml", "packages/pegasus-python/test", { replace = "posargs", extend = true }],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "run",
+        "-m",
+        "pytest",
+        "--junit-xml=test-reports/{env_name}/pyunit.xml",
+        "packages/pegasus-python/test",
+        { replace = "posargs", extend = true },
+    ],
 ]
 commands_post = [
-    ["python", "-m", "coverage", "combine", "--quiet"],
-    ["python", "-m", "coverage", "xml", "-o", "test-reports/{env_name}/coverage.xml", "--include=packages/pegasus-python/*"],
-    ["python", "-m", "coverage", "html", "-d", "test-reports/{env_name}/htmlcov", "--include=packages/pegasus-python/*"],
-    ["python", "-m", "coverage", "report", "--include=packages/pegasus-python/*", "--fail-under=25.5"],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "combine",
+        "--quiet",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "xml",
+        "-o",
+        "test-reports/{env_name}/coverage.xml",
+        "--include=packages/pegasus-python/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "html",
+        "-d",
+        "test-reports/{env_name}/htmlcov",
+        "--include=packages/pegasus-python/*",
+    ],
+    [
+        "python",
+        "-m",
+        "coverage",
+        "report",
+        "--include=packages/pegasus-python/*",
+        "--fail-under=25.5",
+    ],
 ]
 
 # --- wheel build ------------------------------------------------------------
@@ -99,22 +251,6 @@ PEGASUS_NO_JAVA = "1"
 PEGASUS_NO_GO = "1"
 PEGASUS_NO_WORKER = "1"
 SKBUILD_BUILD_DIR = "{work_dir}/.pkg-cmake-build"
-
-# --- lint -------------------------------------------------------------------
-# One env: ruff applies the closest [tool.ruff] to each file, so every package
-# keeps its own config.  Pin matches .pre-commit-config.yaml.
-
-[env.lint]
-description = "ruff check + format --check"
-env_dir = "{work_dir}/{env_name}"
-skip_install = true
-deps = ["ruff==0.15.15"]
-commands_pre = []
-commands_post = []
-commands = [
-    ["ruff", "check", "packages/pegasus-common", "packages/pegasus-api", "packages/pegasus-python"],
-    ["ruff", "format", "--check", "packages/pegasus-common", "packages/pegasus-api", "packages/pegasus-python"],
-]
 
 # --- docs -------------------------------------------------------------------
 # Driven by `make doc-sphinx`.
@@ -137,9 +273,19 @@ commands_pre = [
         "sphinx-apidoc",
         "--force",
         "--implicit-namespaces",
-        "--output-dir", "python",
+        "--output-dir",
+        "python",
         "{tox_root}/packages/pegasus-api/src/Pegasus",
     ],
 ]
 commands_post = []
-commands = [["make", { replace = "posargs", default = ["html", "man", "latexpdf"], extend = true }]]
+commands = [
+    [
+        "make",
+        { replace = "posargs", default = [
+            "html",
+            "man",
+            "latexpdf",
+        ], extend = true },
+    ],
+]
