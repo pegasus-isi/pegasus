@@ -68,7 +68,6 @@ sites:
     pegasus:
       change.dir: "true"
       clusters.num: "1"
-      data.configuration: "sharedfs"
       glite.arguments: "--cpus-per-task=1"
       memory: "1024"
       project: "eclair"
@@ -86,6 +85,7 @@ sites:
     pegasus:
       clusters.num: "1"
       style: "condor"
+      data.configuration: "condorio"
  -
   name: "local"
   arch: "x86_64"
