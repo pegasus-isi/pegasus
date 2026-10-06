@@ -1,6 +1,5 @@
 !test/scripts
 /test-reports/
-!**/go.mod
 _cmake_build/
 _cmake_build_worker/
 
@@ -741,3 +740,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,windows,virtualenv,intellij+all,visualstudiocode,go
+
+# Must stay last: un-ignores Go module manifests matched by *.mod above
+# (negations only apply if they are the last matching rule).
+!**/go.mod
