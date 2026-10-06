@@ -336,7 +336,7 @@ macOS:
   parallel:
     matrix:
     - ARCH:
-      - x86_64
+      #- x86_64
       - arm64
       VERSION:
       - 12
