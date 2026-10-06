@@ -1,0 +1,20 @@
+Usage:	pegasus-keg [-a appname] [(-s|-t|-T) thinktime] [-l fn] [-o fn [..]]
+	[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps] [-h]
+ -a app	set name of application to something else, default pegasus-keg
+ -m me	allocate 'me' MB of memory
+ -t to	sleep for 'to' seconds during execution, default 3
+ -s to	sleep for 'to' seconds after the I/O phase, default 0
+ -T to	spin for 'to' seconds during execution, default 0
+ -l fn	append own information atomically to a logfile
+ -o ..	enumerate space-separated list output files to create
+        Accept also '<filename>=<filesize><data_unit>' form, where <data_unit>
+        is a character supported by '-u' switch.
+        If you don't specify input files you have to specify output file size.
+ -i ..	enumerate space-separated list input to read and copy
+ -G ..	enumerate space-separated list of output file sizes
+ -u un	data unit for output files generator - accepted values includes [ B K M G ], default is B
+ -p ..	enumerate space-separated parameters to mention
+ -e ..	enumerate space-separated environment values to print
+ -C	print all environment variables starting with _CONDOR
+ -P ps	prefix input file lines with 'ps', default "  "
+ -h	shows this help message

@@ -96,8 +96,8 @@ pegasus-config         = "Pegasus.cli.main:pegasus_config"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
 
-# C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
-# pegasus-transfer / pegasus-checkpoint / pegasus-integrity /
+# C binaries (pegasus-kickstart, pegasus-cluster) and the Go
+# pegasus-transfer / pegasus-checkpoint / pegasus-integrity / pegasus-keg /
 # pegasus-globus-online / pegasus-globus-online-init binaries are installed
 # directly to <venv>/bin/ by CMake via the wheel scripts section.
 # pegasus-s3 has been retired; its S3 support was merged natively into

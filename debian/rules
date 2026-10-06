@@ -74,7 +74,6 @@ install: build
 	# Strip C executables (they live in the venv's bin/)
 	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-kickstart
 	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-cluster
-	-strip debian/pegasus/usr/lib/pegasus/venv/bin/pegasus-keg
 
 	# Put the CLI + C binaries on PATH via symlinks into /usr/bin
 	mkdir -p debian/pegasus/usr/bin

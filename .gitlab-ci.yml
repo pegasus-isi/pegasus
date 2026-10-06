@@ -159,6 +159,7 @@ Go:
       - packages/pegasus-checkpoint/**/*
       - packages/pegasus-integrity/**/*
       - packages/pegasus-globus-online/**/*
+      - packages/pegasus-keg/**/*
   tags:
   - ${ARCH}
   - docker

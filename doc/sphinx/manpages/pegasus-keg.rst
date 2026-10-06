@@ -24,12 +24,8 @@ execution of a DAG, and thus is an aid to debugging DAG related issues.
 
 Key feature of **pegasus-keg** is that it can copy any number of input
 files, including the *generator* case, to any number of output files,
-including the *datasink* case. In addition, it protocols the IPv4 and
-hostname of the host it ran upon, the current timestamp, and the run
-time from start til the point of logging the information, the current
-working directory and some information on the system environment.
-**pegasus-keg** will also report all input files, the current output
-files and any requested string and environment value.
+including the *datasink* case. In addition, it records the IPv4 address
+and hostname of the host it ran upon at the end of each output file.
 
 The workflow of the Keg tool is as follows: - if **-m** - allocate a
 memory buffer of the specified amount - if **-i** - read all input files
@@ -41,8 +37,8 @@ period specified here the program exits with code status 3 - if **-t** -
 wait/sleep for the specified time period decreased by time periods spent
 on IO stuff (and CPU load generating if any); if the time period spent
 on previous activities exceeds the amount specified here the program
-exits with code status 3 - if **-l** - write info to the specified log
-file.
+exits with code status 3 - if **-s** - sleep for the remaining **-s**
+time (see below) - if **-l** - write info to the specified log file.
 
 
 
@@ -65,21 +61,19 @@ usage and exit with success.
    The default is the basename of *argv[0]*.
 
 **-e env [..]**
-   This option names any number of environment variables, whose value
-   should be reported as part of the data dump. By default, no
-   environment variables are reported.
+   Accepted for backward compatibility; the values are not reported.
 
 **-i infile [..]**
    The **pegasus-keg** binary can work on any number of input files. For
    each output file, every input file will be opened, and its content
-   copied to the output file. Textual input files are assumed. Each
-   input line is indented by two spaces. The input file content is
-   bracketed between an start and end section, see below. By default,
-   **pegasus-keg** operates in *generator* mode.
+   copied to the output file. The input file content is bracketed
+   between an start and end section, see below. Input files are copied
+   byte for byte; a directory reads as empty. By default, no input files
+   are read.
 
 **-l logfile**
    The *logfile* is the name of a file to append atomically the
-   self-info, see below. The atomic write guarantees that the multi-line
+   identification line, see below. The atomic write guarantees that the
    information will not interleave with other processes that
    simultaneously write to the same file. The default is not to use any
    log file.
@@ -87,14 +81,15 @@ usage and exit with success.
 **-o outfile [..]**
    The **pegasus-keg** can work on any number of output files. For each
    output file, every input file will be opened, and its content copied
-   to the output file. Textual input files are assumed. Each input line
-   is indented by two spaces. The input file content is bracketed
-   between an start and end section, see 2nd example. After all input
+   to the output file, preceded by the **-P** prefix. The input file
+   content is bracketed between an start and end section, see the
+   example. After all input
    files are copied, the data dump from this instance of **pegasus-keg**
    is appended to the output file. Without output files, **pegasus-keg**
    operates in *data sink* mode. Accept also
-   *<filename>=<filesize><data_unit>* form, where <data_unit> is a
-   character supported by the **-u** switch.
+   *<filename>=<filesize>[<data_unit>]* form, where the optional
+   <data_unit> is a character supported by the **-u** switch (default B).
+   Parent directories of a plain *<filename>* are created as needed.
 
 **-G size [..]**
    If you want **pegasus-keg** to generate a lot of output, the
@@ -112,49 +107,45 @@ usage and exit with success.
    G for GigaBytes.
 
 **-C**
-   This option causes **pegasus-keg** to list all environment variables
-   that start with the prefix *\\_CONDOR* The option is useful, if .B
-   pegasus-keg is run as (part of) a Condor job. This option is off by
-   default.
+   Accepted for backward compatibility; has no effect.
 
 **-p string [..]**
-   Any number of parameters can be reported, without being specific on
-   their content. Effectively, these strings are copied straight from
-   the command line. By default, no extra arguments are shown.
+   Accepted for backward compatibility; the strings are not reported.
 
 **-P prefix**
-   Each line from every input file is indented with a prefix string to
-   visually emphasize the provenance of an input files through multiple
-   instances of **pegasus-keg**. By default, two spaces are used as
+   A prefix string written once at the start of each output file, before
+   the copied input files. It is not written to generated outputs
+   (**-G** or *<filename>=<filesize>*). By default, two spaces are used as
    prefix string.
 
 **-t interval**
    The interval is an amount of sleep time that the **pegasus-keg**
    executable is to sleep in seconds. This can be used to emulate light
-   work without straining the pool resources. If used together with the
-   **-T** spin option, the sleep interval comes before the spin
-   interval. The default is no sleep time. Note that if the time
-   taken by I/Os is larger than the sleep time, **pegasus-keg** will
-   *exit immediately* (i.e, **pegasus-keg** will run
-   for min(I/O time, interval)).
+   work without straining the pool resources. The interval is measured
+   from the start of **pegasus-keg**, so it includes the time spent on
+   I/O and on the **-T** spin, which comes first. The default is no
+   sleep time. If that time already exceeds the interval,
+   **pegasus-keg** exits with code 3.
 
 **-T interval**
    The interval is an amount of busy spin time that the **pegasus-keg**
    executable is to simulate intense computation in seconds. The
    simulation is done by random julia set calculations. This option can
-   be used to emulate an intense work to strain pool resources. If used
-   together with the **-t** sleep option, the sleep interval comes
-   before the spin interval. The default is no spin time. Note that
-   if the time  taken by I/Os is larger than the spin time,
-   **pegasus-keg** will *exit immediately* (i.e, **pegasus-keg**
-   will run for min(I/O time, interval)).
+   be used to emulate an intense work to strain pool resources. The
+   interval is measured from the start of **pegasus-keg**, so it
+   includes the time spent on I/O. The spin comes before the **-t**
+   sleep. The default is no spin time. If the I/O time already exceeds
+   the interval, **pegasus-keg** exits with code 3.
 
 **-s interval**
    The interval is an amount of sleep time that the **pegasus-keg**
    executable is to sleep in seconds after performing any I/Os.
    With this option **pegasus-keg** will perform I/Os and then sleep
    for the amount of seconds specified (i.e, **pegasus-keg**
-   will run for I/O time + interval).
+   will run for I/O time + interval). When combined with **-t** and/or
+   **-T**, the extra sleep is the absolute difference between this
+   interval and each of them, and is dropped entirely if **-t** or
+   **-T** is larger than the result.
 
 
 **-m memory**
@@ -167,12 +158,15 @@ usage and exit with success.
 Return Value
 ============
 
-Execution as planned will return 0. The failure to open an input file
-will return 1, the failure to open an output file, including the log
-file, will return with exit code 2. If the time spent on IO exceeds the
-specified time CPU load period with **-T** or the time spent on IO and
-CPU load exceeds the specified wall time with **-T** the return code
-will be 3.
+Execution as planned will return 0. The failure to create the parent
+directory of an output file will return 1, the failure to open an input
+or output file, or to write an output file (e.g. a full disk), will
+return with exit code 2. A log file that cannot be opened only produces
+a warning, and a failed **-m** allocation only reports
+*Memory allocation failure* and continues. If the time spent on IO exceeds the
+specified CPU load period with **-T** or the time spent on IO and CPU
+load exceeds the specified wall time with **-t** the return code will
+be 3.
 
 
 
@@ -186,44 +180,19 @@ connected to *stdout* :
 ::
 
    $ date > xx
-   $ pegasus-keg -i xx -p a b c -o -
-   --- start xx ----
-     Thu May  5 10:55:45 PDT 2011
+   $ pegasus-keg -i xx -o -
+     --- start xx ----
+   Thu May  5 10:55:45 PDT 2011
    --- final xx ----
-   Timestamp Today: 20110505T105552.910-07:00 (1304618152.910;0.000)
-   Applicationname: pegasus-keg [3661M] @ 128.9.xxx.xxx (xxx.isi.edu)
-   Current Workdir: /opt/pegasus/default/bin/pegasus-keg
-   Systemenvironm.: x86_64-Linux 2.6.18-238.9.1.el5
-   Processor Info.: 4 x Intel(R) Core(TM) i5 CPU         750  @ 2.67GHz @ 2660.068
-   Load Averages  : 0.298 0.135 0.104
-   Memory Usage MB: 11970 total, 8089 free, 0 shared, 695 buffered
-   Swap Usage   MB: 12299 total, 12299 free
-   Filesystem Info: /                        ext3    62GB total,    20GB avail
-   Filesystem Info: /lfs/balefire            ext4  1694GB total,  1485GB avail
-   Filesystem Info: /boot                    ext2   493MB total,   447MB avail
-   Output Filename: -
-   Input Filenames: xx
-   Other Arguments: a b c
+   IP addr and hostname: 128.9.xxx.xxx (xxx.isi.edu)
 
 
 
 Restrictions
 ============
 
-The input file must be textual files. The behaviour with binary files is
-unspecified.
-
 The host address is determined from the primary interface. If there is
 no active interface besides loopback, the host address will default to
 0.0.0.0. If the host address is within a *virtual private network*
-address range, only *(VPN)* will be displayed as hostname, and no
-reverse address lookup will be attempted.
-
-The *processor info* line is only available on Linux systems. The line
-will be missing on other operating systems. Its information is assuming
-symmetrical multi processing, reflecting the CPU name and speed of the
-last CPU available in */dev/cpuinfo* .
-
-There is a limit of *4 \* page size* to the output buffer of things that
-.B pegasus-keg can report in its self-info dump. There is no such
-restriction on the input to output file copy.
+address range, the address is followed by *(VPN)* instead of a hostname,
+and no reverse address lookup will be attempted.
