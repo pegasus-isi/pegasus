@@ -8,41 +8,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Test
 
+Run from the **repo root**. Tests run against the installed pegasus-wms wheel;
+pytest and coverage are configured in the root `pyproject.toml` (see the root
+`tox.toml`).
+
 ```bash
-# Run full test suite with coverage (94% minimum required)
-tox -e py310
+# Run this package's suite with coverage
+tox -m common
 
-# Run pytest directly (from package root)
-pytest test/
+# Run tests matching a pattern
+tox -m common -- -k braindump
 
-# Run a single test file
-pytest test/test_braindump.py
-pytest test/test_yaml.py
-pytest test/test_json.py
-pytest test/test_condor.py
-pytest test/test_status.py
-pytest test/client/test_client.py
-
-# Run a single test function
-pytest test/test_braindump.py::TestBraindump::test_load -v
+# Run a single test file or function (any interpreter: 3.10 .. 3.14, py)
+tox -e py -- packages/pegasus-common/test/test_braindump.py
+tox -e py -- packages/pegasus-common/test/test_braindump.py::TestBraindump::test_load -v
 ```
 
-Coverage must stay at or above **94%** (`--cov-fail-under 94` in tox.ini).
+Coverage for `tox -m common` must stay at or above **48%** (the `common` env in
+the root `tox.toml`). Actual coverage is currently ~91%. Reports go to
+`test-reports/common/` at the repo root.
 
 ## Linting & Formatting
 
 ```bash
-# Run all linters/formatters via tox
+# From the repo root; lints all three Python packages
 tox -e lint
 ```
 
-The lint environment runs, in order: autoflake, pyupgrade (--py36-plus), isort, black (target py36), flake8. Configure these in `pyproject.toml`.
+Runs `ruff check` then `ruff format --check`, using the `[tool.ruff]` config in this package's `pyproject.toml`. To fix formatting, run `ruff format` (or pre-commit).
 
 ## Architecture
 
 ### Namespace Package
 
-This package shares the `Pegasus` Python namespace with three sibling packages (`pegasus-api`, `pegasus-python`, `pegasus-worker`) using `pkgutil.extend_path`. All source lives under `src/Pegasus/`. The `__init__.py` must preserve the `extend_path` call or imports across sibling packages will break.
+This package shares the `Pegasus` Python namespace with two sibling packages (`pegasus-api`, `pegasus-python`) using `pkgutil.extend_path`. All source lives under `src/Pegasus/`. The `__init__.py` must preserve the `extend_path` call or imports across sibling packages will break.
 
 ### Modules
 
@@ -53,6 +52,6 @@ This package shares the `Pegasus` Python namespace with three sibling packages (
 
 ### Key Conventions
 
-- Python 3.6+ compatibility required (`pyupgrade` enforces `--py36-plus`). Note: this package is merged into the `pegasus-wms` wheel (Python ≥3.10) but its source targets 3.6 for compatibility with the worker tarball environment.
+- Targets Python ≥3.10, like the `pegasus-wms` wheel it is merged into (ruff `target-version = "py310"`). The old Python 3.6 floor existed for the worker tarball environment, which no longer ships any Python.
 - Use `Pegasus.yaml` and `Pegasus.json` instead of raw PyYAML/json for consistent Pegasus-specific serialization behavior.
 - The client module is a thin wrapper around CLI subprocess calls, not a reimplementation of planner logic.
