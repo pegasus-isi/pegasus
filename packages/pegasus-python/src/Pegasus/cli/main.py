@@ -360,55 +360,95 @@ def _do_halt(argv: list) -> None:
 
 def _do_configure_glite(argv: list) -> None:
     """Implement pegasus-configure-glite: configure Condor BLAHPD integration."""
+    import platform
     import shutil
     import subprocess
+    from datetime import date
 
+    # ── Help / usage ─────────────────────────────────────────────────────────
     if len(argv) > 1 or (argv and argv[0] in ("-h", "--help")):
         click.echo("Usage: pegasus configure-glite [-h] [GLITE_LOCATION]")
         sys.exit(0 if argv and argv[0] in ("-h", "--help") else 1)
 
-    import platform
-
     if platform.system() == "Darwin":
         click.echo(
-            "WARNING: Condor doesn't normally ship with glite on OSX, so this is unlikely to work"
+            "WARNING: Condor doesn't normally ship with glite on OSX, "
+            "so this is unlikely to work"
         )
 
     if not shutil.which("condor_config_val"):
         click.echo(
-            "ERROR: Unable to find condor_config_val. Ensure Condor is installed and in PATH.",
+            "ERROR: Unable to find condor_config_val. "
+            "Ensure Condor is installed and in PATH.",
             err=True,
         )
         sys.exit(1)
 
     def _condor_val(key: str) -> str:
         result = subprocess.run(
-            ["condor_config_val", key],
-            capture_output=True,
-            text=True,
+            ["condor_config_val", key], capture_output=True, text=True
         )
         return result.stdout.strip() if result.returncode == 0 else ""
 
-    blahpd_location = argv[0] if argv else _condor_val("BLAHPD_LOCATION")
+    # ── Condor version detection ──────────────────────────────────────────────
+    # sfapi_local_submit_attributes.sh is always installed.
+    # All other sfapi_* scripts are skipped on Condor >= 25.15.0.
+    def _get_condor_version() -> tuple:
+        result = subprocess.run(["condor_version"], capture_output=True, text=True)
+        if result.returncode != 0:
+            return (0, 0, 0)
+        for line in result.stdout.splitlines():
+            if "CondorVersion" in line:
+                parts = line.split()
+                if len(parts) >= 2:
+                    try:
+                        return tuple(int(x) for x in parts[1].split("."))
+                    except ValueError:
+                        pass
+        return (0, 0, 0)
+
+    _SFAPI_THRESHOLD = (25, 15, 0)
+    condor_ver = _get_condor_version()
+    install_sfapi = condor_ver < _SFAPI_THRESHOLD
+    if not install_sfapi:
+        ver_str = ".".join(str(x) for x in condor_ver)
+        click.echo(
+            f"Condor version {ver_str} >= 25.15.0: skipping sfapi_* scripts "
+            "(sfapi_local_submit_attributes.sh always installed)"
+        )
+
+    # ── Resolve BLAHPD / GLITE location ──────────────────────────────────────
+    if argv:
+        blahpd_location = argv[0]
+        if not Path(blahpd_location).is_dir():
+            click.echo(f"Directory does not exist: {blahpd_location}", err=True)
+            sys.exit(1)
+    else:
+        blahpd_location = _condor_val("BLAHPD_LOCATION")
     glite_location = _condor_val("GLITE_LOCATION")
 
-    # Resolve glite files directory
     from Pegasus.cli._java import get_system_properties
 
     props = get_system_properties()
     share_dir = Path(props.get("pegasus.home.sharedstatedir", ""))
     pegasus_glite_dir = share_dir / "htcondor" / "glite"
 
+    # New layout (BLAHPD_LOCATION)
     if blahpd_location and Path(blahpd_location).is_dir():
         blahpd_libexec = Path(blahpd_location) / "libexec" / "blahp"
-        blahpd_config = Path(blahpd_location) / "etc" / "blah.config"
-        blahpd_scripts = Path(blahpd_location) / "etc" / "blahp"
+        # RPM installs set BLAHPD_LOCATION=/usr; config lives at /etc/ not /usr/etc/
         if blahpd_location == "/usr":
             blahpd_location = ""
+        config_root = Path(blahpd_location) if blahpd_location else Path("/")
+        blahpd_config = config_root / "etc" / "blah.config"
+        blahpd_scripts = config_root / "etc" / "blahp"
+
+    # Old layout (GLITE_LOCATION)
     elif glite_location and Path(glite_location).is_dir():
         blahpd_config = Path(glite_location) / "etc" / "batch_gahp.config"
         blahpd_scripts = Path(glite_location) / "bin"
         blahpd_libexec = blahpd_scripts
+
     else:
         click.echo("ERROR: BLAHPD_LOCATION / GLITE_LOCATION not found.", err=True)
         sys.exit(1)
@@ -416,39 +456,81 @@ def _do_configure_glite(argv: list) -> None:
     for path in (blahpd_config, blahpd_scripts):
         if not path.exists():
             click.echo(
-                f"ERROR: Missing {path}. Check your BLAHPD_LOCATION / GLITE_LOCATION.",
+                f"ERROR: It looks like your BLAHPD_LOCATION / GLITE_LOCATION is not correct\n"
+                f"Missing file/directory: {path}\n"
+                "If Condor is not installed, then you will need to install it before proceeding.\n"
+                "If you have Condor installed, then you might be missing the condor-externals package.\n"
+                "If you are on Mac OS X, then your Condor probably doesn't have glite.\n"
+                "Please confirm your BLAHPD_LOCATION / GLITE_LOCATION and try again",
                 err=True,
             )
             sys.exit(1)
 
-    # Install local_submit_attributes scripts and create symlinks
+    # ── Install *local_submit_attributes.sh (always, regardless of version) ──
+    # GH-2191: these go to the etc dir; symlinks are created in libexec.
     for src in pegasus_glite_dir.glob("*local_submit_attributes.sh"):
-        dst = blahpd_scripts / src.name
-        import shutil as _shutil
-
-        _shutil.copy2(src, dst)
+        shutil.copy2(src, blahpd_scripts / src.name)
         click.echo(f"Installing {src.name} into {blahpd_scripts}/")
+
         symlink = blahpd_libexec / src.name
         if symlink.is_symlink():
+            click.echo(
+                f"Symlink for {src.name} already exists in {blahpd_libexec}. Removing"
+            )
             symlink.unlink()
         elif symlink.exists():
             symlink.rename(str(symlink) + ".bak")
+
         os.symlink(f"../../../etc/blahp/{src.name}", symlink)
         click.echo(f"Created symlink {src.name} in {blahpd_libexec}")
 
-    # Install remaining scripts
-    for src in pegasus_glite_dir.glob("*.sh"):
-        if "local_submit_attributes" not in src.name:
-            import shutil as _shutil
+    # ── Install remaining .sh and .py files into libexec ─────────────────────
+    # Skip sfapi_* (other than local_submit_attributes) on Condor >= 25.15.0.
+    for src in sorted(
+        list(pegasus_glite_dir.glob("*.sh")) + list(pegasus_glite_dir.glob("*.py"))
+    ):
+        if "local_submit_attributes" in src.name:
+            continue
+        if src.name.startswith("sfapi_") and not install_sfapi:
+            click.echo(f"Skipping {src.name} (condor >= 25.15.0)")
+            continue
+        click.echo(f"Installing {src.name} into {blahpd_libexec}/")
+        shutil.copy2(src, blahpd_libexec / src.name)
 
-            _shutil.copy2(src, blahpd_libexec / src.name)
-            click.echo(f"Installing {src.name} into {blahpd_libexec}/")
-    for src in pegasus_glite_dir.glob("*.py"):
-        if "local_submit_attributes" not in src.name:
-            import shutil as _shutil
+    # ── Update blah.config: moab/sfapi in supported_lrms, blah_child_poll_timeout ──
+    click.echo("Adding moab and sfapi support to batch_gahp.config")
+    config_bak = Path(f"{blahpd_config}.{date.today().isoformat()}")
+    shutil.copy2(blahpd_config, config_bak)
 
-            _shutil.copy2(src, blahpd_libexec / src.name)
-            click.echo(f"Installing {src.name} into {blahpd_libexec}/")
+    lines = config_bak.read_text().splitlines(keepends=True)
+    out_lines = []
+    has_moab_binpath = False
+    has_child_poll_timeout = False
+
+    for line in lines:
+        key = line.split("=", 1)[0].rstrip()
+        if key == "supported_lrms":
+            entry = line.rstrip("\n")
+            rhs = entry.split("=", 1)[1] if "=" in entry else ""
+            if "moab" not in rhs:
+                entry += ",moab"
+            if install_sfapi and "sfapi" not in rhs:
+                entry += ",sfapi"
+            out_lines.append(entry + "\n")
+        elif key == "blah_child_poll_timeout":
+            out_lines.append("blah_child_poll_timeout=60\n")
+            has_child_poll_timeout = True
+        else:
+            out_lines.append(line)
+        if key == "moab_binpath":
+            has_moab_binpath = True
+
+    if not has_moab_binpath:
+        out_lines.append("moab_binpath=`which msub 2>/dev/null|sed 's|/[^/]*$||'`\n")
+    if not has_child_poll_timeout:
+        out_lines.append("blah_child_poll_timeout=60\n")
+
+    blahpd_config.write_text("".join(out_lines))
 
 
 # ── Legacy standalone entry points (console_scripts in pyproject.toml) ───────
