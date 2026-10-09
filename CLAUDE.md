@@ -1,14 +1,28 @@
 # Pegasus WMS — Developer Guide
 
-Pegasus Workflow Management System (v5.2.0-dev). Multi-language scientific workflow system: Java planner, Python CLI/API/monitoring, C/C++ execution wrappers.
+Pegasus Workflow Management System (v6.0.0-dev). Multi-language scientific workflow system: Java planner, Python CLI/API/monitoring, C/C++ execution wrappers.
+
+## Build Environment
+
+The easiest way to build Pegasus is to use a virtualenv with Python3.10 or higher
+
+```
+python3 -m venv ~/pegasus-build-env
+source ~/pegasus-build-env/bin/activate 
+pip3 install build
+make build
+```
 
 ## Build System
 
 scikit-build-core + CMake backend. A single `pip install .` installs the full distribution: Python packages, C binaries, and Java JARs. Java is compiled via CMake's `UseJava` module; C tools via CMake subdirectories. Version defined in `build.properties`.
 
+
+
 ```bash
 # Full wheel build → dist/pegasus_wms-VERSION-PLATFORM.whl
-PYTHON=.venv/bin/python make build
+source ~/pegasus-build-env/bin/activate
+make build
 
 # Editable install for development (Python changes live; C/Java compiled once)
 make dev
