@@ -28,12 +28,32 @@ Job fails
 
 Supported failure types:
 
-| Failure Type | Auto-fix |
-|---|---|
-| `OUT_OF_MEMORY` | Scales `request_memory` by 1.5× in the `.sub` file |
-| `MISSING_INPUT_FILE` | Patches file paths or replica catalog entries |
-| `STAGING_ERROR` | Retries with corrected transfer arguments |
-| `RUNTIME_ERROR` | Diagnosis + escalation report |
+| Failure Type | Decision | Action |
+|---|---|---|
+| `OUT_OF_MEMORY` | AUTO | Scale `request_memory` by 1.5× in the `.sub` file |
+| `DISK_EXCEEDED` | AUTO | Scale `request_disk` by 2× in the `.sub` file |
+| `PREEMPTED` | AUTO | Retry immediately (no config change) |
+| `NODE_FAILURE` | AUTO | Retry immediately (no config change) |
+| `STAGING_FAILURE` | AUTO | Retry transfer job (transient I/O error) |
+| `MPI_FAILURE` | AUTO | Retry (transient fabric issue) |
+| `TRANSIENT_INFRASTRUCTURE` | AUTO | Retry (generic transient failure) |
+| `WALLTIME_EXCEEDED` | ASK | Propose runtime increase (cost implications) |
+| `PARTITION_MIGRATION` | ASK | Propose moving to a larger HPC partition |
+| `LICENSE_UNAVAILABLE` | ASK | Propose retry on a site with available license |
+| `GPU_UNAVAILABLE` | ASK | Propose retry on a GPU-capable site |
+| `DATA_CORRUPTION` | ASK | Propose re-staging input from replica catalog |
+| `MISSING_INPUT` | ASK | Propose replica catalog correction |
+| `DATA_MISMATCH` | ASK | Propose catalog data binding fix |
+| `SCRIPT_ERROR` | ASK | Propose transformation script patch |
+| `APPLICATION_ERROR` | ASK | Diagnosis + proposed fix for human review |
+| `CONTAINER_PULL_FAILED` | ASK | Propose image/registry fix |
+| `MODULE_NOT_FOUND` | ASK | Propose site change or module install |
+| `SCRATCH_FULL` | ASK | Propose TMPDIR redirect or scratch cleanup |
+| `SCHEDULER_ADMISSION` | ASK | Propose scheduler config correction |
+| `ACCOUNT_EXPIRED` | ESCALATE | HPC allocation exhausted — human must act |
+| `SSH_AUTH_FAILURE` | ESCALATE | Credential fix required — human must act |
+| `LOGIC_VALIDATION` | STOP | Scientific logic error — never auto-fix |
+| `UNKNOWN` | ASK | Best-effort diagnosis surfaced for human review |
 
 ## Installation
 
