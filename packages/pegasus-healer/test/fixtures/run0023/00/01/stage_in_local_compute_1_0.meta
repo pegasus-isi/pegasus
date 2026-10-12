@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "mifaser",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "816",
+      "ctime": "2026-09-10T17:35:53.831758",
+      "checksum.type": "sha256",
+      "checksum.value": "28e6108547c7c8463408d7e38592bad0146a3a09ec9fb1d8dd4f49796b935838",
+      "checksum.timing": "0.032"
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "SLS_trim_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "519291820",
+      "ctime": "2026-09-11T05:33:24+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "4b631d070f825fbd4f6fed6dda06312c20b0cc6cbdb99f8982d5e924d167871e",
+      "checksum.timing": "2.17"
+    }
+  },
+  {
+    "_id": "SLS_trim_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "517441915",
+      "ctime": "2026-09-11T05:33:24+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "80503b3f5687552dc2b110c678cd29cc5bde90c92bc08ea445c10b728b87d343",
+      "checksum.timing": "2.18"
+    }
+  }
+]

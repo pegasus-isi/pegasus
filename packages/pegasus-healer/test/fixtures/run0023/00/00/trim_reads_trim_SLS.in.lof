@@ -1,0 +1,3 @@
+SLS_R1.fastq.gz=SLS_R1.fastq.gz
+SLS_R2.fastq.gz=SLS_R2.fastq.gz
+trim_reads=trim_reads

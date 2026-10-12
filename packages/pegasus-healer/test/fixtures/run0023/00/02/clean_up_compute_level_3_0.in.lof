@@ -1,0 +1,11 @@
+RVF_R1.fastq.gz=RVF_R1.fastq.gz
+BRS1_R2.fastq.gz=BRS1_R2.fastq.gz
+ARS_R1.fastq.gz=ARS_R1.fastq.gz
+QHS1_R2.fastq.gz=QHS1_R2.fastq.gz
+BRS2_R2.fastq.gz=BRS2_R2.fastq.gz
+ARS_R2.fastq.gz=ARS_R2.fastq.gz
+BRS2_R1.fastq.gz=BRS2_R1.fastq.gz
+trim_reads=trim_reads
+RVF_R2.fastq.gz=RVF_R2.fastq.gz
+BRS1_R1.fastq.gz=BRS1_R1.fastq.gz
+QHS1_R1.fastq.gz=QHS1_R1.fastq.gz

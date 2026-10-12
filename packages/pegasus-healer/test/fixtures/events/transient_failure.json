@@ -1,0 +1,13 @@
+{
+  "_routing_key": "stampede.job_inst.held",
+  "wf_id": "wf-test-002",
+  "job_id": "bwa_mem_0",
+  "job_inst_id": 1,
+  "sched_id": "99999.0",
+  "exitcode": 1,
+  "status": 5,
+  "ts": 1724400060.0,
+  "site": "remote",
+  "hold_reason": "Node failure detected — network disconnected",
+  "hold_reason_code": 250
+}

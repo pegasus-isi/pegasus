@@ -125,6 +125,13 @@ if(DEFINED SKBUILD_PLATLIB_DIR)
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-api/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-healer/src/Pegasus/"
+            DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
+
+    # Create ~/.pegasus/healer.env from the bundled example on first install.
+    # Follows the Pegasus lazy-creation pattern (same as ~/.pegasus/workflow.db).
+    install(CODE "set(SRC_DIR \"${CMAKE_SOURCE_DIR}\")")
+    install(SCRIPT "${CMAKE_SOURCE_DIR}/packages/pegasus-healer/cmake/post-install.cmake")
 endif()
 
 # Static runtime data — always installed regardless of Java/C build flags.

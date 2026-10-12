@@ -1,0 +1,916 @@
+- invocation: True
+  version: 3.0
+  start: 2026-09-11T05:14:00.514+00:00
+  duration: 294.428
+  transformation: "pegasus::transfer"
+  derivation: "null"
+  resource: "local"
+  wf-label: "subductcr-end-to-end"
+  wf-stamp: "2026-09-11T05:13:20+00:00"
+  interface: eth0
+  hostaddr: 10.1.214.25
+  hostname: pegasus.access-ci.org
+  pid: 4132923
+  uid: 1333
+  user: hsafri
+  gid: 1333
+  group: hsafri
+  umask: 0o0022
+  mainjob:
+    start: 2026-09-11T05:14:00.543+00:00
+    duration: 294.396
+    pid: 4132941
+    usage:
+      utime: 63.739
+      stime: 115.106
+      maxrss: 39848
+      minflt: 10674727
+      majflt: 10
+      nswap: 0
+      inblock: 87720272
+      outblock: 664
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 642794
+      nivcsw: 1896
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/pegasus-transfer
+      mode: 0o100755
+      size: 2909
+      inode: 12768319
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-10T22:47:01+00:00
+      atime: 2026-09-10T22:47:01+00:00
+      ctime: 2026-09-11T03:00:38+00:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    argument_vector:
+      - "--threads"
+      - "2"
+    procs:
+  cleanup:
+    start: 2026-09-11T05:18:54.939+00:00
+    duration: 0.003
+    pid: 4138532
+    usage:
+      utime: 0.001
+      stime: 0.001
+      maxrss: 1788
+      minflt: 71
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 0
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 1
+      nivcsw: 1
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/rm
+      mode: 0o100755
+      size: 72064
+      inode: 12748942
+      nlink: 1
+      blksize: 4096
+      blocks: 144
+      mtime: 2026-04-04T15:03:19+00:00
+      atime: 2026-04-04T15:03:19+00:00
+      ctime: 2026-04-29T21:51:54+00:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    argument_vector:
+      - "-rf"
+      - "stage_in_local_compute_0_0.out.lof"
+    procs:
+  jobids:
+    condor: 4351918.0
+  cwd: /var/lib/condor/spool/local_univ_execute/dir_4132912/scratch
+  usage:
+    utime: 0.002
+    stime: 0.030
+    maxrss: 2100
+    minflt: 157
+    majflt: 0
+    nswap: 0
+    inblock: 0
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 2
+    nivcsw: 1
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: pegasus.access-ci.org
+    uname_release: 4.18.0-553.146.1.el8_10.x86_64
+    uname_machine: x86_64
+    ram_total: 30589076
+    ram_free: 1155988
+    ram_shared: 283288
+    ram_buffer: 1000
+    swap_total: 0
+    swap_free: 0
+    cpu_count: 8
+    cpu_speed: 1996
+    cpu_vendor: AuthenticAMD
+    cpu_model: AMD EPYC-Milan Processor
+    load_min1: 0.40
+    load_min5: 1.31
+    load_min15: 1.75
+    procs_total: 262
+    procs_running: 1
+    procs_sleeping: 172
+    procs_waiting: 2
+    procs_other: 87
+    procs_vmsize: 61345180
+    procs_rss: 3107692
+    task_total: 900
+    task_running: 1
+    task_sleeping: 810
+    task_waiting: 2
+    task_other: 87
+  files:
+    MTF_R2.fastq.gz:
+      error: 2
+      lfn: "MTF_R2.fastq.gz"
+      file_name: MTF_R2.fastq.gz
+    BRS2_R1.fastq.gz:
+      error: 2
+      lfn: "BRS2_R1.fastq.gz"
+      file_name: BRS2_R1.fastq.gz
+    EPS_R1.fastq.gz:
+      error: 2
+      lfn: "EPS_R1.fastq.gz"
+      file_name: EPS_R1.fastq.gz
+    CYF_R2.fastq.gz:
+      error: 2
+      lfn: "CYF_R2.fastq.gz"
+      file_name: CYF_R2.fastq.gz
+    PGF_R2.fastq.gz:
+      error: 2
+      lfn: "PGF_R2.fastq.gz"
+      file_name: PGF_R2.fastq.gz
+    SLS_R2.fastq.gz:
+      error: 2
+      lfn: "SLS_R2.fastq.gz"
+      file_name: SLS_R2.fastq.gz
+    PFS_R1.fastq.gz:
+      error: 2
+      lfn: "PFS_R1.fastq.gz"
+      file_name: PFS_R1.fastq.gz
+    PBS_R2.fastq.gz:
+      error: 2
+      lfn: "PBS_R2.fastq.gz"
+      file_name: PBS_R2.fastq.gz
+    QHS2_R1.fastq.gz:
+      error: 2
+      lfn: "QHS2_R1.fastq.gz"
+      file_name: QHS2_R1.fastq.gz
+    carbon_flux:
+      error: 2
+      lfn: "carbon_flux"
+      file_name: carbon_flux
+    SIS_R2.fastq.gz:
+      error: 2
+      lfn: "SIS_R2.fastq.gz"
+      file_name: SIS_R2.fastq.gz
+    QH2F_R2.fastq.gz:
+      error: 2
+      lfn: "QH2F_R2.fastq.gz"
+      file_name: QH2F_R2.fastq.gz
+    BQS_R2.fastq.gz:
+      error: 2
+      lfn: "BQS_R2.fastq.gz"
+      file_name: BQS_R2.fastq.gz
+    BRF2_R2.fastq.gz:
+      error: 2
+      lfn: "BRF2_R2.fastq.gz"
+      file_name: BRF2_R2.fastq.gz
+    BRS1_R1.fastq.gz:
+      error: 2
+      lfn: "BRS1_R1.fastq.gz"
+      file_name: BRS1_R1.fastq.gz
+    kebj01_16s.fasta:
+      error: 2
+      lfn: "kebj01_16s.fasta"
+      file_name: kebj01_16s.fasta
+    BQF_R2.fastq.gz:
+      error: 2
+      lfn: "BQF_R2.fastq.gz"
+      file_name: BQF_R2.fastq.gz
+    trim_reads:
+      error: 2
+      lfn: "trim_reads"
+      file_name: trim_reads
+    QNF_R2.fastq.gz:
+      error: 2
+      lfn: "QNF_R2.fastq.gz"
+      file_name: QNF_R2.fastq.gz
+    RVF_R2.fastq.gz:
+      error: 2
+      lfn: "RVF_R2.fastq.gz"
+      file_name: RVF_R2.fastq.gz
+    "EPS_R1.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R1.fastq.gz"
+      mode: 0o100644
+      size: 2084195814
+      inode: 15103812567
+      nlink: 1
+      mtime: 2020-04-26T10:25:33
+      atime: 2026-09-10T22:08:44.547175
+      ctime: 2026-09-05T23:05:10.336127
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: d8523d73bc965fa078b47a5a0a122481502e2a0451f74c3faf9bf82a62b8ef45
+      checksum_timing: 3.472
+    "BRS2_R1.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R1.fastq.gz"
+      mode: 0o100644
+      size: 1158378667
+      inode: 15103812518
+      nlink: 1
+      mtime: 2020-04-26T08:28:16
+      atime: 2026-09-10T22:08:52.389235
+      ctime: 2026-09-05T23:05:10.274127
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 3a844a6a584f5a802aa22763006f6b274254720638ecd07200f1140047ecfcaa
+      checksum_timing: 2.408
+    "BRS1_R1.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R1.fastq.gz"
+      mode: 0o100644
+      size: 1180273130
+      inode: 15103812546
+      nlink: 1
+      mtime: 2020-04-26T08:28:03
+      atime: 2026-09-10T22:08:54.135248
+      ctime: 2026-09-05T23:05:10.260127
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 8e5f8c606663f029a08d98167401fa8777861b161e6ef8fc485867311e9bc196
+      checksum_timing: 1.808
+    "PBS_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R2.fastq.gz"
+      mode: 0o100644
+      size: 1135102999
+      inode: 15103812652
+      nlink: 1
+      mtime: 2020-04-26T08:17:40
+      atime: 2026-09-10T22:08:48.278204
+      ctime: 2026-09-05T23:05:10.414128
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 0fc1a60f201d89e53615a38bd19dc8feb31e7540acb7760fb1de809b04cc5bd7
+      checksum_timing: 1.614
+    "trim_reads":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads"
+      mode: 0o100755
+      size: 401
+      inode: 15104219247
+      nlink: 1
+      mtime: 2026-09-09T20:44:20.484849
+      atime: 2026-09-10T22:11:10.148287
+      ctime: 2026-09-09T20:44:20.484849
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 50d85e058e9ffb0bb6e3f77d2f9377356cd0291338f58df2a6ade23161255380
+      checksum_timing: 0.031
+    "SLS_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R2.fastq.gz"
+      mode: 0o100644
+      size: 518964075
+      inode: 15103812527
+      nlink: 1
+      mtime: 2020-04-26T06:59:50
+      atime: 2026-09-10T22:09:24.187478
+      ctime: 2026-09-05T23:05:10.671130
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 41e3e1d3972a6f86dd3ecea6ca322fd29be6940daffe74f89ab8cbb5e1aaf1ad
+      checksum_timing: 0.705
+    "SIS_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R2.fastq.gz"
+      mode: 0o100644
+      size: 2156752539
+      inode: 15103812551
+      nlink: 1
+      mtime: 2020-04-26T16:25:06
+      atime: 2026-09-10T22:09:25.024484
+      ctime: 2026-09-05T23:05:10.641129
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 720ef1efe6f453dfe31fbd9637a9d6264c162e7943701e23da1e0ddd77f7a023
+      checksum_timing: 3.999
+    "RVF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R2.fastq.gz"
+      mode: 0o100644
+      size: 964565405
+      inode: 15103812717
+      nlink: 1
+      mtime: 2020-04-26T14:02:09
+      atime: 2026-09-10T22:09:28.727513
+      ctime: 2026-09-05T23:05:10.611129
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: d847f979c779fdb6551e25fa20a745e01f462fc2063986fc7eb60e58297d6e8b
+      checksum_timing: 1.452
+    "QNF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R2.fastq.gz"
+      mode: 0o100644
+      size: 1761785135
+      inode: 15103812559
+      nlink: 1
+      mtime: 2020-04-26T09:32:28
+      atime: 2026-09-10T22:09:30.198524
+      ctime: 2026-09-05T23:05:10.550129
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: bb81055a625167a5a8461d3d38379600787579525a8d2e832dd7566cea0fbc0e
+      checksum_timing: 2.268
+    "QHS2_R1.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R1.fastq.gz"
+      mode: 0o100644
+      size: 1210468712
+      inode: 15103812576
+      nlink: 1
+      mtime: 2020-04-26T08:41:40
+      atime: 2026-09-10T22:09:32.691543
+      ctime: 2026-09-05T23:05:10.533129
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: cab5a65046c09ef222baef57a0981b91e328c7e3943a9d97a90699d47d5e2520
+      checksum_timing: 1.823
+    "QH2F_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R2.fastq.gz"
+      mode: 0o100644
+      size: 2478103241
+      inode: 15103812537
+      nlink: 1
+      mtime: 2020-04-26T10:57:23
+      atime: 2026-09-10T22:09:34.461556
+      ctime: 2026-09-05T23:05:10.505129
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 4d5fe5b374be603a4d7a96eef5432d8cd607b04d7f5045f8a601b4aa7b16c70e
+      checksum_timing: 3.406
+    "PGF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R2.fastq.gz"
+      mode: 0o100644
+      size: 1991076639
+      inode: 15103812562
+      nlink: 1
+      mtime: 2020-04-26T14:47:33
+      atime: 2026-09-10T22:09:38.328586
+      ctime: 2026-09-05T23:05:10.459128
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 97d781af533ee71af375a10a3c0764bcd2f88763a5ad64002fbdfd2d1828ad4f
+      checksum_timing: 2.568
+    "PFS_R1.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R1.fastq.gz"
+      mode: 0o100644
+      size: 1001065878
+      inode: 15103812563
+      nlink: 1
+      mtime: 2020-04-26T07:56:49
+      atime: 2026-09-10T22:09:41.104607
+      ctime: 2026-09-05T23:05:10.442128
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: 29852c2c70169897c6df99ef288c2939df0d601c666e3e1029ba80a2f925b0d1
+      checksum_timing: 1.358
+    "kebj01_16s.fasta":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/16s/kebj01_16s.fasta"
+      mode: 0o100644
+      size: 647002535
+      inode: 10813904870
+      nlink: 1
+      mtime: 2026-09-05T23:05:15.167164
+      atime: 2026-09-10T22:12:29.450892
+      ctime: 2026-09-05T23:05:15.167164
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: a1524982db75f14e96a597ea795fa1dc0880503ceac1619a9b854723c53c633c
+      checksum_timing: 1.623
+    "MTF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R2.fastq.gz"
+      mode: 0o100644
+      size: 1224815654
+      inode: 15103812676
+      nlink: 1
+      mtime: 2020-04-26T08:47:33
+      atime: 2026-09-10T22:08:42.135157
+      ctime: 2026-09-05T23:05:10.399128
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: f6ca6d09989e7aa223460afe4c7d6aac22c524fffcfcc8dcdf95dd711c06abb3
+      checksum_timing: 2.417
+    "CYF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R2.fastq.gz"
+      mode: 0o100644
+      size: 1099392835
+      inode: 15103812573
+      nlink: 1
+      mtime: 2020-04-26T08:53:28
+      atime: 2026-09-10T22:08:50.658222
+      ctime: 2026-09-05T23:05:10.292127
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: aa7cd992ece4a3d61bf344a8ad23365088d483b7efb290735514c197dcdd4032
+      checksum_timing: 1.598
+    "BRF2_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R2.fastq.gz"
+      mode: 0o100644
+      size: 1126578250
+      inode: 15103812521
+      nlink: 1
+      mtime: 2020-04-26T08:28:20
+      atime: 2026-09-10T22:08:56.390266
+      ctime: 2026-09-05T23:05:10.246127
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: c2f74120a99e2be31696c7490e85870222e61f14efdb6fa31cb3c0a566d4afee
+      checksum_timing: 1.516
+    "BQS_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R2.fastq.gz"
+      mode: 0o100644
+      size: 974957510
+      inode: 15103812666
+      nlink: 1
+      mtime: 2020-04-26T07:40:08
+      atime: 2026-09-10T22:08:58.027278
+      ctime: 2026-09-05T23:05:10.212126
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: dbbae07ed931d83191c05d1482b56d74b2c89fe3891c09a548466b1c85281bcf
+      checksum_timing: 1.264
+    "BQF_R2.fastq.gz":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R2.fastq.gz"
+      mode: 0o100644
+      size: 884533952
+      inode: 15103812638
+      nlink: 1
+      mtime: 2020-04-26T08:05:49
+      atime: 2026-09-10T22:08:59.696291
+      ctime: 2026-09-05T23:05:10.195126
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: c5c4d1417bb5a18fde7e4bac998d415bfe26fc7fbcb8f96192e5eab5e52f549b
+      checksum_timing: 1.174
+    "carbon_flux":
+      comment: entry generated by pegasus-integrity
+      file_name: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux"
+      mode: 0o100755
+      size: 2239
+      inode: 15104219252
+      nlink: 1
+      mtime: 2026-09-10T02:00:46.693648
+      atime: 2026-09-11T04:41:31.984198
+      ctime: 2026-09-10T02:00:46.693648
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      output: True
+      sha256: a6384039c4d95c7f0af9538b266e469ca33a63392d40bda3dbe7e34e4e67b67b
+      checksum_timing: 0.026
+    stdin:
+      descriptor_number: 0
+      mode: 0o10600
+      size: 0
+      inode: 202680489
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:14:00+00:00
+      atime: 2026-09-11T05:14:00+00:00
+      ctime: 2026-09-11T05:14:00+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+    stdout:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132912/scratch/ks.out.X1iAGY
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 1518402528
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:14:00+00:00
+      atime: 2026-09-11T05:14:00+00:00
+      ctime: 2026-09-11T05:14:00+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+    stderr:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132912/scratch/ks.err.qWJ1jq
+      descriptor: 4
+      mode: 0o100600
+      size: 22452
+      inode: 1518402529
+      nlink: 1
+      blksize: 4096
+      blocks: 48
+      mtime: 2026-09-11T05:18:54+00:00
+      atime: 2026-09-11T05:14:00+00:00
+      ctime: 2026-09-11T05:18:54+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      data_truncated: false
+      data: |
+        2026-09-11 05:14:00,620    INFO:  Reading URL pairs from stdin
+        2026-09-11 05:14:00,621    INFO:  20 transfers loaded
+        2026-09-11 05:14:00,621    INFO:  PATH=/opt/jupyter-venv/bin:/home/hsafri/.local/bin:/home/hsafri/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/local/bin
+        2026-09-11 05:14:00,621    INFO:  LD_LIBRARY_PATH=
+        2026-09-11 05:14:00,655    INFO:  --------------------------------------------------------------------------------
+        2026-09-11 05:14:00,656    INFO:  Starting transfers - attempt 1
+        2026-09-11 05:14:02,658    INFO:  Tool found: pegasus-integrity   Version: N/A   Path: /usr/bin/pegasus-integrity
+        2026-09-11 05:14:02,658    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="EPS_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R1.fastq.gz"
+        2026-09-11 05:14:06,216    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="BRS2_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R1.fastq.gz"
+        2026-09-11 05:14:08,716    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="BRS1_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R1.fastq.gz"
+        2026-09-11 05:14:10,612    INFO:  /usr/bin/ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -p 22 hsafri@perlmutter.nersc.gov '/bin/mkdir -p /pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/.'
+        2026-09-11 05:14:10,634    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="PBS_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R2.fastq.gz"
+        2026-09-11 05:14:12,329    INFO:  /usr/bin/ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -p 22 hsafri@perlmutter.nersc.gov '/bin/mkdir -p /pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/.'
+        2026-09-11 05:14:14,167    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3114c0s21b0n0:
+        
+        2026-09-11 05:14:14,169    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R1.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./'
+        2026-09-11 05:14:14,738    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3114c0s21b0n0:
+        
+        2026-09-11 05:14:14,738    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R2.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PBS_R2.fastq.gz'
+        2026-09-11 05:14:45,181    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3115c0s3b0n0:
+        
+        2026-09-11 05:14:45,182    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="trim_reads=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads"
+        2026-09-11 05:14:45,308    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads'
+        2026-09-11 05:14:47,901    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3113c0s9b0n0:
+        
+        2026-09-11 05:14:47,901    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="SLS_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R2.fastq.gz"
+        2026-09-11 05:14:48,680    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="SIS_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R2.fastq.gz"
+        2026-09-11 05:14:52,762    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="RVF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R2.fastq.gz"
+        2026-09-11 05:14:54,293    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="QNF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R2.fastq.gz"
+        2026-09-11 05:14:56,636    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="QHS2_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R1.fastq.gz"
+        2026-09-11 05:14:58,553    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="QH2F_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R2.fastq.gz"
+        2026-09-11 05:15:02,034    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="PGF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R2.fastq.gz"
+        2026-09-11 05:15:04,677    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="PFS_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R1.fastq.gz"
+        2026-09-11 05:15:06,110    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R1.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./'
+        2026-09-11 05:15:43,498    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3113c0s5b0n0:
+        
+        2026-09-11 05:15:43,499    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="kebj01_16s.fasta=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/16s/kebj01_16s.fasta"
+        2026-09-11 05:15:45,197    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/16s/kebj01_16s.fasta' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./kebj01_16s.fasta'
+        2026-09-11 05:16:04,718    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3115c0s9b0n0:
+        
+        2026-09-11 05:16:04,718    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="MTF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R2.fastq.gz"
+        2026-09-11 05:16:07,238    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="CYF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R2.fastq.gz"
+        2026-09-11 05:16:08,930    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="BRF2_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R2.fastq.gz"
+        2026-09-11 05:16:10,534    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="BQS_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R2.fastq.gz"
+        2026-09-11 05:16:11,870    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="BQF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R2.fastq.gz"
+        2026-09-11 05:16:13,119    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R2.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./'
+        2026-09-11 05:18:00,975    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3114c0s13b0n0:
+        
+        2026-09-11 05:18:00,977    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="carbon_flux=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux"
+        2026-09-11 05:18:01,100    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./carbon_flux'
+        2026-09-11 05:18:03,813    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3116c0s7b0n0:
+        
+        2026-09-11 05:18:54,922    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3113c0s21b0n0:
+        
+        2026-09-11 05:18:54,923    INFO:  --------------------------------------------------------------------------------
+        2026-09-11 05:18:54,924    INFO:  Stats: Total 20 transfers, 22.0 GB transferred in 294 seconds. Rate: 76.5 MB/s (611.7 Mb/s)
+        2026-09-11 05:18:54,924    INFO:         Between sites local->compute : 20 transfers, 22.0 GB transferred in 294 seconds. Rate: 76.5 MB/s (611.7 Mb/s)
+        2026-09-11 05:18:54,924    INFO:  All transfers completed successfully.
+        
+    metadata:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132912/scratch/ks.meta.hT2UY6
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 1518402530
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:14:00+00:00
+      atime: 2026-09-11T05:14:00+00:00
+      ctime: 2026-09-11T05:14:00+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri

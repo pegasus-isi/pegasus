@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./gene_network", "recursive": "False" } }
+  ,
+  {
+    "id": 2,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./gene_table.tsv", "recursive": "False" } }
+  ,
+  {
+    "id": 3,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./clique_geochem", "recursive": "False" } }
+  ,
+  {
+    "id": 4,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./asv_cliques.rds", "recursive": "False" } }
+  ,
+  {
+    "id": 5,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./fig2.pdf", "recursive": "False" } }
+]

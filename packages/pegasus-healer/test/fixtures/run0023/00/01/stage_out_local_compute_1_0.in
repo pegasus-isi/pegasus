@@ -1,0 +1,109 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "ARS_enzymes.tsv",
+   "id": 1,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./ARS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/ARS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "TCS_enzymes.tsv",
+   "id": 2,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./TCS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/TCS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "filtered.rds",
+   "id": 3,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./filtered.rds" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/filtered.rds" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "BQS_enzymes.tsv",
+   "id": 4,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BQS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/BQS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "RVF_enzymes.tsv",
+   "id": 5,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./RVF_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/RVF_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "EPS_enzymes.tsv",
+   "id": 6,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./EPS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/EPS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "SLS_enzymes.tsv",
+   "id": 7,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/SLS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "PBS_enzymes.tsv",
+   "id": 8,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PBS_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/PBS_enzymes.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "BRF2_enzymes.tsv",
+   "id": 9,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRF2_enzymes.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/BRF2_enzymes.tsv" }
+   ] }
+]

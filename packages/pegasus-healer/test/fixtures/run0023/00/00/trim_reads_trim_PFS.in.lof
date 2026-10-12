@@ -1,0 +1,3 @@
+PFS_R2.fastq.gz=PFS_R2.fastq.gz
+PFS_R1.fastq.gz=PFS_R1.fastq.gz
+trim_reads=trim_reads

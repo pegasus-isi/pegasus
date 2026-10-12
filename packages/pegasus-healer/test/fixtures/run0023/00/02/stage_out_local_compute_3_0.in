@@ -1,0 +1,25 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "asv_clique_env.tsv",
+   "id": 1,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./asv_clique_env.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/asv_clique_env.tsv" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "gene_cliques.rds",
+   "id": 2,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./gene_cliques.rds" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/gene_cliques.rds" }
+   ] }
+]

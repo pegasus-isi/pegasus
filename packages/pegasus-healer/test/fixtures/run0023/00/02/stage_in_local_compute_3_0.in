@@ -1,0 +1,25 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "clique_geochem",
+   "id": 1,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/clique_geochem", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./clique_geochem" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "gene_network",
+   "id": 2,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_network", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./gene_network" }
+   ] }
+]

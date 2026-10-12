@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./ARS_R1.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 2,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./ARS_R2.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 3,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads", "recursive": "False" } }
+  ,
+  {
+    "id": 4,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS2_R2.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 5,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS2_R1.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 6,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QHS1_R2.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 7,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QHS1_R1.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 8,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./RVF_R1.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 9,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./RVF_R2.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 10,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS1_R2.fastq.gz", "recursive": "False" } }
+  ,
+  {
+    "id": 11,
+    "type": "remove",
+    "target": { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS1_R1.fastq.gz", "recursive": "False" } }
+]

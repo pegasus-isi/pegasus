@@ -1,0 +1,386 @@
+- invocation: True
+  version: 3.0
+  start: 2026-09-11T05:25:40.144+00:00
+  duration: 662.810
+  transformation: "trim_reads"
+  derivation: "trim_QNF"
+  resource: "compute"
+  wf-label: "subductcr-end-to-end"
+  wf-stamp: "2026-09-11T05:13:20+00:00"
+  interface: hsn0:chn
+  hostaddr: 128.55.70.85
+  hostname: nid004078-hsn0
+  pid: 1679416
+  uid: 115314
+  user: hsafri
+  gid: 115314
+  group: hsafri
+  umask: 0o0022
+  mainjob:
+    start: 2026-09-11T05:25:40.394+00:00
+    duration: 662.556
+    pid: 1679521
+    usage:
+      utime: 1432.255
+      stime: 51.173
+      maxrss: 1369448
+      minflt: 41827
+      majflt: 100
+      nswap: 0
+      inblock: 6335554
+      outblock: 6927376
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 202426
+      nivcsw: 86902
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /scratch/trim_reads
+      mode: 0o100750
+      size: 401
+      inode: 702577900393634969
+      nlink: 1
+      blksize: 4194304
+      blocks: 1
+      mtime: 2026-09-11T05:25:28+00:00
+      atime: 2026-09-11T05:25:30+00:00
+      ctime: 2026-09-11T05:25:28+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    argument_vector:
+      - "QNF_R1.fastq.gz"
+      - "QNF_R2.fastq.gz"
+      - "QNF_trim_R1.fastq.gz"
+      - "QNF_trim_R2.fastq.gz"
+    procs:
+  cleanup:
+    start: 2026-09-11T05:36:42.950+00:00
+    duration: 0.003
+    pid: 1835189
+    usage:
+      utime: 0.002
+      stime: 0.001
+      maxrss: 0
+      minflt: 80
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 0
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 6
+      nivcsw: 0
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/rm
+      mode: 0o100755
+      size: 59912
+      inode: 844
+      nlink: 1
+      blksize: 1024
+      blocks: 118
+      mtime: 2026-01-23T10:51:17+00:00
+      atime: 2026-01-23T10:51:17+00:00
+      ctime: 2026-01-23T10:51:17+00:00
+      uid: 0
+      gid: 0
+    argument_vector:
+      - "-rf"
+      - "trim_reads_trim_QNF.in.lof"
+      - "trim_reads_trim_QNF.out.lof"
+    procs:
+  jobids:
+    condor: 4351932.0
+    lrmtype: slurm
+    lrm: 58186458
+  cwd: /scratch
+  usage:
+    utime: 0.057
+    stime: 0.199
+    maxrss: 2048
+    minflt: 169
+    majflt: 16
+    nswap: 0
+    inblock: 1872
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 41
+    nivcsw: 8
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: nid004078
+    uname_release: 6.4.0-150600.23.125_15.0.28-cray_shasta_c
+    uname_machine: x86_64
+    ram_total: 527499868
+    ram_free: 266250340
+    ram_shared: 8580416
+    ram_buffer: 48980
+    swap_total: 0
+    swap_free: 0
+    cpu_count: 256
+    cpu_speed: 2450
+    cpu_vendor: AuthenticAMD
+    cpu_model: AMD EPYC 7763 64-Core Processor
+    load_min1: 123.63
+    load_min5: 128.04
+    load_min15: 135.31
+    procs_total: 3459
+    procs_running: 12
+    procs_sleeping: 1695
+    procs_other: 1752
+    procs_vmsize: 293706036
+    procs_rss: 132893900
+    task_total: 5404
+    task_running: 94
+    task_sleeping: 3558
+    task_other: 1752
+  files:
+    QNF_R1.fastq.gz:
+      lfn: "QNF_R1.fastq.gz"
+      file_name: /scratch/QNF_R1.fastq.gz
+      mode: 0o100640
+      size: 1794975404
+      inode: 702577900393634967
+      nlink: 1
+      blksize: 4194304
+      blocks: 3497992
+      mtime: 2026-09-11T05:25:26+00:00
+      atime: 2026-09-11T05:25:30+00:00
+      ctime: 2026-09-11T05:25:26+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    trim_reads:
+      lfn: "trim_reads"
+      file_name: /scratch/trim_reads
+      mode: 0o100750
+      size: 401
+      inode: 702577900393634969
+      nlink: 1
+      blksize: 4194304
+      blocks: 1
+      mtime: 2026-09-11T05:25:28+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:25:28+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    QNF_R2.fastq.gz:
+      lfn: "QNF_R2.fastq.gz"
+      file_name: /scratch/QNF_R2.fastq.gz
+      mode: 0o100640
+      size: 1761785135
+      inode: 702577900393634968
+      nlink: 1
+      blksize: 4194304
+      blocks: 3440648
+      mtime: 2026-09-11T05:25:28+00:00
+      atime: 2026-09-11T05:25:32+00:00
+      ctime: 2026-09-11T05:25:28+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    QNF_trim_R2.fastq.gz:
+      lfn: "QNF_trim_R2.fastq.gz"
+      file_name: /scratch/QNF_trim_R2.fastq.gz
+      mode: 0o100644
+      size: 1756067982
+      inode: 702577900393639440
+      nlink: 1
+      blksize: 4194304
+      blocks: 3421736
+      mtime: 2026-09-11T05:36:42+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:36:42+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      output: True
+      sha256: 76aec81b063602986e72f48448716e7be64ca7119c9a8f64b6081f9c9210426d
+      checksum_timing: 7.91
+    QNF_trim_R1.fastq.gz:
+      lfn: "QNF_trim_R1.fastq.gz"
+      file_name: /scratch/QNF_trim_R1.fastq.gz
+      mode: 0o100644
+      size: 1789508188
+      inode: 702577900393639439
+      nlink: 1
+      blksize: 4194304
+      blocks: 3485544
+      mtime: 2026-09-11T05:36:42+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:36:42+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      output: True
+      sha256: c4e3b025cf6e2d181b287d373f2dd044be716f10ebc86a6867de5b4b666e3480
+      checksum_timing: 8.31
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 4
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-05T14:25:11+00:00
+      atime: 2026-09-05T14:25:11+00:00
+      ctime: 2026-09-05T14:25:11+00:00
+      uid: 0
+      gid: 0
+    stdout:
+      temporary_name: /tmp/ks.out.v2Iij1
+      descriptor: 3
+      mode: 0o100600
+      size: 63
+      inode: 4490958
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-11T05:36:42+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:36:42+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      data_truncated: false
+      data: |
+        [trim_reads] wrote QNF_trim_R1.fastq.gz + QNF_trim_R2.fastq.gz
+        
+    stderr:
+      temporary_name: /tmp/ks.err.mMrvAt
+      descriptor: 4
+      mode: 0o100600
+      size: 406
+      inode: 4490959
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-11T05:36:42+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:36:42+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      data_truncated: false
+      data: |
+        TrimmomaticPE: Started with arguments:
+         -threads 8 QNF_R1.fastq.gz QNF_R2.fastq.gz QNF_trim_R1.fastq.gz /dev/null QNF_trim_R2.fastq.gz /dev/null SLIDINGWINDOW:4:20 MINLEN:50
+        Quality encoding detected as phred33
+        Input Read Pairs: 23425974 Both Surviving: 23391793 (99.85%) Forward Only Surviving: 22793 (0.10%) Reverse Only Surviving: 11302 (0.05%) Dropped: 86 (0.00%)
+        TrimmomaticPE: Completed successfully
+        
+    metadata:
+      temporary_name: /tmp/ks.meta.fTfSs9
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 4490960
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:25:40+00:00
+      atime: 2026-09-11T05:25:40+00:00
+      ctime: 2026-09-11T05:25:40+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+
+---------------pegasus-multipart
+- integrity_verification_attempts:
+  - lfn: "QNF_R1.fastq.gz"
+    pfn: "QNF_R1.fastq.gz"
+    sha256: 88febe0df90d7ab0f542c3c52afdbbc5fa708daa567cf201ec3a21f093a51e39
+    success: True
+  - lfn: "trim_reads"
+    pfn: "trim_reads"
+    sha256: 50d85e058e9ffb0bb6e3f77d2f9377356cd0291338f58df2a6ade23161255380
+    success: True
+  - lfn: "QNF_R2.fastq.gz"
+    pfn: "QNF_R2.fastq.gz"
+    sha256: bb81055a625167a5a8461d3d38379600787579525a8d2e832dd7566cea0fbc0e
+    success: True
+- integrity_summary:
+    succeeded: 3
+    failed: 0
+    duration: 3.766
+
+---------------pegasus-multipart
+- transfer_attempts:
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_R1.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_R1.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104324
+    duration: 2.8
+    lfn: "QNF_R1.fastq.gz"
+    bytes: 1794975404
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_R2.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_R2.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104326
+    duration: 2.3
+    lfn: "QNF_R2.fastq.gz"
+    bytes: 1761785135
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/trim_reads"
+    dst_label: "compute"
+    success: True
+    start: 1789104329
+    duration: 0.0
+    lfn: "trim_reads"
+    bytes: 401
+
+---------------pegasus-multipart
+- transfer_attempts:
+  - src_url: "file:///pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_trim_R1.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_trim_R1.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789105022
+    duration: 2.5
+    lfn: "QNF_trim_R1.fastq.gz"
+    bytes: 1789508188
+  - src_url: "file:///pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_trim_R2.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_trim_R2.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789105024
+    duration: 2.4
+    lfn: "QNF_trim_R2.fastq.gz"
+    bytes: 1756067982
+
+---------------pegasus-multipart
+location:
+    geohash: 9ydq
+    ip: 128.55.70.85
+    latitude: '37.751'
+    longitude: '-97.822'
+    organization: National Energy Research Scientific Computing Center
+    subdomain: chn.perlmutter.nersc.gov

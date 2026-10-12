@@ -1,0 +1,52 @@
+#!/bin/sh
+# pegasus-config — source-tree bridge
+#
+# Emits the installed Pegasus config but overrides:
+#   PEGASUS_BIN_DIR    → this pegasus-src/bin/   (source scripts take priority)
+#   PEGASUS_PYTHON_DIR → project venv site-packages (source Python packages)
+#
+# The Java JARs and share/ come from the installed Pegasus because they are
+# compiled artifacts that cannot be used directly from source without `ant`.
+
+# ── Find installed pegasus-config ─────────────────────────────────────────────
+_INSTALLED=""
+for _dir in /opt/homebrew/bin /usr/bin /usr/local/bin; do
+    if [ -x "$_dir/pegasus-config" ]; then
+        _INSTALLED="$_dir/pegasus-config"
+        break
+    fi
+done
+
+if [ -z "$_INSTALLED" ]; then
+    echo "ERROR: no installed pegasus-config found on PATH" >&2
+    exit 1
+fi
+
+# ── Resolve this script's directory = pegasus-src/bin/ ───────────────────────
+_SCRIPT="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+_SRC_BIN="$(cd "$(dirname "$_SCRIPT")" && pwd)"
+_PROJECT_ROOT="$(cd "$_SRC_BIN/../.." && pwd)"   # pegasus-src/../.. = project root
+_VENV_PYTHON="$_PROJECT_ROOT/agentic/lib"
+
+# Find venv site-packages (python version-agnostic)
+_VENV_SITE=""
+for _sp in "$_PROJECT_ROOT/agentic/lib"/python*/site-packages; do
+    [ -d "$_sp" ] && _VENV_SITE="$_sp" && break
+done
+
+# ── Pass-through for non-sh-dump flags ───────────────────────────────────────
+case "$1" in
+    --sh-dump)
+        # Emit installed config, then override the two dirs
+        "$_INSTALLED" --sh-dump | grep -v "^PEGASUS_BIN_DIR\|^PEGASUS_PYTHON_DIR\|^PEGASUS_PYTHON_EXTERNALS_DIR"
+        echo "PEGASUS_BIN_DIR=\"$_SRC_BIN\";"
+        echo "export PEGASUS_BIN_DIR"
+        if [ -n "$_VENV_SITE" ]; then
+            echo "PEGASUS_PYTHON_DIR=\"$_VENV_SITE\";"
+            echo "export PEGASUS_PYTHON_DIR"
+        fi
+        ;;
+    *)
+        exec "$_INSTALLED" "$@"
+        ;;
+esac

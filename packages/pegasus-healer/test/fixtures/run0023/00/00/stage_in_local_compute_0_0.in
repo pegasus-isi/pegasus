@@ -1,0 +1,241 @@
+[
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "trim_reads",
+   "id": 1,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "BRS2_R1.fastq.gz",
+   "id": 2,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R1.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS2_R1.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "BRS1_R1.fastq.gz",
+   "id": 3,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R1.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRS1_R1.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "QHS2_R1.fastq.gz",
+   "id": 4,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R1.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QHS2_R1.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "QNF_R2.fastq.gz",
+   "id": 5,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "kebj01_16s.fasta",
+   "id": 6,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/16s/kebj01_16s.fasta", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./kebj01_16s.fasta" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "BQF_R2.fastq.gz",
+   "id": 7,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BQF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "BQS_R2.fastq.gz",
+   "id": 8,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BQS_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "QH2F_R2.fastq.gz",
+   "id": 9,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QH2F_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "RVF_R2.fastq.gz",
+   "id": 10,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./RVF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "MTF_R2.fastq.gz",
+   "id": 11,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./MTF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "EPS_R1.fastq.gz",
+   "id": 12,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R1.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./EPS_R1.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "CYF_R2.fastq.gz",
+   "id": 13,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./CYF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "SLS_R2.fastq.gz",
+   "id": 14,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "PFS_R1.fastq.gz",
+   "id": 15,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R1.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PFS_R1.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "PBS_R2.fastq.gz",
+   "id": 16,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PBS_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "PGF_R2.fastq.gz",
+   "id": 17,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PGF_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "BRF2_R2.fastq.gz",
+   "id": 18,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./BRF2_R2.fastq.gz" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "carbon_flux",
+   "id": 19,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux", "priority": 100 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./carbon_flux" }
+   ] }
+ ,
+ { "type": "transfer",
+   "linkage": "input",
+   "lfn": "SIS_R2.fastq.gz",
+   "id": 20,
+   "generate_checksum": true,
+   "src_urls": [
+     { "site_label": "local", "url": "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R2.fastq.gz", "priority": 10 }
+   ],
+   "dest_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SIS_R2.fastq.gz" }
+   ] }
+]

@@ -1,0 +1,25 @@
+# Rescue DAG file, created after running
+#   the subductcr-end-to-end-0.dag DAG file
+# Created 9/11/2026 05:40:22 UTC
+# Rescue DAG version: 2.1.0
+#
+# Total number of Nodes: 135
+# Nodes premarked DONE: 15
+# Nodes that failed: 0
+#   <ENDLIST>
+
+DONE create_dir_subductcr-end-to-end_0_compute
+DONE stage_in_local_compute_4_0
+DONE stage_in_local_compute_5_0
+DONE stage_in_local_compute_0_0
+DONE stage_in_local_compute_0_1
+DONE stage_in_local_compute_1_0
+DONE stage_in_local_compute_0_2
+DONE stage_in_local_compute_2_0
+DONE stage_in_local_compute_1_1
+DONE stage_in_local_compute_0_3
+DONE stage_in_local_compute_3_0
+DONE trim_reads_trim_MTF
+DONE trim_reads_trim_PBS
+DONE trim_reads_trim_QNF
+DONE trim_reads_trim_SLS

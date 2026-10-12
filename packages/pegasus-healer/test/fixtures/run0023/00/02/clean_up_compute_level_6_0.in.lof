@@ -1,0 +1,5 @@
+clique_geochem=clique_geochem
+gene_network=gene_network
+gene_table.tsv=gene_table.tsv
+asv_cliques.rds=asv_cliques.rds
+fig2.pdf=fig2.pdf

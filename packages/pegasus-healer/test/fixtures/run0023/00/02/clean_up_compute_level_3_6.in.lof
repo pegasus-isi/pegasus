@@ -1,0 +1,11 @@
+EPF_R1.fastq.gz=EPF_R1.fastq.gz
+cell_counts.csv=cell_counts.csv
+carbon_flux=carbon_flux
+SIS_R1.fastq.gz=SIS_R1.fastq.gz
+QH2F_R1.fastq.gz=QH2F_R1.fastq.gz
+EPF_R2.fastq.gz=EPF_R2.fastq.gz
+flux_params.yml=flux_params.yml
+PGS_R1.fastq.gz=PGS_R1.fastq.gz
+QH2F_R2.fastq.gz=QH2F_R2.fastq.gz
+PGS_R2.fastq.gz=PGS_R2.fastq.gz
+SIS_R2.fastq.gz=SIS_R2.fastq.gz

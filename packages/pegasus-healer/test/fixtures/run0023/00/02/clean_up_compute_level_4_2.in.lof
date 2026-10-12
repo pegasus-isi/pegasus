@@ -1,0 +1,10 @@
+SLS_trim_R1.fastq.gz=SLS_trim_R1.fastq.gz
+CYF_trim_R2.fastq.gz=CYF_trim_R2.fastq.gz
+QH2F_trim_R2.fastq.gz=QH2F_trim_R2.fastq.gz
+BQF_trim_R1.fastq.gz=BQF_trim_R1.fastq.gz
+CYF_trim_R1.fastq.gz=CYF_trim_R1.fastq.gz
+SLF_trim_R1.fastq.gz=SLF_trim_R1.fastq.gz
+SLF_trim_R2.fastq.gz=SLF_trim_R2.fastq.gz
+QH2F_trim_R1.fastq.gz=QH2F_trim_R1.fastq.gz
+BQF_trim_R2.fastq.gz=BQF_trim_R2.fastq.gz
+SLS_trim_R2.fastq.gz=SLS_trim_R2.fastq.gz

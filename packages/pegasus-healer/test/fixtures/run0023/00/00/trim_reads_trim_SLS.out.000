@@ -1,0 +1,390 @@
+- invocation: True
+  version: 3.0
+  start: 2026-09-11T05:30:06.906+00:00
+  duration: 197.124
+  transformation: "trim_reads"
+  derivation: "trim_SLS"
+  resource: "compute"
+  wf-label: "subductcr-end-to-end"
+  wf-stamp: "2026-09-11T05:13:20+00:00"
+  interface: hsn0:chn
+  hostaddr: 128.55.70.113
+  hostname: nid004106-hsn0
+  pid: 1083646
+  uid: 115314
+  user: hsafri
+  gid: 115314
+  group: hsafri
+  umask: 0o0022
+  mainjob:
+    start: 2026-09-11T05:30:07.147+00:00
+    duration: 196.879
+    pid: 1083842
+    usage:
+      utime: 423.958
+      stime: 14.429
+      maxrss: 1842660
+      minflt: 49079
+      majflt: 100
+      nswap: 0
+      inblock: 26722
+      outblock: 2028904
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 58731
+      nivcsw: 24939
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /scratch/trim_reads
+      mode: 0o100750
+      size: 401
+      inode: 702577854541496695
+      nlink: 1
+      blksize: 4194304
+      blocks: 1
+      mtime: 2026-09-11T05:29:59+00:00
+      atime: 2026-09-11T05:30:00+00:00
+      ctime: 2026-09-11T05:29:59+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    argument_vector:
+      - "SLS_R1.fastq.gz"
+      - "SLS_R2.fastq.gz"
+      - "SLS_trim_R1.fastq.gz"
+      - "SLS_trim_R2.fastq.gz"
+    procs:
+  cleanup:
+    start: 2026-09-11T05:33:24.027+00:00
+    duration: 0.003
+    pid: 1143519
+    usage:
+      utime: 0.002
+      stime: 0.001
+      maxrss: 0
+      minflt: 84
+      majflt: 0
+      nswap: 0
+      inblock: 0
+      outblock: 0
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 2
+      nivcsw: 1
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/rm
+      mode: 0o100755
+      size: 59912
+      inode: 844
+      nlink: 1
+      blksize: 1024
+      blocks: 118
+      mtime: 2026-01-23T10:51:17+00:00
+      atime: 2026-01-23T10:51:17+00:00
+      ctime: 2026-01-23T10:51:17+00:00
+      uid: 0
+      gid: 0
+    argument_vector:
+      - "-rf"
+      - "trim_reads_trim_SLS.in.lof"
+      - "trim_reads_trim_SLS.out.lof"
+    procs:
+  jobids:
+    condor: 4351934.0
+    lrmtype: slurm
+    lrm: 58186460
+  cwd: /scratch
+  usage:
+    utime: 0.061
+    stime: 0.187
+    maxrss: 0
+    minflt: 169
+    majflt: 2
+    nswap: 0
+    inblock: 1048
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 32
+    nivcsw: 1
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: nid004106
+    uname_release: 6.4.0-150600.23.125_15.0.28-cray_shasta_c
+    uname_machine: x86_64
+    ram_total: 527499864
+    ram_free: 246756704
+    ram_shared: 1768548
+    ram_buffer: 28876
+    swap_total: 0
+    swap_free: 0
+    cpu_count: 256
+    cpu_speed: 2450
+    cpu_vendor: AuthenticAMD
+    cpu_model: AMD EPYC 7763 64-Core Processor
+    load_min1: 120.73
+    load_min5: 124.14
+    load_min15: 120.87
+    procs_total: 3493
+    procs_running: 12
+    procs_sleeping: 1654
+    procs_waiting: 2
+    procs_zombie: 1
+    procs_other: 1824
+    procs_vmsize: 375063552
+    procs_rss: 159150772
+    task_total: 5180
+    task_running: 83
+    task_sleeping: 3270
+    task_waiting: 2
+    task_zombie: 1
+    task_other: 1824
+  files:
+    SLS_R1.fastq.gz:
+      lfn: "SLS_R1.fastq.gz"
+      file_name: /scratch/SLS_R1.fastq.gz
+      mode: 0o100640
+      size: 520659840
+      inode: 702577854541496693
+      nlink: 1
+      blksize: 4194304
+      blocks: 1015816
+      mtime: 2026-09-11T05:29:58+00:00
+      atime: 2026-09-11T05:29:59+00:00
+      ctime: 2026-09-11T05:29:58+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    SLS_R2.fastq.gz:
+      lfn: "SLS_R2.fastq.gz"
+      file_name: /scratch/SLS_R2.fastq.gz
+      mode: 0o100640
+      size: 518964075
+      inode: 702577854541496694
+      nlink: 1
+      blksize: 4194304
+      blocks: 1007624
+      mtime: 2026-09-11T05:29:59+00:00
+      atime: 2026-09-11T05:30:00+00:00
+      ctime: 2026-09-11T05:29:59+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    trim_reads:
+      lfn: "trim_reads"
+      file_name: /scratch/trim_reads
+      mode: 0o100750
+      size: 401
+      inode: 702577854541496695
+      nlink: 1
+      blksize: 4194304
+      blocks: 1
+      mtime: 2026-09-11T05:29:59+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:29:59+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+    SLS_trim_R1.fastq.gz:
+      lfn: "SLS_trim_R1.fastq.gz"
+      file_name: /scratch/SLS_trim_R1.fastq.gz
+      mode: 0o100644
+      size: 519291820
+      inode: 702577854541501165
+      nlink: 1
+      blksize: 4194304
+      blocks: 1000256
+      mtime: 2026-09-11T05:33:24+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:33:24+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      output: True
+      sha256: 4b631d070f825fbd4f6fed6dda06312c20b0cc6cbdb99f8982d5e924d167871e
+      checksum_timing: 2.17
+    SLS_trim_R2.fastq.gz:
+      lfn: "SLS_trim_R2.fastq.gz"
+      file_name: /scratch/SLS_trim_R2.fastq.gz
+      mode: 0o100644
+      size: 517441915
+      inode: 702577854541501166
+      nlink: 1
+      blksize: 4194304
+      blocks: 1006032
+      mtime: 2026-09-11T05:33:24+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:33:24+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      output: True
+      sha256: 80503b3f5687552dc2b110c678cd29cc5bde90c92bc08ea445c10b728b87d343
+      checksum_timing: 2.18
+    stdin:
+      file_name: /dev/null
+      mode: 0o20666
+      size: 0
+      inode: 4
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-03T22:29:21+00:00
+      atime: 2026-09-03T22:29:21+00:00
+      ctime: 2026-09-03T22:29:21+00:00
+      uid: 0
+      gid: 0
+    stdout:
+      temporary_name: /tmp/ks.out.fO7MuD
+      descriptor: 3
+      mode: 0o100600
+      size: 63
+      inode: 9973210
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-11T05:33:24+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:33:24+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      data_truncated: false
+      data: |
+        [trim_reads] wrote SLS_trim_R1.fastq.gz + SLS_trim_R2.fastq.gz
+        
+    stderr:
+      temporary_name: /tmp/ks.err.FysXdp
+      descriptor: 4
+      mode: 0o100600
+      size: 402
+      inode: 9973211
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-11T05:33:24+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:33:24+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+      data_truncated: false
+      data: |
+        TrimmomaticPE: Started with arguments:
+         -threads 8 SLS_R1.fastq.gz SLS_R2.fastq.gz SLS_trim_R1.fastq.gz /dev/null SLS_trim_R2.fastq.gz /dev/null SLIDINGWINDOW:4:20 MINLEN:50
+        Quality encoding detected as phred33
+        Input Read Pairs: 6778135 Both Surviving: 6770196 (99.88%) Forward Only Surviving: 5537 (0.08%) Reverse Only Surviving: 2382 (0.04%) Dropped: 20 (0.00%)
+        TrimmomaticPE: Completed successfully
+        
+    metadata:
+      temporary_name: /tmp/ks.meta.QhlqUq
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 9973212
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:30:07+00:00
+      atime: 2026-09-11T05:30:07+00:00
+      ctime: 2026-09-11T05:30:07+00:00
+      uid: 115314
+      user: hsafri
+      gid: 115314
+      group: hsafri
+
+---------------pegasus-multipart
+- integrity_verification_attempts:
+  - lfn: "SLS_R1.fastq.gz"
+    pfn: "SLS_R1.fastq.gz"
+    sha256: df2ca7ffb5ac4d06475b29f8929d19ebcd9a50fe6837f3d324489ef2793dfc93
+    success: True
+  - lfn: "SLS_R2.fastq.gz"
+    pfn: "SLS_R2.fastq.gz"
+    sha256: 41e3e1d3972a6f86dd3ecea6ca322fd29be6940daffe74f89ab8cbb5e1aaf1ad
+    success: True
+  - lfn: "trim_reads"
+    pfn: "trim_reads"
+    sha256: 50d85e058e9ffb0bb6e3f77d2f9377356cd0291338f58df2a6ade23161255380
+    success: True
+- integrity_summary:
+    succeeded: 3
+    failed: 0
+    duration: 1.161
+
+---------------pegasus-multipart
+- transfer_attempts:
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_R1.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw/SLS_R1.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104597
+    duration: 0.9
+    lfn: "SLS_R1.fastq.gz"
+    bytes: 520659840
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_R2.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw/SLS_R2.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104598
+    duration: 0.9
+    lfn: "SLS_R2.fastq.gz"
+    bytes: 518964075
+  - src_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw/trim_reads"
+    dst_label: "compute"
+    success: True
+    start: 1789104599
+    duration: 0.0
+    lfn: "trim_reads"
+    bytes: 401
+
+---------------pegasus-multipart
+- transfer_attempts:
+  - src_url: "file:///pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw/SLS_trim_R1.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_trim_R1.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104811
+    duration: 0.7
+    lfn: "SLS_trim_R1.fastq.gz"
+    bytes: 519291820
+  - src_url: "file:///pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw/SLS_trim_R2.fastq.gz"
+    src_label: "compute"
+    dst_url: "file:///pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./SLS_trim_R2.fastq.gz"
+    dst_label: "compute"
+    success: True
+    start: 1789104811
+    duration: 0.7
+    lfn: "SLS_trim_R2.fastq.gz"
+    bytes: 517441915
+
+---------------pegasus-multipart
+location:
+    geohash: 9ydq
+    ip: 128.55.70.113
+    latitude: '37.751'
+    longitude: '-97.822'
+    organization: National Energy Research Scientific Computing Center
+    subdomain: chn.perlmutter.nersc.gov

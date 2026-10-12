@@ -1,0 +1,6 @@
+adonis.tsv=adonis.tsv
+carbon_flux.tsv=carbon_flux.tsv
+make_report=make_report
+asv_clique_env.tsv=asv_clique_env.tsv
+nmds.tsv=nmds.tsv
+gene_clique_env.tsv=gene_clique_env.tsv

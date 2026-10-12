@@ -1,0 +1,11 @@
+ETS_trim_R1.fastq.gz=ETS_trim_R1.fastq.gz
+EPS_trim_R1.fastq.gz=EPS_trim_R1.fastq.gz
+TCS_trim_R2.fastq.gz=TCS_trim_R2.fastq.gz
+EPS_trim_R2.fastq.gz=EPS_trim_R2.fastq.gz
+asv_table.tsv=asv_table.tsv
+PFF_trim_R1.fastq.gz=PFF_trim_R1.fastq.gz
+PFF_trim_R2.fastq.gz=PFF_trim_R2.fastq.gz
+ETS_trim_R2.fastq.gz=ETS_trim_R2.fastq.gz
+TCS_trim_R1.fastq.gz=TCS_trim_R1.fastq.gz
+taxonomy.tsv=taxonomy.tsv
+filter_normalize=filter_normalize

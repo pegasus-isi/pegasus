@@ -1,0 +1,65 @@
+2026-09-10 22:24:48: Job launched in directory /pscratch/sd/h/hsafri/.blah/bl_RybrBY
+2026-09-10 22:24:48: PegasusLite: version 5.1.3-dev.0
+2026-09-10 22:24:48: Executing on host x1004c0s1b1n0h0.chn.perlmutter.nersc.gov IP=128.55.70.85
+
+########################[Pegasus Lite] Setting up workdir ########################
+2026-09-10 22:24:49: Checking /pscratch/sd/h/hsafri/.blah/bl_RybrBY for potential use as work space... 
+2026-09-10 22:25:17:   Workdir is /pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2 - 17P available
+2026-09-10 22:25:17: Changing cwd to /pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2
+2026-09-10 22:25:17: Copying lof files from /pscratch/sd/h/hsafri/.blah/bl_RybrBY to /pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2
+2026-09-10 22:25:17: Copying meta files from /pscratch/sd/h/hsafri/.blah/bl_RybrBY to /pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2
+
+##############[Pegasus Lite] Figuring out the worker package to use ##############
+2026-09-10 22:25:17: The job contained a Pegasus worker package
+2026-09-10 22:25:17: Warning: worker package pegasus-worker-5.1.3-dev.0-x86_64_rhel_8.tar.gz does not seem to match the system x86_64_suse_15
+2026-09-10 22:25:17: Checking for untar worker package in /pscratch/sd/h/hsafri/.blah/bl_RybrBY
+2026-09-10 22:25:17: Downloading Pegasus worker package from http://download.pegasus.isi.edu/pegasus/5.1.3-dev.0/pegasus-worker-5.1.3-dev.0-x86_64_suse_15.tar.gz
+
+###################### Staging in input data and executables ######################
+2026-09-10 22:25:21,631    INFO:  Reading URL pairs from stdin
+2026-09-10 22:25:21,631    INFO:  3 transfers loaded
+2026-09-10 22:25:21,631    INFO:  PATH=/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/pegasus-5.1.3-dev.0-x86_64_suse_15/bin:/opt/nersc/pe/bin:/global/common/software/nersc/bin:/global/common/software/nersc9/darshan/default/bin:/global/common/software/nersc9/sqs/2.0/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/compute-sanitizer:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/libnvvp:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/profilers/13.2/Nsight_Compute:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/profilers/13.2/Nsight_Systems/bin:/opt/cray/pe/perftools/26.03.0/bin:/opt/cray/pe/papi/7.3.0.1/bin:/opt/cray/pe/craype/2.7.36/bin:/opt/cray/pe/mpich/9.1.0/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.1.0/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/libfabric/1.22.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin:/usr/sbin
+2026-09-10 22:25:21,631    INFO:  LD_LIBRARY_PATH=/global/common/software/nersc9/darshan/default/lib:/usr/local/cuda-13.2/compat:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/math_libs/13.2/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/extras/CUPTI/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/extras/Debugger/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/nvvm/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/lib64:/opt/cray/pe/papi/7.3.0.1/lib64:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/libfabric/default/lib64
+2026-09-10 22:25:21,681    INFO:  --------------------------------------------------------------------------------
+2026-09-10 22:25:21,682    INFO:  Starting transfers - attempt 1
+2026-09-10 22:25:24,103    INFO:  /bin/cp -f -R -L '/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_R1.fastq.gz' '/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_R1.fastq.gz'
+2026-09-10 22:25:26,502    INFO:  /bin/cp -f -R -L '/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_R2.fastq.gz' '/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_R2.fastq.gz'
+2026-09-10 22:25:28,844    INFO:  /bin/cp -f -R -L '/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./trim_reads' '/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/trim_reads'
+2026-09-10 22:25:28,856    INFO:  --------------------------------------------------------------------------------
+2026-09-10 22:25:28,857    INFO:  Stats: Total 3 transfers, 3.3 GB transferred in 7 seconds. Rate: 469.4 MB/s (3.7 Gb/s)
+2026-09-10 22:25:28,857    INFO:         Between sites compute->compute : 3 transfers, 3.3 GB transferred in 7 seconds. Rate: 469.4 MB/s (3.7 Gb/s)
+2026-09-10 22:25:28,857    INFO:  All transfers completed successfully.
+
+##################### Setting the xbit for executables staged #####################
+
+##################### Checking file integrity for input files #####################
+
+########[Pegasus Lite] Writing out script to launch user task in container ########
+2026-09-11 05:25:34: Job launched in directory /scratch
+
+##############[Container] Figuring out Pegasus worker package to use ##############
+2026-09-11 05:25:34: Checking for untar worker package in /scratch
+2026-09-11 05:25:34: The job contained a Pegasus worker package that was already untarred in /scratch/pegasus-5.1.3-dev.0-x86_64_suse_15
+2026-09-11 05:25:34: Warning: worker package /scratch/pegasus-5.1.3-dev.0-x86_64_suse_15 does not seem to match the system x86_64_ubuntu_22
+2026-09-11 05:25:34: Downloading Pegasus worker package from http://download.pegasus.isi.edu/pegasus/5.1.3-dev.0/pegasus-worker-5.1.3-dev.0-x86_64_ubuntu_22.tar.gz
+curl: /opt/udiImage/modules/mpich/dep/libcurl.so.4: no version information available (required by curl)
+PATH in container is set to is set to /scratch/pegasus-5.1.3-dev.0-x86_64_ubuntu_22/bin:/opt/udiImage/modules/gpu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/udiImage/bin
+
+#########################[Container] Launching user task #########################
+
+############################ Staging out output files ############################
+2026-09-10 22:36:59,514    INFO:  Reading URL pairs from stdin
+2026-09-10 22:36:59,515    INFO:  2 transfers loaded
+2026-09-10 22:36:59,515    INFO:  PATH=/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/pegasus-5.1.3-dev.0-x86_64_suse_15/bin:/opt/nersc/pe/bin:/global/common/software/nersc/bin:/global/common/software/nersc9/darshan/default/bin:/global/common/software/nersc9/sqs/2.0/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/compute-sanitizer:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/libnvvp:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/profilers/13.2/Nsight_Compute:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/profilers/13.2/Nsight_Systems/bin:/opt/cray/pe/perftools/26.03.0/bin:/opt/cray/pe/papi/7.3.0.1/bin:/opt/cray/pe/craype/2.7.36/bin:/opt/cray/pe/mpich/9.1.0/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.1.0/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/libfabric/1.22.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin:/usr/sbin
+2026-09-10 22:36:59,515    INFO:  LD_LIBRARY_PATH=/global/common/software/nersc9/darshan/default/lib:/usr/local/cuda-13.2/compat:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/math_libs/13.2/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/extras/CUPTI/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/extras/Debugger/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/nvvm/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/26.5/cuda/13.2/lib64:/opt/cray/pe/papi/7.3.0.1/lib64:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/libfabric/default/lib64
+2026-09-10 22:36:59,567    INFO:  --------------------------------------------------------------------------------
+2026-09-10 22:36:59,567    INFO:  Starting transfers - attempt 1
+2026-09-10 22:37:01,578    INFO:  /bin/cp -f -R -L '/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_trim_R1.fastq.gz' '/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_trim_R1.fastq.gz'
+2026-09-10 22:37:04,061    INFO:  /bin/cp -f -R -L '/pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2/QNF_trim_R2.fastq.gz' '/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./QNF_trim_R2.fastq.gz'
+2026-09-10 22:37:06,416    INFO:  --------------------------------------------------------------------------------
+2026-09-10 22:37:06,418    INFO:  Stats: Total 2 transfers, 3.3 GB transferred in 7 seconds. Rate: 489.8 MB/s (3.8 Gb/s)
+2026-09-10 22:37:06,418    INFO:         Between sites compute->compute : 2 transfers, 3.3 GB transferred in 7 seconds. Rate: 489.8 MB/s (3.8 Gb/s)
+2026-09-10 22:37:06,418    INFO:  All transfers completed successfully.
+2026-09-10 22:37:11: /pscratch/sd/h/hsafri/.blah/bl_RybrBY/pegasus.uXCZqRwY2 cleaned up
+PegasusLite: runtime 743
+PegasusLite: exitcode 0

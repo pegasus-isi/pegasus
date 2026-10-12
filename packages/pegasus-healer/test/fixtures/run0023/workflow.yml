@@ -1,0 +1,2308 @@
+x-pegasus:
+  apiLang: python
+  createdBy: hsafri
+  createdOn: 09-11-26T05:13:19Z
+pegasus: 5.0.4
+name: subductcr-end-to-end
+replicaCatalog:
+  replicas:
+  - lfn: kebj01_16s.fasta
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/16s/kebj01_16s.fasta
+  - lfn: silva_v132.db
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/silva_v132.db
+  - lfn: silva_v132.tax
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/silva_v132.tax
+  - lfn: ARS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ARS_R1.fastq.gz
+  - lfn: ARS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ARS_R2.fastq.gz
+  - lfn: BQF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R1.fastq.gz
+  - lfn: BQF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQF_R2.fastq.gz
+  - lfn: BQS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R1.fastq.gz
+  - lfn: BQS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BQS_R2.fastq.gz
+  - lfn: BR1F_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BR1F_R1.fastq.gz
+  - lfn: BR1F_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BR1F_R2.fastq.gz
+  - lfn: BRF2_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R1.fastq.gz
+  - lfn: BRF2_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRF2_R2.fastq.gz
+  - lfn: BRS1_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R1.fastq.gz
+  - lfn: BRS1_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS1_R2.fastq.gz
+  - lfn: BRS2_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R1.fastq.gz
+  - lfn: BRS2_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BRS2_R2.fastq.gz
+  - lfn: CYF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R1.fastq.gz
+  - lfn: CYF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYF_R2.fastq.gz
+  - lfn: CYS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYS_R1.fastq.gz
+  - lfn: CYS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYS_R2.fastq.gz
+  - lfn: EPF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPF_R1.fastq.gz
+  - lfn: EPF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPF_R2.fastq.gz
+  - lfn: EPS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R1.fastq.gz
+  - lfn: EPS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPS_R2.fastq.gz
+  - lfn: ESF9_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ESF9_R1.fastq.gz
+  - lfn: ESF9_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ESF9_R2.fastq.gz
+  - lfn: ETS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ETS_R1.fastq.gz
+  - lfn: ETS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ETS_R2.fastq.gz
+  - lfn: FAS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/FAS_R1.fastq.gz
+  - lfn: FAS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/FAS_R2.fastq.gz
+  - lfn: MTF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R1.fastq.gz
+  - lfn: MTF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/MTF_R2.fastq.gz
+  - lfn: PBS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R1.fastq.gz
+  - lfn: PBS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PBS_R2.fastq.gz
+  - lfn: PFF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFF_R1.fastq.gz
+  - lfn: PFF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFF_R2.fastq.gz
+  - lfn: PFS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R1.fastq.gz
+  - lfn: PFS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFS_R2.fastq.gz
+  - lfn: PGF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R1.fastq.gz
+  - lfn: PGF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGF_R2.fastq.gz
+  - lfn: PGS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGS_R1.fastq.gz
+  - lfn: PGS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGS_R2.fastq.gz
+  - lfn: PLS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PLS_R1.fastq.gz
+  - lfn: PLS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PLS_R2.fastq.gz
+  - lfn: QH2F_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R1.fastq.gz
+  - lfn: QH2F_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QH2F_R2.fastq.gz
+  - lfn: QHS1_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS1_R1.fastq.gz
+  - lfn: QHS1_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS1_R2.fastq.gz
+  - lfn: QHS2_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R1.fastq.gz
+  - lfn: QHS2_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS2_R2.fastq.gz
+  - lfn: QNF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R1.fastq.gz
+  - lfn: QNF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNF_R2.fastq.gz
+  - lfn: QNS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNS_R1.fastq.gz
+  - lfn: QNS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNS_R2.fastq.gz
+  - lfn: RSF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSF_R1.fastq.gz
+  - lfn: RSF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSF_R2.fastq.gz
+  - lfn: RSS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSS_R1.fastq.gz
+  - lfn: RSS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSS_R2.fastq.gz
+  - lfn: RVF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R1.fastq.gz
+  - lfn: RVF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RVF_R2.fastq.gz
+  - lfn: SIF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIF_R1.fastq.gz
+  - lfn: SIF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIF_R2.fastq.gz
+  - lfn: SIS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R1.fastq.gz
+  - lfn: SIS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIS_R2.fastq.gz
+  - lfn: SLF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLF_R1.fastq.gz
+  - lfn: SLF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLF_R2.fastq.gz
+  - lfn: SLS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R1.fastq.gz
+  - lfn: SLS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLS_R2.fastq.gz
+  - lfn: TCF_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCF_R1.fastq.gz
+  - lfn: TCF_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCF_R2.fastq.gz
+  - lfn: TCS_R1.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCS_R1.fastq.gz
+  - lfn: TCS_R2.fastq.gz
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCS_R2.fastq.gz
+  - lfn: ec_carbon.csv
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/ec_carbon.csv
+  - lfn: geochem.csv
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/geochem.csv
+  - lfn: cell_counts.csv
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/cell_counts.csv
+  - lfn: flux_params.yml
+    pfns:
+    - site: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/config/flux_params.yml
+transformationCatalog:
+  transformations:
+  - name: mothur_asv
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/mothur_asv
+      type: stageable
+      container: subductcr-mothur
+    profiles:
+      pegasus:
+        memory: '65536'
+        cores: '8'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: filter_normalize
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/filter_normalize
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: asv_network
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/asv_network
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: nmds_adonis
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/nmds_adonis
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: clique_geochem
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/clique_geochem
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: trim_reads
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads
+      type: stageable
+      container: subductcr-mothur
+    profiles:
+      pegasus:
+        memory: '16384'
+        cores: '8'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: mifaser
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/mifaser
+      type: stageable
+      container: subductcr-mifaser
+    profiles:
+      pegasus:
+        memory: '65536'
+        cores: '8'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: gene_merge
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_merge
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: gene_network
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_network
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: gene_geochem
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_geochem
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: carbon_flux
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  - name: make_report
+    sites:
+    - name: local
+      pfn: /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/make_report
+      type: stageable
+      container: subductcr-r
+    profiles:
+      pegasus:
+        memory: '4096'
+        cores: '1'
+        runtime: '43200'
+        maxwalltime: '720'
+        glite.arguments: -C cpu
+  containers:
+  - name: subductcr-r
+    type: shifter
+    image: shifter:///swarmourr/subductcr-r:latest
+    bypass: true
+  - name: subductcr-mothur
+    type: shifter
+    image: shifter:///swarmourr/subductcr-mothur:latest
+    bypass: true
+  - name: subductcr-mifaser
+    type: shifter
+    image: shifter:///swarmourr/subductcr-mifaser:latest
+    bypass: true
+jobs:
+- type: job
+  name: trim_reads
+  id: trim_ARS
+  arguments:
+  - ARS_R1.fastq.gz
+  - ARS_R2.fastq.gz
+  - ARS_trim_R1.fastq.gz
+  - ARS_trim_R2.fastq.gz
+  uses:
+  - lfn: ARS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: ARS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: ARS_R2.fastq.gz
+    type: input
+  - lfn: ARS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_ARS
+  arguments:
+  - ARS_trim_R1.fastq.gz
+  - ARS_trim_R2.fastq.gz
+  - ARS_enzymes.tsv
+  uses:
+  - lfn: ARS_trim_R2.fastq.gz
+    type: input
+  - lfn: ARS_trim_R1.fastq.gz
+    type: input
+  - lfn: ARS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_BQF
+  arguments:
+  - BQF_R1.fastq.gz
+  - BQF_R2.fastq.gz
+  - BQF_trim_R1.fastq.gz
+  - BQF_trim_R2.fastq.gz
+  uses:
+  - lfn: BQF_R2.fastq.gz
+    type: input
+  - lfn: BQF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BQF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BQF_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BQF
+  arguments:
+  - BQF_trim_R1.fastq.gz
+  - BQF_trim_R2.fastq.gz
+  - BQF_enzymes.tsv
+  uses:
+  - lfn: BQF_trim_R1.fastq.gz
+    type: input
+  - lfn: BQF_trim_R2.fastq.gz
+    type: input
+  - lfn: BQF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_BQS
+  arguments:
+  - BQS_R1.fastq.gz
+  - BQS_R2.fastq.gz
+  - BQS_trim_R1.fastq.gz
+  - BQS_trim_R2.fastq.gz
+  uses:
+  - lfn: BQS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BQS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BQS_R1.fastq.gz
+    type: input
+  - lfn: BQS_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BQS
+  arguments:
+  - BQS_trim_R1.fastq.gz
+  - BQS_trim_R2.fastq.gz
+  - BQS_enzymes.tsv
+  uses:
+  - lfn: BQS_trim_R1.fastq.gz
+    type: input
+  - lfn: BQS_trim_R2.fastq.gz
+    type: input
+  - lfn: BQS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_BR1F
+  arguments:
+  - BR1F_R1.fastq.gz
+  - BR1F_R2.fastq.gz
+  - BR1F_trim_R1.fastq.gz
+  - BR1F_trim_R2.fastq.gz
+  uses:
+  - lfn: BR1F_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BR1F_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BR1F_R1.fastq.gz
+    type: input
+  - lfn: BR1F_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BR1F
+  arguments:
+  - BR1F_trim_R1.fastq.gz
+  - BR1F_trim_R2.fastq.gz
+  - BR1F_enzymes.tsv
+  uses:
+  - lfn: BR1F_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: BR1F_trim_R1.fastq.gz
+    type: input
+  - lfn: BR1F_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_BRF2
+  arguments:
+  - BRF2_R1.fastq.gz
+  - BRF2_R2.fastq.gz
+  - BRF2_trim_R1.fastq.gz
+  - BRF2_trim_R2.fastq.gz
+  uses:
+  - lfn: BRF2_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRF2_R1.fastq.gz
+    type: input
+  - lfn: BRF2_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRF2_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BRF2
+  arguments:
+  - BRF2_trim_R1.fastq.gz
+  - BRF2_trim_R2.fastq.gz
+  - BRF2_enzymes.tsv
+  uses:
+  - lfn: BRF2_trim_R1.fastq.gz
+    type: input
+  - lfn: BRF2_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: BRF2_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_BRS1
+  arguments:
+  - BRS1_R1.fastq.gz
+  - BRS1_R2.fastq.gz
+  - BRS1_trim_R1.fastq.gz
+  - BRS1_trim_R2.fastq.gz
+  uses:
+  - lfn: BRS1_R1.fastq.gz
+    type: input
+  - lfn: BRS1_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRS1_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRS1_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BRS1
+  arguments:
+  - BRS1_trim_R1.fastq.gz
+  - BRS1_trim_R2.fastq.gz
+  - BRS1_enzymes.tsv
+  uses:
+  - lfn: BRS1_trim_R1.fastq.gz
+    type: input
+  - lfn: BRS1_trim_R2.fastq.gz
+    type: input
+  - lfn: BRS1_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_BRS2
+  arguments:
+  - BRS2_R1.fastq.gz
+  - BRS2_R2.fastq.gz
+  - BRS2_trim_R1.fastq.gz
+  - BRS2_trim_R2.fastq.gz
+  uses:
+  - lfn: BRS2_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRS2_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: BRS2_R1.fastq.gz
+    type: input
+  - lfn: BRS2_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_BRS2
+  arguments:
+  - BRS2_trim_R1.fastq.gz
+  - BRS2_trim_R2.fastq.gz
+  - BRS2_enzymes.tsv
+  uses:
+  - lfn: BRS2_trim_R2.fastq.gz
+    type: input
+  - lfn: BRS2_trim_R1.fastq.gz
+    type: input
+  - lfn: BRS2_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_CYF
+  arguments:
+  - CYF_R1.fastq.gz
+  - CYF_R2.fastq.gz
+  - CYF_trim_R1.fastq.gz
+  - CYF_trim_R2.fastq.gz
+  uses:
+  - lfn: CYF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: CYF_R2.fastq.gz
+    type: input
+  - lfn: CYF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: CYF_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_CYF
+  arguments:
+  - CYF_trim_R1.fastq.gz
+  - CYF_trim_R2.fastq.gz
+  - CYF_enzymes.tsv
+  uses:
+  - lfn: CYF_trim_R1.fastq.gz
+    type: input
+  - lfn: CYF_trim_R2.fastq.gz
+    type: input
+  - lfn: CYF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_CYS
+  arguments:
+  - CYS_R1.fastq.gz
+  - CYS_R2.fastq.gz
+  - CYS_trim_R1.fastq.gz
+  - CYS_trim_R2.fastq.gz
+  uses:
+  - lfn: CYS_R1.fastq.gz
+    type: input
+  - lfn: CYS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: CYS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: CYS_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_CYS
+  arguments:
+  - CYS_trim_R1.fastq.gz
+  - CYS_trim_R2.fastq.gz
+  - CYS_enzymes.tsv
+  uses:
+  - lfn: CYS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: CYS_trim_R1.fastq.gz
+    type: input
+  - lfn: CYS_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_EPF
+  arguments:
+  - EPF_R1.fastq.gz
+  - EPF_R2.fastq.gz
+  - EPF_trim_R1.fastq.gz
+  - EPF_trim_R2.fastq.gz
+  uses:
+  - lfn: EPF_R2.fastq.gz
+    type: input
+  - lfn: EPF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: EPF_R1.fastq.gz
+    type: input
+  - lfn: EPF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_EPF
+  arguments:
+  - EPF_trim_R1.fastq.gz
+  - EPF_trim_R2.fastq.gz
+  - EPF_enzymes.tsv
+  uses:
+  - lfn: EPF_trim_R2.fastq.gz
+    type: input
+  - lfn: EPF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: EPF_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_EPS
+  arguments:
+  - EPS_R1.fastq.gz
+  - EPS_R2.fastq.gz
+  - EPS_trim_R1.fastq.gz
+  - EPS_trim_R2.fastq.gz
+  uses:
+  - lfn: EPS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: EPS_R2.fastq.gz
+    type: input
+  - lfn: EPS_R1.fastq.gz
+    type: input
+  - lfn: EPS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_EPS
+  arguments:
+  - EPS_trim_R1.fastq.gz
+  - EPS_trim_R2.fastq.gz
+  - EPS_enzymes.tsv
+  uses:
+  - lfn: EPS_trim_R1.fastq.gz
+    type: input
+  - lfn: EPS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: EPS_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_ESF9
+  arguments:
+  - ESF9_R1.fastq.gz
+  - ESF9_R2.fastq.gz
+  - ESF9_trim_R1.fastq.gz
+  - ESF9_trim_R2.fastq.gz
+  uses:
+  - lfn: ESF9_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: ESF9_R1.fastq.gz
+    type: input
+  - lfn: ESF9_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: ESF9_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_ESF9
+  arguments:
+  - ESF9_trim_R1.fastq.gz
+  - ESF9_trim_R2.fastq.gz
+  - ESF9_enzymes.tsv
+  uses:
+  - lfn: ESF9_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: ESF9_trim_R1.fastq.gz
+    type: input
+  - lfn: ESF9_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_ETS
+  arguments:
+  - ETS_R1.fastq.gz
+  - ETS_R2.fastq.gz
+  - ETS_trim_R1.fastq.gz
+  - ETS_trim_R2.fastq.gz
+  uses:
+  - lfn: ETS_R1.fastq.gz
+    type: input
+  - lfn: ETS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: ETS_R2.fastq.gz
+    type: input
+  - lfn: ETS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_ETS
+  arguments:
+  - ETS_trim_R1.fastq.gz
+  - ETS_trim_R2.fastq.gz
+  - ETS_enzymes.tsv
+  uses:
+  - lfn: ETS_trim_R2.fastq.gz
+    type: input
+  - lfn: ETS_trim_R1.fastq.gz
+    type: input
+  - lfn: ETS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_FAS
+  arguments:
+  - FAS_R1.fastq.gz
+  - FAS_R2.fastq.gz
+  - FAS_trim_R1.fastq.gz
+  - FAS_trim_R2.fastq.gz
+  uses:
+  - lfn: FAS_R2.fastq.gz
+    type: input
+  - lfn: FAS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: FAS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: FAS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_FAS
+  arguments:
+  - FAS_trim_R1.fastq.gz
+  - FAS_trim_R2.fastq.gz
+  - FAS_enzymes.tsv
+  uses:
+  - lfn: FAS_trim_R2.fastq.gz
+    type: input
+  - lfn: FAS_trim_R1.fastq.gz
+    type: input
+  - lfn: FAS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_MTF
+  arguments:
+  - MTF_R1.fastq.gz
+  - MTF_R2.fastq.gz
+  - MTF_trim_R1.fastq.gz
+  - MTF_trim_R2.fastq.gz
+  uses:
+  - lfn: MTF_R2.fastq.gz
+    type: input
+  - lfn: MTF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: MTF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: MTF_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_MTF
+  arguments:
+  - MTF_trim_R1.fastq.gz
+  - MTF_trim_R2.fastq.gz
+  - MTF_enzymes.tsv
+  uses:
+  - lfn: MTF_trim_R2.fastq.gz
+    type: input
+  - lfn: MTF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: MTF_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_PBS
+  arguments:
+  - PBS_R1.fastq.gz
+  - PBS_R2.fastq.gz
+  - PBS_trim_R1.fastq.gz
+  - PBS_trim_R2.fastq.gz
+  uses:
+  - lfn: PBS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PBS_R2.fastq.gz
+    type: input
+  - lfn: PBS_R1.fastq.gz
+    type: input
+  - lfn: PBS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_PBS
+  arguments:
+  - PBS_trim_R1.fastq.gz
+  - PBS_trim_R2.fastq.gz
+  - PBS_enzymes.tsv
+  uses:
+  - lfn: PBS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: PBS_trim_R1.fastq.gz
+    type: input
+  - lfn: PBS_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_PFF
+  arguments:
+  - PFF_R1.fastq.gz
+  - PFF_R2.fastq.gz
+  - PFF_trim_R1.fastq.gz
+  - PFF_trim_R2.fastq.gz
+  uses:
+  - lfn: PFF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PFF_R2.fastq.gz
+    type: input
+  - lfn: PFF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PFF_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_PFF
+  arguments:
+  - PFF_trim_R1.fastq.gz
+  - PFF_trim_R2.fastq.gz
+  - PFF_enzymes.tsv
+  uses:
+  - lfn: PFF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: PFF_trim_R1.fastq.gz
+    type: input
+  - lfn: PFF_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_PFS
+  arguments:
+  - PFS_R1.fastq.gz
+  - PFS_R2.fastq.gz
+  - PFS_trim_R1.fastq.gz
+  - PFS_trim_R2.fastq.gz
+  uses:
+  - lfn: PFS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PFS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PFS_R1.fastq.gz
+    type: input
+  - lfn: PFS_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_PFS
+  arguments:
+  - PFS_trim_R1.fastq.gz
+  - PFS_trim_R2.fastq.gz
+  - PFS_enzymes.tsv
+  uses:
+  - lfn: PFS_trim_R2.fastq.gz
+    type: input
+  - lfn: PFS_trim_R1.fastq.gz
+    type: input
+  - lfn: PFS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_PGF
+  arguments:
+  - PGF_R1.fastq.gz
+  - PGF_R2.fastq.gz
+  - PGF_trim_R1.fastq.gz
+  - PGF_trim_R2.fastq.gz
+  uses:
+  - lfn: PGF_R2.fastq.gz
+    type: input
+  - lfn: PGF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PGF_R1.fastq.gz
+    type: input
+  - lfn: PGF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_PGF
+  arguments:
+  - PGF_trim_R1.fastq.gz
+  - PGF_trim_R2.fastq.gz
+  - PGF_enzymes.tsv
+  uses:
+  - lfn: PGF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: PGF_trim_R2.fastq.gz
+    type: input
+  - lfn: PGF_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_PGS
+  arguments:
+  - PGS_R1.fastq.gz
+  - PGS_R2.fastq.gz
+  - PGS_trim_R1.fastq.gz
+  - PGS_trim_R2.fastq.gz
+  uses:
+  - lfn: PGS_R2.fastq.gz
+    type: input
+  - lfn: PGS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PGS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PGS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_PGS
+  arguments:
+  - PGS_trim_R1.fastq.gz
+  - PGS_trim_R2.fastq.gz
+  - PGS_enzymes.tsv
+  uses:
+  - lfn: PGS_trim_R1.fastq.gz
+    type: input
+  - lfn: PGS_trim_R2.fastq.gz
+    type: input
+  - lfn: PGS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_PLS
+  arguments:
+  - PLS_R1.fastq.gz
+  - PLS_R2.fastq.gz
+  - PLS_trim_R1.fastq.gz
+  - PLS_trim_R2.fastq.gz
+  uses:
+  - lfn: PLS_R2.fastq.gz
+    type: input
+  - lfn: PLS_R1.fastq.gz
+    type: input
+  - lfn: PLS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: PLS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_PLS
+  arguments:
+  - PLS_trim_R1.fastq.gz
+  - PLS_trim_R2.fastq.gz
+  - PLS_enzymes.tsv
+  uses:
+  - lfn: PLS_trim_R2.fastq.gz
+    type: input
+  - lfn: PLS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: PLS_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_QH2F
+  arguments:
+  - QH2F_R1.fastq.gz
+  - QH2F_R2.fastq.gz
+  - QH2F_trim_R1.fastq.gz
+  - QH2F_trim_R2.fastq.gz
+  uses:
+  - lfn: QH2F_R1.fastq.gz
+    type: input
+  - lfn: QH2F_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QH2F_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QH2F_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_QH2F
+  arguments:
+  - QH2F_trim_R1.fastq.gz
+  - QH2F_trim_R2.fastq.gz
+  - QH2F_enzymes.tsv
+  uses:
+  - lfn: QH2F_trim_R2.fastq.gz
+    type: input
+  - lfn: QH2F_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: QH2F_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_QHS1
+  arguments:
+  - QHS1_R1.fastq.gz
+  - QHS1_R2.fastq.gz
+  - QHS1_trim_R1.fastq.gz
+  - QHS1_trim_R2.fastq.gz
+  uses:
+  - lfn: QHS1_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QHS1_R2.fastq.gz
+    type: input
+  - lfn: QHS1_R1.fastq.gz
+    type: input
+  - lfn: QHS1_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_QHS1
+  arguments:
+  - QHS1_trim_R1.fastq.gz
+  - QHS1_trim_R2.fastq.gz
+  - QHS1_enzymes.tsv
+  uses:
+  - lfn: QHS1_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: QHS1_trim_R2.fastq.gz
+    type: input
+  - lfn: QHS1_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_QHS2
+  arguments:
+  - QHS2_R1.fastq.gz
+  - QHS2_R2.fastq.gz
+  - QHS2_trim_R1.fastq.gz
+  - QHS2_trim_R2.fastq.gz
+  uses:
+  - lfn: QHS2_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QHS2_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QHS2_R2.fastq.gz
+    type: input
+  - lfn: QHS2_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_QHS2
+  arguments:
+  - QHS2_trim_R1.fastq.gz
+  - QHS2_trim_R2.fastq.gz
+  - QHS2_enzymes.tsv
+  uses:
+  - lfn: QHS2_trim_R2.fastq.gz
+    type: input
+  - lfn: QHS2_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: QHS2_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_QNF
+  arguments:
+  - QNF_R1.fastq.gz
+  - QNF_R2.fastq.gz
+  - QNF_trim_R1.fastq.gz
+  - QNF_trim_R2.fastq.gz
+  uses:
+  - lfn: QNF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QNF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QNF_R2.fastq.gz
+    type: input
+  - lfn: QNF_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_QNF
+  arguments:
+  - QNF_trim_R1.fastq.gz
+  - QNF_trim_R2.fastq.gz
+  - QNF_enzymes.tsv
+  uses:
+  - lfn: QNF_trim_R2.fastq.gz
+    type: input
+  - lfn: QNF_trim_R1.fastq.gz
+    type: input
+  - lfn: QNF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_QNS
+  arguments:
+  - QNS_R1.fastq.gz
+  - QNS_R2.fastq.gz
+  - QNS_trim_R1.fastq.gz
+  - QNS_trim_R2.fastq.gz
+  uses:
+  - lfn: QNS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QNS_R2.fastq.gz
+    type: input
+  - lfn: QNS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: QNS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_QNS
+  arguments:
+  - QNS_trim_R1.fastq.gz
+  - QNS_trim_R2.fastq.gz
+  - QNS_enzymes.tsv
+  uses:
+  - lfn: QNS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: QNS_trim_R2.fastq.gz
+    type: input
+  - lfn: QNS_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_RSF
+  arguments:
+  - RSF_R1.fastq.gz
+  - RSF_R2.fastq.gz
+  - RSF_trim_R1.fastq.gz
+  - RSF_trim_R2.fastq.gz
+  uses:
+  - lfn: RSF_R2.fastq.gz
+    type: input
+  - lfn: RSF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: RSF_R1.fastq.gz
+    type: input
+  - lfn: RSF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_RSF
+  arguments:
+  - RSF_trim_R1.fastq.gz
+  - RSF_trim_R2.fastq.gz
+  - RSF_enzymes.tsv
+  uses:
+  - lfn: RSF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: RSF_trim_R1.fastq.gz
+    type: input
+  - lfn: RSF_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_RSS
+  arguments:
+  - RSS_R1.fastq.gz
+  - RSS_R2.fastq.gz
+  - RSS_trim_R1.fastq.gz
+  - RSS_trim_R2.fastq.gz
+  uses:
+  - lfn: RSS_R1.fastq.gz
+    type: input
+  - lfn: RSS_R2.fastq.gz
+    type: input
+  - lfn: RSS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: RSS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_RSS
+  arguments:
+  - RSS_trim_R1.fastq.gz
+  - RSS_trim_R2.fastq.gz
+  - RSS_enzymes.tsv
+  uses:
+  - lfn: RSS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: RSS_trim_R2.fastq.gz
+    type: input
+  - lfn: RSS_trim_R1.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_RVF
+  arguments:
+  - RVF_R1.fastq.gz
+  - RVF_R2.fastq.gz
+  - RVF_trim_R1.fastq.gz
+  - RVF_trim_R2.fastq.gz
+  uses:
+  - lfn: RVF_R2.fastq.gz
+    type: input
+  - lfn: RVF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: RVF_R1.fastq.gz
+    type: input
+  - lfn: RVF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_RVF
+  arguments:
+  - RVF_trim_R1.fastq.gz
+  - RVF_trim_R2.fastq.gz
+  - RVF_enzymes.tsv
+  uses:
+  - lfn: RVF_trim_R2.fastq.gz
+    type: input
+  - lfn: RVF_trim_R1.fastq.gz
+    type: input
+  - lfn: RVF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_SIF
+  arguments:
+  - SIF_R1.fastq.gz
+  - SIF_R2.fastq.gz
+  - SIF_trim_R1.fastq.gz
+  - SIF_trim_R2.fastq.gz
+  uses:
+  - lfn: SIF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SIF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SIF_R1.fastq.gz
+    type: input
+  - lfn: SIF_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_SIF
+  arguments:
+  - SIF_trim_R1.fastq.gz
+  - SIF_trim_R2.fastq.gz
+  - SIF_enzymes.tsv
+  uses:
+  - lfn: SIF_trim_R2.fastq.gz
+    type: input
+  - lfn: SIF_trim_R1.fastq.gz
+    type: input
+  - lfn: SIF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_SIS
+  arguments:
+  - SIS_R1.fastq.gz
+  - SIS_R2.fastq.gz
+  - SIS_trim_R1.fastq.gz
+  - SIS_trim_R2.fastq.gz
+  uses:
+  - lfn: SIS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SIS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SIS_R2.fastq.gz
+    type: input
+  - lfn: SIS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_SIS
+  arguments:
+  - SIS_trim_R1.fastq.gz
+  - SIS_trim_R2.fastq.gz
+  - SIS_enzymes.tsv
+  uses:
+  - lfn: SIS_trim_R2.fastq.gz
+    type: input
+  - lfn: SIS_trim_R1.fastq.gz
+    type: input
+  - lfn: SIS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_SLF
+  arguments:
+  - SLF_R1.fastq.gz
+  - SLF_R2.fastq.gz
+  - SLF_trim_R1.fastq.gz
+  - SLF_trim_R2.fastq.gz
+  uses:
+  - lfn: SLF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SLF_R1.fastq.gz
+    type: input
+  - lfn: SLF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SLF_R2.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_SLF
+  arguments:
+  - SLF_trim_R1.fastq.gz
+  - SLF_trim_R2.fastq.gz
+  - SLF_enzymes.tsv
+  uses:
+  - lfn: SLF_trim_R1.fastq.gz
+    type: input
+  - lfn: SLF_trim_R2.fastq.gz
+    type: input
+  - lfn: SLF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_SLS
+  arguments:
+  - SLS_R1.fastq.gz
+  - SLS_R2.fastq.gz
+  - SLS_trim_R1.fastq.gz
+  - SLS_trim_R2.fastq.gz
+  uses:
+  - lfn: SLS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SLS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: SLS_R2.fastq.gz
+    type: input
+  - lfn: SLS_R1.fastq.gz
+    type: input
+- type: job
+  name: mifaser
+  id: mifaser_SLS
+  arguments:
+  - SLS_trim_R1.fastq.gz
+  - SLS_trim_R2.fastq.gz
+  - SLS_enzymes.tsv
+  uses:
+  - lfn: SLS_trim_R1.fastq.gz
+    type: input
+  - lfn: SLS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: SLS_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: trim_reads
+  id: trim_TCF
+  arguments:
+  - TCF_R1.fastq.gz
+  - TCF_R2.fastq.gz
+  - TCF_trim_R1.fastq.gz
+  - TCF_trim_R2.fastq.gz
+  uses:
+  - lfn: TCF_R1.fastq.gz
+    type: input
+  - lfn: TCF_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: TCF_R2.fastq.gz
+    type: input
+  - lfn: TCF_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_TCF
+  arguments:
+  - TCF_trim_R1.fastq.gz
+  - TCF_trim_R2.fastq.gz
+  - TCF_enzymes.tsv
+  uses:
+  - lfn: TCF_trim_R1.fastq.gz
+    type: input
+  - lfn: TCF_trim_R2.fastq.gz
+    type: input
+  - lfn: TCF_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: trim_reads
+  id: trim_TCS
+  arguments:
+  - TCS_R1.fastq.gz
+  - TCS_R2.fastq.gz
+  - TCS_trim_R1.fastq.gz
+  - TCS_trim_R2.fastq.gz
+  uses:
+  - lfn: TCS_R1.fastq.gz
+    type: input
+  - lfn: TCS_R2.fastq.gz
+    type: input
+  - lfn: TCS_trim_R1.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+  - lfn: TCS_trim_R2.fastq.gz
+    type: output
+    stageOut: false
+    registerReplica: false
+- type: job
+  name: mifaser
+  id: mifaser_TCS
+  arguments:
+  - TCS_trim_R1.fastq.gz
+  - TCS_trim_R2.fastq.gz
+  - TCS_enzymes.tsv
+  uses:
+  - lfn: TCS_enzymes.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: TCS_trim_R1.fastq.gz
+    type: input
+  - lfn: TCS_trim_R2.fastq.gz
+    type: input
+- type: job
+  name: mothur_asv
+  id: mothur_asv
+  arguments:
+  - kebj01_16s.fasta
+  - silva_v132.db
+  - silva_v132.tax
+  - asv_table.tsv
+  - taxonomy.tsv
+  uses:
+  - lfn: taxonomy.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: silva_v132.db
+    type: input
+  - lfn: kebj01_16s.fasta
+    type: input
+  - lfn: asv_table.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: silva_v132.tax
+    type: input
+- type: job
+  name: filter_normalize
+  id: filter_normalize
+  arguments:
+  - asv_table.tsv
+  - taxonomy.tsv
+  - filtered.rds
+  uses:
+  - lfn: taxonomy.tsv
+    type: input
+  - lfn: filtered.rds
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: asv_table.tsv
+    type: input
+- type: job
+  name: asv_network
+  id: asv_network
+  arguments:
+  - filtered.rds
+  - asv_cliques.rds
+  uses:
+  - lfn: filtered.rds
+    type: input
+  - lfn: asv_cliques.rds
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: nmds_adonis
+  id: nmds_adonis
+  arguments:
+  - filtered.rds
+  - geochem.csv
+  - nmds.tsv
+  - adonis.tsv
+  - fig2.pdf
+  uses:
+  - lfn: filtered.rds
+    type: input
+  - lfn: fig2.pdf
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: nmds.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: geochem.csv
+    type: input
+  - lfn: adonis.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+- type: job
+  name: clique_geochem
+  id: clique_geochem
+  arguments:
+  - asv_cliques.rds
+  - geochem.csv
+  - asv_clique_env.tsv
+  uses:
+  - lfn: asv_cliques.rds
+    type: input
+  - lfn: asv_clique_env.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: geochem.csv
+    type: input
+- type: job
+  name: gene_merge
+  id: gene_merge
+  arguments:
+  - ec_carbon.csv
+  - gene_table.tsv
+  - ARS_enzymes.tsv
+  - BQF_enzymes.tsv
+  - BQS_enzymes.tsv
+  - BR1F_enzymes.tsv
+  - BRF2_enzymes.tsv
+  - BRS1_enzymes.tsv
+  - BRS2_enzymes.tsv
+  - CYF_enzymes.tsv
+  - CYS_enzymes.tsv
+  - EPF_enzymes.tsv
+  - EPS_enzymes.tsv
+  - ESF9_enzymes.tsv
+  - ETS_enzymes.tsv
+  - FAS_enzymes.tsv
+  - MTF_enzymes.tsv
+  - PBS_enzymes.tsv
+  - PFF_enzymes.tsv
+  - PFS_enzymes.tsv
+  - PGF_enzymes.tsv
+  - PGS_enzymes.tsv
+  - PLS_enzymes.tsv
+  - QH2F_enzymes.tsv
+  - QHS1_enzymes.tsv
+  - QHS2_enzymes.tsv
+  - QNF_enzymes.tsv
+  - QNS_enzymes.tsv
+  - RSF_enzymes.tsv
+  - RSS_enzymes.tsv
+  - RVF_enzymes.tsv
+  - SIF_enzymes.tsv
+  - SIS_enzymes.tsv
+  - SLF_enzymes.tsv
+  - SLS_enzymes.tsv
+  - TCF_enzymes.tsv
+  - TCS_enzymes.tsv
+  uses:
+  - lfn: CYF_enzymes.tsv
+    type: input
+  - lfn: BR1F_enzymes.tsv
+    type: input
+  - lfn: CYS_enzymes.tsv
+    type: input
+  - lfn: RSS_enzymes.tsv
+    type: input
+  - lfn: QNS_enzymes.tsv
+    type: input
+  - lfn: EPS_enzymes.tsv
+    type: input
+  - lfn: PGF_enzymes.tsv
+    type: input
+  - lfn: SLS_enzymes.tsv
+    type: input
+  - lfn: BQS_enzymes.tsv
+    type: input
+  - lfn: FAS_enzymes.tsv
+    type: input
+  - lfn: QHS2_enzymes.tsv
+    type: input
+  - lfn: ec_carbon.csv
+    type: input
+  - lfn: EPF_enzymes.tsv
+    type: input
+  - lfn: RVF_enzymes.tsv
+    type: input
+  - lfn: ESF9_enzymes.tsv
+    type: input
+  - lfn: QHS1_enzymes.tsv
+    type: input
+  - lfn: BQF_enzymes.tsv
+    type: input
+  - lfn: MTF_enzymes.tsv
+    type: input
+  - lfn: BRS2_enzymes.tsv
+    type: input
+  - lfn: PGS_enzymes.tsv
+    type: input
+  - lfn: gene_table.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: SIF_enzymes.tsv
+    type: input
+  - lfn: ETS_enzymes.tsv
+    type: input
+  - lfn: TCF_enzymes.tsv
+    type: input
+  - lfn: QNF_enzymes.tsv
+    type: input
+  - lfn: PFS_enzymes.tsv
+    type: input
+  - lfn: TCS_enzymes.tsv
+    type: input
+  - lfn: QH2F_enzymes.tsv
+    type: input
+  - lfn: ARS_enzymes.tsv
+    type: input
+  - lfn: PLS_enzymes.tsv
+    type: input
+  - lfn: SIS_enzymes.tsv
+    type: input
+  - lfn: RSF_enzymes.tsv
+    type: input
+  - lfn: SLF_enzymes.tsv
+    type: input
+  - lfn: PFF_enzymes.tsv
+    type: input
+  - lfn: BRS1_enzymes.tsv
+    type: input
+  - lfn: BRF2_enzymes.tsv
+    type: input
+  - lfn: PBS_enzymes.tsv
+    type: input
+- type: job
+  name: gene_network
+  id: gene_network
+  arguments:
+  - gene_table.tsv
+  - gene_cliques.rds
+  uses:
+  - lfn: gene_cliques.rds
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: gene_table.tsv
+    type: input
+- type: job
+  name: gene_geochem
+  id: gene_geochem
+  arguments:
+  - gene_cliques.rds
+  - geochem.csv
+  - gene_clique_env.tsv
+  uses:
+  - lfn: gene_cliques.rds
+    type: input
+  - lfn: gene_clique_env.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: geochem.csv
+    type: input
+- type: job
+  name: carbon_flux
+  id: carbon_flux
+  arguments:
+  - geochem.csv
+  - cell_counts.csv
+  - flux_params.yml
+  - carbon_flux.tsv
+  uses:
+  - lfn: cell_counts.csv
+    type: input
+  - lfn: carbon_flux.tsv
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: flux_params.yml
+    type: input
+  - lfn: geochem.csv
+    type: input
+- type: job
+  name: make_report
+  id: make_report
+  arguments:
+  - asv_clique_env.tsv
+  - gene_clique_env.tsv
+  - nmds.tsv
+  - adonis.tsv
+  - carbon_flux.tsv
+  - report.html
+  uses:
+  - lfn: report.html
+    type: output
+    stageOut: true
+    registerReplica: true
+  - lfn: asv_clique_env.tsv
+    type: input
+  - lfn: nmds.tsv
+    type: input
+  - lfn: carbon_flux.tsv
+    type: input
+  - lfn: gene_clique_env.tsv
+    type: input
+  - lfn: adonis.tsv
+    type: input
+jobDependencies:
+- id: trim_ARS
+  children:
+  - mifaser_ARS
+- id: mifaser_ARS
+  children:
+  - gene_merge
+- id: trim_BQF
+  children:
+  - mifaser_BQF
+- id: mifaser_BQF
+  children:
+  - gene_merge
+- id: trim_BQS
+  children:
+  - mifaser_BQS
+- id: mifaser_BQS
+  children:
+  - gene_merge
+- id: trim_BR1F
+  children:
+  - mifaser_BR1F
+- id: mifaser_BR1F
+  children:
+  - gene_merge
+- id: trim_BRF2
+  children:
+  - mifaser_BRF2
+- id: mifaser_BRF2
+  children:
+  - gene_merge
+- id: trim_BRS1
+  children:
+  - mifaser_BRS1
+- id: mifaser_BRS1
+  children:
+  - gene_merge
+- id: trim_BRS2
+  children:
+  - mifaser_BRS2
+- id: mifaser_BRS2
+  children:
+  - gene_merge
+- id: trim_CYF
+  children:
+  - mifaser_CYF
+- id: mifaser_CYF
+  children:
+  - gene_merge
+- id: trim_CYS
+  children:
+  - mifaser_CYS
+- id: mifaser_CYS
+  children:
+  - gene_merge
+- id: trim_EPF
+  children:
+  - mifaser_EPF
+- id: mifaser_EPF
+  children:
+  - gene_merge
+- id: trim_EPS
+  children:
+  - mifaser_EPS
+- id: mifaser_EPS
+  children:
+  - gene_merge
+- id: trim_ESF9
+  children:
+  - mifaser_ESF9
+- id: mifaser_ESF9
+  children:
+  - gene_merge
+- id: trim_ETS
+  children:
+  - mifaser_ETS
+- id: mifaser_ETS
+  children:
+  - gene_merge
+- id: trim_FAS
+  children:
+  - mifaser_FAS
+- id: mifaser_FAS
+  children:
+  - gene_merge
+- id: trim_MTF
+  children:
+  - mifaser_MTF
+- id: mifaser_MTF
+  children:
+  - gene_merge
+- id: trim_PBS
+  children:
+  - mifaser_PBS
+- id: mifaser_PBS
+  children:
+  - gene_merge
+- id: trim_PFF
+  children:
+  - mifaser_PFF
+- id: mifaser_PFF
+  children:
+  - gene_merge
+- id: trim_PFS
+  children:
+  - mifaser_PFS
+- id: mifaser_PFS
+  children:
+  - gene_merge
+- id: trim_PGF
+  children:
+  - mifaser_PGF
+- id: mifaser_PGF
+  children:
+  - gene_merge
+- id: trim_PGS
+  children:
+  - mifaser_PGS
+- id: mifaser_PGS
+  children:
+  - gene_merge
+- id: trim_PLS
+  children:
+  - mifaser_PLS
+- id: mifaser_PLS
+  children:
+  - gene_merge
+- id: trim_QH2F
+  children:
+  - mifaser_QH2F
+- id: mifaser_QH2F
+  children:
+  - gene_merge
+- id: trim_QHS1
+  children:
+  - mifaser_QHS1
+- id: mifaser_QHS1
+  children:
+  - gene_merge
+- id: trim_QHS2
+  children:
+  - mifaser_QHS2
+- id: mifaser_QHS2
+  children:
+  - gene_merge
+- id: trim_QNF
+  children:
+  - mifaser_QNF
+- id: mifaser_QNF
+  children:
+  - gene_merge
+- id: trim_QNS
+  children:
+  - mifaser_QNS
+- id: mifaser_QNS
+  children:
+  - gene_merge
+- id: trim_RSF
+  children:
+  - mifaser_RSF
+- id: mifaser_RSF
+  children:
+  - gene_merge
+- id: trim_RSS
+  children:
+  - mifaser_RSS
+- id: mifaser_RSS
+  children:
+  - gene_merge
+- id: trim_RVF
+  children:
+  - mifaser_RVF
+- id: mifaser_RVF
+  children:
+  - gene_merge
+- id: trim_SIF
+  children:
+  - mifaser_SIF
+- id: mifaser_SIF
+  children:
+  - gene_merge
+- id: trim_SIS
+  children:
+  - mifaser_SIS
+- id: mifaser_SIS
+  children:
+  - gene_merge
+- id: trim_SLF
+  children:
+  - mifaser_SLF
+- id: mifaser_SLF
+  children:
+  - gene_merge
+- id: trim_SLS
+  children:
+  - mifaser_SLS
+- id: mifaser_SLS
+  children:
+  - gene_merge
+- id: trim_TCF
+  children:
+  - mifaser_TCF
+- id: mifaser_TCF
+  children:
+  - gene_merge
+- id: trim_TCS
+  children:
+  - mifaser_TCS
+- id: mifaser_TCS
+  children:
+  - gene_merge
+- id: mothur_asv
+  children:
+  - filter_normalize
+- id: filter_normalize
+  children:
+  - asv_network
+  - nmds_adonis
+- id: asv_network
+  children:
+  - clique_geochem
+- id: nmds_adonis
+  children:
+  - make_report
+- id: clique_geochem
+  children:
+  - make_report
+- id: gene_merge
+  children:
+  - gene_network
+- id: gene_network
+  children:
+  - gene_geochem
+- id: gene_geochem
+  children:
+  - make_report
+- id: carbon_flux
+  children:
+  - make_report

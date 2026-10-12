@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "QNF_trim_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1756067982",
+      "ctime": "2026-09-11T05:36:42+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "76aec81b063602986e72f48448716e7be64ca7119c9a8f64b6081f9c9210426d",
+      "checksum.timing": "7.91"
+    }
+  },
+  {
+    "_id": "QNF_trim_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1789508188",
+      "ctime": "2026-09-11T05:36:42+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "c4e3b025cf6e2d181b287d373f2dd044be716f10ebc86a6867de5b4b666e3480",
+      "checksum.timing": "8.31"
+    }
+  }
+]

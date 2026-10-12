@@ -1,0 +1,42 @@
+{
+  "client": "pegasus-plan",
+  "version": "5.1.3-dev.0",
+  "wf_api": "python",
+  "type": "metrics",
+  "start_time": 1.789103600605E9,
+  "end_time": 1.789103609655E9,
+  "duration": 9.05,
+  "exitcode": 0,
+  "root_wf_uuid": "91c16593-c21e-4cd5-bce3-9e6d076068ab",
+  "wf_uuid": "91c16593-c21e-4cd5-bce3-9e6d076068ab",
+  "data_config": "condorio",
+  "planner_args": "--sites compute --output-sites local --dir /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs --submit workflow.yml --json ",
+  "uses_pmc": false,
+  "wf_metrics": {
+    "compute_tasks": 80,
+    "dax_tasks": 0,
+    "dag_tasks": 0,
+    "total_tasks": 80,
+    "deleted_tasks": 0,
+    "dax_input_files": 77,
+    "dax_inter_files": 116,
+    "dax_output_files": 2,
+    "dax_total_files": 195,
+    "compute_jobs": 80,
+    "clustered_jobs": 0,
+    "si_tx_jobs": 10,
+    "so_tx_jobs": 11,
+    "inter_tx_jobs": 0,
+    "reg_jobs": 11,
+    "cleanup_jobs": 22,
+    "create_dir_jobs": 1,
+    "dax_jobs": 0,
+    "dag_jobs": 0,
+    "chmod_jobs": 0,
+    "total_jobs": 135
+  },
+  "app_metrics": {
+    "name": "subductcr-end-to-end"
+  }
+}
+

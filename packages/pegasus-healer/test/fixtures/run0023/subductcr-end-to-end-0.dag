@@ -1,0 +1,1343 @@
+######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG subductcr-end-to-end
+# Index = 0, Count = null
+######################################################################
+MAXJOBS registration 1
+MAXJOBS stagein 10
+MAXJOBS cleanup 4
+MAXJOBS stageout 10
+
+JOB create_dir_subductcr-end-to-end_0_compute 00/02/create_dir_subductcr-end-to-end_0_compute.sub
+SCRIPT POST create_dir_subductcr-end-to-end_0_compute /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/create_dir_subductcr-end-to-end_0_compute.out
+PRIORITY create_dir_subductcr-end-to-end_0_compute 800
+RETRY create_dir_subductcr-end-to-end_0_compute 3
+VARS create_dir_subductcr-end-to-end_0_compute My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_4_0 00/02/stage_in_local_compute_4_0.sub
+SCRIPT POST stage_in_local_compute_4_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_in_local_compute_4_0.out
+PRIORITY stage_in_local_compute_4_0 700
+RETRY stage_in_local_compute_4_0 3
+CATEGORY stage_in_local_compute_4_0 stagein
+VARS stage_in_local_compute_4_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_5_0 00/02/stage_in_local_compute_5_0.sub
+SCRIPT POST stage_in_local_compute_5_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_in_local_compute_5_0.out
+PRIORITY stage_in_local_compute_5_0 700
+RETRY stage_in_local_compute_5_0 3
+CATEGORY stage_in_local_compute_5_0 stagein
+VARS stage_in_local_compute_5_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_0_0 00/00/stage_in_local_compute_0_0.sub
+SCRIPT POST stage_in_local_compute_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_in_local_compute_0_0.out
+PRIORITY stage_in_local_compute_0_0 700
+RETRY stage_in_local_compute_0_0 3
+CATEGORY stage_in_local_compute_0_0 stagein
+VARS stage_in_local_compute_0_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_0_1 00/00/stage_in_local_compute_0_1.sub
+SCRIPT POST stage_in_local_compute_0_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_in_local_compute_0_1.out
+PRIORITY stage_in_local_compute_0_1 699
+RETRY stage_in_local_compute_0_1 3
+CATEGORY stage_in_local_compute_0_1 stagein
+VARS stage_in_local_compute_0_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_1_0 00/01/stage_in_local_compute_1_0.sub
+SCRIPT POST stage_in_local_compute_1_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_in_local_compute_1_0.out
+PRIORITY stage_in_local_compute_1_0 700
+RETRY stage_in_local_compute_1_0 3
+CATEGORY stage_in_local_compute_1_0 stagein
+VARS stage_in_local_compute_1_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_0_2 00/00/stage_in_local_compute_0_2.sub
+SCRIPT POST stage_in_local_compute_0_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_in_local_compute_0_2.out
+PRIORITY stage_in_local_compute_0_2 698
+RETRY stage_in_local_compute_0_2 3
+CATEGORY stage_in_local_compute_0_2 stagein
+VARS stage_in_local_compute_0_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_2_0 00/02/stage_in_local_compute_2_0.sub
+SCRIPT POST stage_in_local_compute_2_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_in_local_compute_2_0.out
+PRIORITY stage_in_local_compute_2_0 700
+RETRY stage_in_local_compute_2_0 3
+CATEGORY stage_in_local_compute_2_0 stagein
+VARS stage_in_local_compute_2_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_1_1 00/01/stage_in_local_compute_1_1.sub
+SCRIPT POST stage_in_local_compute_1_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_in_local_compute_1_1.out
+PRIORITY stage_in_local_compute_1_1 699
+RETRY stage_in_local_compute_1_1 3
+CATEGORY stage_in_local_compute_1_1 stagein
+VARS stage_in_local_compute_1_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_0_3 00/00/stage_in_local_compute_0_3.sub
+SCRIPT POST stage_in_local_compute_0_3 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_in_local_compute_0_3.out
+PRIORITY stage_in_local_compute_0_3 697
+RETRY stage_in_local_compute_0_3 3
+CATEGORY stage_in_local_compute_0_3 stagein
+VARS stage_in_local_compute_0_3 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_in_local_compute_3_0 00/02/stage_in_local_compute_3_0.sub
+SCRIPT POST stage_in_local_compute_3_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_in_local_compute_3_0.out
+PRIORITY stage_in_local_compute_3_0 700
+RETRY stage_in_local_compute_3_0 3
+CATEGORY stage_in_local_compute_3_0 stagein
+VARS stage_in_local_compute_3_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_ARS 00/00/trim_reads_trim_ARS.sub
+SCRIPT POST trim_reads_trim_ARS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_ARS.out
+PRIORITY trim_reads_trim_ARS 20
+RETRY trim_reads_trim_ARS 3
+VARS trim_reads_trim_ARS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_QHS1 00/00/trim_reads_trim_QHS1.sub
+SCRIPT POST trim_reads_trim_QHS1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_QHS1.out
+PRIORITY trim_reads_trim_QHS1 20
+RETRY trim_reads_trim_QHS1 3
+VARS trim_reads_trim_QHS1 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_TCS 00/00/trim_reads_trim_TCS.sub
+SCRIPT POST trim_reads_trim_TCS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_TCS.out
+PRIORITY trim_reads_trim_TCS 20
+RETRY trim_reads_trim_TCS 3
+VARS trim_reads_trim_TCS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_ETS 00/00/trim_reads_trim_ETS.sub
+SCRIPT POST trim_reads_trim_ETS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_ETS.out
+PRIORITY trim_reads_trim_ETS 20
+RETRY trim_reads_trim_ETS 3
+VARS trim_reads_trim_ETS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_RSF 00/00/trim_reads_trim_RSF.sub
+SCRIPT POST trim_reads_trim_RSF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_RSF.out
+PRIORITY trim_reads_trim_RSF 20
+RETRY trim_reads_trim_RSF 3
+VARS trim_reads_trim_RSF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_SLF 00/00/trim_reads_trim_SLF.sub
+SCRIPT POST trim_reads_trim_SLF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_SLF.out
+PRIORITY trim_reads_trim_SLF 20
+RETRY trim_reads_trim_SLF 3
+VARS trim_reads_trim_SLF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BR1F 00/00/trim_reads_trim_BR1F.sub
+SCRIPT POST trim_reads_trim_BR1F /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BR1F.out
+PRIORITY trim_reads_trim_BR1F 20
+RETRY trim_reads_trim_BR1F 3
+VARS trim_reads_trim_BR1F My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_RSS 00/00/trim_reads_trim_RSS.sub
+SCRIPT POST trim_reads_trim_RSS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_RSS.out
+PRIORITY trim_reads_trim_RSS 20
+RETRY trim_reads_trim_RSS 3
+VARS trim_reads_trim_RSS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_ESF9 00/00/trim_reads_trim_ESF9.sub
+SCRIPT POST trim_reads_trim_ESF9 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_ESF9.out
+PRIORITY trim_reads_trim_ESF9 20
+RETRY trim_reads_trim_ESF9 3
+VARS trim_reads_trim_ESF9 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PFF 00/00/trim_reads_trim_PFF.sub
+SCRIPT POST trim_reads_trim_PFF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PFF.out
+PRIORITY trim_reads_trim_PFF 20
+RETRY trim_reads_trim_PFF 3
+VARS trim_reads_trim_PFF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_SIF 00/00/trim_reads_trim_SIF.sub
+SCRIPT POST trim_reads_trim_SIF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_SIF.out
+PRIORITY trim_reads_trim_SIF 20
+RETRY trim_reads_trim_SIF 3
+VARS trim_reads_trim_SIF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_EPF 00/00/trim_reads_trim_EPF.sub
+SCRIPT POST trim_reads_trim_EPF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_EPF.out
+PRIORITY trim_reads_trim_EPF 20
+RETRY trim_reads_trim_EPF 3
+VARS trim_reads_trim_EPF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PGS 00/00/trim_reads_trim_PGS.sub
+SCRIPT POST trim_reads_trim_PGS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PGS.out
+PRIORITY trim_reads_trim_PGS 20
+RETRY trim_reads_trim_PGS 3
+VARS trim_reads_trim_PGS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_CYS 00/00/trim_reads_trim_CYS.sub
+SCRIPT POST trim_reads_trim_CYS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_CYS.out
+PRIORITY trim_reads_trim_CYS 20
+RETRY trim_reads_trim_CYS 3
+VARS trim_reads_trim_CYS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_QNS 00/00/trim_reads_trim_QNS.sub
+SCRIPT POST trim_reads_trim_QNS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_QNS.out
+PRIORITY trim_reads_trim_QNS 20
+RETRY trim_reads_trim_QNS 3
+VARS trim_reads_trim_QNS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PLS 00/00/trim_reads_trim_PLS.sub
+SCRIPT POST trim_reads_trim_PLS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PLS.out
+PRIORITY trim_reads_trim_PLS 20
+RETRY trim_reads_trim_PLS 3
+VARS trim_reads_trim_PLS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_TCF 00/00/trim_reads_trim_TCF.sub
+SCRIPT POST trim_reads_trim_TCF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_TCF.out
+PRIORITY trim_reads_trim_TCF 20
+RETRY trim_reads_trim_TCF 3
+VARS trim_reads_trim_TCF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_FAS 00/00/trim_reads_trim_FAS.sub
+SCRIPT POST trim_reads_trim_FAS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_FAS.out
+PRIORITY trim_reads_trim_FAS 20
+RETRY trim_reads_trim_FAS 3
+VARS trim_reads_trim_FAS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BRS2 00/00/trim_reads_trim_BRS2.sub
+SCRIPT POST trim_reads_trim_BRS2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BRS2.out
+PRIORITY trim_reads_trim_BRS2 20
+RETRY trim_reads_trim_BRS2 3
+VARS trim_reads_trim_BRS2 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_RVF 00/00/trim_reads_trim_RVF.sub
+SCRIPT POST trim_reads_trim_RVF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_RVF.out
+PRIORITY trim_reads_trim_RVF 20
+RETRY trim_reads_trim_RVF 3
+VARS trim_reads_trim_RVF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BRS1 00/00/trim_reads_trim_BRS1.sub
+SCRIPT POST trim_reads_trim_BRS1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BRS1.out
+PRIORITY trim_reads_trim_BRS1 20
+RETRY trim_reads_trim_BRS1 3
+VARS trim_reads_trim_BRS1 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BQS 00/00/trim_reads_trim_BQS.sub
+SCRIPT POST trim_reads_trim_BQS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BQS.out
+PRIORITY trim_reads_trim_BQS 20
+RETRY trim_reads_trim_BQS 3
+VARS trim_reads_trim_BQS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_MTF 00/00/trim_reads_trim_MTF.sub
+SCRIPT POST trim_reads_trim_MTF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_MTF.out
+PRIORITY trim_reads_trim_MTF 20
+RETRY trim_reads_trim_MTF 3
+VARS trim_reads_trim_MTF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_QHS2 00/00/trim_reads_trim_QHS2.sub
+SCRIPT POST trim_reads_trim_QHS2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_QHS2.out
+PRIORITY trim_reads_trim_QHS2 20
+RETRY trim_reads_trim_QHS2 3
+VARS trim_reads_trim_QHS2 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PBS 00/00/trim_reads_trim_PBS.sub
+SCRIPT POST trim_reads_trim_PBS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PBS.out
+PRIORITY trim_reads_trim_PBS 20
+RETRY trim_reads_trim_PBS 3
+VARS trim_reads_trim_PBS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_EPS 00/00/trim_reads_trim_EPS.sub
+SCRIPT POST trim_reads_trim_EPS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_EPS.out
+PRIORITY trim_reads_trim_EPS 20
+RETRY trim_reads_trim_EPS 3
+VARS trim_reads_trim_EPS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_QNF 00/00/trim_reads_trim_QNF.sub
+SCRIPT POST trim_reads_trim_QNF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_QNF.out
+PRIORITY trim_reads_trim_QNF 20
+RETRY trim_reads_trim_QNF 3
+VARS trim_reads_trim_QNF My.DAGNodeRetry="$(RETRY)"
+
+JOB mothur_asv_mothur_asv 00/00/mothur_asv_mothur_asv.sub
+SCRIPT POST mothur_asv_mothur_asv /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/mothur_asv_mothur_asv.out
+PRIORITY mothur_asv_mothur_asv 20
+RETRY mothur_asv_mothur_asv 3
+VARS mothur_asv_mothur_asv My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PGF 00/00/trim_reads_trim_PGF.sub
+SCRIPT POST trim_reads_trim_PGF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PGF.out
+PRIORITY trim_reads_trim_PGF 20
+RETRY trim_reads_trim_PGF 3
+VARS trim_reads_trim_PGF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_CYF 00/00/trim_reads_trim_CYF.sub
+SCRIPT POST trim_reads_trim_CYF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_CYF.out
+PRIORITY trim_reads_trim_CYF 20
+RETRY trim_reads_trim_CYF 3
+VARS trim_reads_trim_CYF My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BRF2 00/00/trim_reads_trim_BRF2.sub
+SCRIPT POST trim_reads_trim_BRF2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BRF2.out
+PRIORITY trim_reads_trim_BRF2 20
+RETRY trim_reads_trim_BRF2 3
+VARS trim_reads_trim_BRF2 My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_SLS 00/00/trim_reads_trim_SLS.sub
+SCRIPT POST trim_reads_trim_SLS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_SLS.out
+PRIORITY trim_reads_trim_SLS 20
+RETRY trim_reads_trim_SLS 3
+VARS trim_reads_trim_SLS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_QH2F 00/00/trim_reads_trim_QH2F.sub
+SCRIPT POST trim_reads_trim_QH2F /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_QH2F.out
+PRIORITY trim_reads_trim_QH2F 20
+RETRY trim_reads_trim_QH2F 3
+VARS trim_reads_trim_QH2F My.DAGNodeRetry="$(RETRY)"
+
+JOB carbon_flux_carbon_flux 00/00/carbon_flux_carbon_flux.sub
+SCRIPT POST carbon_flux_carbon_flux /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/carbon_flux_carbon_flux.out
+PRIORITY carbon_flux_carbon_flux 20
+RETRY carbon_flux_carbon_flux 3
+VARS carbon_flux_carbon_flux My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_PFS 00/00/trim_reads_trim_PFS.sub
+SCRIPT POST trim_reads_trim_PFS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_PFS.out
+PRIORITY trim_reads_trim_PFS 20
+RETRY trim_reads_trim_PFS 3
+VARS trim_reads_trim_PFS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_SIS 00/00/trim_reads_trim_SIS.sub
+SCRIPT POST trim_reads_trim_SIS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_SIS.out
+PRIORITY trim_reads_trim_SIS 20
+RETRY trim_reads_trim_SIS 3
+VARS trim_reads_trim_SIS My.DAGNodeRetry="$(RETRY)"
+
+JOB trim_reads_trim_BQF 00/00/trim_reads_trim_BQF.sub
+SCRIPT POST trim_reads_trim_BQF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/trim_reads_trim_BQF.out
+PRIORITY trim_reads_trim_BQF 20
+RETRY trim_reads_trim_BQF 3
+VARS trim_reads_trim_BQF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_ARS 00/00/mifaser_mifaser_ARS.sub
+SCRIPT POST mifaser_mifaser_ARS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/mifaser_mifaser_ARS.out
+PRIORITY mifaser_mifaser_ARS 30
+RETRY mifaser_mifaser_ARS 3
+VARS mifaser_mifaser_ARS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_QHS1 00/01/mifaser_mifaser_QHS1.sub
+SCRIPT POST mifaser_mifaser_QHS1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_QHS1.out
+PRIORITY mifaser_mifaser_QHS1 30
+RETRY mifaser_mifaser_QHS1 3
+VARS mifaser_mifaser_QHS1 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_TCS 00/01/mifaser_mifaser_TCS.sub
+SCRIPT POST mifaser_mifaser_TCS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_TCS.out
+PRIORITY mifaser_mifaser_TCS 30
+RETRY mifaser_mifaser_TCS 3
+VARS mifaser_mifaser_TCS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_ETS 00/01/mifaser_mifaser_ETS.sub
+SCRIPT POST mifaser_mifaser_ETS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_ETS.out
+PRIORITY mifaser_mifaser_ETS 30
+RETRY mifaser_mifaser_ETS 3
+VARS mifaser_mifaser_ETS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_RSF 00/01/mifaser_mifaser_RSF.sub
+SCRIPT POST mifaser_mifaser_RSF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_RSF.out
+PRIORITY mifaser_mifaser_RSF 30
+RETRY mifaser_mifaser_RSF 3
+VARS mifaser_mifaser_RSF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_SLF 00/01/mifaser_mifaser_SLF.sub
+SCRIPT POST mifaser_mifaser_SLF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_SLF.out
+PRIORITY mifaser_mifaser_SLF 30
+RETRY mifaser_mifaser_SLF 3
+VARS mifaser_mifaser_SLF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BR1F 00/01/mifaser_mifaser_BR1F.sub
+SCRIPT POST mifaser_mifaser_BR1F /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BR1F.out
+PRIORITY mifaser_mifaser_BR1F 30
+RETRY mifaser_mifaser_BR1F 3
+VARS mifaser_mifaser_BR1F My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_RSS 00/01/mifaser_mifaser_RSS.sub
+SCRIPT POST mifaser_mifaser_RSS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_RSS.out
+PRIORITY mifaser_mifaser_RSS 30
+RETRY mifaser_mifaser_RSS 3
+VARS mifaser_mifaser_RSS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_ESF9 00/01/mifaser_mifaser_ESF9.sub
+SCRIPT POST mifaser_mifaser_ESF9 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_ESF9.out
+PRIORITY mifaser_mifaser_ESF9 30
+RETRY mifaser_mifaser_ESF9 3
+VARS mifaser_mifaser_ESF9 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PFF 00/01/mifaser_mifaser_PFF.sub
+SCRIPT POST mifaser_mifaser_PFF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PFF.out
+PRIORITY mifaser_mifaser_PFF 30
+RETRY mifaser_mifaser_PFF 3
+VARS mifaser_mifaser_PFF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_SIF 00/01/mifaser_mifaser_SIF.sub
+SCRIPT POST mifaser_mifaser_SIF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_SIF.out
+PRIORITY mifaser_mifaser_SIF 30
+RETRY mifaser_mifaser_SIF 3
+VARS mifaser_mifaser_SIF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_EPF 00/01/mifaser_mifaser_EPF.sub
+SCRIPT POST mifaser_mifaser_EPF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_EPF.out
+PRIORITY mifaser_mifaser_EPF 30
+RETRY mifaser_mifaser_EPF 3
+VARS mifaser_mifaser_EPF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PGS 00/01/mifaser_mifaser_PGS.sub
+SCRIPT POST mifaser_mifaser_PGS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PGS.out
+PRIORITY mifaser_mifaser_PGS 30
+RETRY mifaser_mifaser_PGS 3
+VARS mifaser_mifaser_PGS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_CYS 00/01/mifaser_mifaser_CYS.sub
+SCRIPT POST mifaser_mifaser_CYS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_CYS.out
+PRIORITY mifaser_mifaser_CYS 30
+RETRY mifaser_mifaser_CYS 3
+VARS mifaser_mifaser_CYS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_QNS 00/01/mifaser_mifaser_QNS.sub
+SCRIPT POST mifaser_mifaser_QNS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_QNS.out
+PRIORITY mifaser_mifaser_QNS 30
+RETRY mifaser_mifaser_QNS 3
+VARS mifaser_mifaser_QNS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PLS 00/01/mifaser_mifaser_PLS.sub
+SCRIPT POST mifaser_mifaser_PLS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PLS.out
+PRIORITY mifaser_mifaser_PLS 30
+RETRY mifaser_mifaser_PLS 3
+VARS mifaser_mifaser_PLS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_TCF 00/01/mifaser_mifaser_TCF.sub
+SCRIPT POST mifaser_mifaser_TCF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_TCF.out
+PRIORITY mifaser_mifaser_TCF 30
+RETRY mifaser_mifaser_TCF 3
+VARS mifaser_mifaser_TCF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_FAS 00/01/mifaser_mifaser_FAS.sub
+SCRIPT POST mifaser_mifaser_FAS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_FAS.out
+PRIORITY mifaser_mifaser_FAS 30
+RETRY mifaser_mifaser_FAS 3
+VARS mifaser_mifaser_FAS My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_7 00/02/clean_up_compute_level_3_7.sub
+SCRIPT POST clean_up_compute_level_3_7 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_7.out
+PRIORITY clean_up_compute_level_3_7 1000
+RETRY clean_up_compute_level_3_7 3
+CATEGORY clean_up_compute_level_3_7 cleanup
+VARS clean_up_compute_level_3_7 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BRS2 00/01/mifaser_mifaser_BRS2.sub
+SCRIPT POST mifaser_mifaser_BRS2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BRS2.out
+PRIORITY mifaser_mifaser_BRS2 30
+RETRY mifaser_mifaser_BRS2 3
+VARS mifaser_mifaser_BRS2 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_RVF 00/01/mifaser_mifaser_RVF.sub
+SCRIPT POST mifaser_mifaser_RVF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_RVF.out
+PRIORITY mifaser_mifaser_RVF 30
+RETRY mifaser_mifaser_RVF 3
+VARS mifaser_mifaser_RVF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BRS1 00/01/mifaser_mifaser_BRS1.sub
+SCRIPT POST mifaser_mifaser_BRS1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BRS1.out
+PRIORITY mifaser_mifaser_BRS1 30
+RETRY mifaser_mifaser_BRS1 3
+VARS mifaser_mifaser_BRS1 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BQS 00/01/mifaser_mifaser_BQS.sub
+SCRIPT POST mifaser_mifaser_BQS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BQS.out
+PRIORITY mifaser_mifaser_BQS 30
+RETRY mifaser_mifaser_BQS 3
+VARS mifaser_mifaser_BQS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_MTF 00/01/mifaser_mifaser_MTF.sub
+SCRIPT POST mifaser_mifaser_MTF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_MTF.out
+PRIORITY mifaser_mifaser_MTF 30
+RETRY mifaser_mifaser_MTF 3
+VARS mifaser_mifaser_MTF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_QHS2 00/01/mifaser_mifaser_QHS2.sub
+SCRIPT POST mifaser_mifaser_QHS2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_QHS2.out
+PRIORITY mifaser_mifaser_QHS2 30
+RETRY mifaser_mifaser_QHS2 3
+VARS mifaser_mifaser_QHS2 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_1 00/02/clean_up_compute_level_3_1.sub
+SCRIPT POST clean_up_compute_level_3_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_1.out
+PRIORITY clean_up_compute_level_3_1 1000
+RETRY clean_up_compute_level_3_1 3
+CATEGORY clean_up_compute_level_3_1 cleanup
+VARS clean_up_compute_level_3_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PBS 00/01/mifaser_mifaser_PBS.sub
+SCRIPT POST mifaser_mifaser_PBS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PBS.out
+PRIORITY mifaser_mifaser_PBS 30
+RETRY mifaser_mifaser_PBS 3
+VARS mifaser_mifaser_PBS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_EPS 00/01/mifaser_mifaser_EPS.sub
+SCRIPT POST mifaser_mifaser_EPS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_EPS.out
+PRIORITY mifaser_mifaser_EPS 30
+RETRY mifaser_mifaser_EPS 3
+VARS mifaser_mifaser_EPS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_QNF 00/01/mifaser_mifaser_QNF.sub
+SCRIPT POST mifaser_mifaser_QNF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_QNF.out
+PRIORITY mifaser_mifaser_QNF 30
+RETRY mifaser_mifaser_QNF 3
+VARS mifaser_mifaser_QNF My.DAGNodeRetry="$(RETRY)"
+
+JOB filter_normalize_filter_normalize 00/01/filter_normalize_filter_normalize.sub
+SCRIPT POST filter_normalize_filter_normalize /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/filter_normalize_filter_normalize.out
+PRIORITY filter_normalize_filter_normalize 30
+RETRY filter_normalize_filter_normalize 3
+VARS filter_normalize_filter_normalize My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_0_0 00/00/stage_out_local_compute_0_0.sub
+SCRIPT POST stage_out_local_compute_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_out_local_compute_0_0.out
+PRIORITY stage_out_local_compute_0_0 900
+RETRY stage_out_local_compute_0_0 3
+CATEGORY stage_out_local_compute_0_0 stageout
+VARS stage_out_local_compute_0_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_2 00/02/clean_up_compute_level_3_2.sub
+SCRIPT POST clean_up_compute_level_3_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_2.out
+PRIORITY clean_up_compute_level_3_2 1000
+RETRY clean_up_compute_level_3_2 3
+CATEGORY clean_up_compute_level_3_2 cleanup
+VARS clean_up_compute_level_3_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_0_1 00/00/stage_out_local_compute_0_1.sub
+SCRIPT POST stage_out_local_compute_0_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/stage_out_local_compute_0_1.out
+PRIORITY stage_out_local_compute_0_1 900
+RETRY stage_out_local_compute_0_1 3
+CATEGORY stage_out_local_compute_0_1 stageout
+VARS stage_out_local_compute_0_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PGF 00/01/mifaser_mifaser_PGF.sub
+SCRIPT POST mifaser_mifaser_PGF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PGF.out
+PRIORITY mifaser_mifaser_PGF 30
+RETRY mifaser_mifaser_PGF 3
+VARS mifaser_mifaser_PGF My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_CYF 00/01/mifaser_mifaser_CYF.sub
+SCRIPT POST mifaser_mifaser_CYF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_CYF.out
+PRIORITY mifaser_mifaser_CYF 30
+RETRY mifaser_mifaser_CYF 3
+VARS mifaser_mifaser_CYF My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_5 00/02/clean_up_compute_level_3_5.sub
+SCRIPT POST clean_up_compute_level_3_5 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_5.out
+PRIORITY clean_up_compute_level_3_5 1000
+RETRY clean_up_compute_level_3_5 3
+CATEGORY clean_up_compute_level_3_5 cleanup
+VARS clean_up_compute_level_3_5 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BRF2 00/01/mifaser_mifaser_BRF2.sub
+SCRIPT POST mifaser_mifaser_BRF2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BRF2.out
+PRIORITY mifaser_mifaser_BRF2 30
+RETRY mifaser_mifaser_BRF2 3
+VARS mifaser_mifaser_BRF2 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_SLS 00/01/mifaser_mifaser_SLS.sub
+SCRIPT POST mifaser_mifaser_SLS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_SLS.out
+PRIORITY mifaser_mifaser_SLS 30
+RETRY mifaser_mifaser_SLS 3
+VARS mifaser_mifaser_SLS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_QH2F 00/01/mifaser_mifaser_QH2F.sub
+SCRIPT POST mifaser_mifaser_QH2F /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_QH2F.out
+PRIORITY mifaser_mifaser_QH2F 30
+RETRY mifaser_mifaser_QH2F 3
+VARS mifaser_mifaser_QH2F My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_0_2 00/01/stage_out_local_compute_0_2.sub
+SCRIPT POST stage_out_local_compute_0_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_out_local_compute_0_2.out
+PRIORITY stage_out_local_compute_0_2 900
+RETRY stage_out_local_compute_0_2 3
+CATEGORY stage_out_local_compute_0_2 stageout
+VARS stage_out_local_compute_0_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_3 00/02/clean_up_compute_level_3_3.sub
+SCRIPT POST clean_up_compute_level_3_3 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_3.out
+PRIORITY clean_up_compute_level_3_3 1000
+RETRY clean_up_compute_level_3_3 3
+CATEGORY clean_up_compute_level_3_3 cleanup
+VARS clean_up_compute_level_3_3 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_PFS 00/01/mifaser_mifaser_PFS.sub
+SCRIPT POST mifaser_mifaser_PFS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_PFS.out
+PRIORITY mifaser_mifaser_PFS 30
+RETRY mifaser_mifaser_PFS 3
+VARS mifaser_mifaser_PFS My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_6 00/02/clean_up_compute_level_3_6.sub
+SCRIPT POST clean_up_compute_level_3_6 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_6.out
+PRIORITY clean_up_compute_level_3_6 1000
+RETRY clean_up_compute_level_3_6 3
+CATEGORY clean_up_compute_level_3_6 cleanup
+VARS clean_up_compute_level_3_6 My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_SIS 00/01/mifaser_mifaser_SIS.sub
+SCRIPT POST mifaser_mifaser_SIS /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_SIS.out
+PRIORITY mifaser_mifaser_SIS 30
+RETRY mifaser_mifaser_SIS 3
+VARS mifaser_mifaser_SIS My.DAGNodeRetry="$(RETRY)"
+
+JOB mifaser_mifaser_BQF 00/01/mifaser_mifaser_BQF.sub
+SCRIPT POST mifaser_mifaser_BQF /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/mifaser_mifaser_BQF.out
+PRIORITY mifaser_mifaser_BQF 30
+RETRY mifaser_mifaser_BQF 3
+VARS mifaser_mifaser_BQF My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_4 00/02/clean_up_compute_level_3_4.sub
+SCRIPT POST clean_up_compute_level_3_4 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_4.out
+PRIORITY clean_up_compute_level_3_4 1000
+RETRY clean_up_compute_level_3_4 3
+CATEGORY clean_up_compute_level_3_4 cleanup
+VARS clean_up_compute_level_3_4 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_3_0 00/02/clean_up_compute_level_3_0.sub
+SCRIPT POST clean_up_compute_level_3_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_3_0.out
+PRIORITY clean_up_compute_level_3_0 1000
+RETRY clean_up_compute_level_3_0 3
+CATEGORY clean_up_compute_level_3_0 cleanup
+VARS clean_up_compute_level_3_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_6 00/02/clean_up_compute_level_4_6.sub
+SCRIPT POST clean_up_compute_level_4_6 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_6.out
+PRIORITY clean_up_compute_level_4_6 1000
+RETRY clean_up_compute_level_4_6 3
+CATEGORY clean_up_compute_level_4_6 cleanup
+VARS clean_up_compute_level_4_6 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_1_1 00/01/stage_out_local_compute_1_1.sub
+SCRIPT POST stage_out_local_compute_1_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_out_local_compute_1_1.out
+PRIORITY stage_out_local_compute_1_1 900
+RETRY stage_out_local_compute_1_1 3
+CATEGORY stage_out_local_compute_1_1 stageout
+VARS stage_out_local_compute_1_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_1_3 00/01/stage_out_local_compute_1_3.sub
+SCRIPT POST stage_out_local_compute_1_3 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_out_local_compute_1_3.out
+PRIORITY stage_out_local_compute_1_3 900
+RETRY stage_out_local_compute_1_3 3
+CATEGORY stage_out_local_compute_1_3 stageout
+VARS stage_out_local_compute_1_3 My.DAGNodeRetry="$(RETRY)"
+
+JOB asv_network_asv_network 00/01/asv_network_asv_network.sub
+SCRIPT POST asv_network_asv_network /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/asv_network_asv_network.out
+PRIORITY asv_network_asv_network 40
+RETRY asv_network_asv_network 3
+VARS asv_network_asv_network My.DAGNodeRetry="$(RETRY)"
+
+JOB nmds_adonis_nmds_adonis 00/01/nmds_adonis_nmds_adonis.sub
+SCRIPT POST nmds_adonis_nmds_adonis /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/nmds_adonis_nmds_adonis.out
+PRIORITY nmds_adonis_nmds_adonis 40
+RETRY nmds_adonis_nmds_adonis 3
+VARS nmds_adonis_nmds_adonis My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_0_0 00/00/register_compute_0_0.sub
+SCRIPT POST register_compute_0_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/00/register_compute_0_0.out
+PRIORITY register_compute_0_0 40
+RETRY register_compute_0_0 3
+CATEGORY register_compute_0_0 registration
+VARS register_compute_0_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_3 00/02/clean_up_compute_level_4_3.sub
+SCRIPT POST clean_up_compute_level_4_3 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_3.out
+PRIORITY clean_up_compute_level_4_3 1000
+RETRY clean_up_compute_level_4_3 3
+CATEGORY clean_up_compute_level_4_3 cleanup
+VARS clean_up_compute_level_4_3 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_0_1 00/01/register_compute_0_1.sub
+SCRIPT POST register_compute_0_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_0_1.out
+PRIORITY register_compute_0_1 40
+RETRY register_compute_0_1 3
+CATEGORY register_compute_0_1 registration
+VARS register_compute_0_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_7 00/02/clean_up_compute_level_4_7.sub
+SCRIPT POST clean_up_compute_level_4_7 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_7.out
+PRIORITY clean_up_compute_level_4_7 1000
+RETRY clean_up_compute_level_4_7 3
+CATEGORY clean_up_compute_level_4_7 cleanup
+VARS clean_up_compute_level_4_7 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_4 00/02/clean_up_compute_level_4_4.sub
+SCRIPT POST clean_up_compute_level_4_4 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_4.out
+PRIORITY clean_up_compute_level_4_4 1000
+RETRY clean_up_compute_level_4_4 3
+CATEGORY clean_up_compute_level_4_4 cleanup
+VARS clean_up_compute_level_4_4 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_1_0 00/01/stage_out_local_compute_1_0.sub
+SCRIPT POST stage_out_local_compute_1_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_out_local_compute_1_0.out
+PRIORITY stage_out_local_compute_1_0 900
+RETRY stage_out_local_compute_1_0 3
+CATEGORY stage_out_local_compute_1_0 stageout
+VARS stage_out_local_compute_1_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_0_2 00/01/register_compute_0_2.sub
+SCRIPT POST register_compute_0_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_0_2.out
+PRIORITY register_compute_0_2 40
+RETRY register_compute_0_2 3
+CATEGORY register_compute_0_2 registration
+VARS register_compute_0_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_1 00/02/clean_up_compute_level_4_1.sub
+SCRIPT POST clean_up_compute_level_4_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_1.out
+PRIORITY clean_up_compute_level_4_1 1000
+RETRY clean_up_compute_level_4_1 3
+CATEGORY clean_up_compute_level_4_1 cleanup
+VARS clean_up_compute_level_4_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_5 00/02/clean_up_compute_level_4_5.sub
+SCRIPT POST clean_up_compute_level_4_5 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_5.out
+PRIORITY clean_up_compute_level_4_5 1000
+RETRY clean_up_compute_level_4_5 3
+CATEGORY clean_up_compute_level_4_5 cleanup
+VARS clean_up_compute_level_4_5 My.DAGNodeRetry="$(RETRY)"
+
+JOB gene_merge_gene_merge 00/01/gene_merge_gene_merge.sub
+SCRIPT POST gene_merge_gene_merge /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/gene_merge_gene_merge.out
+PRIORITY gene_merge_gene_merge 40
+RETRY gene_merge_gene_merge 3
+VARS gene_merge_gene_merge My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_2 00/02/clean_up_compute_level_4_2.sub
+SCRIPT POST clean_up_compute_level_4_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_2.out
+PRIORITY clean_up_compute_level_4_2 1000
+RETRY clean_up_compute_level_4_2 3
+CATEGORY clean_up_compute_level_4_2 cleanup
+VARS clean_up_compute_level_4_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_4_0 00/02/clean_up_compute_level_4_0.sub
+SCRIPT POST clean_up_compute_level_4_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_4_0.out
+PRIORITY clean_up_compute_level_4_0 1000
+RETRY clean_up_compute_level_4_0 3
+CATEGORY clean_up_compute_level_4_0 cleanup
+VARS clean_up_compute_level_4_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_1_2 00/01/stage_out_local_compute_1_2.sub
+SCRIPT POST stage_out_local_compute_1_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/stage_out_local_compute_1_2.out
+PRIORITY stage_out_local_compute_1_2 900
+RETRY stage_out_local_compute_1_2 3
+CATEGORY stage_out_local_compute_1_2 stageout
+VARS stage_out_local_compute_1_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_1_1 00/01/register_compute_1_1.sub
+SCRIPT POST register_compute_1_1 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_1_1.out
+PRIORITY register_compute_1_1 50
+RETRY register_compute_1_1 3
+CATEGORY register_compute_1_1 registration
+VARS register_compute_1_1 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_1_3 00/01/register_compute_1_3.sub
+SCRIPT POST register_compute_1_3 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_1_3.out
+PRIORITY register_compute_1_3 50
+RETRY register_compute_1_3 3
+CATEGORY register_compute_1_3 registration
+VARS register_compute_1_3 My.DAGNodeRetry="$(RETRY)"
+
+JOB clique_geochem_clique_geochem 00/02/clique_geochem_clique_geochem.sub
+SCRIPT POST clique_geochem_clique_geochem /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clique_geochem_clique_geochem.out
+PRIORITY clique_geochem_clique_geochem 50
+RETRY clique_geochem_clique_geochem 3
+VARS clique_geochem_clique_geochem My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_1_0 00/01/register_compute_1_0.sub
+SCRIPT POST register_compute_1_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_1_0.out
+PRIORITY register_compute_1_0 50
+RETRY register_compute_1_0 3
+CATEGORY register_compute_1_0 registration
+VARS register_compute_1_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB gene_network_gene_network 00/02/gene_network_gene_network.sub
+SCRIPT POST gene_network_gene_network /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/gene_network_gene_network.out
+PRIORITY gene_network_gene_network 50
+RETRY gene_network_gene_network 3
+VARS gene_network_gene_network My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_2_0 00/02/stage_out_local_compute_2_0.sub
+SCRIPT POST stage_out_local_compute_2_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_out_local_compute_2_0.out
+PRIORITY stage_out_local_compute_2_0 900
+RETRY stage_out_local_compute_2_0 3
+CATEGORY stage_out_local_compute_2_0 stageout
+VARS stage_out_local_compute_2_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_1_2 00/01/register_compute_1_2.sub
+SCRIPT POST register_compute_1_2 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/01/register_compute_1_2.out
+PRIORITY register_compute_1_2 50
+RETRY register_compute_1_2 3
+CATEGORY register_compute_1_2 registration
+VARS register_compute_1_2 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_5_0 00/02/clean_up_compute_level_5_0.sub
+SCRIPT POST clean_up_compute_level_5_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_5_0.out
+PRIORITY clean_up_compute_level_5_0 1000
+RETRY clean_up_compute_level_5_0 3
+CATEGORY clean_up_compute_level_5_0 cleanup
+VARS clean_up_compute_level_5_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB gene_geochem_gene_geochem 00/02/gene_geochem_gene_geochem.sub
+SCRIPT POST gene_geochem_gene_geochem /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/gene_geochem_gene_geochem.out
+PRIORITY gene_geochem_gene_geochem 60
+RETRY gene_geochem_gene_geochem 3
+VARS gene_geochem_gene_geochem My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_3_0 00/02/stage_out_local_compute_3_0.sub
+SCRIPT POST stage_out_local_compute_3_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_out_local_compute_3_0.out
+PRIORITY stage_out_local_compute_3_0 900
+RETRY stage_out_local_compute_3_0 3
+CATEGORY stage_out_local_compute_3_0 stageout
+VARS stage_out_local_compute_3_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_2_0 00/02/register_compute_2_0.sub
+SCRIPT POST register_compute_2_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/register_compute_2_0.out
+PRIORITY register_compute_2_0 60
+RETRY register_compute_2_0 3
+CATEGORY register_compute_2_0 registration
+VARS register_compute_2_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_6_0 00/02/clean_up_compute_level_6_0.sub
+SCRIPT POST clean_up_compute_level_6_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_6_0.out
+PRIORITY clean_up_compute_level_6_0 1000
+RETRY clean_up_compute_level_6_0 3
+CATEGORY clean_up_compute_level_6_0 cleanup
+VARS clean_up_compute_level_6_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB make_report_make_report 00/02/make_report_make_report.sub
+SCRIPT POST make_report_make_report /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -s PegasusLite:+exitcode+0 -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/make_report_make_report.out
+PRIORITY make_report_make_report 70
+RETRY make_report_make_report 3
+VARS make_report_make_report My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_4_0 00/02/stage_out_local_compute_4_0.sub
+SCRIPT POST stage_out_local_compute_4_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_out_local_compute_4_0.out
+PRIORITY stage_out_local_compute_4_0 900
+RETRY stage_out_local_compute_4_0 3
+CATEGORY stage_out_local_compute_4_0 stageout
+VARS stage_out_local_compute_4_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_3_0 00/02/register_compute_3_0.sub
+SCRIPT POST register_compute_3_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/register_compute_3_0.out
+PRIORITY register_compute_3_0 70
+RETRY register_compute_3_0 3
+CATEGORY register_compute_3_0 registration
+VARS register_compute_3_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_7_0 00/02/clean_up_compute_level_7_0.sub
+SCRIPT POST clean_up_compute_level_7_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_7_0.out
+PRIORITY clean_up_compute_level_7_0 1000
+RETRY clean_up_compute_level_7_0 3
+CATEGORY clean_up_compute_level_7_0 cleanup
+VARS clean_up_compute_level_7_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB stage_out_local_compute_5_0 00/02/stage_out_local_compute_5_0.sub
+SCRIPT POST stage_out_local_compute_5_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/stage_out_local_compute_5_0.out
+PRIORITY stage_out_local_compute_5_0 900
+RETRY stage_out_local_compute_5_0 3
+CATEGORY stage_out_local_compute_5_0 stageout
+VARS stage_out_local_compute_5_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_4_0 00/02/register_compute_4_0.sub
+SCRIPT POST register_compute_4_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/register_compute_4_0.out
+PRIORITY register_compute_4_0 80
+RETRY register_compute_4_0 3
+CATEGORY register_compute_4_0 registration
+VARS register_compute_4_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_8_0 00/02/clean_up_compute_level_8_0.sub
+SCRIPT POST clean_up_compute_level_8_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_8_0.out
+PRIORITY clean_up_compute_level_8_0 1000
+RETRY clean_up_compute_level_8_0 3
+CATEGORY clean_up_compute_level_8_0 cleanup
+VARS clean_up_compute_level_8_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB register_compute_5_0 00/02/register_compute_5_0.sub
+SCRIPT POST register_compute_5_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/register_compute_5_0.out
+PRIORITY register_compute_5_0 90
+RETRY register_compute_5_0 3
+CATEGORY register_compute_5_0 registration
+VARS register_compute_5_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB clean_up_compute_level_9_0 00/02/clean_up_compute_level_9_0.sub
+SCRIPT POST clean_up_compute_level_9_0 /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/clean_up_compute_level_9_0.out
+PRIORITY clean_up_compute_level_9_0 1000
+RETRY clean_up_compute_level_9_0 3
+CATEGORY clean_up_compute_level_9_0 cleanup
+VARS clean_up_compute_level_9_0 My.DAGNodeRetry="$(RETRY)"
+
+JOB cleanup_subductcr-end-to-end_0_compute 00/02/cleanup_subductcr-end-to-end_0_compute.sub
+SCRIPT POST cleanup_subductcr-end-to-end_0_compute /usr/bin/pegasus-exitcode  -r $RETURN -R $RETRY -l subductcr-end-to-end-0.exitcode.log -M subductcr-end-to-end-0.cache.meta   .//00/02/cleanup_subductcr-end-to-end_0_compute.out
+PRIORITY cleanup_subductcr-end-to-end_0_compute 1000
+RETRY cleanup_subductcr-end-to-end_0_compute 3
+VARS cleanup_subductcr-end-to-end_0_compute My.DAGNodeRetry="$(RETRY)"
+
+PARENT  trim_reads_trim_ARS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_ARS CHILD mifaser_mifaser_ARS
+PARENT  mifaser_mifaser_RSF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_RSF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_RSF CHILD stage_out_local_compute_1_3
+PARENT  clean_up_compute_level_4_7 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_4_6 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_4_5 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_8_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_4_4 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  mifaser_mifaser_QHS1 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_QHS1 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_QHS1 CHILD stage_out_local_compute_1_2
+PARENT  clean_up_compute_level_4_3 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_4_2 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_4_1 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  mifaser_mifaser_PFS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PFS CHILD clean_up_compute_level_4_1
+PARENT  mifaser_mifaser_PFS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PFS CHILD stage_out_local_compute_1_2
+PARENT  mifaser_mifaser_QHS2 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_QHS2 CHILD clean_up_compute_level_4_1
+PARENT  mifaser_mifaser_QHS2 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_QHS2 CHILD stage_out_local_compute_1_1
+PARENT  clean_up_compute_level_4_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_4_0
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_5_0
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_0_0
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_0_1
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_1_0
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_0_2
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_2_0
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_1_1
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_0_3
+PARENT  create_dir_subductcr-end-to-end_0_compute CHILD stage_in_local_compute_3_0
+PARENT  mifaser_mifaser_SLS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_SLS CHILD clean_up_compute_level_4_2
+PARENT  mifaser_mifaser_SLS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_SLS CHILD stage_out_local_compute_1_0
+PARENT  mifaser_mifaser_SLF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_SLF CHILD clean_up_compute_level_4_2
+PARENT  mifaser_mifaser_SLF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_SLF CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_PFF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PFF CHILD clean_up_compute_level_4_3
+PARENT  mifaser_mifaser_PFF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PFF CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_QH2F CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_QH2F CHILD clean_up_compute_level_4_2
+PARENT  mifaser_mifaser_QH2F CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_QH2F CHILD stage_out_local_compute_1_2
+PARENT  mifaser_mifaser_EPS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_EPS CHILD clean_up_compute_level_4_3
+PARENT  mifaser_mifaser_EPS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_EPS CHILD stage_out_local_compute_1_0
+PARENT  make_report_make_report CHILD stage_out_local_compute_5_0
+PARENT  make_report_make_report CHILD clean_up_compute_level_8_0
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_ARS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BRS2
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_QHS1
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_RVF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BRS1
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_TCS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_ETS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_MTF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_QHS2
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_SLF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BR1F
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_EPS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_QNF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_ESF9
+PARENT  stage_in_local_compute_0_0 CHILD mothur_asv_mothur_asv
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_CYF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PFF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_SLS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_CYS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PFS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_QNS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BQF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PLS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BQS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_RSF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PBS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_RSS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PGF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_SIF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_BRF2
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_EPF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_QH2F
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_PGS
+PARENT  stage_in_local_compute_0_0 CHILD carbon_flux_carbon_flux
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_SIS
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_TCF
+PARENT  stage_in_local_compute_0_0 CHILD trim_reads_trim_FAS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_ARS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_QHS1
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_TCS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_ETS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_RSF
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_SLF
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_BR1F
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_RSS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_ESF9
+PARENT  stage_in_local_compute_0_1 CHILD mothur_asv_mothur_asv
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_PFF
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_SIF
+PARENT  stage_in_local_compute_0_1 CHILD nmds_adonis_nmds_adonis
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_EPF
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_PGS
+PARENT  stage_in_local_compute_0_1 CHILD carbon_flux_carbon_flux
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_CYS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_QNS
+PARENT  stage_in_local_compute_0_1 CHILD clique_geochem_clique_geochem
+PARENT  stage_in_local_compute_0_1 CHILD gene_geochem_gene_geochem
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_PLS
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_TCF
+PARENT  stage_in_local_compute_0_1 CHILD trim_reads_trim_FAS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_ARS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_QHS1
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_TCS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_ETS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_RSF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_SLF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_BR1F
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_RSS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_ESF9
+PARENT  stage_in_local_compute_0_2 CHILD mothur_asv_mothur_asv
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_PFF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_SIF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_EPF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_PGS
+PARENT  stage_in_local_compute_0_2 CHILD carbon_flux_carbon_flux
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_CYS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_QNS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_PLS
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_TCF
+PARENT  stage_in_local_compute_0_2 CHILD trim_reads_trim_FAS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_BRS2
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_RVF
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_BRS1
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_BQS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_MTF
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_QHS2
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_PBS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_EPS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_QNF
+PARENT  stage_in_local_compute_0_3 CHILD mothur_asv_mothur_asv
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_PGF
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_CYF
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_BRF2
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_SLS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_QH2F
+PARENT  stage_in_local_compute_0_3 CHILD carbon_flux_carbon_flux
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_PFS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_SIS
+PARENT  stage_in_local_compute_0_3 CHILD trim_reads_trim_BQF
+PARENT  stage_out_local_compute_2_0 CHILD clean_up_compute_level_8_0
+PARENT  stage_out_local_compute_2_0 CHILD register_compute_2_0
+PARENT  stage_out_local_compute_2_0 CHILD clean_up_compute_level_6_0
+PARENT  stage_in_local_compute_4_0 CHILD gene_geochem_gene_geochem
+PARENT  mifaser_mifaser_FAS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_FAS CHILD clean_up_compute_level_4_6
+PARENT  mifaser_mifaser_FAS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_FAS CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_EPF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_EPF CHILD clean_up_compute_level_4_6
+PARENT  mifaser_mifaser_EPF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_EPF CHILD stage_out_local_compute_1_1
+PARENT  mifaser_mifaser_BQS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BQS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BQS CHILD stage_out_local_compute_1_0
+PARENT  clean_up_compute_level_3_7 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_6 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_5 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_7_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_4 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_3 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_2 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  trim_reads_trim_SLF CHILD mifaser_mifaser_SLF
+PARENT  trim_reads_trim_SLF CHILD clean_up_compute_level_3_1
+PARENT  trim_reads_trim_SLF CHILD clean_up_compute_level_3_0
+PARENT  clean_up_compute_level_3_1 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  clean_up_compute_level_3_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  trim_reads_trim_EPS CHILD mifaser_mifaser_EPS
+PARENT  trim_reads_trim_EPS CHILD clean_up_compute_level_3_2
+PARENT  trim_reads_trim_EPS CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_QNS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_QNS CHILD clean_up_compute_level_4_1
+PARENT  mifaser_mifaser_QNS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_QNS CHILD stage_out_local_compute_1_1
+PARENT  trim_reads_trim_ESF9 CHILD mifaser_mifaser_ESF9
+PARENT  trim_reads_trim_ESF9 CHILD clean_up_compute_level_3_2
+PARENT  trim_reads_trim_ESF9 CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_PLS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PLS CHILD clean_up_compute_level_4_1
+PARENT  mifaser_mifaser_PLS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PLS CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_BQF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BQF CHILD clean_up_compute_level_4_2
+PARENT  mifaser_mifaser_BQF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BQF CHILD stage_out_local_compute_1_2
+PARENT  trim_reads_trim_PFF CHILD clean_up_compute_level_3_3
+PARENT  trim_reads_trim_PFF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_PFF CHILD mifaser_mifaser_PFF
+PARENT  trim_reads_trim_SLS CHILD mifaser_mifaser_SLS
+PARENT  trim_reads_trim_SLS CHILD clean_up_compute_level_3_3
+PARENT  trim_reads_trim_SLS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_PFS CHILD clean_up_compute_level_3_3
+PARENT  trim_reads_trim_PFS CHILD mifaser_mifaser_PFS
+PARENT  trim_reads_trim_PFS CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_TCS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_TCS CHILD clean_up_compute_level_4_3
+PARENT  mifaser_mifaser_TCS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_TCS CHILD stage_out_local_compute_1_0
+PARENT  gene_merge_gene_merge CHILD gene_network_gene_network
+PARENT  gene_merge_gene_merge CHILD clean_up_compute_level_5_0
+PARENT  gene_merge_gene_merge CHILD stage_out_local_compute_2_0
+PARENT  trim_reads_trim_RSF CHILD mifaser_mifaser_RSF
+PARENT  trim_reads_trim_RSF CHILD clean_up_compute_level_3_4
+PARENT  trim_reads_trim_RSF CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_QNF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_QNF CHILD clean_up_compute_level_4_4
+PARENT  mifaser_mifaser_QNF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_QNF CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_SIS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_SIS CHILD clean_up_compute_level_4_5
+PARENT  mifaser_mifaser_SIS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_SIS CHILD stage_out_local_compute_1_2
+PARENT  stage_in_local_compute_3_0 CHILD gene_network_gene_network
+PARENT  stage_in_local_compute_3_0 CHILD clique_geochem_clique_geochem
+PARENT  stage_out_local_compute_3_0 CHILD register_compute_3_0
+PARENT  stage_out_local_compute_3_0 CHILD clean_up_compute_level_8_0
+PARENT  stage_out_local_compute_3_0 CHILD clean_up_compute_level_7_0
+PARENT  trim_reads_trim_RSS CHILD clean_up_compute_level_3_5
+PARENT  trim_reads_trim_RSS CHILD mifaser_mifaser_RSS
+PARENT  trim_reads_trim_RSS CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_TCF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_TCF CHILD clean_up_compute_level_4_5
+PARENT  mifaser_mifaser_TCF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_TCF CHILD stage_out_local_compute_1_3
+PARENT  mifaser_mifaser_BR1F CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BR1F CHILD clean_up_compute_level_4_6
+PARENT  mifaser_mifaser_BR1F CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BR1F CHILD stage_out_local_compute_1_2
+PARENT  trim_reads_trim_PGF CHILD clean_up_compute_level_3_5
+PARENT  trim_reads_trim_PGF CHILD mifaser_mifaser_PGF
+PARENT  trim_reads_trim_PGF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_BRF2 CHILD clean_up_compute_level_3_5
+PARENT  trim_reads_trim_BRF2 CHILD mifaser_mifaser_BRF2
+PARENT  trim_reads_trim_BRF2 CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_BRS2 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BRS2 CHILD clean_up_compute_level_4_6
+PARENT  mifaser_mifaser_BRS2 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BRS2 CHILD stage_out_local_compute_1_1
+PARENT  mifaser_mifaser_BRS1 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BRS1 CHILD clean_up_compute_level_4_6
+PARENT  mifaser_mifaser_BRS1 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BRS1 CHILD stage_out_local_compute_1_3
+PARENT  trim_reads_trim_PGS CHILD clean_up_compute_level_3_6
+PARENT  trim_reads_trim_PGS CHILD mifaser_mifaser_PGS
+PARENT  trim_reads_trim_PGS CHILD clean_up_compute_level_3_0
+PARENT  carbon_flux_carbon_flux CHILD clean_up_compute_level_3_6
+PARENT  carbon_flux_carbon_flux CHILD make_report_make_report
+PARENT  carbon_flux_carbon_flux CHILD clean_up_compute_level_7_0
+PARENT  carbon_flux_carbon_flux CHILD stage_out_local_compute_0_2
+PARENT  gene_geochem_gene_geochem CHILD make_report_make_report
+PARENT  gene_geochem_gene_geochem CHILD clean_up_compute_level_7_0
+PARENT  gene_geochem_gene_geochem CHILD stage_out_local_compute_4_0
+PARENT  mifaser_mifaser_SIF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_SIF CHILD clean_up_compute_level_4_7
+PARENT  mifaser_mifaser_SIF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_SIF CHILD stage_out_local_compute_1_3
+PARENT  trim_reads_trim_BRS2 CHILD mifaser_mifaser_BRS2
+PARENT  trim_reads_trim_BRS2 CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_QHS1 CHILD mifaser_mifaser_QHS1
+PARENT  trim_reads_trim_QHS1 CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_BRS1 CHILD mifaser_mifaser_BRS1
+PARENT  trim_reads_trim_BRS1 CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_TCS CHILD mifaser_mifaser_TCS
+PARENT  trim_reads_trim_TCS CHILD clean_up_compute_level_3_1
+PARENT  trim_reads_trim_TCS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_QHS2 CHILD mifaser_mifaser_QHS2
+PARENT  trim_reads_trim_QHS2 CHILD clean_up_compute_level_3_1
+PARENT  trim_reads_trim_QHS2 CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_CYS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_CYS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_CYS CHILD stage_out_local_compute_1_1
+PARENT  clean_up_compute_level_6_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  trim_reads_trim_BR1F CHILD mifaser_mifaser_BR1F
+PARENT  trim_reads_trim_BR1F CHILD clean_up_compute_level_3_2
+PARENT  trim_reads_trim_BR1F CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_PBS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PBS CHILD clean_up_compute_level_4_1
+PARENT  mifaser_mifaser_PBS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PBS CHILD stage_out_local_compute_1_0
+PARENT  trim_reads_trim_QNF CHILD mifaser_mifaser_QNF
+PARENT  trim_reads_trim_QNF CHILD clean_up_compute_level_3_2
+PARENT  trim_reads_trim_QNF CHILD clean_up_compute_level_3_0
+PARENT  mothur_asv_mothur_asv CHILD filter_normalize_filter_normalize
+PARENT  mothur_asv_mothur_asv CHILD stage_out_local_compute_0_0
+PARENT  mothur_asv_mothur_asv CHILD clean_up_compute_level_3_2
+PARENT  mothur_asv_mothur_asv CHILD stage_out_local_compute_0_1
+PARENT  asv_network_asv_network CHILD clean_up_compute_level_5_0
+PARENT  asv_network_asv_network CHILD clique_geochem_clique_geochem
+PARENT  asv_network_asv_network CHILD stage_out_local_compute_2_0
+PARENT  trim_reads_trim_QNS CHILD mifaser_mifaser_QNS
+PARENT  trim_reads_trim_QNS CHILD clean_up_compute_level_3_4
+PARENT  trim_reads_trim_QNS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_BQF CHILD mifaser_mifaser_BQF
+PARENT  trim_reads_trim_BQF CHILD clean_up_compute_level_3_4
+PARENT  trim_reads_trim_BQF CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_CYF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_CYF CHILD clean_up_compute_level_4_2
+PARENT  mifaser_mifaser_CYF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_CYF CHILD stage_out_local_compute_1_2
+PARENT  trim_reads_trim_PLS CHILD mifaser_mifaser_PLS
+PARENT  trim_reads_trim_PLS CHILD clean_up_compute_level_3_4
+PARENT  trim_reads_trim_PLS CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_ETS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_ETS CHILD clean_up_compute_level_4_3
+PARENT  mifaser_mifaser_ETS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_ETS CHILD stage_out_local_compute_1_1
+PARENT  trim_reads_trim_BQS CHILD mifaser_mifaser_BQS
+PARENT  trim_reads_trim_BQS CHILD clean_up_compute_level_3_4
+PARENT  trim_reads_trim_BQS CHILD clean_up_compute_level_3_0
+PARENT  filter_normalize_filter_normalize CHILD asv_network_asv_network
+PARENT  filter_normalize_filter_normalize CHILD nmds_adonis_nmds_adonis
+PARENT  filter_normalize_filter_normalize CHILD clean_up_compute_level_4_3
+PARENT  filter_normalize_filter_normalize CHILD stage_out_local_compute_1_0
+PARENT  mifaser_mifaser_MTF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_MTF CHILD clean_up_compute_level_4_4
+PARENT  mifaser_mifaser_MTF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_MTF CHILD stage_out_local_compute_1_2
+PARENT  stage_out_local_compute_0_0 CHILD clean_up_compute_level_4_4
+PARENT  stage_out_local_compute_0_0 CHILD clean_up_compute_level_4_3
+PARENT  stage_out_local_compute_0_0 CHILD register_compute_0_0
+PARENT  stage_in_local_compute_2_0 CHILD gene_merge_gene_merge
+PARENT  stage_in_local_compute_2_0 CHILD asv_network_asv_network
+PARENT  stage_in_local_compute_2_0 CHILD nmds_adonis_nmds_adonis
+PARENT  mifaser_mifaser_RVF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_RVF CHILD clean_up_compute_level_4_5
+PARENT  mifaser_mifaser_RVF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_RVF CHILD stage_out_local_compute_1_0
+PARENT  stage_out_local_compute_4_0 CHILD register_compute_4_0
+PARENT  stage_out_local_compute_4_0 CHILD clean_up_compute_level_8_0
+PARENT  stage_out_local_compute_0_1 CHILD clean_up_compute_level_4_5
+PARENT  stage_out_local_compute_0_1 CHILD clean_up_compute_level_4_3
+PARENT  stage_out_local_compute_0_1 CHILD register_compute_0_1
+PARENT  stage_out_local_compute_0_2 CHILD clean_up_compute_level_8_0
+PARENT  stage_out_local_compute_0_2 CHILD register_compute_0_2
+PARENT  trim_reads_trim_EPF CHILD mifaser_mifaser_EPF
+PARENT  trim_reads_trim_EPF CHILD clean_up_compute_level_3_6
+PARENT  trim_reads_trim_EPF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_QH2F CHILD clean_up_compute_level_3_6
+PARENT  trim_reads_trim_QH2F CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_QH2F CHILD mifaser_mifaser_QH2F
+PARENT  clique_geochem_clique_geochem CHILD make_report_make_report
+PARENT  clique_geochem_clique_geochem CHILD clean_up_compute_level_6_0
+PARENT  clique_geochem_clique_geochem CHILD stage_out_local_compute_3_0
+PARENT  trim_reads_trim_FAS CHILD mifaser_mifaser_FAS
+PARENT  trim_reads_trim_FAS CHILD clean_up_compute_level_3_7
+PARENT  trim_reads_trim_FAS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_RVF CHILD mifaser_mifaser_RVF
+PARENT  trim_reads_trim_RVF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_ETS CHILD mifaser_mifaser_ETS
+PARENT  trim_reads_trim_ETS CHILD clean_up_compute_level_3_1
+PARENT  trim_reads_trim_ETS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_MTF CHILD mifaser_mifaser_MTF
+PARENT  trim_reads_trim_MTF CHILD clean_up_compute_level_3_1
+PARENT  trim_reads_trim_MTF CHILD clean_up_compute_level_3_0
+PARENT  clean_up_compute_level_9_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  mifaser_mifaser_ESF9 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_ESF9 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_ESF9 CHILD stage_out_local_compute_1_1
+PARENT  clean_up_compute_level_5_0 CHILD cleanup_subductcr-end-to-end_0_compute
+PARENT  trim_reads_trim_CYF CHILD clean_up_compute_level_3_3
+PARENT  trim_reads_trim_CYF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_CYF CHILD mifaser_mifaser_CYF
+PARENT  nmds_adonis_nmds_adonis CHILD make_report_make_report
+PARENT  nmds_adonis_nmds_adonis CHILD clean_up_compute_level_7_0
+PARENT  nmds_adonis_nmds_adonis CHILD clean_up_compute_level_5_0
+PARENT  nmds_adonis_nmds_adonis CHILD stage_out_local_compute_2_0
+PARENT  trim_reads_trim_CYS CHILD mifaser_mifaser_CYS
+PARENT  trim_reads_trim_CYS CHILD clean_up_compute_level_3_3
+PARENT  trim_reads_trim_CYS CHILD clean_up_compute_level_3_0
+PARENT  stage_out_local_compute_5_0 CHILD register_compute_5_0
+PARENT  stage_out_local_compute_5_0 CHILD clean_up_compute_level_9_0
+PARENT  trim_reads_trim_PBS CHILD clean_up_compute_level_3_5
+PARENT  trim_reads_trim_PBS CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_PBS CHILD mifaser_mifaser_PBS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BQS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_RSF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_QHS1
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_CYS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_ESF9
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_QHS2
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PFS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PBS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_QNS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PLS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BQF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_SLS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_SLF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_CYF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_QH2F
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PFF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_ETS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_TCS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_EPS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_QNF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_MTF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PGS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BRF2
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_SIS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_RVF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_ARS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_TCF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BR1F
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_FAS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_EPF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BRS2
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_BRS1
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_PGF
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_RSS
+PARENT  stage_in_local_compute_1_0 CHILD mifaser_mifaser_SIF
+PARENT  mifaser_mifaser_PGS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PGS CHILD clean_up_compute_level_4_4
+PARENT  mifaser_mifaser_PGS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PGS CHILD stage_out_local_compute_1_1
+PARENT  stage_in_local_compute_1_1 CHILD filter_normalize_filter_normalize
+PARENT  mifaser_mifaser_BRF2 CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_BRF2 CHILD clean_up_compute_level_4_4
+PARENT  mifaser_mifaser_BRF2 CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_BRF2 CHILD stage_out_local_compute_1_0
+PARENT  stage_out_local_compute_1_2 CHILD register_compute_1_2
+PARENT  stage_out_local_compute_1_2 CHILD clean_up_compute_level_5_0
+PARENT  stage_out_local_compute_1_3 CHILD register_compute_1_3
+PARENT  stage_out_local_compute_1_3 CHILD clean_up_compute_level_5_0
+PARENT  stage_out_local_compute_1_0 CHILD register_compute_1_0
+PARENT  stage_out_local_compute_1_0 CHILD clean_up_compute_level_5_0
+PARENT  mifaser_mifaser_ARS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_ARS CHILD clean_up_compute_level_4_5
+PARENT  mifaser_mifaser_ARS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_ARS CHILD stage_out_local_compute_1_0
+PARENT  stage_out_local_compute_1_1 CHILD register_compute_1_1
+PARENT  stage_out_local_compute_1_1 CHILD clean_up_compute_level_5_0
+PARENT  gene_network_gene_network CHILD clean_up_compute_level_6_0
+PARENT  gene_network_gene_network CHILD gene_geochem_gene_geochem
+PARENT  gene_network_gene_network CHILD stage_out_local_compute_3_0
+PARENT  stage_in_local_compute_5_0 CHILD make_report_make_report
+PARENT  trim_reads_trim_SIF CHILD clean_up_compute_level_3_5
+PARENT  trim_reads_trim_SIF CHILD clean_up_compute_level_3_0
+PARENT  trim_reads_trim_SIF CHILD mifaser_mifaser_SIF
+PARENT  mifaser_mifaser_PGF CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_PGF CHILD clean_up_compute_level_4_7
+PARENT  mifaser_mifaser_PGF CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_PGF CHILD stage_out_local_compute_1_2
+PARENT  trim_reads_trim_SIS CHILD clean_up_compute_level_3_6
+PARENT  trim_reads_trim_SIS CHILD mifaser_mifaser_SIS
+PARENT  trim_reads_trim_SIS CHILD clean_up_compute_level_3_0
+PARENT  mifaser_mifaser_RSS CHILD gene_merge_gene_merge
+PARENT  mifaser_mifaser_RSS CHILD clean_up_compute_level_4_7
+PARENT  mifaser_mifaser_RSS CHILD clean_up_compute_level_4_0
+PARENT  mifaser_mifaser_RSS CHILD stage_out_local_compute_1_1
+PARENT  trim_reads_trim_TCF CHILD mifaser_mifaser_TCF
+PARENT  trim_reads_trim_TCF CHILD clean_up_compute_level_3_7
+PARENT  trim_reads_trim_TCF CHILD clean_up_compute_level_3_0
+######################################################################
+# End of DAG
+######################################################################

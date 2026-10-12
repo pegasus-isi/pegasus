@@ -493,6 +493,20 @@ public class Condor extends Abstract {
                 // for shared file system mode we want the wrapped job
                 // to execute in workdir
                 job.envVariables.construct(Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true");
+                // GH-2156/GH-2173: for sharedfs local universe jobs, HTCondor may set
+                // $_CONDOR_SCRATCH_DIR to a temp dir while .lof files are in the submit dir.
+                // Fix by setting _CONDOR_SCRATCH_DIR="." so kickstart resolves lof paths
+                // relative to the working directory (which pegasus-lite-local.sh cd's to).
+                // Mirrors the same fix applied in GLite.java for grid universe sharedfs jobs.
+                String dataConf = job.getDataConfiguration();
+                if (dataConf != null
+                        && dataConf.equals(
+                                edu.isi.pegasus.planner.common.PegasusConfiguration
+                                        .SHARED_FS_CONFIGURATION_VALUE)) {
+                    job.envVariables.construct("_CONDOR_SCRATCH_DIR", ".");
+                    edu.isi.pegasus.planner.code.CodeGenerator
+                            .replaceCondorScratchDirInArguments(job, mLogger, ".");
+                }
             }
         }
 

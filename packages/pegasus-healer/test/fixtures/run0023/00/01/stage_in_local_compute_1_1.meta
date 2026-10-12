@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "filter_normalize",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "2414",
+      "ctime": "2026-09-09T17:48:58.659941",
+      "checksum.type": "sha256",
+      "checksum.value": "ecd548e9201ed78dcf4c90bea2a8b8b0a28707b1381d944fbec6233d84b02b89",
+      "checksum.timing": "0.031"
+    }
+  }
+]

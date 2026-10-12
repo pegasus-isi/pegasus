@@ -1,0 +1,37 @@
+# ── pegasus-healer opt-in ─────────────────────────────────────────────────────
+#
+# Replace pegasus-exitcode with the LLM-assisted healer as the DAGMan POST script.
+# DAGMan will invoke it as:
+#
+#   SCRIPT POST <job_node> pegasus-healer $RETURN $JOB $RETRY $MAX_RETRIES
+#
+# pegasus-healer reads submit_dir and wf_uuid from ./braindump.yml (which
+# DAGMan places in CWD = submit_dir at plan time) — no extra CLI args needed.
+#
+dagman.post           = pegasus-healer
+dagman.post.arguments = $RETURN $JOB $RETRY $MAX_RETRIES
+
+# ── LLM backend ───────────────────────────────────────────────────────────────
+# Credentials can alternatively be placed in ~/.pegasus/healer.env so they are
+# not committed to version control.
+#
+# pegasus.healer.llm.model    = claude-opus-4-6
+# pegasus.healer.llm.api_key  = sk-ant-...
+# pegasus.healer.llm.base_url =
+#
+# Per-agent overrides (fall back to the shared settings above):
+# pegasus.healer.diagnosis_llm.model    =
+# pegasus.healer.fix_planning_llm.model =
+
+# ── Policy file ───────────────────────────────────────────────────────────────
+# Absolute path to the YAML policy that controls AUTO/ASK/STOP/ESCALATE gates.
+# Defaults to $PEGASUS_HOME/share/pegasus/healer/remediation.yaml
+#
+# pegasus.healer.policy.file = /path/to/remediation.yaml
+
+# ── Persistence ───────────────────────────────────────────────────────────────
+# SQLite databases for LangGraph checkpoints and failure memory.
+# Defaults: ~/.pegasus/healer_checkpoint.db and ~/.pegasus/healer_memory.db
+#
+# pegasus.healer.checkpoint.db = /scratch/user/.pegasus/healer_checkpoint.db
+# pegasus.healer.memory.db     = /scratch/user/.pegasus/healer_memory.db

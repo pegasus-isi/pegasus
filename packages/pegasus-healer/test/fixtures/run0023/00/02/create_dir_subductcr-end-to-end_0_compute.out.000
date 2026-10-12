@@ -1,0 +1,206 @@
+- invocation: True
+  version: 3.0
+  start: 2026-09-11T05:13:36.027+00:00
+  duration: 5.557
+  transformation: "pegasus::dirmanager"
+  derivation: "null"
+  resource: "local"
+  wf-label: "subductcr-end-to-end"
+  wf-stamp: "2026-09-11T05:13:20+00:00"
+  interface: eth0
+  hostaddr: 10.1.214.25
+  hostname: pegasus.access-ci.org
+  pid: 4132728
+  uid: 1333
+  user: hsafri
+  gid: 1333
+  group: hsafri
+  umask: 0o0022
+  mainjob:
+    start: 2026-09-11T05:13:36.053+00:00
+    duration: 5.531
+    pid: 4132729
+    usage:
+      utime: 0.109
+      stime: 0.052
+      maxrss: 17400
+      minflt: 9441
+      majflt: 1
+      nswap: 0
+      inblock: 304
+      outblock: 32
+      msgsnd: 0
+      msgrcv: 0
+      nsignals: 0
+      nvcsw: 76
+      nivcsw: 6
+    status:
+      raw: 0
+      regular_exitcode: 0
+    executable:
+      file_name: /usr/bin/pegasus-transfer
+      mode: 0o100755
+      size: 2909
+      inode: 12768319
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-10T22:47:01+00:00
+      atime: 2026-09-10T22:47:01+00:00
+      ctime: 2026-09-11T03:00:38+00:00
+      uid: 0
+      user: root
+      gid: 0
+      group: root
+    argument_vector:
+    procs:
+  jobids:
+    condor: 4351915.0
+  cwd: /var/lib/condor/spool/local_univ_execute/dir_4132725/scratch
+  usage:
+    utime: 0.004
+    stime: 0.024
+    maxrss: 2592
+    minflt: 137
+    majflt: 1
+    nswap: 0
+    inblock: 16
+    outblock: 0
+    msgsnd: 0
+    msgrcv: 0
+    nsignals: 0
+    nvcsw: 3
+    nivcsw: 0
+  machine:
+    page-size: 4096
+    uname_system: linux
+    uname_nodename: pegasus.access-ci.org
+    uname_release: 4.18.0-553.146.1.el8_10.x86_64
+    uname_machine: x86_64
+    ram_total: 30589076
+    ram_free: 1172996
+    ram_shared: 283288
+    ram_buffer: 1000
+    swap_total: 0
+    swap_free: 0
+    cpu_count: 8
+    cpu_speed: 1996
+    cpu_vendor: AuthenticAMD
+    cpu_model: AMD EPYC-Milan Processor
+    load_min1: 0.61
+    load_min5: 1.42
+    load_min15: 1.79
+    procs_total: 250
+    procs_running: 1
+    procs_sleeping: 162
+    procs_other: 87
+    procs_vmsize: 59387808
+    procs_rss: 2977308
+    task_total: 886
+    task_running: 1
+    task_sleeping: 798
+    task_other: 87
+  files:
+    stdin:
+      descriptor_number: 0
+      mode: 0o10600
+      size: 0
+      inode: 202680379
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:13:36+00:00
+      atime: 2026-09-11T05:13:36+00:00
+      ctime: 2026-09-11T05:13:36+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+    stdout:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132725/scratch/ks.out.N68DmS
+      descriptor: 3
+      mode: 0o100600
+      size: 0
+      inode: 1468055636
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:13:36+00:00
+      atime: 2026-09-11T05:13:36+00:00
+      ctime: 2026-09-11T05:13:36+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+    stderr:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132725/scratch/ks.err.H9NpSm
+      descriptor: 4
+      mode: 0o100600
+      size: 2471
+      inode: 1468055637
+      nlink: 1
+      blksize: 4096
+      blocks: 8
+      mtime: 2026-09-11T05:13:41+00:00
+      atime: 2026-09-11T05:13:36+00:00
+      ctime: 2026-09-11T05:13:41+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri
+      data_truncated: false
+      data: |
+        2026-09-11 05:13:36,129    INFO:  Reading URL pairs from stdin
+        2026-09-11 05:13:36,129    INFO:  1 transfers loaded
+        2026-09-11 05:13:36,129    INFO:  PATH=/opt/jupyter-venv/bin:/home/hsafri/.local/bin:/home/hsafri/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/local/bin
+        2026-09-11 05:13:36,129    INFO:  LD_LIBRARY_PATH=
+        2026-09-11 05:13:36,171    INFO:  --------------------------------------------------------------------------------
+        2026-09-11 05:13:36,172    INFO:  Starting transfers - attempt 1
+        2026-09-11 05:13:38,174    INFO:  /usr/bin/ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -p 22 hsafri@perlmutter.nersc.gov '/bin/mkdir -p /pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023'
+        2026-09-11 05:13:41,571    INFO:  ***************************************************************************
+                                  NOTICE TO USERS
+        
+        Lawrence Berkeley National Laboratory operates this computer system under
+        contract to the U.S. Department of Energy.  This computer system is the
+        property of the United States Government and is for authorized use only.
+        Users (authorized or unauthorized) have no explicit or implicit
+        expectation of privacy.
+        
+        Any or all uses of this system and all files on this system may be
+        intercepted, monitored, recorded, copied, audited, inspected, and disclosed
+        to authorized site, Department of Energy, and law enforcement personnel,
+        as well as authorized officials of other agencies, both domestic and foreign.
+        By using this system, the user consents to such interception, monitoring,
+        recording, copying, auditing, inspection, and disclosure at the discretion
+        of authorized site or Department of Energy personnel.
+        
+        Unauthorized or improper use of this system may result in administrative
+        disciplinary action and civil and criminal penalties. By continuing to use
+        this system you indicate your awareness of and consent to these terms and
+        conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
+        stated in this warning.
+        
+        *****************************************************************************
+        
+        Login connection to host x3114c0s13b0n0:
+        
+        2026-09-11 05:13:41,572    INFO:  --------------------------------------------------------------------------------
+        2026-09-11 05:13:41,572    INFO:  Stats: no local files in the transfer set
+        2026-09-11 05:13:41,572    INFO:  All transfers completed successfully.
+        
+    metadata:
+      temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132725/scratch/ks.meta.PoVmxb
+      descriptor: 5
+      mode: 0o100600
+      size: 0
+      inode: 1468055638
+      nlink: 1
+      blksize: 4096
+      blocks: 0
+      mtime: 2026-09-11T05:13:36+00:00
+      atime: 2026-09-11T05:13:36+00:00
+      ctime: 2026-09-11T05:13:36+00:00
+      uid: 1333
+      user: hsafri
+      gid: 1333
+      group: hsafri

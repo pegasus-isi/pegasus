@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# pegasus-healer — LangGraph remediation agent for Pegasus WMS
+#
+# Invoked by DAGMan as a POST script after every job failure:
+#   dagman.post           = pegasus-healer
+#   dagman.post.arguments = $RETURN $JOB $RETRY $MAX_RETRIES
+#
+# Can also be called manually for diagnosis and inspection.
+#
+
+# ── Resolve pegasus-src root from this script's location ─────────────────────
+PEGASUS_HOME="`dirname "$0"`/.."
+PEGASUS_HOME=`cd "$PEGASUS_HOME" && pwd`
+
+# ── Project root is two levels up from pegasus-src/ ──────────────────────────
+PROJECT_ROOT="`cd "$PEGASUS_HOME/.." && pwd`"
+
+# ── Load .env (API keys, model config) if present ────────────────────────────
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$PROJECT_ROOT/.env"
+    set +a
+fi
+
+# ── Always use absolute POLICY_FILE ──────────────────────────────────────────
+POLICY_FILE="$PROJECT_ROOT/policies/remediation.yaml"
+export POLICY_FILE
+
+_PEGASUS_STATE="${HOME:-/tmp}/.pegasus"
+mkdir -p "$_PEGASUS_STATE"
+HEALER_CHECKPOINT="${HEALER_CHECKPOINT:-$_PEGASUS_STATE/healer_checkpoint.db}"
+HEALER_MEMORY_DB="${HEALER_MEMORY_DB:-$_PEGASUS_STATE/healer_memory.db}"
+export HEALER_CHECKPOINT HEALER_MEMORY_DB
+
+# ── Pick Python interpreter ───────────────────────────────────────────────────
+# Priority: HEALER_PYTHON env > activated venv > project venv > PEGASUS_PYTHON > python3
+if [ -n "$HEALER_PYTHON" ] && [ -x "$HEALER_PYTHON" ]; then
+    PEGASUS_PYTHON="$HEALER_PYTHON"
+elif [ -n "$VIRTUAL_ENV" ] && [ -x "$VIRTUAL_ENV/bin/python3" ]; then
+    PEGASUS_PYTHON="$VIRTUAL_ENV/bin/python3"
+elif [ -x "$PROJECT_ROOT/agentic/bin/python3" ]; then
+    PEGASUS_PYTHON="$PROJECT_ROOT/agentic/bin/python3"
+elif [ -n "$PEGASUS_PYTHON" ] && [ -x "$PEGASUS_PYTHON" ]; then
+    : # already set
+else
+    PEGASUS_PYTHON="$(command -v python3 || command -v python)"
+fi
+
+if [ -z "$PEGASUS_PYTHON" ]; then
+    echo "[pegasus-healer] ERROR: no Python interpreter found." >&2
+    echo "  Set HEALER_PYTHON=/path/to/python or activate a venv." >&2
+    exit 2
+fi
+
+# ── PYTHONPATH — project src/ first for live edits, then venv handles the rest
+case ":${PYTHONPATH:-}:" in
+    *":$PROJECT_ROOT/src:"*) ;;
+    *) PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}" ;;
+esac
+export PYTHONPATH
+
+# ── Execute healer CLI ────────────────────────────────────────────────────────
+exec "$PEGASUS_PYTHON" -m Pegasus.healer.cli.healer "$@"

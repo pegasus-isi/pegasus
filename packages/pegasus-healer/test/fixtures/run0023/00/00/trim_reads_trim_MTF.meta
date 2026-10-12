@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "MTF_trim_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1217841089",
+      "ctime": "2026-09-11T05:33:49+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "941f76d8512e9a7af5fb46994aad01735c931ad8181534ffd46baaced7be53d0",
+      "checksum.timing": "5.22"
+    }
+  },
+  {
+    "_id": "MTF_trim_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1218032571",
+      "ctime": "2026-09-11T05:33:49+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "c1fb8e32fdbe362a80d7a0e6f21d2bf16f05b57b6f80ba8c28571034ae321580",
+      "checksum.timing": "5.24"
+    }
+  }
+]

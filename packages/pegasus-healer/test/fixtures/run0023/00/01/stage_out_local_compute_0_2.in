@@ -1,0 +1,13 @@
+[
+ { "type": "transfer",
+   "linkage": "output",
+   "lfn": "carbon_flux.tsv",
+   "id": 1,
+   "verify_checksum_remote": true,
+   "src_urls": [
+     { "site_label": "compute", "url": "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./carbon_flux.tsv" }
+   ],
+   "dest_urls": [
+     { "site_label": "local", "url": "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output/carbon_flux.tsv" }
+   ] }
+]

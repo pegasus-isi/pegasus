@@ -1,0 +1,242 @@
+[
+  {
+    "_id": "ESF9_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1134664692",
+      "ctime": "2026-09-05T23:05:10.352127",
+      "checksum.type": "sha256",
+      "checksum.value": "938324ac8cbf9f48960ef46b00994ad3bb9af2c997177b50301ef5458e830378",
+      "checksum.timing": "1.431"
+    }
+  },
+  {
+    "_id": "ARS_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1017549086",
+      "ctime": "2026-09-05T23:05:10.178126",
+      "checksum.type": "sha256",
+      "checksum.value": "7eae91609b222854426e56260a27501552936471cb040700e8c11e0741c8a637",
+      "checksum.timing": "1.737"
+    }
+  },
+  {
+    "_id": "PFF_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1948449655",
+      "ctime": "2026-09-05T23:05:10.429128",
+      "checksum.type": "sha256",
+      "checksum.value": "be60edd08fef0effce098afef451cfdf3e02135828e9935362ac13482457ccc2",
+      "checksum.timing": "2.644"
+    }
+  },
+  {
+    "_id": "TCF_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1308185545",
+      "ctime": "2026-09-05T23:05:10.685130",
+      "checksum.type": "sha256",
+      "checksum.value": "4b57d3fad6a4bd5c12da9db4c84d43ccab7a7230354b6560d5f23d62de4bd971",
+      "checksum.timing": "2.318"
+    }
+  },
+  {
+    "_id": "SLF_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1132671602",
+      "ctime": "2026-09-05T23:05:10.655130",
+      "checksum.type": "sha256",
+      "checksum.value": "3032d561d3e9057bfe6b63166c4e9acd60bd319cd1b02547e3b4c8f9a0b2f73b",
+      "checksum.timing": "1.728"
+    }
+  },
+  {
+    "_id": "PLS_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1024129938",
+      "ctime": "2026-09-05T23:05:10.489128",
+      "checksum.type": "sha256",
+      "checksum.value": "3d0f23d86c2c35228154308dfd4cb62effbeb828907804d49d5af5f7229664de",
+      "checksum.timing": "1.653"
+    }
+  },
+  {
+    "_id": "flux_params.yml",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "328",
+      "ctime": "2026-09-04T22:53:35.562173",
+      "checksum.type": "sha256",
+      "checksum.value": "c46bfee9b6df98632c8c4ed1a5715bad02afc4e980814cd9e4ae65488c224bb0",
+      "checksum.timing": "0.028"
+    }
+  },
+  {
+    "_id": "CYS_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "2296934662",
+      "ctime": "2026-09-05T23:05:10.305127",
+      "checksum.type": "sha256",
+      "checksum.value": "ace87a33a52eda6da74ff9df8569410248e245f54b7439e89d7c3bf01d2c10fd",
+      "checksum.timing": "3.868"
+    }
+  },
+  {
+    "_id": "RSF_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1371597015",
+      "ctime": "2026-09-05T23:05:10.580129",
+      "checksum.type": "sha256",
+      "checksum.value": "264653f91b4c0ab3332b6f134303139c71a1896113d863595e37035e56c399a6",
+      "checksum.timing": "2.098"
+    }
+  },
+  {
+    "_id": "PGS_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "2697066216",
+      "ctime": "2026-09-05T23:05:10.474128",
+      "checksum.type": "sha256",
+      "checksum.value": "835a31103470e3b35d80e5863acf24487a6618770eba4a8bdd38a089aefaa613",
+      "checksum.timing": "3.808"
+    }
+  },
+  {
+    "_id": "TCS_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "793037090",
+      "ctime": "2026-09-05T23:05:10.700130",
+      "checksum.type": "sha256",
+      "checksum.value": "69fa022eb529eff3b914f5e82566dda72d96ab4a86f035bce2cbbf5320d25cc3",
+      "checksum.timing": "1.2"
+    }
+  },
+  {
+    "_id": "BR1F_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "908409929",
+      "ctime": "2026-09-05T23:05:10.226126",
+      "checksum.type": "sha256",
+      "checksum.value": "4054564a4ec48bb17c9bf8a8a583fdb7b68608ac94cbd2029c3632b7d242ec8e",
+      "checksum.timing": "1.549"
+    }
+  },
+  {
+    "_id": "ETS_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1101560827",
+      "ctime": "2026-09-05T23:05:10.366127",
+      "checksum.type": "sha256",
+      "checksum.value": "181980b1089a8c379ff11662d385b288c47c4d066e08ed9d4575e5beba78e474",
+      "checksum.timing": "1.82"
+    }
+  },
+  {
+    "_id": "silva_v132.db",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "10680384402",
+      "ctime": "2026-09-05T23:06:57.538937",
+      "checksum.type": "sha256",
+      "checksum.value": "4f8665bb213ba5056bcbb0dcacce24b7522e1e149eabfe8f7f1992b8fa2da7d2",
+      "checksum.timing": "15.071"
+    }
+  },
+  {
+    "_id": "SIF_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1295349027",
+      "ctime": "2026-09-05T23:05:10.625129",
+      "checksum.type": "sha256",
+      "checksum.value": "c1f4fa11725a19e9ad2349d5ccdeb58fc76b65d3e381a78d43d1b20d14c6ffae",
+      "checksum.timing": "3.277"
+    }
+  },
+  {
+    "_id": "FAS_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1993478707",
+      "ctime": "2026-09-05T23:05:10.382128",
+      "checksum.type": "sha256",
+      "checksum.value": "46bc396335bef979cf659e6e003a1325d52c6e3a9680caeacaa474a939d4d188",
+      "checksum.timing": "2.654"
+    }
+  },
+  {
+    "_id": "QHS1_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "6325631374",
+      "ctime": "2026-09-05T23:05:10.518129",
+      "checksum.type": "sha256",
+      "checksum.value": "78991e679e0c900581b98d3bfa82925fb32b0e96154ad2619fa85ca989d5c241",
+      "checksum.timing": "10.935"
+    }
+  },
+  {
+    "_id": "EPF_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1271731825",
+      "ctime": "2026-09-05T23:05:10.322127",
+      "checksum.type": "sha256",
+      "checksum.value": "def6cfdc4f6f372c023b05db0667e1915f8ae0e90d9181f672f66be02111ee14",
+      "checksum.timing": "1.631"
+    }
+  },
+  {
+    "_id": "QNS_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "2320019150",
+      "ctime": "2026-09-05T23:05:10.563129",
+      "checksum.type": "sha256",
+      "checksum.value": "b14458c088d1c66a24afb0edbfde66c58e9e2dfa6806960f216a558f840968f5",
+      "checksum.timing": "4.1"
+    }
+  },
+  {
+    "_id": "RSS_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1105770601",
+      "ctime": "2026-09-05T23:05:10.596129",
+      "checksum.type": "sha256",
+      "checksum.value": "0ad805ac8895ee5849295b04721a8d4d58d719c5365c416e2615af12ab88e4db",
+      "checksum.timing": "2.183"
+    }
+  }
+]

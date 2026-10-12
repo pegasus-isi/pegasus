@@ -1,0 +1,91 @@
+---
+pegasus: "5.0"
+sites:
+ -
+  name: "compute"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "localStorage"
+    path: "/global/cfs/cdirs/m4144/hsafri/wf-outputs"
+    sharedFileSystem: true
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://hsafri@perlmutter.nersc.gov/global/cfs/cdirs/m4144/hsafri/wf-outputs"
+   -
+    type: "sharedScratch"
+    path: "/pscratch/sd/h/hsafri/wf-scratch"
+    sharedFileSystem: true
+    fileServers:
+     -
+      operation: "all"
+      url: "scp://hsafri@perlmutter.nersc.gov//pscratch/sd/h/hsafri/wf-scratch"
+  grids:
+   -
+    type: "sfapi"
+    contact: "perlmutter"
+    scheduler: "slurm"
+    jobtype: "compute"
+  profiles:
+    pegasus:
+      change.dir: "true"
+      clusters.num: "2"
+      data.configuration: "nonsharedfs"
+      glite.arguments: "-C cpu"
+      memory: "1024"
+      project: "m4144"
+      queue: "shared"
+      runtime: "1800"
+      style: "glite"
+  x-tags:
+   -
+    name: "cpu"
+    profiles:
+      pegasus:
+        container.arguments: "--module none"
+        cores: "1"
+        glite.arguments: "-C cpu"
+        queue: "shared"
+   -
+    name: "gpu"
+    profiles:
+      pegasus:
+        glite.arguments: "-C gpu"
+        gpus: "1"
+        queue: "regular"
+ -
+  name: "condorpool"
+  arch: "x86_64"
+  os.type: "linux"
+  profiles:
+    pegasus:
+      style: "condor"
+ -
+  name: "local"
+  arch: "x86_64"
+  os.type: "linux"
+  directories:
+   -
+    type: "sharedStorage"
+    path: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-output"
+   -
+    type: "sharedScratch"
+    path: "/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-scratch/LOCAL"
+    sharedFileSystem: false
+    fileServers:
+     -
+      operation: "all"
+      url: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/wf-scratch/LOCAL"
+  profiles:
+    env:
+      PEGASUS_HOME: "/usr"
+      PATH: "/opt/jupyter-venv/bin:/home/hsafri/.local/bin:/home/hsafri/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+    pegasus:
+      ssh_private_key: "/home/hsafri/.ssh/nersc"

@@ -1,0 +1,11 @@
+{
+  "_routing_key": "stampede.job_inst.main.failure",
+  "wf_id": "wf-test-001",
+  "job_id": "bowtie_alignment_0",
+  "job_inst_id": 1,
+  "sched_id": "12345.0",
+  "exitcode": 137,
+  "status": 1,
+  "ts": 1724400000.0,
+  "site": "local"
+}

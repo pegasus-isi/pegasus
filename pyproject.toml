@@ -55,6 +55,17 @@ dependencies = [
     # their respective tools (pegasus-s3/pegasus-transfer, then
     # pegasus-globus-online/-init) were rewritten in Go — see
     # packages/pegasus-transfer/CLAUDE.md for the decision record.
+
+    # ── pegasus-healer: LLM-assisted job failure remediation ──────────────────
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "langgraph>=0.2.0",
+    "langgraph-checkpoint-sqlite>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "litellm>=1.40.0",
+    "instructor>=1.3.0",
+    "structlog>=24.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
@@ -96,6 +107,9 @@ pegasus-config         = "Pegasus.cli.main:pegasus_config"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
 
+# Healer — LLM-assisted POST script (drop-in for pegasus-exitcode)
+pegasus-healer         = "Pegasus.healer.cli.healer:main"
+
 # C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
 # pegasus-transfer / pegasus-checkpoint / pegasus-integrity /
 # pegasus-globus-online / pegasus-globus-online-init binaries are installed
@@ -113,7 +127,7 @@ cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
 cmake.version = ">=3.20"
 cmake.build-type = "Release"
 build-dir = "_cmake_build"
-editable.rebuild = true
+editable.rebuild = false
 wheel.py-api = "py3"
 
 # Python package location — pegasus-python is the main package; pegasus-common
@@ -159,6 +173,7 @@ testpaths = [
     "packages/pegasus-common/test",
     "packages/pegasus-api/test",
     "packages/pegasus-python/test",
+    "packages/pegasus-healer/test",
 ]
 # importlib: the suites share module basenames (test_workflow.py, ...) and must
 # not put their directories on sys.path.
@@ -184,3 +199,4 @@ relative_files = true
 common = ["packages/pegasus-common/src/Pegasus", "*/site-packages/Pegasus"]
 api = ["packages/pegasus-api/src/Pegasus", "*/site-packages/Pegasus"]
 python = ["packages/pegasus-python/src/Pegasus", "*/site-packages/Pegasus"]
+healer = ["packages/pegasus-healer/src/Pegasus", "*/site-packages/Pegasus"]

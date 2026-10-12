@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "gene_geochem",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "943",
+      "ctime": "2026-09-09T17:48:58.659941",
+      "checksum.type": "sha256",
+      "checksum.value": "c769872c48755ed8a865add46a3885d6fa385dd317d786d9102c40616facc8f9",
+      "checksum.timing": "0.03"
+    }
+  }
+]

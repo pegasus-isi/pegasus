@@ -1,0 +1,41 @@
+######################################################################
+# PEGASUS WMS GENERATED SUBMIT FILE
+# DAG : subductcr-end-to-end, Index = 0, Count = null
+# SUBMIT FILE NAME : clean_up_compute_level_3_2.sub
+######################################################################
+stream_error  = false
+stream_output = false
+environment = "LANG=en_US.UTF-8 PEGASUS_HOME=/usr PATH=/opt/jupyter-venv/bin:/home/hsafri/.local/bin:/home/hsafri/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin RESOURCE_USERNAME=hsafri RESOURCE_SCRATCH_DIR=/pscratch/sd/h/hsafri RESOURCE_PROJECT=m4144 CONDOR_JOBID=$(cluster).$(process) PEGASUS_WF_UUID=91c16593-c21e-4cd5-bce3-9e6d076068ab PEGASUS_WF_LABEL=subductcr-end-to-end PEGASUS_DAG_JOB_ID=clean_up_compute_level_3_2 PEGASUS_SITE=local GRIDSTART_CLEANUP='/bin/rm -rf clean_up_compute_level_3_2.in.lof ' _PEGASUS_WF_SUBMIT_DIR=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023 _PEGASUS_TRANSFER_INPUT_FILES=$(wf_submit_dir)/00/02/clean_up_compute_level_3_2.in.lof, PEGASUS_BIN_DIR=/usr/bin _PEGASUS_CONNECT_STDIN=true SSH_PRIVATE_KEY_compute=/home/hsafri/.ssh/nersc"
+arguments = "/usr/bin/pegasus-kickstart  -n pegasus::cleanup -N null -i - -R local  -S @$_CONDOR_SCRATCH_DIR/clean_up_compute_level_3_2.in.lof  -L subductcr-end-to-end -T 2026-09-11T05:13:20+00:00 /usr/bin/pegasus-transfer "
+error = /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023//00/02/clean_up_compute_level_3_2.err
+executable = /usr/share/pegasus/sh/pegasus-lite-local.sh
+input = /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023//00/02/clean_up_compute_level_3_2.in
+log = /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023/subductcr-end-to-end-0.log
+notification = NEVER
+output = /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023//00/02/clean_up_compute_level_3_2.out
+periodic_release = False
+periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)
+priority = 1000
+submit_event_user_notes = pool:local
+transfer_executable = false
+universe = local
+wf_submit_dir = /home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/runs/hsafri/pegasus/subductcr-end-to-end/run0023
+pegasus_job_runtime = 0
+pegasus_cores = 1
+pegasus_gpus = 0
++pegasus_generator = "Pegasus"
++pegasus_root_wf_uuid = "91c16593-c21e-4cd5-bce3-9e6d076068ab"
++pegasus_wf_uuid = "91c16593-c21e-4cd5-bce3-9e6d076068ab"
++pegasus_version = "5.1.3-dev.0"
++pegasus_wf_name = "subductcr-end-to-end-0"
++pegasus_wf_time = "20260911T051320+0000"
++pegasus_wf_xformation = "pegasus::cleanup"
++pegasus_wf_dax_job_id = "null"
++pegasus_wf_dag_job_id = "clean_up_compute_level_3_2"
++pegasus_job_class = 8
++pegasus_site = "local"
++pegasus_cluster_size = 1
+queue
+######################################################################
+# END OF SUBMIT FILE
+######################################################################

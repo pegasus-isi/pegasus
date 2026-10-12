@@ -1,0 +1,235 @@
+---
+pegasus: "5.0"
+transformations:
+ -
+  name: "asv_network"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/asv_network"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "carbon_flux"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/carbon_flux"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "clique_geochem"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/clique_geochem"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "filter_normalize"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/filter_normalize"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "gene_geochem"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_geochem"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "gene_merge"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_merge"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "gene_network"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_network"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "make_report"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/make_report"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "mifaser"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/mifaser"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "8"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "65536"
+        runtime: "43200"
+    container: "subductcr-mifaser"
+ -
+  name: "mothur_asv"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/mothur_asv"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "8"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "65536"
+        runtime: "43200"
+    container: "subductcr-mothur"
+ -
+  name: "nmds_adonis"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/nmds_adonis"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "1"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "4096"
+        runtime: "43200"
+    container: "subductcr-r"
+ -
+  name: "trim_reads"
+  sites:
+   -
+    name: "local"
+    type: "stageable"
+    pfn: "file:///home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/trim_reads"
+    bypass: false
+    arch: "x86_64"
+    os.type: "linux"
+    profiles:
+      pegasus:
+        cores: "8"
+        glite.arguments: "-C cpu"
+        maxwalltime: "720"
+        memory: "16384"
+        runtime: "43200"
+    container: "subductcr-mothur"
+containers:
+ -
+  name: "subductcr-mifaser"
+  type: "shifter"
+  image: "shifter:///swarmourr/subductcr-mifaser:latest"
+  bypass: true
+ -
+  name: "subductcr-mothur"
+  type: "shifter"
+  image: "shifter:///swarmourr/subductcr-mothur:latest"
+  bypass: true
+ -
+  name: "subductcr-r"
+  type: "shifter"
+  image: "shifter:///swarmourr/subductcr-r:latest"
+  bypass: true

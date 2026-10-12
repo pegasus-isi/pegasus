@@ -1,0 +1,13 @@
+{
+  "_routing_key": "stampede.job_inst.main.failure",
+  "wf_id": "wf-test-003",
+  "job_id": "sort_merge_0",
+  "job_inst_id": 1,
+  "sched_id": "77777.0",
+  "exitcode": 1,
+  "status": 1,
+  "ts": 1724400120.0,
+  "site": "local",
+  "hold_reason": "Disk quota exceeded — job removed",
+  "hold_reason_code": 34
+}

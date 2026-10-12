@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "PBS_trim_R2.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1128390885",
+      "ctime": "2026-09-11T05:37:12+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "ff4c2371804575102b429dfbfb1b051a5701ee5b1948f6d071c0a9ba56ea784a",
+      "checksum.timing": "4.75"
+    }
+  },
+  {
+    "_id": "PBS_trim_R1.fastq.gz",
+    "_type": "file",
+    "_attributes": {
+      "user": "hsafri",
+      "size": "1126976687",
+      "ctime": "2026-09-11T05:37:12+00:00",
+      "checksum.type": "sha256",
+      "checksum.value": "00ec4cb0ad7e3e5f6a3a48864bf10760821ae9e47217ca811785b6b443b13e4d",
+      "checksum.timing": "4.78"
+    }
+  }
+]
