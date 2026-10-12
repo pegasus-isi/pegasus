@@ -147,3 +147,14 @@ $ ant dist-release
 ```
 
 The resulting packages will be created in the `dist` subdirectory.
+
+## Pegasus Healer
+
+Pegasus Healer is an agentic auto-recovery system that diagnoses and fixes
+failed workflow jobs automatically using LLM reasoning and a configurable
+policy engine. It runs as a DAGMan post-script and can auto-retry jobs
+affected by out-of-memory errors, missing files, staging failures, and more —
+without human intervention.
+
+See [packages/pegasus-healer/README.md](packages/pegasus-healer/README.md)
+for full setup, configuration, and usage instructions.
