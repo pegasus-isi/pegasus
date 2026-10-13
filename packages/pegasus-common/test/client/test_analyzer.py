@@ -102,7 +102,7 @@ class TestBaseAnalyze:
         )
         with pytest.raises(Exception) as err:
             BaseAnalyze.parse_submit_file(job, opts)
-        assert f"error opening submit file: {submit_file}" in str(err)
+        assert f"error opening submit file: {submit_file}" in str(err.value)
 
     def test_parse_submit_file_subdag_job(self, mocker, capsys, BaseAnalyzer):
         job = Job("job-0", "running")
@@ -214,7 +214,7 @@ class TestAnalyzeDB:
 
         with pytest.raises(ValueError) as err:
             analyze.analyze_db(None)
-        assert "Database URL is required" in str(err)
+        assert "Database URL is required" in str(err.value)
 
     def test_analyze_db_no_wf_id(self, mocker, capsys, AnalyzerDatabase):
         mocker.patch(
@@ -447,9 +447,9 @@ class TestAnalyzeDB:
         analyze = AnalyzerDatabase(Options(summary_mode=True))
         with pytest.raises(Exception) as err:
             analyze.analyze_db_for_wf(mock_wf_stats, "uuid-0", "submit_dir-0", mock_wf)
-            assert "Workflow failed" in str(err)
-            assert "uuid-0" in str(err)
-            assert "submit_dir-0" in str(err)
+            assert "Workflow failed" in str(err.value)
+            assert "uuid-0" in str(err.value)
+            assert "submit_dir-0" in str(err.value)
 
     def DISABLED_test_analyze_db_for_wf_failing_jobs(
         self, mocker, capsys, AnalyzerDatabase
@@ -733,7 +733,7 @@ class TestAnalyzeFiles:
         )
         with pytest.raises(Exception) as err:
             analyze.analyze_files()
-        assert expected_output in str(err)
+        assert expected_output in str(err.value)
 
     def test_hierarchical_wf_failure(self, mocker, capsys, AnalyzerFiles):
         submit_dir = os.path.join(
@@ -844,13 +844,13 @@ class TestAnalyzeFiles:
         analyze = AnalyzerFiles(Options(input_dir="/random/dir"))
         with pytest.raises(AnalyzerError) as err:
             analyze.parse_dag_file("dag_file")
-        assert "could not open dag file dag_file: exiting..." in str(err)
+        assert "could not open dag file dag_file: exiting..." in str(err.value)
 
     def test_parse_jobstate_log(self, mocker, capsys, AnalyzerFiles):
         analyze = AnalyzerFiles(Options(input_dir="/random/dir"))
         with pytest.raises(AnalyzerError) as err:
             analyze.parse_jobstate_log("jobstate_file")
-        assert "could not open file jobstate_file: exiting..." in str(err)
+        assert "could not open file jobstate_file: exiting..." in str(err.value)
 
     def test_add_job(self, mocker, AnalyzerFiles):
         analyze = AnalyzerFiles(Options())
@@ -900,7 +900,7 @@ class TestDebugWF:
 
         with pytest.raises(AnalyzerError) as err:
             debug.debug_workflow()
-        assert "cannot access job submit file: job-0.sub" in str(err)
+        assert "cannot access job submit file: job-0.sub" in str(err.value)
 
     def test_debug_workflow_no_tempdir(self, mocker, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
@@ -910,7 +910,7 @@ class TestDebugWF:
 
         with pytest.raises(AnalyzerError) as err:
             debug.debug_workflow()
-        assert "could not create temporary directory!" in str(err)
+        assert "could not create temporary directory!" in str(err.value)
 
     def test_debug_workflow_create_debug_dir_fail(self, mocker, capsys, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")
@@ -933,7 +933,7 @@ class TestDebugWF:
 
         with pytest.raises(AnalyzerError) as err:
             debug.debug_workflow()
-        assert "workflow type OTHER not supported!" in str(err)
+        assert "workflow type OTHER not supported!" in str(err.value)
 
     def test_debug_mode_no_debug_dir(mocker, capsys, AnalyzerDebug):
         submit_dir = os.path.join(directory, "analyzer_samples_dir/process_wf_failure")

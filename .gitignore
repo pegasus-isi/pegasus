@@ -1,11 +1,14 @@
 !test/scripts
+/test-reports/
+_cmake_build/
+_cmake_build_worker/
 
 # Claude Code personal/runtime settings (per-developer, not shared)
 **/.claude/settings.local.json
 .claude/worktrees/
 
-# Created by https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,windows,virtualenv,intellij+all,visualstudiocode,go
+# Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,windows,virtualenv,intellij+all,visualstudiocode,go
 
 ### C ###
 # Prerequisites
@@ -87,72 +90,6 @@ dkms.conf
 ### dotenv ###
 .env
 
-### Eclipse ###
-.metadata
-## bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.settings/
-.loadpath
-.recommenders
-
-# External tool builders
-.externalToolBuilders/
-
-# Locally stored "Eclipse launch configurations"
-*.launch
-
-# PyDev specific (Python IDE for Eclipse)
-*.pydevproject
-
-# CDT-specific (C/C++ Development Tooling)
-.cproject
-
-# CDT- autotools
-.autotools
-
-# Java annotation processor (APT)
-.factorypath
-
-# PDT-specific (PHP Development Tools)
-.buildpath
-
-# sbteclipse plugin
-.target
-
-# Tern plugin
-.tern-project
-
-# TeXlipse plugin
-.texlipse
-
-# STS (Spring Tool Suite)
-.springBeans
-
-# Code Recommenders
-.recommenders/
-
-# Annotation Processing
-.apt_generated/
-.apt_generated_test/
-
-# Scala IDE specific (Scala & Java development for Eclipse)
-.cache-main
-.scala_dependencies
-.worksheet
-
-# Uncomment this line if you wish to ignore the project description file.
-# Typically, this file would be tracked if it contains build/dependency configurations:
-#.project
-
-### Eclipse Patch ###
-# Spring Boot Tooling
-.sts4-cache/
-
 ### Emacs ###
 # -*- mode: gitignore; -*-
 *~
@@ -219,6 +156,24 @@ flycheck_*.el
 *_LOCAL_*.txt
 *_REMOTE_*.txt
 
+### Go ###
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe~
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
 ### Intellij+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
@@ -264,8 +219,6 @@ flycheck_*.el
 
 # CMake
 cmake-build-*/
-_cmake_build/
-_cmake_build_worker/
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
@@ -304,7 +257,10 @@ fabric.properties
 # Ignore everything but code style settings and run configurations
 # that are supposed to be shared within teams.
 
-.idea/
+.idea/*
+
+!.idea/codeStyles
+!.idea/runConfigurations
 
 ### Java ###
 # Compiled class file
@@ -783,17 +739,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,eclipse,windows,virtualenv,intellij+all,visualstudiocode
+# End of https://www.toptal.com/developers/gitignore/api/c,c++,git,vim,java,node,venv,emacs,linux,macos,maven,direnv,dotenv,python,windows,virtualenv,intellij+all,visualstudiocode,go
 
-# The toptal-generated C++/Fortran boilerplate above ignores *.mod / *.mod*
-# for kernel-module and Fortran-module build artifacts — but Go's module
-# manifest is also named go.mod, and this repo has several Go modules
-# (packages/pegasus-transfer, pegasus-checkpoint, pegasus-integrity,
-# pegasus-globus-online). Un-ignore those explicitly (must come after the
-# ignoring patterns above — gitignore negations only take effect if they're
-# the LAST matching rule) so `git add`/sdist packaging actually picks them
-# up. This was a real, silent bug: go.mod was never tracked, breaking
-# `python -m build`'s sdist-based wheel build — though not a plain in-tree
-# `go build`/CMake build, which reads the file straight off disk regardless
-# of git's tracking state.
+# Must stay last: un-ignores Go module manifests matched by *.mod above
+# (negations only apply if they are the last matching rule).
 !**/go.mod

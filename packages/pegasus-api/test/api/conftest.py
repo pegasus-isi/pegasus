@@ -5,13 +5,6 @@ import re
 import pytest
 import yaml
 
-from Pegasus.api.writable import _CustomEncoder
-
-
-def _tojson(obj):
-    """Returns dict representation of obj using writable._CustomEncoder"""
-    return json.loads(json.dumps(obj, cls=_CustomEncoder))
-
 
 @pytest.fixture(scope="module")
 def convert_yaml_schemas_to_json():

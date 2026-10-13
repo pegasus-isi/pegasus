@@ -113,15 +113,13 @@ set(WORKER_DEST  "${_data_base}/worker-packages")
 set(SCHEMA_DEST  "${_data_base}/schema")
 set(ETC_DEST     "${_data_base}/etc")
 
-# Python sub-packages: merge pegasus-common, and pegasus-api
-# into the wheel alongside pegasus-python (handled by wheel.packages).
-# pegasus-worker's Python content here is now just namespace-package
-# boilerplate (see packages/pegasus-worker/CLAUDE.md) — every CLI tool that
-# used to live in pegasus-worker (transfer, s3, checkpoint, integrity,
-# globus-online(-init)) has been rewritten in Go and is installed as a
-# compiled binary further down instead. The isolated, Python-free worker
-# tarball for remote hosts is built separately by the build_worker_tarball
-# CMake target below.
+# Python sub-packages: merge pegasus-common and pegasus-api into the wheel
+# alongside pegasus-python (handled by wheel.packages). The former
+# pegasus-worker Python package is gone — every CLI tool it held (transfer,
+# s3, checkpoint, integrity, globus-online(-init)) was rewritten in Go and is
+# installed as a compiled binary further down instead. The isolated,
+# Python-free worker tarball for remote hosts is built separately by the
+# build_worker_tarball CMake target below.
 if(DEFINED SKBUILD_PLATLIB_DIR)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-common/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
@@ -156,8 +154,8 @@ endif()
 
 # ── pegasus-transfer (Go) ────────────────────────────────────────────────────
 # A single static (CGO_ENABLED=0) binary implementing all pegasus-transfer
-# protocols, replacing the old Python packages/pegasus-worker/src/Pegasus/
-# transfer.py + s3.py. Installed to bin/ like the C tools; PEGASUS_TRANSFER_GO_BIN
+# protocols, replacing the old Python Pegasus/transfer.py + s3.py from the
+# removed pegasus-worker package. Installed to bin/ like the C tools; PEGASUS_TRANSFER_GO_BIN
 # / PEGASUS_TRANSFER_GO_TARGET (set by the subdirectory) let the worker
 # tarball below stage the compiled binary alongside pegasus-kickstart.
 if(PEGASUS_BUILD_GO)
