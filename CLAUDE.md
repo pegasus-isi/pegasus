@@ -8,7 +8,7 @@ The easiest way to build Pegasus is to use a virtualenv with Python3.10 or highe
 
 ```
 python3 -m venv ~/pegasus-build-env
-source ~/pegasus-build-env/bin/activate 
+source ~/pegasus-build-env/bin/activate
 pip3 install build
 make build
 ```
@@ -16,8 +16,6 @@ make build
 ## Build System
 
 scikit-build-core + CMake backend. A single `pip install .` installs the full distribution: Python packages, C binaries, and Java JARs. Java is compiled via CMake's `UseJava` module; C tools via CMake subdirectories. Version defined in `build.properties`.
-
-
 
 ```bash
 # Full wheel build → dist/pegasus_wms-VERSION-PLATFORM.whl
