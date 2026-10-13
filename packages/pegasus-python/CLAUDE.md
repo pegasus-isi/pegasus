@@ -29,7 +29,7 @@ separately. Runtime dependencies are declared only in the repo-root
 # Run this package's suite (from the REPO ROOT, against the pegasus-wms wheel)
 tox -m python
 
-# Run a single test file, or a single test (any interpreter: 3.10 .. 3.14, py)
+# Run a single test file, or a single test (any interpreter: 3.10 .. 3.15, py)
 tox -e py -- packages/pegasus-python/test/test_statistics.py
 tox -e py -- packages/pegasus-python/test/test_statistics.py::TestPegasusStatistics::test_initialize -v
 ```

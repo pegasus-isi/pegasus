@@ -19,7 +19,7 @@ tox -m common
 # Run tests matching a pattern
 tox -m common -- -k braindump
 
-# Run a single test file or function (any interpreter: 3.10 .. 3.14, py)
+# Run a single test file or function (any interpreter: 3.10 .. 3.15, py)
 tox -e py -- packages/pegasus-common/test/test_braindump.py
 tox -e py -- packages/pegasus-common/test/test_braindump.py::TestBraindump::test_load -v
 ```
