@@ -3,7 +3,7 @@
 2026-09-10 22:29:51: Executing on host x1004c1s0b1n0h0.chn.perlmutter.nersc.gov IP=128.55.70.113
 
 ########################[Pegasus Lite] Setting up workdir ########################
-2026-09-10 22:29:52: Checking /pscratch/sd/h/hsafri/.blah/bl_grFz7C for potential use as work space... 
+2026-09-10 22:29:52: Checking /pscratch/sd/h/hsafri/.blah/bl_grFz7C for potential use as work space...
 2026-09-10 22:29:52:   Workdir is /pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw - 17P available
 2026-09-10 22:29:52: Changing cwd to /pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw
 2026-09-10 22:29:52: Copying lof files from /pscratch/sd/h/hsafri/.blah/bl_grFz7C to /pscratch/sd/h/hsafri/.blah/bl_grFz7C/pegasus.4ODL36brw

@@ -124,7 +124,7 @@ EOF2
 
 chmod +x carbon_flux_carbon_flux-cont.sh
 if ! [ $pegasus_lite_start_dir -ef . ]; then
-	cp $pegasus_lite_start_dir/pegasus-lite-common.sh . 
+	cp $pegasus_lite_start_dir/pegasus-lite-common.sh .
 fi
 
 set +e
@@ -132,7 +132,7 @@ job_ec=0
 shifter_init swarmourr/subductcr-r:latest
 job_ec=$(($job_ec + $?))
 
-shifter --image swarmourr/subductcr-r:latest --volume $PWD:/scratch --workdir=/scratch ./carbon_flux_carbon_flux-cont.sh 
+shifter --image swarmourr/subductcr-r:latest --volume $PWD:/scratch --workdir=/scratch ./carbon_flux_carbon_flux-cont.sh
 job_ec=$(($job_ec + $?))
 
 pegasus_lite_section_start stage_out

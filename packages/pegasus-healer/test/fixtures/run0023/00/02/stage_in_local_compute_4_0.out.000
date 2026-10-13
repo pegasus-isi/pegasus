@@ -226,13 +226,13 @@
         2026-09-11 05:13:57,478    INFO:  /usr/bin/ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -p 22 hsafri@perlmutter.nersc.gov '/bin/mkdir -p /pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/.'
         2026-09-11 05:14:00,924    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -240,27 +240,27 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3113c0s5b0n0:
-        
+
         2026-09-11 05:14:00,924    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/bin/gene_geochem' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./gene_geochem'
         2026-09-11 05:14:04,479    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -268,22 +268,22 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3113c0s11b0n0:
-        
+
         2026-09-11 05:14:04,479    INFO:  --------------------------------------------------------------------------------
         2026-09-11 05:14:04,479    INFO:  Stats: Total 1 transfers, 943.0 B transferred in 9 seconds. Rate: 103.0 B/s (824.4 b/s)
         2026-09-11 05:14:04,480    INFO:         Between sites local->compute : 1 transfers, 943.0 B transferred in 9 seconds. Rate: 103.0 B/s (824.4 b/s)
         2026-09-11 05:14:04,480    INFO:  All transfers completed successfully.
-        
+
     metadata:
       temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132867/scratch/ks.meta.lvmemX
       descriptor: 5

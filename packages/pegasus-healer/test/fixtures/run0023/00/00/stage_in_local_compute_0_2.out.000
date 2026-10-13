@@ -627,13 +627,13 @@
         2026-09-11 05:14:13,902    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="ETS_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ETS_R1.fastq.gz"
         2026-09-11 05:14:14,874    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -641,17 +641,17 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3115c0s9b0n0:
-        
+
         2026-09-11 05:14:14,874    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PLS_R2.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./PLS_R2.fastq.gz'
         2026-09-11 05:14:15,795    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="ESF9_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ESF9_R1.fastq.gz"
         2026-09-11 05:14:17,298    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="EPF_R2.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPF_R2.fastq.gz"
@@ -661,13 +661,13 @@
         2026-09-11 05:14:26,438    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PGS_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/PFF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/FAS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ETS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ESF9_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/EPF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/CYS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/BR1F_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/ARS_R2.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./'
         2026-09-11 05:14:43,624    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -675,28 +675,28 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3116c0s21b0n0:
-        
+
         2026-09-11 05:14:43,625    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="silva_v132.db=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/silva_v132.db"
         2026-09-11 05:14:58,787    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/reference/silva_v132.db' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./silva_v132.db'
         2026-09-11 05:18:29,733    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -704,17 +704,17 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3113c0s13b0n0:
-        
+
         2026-09-11 05:18:29,735    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="TCS_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCS_R1.fastq.gz"
         2026-09-11 05:18:31,012    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="TCF_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCF_R1.fastq.gz"
         2026-09-11 05:18:33,405    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="SLF_R1.fastq.gz=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLF_R1.fastq.gz"
@@ -726,13 +726,13 @@
         2026-09-11 05:18:58,254    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/TCF_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SLF_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/SIF_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSS_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/RSF_R2.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QNS_R1.fastq.gz' '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/data/metagenome/QHS1_R1.fastq.gz' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./'
         2026-09-11 05:18:58,750    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -740,28 +740,28 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3113c0s9b0n0:
-        
+
         2026-09-11 05:18:58,750    INFO:  /usr/bin/pegasus-integrity --generate-fullstat-yaml="flux_params.yml=/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/config/flux_params.yml"
         2026-09-11 05:18:58,850    INFO:  /usr/bin/scp -r -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /home/hsafri/.ssh/nersc -P 22 '/home/hsafri/hotSprings/PegasusWMS-SubductCR_16S-diversity/subductcr-final/config/flux_params.yml' 'hsafri@perlmutter.nersc.gov:/pscratch/sd/h/hsafri/wf-scratch/hsafri/pegasus/subductcr-end-to-end/run0023/./flux_params.yml'
         2026-09-11 05:19:02,522    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -769,26 +769,26 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3115c0s19b0n0:
-        
+
         2026-09-11 05:23:51,049    INFO:  ***************************************************************************
                                   NOTICE TO USERS
-        
+
         Lawrence Berkeley National Laboratory operates this computer system under
         contract to the U.S. Department of Energy.  This computer system is the
         property of the United States Government and is for authorized use only.
         Users (authorized or unauthorized) have no explicit or implicit
         expectation of privacy.
-        
+
         Any or all uses of this system and all files on this system may be
         intercepted, monitored, recorded, copied, audited, inspected, and disclosed
         to authorized site, Department of Energy, and law enforcement personnel,
@@ -796,22 +796,22 @@
         By using this system, the user consents to such interception, monitoring,
         recording, copying, auditing, inspection, and disclosure at the discretion
         of authorized site or Department of Energy personnel.
-        
+
         Unauthorized or improper use of this system may result in administrative
         disciplinary action and civil and criminal penalties. By continuing to use
         this system you indicate your awareness of and consent to these terms and
         conditions of use. LOG OFF IMMEDIATELY if you do not agree to the conditions
         stated in this warning.
-        
+
         *****************************************************************************
-        
+
         Login connection to host x3114c0s13b0n0:
-        
+
         2026-09-11 05:23:51,049    INFO:  --------------------------------------------------------------------------------
         2026-09-11 05:23:51,050    INFO:  Stats: Total 20 transfers, 38.9 GB transferred in 590 seconds. Rate: 67.4 MB/s (539.3 Mb/s)
         2026-09-11 05:23:51,050    INFO:         Between sites local->compute : 20 transfers, 38.9 GB transferred in 590 seconds. Rate: 67.4 MB/s (539.3 Mb/s)
         2026-09-11 05:23:51,050    INFO:  All transfers completed successfully.
-        
+
     metadata:
       temporary_name: /var/lib/condor/spool/local_univ_execute/dir_4132957/scratch/ks.meta.OtajfF
       descriptor: 5

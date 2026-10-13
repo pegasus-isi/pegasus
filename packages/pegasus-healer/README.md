@@ -28,32 +28,32 @@ Job fails
 
 Supported failure types:
 
-| Failure Type | Decision | Action |
-|---|---|---|
-| `OUT_OF_MEMORY` | AUTO | Scale `request_memory` by 1.5× in the `.sub` file |
-| `DISK_EXCEEDED` | AUTO | Scale `request_disk` by 2× in the `.sub` file |
-| `PREEMPTED` | AUTO | Retry immediately (no config change) |
-| `NODE_FAILURE` | AUTO | Retry immediately (no config change) |
-| `STAGING_FAILURE` | AUTO | Retry transfer job (transient I/O error) |
-| `MPI_FAILURE` | AUTO | Retry (transient fabric issue) |
-| `TRANSIENT_INFRASTRUCTURE` | AUTO | Retry (generic transient failure) |
-| `WALLTIME_EXCEEDED` | ASK | Propose runtime increase (cost implications) |
-| `PARTITION_MIGRATION` | ASK | Propose moving to a larger HPC partition |
-| `LICENSE_UNAVAILABLE` | ASK | Propose retry on a site with available license |
-| `GPU_UNAVAILABLE` | ASK | Propose retry on a GPU-capable site |
-| `DATA_CORRUPTION` | ASK | Propose re-staging input from replica catalog |
-| `MISSING_INPUT` | ASK | Propose replica catalog correction |
-| `DATA_MISMATCH` | ASK | Propose catalog data binding fix |
-| `SCRIPT_ERROR` | ASK | Propose transformation script patch |
-| `APPLICATION_ERROR` | ASK | Diagnosis + proposed fix for human review |
-| `CONTAINER_PULL_FAILED` | ASK | Propose image/registry fix |
-| `MODULE_NOT_FOUND` | ASK | Propose site change or module install |
-| `SCRATCH_FULL` | ASK | Propose TMPDIR redirect or scratch cleanup |
-| `SCHEDULER_ADMISSION` | ASK | Propose scheduler config correction |
-| `ACCOUNT_EXPIRED` | ESCALATE | HPC allocation exhausted — human must act |
-| `SSH_AUTH_FAILURE` | ESCALATE | Credential fix required — human must act |
-| `LOGIC_VALIDATION` | STOP | Scientific logic error — never auto-fix |
-| `UNKNOWN` | ASK | Best-effort diagnosis surfaced for human review |
+| Failure Type               | Decision | Action                                            |
+| -------------------------- | -------- | ------------------------------------------------- |
+| `OUT_OF_MEMORY`            | AUTO     | Scale `request_memory` by 1.5× in the `.sub` file |
+| `DISK_EXCEEDED`            | AUTO     | Scale `request_disk` by 2× in the `.sub` file     |
+| `PREEMPTED`                | AUTO     | Retry immediately (no config change)              |
+| `NODE_FAILURE`             | AUTO     | Retry immediately (no config change)              |
+| `STAGING_FAILURE`          | AUTO     | Retry transfer job (transient I/O error)          |
+| `MPI_FAILURE`              | AUTO     | Retry (transient fabric issue)                    |
+| `TRANSIENT_INFRASTRUCTURE` | AUTO     | Retry (generic transient failure)                 |
+| `WALLTIME_EXCEEDED`        | ASK      | Propose runtime increase (cost implications)      |
+| `PARTITION_MIGRATION`      | ASK      | Propose moving to a larger HPC partition          |
+| `LICENSE_UNAVAILABLE`      | ASK      | Propose retry on a site with available license    |
+| `GPU_UNAVAILABLE`          | ASK      | Propose retry on a GPU-capable site               |
+| `DATA_CORRUPTION`          | ASK      | Propose re-staging input from replica catalog     |
+| `MISSING_INPUT`            | ASK      | Propose replica catalog correction                |
+| `DATA_MISMATCH`            | ASK      | Propose catalog data binding fix                  |
+| `SCRIPT_ERROR`             | ASK      | Propose transformation script patch               |
+| `APPLICATION_ERROR`        | ASK      | Diagnosis + proposed fix for human review         |
+| `CONTAINER_PULL_FAILED`    | ASK      | Propose image/registry fix                        |
+| `MODULE_NOT_FOUND`         | ASK      | Propose site change or module install             |
+| `SCRATCH_FULL`             | ASK      | Propose TMPDIR redirect or scratch cleanup        |
+| `SCHEDULER_ADMISSION`      | ASK      | Propose scheduler config correction               |
+| `ACCOUNT_EXPIRED`          | ESCALATE | HPC allocation exhausted — human must act         |
+| `SSH_AUTH_FAILURE`         | ESCALATE | Credential fix required — human must act          |
+| `LOGIC_VALIDATION`         | STOP     | Scientific logic error — never auto-fix           |
+| `UNKNOWN`                  | ASK      | Best-effort diagnosis surfaced for human review   |
 
 ## Installation
 
@@ -140,35 +140,35 @@ submit directory, or as shell environment variables (shell takes precedence).
 
 #### LLM
 
-| Variable | Default | Description |
-|---|---|---|
-| `LLM_MODEL` | `gpt-4o` | Model in LiteLLM format (e.g. `ollama/llama3.3`, `anthropic/claude-sonnet-4-6`) |
-| `LLM_API_KEY` | — | API key for the provider |
-| `LLM_BASE_URL` | — | Custom endpoint (local models, Azure, vLLM) |
-| `DIAGNOSIS_LLM_MODEL` | `LLM_MODEL` | Override model for DiagnosisAgent |
-| `FIX_PLANNING_LLM_MODEL` | `LLM_MODEL` | Override model for FixPlanningAgent |
+| Variable                 | Default     | Description                                                                     |
+| ------------------------ | ----------- | ------------------------------------------------------------------------------- |
+| `LLM_MODEL`              | `gpt-4o`    | Model in LiteLLM format (e.g. `ollama/llama3.3`, `anthropic/claude-sonnet-4-6`) |
+| `LLM_API_KEY`            | —           | API key for the provider                                                        |
+| `LLM_BASE_URL`           | —           | Custom endpoint (local models, Azure, vLLM)                                     |
+| `DIAGNOSIS_LLM_MODEL`    | `LLM_MODEL` | Override model for DiagnosisAgent                                               |
+| `FIX_PLANNING_LLM_MODEL` | `LLM_MODEL` | Override model for FixPlanningAgent                                             |
 
 #### Policy
 
-| Variable | Default | Description |
-|---|---|---|
-| `POLICY_FILE` | auto-detected | Path to `remediation.yaml` policy config |
-| `HEALER_POLICY_MODE` | `production` | `production` (conservative) or `debug` (aggressive) |
-| `CONFIDENCE_THRESHOLD` | `0.80` | Minimum confidence for AUTO decisions |
+| Variable               | Default       | Description                                         |
+| ---------------------- | ------------- | --------------------------------------------------- |
+| `POLICY_FILE`          | auto-detected | Path to `remediation.yaml` policy config            |
+| `HEALER_POLICY_MODE`   | `production`  | `production` (conservative) or `debug` (aggressive) |
+| `CONFIDENCE_THRESHOLD` | `0.80`        | Minimum confidence for AUTO decisions               |
 
 #### Storage
 
-| Variable | Default | Description |
-|---|---|---|
+| Variable            | Default                           | Description                                                   |
+| ------------------- | --------------------------------- | ------------------------------------------------------------- |
 | `HEALER_CHECKPOINT` | `~/.pegasus/healer_checkpoint.db` | LangGraph checkpoint DB (resumes graph state between retries) |
-| `HEALER_MEMORY_DB` | `~/.pegasus/healer_memory.db` | Episodic memory DB (successful fix history) |
+| `HEALER_MEMORY_DB`  | `~/.pegasus/healer_memory.db`     | Episodic memory DB (successful fix history)                   |
 
 #### Observability
 
-| Variable | Default | Description |
-|---|---|---|
-| `LOG_LEVEL` | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`) |
-| `OTLP_ENDPOINT` | — | OpenTelemetry collector endpoint |
+| Variable        | Default | Description                                |
+| --------------- | ------- | ------------------------------------------ |
+| `LOG_LEVEL`     | `INFO`  | Logging level (`DEBUG`, `INFO`, `WARNING`) |
+| `OTLP_ENDPOINT` | —       | OpenTelemetry collector endpoint           |
 
 ### Policy File
 
@@ -223,25 +223,25 @@ job.add_profiles(Namespace.ENV, key="JOB_MEMORY_MB", value="$(request_memory)")
 
 After each healer invocation the following files are written to the submit directory:
 
-| File | Contents |
-|---|---|
-| `healer-proposal-<job>.json` | Full fix proposal with evidence, confidence, and policy decision |
-| `healer-reasoning-<job>.md` | Step-by-step LLM reasoning trace |
-| `healer-escalation-<job>.txt` | Human-readable escalation report (ASK/STOP decisions) |
+| File                          | Contents                                                         |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `healer-proposal-<job>.json`  | Full fix proposal with evidence, confidence, and policy decision |
+| `healer-reasoning-<job>.md`   | Step-by-step LLM reasoning trace                                 |
+| `healer-escalation-<job>.txt` | Human-readable escalation report (ASK/STOP decisions)            |
 
 ## Supported LLM Providers
 
 Pegasus Healer uses [LiteLLM](https://docs.litellm.ai/) — any provider it
 supports works out of the box:
 
-| Provider | Example model | Notes |
-|---|---|---|
-| OpenAI | `gpt-4o` | Best accuracy |
-| Anthropic | `anthropic/claude-sonnet-4-6` | Strong reasoning |
-| Ollama (local) | `ollama/llama3.3` | No API key, free |
-| Azure OpenAI | `azure/gpt-4o` | Set `LLM_BASE_URL` |
-| AWS Bedrock | `bedrock/anthropic.claude-3-opus` | Uses AWS env vars |
-| vLLM | `openai/my-model` | Set `LLM_BASE_URL` |
+| Provider       | Example model                     | Notes              |
+| -------------- | --------------------------------- | ------------------ |
+| OpenAI         | `gpt-4o`                          | Best accuracy      |
+| Anthropic      | `anthropic/claude-sonnet-4-6`     | Strong reasoning   |
+| Ollama (local) | `ollama/llama3.3`                 | No API key, free   |
+| Azure OpenAI   | `azure/gpt-4o`                    | Set `LLM_BASE_URL` |
+| AWS Bedrock    | `bedrock/anthropic.claude-3-opus` | Uses AWS env vars  |
+| vLLM           | `openai/my-model`                 | Set `LLM_BASE_URL` |
 
 ## Development
 

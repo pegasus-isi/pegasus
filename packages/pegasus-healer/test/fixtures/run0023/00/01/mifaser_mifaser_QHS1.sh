@@ -113,7 +113,7 @@ EOF2
 
 chmod +x mifaser_mifaser_QHS1-cont.sh
 if ! [ $pegasus_lite_start_dir -ef . ]; then
-	cp $pegasus_lite_start_dir/pegasus-lite-common.sh . 
+	cp $pegasus_lite_start_dir/pegasus-lite-common.sh .
 fi
 
 set +e
@@ -121,7 +121,7 @@ job_ec=0
 shifter_init swarmourr/subductcr-mifaser:latest
 job_ec=$(($job_ec + $?))
 
-shifter --image swarmourr/subductcr-mifaser:latest --volume $PWD:/scratch --workdir=/scratch ./mifaser_mifaser_QHS1-cont.sh 
+shifter --image swarmourr/subductcr-mifaser:latest --volume $PWD:/scratch --workdir=/scratch ./mifaser_mifaser_QHS1-cont.sh
 job_ec=$(($job_ec + $?))
 
 pegasus_lite_section_start stage_out

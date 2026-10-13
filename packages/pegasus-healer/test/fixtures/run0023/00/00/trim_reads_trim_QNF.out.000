@@ -264,7 +264,7 @@
       data_truncated: false
       data: |
         [trim_reads] wrote QNF_trim_R1.fastq.gz + QNF_trim_R2.fastq.gz
-        
+
     stderr:
       temporary_name: /tmp/ks.err.mMrvAt
       descriptor: 4
@@ -288,7 +288,7 @@
         Quality encoding detected as phred33
         Input Read Pairs: 23425974 Both Surviving: 23391793 (99.85%) Forward Only Surviving: 22793 (0.10%) Reverse Only Surviving: 11302 (0.05%) Dropped: 86 (0.00%)
         TrimmomaticPE: Completed successfully
-        
+
     metadata:
       temporary_name: /tmp/ks.meta.fTfSs9
       descriptor: 5

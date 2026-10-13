@@ -268,7 +268,7 @@
       data_truncated: false
       data: |
         [trim_reads] wrote SLS_trim_R1.fastq.gz + SLS_trim_R2.fastq.gz
-        
+
     stderr:
       temporary_name: /tmp/ks.err.FysXdp
       descriptor: 4
@@ -292,7 +292,7 @@
         Quality encoding detected as phred33
         Input Read Pairs: 6778135 Both Surviving: 6770196 (99.88%) Forward Only Surviving: 5537 (0.08%) Reverse Only Surviving: 2382 (0.04%) Dropped: 20 (0.00%)
         TrimmomaticPE: Completed successfully
-        
+
     metadata:
       temporary_name: /tmp/ks.meta.QhlqUq
       descriptor: 5

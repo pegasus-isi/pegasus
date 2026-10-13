@@ -266,7 +266,7 @@
       data_truncated: false
       data: |
         [trim_reads] wrote MTF_trim_R1.fastq.gz + MTF_trim_R2.fastq.gz
-        
+
     stderr:
       temporary_name: /tmp/ks.err.0L5HyL
       descriptor: 4
@@ -290,7 +290,7 @@
         Quality encoding detected as phred33
         Input Read Pairs: 15570703 Both Surviving: 15529188 (99.73%) Forward Only Surviving: 28823 (0.19%) Reverse Only Surviving: 12528 (0.08%) Dropped: 164 (0.00%)
         TrimmomaticPE: Completed successfully
-        
+
     metadata:
       temporary_name: /tmp/ks.meta.fm0mQy
       descriptor: 5

@@ -266,7 +266,7 @@
       data_truncated: false
       data: |
         [trim_reads] wrote PBS_trim_R1.fastq.gz + PBS_trim_R2.fastq.gz
-        
+
     stderr:
       temporary_name: /tmp/ks.err.xUW98U
       descriptor: 4
@@ -290,7 +290,7 @@
         Quality encoding detected as phred33
         Input Read Pairs: 14368814 Both Surviving: 14327808 (99.71%) Forward Only Surviving: 28850 (0.20%) Reverse Only Surviving: 12005 (0.08%) Dropped: 151 (0.00%)
         TrimmomaticPE: Completed successfully
-        
+
     metadata:
       temporary_name: /tmp/ks.meta.AGWtbw
       descriptor: 5
