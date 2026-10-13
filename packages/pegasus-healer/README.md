@@ -116,10 +116,10 @@ Or set them programmatically using the Python API:
 from Pegasus.api import Properties
 
 props = Properties()
-props["dagman.post"]                     = "pegasus-healer"
+props["dagman.post"] = "pegasus-healer"
 props["dagman.post.path.pegasus-healer"] = "/path/to/bin/pegasus-healer"
-props["dagman.post.arguments"]           = "$RETURN $JOB $RETRY $MAX_RETRIES"
-props["dagman.maxretries"]               = "3"
+props["dagman.post.arguments"] = "$RETURN $JOB $RETRY $MAX_RETRIES"
+props["dagman.maxretries"] = "3"
 props.write("pegasus.properties")
 ```
 

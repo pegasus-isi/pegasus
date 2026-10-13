@@ -172,4 +172,3 @@ set -e
 # clear the trap, and exit cleanly
 trap - EXIT
 pegasus_lite_final_exit
-

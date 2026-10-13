@@ -881,7 +881,3 @@ pegasus_lite_section_end()
         duration=$(($ts - $start_ts))
     fi
 }
-
-
-
-
