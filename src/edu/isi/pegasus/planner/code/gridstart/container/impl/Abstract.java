@@ -46,6 +46,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -98,6 +99,12 @@ public abstract class Abstract implements ContainerShellWrapper {
 
     /** Whether to do integrity checking or not. */
     protected boolean mDoIntegrityChecking;
+
+    /** Boolean tracking if runtime prediction is enabled or not. */
+    protected boolean mDoRuntimePrediction;
+
+    /** Boolean tracking if lof files are generated or not. */
+    protected boolean mGenerateLOF;
 
     private Integrity mIntegrityHandler;
 
@@ -160,6 +167,11 @@ public abstract class Abstract implements ContainerShellWrapper {
         mIntegrityHandler.initialize(bag, dag);
         mPegasusMode = mProps.getPegasusMode();
         mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
+
+        // GH-2264 runtime prediction is enabled only if integrity checking
+        // is on and also generation of LOF files is on.
+        mDoRuntimePrediction = (this.mDoIntegrityChecking && mProps.doRuntimePrediction());
+        mGenerateLOF = mProps.generateLOFFiles();
     }
 
     /**
@@ -476,6 +488,22 @@ public abstract class Abstract implements ContainerShellWrapper {
     }
 
     /**
+     * Enables a job for integrity checking and runtime prediction. The runtime prediction changes
+     * happens to the job, with a prescript being associated.
+     *
+     * @param job
+     * @param prefix
+     * @return StringBuilder containing the integrity invocation.
+     */
+    protected StringBuilder enableForIntegrityAndRuntimePrediction(Job job, String prefix) {
+        StringBuilder integrityInvocation = this.enableForIntegrity(job, prefix);
+        // we can enable runtime prediction only after
+        // job has been  enabled for integrity checking
+        this.enableForRuntimePrediction(job);
+        return integrityInvocation;
+    }
+
+    /**
      * Enables a job for integrity checking
      *
      * @param job
@@ -517,6 +545,34 @@ public abstract class Abstract implements ContainerShellWrapper {
         }
 
         return sb;
+    }
+
+    /**
+     * Enables a job for runtime prediction only if a job is a compute job.
+     *
+     * @param job
+     */
+    protected void enableForRuntimePrediction(Job job) {
+        // safe-guards
+        if (!(this.mDoRuntimePrediction
+                || this.mGenerateLOF
+                || job.getJobType() != Job.COMPUTE_JOB)) {
+            // we only do prediction for compute jobs
+            return;
+        }
+
+        // retrieve a list of input files to be tx-ed using
+        // condor file transfer for the job
+        String tIPFiles = job.condorVariables.getIPFilesForTransfer();
+        Collection<String> metaFiles = new HashSet();
+        if (tIPFiles != null) {
+            String[] files = tIPFiles.split(",");
+            for (String file : files) {
+                if (file.endsWith(".meta")) {
+                    metaFiles.add(file);
+                }
+            }
+        }
     }
 
     /**
