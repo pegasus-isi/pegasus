@@ -21,7 +21,7 @@ export JAVA_HEAPMAX=6144
 
 #######################################################################
 
-set -e
+set -euo pipefail
 
 TOPDIR=`pwd`
 

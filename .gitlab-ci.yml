@@ -16,6 +16,10 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
 
+    # 2. Do not trigger pipelines when commits are pushed on branches created by AI tools.
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH =~ /^(feature|bug|task|improvement)\/(?:[^\/]+\/)?[0-9]+-.+$/'
+      when: never
+
     # 2. Allow all other normal pipeline triggers (pushes, merge requests, etc.)
     - when: always
 
