@@ -42,6 +42,10 @@ public class Metadata extends Namespace {
     public static final String CHECKSUM_TYPE_KEY = "checksum.type";
     public static final String CHECKSUM_VALUE_KEY = "checksum.value";
 
+    // the meta file suffix. this is where pegasus postscripts
+    // write out the metadata associated for the job
+    public static final String META_FILE_SUFFIX = ".meta";
+
     // some other predefinded keys that we use
     public static final String WF_API_KEY = "wf.api";
     public static final String DAX_API_KEY = "dax.api";

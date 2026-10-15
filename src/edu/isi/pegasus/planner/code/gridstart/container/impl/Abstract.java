@@ -33,8 +33,10 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.gridstart.Integrity;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
+import edu.isi.pegasus.planner.code.gridstart.PegasusRuntimePredictor;
 import edu.isi.pegasus.planner.code.gridstart.container.ContainerShellWrapper;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Metadata;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.transfer.SLS;
@@ -108,6 +110,12 @@ public abstract class Abstract implements ContainerShellWrapper {
 
     private Integrity mIntegrityHandler;
 
+    /**
+     * handle to the runtime predictor that generates the invocation to pegasus-runtime-predictor in
+     * the prescript of the jobs.
+     */
+    private PegasusRuntimePredictor mPegasusRuntimePredictor;
+
     protected PegasusProperties.PEGASUS_MODE mPegasusMode;
 
     /** A boolean tracking whether transfers should be on the HOST OS or not */
@@ -172,6 +180,8 @@ public abstract class Abstract implements ContainerShellWrapper {
         // is on and also generation of LOF files is on.
         mDoRuntimePrediction = (this.mDoIntegrityChecking && mProps.doRuntimePrediction());
         mGenerateLOF = mProps.generateLOFFiles();
+        mPegasusRuntimePredictor = new PegasusRuntimePredictor();
+        mPegasusRuntimePredictor.initialize(bag);
     }
 
     /**
@@ -568,11 +578,13 @@ public abstract class Abstract implements ContainerShellWrapper {
         if (tIPFiles != null) {
             String[] files = tIPFiles.split(",");
             for (String file : files) {
-                if (file.endsWith(".meta")) {
+                if (file.endsWith(Metadata.META_FILE_SUFFIX)) {
                     metaFiles.add(file);
                 }
             }
         }
+        File inputLOF = new File(job.getRelativeSubmitDirectory(), job.getID() + ".in.lof");
+        mPegasusRuntimePredictor.modify(job, inputLOF.getPath(), metaFiles);
     }
 
     /**

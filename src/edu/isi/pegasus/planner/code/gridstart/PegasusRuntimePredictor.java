@@ -87,10 +87,14 @@ public class PegasusRuntimePredictor {
         args.append("--job-id").append(" ").append(job.getID()).append(" ");
         args.append("--level").append(" ").append(job.getLevel()).append(" ");
         args.append("--lof").append(" ").append(inputLOF).append(" ");
-        args.append("--meta").append(" ");
 
-        for (String metaFile : metaFiles) {
-            args.append(metaFile).append(",");
+        if (!metaFiles.isEmpty()) {
+            args.append("--meta").append(" ");
+            for (String metaFile : metaFiles) {
+                args.append(metaFile).append(",");
+            }
+            // remove trailing ,
+            args.replace(args.length() - 1, args.length(), "");
         }
 
         job.dagmanVariables.construct(prescriptKey, this.mPredictorPath);
