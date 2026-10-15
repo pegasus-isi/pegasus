@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 pegasus-runtime-predictor — Pegasus runtime prediction CLI.
 
@@ -10,7 +9,7 @@ bin/pegasus-runtime-predictor delegates here so both source installs and
 pip installs use the same code path.
 
 Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
-    pegasus-runtime-predictor <workflow.yml> <output_dir> [--level=N] [--job-id=ID]
+    pegasus-runtime-predictor [--level N] [--job-id ID] <workflow.yml> <output_dir>
 """
 
 import fcntl
@@ -21,6 +20,7 @@ import time
 import traceback
 from pathlib import Path
 
+import click
 import yaml
 
 from Pegasus.api import File, Job, Namespace, Workflow
@@ -30,7 +30,6 @@ from Pegasus.runtime.predictor import (
     count_cluster_tasks,
     find_submit_dir,
     patch_sub_file,
-    read_meta_sizes,
     scan_sub_files,
 )
 
@@ -43,9 +42,9 @@ def _load_workflow_from_yaml(path: str) -> Workflow:
     wf = Workflow(wf_name, infer_dependencies=False)
 
     for jdata in data.get("jobs", []):
-        jid   = jdata.get("id", "")
+        jid = jdata.get("id", "")
         trans = jdata.get("name", jdata.get("transformation", ""))
-        job   = Job(trans, _id=jid)
+        job = Job(trans, _id=jid)
 
         for u in jdata.get("uses", []):
             fi = File(u["lfn"])
@@ -73,9 +72,9 @@ def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
     """Scan output_dir and nearby scratch dirs for actual file sizes on disk."""
     all_lfns = set()
     for job in wf.jobs.values():
-        for fi in (job.get_inputs() if hasattr(job, "get_inputs") else []):
+        for fi in job.get_inputs() if hasattr(job, "get_inputs") else []:
             all_lfns.add(fi.lfn)
-        for fi in (job.get_outputs() if hasattr(job, "get_outputs") else []):
+        for fi in job.get_outputs() if hasattr(job, "get_outputs") else []:
             all_lfns.add(fi.lfn)
 
     size_map = {}
@@ -98,7 +97,9 @@ def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
     return size_map
 
 
-def _append_level_timing(output_dir: str, level, num_jobs: int, duration_s: float) -> None:
+def _append_level_timing(
+    output_dir: str, level, num_jobs: int, duration_s: float
+) -> None:
     """Record how long it took to compute predictions for one DAG level."""
     timing_csv = os.path.join(output_dir, "level_prediction_timings.csv")
     header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
@@ -107,12 +108,16 @@ def _append_level_timing(output_dir: str, level, num_jobs: int, duration_s: floa
         try:
             if header_needed:
                 fh.write("dag_level,num_jobs,prediction_duration_s\n")
-            fh.write(f"{level if level is not None else 'all'},{num_jobs},{duration_s:.3f}\n")
+            fh.write(
+                f"{level if level is not None else 'all'},{num_jobs},{duration_s:.3f}\n"
+            )
         finally:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float, level) -> None:
+def _append_prescript_timing(
+    output_dir: str, job_id: str, duration_s: float, level
+) -> None:
     """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
     timing_csv = os.path.join(output_dir, "prescript_timings.csv")
     header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
@@ -121,41 +126,31 @@ def _append_prescript_timing(output_dir: str, job_id: str, duration_s: float, le
         try:
             if header_needed:
                 fh.write("job_id,dag_level,prescript_duration_s\n")
-            fh.write(f"{job_id},{level if level is not None else ''},{duration_s:.3f}\n")
+            fh.write(
+                f"{job_id},{level if level is not None else ''},{duration_s:.3f}\n"
+            )
         finally:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def main():
+def predict(workflow_yml, output_dir, target_level=None, caller_job_id=None):
+    """
+    Computes the runtime predictions for the jobs in a level of the workflow,
+    and patches the .sub file of the job invoking this prescript.
+
+    :param workflow_yml: path to the workflow YAML file
+    :param output_dir: directory to write the predictions and timings to
+    :param target_level: the DAG level to predict for, None for all levels
+    :param caller_job_id: the id of the job whose .sub file is to be patched
+    """
     _start_time = time.time()
-
-    if len(sys.argv) < 3:
-        print(
-            f"Usage: {sys.argv[0]} <workflow.yml> <output_dir> [--level=N] [--job-id=ID]",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    workflow_yml  = sys.argv[1]
-    output_dir    = sys.argv[2]
-    target_level  = None
-    caller_job_id = None
-
-    for arg in sys.argv[3:]:
-        if arg.startswith("--level="):
-            try:
-                target_level = int(arg.split("=", 1)[1])
-            except ValueError:
-                pass
-        elif arg.startswith("--job-id="):
-            caller_job_id = arg.split("=", 1)[1]
 
     output_dir = str(Path(output_dir).resolve())
     os.makedirs(output_dir, exist_ok=True)
 
-    suffix    = f"_L{target_level}" if target_level is not None else ""
+    suffix = f"_L{target_level}" if target_level is not None else ""
     json_path = os.path.join(output_dir, f"runtime_predictions{suffix}.json")
-    csv_path  = os.path.join(output_dir, f"runtime_predictions{suffix}.csv")
+    csv_path = os.path.join(output_dir, f"runtime_predictions{suffix}.csv")
 
     # ── Step 1: compute predictions (only if not already done for this level) ─
     # When many parallel jobs fire their prescript simultaneously, only the
@@ -167,25 +162,31 @@ def main():
 
         actual_sizes = _scan_actual_file_sizes(output_dir, wf)
         if actual_sizes:
-            print(f"[pegasus-runtime-predictor] Found {len(actual_sizes)} actual file size(s) on disk")
+            print(
+                f"[pegasus-runtime-predictor] Found {len(actual_sizes)} actual file size(s) on disk"
+            )
             for job in wf.jobs.values():
-                for fi in (job.get_inputs() if hasattr(job, "get_inputs") else []):
+                for fi in job.get_inputs() if hasattr(job, "get_inputs") else []:
                     if fi.lfn in actual_sizes:
                         fi.size = actual_sizes[fi.lfn]
-                for fi in (job.get_outputs() if hasattr(job, "get_outputs") else []):
+                for fi in job.get_outputs() if hasattr(job, "get_outputs") else []:
                     if fi.lfn in actual_sizes:
                         fi.size = actual_sizes[fi.lfn]
 
-        cfg       = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
+        cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
         predictor = WorkflowRuntimePredictor(cfg)
 
         submit_dir = find_submit_dir(workflow_yml)
-        sub_scan   = {}
+        sub_scan = {}
         if submit_dir:
             sub_scan = scan_sub_files(submit_dir)
-            print(f"[pegasus-runtime-predictor] Scanned {len(sub_scan)} .sub file(s) from {submit_dir}")
+            print(
+                f"[pegasus-runtime-predictor] Scanned {len(sub_scan)} .sub file(s) from {submit_dir}"
+            )
         else:
-            print("[pegasus-runtime-predictor] Submit dir not found — using YAML profile values")
+            print(
+                "[pegasus-runtime-predictor] Submit dir not found — using YAML profile values"
+            )
 
         sub_resources = {
             jid: {k: v for k, v in info.items() if k != "sub_path"}
@@ -198,28 +199,41 @@ def main():
 
         if target_level is not None and results:
             level_results = [r for r in results if r.get("dag_level") == target_level]
-            print(f"[pegasus-runtime-predictor] Level {target_level}: {len(level_results)} job(s) predicted in {_pred_duration:.3f}s")
+            print(
+                f"[pegasus-runtime-predictor] Level {target_level}: {len(level_results)} job(s) predicted in {_pred_duration:.3f}s"
+            )
         else:
             level_results = results
-            print(f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted in {_pred_duration:.3f}s")
+            print(
+                f"[pegasus-runtime-predictor] All levels: {len(results)} job(s) predicted in {_pred_duration:.3f}s"
+            )
 
-        _append_level_timing(output_dir, target_level, len(level_results), _pred_duration)
+        _append_level_timing(
+            output_dir, target_level, len(level_results), _pred_duration
+        )
 
         import pandas as pd
 
         tmp_json = json_path + ".tmp"
-        tmp_csv  = csv_path  + ".tmp"
+        tmp_csv = csv_path + ".tmp"
         pd.DataFrame(level_results).to_csv(tmp_csv, index=False)
         with open(tmp_json, "w") as fh:
             json.dump(
-                {"level": target_level, "total_jobs": len(level_results), "predictions": level_results},
-                fh, indent=2,
+                {
+                    "level": target_level,
+                    "total_jobs": len(level_results),
+                    "predictions": level_results,
+                },
+                fh,
+                indent=2,
             )
-        os.replace(tmp_csv,  csv_path)
+        os.replace(tmp_csv, csv_path)
         os.replace(tmp_json, json_path)
         print(f"[pegasus-runtime-predictor] Done -> {json_path}")
     else:
-        print(f"[pegasus-runtime-predictor] Level {target_level} predictions already exist — skipping computation")
+        print(
+            f"[pegasus-runtime-predictor] Level {target_level} predictions already exist — skipping computation"
+        )
 
     # ── Step 2: wait for JSON, then patch only THIS job's .sub file ────────
     deadline = time.time() + 60
@@ -227,8 +241,10 @@ def main():
         time.sleep(0.5)
 
     if not os.path.exists(json_path):
-        print(f"[pegasus-runtime-predictor] Timed out waiting for {json_path} — skipping patch",
-              file=sys.stderr)
+        print(
+            f"[pegasus-runtime-predictor] Timed out waiting for {json_path} — skipping patch",
+            file=sys.stderr,
+        )
         return
 
     if caller_job_id:
@@ -236,86 +252,130 @@ def main():
             data = json.load(fh)
 
         submit_dir = find_submit_dir(workflow_yml)
-        sub_scan   = scan_sub_files(submit_dir) if submit_dir else {}
-        sub_info   = sub_scan.get(caller_job_id)
+        sub_scan = scan_sub_files(submit_dir) if submit_dir else {}
+        sub_info = sub_scan.get(caller_job_id)
 
         # Direct match — individual (non-clustered) job
         pred = next(
-            (p for p in data.get("predictions", []) if p.get("job_id") == caller_job_id),
+            (
+                p
+                for p in data.get("predictions", [])
+                if p.get("job_id") == caller_job_id
+            ),
             None,
         )
 
         if pred is None and sub_info and sub_info.get("cluster_in_file"):
             # Clustered job — aggregate predictions for all constituent tasks
-            trans      = sub_info.get("cluster_transformation", "")
+            trans = sub_info.get("cluster_transformation", "")
             task_count = count_cluster_tasks(sub_info["cluster_in_file"])
             print(f"[pegasus-runtime-predictor] Cluster detected: job={caller_job_id}")
-            print(f"[pegasus-runtime-predictor]   .in file:        {sub_info['cluster_in_file']}")
+            print(
+                f"[pegasus-runtime-predictor]   .in file:        {sub_info['cluster_in_file']}"
+            )
             print(f"[pegasus-runtime-predictor]   transformation:  {trans}")
             print(f"[pegasus-runtime-predictor]   task count:      {task_count}")
-            matching   = [
-                p for p in data.get("predictions", [])
+            matching = [
+                p
+                for p in data.get("predictions", [])
                 if trans and trans in p.get("transformation", "")
             ][:task_count]
             print(f"[pegasus-runtime-predictor]   matched preds:   {len(matching)}")
 
             if matching:
                 pred = {
-                    "predicted_runtime_s": sum(p["predicted_runtime_s"] for p in matching),
-                    "upper_bound_s":       sum(p["upper_bound_s"]       for p in matching),
-                    "lower_bound_s":       sum(p["lower_bound_s"]       for p in matching),
+                    "predicted_runtime_s": sum(
+                        p["predicted_runtime_s"] for p in matching
+                    ),
+                    "upper_bound_s": sum(p["upper_bound_s"] for p in matching),
+                    "lower_bound_s": sum(p["lower_bound_s"] for p in matching),
                     "status": "CLUSTERED",
                 }
-                print(f"[pegasus-runtime-predictor] Cluster {caller_job_id}: "
-                      f"{len(matching)}/{task_count} tasks aggregated, "
-                      f"total={pred['predicted_runtime_s']:.1f}s")
+                print(
+                    f"[pegasus-runtime-predictor] Cluster {caller_job_id}: "
+                    f"{len(matching)}/{task_count} tasks aggregated, "
+                    f"total={pred['predicted_runtime_s']:.1f}s"
+                )
 
         if pred:
             if sub_info and sub_info.get("sub_path"):
                 if patch_sub_file(sub_info["sub_path"], pred):
-                    print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
+                    print(
+                        f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}"
+                    )
                 else:
-                    print(f"[pegasus-runtime-predictor] Could not patch .sub for {caller_job_id}",
-                          file=sys.stderr)
+                    print(
+                        f"[pegasus-runtime-predictor] Could not patch .sub for {caller_job_id}",
+                        file=sys.stderr,
+                    )
         else:
-            print(f"[pegasus-runtime-predictor] No prediction found for {caller_job_id}")
+            print(
+                f"[pegasus-runtime-predictor] No prediction found for {caller_job_id}"
+            )
 
     # ── Record how long this prescript invocation took ─────────────────────
     if caller_job_id:
         prescript_duration_s = time.time() - _start_time
-        _append_prescript_timing(output_dir, caller_job_id, prescript_duration_s, target_level)
-        print(f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
-              f"{prescript_duration_s:.3f}s")
+        _append_prescript_timing(
+            output_dir, caller_job_id, prescript_duration_s, target_level
+        )
+        print(
+            f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
+            f"{prescript_duration_s:.3f}s"
+        )
 
 
-def _run():
-    """Entry point with error handling and fallback JSON output."""
+@click.command(options_metavar="<options>")
+@click.option(
+    "--level",
+    "target_level",
+    type=int,
+    metavar="<N>",
+    help="DAG level to compute predictions for, default all levels",
+)
+@click.option(
+    "--job-id",
+    "caller_job_id",
+    metavar="<ID>",
+    help="ID of the job invoking the prescript, whose .sub file is patched",
+)
+@click.argument("workflow-yml", type=click.Path(dir_okay=False))
+@click.argument("output-dir", type=click.Path(file_okay=False))
+def main(workflow_yml, output_dir, target_level, caller_job_id):
+    """pegasus-runtime-predictor predicts the runtime of the jobs in a workflow.
+
+    Called automatically as a DAGMan PRE script for a job. On error, empty
+    fallback outputs are written to OUTPUT_DIR and it exits 0, so that the
+    workflow continues.
+    """
     try:
-        main()
+        predict(workflow_yml, output_dir, target_level, caller_job_id)
     except Exception as exc:
         print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
 
-        _output_dir = sys.argv[2] if len(sys.argv) >= 3 else "."
-        _level = None
-        for _a in sys.argv[3:]:
-            if _a.startswith("--level="):
-                try:
-                    _level = int(_a.split("=", 1)[1])
-                except ValueError:
-                    pass
-        _suffix = f"_L{_level}" if _level is not None else ""
+        _suffix = f"_L{target_level}" if target_level is not None else ""
         try:
-            os.makedirs(_output_dir, exist_ok=True)
-            _fallback = {"level": _level, "total_jobs": 0, "predictions": [], "error": str(exc)}
-            _json_path = os.path.join(_output_dir, f"runtime_predictions{_suffix}.json")
-            _csv_path  = os.path.join(_output_dir, f"runtime_predictions{_suffix}.csv")
+            os.makedirs(output_dir, exist_ok=True)
+            _fallback = {
+                "level": target_level,
+                "total_jobs": 0,
+                "predictions": [],
+                "error": str(exc),
+            }
+            _json_path = os.path.join(output_dir, f"runtime_predictions{_suffix}.json")
+            _csv_path = os.path.join(output_dir, f"runtime_predictions{_suffix}.csv")
             with open(_json_path, "w") as _f:
                 json.dump(_fallback, _f, indent=2)
             with open(_csv_path, "w") as _f:
-                _f.write("job_id,transformation,dag_level,status,"
-                         "predicted_runtime_s,lower_bound_s,upper_bound_s\n")
-            print(f"[pegasus-runtime-predictor] Wrote fallback outputs to {_output_dir}", file=sys.stderr)
+                _f.write(
+                    "job_id,transformation,dag_level,status,"
+                    "predicted_runtime_s,lower_bound_s,upper_bound_s\n"
+                )
+            print(
+                f"[pegasus-runtime-predictor] Wrote fallback outputs to {output_dir}",
+                file=sys.stderr,
+            )
         except Exception:
             pass
 
@@ -323,4 +383,4 @@ def _run():
 
 
 if __name__ == "__main__":
-    _run()
+    main()
