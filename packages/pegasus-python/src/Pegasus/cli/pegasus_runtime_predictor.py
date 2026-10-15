@@ -133,7 +133,14 @@ def _append_prescript_timing(
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def predict(workflow_yml, output_dir, target_level=None, caller_job_id=None):
+def predict(
+    workflow_yml,
+    output_dir,
+    target_level=None,
+    caller_job_id=None,
+    lof_file=None,
+    meta_files=None,
+):
     """
     Computes the runtime predictions for the jobs in a level of the workflow,
     and patches the .sub file of the job invoking this prescript.
@@ -142,6 +149,9 @@ def predict(workflow_yml, output_dir, target_level=None, caller_job_id=None):
     :param output_dir: directory to write the predictions and timings to
     :param target_level: the DAG level to predict for, None for all levels
     :param caller_job_id: the id of the job whose .sub file is to be patched
+    :param lof_file: LOF file listing the input files of the job
+    :param meta_files: list of .meta files containing the sizes of the input
+                       files of the job
     """
     _start_time = time.time()
 
@@ -325,6 +335,13 @@ def predict(workflow_yml, output_dir, target_level=None, caller_job_id=None):
         )
 
 
+def _split_comma_list(ctx, param, value):
+    """Click callback that splits a comma separated option value into a list."""
+    if value is None:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+
 @click.command(options_metavar="<options>")
 @click.option(
     "--level",
@@ -339,9 +356,23 @@ def predict(workflow_yml, output_dir, target_level=None, caller_job_id=None):
     metavar="<ID>",
     help="ID of the job invoking the prescript, whose .sub file is patched",
 )
+@click.option(
+    "--lof",
+    "lof_file",
+    type=click.Path(dir_okay=False),
+    metavar="<file>",
+    help="LOF file listing the input files of the job",
+)
+@click.option(
+    "--meta",
+    "meta_files",
+    callback=_split_comma_list,
+    metavar="<file1,file2,...>",
+    help="Comma separated .meta files containing the sizes of the input files of the job",
+)
 @click.argument("workflow-yml", type=click.Path(dir_okay=False))
 @click.argument("output-dir", type=click.Path(file_okay=False))
-def main(workflow_yml, output_dir, target_level, caller_job_id):
+def main(workflow_yml, output_dir, target_level, caller_job_id, lof_file, meta_files):
     """pegasus-runtime-predictor predicts the runtime of the jobs in a workflow.
 
     Called automatically as a DAGMan PRE script for a job. On error, empty
@@ -349,7 +380,14 @@ def main(workflow_yml, output_dir, target_level, caller_job_id):
     workflow continues.
     """
     try:
-        predict(workflow_yml, output_dir, target_level, caller_job_id)
+        predict(
+            workflow_yml,
+            output_dir,
+            target_level,
+            caller_job_id,
+            lof_file=lof_file,
+            meta_files=meta_files,
+        )
     except Exception as exc:
         print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
