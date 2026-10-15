@@ -17,6 +17,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 import java.io.File;
@@ -30,6 +31,10 @@ import java.util.Collection;
  * @version $Revision$
  */
 public class PegasusRuntimePredictor {
+
+    // $(wf_submit_dir)
+    private static final String WF_SUBMIT_DIR_CONDOR_VARIABLE =
+            "$(" + Condor.WF_SUBMIT_DIR_KEY + ")";
 
     /** The LogManager object which is used to log all the messages. */
     protected LogManager mLogger;
@@ -91,6 +96,12 @@ public class PegasusRuntimePredictor {
         if (!metaFiles.isEmpty()) {
             args.append("--meta").append(" ");
             for (String metaFile : metaFiles) {
+                if (metaFile.startsWith(WF_SUBMIT_DIR_CONDOR_VARIABLE)) {
+                    // dagman does not have a notion of variables for the
+                    // dag file itself. So cannot expand $(wf_submit_dir).
+                    // replace with a relative path
+                    metaFile = metaFile.replace(WF_SUBMIT_DIR_CONDOR_VARIABLE, ".");
+                }
                 args.append(metaFile).append(",");
             }
             // remove trailing ,
