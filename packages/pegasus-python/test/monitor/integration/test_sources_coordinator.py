@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-from conftest import (
+from .conftest import (
     CHILD,
     ROOT,
     append_line,

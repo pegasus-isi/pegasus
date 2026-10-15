@@ -27,7 +27,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
-from conftest import ROOT, append_line, insert_state, job_line
+from .conftest import ROOT, append_line, insert_state, job_line
 
 from Pegasus.monitor.condor import CondorObserver, CondorObserverConfig
 from Pegasus.monitor.coordinator import CoordinatorConfig, MonitorCoordinator

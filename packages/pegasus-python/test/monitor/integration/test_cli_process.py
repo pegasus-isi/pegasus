@@ -27,7 +27,8 @@ import time
 from pathlib import Path
 
 import pytest
-from conftest import create_run
+
+from .conftest import create_run
 
 PACKAGE_SRC = Path(__file__).parents[3] / "src"
 COMMON_SRC = Path(__file__).parents[4] / "pegasus-common" / "src"

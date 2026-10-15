@@ -29,7 +29,8 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
-from conftest import ROOT, create_run
+
+from .conftest import ROOT, create_run
 
 from Pegasus.monitor import cli
 from Pegasus.monitor.event_log import EventLogWriter, encode_record, read_jsonl
