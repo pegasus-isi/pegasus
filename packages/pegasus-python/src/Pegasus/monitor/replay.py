@@ -43,6 +43,7 @@ from Pegasus.monitor.models import (
     DiagnosticRecord,
     EnrichmentRecord,
     GapRecord,
+    JobAttemptRecord,
     JobSnapshot,
     JobTransitionRecord,
     JobTransitionWatermark,
@@ -72,6 +73,8 @@ def _record_type(record: EventRecord) -> str:
         return "header"
     if isinstance(record, CheckpointRecord):
         return "checkpoint"
+    if isinstance(record, JobAttemptRecord):
+        return "job_attempt"
     if isinstance(record, JobTransitionRecord):
         return "job_transition"
     if isinstance(record, WorkflowTransitionRecord):
@@ -257,6 +260,8 @@ class ReplayAccumulator:
             return False
 
         self._expire_enrichments(record.recorded_at_epoch)
+        if isinstance(record, JobAttemptRecord):
+            return self._apply_job_attempt(record)
         if isinstance(record, JobTransitionRecord):
             return self._apply_job_transition(record)
         if isinstance(record, WorkflowTransitionRecord):
@@ -431,7 +436,7 @@ class ReplayAccumulator:
         return False
 
     def _advance_snapshot(
-        self, record: JobTransitionRecord | WorkflowTransitionRecord
+        self, record: JobAttemptRecord | JobTransitionRecord | WorkflowTransitionRecord
     ) -> None:
         snapshot_epoch = record.snapshot_epoch
         recorded_at_epoch = record.recorded_at_epoch
@@ -474,6 +479,53 @@ class ReplayAccumulator:
         while len(self._recent_workflows) > self._recent_workflow_transition_limit:
             _key, _identity_key, identity = heapq.heappop(self._recent_workflow_heap)
             self._recent_workflows.pop(identity, None)
+
+    def _apply_job_attempt(self, record: JobAttemptRecord) -> bool:
+        self._ensure_indexed_state()
+        index = self._job_indexes.get(record.exec_job_id)
+        if index is None:
+            return self._reject_incremental()
+        job = self._jobs[index]
+        attempt = record.attempt
+        attempts = [item for item in job.attempts if item.identity != attempt.identity]
+        attempts.append(attempt)
+        attempts.sort(
+            key=lambda item: (
+                item.identity.job_submit_seq,
+                item.identity.job_instance_id,
+            )
+        )
+        current = attempts[-1].identity
+        # Like the Stampede reader, a job's state belongs to its newest attempt;
+        # a fresh attempt has no state until its own transitions arrive.
+        transition = job.transition
+        if transition is not None and (
+            transition.identity.job_instance_id != current.job_instance_id
+            or transition.job_submit_seq != current.job_submit_seq
+        ):
+            transition = None
+        try:
+            updated = replace(
+                job,
+                attempts=tuple(attempts),
+                current_attempt=current,
+                state=transition.identity.state if transition else None,
+                state_timestamp=transition.identity.timestamp if transition else None,
+                transition=transition,
+            )
+        except ValueError:
+            return self._reject_incremental()
+        self._jobs[index] = updated
+        self._attempts_by_job.setdefault(record.exec_job_id, {})[
+            (attempt.identity.job_instance_id, attempt.identity.job_submit_seq)
+        ] = attempt.identity
+        if record.exec_job_id in self._diagnostics and self._diagnostic_problems[
+            record.exec_job_id
+        ] != self._problem_key(updated):
+            self._diagnostics.pop(record.exec_job_id)
+            self._diagnostic_problems.pop(record.exec_job_id)
+        self._advance_snapshot(record)
+        return True
 
     def _apply_job_transition(self, record: JobTransitionRecord) -> bool:
         self._ensure_indexed_state()

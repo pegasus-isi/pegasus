@@ -22,6 +22,7 @@ import asyncio
 import io
 import json
 import os
+import sqlite3
 import stat
 import threading
 import uuid
@@ -50,6 +51,7 @@ from Pegasus.monitor.models import (
     DiagnosticRecord,
     DiagnosticSeverity,
     GapRecord,
+    JobAttemptRecord,
     JobTransitionRecord,
     SnapshotEpoch,
     StreamHeader,
@@ -126,6 +128,66 @@ def test_log_rejects_workflow_inputs_before_starting(
     )
     assert "overlaps workflow input" in errors.getvalue()
     assert {path: path.read_bytes() for path in run.iterdir()} == before
+
+
+@pytest.mark.parametrize("mode", ["--once", "--serve", "--serve-foreground"])
+def test_log_refuses_foreign_file_once_before_starting(
+    tmp_path, monkeypatch, mode
+) -> None:
+    run = tmp_path / "run0001"
+    create_run(run)
+    foreign = tmp_path / "notes.jsonl"
+    foreign.write_text("not a monitor stream\n")
+    monkeypatch.setattr(
+        cli, "_make_coordinator", lambda *_: pytest.fail("must reject before startup")
+    )
+    monkeypatch.setattr(
+        "Pegasus.monitor.server.launch_server",
+        lambda *_args, **_kwargs: pytest.fail("must reject before spawning"),
+    )
+    errors = io.StringIO()
+
+    assert (
+        cli.main(
+            [str(run), mode, "--no-condor", "--log", str(foreign)],
+            stdout=io.StringIO(),
+            stderr=errors,
+        )
+        == 1
+    )
+    assert errors.getvalue().count("not a pegasus-monitor event stream") == 1
+    assert foreign.read_text() == "not a monitor stream\n"
+
+
+def test_stop_server_honors_custom_log(tmp_path, monkeypatch) -> None:
+    run = tmp_path / "run0001"
+    create_run(run)
+    custom = tmp_path / "logs" / "montage-events.jsonl"
+    stopped: list[ServerPaths] = []
+
+    def stop_server(paths: ServerPaths) -> SimpleNamespace:
+        stopped.append(paths)
+        return SimpleNamespace(status=SimpleNamespace(value="not_running"))
+
+    monkeypatch.setattr("Pegasus.monitor.server.stop_server", stop_server)
+    output = io.StringIO()
+
+    assert (
+        cli.main(
+            [str(run), "--stop-server", "--log", str(custom)],
+            stdout=output,
+            stderr=io.StringIO(),
+        )
+        == 0
+    )
+    assert stopped == [ServerPaths.from_log_path(custom)]
+    assert "not_running" in output.getvalue()
+    with pytest.raises(SystemExit):
+        cli.main(
+            [str(run), "--stop-server", str(tmp_path / ".x.pid"), "--log", str(custom)],
+            stdout=io.StringIO(),
+            stderr=io.StringIO(),
+        )
 
 
 @pytest.mark.parametrize("alias", ["relative", "symlink_parent", "hardlink"])
@@ -720,7 +782,10 @@ def test_log_validation_accepts_location_without_optional_paths(tmp_path):
         log=str(tmp_path / "events.jsonl"), serve=False, serve_foreground=False
     )
     location = SimpleNamespace(
-        submit_dir=tmp_path, root_submit_dir=tmp_path, dag_name="workflow.dag"
+        workflow=ROOT,
+        submit_dir=tmp_path,
+        root_submit_dir=tmp_path,
+        dag_name="workflow.dag",
     )
     assert cli._validated_event_log_path(args, location) == tmp_path / "events.jsonl"
 
@@ -756,3 +821,64 @@ def test_foreground_reuses_validated_log_path(tmp_path, monkeypatch):
     ), errors.getvalue()
     assert len(calls) == 1
     assert log.exists()
+
+
+def test_retry_streams_attempt_rows_without_checkpoints(tmp_path) -> None:
+    database, _tail = create_run(tmp_path / "run", terminated=False)
+    event_log = tmp_path / "workflow-events.jsonl"
+
+    def refresh(epoch: int) -> object:
+        result = StampedeReader(database, ROOT).refresh(
+            DBRefreshRequest(
+                workflow=ROOT,
+                next_epoch=SnapshotEpoch(epoch),
+                mode=DBRefreshMode.FULL_REBOOTSTRAP,
+                clock=ClockSample(epoch=1000.0 + epoch, monotonic=500.0 + epoch),
+            )
+        )
+        assert result.snapshot is not None
+        return result.snapshot
+
+    def execute(sql: str) -> None:
+        with sqlite3.connect(database) as connection:
+            connection.execute(sql)
+
+    writer = EventLogWriter(
+        event_log, ROOT, "integration", min_free_mb=0, checkpoint_interval=300
+    )
+    try:
+        writer.record_snapshot(refresh(1), recorded_at_epoch=1001.0)
+        insert_state(database, 100, "EXECUTE", 120, 2)
+        writer.record_snapshot(refresh(2), recorded_at_epoch=1002.0)
+        insert_state(database, 100, "JOB_FAILURE", 130, 3)
+        execute("UPDATE job_instance SET exitcode = 256 WHERE job_instance_id = 100")
+        execute(
+            "INSERT INTO job_instance VALUES "
+            "(101, 10, 4, '1004.0', 'local', NULL, NULL, NULL)"
+        )
+        insert_state(database, 101, "SUBMIT", 140, 1)
+        writer.record_snapshot(refresh(3), recorded_at_epoch=1003.0)
+        insert_state(database, 101, "JOB_SUCCESS", 160, 2)
+        execute("UPDATE job_instance SET exitcode = 0 WHERE job_instance_id = 101")
+        final = refresh(4)
+        writer.record_snapshot(final, recorded_at_epoch=1004.0)
+    finally:
+        writer.close()
+
+    records = read_jsonl(event_log).records
+    attempts = [record for record in records if isinstance(record, JobAttemptRecord)]
+    replayed = ReplayEngine(event_log, speed=0).replay()
+
+    assert [
+        record.reason for record in records if isinstance(record, CheckpointRecord)
+    ] == ["initial"]
+    # EXECUTE sets the start time; failure sets the exit code and the retry is new.
+    assert [record.attempt.identity.job_instance_id for record in attempts] == [
+        100,
+        100,
+        101,
+        101,
+    ]
+    assert replayed.complete is True
+    assert replayed.snapshot is not None
+    assert replayed.snapshot.jobs == final.jobs

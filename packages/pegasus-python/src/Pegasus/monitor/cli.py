@@ -232,7 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         const="auto",
         metavar="PID_FILE",
-        help="Stop the server selected by TARGET or an explicit PID file",
+        help="Stop the server selected by TARGET (and --log) or an explicit PID file",
     )
     server.add_argument(
         "--remote",
@@ -449,8 +449,8 @@ def _validate_mode_args(
         parser.error("--log cannot be combined with --replay or --remote")
     if (args.serve or args.serve_foreground) and (args.once or args.why_idle):
         parser.error("server modes cannot be combined with one-shot modes")
-    if args.stop_server is not None and args.log is not None:
-        parser.error("--stop-server cannot be combined with --log")
+    if args.stop_server not in (None, "auto") and args.log is not None:
+        parser.error("--stop-server PID_FILE cannot be combined with --log")
     if not args.remote and (args.ssh_config or args.ssh_identity):
         parser.error("--ssh-config and --ssh-identity require --remote")
 
@@ -721,9 +721,9 @@ def _event_log_path(args: argparse.Namespace, submit_dir: Path) -> Path:
 
 
 def _validated_event_log_path(args: argparse.Namespace, location: object) -> Path:
-    """Reject monitor outputs that would replace a workflow input."""
+    """Reject outputs that would replace a workflow input or a foreign file."""
 
-    from Pegasus.monitor.event_log import UnsafeEventLogPath
+    from Pegasus.monitor.event_log import EventLogWriter, UnsafeEventLogPath
 
     log_path = _event_log_path(args, Path(location.submit_dir))
     outputs = [log_path]
@@ -761,6 +761,7 @@ def _validated_event_log_path(args: argparse.Namespace, location: object) -> Pat
                 raise UnsafeEventLogPath(
                     f"monitor output {output} overlaps workflow input {source}"
                 )
+    EventLogWriter(log_path, location.workflow, _version()).preflight()
     return log_path
 
 
@@ -1815,8 +1816,8 @@ def _run_stop_server_mode(
 
     if args.stop_server == "auto":
         location = _locate_for_server(args, runtime)
-        log_path = Path(location.submit_dir) / "workflow-events.jsonl"
-        paths = _server_paths_for_log(log_path)
+        # Same derivation as --serve, so a custom --log finds its server.
+        paths = _server_paths_for_log(_event_log_path(args, Path(location.submit_dir)))
     else:
         paths = _explicit_server_paths(Path(args.stop_server))
     result = stop_server(paths)

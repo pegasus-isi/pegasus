@@ -351,6 +351,18 @@ def test_disabled_condor_is_explicit(tmp_path):
     assert "HTCondor DISABLED" in text
 
 
+def test_pool_waiting_only_while_queued_or_held_jobs_need_it(tmp_path):
+    snapshot = _snapshot()
+    options = DisplayOptions(width=150, live=False)
+    waiting = render_text(_context(tmp_path), snapshot, options=options, width=150)
+    snapshot.effective.jobs = (_job("compute_a", Lifecycle.RUNNING),)
+    idle = render_text(_context(tmp_path), snapshot, options=options, width=150)
+
+    assert "condor pool WAITING (not yet polled)" in waiting
+    assert "condor pool not needed (no queued/held jobs)" in idle
+    assert "condor pool WAITING" not in idle
+
+
 def test_job_rows_show_current_attempt_exit_rss_and_scheduler_enrichment(tmp_path):
     current_identity = SimpleNamespace(job_submit_seq=9)
     old_attempt = SimpleNamespace(

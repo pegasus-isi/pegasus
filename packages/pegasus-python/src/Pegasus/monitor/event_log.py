@@ -55,6 +55,7 @@ from Pegasus.monitor.models import (
     GapRecord,
     JobAttempt,
     JobAttemptIdentity,
+    JobAttemptRecord,
     JobSnapshot,
     JobTransitionRecord,
     JobTransitionWatermark,
@@ -72,6 +73,7 @@ from Pegasus.monitor.models import (
 EventRecord: TypeAlias = (
     StreamHeader
     | CheckpointRecord
+    | JobAttemptRecord
     | JobTransitionRecord
     | WorkflowTransitionRecord
     | EnrichmentRecord
@@ -353,6 +355,17 @@ def _decode_record(value: object, *, destructive: bool) -> EventRecord:
                 None if last is None else _integer(last, "last_missing_sequence"),
             )
         epoch = SnapshotEpoch(_integer(payload.get("snapshot_epoch"), "snapshot_epoch"))
+        if record_type == "job_attempt":
+            if payload.get("confirmed") is not True:
+                raise EventLogFormatError("job attempt is not DB-confirmed")
+            return JobAttemptRecord(
+                sequence,
+                stream_id,
+                epoch,
+                recorded,
+                _string(payload.get("exec_job_id"), "exec_job_id"),
+                _job_attempt(payload.get("attempt")),
+            )
         if record_type == "job_transition":
             if payload.get("confirmed") is not True:
                 raise EventLogFormatError("job transition is not DB-confirmed")
@@ -459,6 +472,7 @@ class EventLogWriter:
         self._last_structure: tuple[object, ...] | None = None
         self._known_job_transitions: set[DBTransitionIdentity] = set()
         self._known_workflow_transitions: set[DBWorkflowTransitionIdentity] = set()
+        self._known_attempts: dict[str, dict[JobAttemptIdentity, JobAttempt]] = {}
         self._diagnostic_keys: set[tuple[object, ...]] = set()
         self._diagnostics_need_refresh = False
         self._current_snapshot_epoch: SnapshotEpoch | None = None
@@ -528,11 +542,12 @@ class EventLogWriter:
 
         reason: str | None = None
         structure = _database_structure(snapshot)
+        attempt_changes = self._attempt_changes(snapshot)
         if final:
             reason = "final"
         elif snapshot.generation != self._last_generation:
             reason = "database_replacement"
-        elif structure != self._last_structure:
+        elif structure != self._last_structure or attempt_changes is None:
             reason = "structure_change"
         elif self._missing_transitions(snapshot):
             reason = "transition_gap"
@@ -545,6 +560,20 @@ class EventLogWriter:
             self._write_checkpoint(snapshot, now, reason)
             return
 
+        assert attempt_changes is not None
+        # Attempts precede transitions so replay can match each transition.
+        for exec_job_id, attempt in attempt_changes:
+            record = JobAttemptRecord(
+                self._next_sequence(),
+                self.stream_id,
+                snapshot.epoch,
+                now,
+                exec_job_id,
+                attempt,
+            )
+            if not self._write_record(record):
+                return
+            self._known_attempts.setdefault(exec_job_id, {})[attempt.identity] = attempt
         new_events: list[DBJobTransition | DBWorkflowTransition] = []
         for transition in snapshot.recent_transitions:
             if transition.identity not in self._known_job_transitions:
@@ -652,6 +681,13 @@ class EventLogWriter:
                 return
             self._diagnostic_keys.add(key)
         self._diagnostics_need_refresh = False
+
+    def preflight(self) -> None:
+        """Refuse an unsafe or foreign target before any monitoring starts."""
+
+        original = self._safe_target_status()
+        if original is not None:
+            self._require_event_stream(original)
 
     def close(self) -> None:
         """Close the stream descriptor; closing never mutates workflow state."""
@@ -775,7 +811,29 @@ class EventLogWriter:
         self._last_structure = _database_structure(snapshot)
         self._known_job_transitions = _job_transition_identities(snapshot)
         self._known_workflow_transitions = _workflow_transition_identities(snapshot)
+        self._known_attempts = {
+            job.exec_job_id: {attempt.identity: attempt for attempt in job.attempts}
+            for job in snapshot.jobs
+        }
         self._current_snapshot_epoch = snapshot.epoch
+
+    def _attempt_changes(
+        self, snapshot: DatabaseSnapshot
+    ) -> list[tuple[str, JobAttempt]] | None:
+        """Return inserted or updated attempts, or None if any disappeared."""
+
+        changes: list[tuple[str, JobAttempt]] = []
+        for job in snapshot.jobs:
+            known = self._known_attempts.get(job.exec_job_id, {})
+            current = {attempt.identity for attempt in job.attempts}
+            if not current.issuperset(known):
+                return None
+            changes.extend(
+                (job.exec_job_id, attempt)
+                for attempt in job.attempts
+                if known.get(attempt.identity) != attempt
+            )
+        return changes
 
     def _missing_transitions(self, snapshot: DatabaseSnapshot) -> bool:
         """Check that the bounded event suffix covers every new state head."""
@@ -1133,6 +1191,7 @@ class EventLogWriter:
         self._last_structure = None
         self._known_job_transitions.clear()
         self._known_workflow_transitions.clear()
+        self._known_attempts.clear()
         self._diagnostic_keys.clear()
         self._diagnostics_need_refresh = False
         self._current_snapshot_epoch = None
@@ -1501,25 +1560,25 @@ def _workflow_transition_identities(
 
 
 def _database_structure(snapshot: DatabaseSnapshot) -> tuple[object, ...]:
-    """Fingerprint non-transition data that requires a fresh checkpoint."""
+    """Fingerprint job data that no incremental record can express.
 
-    jobs: list[object] = []
-    for job in snapshot.jobs:
-        jobs.append(
+    Attempt rows are excluded: job_attempt records carry their inserts and
+    updates, so submits and terminations stay incremental.
+    """
+
+    return (
+        snapshot.workflow.wf_id,
+        tuple(
             (
                 job.job_id,
                 job.exec_job_id,
                 job.type_desc,
                 job.task_count,
                 job.transformations,
-                tuple(
-                    json.dumps(attempt.to_json_dict(), sort_keys=True)
-                    for attempt in job.attempts
-                ),
-                job.current_attempt,
             )
-        )
-    return (snapshot.workflow.wf_id, tuple(jobs))
+            for job in snapshot.jobs
+        ),
+    )
 
 
 def _redact_text(value: str, maximum: int) -> str:

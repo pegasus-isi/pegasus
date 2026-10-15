@@ -22,6 +22,17 @@
       "snapshot",
       "reason"
     ],
+    "job_attempt": [
+      "schema_version",
+      "record_type",
+      "sequence",
+      "stream_id",
+      "snapshot_epoch",
+      "recorded_at_epoch",
+      "confirmed",
+      "exec_job_id",
+      "attempt"
+    ],
     "job_transition": [
       "schema_version",
       "record_type",

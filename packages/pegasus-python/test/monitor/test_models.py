@@ -56,6 +56,7 @@ from Pegasus.monitor.models import (
     HealthState,
     JobAttempt,
     JobAttemptIdentity,
+    JobAttemptRecord,
     JobSemanticKey,
     JobSnapshot,
     JobTransitionRecord,
@@ -1364,6 +1365,14 @@ def test_checked_in_jsonl_contract_matches_record_shapes() -> None:
         StreamHeader(0, "s", WORKFLOW, 1.0, "v"),
         CheckpointRecord(1, "s", 1.0, database, "initial"),
         JobTransitionRecord(2, "s", snapshot.epoch, 1.0, transition),
+        JobAttemptRecord(
+            2,
+            "s",
+            snapshot.epoch,
+            1.0,
+            snapshot.jobs[0].exec_job_id,
+            snapshot.jobs[0].attempts[0],
+        ),
         WorkflowTransitionRecord(3, "s", snapshot.epoch, 1.0, wf_transition),
         EnrichmentRecord(
             4,

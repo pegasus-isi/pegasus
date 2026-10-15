@@ -58,6 +58,7 @@ from Pegasus.monitor.models import (
     GapRecord,
     JobAttempt,
     JobAttemptIdentity,
+    JobAttemptRecord,
     JobSnapshot,
     JobTransitionRecord,
     JobTransitionWatermark,
@@ -70,7 +71,7 @@ from Pegasus.monitor.models import (
     WorkflowSnapshot,
     WorkflowTransitionWatermark,
 )
-from Pegasus.monitor.replay import ReplayEngine
+from Pegasus.monitor.replay import ReplayAccumulator, ReplayEngine
 
 WORKFLOW = WorkflowIdentity("wf-selected", "wf-root")
 GENERATION = DatabaseGeneration(1, 10, 20)
@@ -231,6 +232,14 @@ def test_codec_round_trips_every_core_record() -> None:
         StreamHeader(0, "stream", WORKFLOW, 1.0, "6.0"),
         CheckpointRecord(1, "stream", 1.0, snapshot, "initial"),
         JobTransitionRecord(2, "stream", snapshot.epoch, 2.0, transition),
+        JobAttemptRecord(
+            4,
+            "stream",
+            snapshot.epoch,
+            2.0,
+            "compute_ID0001",
+            snapshot.jobs[0].attempts[0],
+        ),
         DiagnosticRecord(
             3,
             "stream",
@@ -607,6 +616,140 @@ def test_attach_to_completed_is_explicit_and_repeated_final_is_idempotent(
         if isinstance(record, CheckpointRecord)
     ]
     assert reasons == ["initial", "final"]
+
+
+def _retried_snapshot(before: DatabaseSnapshot) -> DatabaseSnapshot:
+    """The first attempt fails and a second attempt is submitted."""
+
+    job = before.jobs[0]
+    first = replace(
+        job.attempts[0],
+        end_time=Decimal("3"),
+        raw_wait_status=256,
+        exit_code=1,
+        maxrss_kb=1024,
+    )
+    second = JobAttempt(JobAttemptIdentity(2, 11, 2), submit_time=Decimal("4"))
+    failed = DBJobTransition(
+        WORKFLOW,
+        "compute_ID0001",
+        1,
+        DBTransitionIdentity(10, "JOB_FAILURE", Decimal("3"), 2),
+    )
+    resubmitted = DBJobTransition(
+        WORKFLOW,
+        "compute_ID0001",
+        2,
+        DBTransitionIdentity(11, "SUBMIT", Decimal("4"), 1),
+    )
+    return replace(
+        before,
+        epoch=SnapshotEpoch(2),
+        snapshot_at_epoch=2.0,
+        jobs=(
+            replace(
+                job,
+                attempts=(first, second),
+                current_attempt=second.identity,
+                state="SUBMIT",
+                state_timestamp=Decimal("4"),
+                transition=resubmitted,
+            ),
+        ),
+        recent_transitions=(before.recent_transitions[0], failed, resubmitted),
+        watermarks=(
+            JobTransitionWatermark(10, 2, (failed.identity,)),
+            JobTransitionWatermark(11, 1, (resubmitted.identity,)),
+        ),
+    )
+
+
+def test_attempt_changes_are_incremental_and_replay_exactly(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    before = _snapshot()
+    retried = _retried_snapshot(before)
+    job = retried.jobs[0]
+    # Late invocation data updates an attempt without any state transition.
+    late = replace(
+        retried,
+        epoch=SnapshotEpoch(3),
+        snapshot_at_epoch=3.0,
+        jobs=(
+            replace(
+                job,
+                attempts=(job.attempts[0], replace(job.attempts[1], site="remote")),
+            ),
+        ),
+    )
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    try:
+        writer.record_snapshot(before, recorded_at_epoch=1.0)
+        writer.record_snapshot(retried, recorded_at_epoch=2.0)
+        writer.record_snapshot(late, recorded_at_epoch=3.0)
+        size = path.stat().st_size
+        writer.record_snapshot(late, recorded_at_epoch=3.0)
+        assert path.stat().st_size == size
+    finally:
+        writer.close()
+
+    records = _records(path)
+    assert [type(record).__name__ for record in records[2:]] == [
+        "JobAttemptRecord",
+        "JobAttemptRecord",
+        "JobTransitionRecord",
+        "JobTransitionRecord",
+        "JobAttemptRecord",
+    ]
+    assert [
+        record.reason for record in records if isinstance(record, CheckpointRecord)
+    ] == ["initial"]
+    replayed = ReplayEngine(path, speed=0).replay()
+    assert replayed.complete
+    assert replayed.snapshot == late
+
+
+def test_removed_attempt_forces_structure_checkpoint(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    retried = _retried_snapshot(_snapshot())
+    job = retried.jobs[0]
+    rewound = replace(
+        retried,
+        epoch=SnapshotEpoch(3),
+        jobs=(replace(job, attempts=job.attempts[1:]),),
+        recent_transitions=retried.recent_transitions[2:],
+        watermarks=retried.watermarks[1:],
+    )
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    try:
+        writer.record_snapshot(retried, recorded_at_epoch=1.0)
+        writer.record_snapshot(rewound, recorded_at_epoch=2.0)
+    finally:
+        writer.close()
+
+    assert _records(path)[-1].reason == "structure_change"
+    assert ReplayEngine(path, speed=0).replay().snapshot == rewound
+
+
+def test_replay_rejects_attempt_for_unknown_job() -> None:
+    snapshot = _snapshot()
+    accumulator = ReplayAccumulator()
+    accumulator.consume(StreamHeader(0, "stream", WORKFLOW, 1.0, "6.0"))
+    accumulator.consume(CheckpointRecord(1, "stream", 1.0, snapshot, "initial"))
+
+    applied = accumulator.consume(
+        JobAttemptRecord(
+            2,
+            "stream",
+            snapshot.epoch,
+            2.0,
+            "unknown_ID0001",
+            snapshot.jobs[0].attempts[0],
+        )
+    )
+
+    assert not applied
+    assert accumulator.awaiting_checkpoint
+    assert accumulator.snapshot.jobs == snapshot.jobs
 
 
 def test_final_checkpoint_takes_precedence_over_structure_change(tmp_path) -> None:

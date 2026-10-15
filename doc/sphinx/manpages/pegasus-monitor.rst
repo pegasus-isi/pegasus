@@ -123,8 +123,8 @@ Options
    Stop a server after verifying its recorded process identity. With no
    *PID_FILE*, the default server for ``TARGET`` is selected. Put ``TARGET``
    before the option, for example ``pegasus-monitor TARGET --stop-server``.
-   Supply the adjacent hidden PID file explicitly for a server using a custom
-   log path.
+   For a server started with a custom ``--log``, pass the same ``--log``, or
+   supply the adjacent hidden PID file explicitly.
 
 **--remote** *USER@HOST:PATH*
    Read and display canonical server JSONL incrementally over bounded SSH.
@@ -189,7 +189,10 @@ produce this stream. Every stream begins with a header containing its unique
 DB-confirmed checkpoint. Records have monotonically increasing sequence
 numbers. Workflow and job transitions enter the canonical stream only after
 Stampede confirmation, so the local TUI may temporarily be ahead of the log
-while it displays a provisional ``jobstate.log`` overlay.
+while it displays a provisional ``jobstate.log`` overlay. New and updated job
+attempts (submissions, retries, exit codes, timing) are written as incremental
+``job_attempt`` records ahead of the transitions that refer to them, so the
+stream grows with the number of changes rather than the size of the workflow.
 
 Additional DB-confirmed checkpoints are written periodically, every five
 minutes by default, and after recovery, database replacement or structural
@@ -228,7 +231,7 @@ PID and does not signal a reused or mismatched PID.
 
 ``--replay``, ``--remote``, ``--serve``, ``--serve-foreground``, and
 ``--stop-server`` are mutually exclusive. ``--log`` cannot be combined with
-``--replay``, ``--remote``, or ``--stop-server``. Server modes cannot be
+``--replay``, ``--remote``, or ``--stop-server`` *PID_FILE*. Server modes cannot be
 combined with ``--once`` or ``--why-idle``. ``--ssh-config`` and
 ``--ssh-identity`` require ``--remote``.
 

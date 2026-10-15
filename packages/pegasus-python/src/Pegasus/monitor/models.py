@@ -2186,6 +2186,35 @@ class JobTransitionRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class JobAttemptRecord:
+    """One inserted or updated attempt row, emitted before its transitions."""
+
+    sequence: int
+    stream_id: str
+    snapshot_epoch: SnapshotEpoch
+    recorded_at_epoch: float
+    exec_job_id: str
+    attempt: JobAttempt
+
+    def __post_init__(self) -> None:
+        _validate_stream_record(self.sequence, self.stream_id, self.recorded_at_epoch)
+        if not self.exec_job_id:
+            raise ValueError("exec_job_id must not be empty")
+
+    def to_json_dict(self) -> dict[str, JSONValue]:
+        return _record_json(
+            "job_attempt",
+            self.sequence,
+            stream_id=self.stream_id,
+            snapshot_epoch=self.snapshot_epoch.value,
+            recorded_at_epoch=self.recorded_at_epoch,
+            confirmed=True,
+            exec_job_id=self.exec_job_id,
+            attempt=self.attempt,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class WorkflowTransitionRecord:
     sequence: int
     stream_id: str

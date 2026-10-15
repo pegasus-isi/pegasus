@@ -429,7 +429,17 @@ def _health_panel(snapshot: CoordinatorSnapshot, options: DisplayOptions) -> Pan
         entries.append(Text("HTCondor DISABLED", style="dim"))
     else:
         known_names = {item.value for item in known}
+        effective = snapshot.effective
+        # The coordinator polls the pool only to explain queued or held jobs.
+        pool_idle = effective is not None and not any(
+            job.lifecycle.value in {"queued", "held"} for job in effective.jobs
+        )
         for source in sorted(set(options.expected_scheduler_sources) - known_names):
+            if source == "condor_pool" and pool_idle:
+                entries.append(
+                    Text("condor pool not needed (no queued/held jobs)", style="dim")
+                )
+                continue
             entries.append(
                 Text(
                     f"{source.replace('_', ' ')} WAITING (not yet polled)",
