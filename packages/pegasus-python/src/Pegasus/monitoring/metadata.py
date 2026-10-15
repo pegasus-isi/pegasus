@@ -81,6 +81,31 @@ class Metadata:
 
         return True
 
+    @staticmethod
+    def load(path):
+        """
+        Loads a list of metadata objects from a .meta JSON file, such as one
+        written out by write_to_jsonfile
+
+        :param path: path to the .meta file
+        :return: list of Metadata objects. Entries of type file are returned as
+                 FileMetadata objects
+        """
+        with open(path) as f:
+            entries = json.load(f)
+
+        metadata_list = []
+        for entry in entries:
+            metadata = FileMetadata() if entry.get("_type") == "file" else Metadata()
+            metadata._type = entry.get("_type")
+            metadata.set_id(entry.get("_id"))
+            for key, value in entry.get("_attributes", {}).items():
+                metadata.add_attribute(key, value)
+            metadata_list.append(metadata)
+
+        logger.debug("Loaded %d metadata objects from %s", len(metadata_list), path)
+        return metadata_list
+
 
 class FileMetadata(Metadata):
     """
