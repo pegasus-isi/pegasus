@@ -438,6 +438,9 @@ public class MapGraph implements Graph {
          */
         private LinkedList mQueue;
 
+        /** The number of parents not yet traversed for each node. */
+        private Map<GraphNode, Integer> mRemainingParents;
+
         /** The current depth of the nodes that are being traversed in the BFS. */
         private int mCurrentDepth;
 
@@ -447,24 +450,23 @@ public class MapGraph implements Graph {
         /** The default constructor. */
         public MapGraphIterator() {
             mQueue = new LinkedList();
+            mRemainingParents = new HashMap<GraphNode, Integer>();
             mLevelList = new LinkedList();
             mCurrentDepth = -1;
 
-            // sanity initialization of all nodes depth
+            // initialize node depths and remaining parent counts
             for (Iterator it = nodeIterator(); it.hasNext(); ) {
                 GraphNode node = (GraphNode) it.next();
                 node.setDepth(mCurrentDepth);
                 node.setColor(GraphNode.WHITE_COLOR);
+                int remaining = node.getParents().size();
+                mRemainingParents.put(node, remaining);
+                if (remaining == 0) {
+                    node.setDepth(0);
+                    mQueue.add(node);
+                }
             }
-
-            // initialize all the root nodes depth to 0
-            // and put them in the queue
             mCurrentDepth = 0;
-            for (Iterator it = getRoots().iterator(); it.hasNext(); ) {
-                GraphNode node = (GraphNode) it.next();
-                node.setDepth(mCurrentDepth);
-                mQueue.add(node);
-            }
         }
 
         /**
@@ -506,8 +508,9 @@ public class MapGraph implements Graph {
             // of the parent nodes have been traversed.
             for (Iterator it = node.getChildren().iterator(); it.hasNext(); ) {
                 GraphNode child = (GraphNode) it.next();
-                if (!child.isColor(GraphNode.GRAY_COLOR)
-                        && child.parentsColored(GraphNode.BLACK_COLOR)) {
+                int remaining = mRemainingParents.get(child) - 1;
+                mRemainingParents.put(child, remaining);
+                if (remaining == 0) {
                     // mLogger.log( "Adding to queue " + parent.getID(),
                     //             LogManager.DEBUG_MESSAGE_LEVEL );
                     child.setDepth(depth + 1);
@@ -540,6 +543,9 @@ public class MapGraph implements Graph {
          */
         private LinkedList mQueue;
 
+        /** The number of children not yet traversed for each node. */
+        private Map<GraphNode, Integer> mRemainingChildren;
+
         /**
          * The current height of the nodes that are being traversed in the BFS starting from the
          * leaf.
@@ -552,24 +558,23 @@ public class MapGraph implements Graph {
         /** The default constructor. */
         public BottomUpIterator() {
             mQueue = new LinkedList();
+            mRemainingChildren = new HashMap<GraphNode, Integer>();
             mLevelList = new LinkedList();
             mCurrentDepth = -1;
 
-            // sanity initialization of all nodes depth
+            // initialize node depths and remaining child counts
             for (Iterator it = nodeIterator(); it.hasNext(); ) {
                 GraphNode node = (GraphNode) it.next();
                 node.setDepth(mCurrentDepth);
                 node.setColor(GraphNode.WHITE_COLOR);
+                int remaining = node.getChildren().size();
+                mRemainingChildren.put(node, remaining);
+                if (remaining == 0) {
+                    node.setDepth(0);
+                    mQueue.add(node);
+                }
             }
-
-            // initialize all the root nodes depth to 0
-            // and put them in the queue
             mCurrentDepth = 0;
-            for (Iterator it = getLeaves().iterator(); it.hasNext(); ) {
-                GraphNode node = (GraphNode) it.next();
-                node.setDepth(mCurrentDepth);
-                mQueue.add(node);
-            }
         }
 
         /**
@@ -610,8 +615,9 @@ public class MapGraph implements Graph {
             // add the parents to the list only if all the children
             // of the parent nodes have been traversed.
             for (GraphNode parent : node.getParents()) {
-                if (!parent.isColor(GraphNode.GRAY_COLOR)
-                        && parent.childrenColored(GraphNode.BLACK_COLOR)) {
+                int remaining = mRemainingChildren.get(parent) - 1;
+                mRemainingChildren.put(parent, remaining);
+                if (remaining == 0) {
                     // mLogger.log( "Adding to queue " + parent.getID(),
                     //             LogManager.DEBUG_MESSAGE_LEVEL );
                     parent.setDepth(depth + 1);
