@@ -600,6 +600,50 @@ def test_launch_rejects_metadata_if_bootstrap_process_then_exits(
         )
 
 
+def test_launch_treats_clean_exit_before_handshake_as_completed(
+    tmp_path: Path,
+) -> None:
+    paths = ServerPaths.for_submit_dir(tmp_path)
+    process = FakeProcess(return_code=0)
+
+    result = launch_server(
+        ("pegasus-monitor", "--serve-foreground"),
+        paths,
+        popen=lambda *_args, **_kwargs: process,  # type: ignore[arg-type]
+    )
+
+    assert result.completed is True
+    assert result.metadata is None
+    assert result.pid == process.pid
+
+
+def test_launch_treats_clean_exit_after_metadata_as_completed(
+    tmp_path: Path,
+) -> None:
+    paths = ServerPaths.for_submit_dir(tmp_path)
+    process = FakeProcess()
+    clock = FakeClock()
+    launched = metadata(pid=process.pid)
+
+    def sleep(seconds: float) -> None:
+        clock.sleep(seconds)
+        write_metadata(paths.metadata, launched)
+        process.return_code = 0
+
+    result = launch_server(
+        ("pegasus-monitor", "--serve-foreground"),
+        paths,
+        popen=lambda *_args, **_kwargs: process,  # type: ignore[arg-type]
+        # The exited process has no identity left to compare.
+        identity_reader=lambda _pid: None,
+        monotonic=clock.monotonic,
+        sleep=sleep,
+    )
+
+    assert result.completed is True
+    assert result.metadata == launched
+
+
 def test_launch_failure_terminates_the_detached_process_group(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

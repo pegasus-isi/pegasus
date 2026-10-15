@@ -34,8 +34,9 @@ from Pegasus.monitor.display import (
     DisplayOptions,
     rendering_gc_guard,
 )
-from Pegasus.monitor.event_log import read_jsonl
+from Pegasus.monitor.event_log import encode_record, read_jsonl
 from Pegasus.monitor.models import CheckpointRecord, SchedulerQueryKind
+from Pegasus.monitor.server import ServerLaunchError, ServerLaunchResult
 
 GOLDEN = Path(__file__).parent / "fixtures" / "event_log" / "schema-v1-golden.jsonl"
 
@@ -495,6 +496,57 @@ def test_server_modes_dispatch_without_a_tty(monkeypatch) -> None:
     assert cli.main(["--serve"], stdout=_Output(), stderr=_Output()) == 0
     assert cli.main(["--stop-server"], stdout=_Output(), stderr=_Output()) == 0
     assert calls == [("serve", sentinel), ("stop", sentinel)]
+
+
+def _write_golden_log(path: Path, *, reason: str) -> None:
+    records = read_jsonl(GOLDEN).records
+    header = records[0]
+    checkpoint = next(r for r in records if isinstance(r, CheckpointRecord))
+    staged = path.with_name(f"{path.name}.tmp")
+    staged.write_bytes(
+        encode_record(header) + encode_record(replace(checkpoint, reason=reason))
+    )
+    staged.replace(path)
+
+
+def _completed_launch(monkeypatch, tmp_path, server_writes) -> Path:
+    log_path = tmp_path / "events.jsonl"
+    monkeypatch.setattr(
+        cli, "_locate_for_server", lambda *_: SimpleNamespace(submit_dir=tmp_path)
+    )
+    monkeypatch.setattr(cli, "_validated_event_log_path", lambda *_: log_path)
+    monkeypatch.setattr(cli, "_server_foreground_argv", lambda *_a, **_k: ["serve"])
+
+    def launch_server(*_args: object, **_kwargs: object) -> ServerLaunchResult:
+        if server_writes is not None:
+            _write_golden_log(log_path, reason=server_writes)
+        return ServerLaunchResult(None, 4242, completed=True)
+
+    monkeypatch.setattr("Pegasus.monitor.server.launch_server", launch_server)
+    return log_path
+
+
+def test_serve_accepts_server_that_finished_with_a_final_log(
+    tmp_path, monkeypatch
+) -> None:
+    log_path = _completed_launch(monkeypatch, tmp_path, "final")
+    output = _Output()
+
+    assert cli._run_server_launch_mode(SimpleNamespace(), object(), output) == 0
+    assert "workflow already complete" in output.getvalue()
+    assert str(log_path) in output.getvalue()
+
+
+@pytest.mark.parametrize("server_writes", ["initial", None])
+def test_serve_rejects_finished_server_without_a_fresh_final_log(
+    tmp_path, monkeypatch, server_writes
+) -> None:
+    log_path = _completed_launch(monkeypatch, tmp_path, server_writes)
+    # A previous run's final log must not pass for this server's output.
+    _write_golden_log(log_path, reason="final")
+
+    with pytest.raises(ServerLaunchError, match="complete event log"):
+        cli._run_server_launch_mode(SimpleNamespace(), object(), _Output())
 
 
 def test_detached_foreground_argv_preserves_scoped_options() -> None:

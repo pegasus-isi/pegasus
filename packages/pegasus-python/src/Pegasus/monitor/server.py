@@ -233,8 +233,11 @@ class ServerRunResult:
 
 @dataclass(frozen=True, slots=True)
 class ServerLaunchResult:
-    metadata: ServerMetadata
+    metadata: ServerMetadata | None
     pid: int
+    # The foreground command finished cleanly before or during the handshake,
+    # e.g. the workflow was already complete; metadata may be gone or absent.
+    completed: bool = False
 
 
 class ServerStopStatus(Enum):
@@ -866,16 +869,28 @@ def launch_server(
                 and metadata.pid == process.pid
                 and metadata.instance_id != previous_instance
             ):
-                if identity_reader(process.pid) != metadata.process_identity:
+                identity_matches = (
+                    identity_reader(process.pid) == metadata.process_identity
+                )
+                # Poll after reading the identity: an exited process no
+                # longer has one, and a clean exit is not a mismatch.
+                return_code = process.poll()
+                if return_code == 0:
+                    return ServerLaunchResult(metadata, process.pid, completed=True)
+                if not identity_matches:
                     raise ServerLaunchError(
                         "server PID metadata does not match the spawned process"
                     )
-                if process.poll() is not None:
+                if return_code is not None:
                     raise ServerLaunchError(
                         "server exited during the startup handshake"
                     )
                 return ServerLaunchResult(metadata, process.pid)
             return_code = process.poll()
+            if return_code == 0:
+                # A clean exit can beat the handshake: the lifecycle finished
+                # before readiness, or its lease already removed the metadata.
+                return ServerLaunchResult(None, process.pid, completed=True)
             if return_code is not None:
                 raise ServerLaunchError(
                     f"server foreground command exited with status {return_code}"

@@ -1776,10 +1776,11 @@ def _run_server_launch_mode(
     runtime: RuntimeComponents,
     stdout: TextIO,
 ) -> int:
-    from Pegasus.monitor.server import launch_server
+    from Pegasus.monitor.server import ServerLaunchError, launch_server
 
     location = _locate_for_server(args, runtime)
     log_path = _validated_event_log_path(args, location)
+    previous_log = _file_identity(log_path)
     result = launch_server(
         _server_foreground_argv(
             args,
@@ -1789,11 +1790,49 @@ def _run_server_launch_mode(
         _server_paths_for_log(log_path),
         cwd=Path(location.submit_dir),
     )
+    if result.completed:
+        if not _server_wrote_final_log(log_path, previous_log):
+            raise ServerLaunchError(
+                "server exited before recording a complete event log"
+            )
+        print(
+            f"pegasus-monitor server pid {result.pid} finished: "
+            f"workflow already complete; log {log_path}",
+            file=stdout,
+        )
+        return 0
     print(
         f"pegasus-monitor server pid {result.pid}; log {log_path}",
         file=stdout,
     )
     return 0
+
+
+def _file_identity(path: Path) -> tuple[int, int, int] | None:
+    try:
+        status = path.stat()
+    except FileNotFoundError:
+        return None
+    return (status.st_dev, status.st_ino, status.st_mtime_ns)
+
+
+def _server_wrote_final_log(
+    log_path: Path, previous: tuple[int, int, int] | None
+) -> bool:
+    """Whether a server that already exited left a fresh, finished stream."""
+
+    from Pegasus.monitor.event_log import read_jsonl
+    from Pegasus.monitor.models import CheckpointRecord
+
+    # The server always starts a new stream by atomic replacement, so an
+    # unchanged file means it never wrote one and an old final is stale.
+    current = _file_identity(log_path)
+    if current is None or current == previous:
+        return False
+    return any(
+        isinstance(record, CheckpointRecord) and record.reason == "final"
+        for record in read_jsonl(log_path).records
+    )
 
 
 def _explicit_server_paths(metadata_path: Path) -> object:
