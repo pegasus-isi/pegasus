@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import shutil
@@ -941,7 +942,9 @@ def test_whitespace_bearing_secret_is_redacted_before_normalization(
 def test_deadline_clock_is_mechanical_not_a_semantic_timestamp(
     fake_bin: Path,
 ) -> None:
-    readings = iter((1_000_000.0, 1_000_000.01, 1_000_000.02, 1_000_000.03))
+    # The bounded reader samples the clock once per select wakeup, and how many
+    # wakeups it takes varies with scheduling, so never run out of readings.
+    readings = itertools.count(1_000_000.0, 0.01)
     provider = observer(
         fake_bin,
         payload=FIXTURES / "queue.json",

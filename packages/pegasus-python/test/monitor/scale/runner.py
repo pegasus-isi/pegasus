@@ -637,7 +637,9 @@ def run_worker(
     observed_cardinalities = validate_workload(workload, config)
     workload = _runtime_workload(workload, "worker")
     started_wall = time.perf_counter()
-    started_cpu = time.process_time()
+    # Thread CPU, not process CPU: the live burst runs a synthetic workflow
+    # producer thread in this process, and it is not monitor work.
+    started_cpu = time.thread_time()
     reader = StampedeReader(workload.database_path, WORKFLOW, busy_timeout_seconds=0.25)
     refresh_samples: list[float] = []
     transaction_samples: list[float] = []
@@ -683,7 +685,7 @@ def run_worker(
         publication,
         publication.sequence,
     )
-    monitor_cpu_seconds = time.process_time() - started_cpu
+    monitor_cpu_seconds = time.thread_time() - started_cpu
     # Read CPU before the enclosing wall clock so the measured CPU interval is
     # nested inside the wall interval. The inverse order can report slightly
     # more than one core for this single-threaded probe on very short runs.
