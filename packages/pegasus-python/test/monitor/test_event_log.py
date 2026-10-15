@@ -70,6 +70,7 @@ from Pegasus.monitor.models import (
     WorkflowSnapshot,
     WorkflowTransitionWatermark,
 )
+from Pegasus.monitor.replay import ReplayEngine
 
 WORKFLOW = WorkflowIdentity("wf-selected", "wf-root")
 GENERATION = DatabaseGeneration(1, 10, 20)
@@ -403,7 +404,9 @@ def test_writer_streams_checkpoint_without_whole_snapshot_conversion(
 
 def test_new_writer_atomically_replaces_existing_torn_stream(tmp_path) -> None:
     path = tmp_path / "workflow-events.jsonl"
-    path.write_bytes(b'{"torn":')
+    path.write_bytes(
+        encode_record(StreamHeader(0, "old", WORKFLOW, 0.0, "6.0")) + b'{"torn":'
+    )
     writer = EventLogWriter(
         path,
         WORKFLOW,
@@ -501,6 +504,88 @@ def test_writer_emits_periodic_and_final_checkpoints(tmp_path) -> None:
         if isinstance(record, CheckpointRecord)
     ]
     assert reasons == ["initial", "periodic", "final"]
+
+
+def test_truncated_job_suffix_recovers_all_current_states(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    before = _moderate_snapshot(2)
+    transitions = tuple(
+        replace(
+            job.transition,
+            identity=replace(
+                job.transition.identity,
+                state="JOB_HELD",
+                timestamp=Decimal("10"),
+                jobstate_submit_seq=2,
+            ),
+        )
+        for job in before.jobs
+    )
+    after = replace(
+        before,
+        epoch=SnapshotEpoch(2),
+        snapshot_at_epoch=10.0,
+        jobs=tuple(
+            replace(
+                job,
+                state=transition.identity.state,
+                state_timestamp=transition.identity.timestamp,
+                transition=transition,
+            )
+            for job, transition in zip(before.jobs, transitions)
+        ),
+        recent_transitions=transitions[-1:],
+        watermarks=tuple(
+            JobTransitionWatermark(item.identity.job_instance_id, 2, (item.identity,))
+            for item in transitions
+        ),
+    )
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    try:
+        writer.record_snapshot(before, recorded_at_epoch=1.0)
+        writer.record_snapshot(after, recorded_at_epoch=10.0)
+        size = path.stat().st_size
+        writer.record_snapshot(after, recorded_at_epoch=11.0)
+        assert path.stat().st_size == size
+    finally:
+        writer.close()
+
+    replayed = ReplayEngine(path, speed=0).replay()
+    assert _records(path)[-1].reason == "transition_gap"
+    assert replayed.complete
+    assert replayed.snapshot == after
+    assert [job.state for job in replayed.snapshot.jobs] == ["JOB_HELD", "JOB_HELD"]
+
+
+def test_missing_workflow_transition_forces_checkpoint(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    before = _snapshot()
+    transition = _workflow_transition("WORKFLOW_TERMINATED", "2", 1)
+    after = replace(
+        before,
+        epoch=SnapshotEpoch(2),
+        workflow=replace(
+            before.workflow,
+            state="WORKFLOW_TERMINATED",
+            status=1,
+            ended_at=Decimal("2"),
+            transition=transition,
+        ),
+        recent_workflow_transitions=(),
+        workflow_watermark=replace(
+            before.workflow_watermark,
+            identities=before.workflow_watermark.identities + (transition.identity,),
+        ),
+    )
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    try:
+        writer.record_snapshot(before, recorded_at_epoch=1.0)
+        writer.record_snapshot(after, recorded_at_epoch=2.0)
+    finally:
+        writer.close()
+
+    assert _records(path)[-1].reason == "transition_gap"
+    assert ReplayEngine(path, speed=0).replay().snapshot == after
 
 
 def test_attach_to_completed_is_explicit_and_repeated_final_is_idempotent(
@@ -682,6 +767,60 @@ def test_diagnostic_epoch_must_match_current_authoritative_snapshot(tmp_path) ->
         )
 
 
+@pytest.mark.parametrize("guard", ["disk", "size"])
+def test_paused_diagnostics_resume_from_active_findings(tmp_path, guard) -> None:
+    path = tmp_path / "events.jsonl"
+    disk = types.SimpleNamespace(free=1024**3)
+    writer = EventLogWriter(
+        path, WORKFLOW, "6.0", min_free_mb=100, disk_usage=lambda _path: disk
+    )
+    finding = types.SimpleNamespace(
+        exec_job_id="compute_ID0001",
+        code="held_unknown",
+        severity=DiagnosticSeverity.WARNING,
+        summary="Job is held",
+        job_provenance="db_confirmed",
+        evidence=(),
+    )
+    snapshot = _snapshot(epoch=2, state="JOB_HELD", timestamp="2", sequence=2)
+    try:
+        writer.record_snapshot(_snapshot(), recorded_at_epoch=1.0)
+        if guard == "disk":
+            disk.free = 0
+        else:
+            writer.max_log_bytes = path.stat().st_size
+        writer.record_snapshot(snapshot, recorded_at_epoch=2.0)
+        assert writer.status.paused
+        writer.record_diagnostics(
+            types.SimpleNamespace(findings=(finding,), new_findings=(finding,)),
+            snapshot_epoch=snapshot.epoch,
+            recorded_at_epoch=2.0,
+        )
+        writer.record_diagnostics(
+            types.SimpleNamespace(new_findings=()),
+            snapshot_epoch=snapshot.epoch,
+            recorded_at_epoch=2.0,
+        )
+        assert not any(isinstance(item, DiagnosticRecord) for item in _records(path))
+
+        disk.free = 1024**3
+        writer.max_log_bytes = None
+        writer.record_snapshot(snapshot, recorded_at_epoch=3.0)
+        assert not writer.status.paused
+        writer.record_diagnostics(
+            types.SimpleNamespace(findings=(finding,), new_findings=()),
+            snapshot_epoch=snapshot.epoch,
+            recorded_at_epoch=3.0,
+        )
+    finally:
+        writer.close()
+
+    replayed = ReplayEngine(path, speed=0).replay()
+    assert replayed.complete
+    assert replayed.snapshot == snapshot
+    assert [item.code for item in replayed.current_diagnostics] == ["held_unknown"]
+
+
 def test_snapshot_workflow_must_match_writer_workflow(tmp_path) -> None:
     writer = EventLogWriter(
         tmp_path / "events.jsonl",
@@ -731,7 +870,9 @@ def test_path_replacement_starts_fresh_stream_with_replacement_checkpoint(
     writer.record_snapshot(_snapshot(), recorded_at_epoch=1.0)
 
     replacement = tmp_path / "replacement"
-    replacement.write_text("external replacement")
+    replacement.write_bytes(
+        encode_record(StreamHeader(0, "external", WORKFLOW, 0.0, "6.0"))
+    )
     os.replace(replacement, path)
     writer.record_snapshot(_snapshot(epoch=2), recorded_at_epoch=2.0)
     writer.close()
@@ -760,13 +901,15 @@ def test_replacement_checkpoint_reason_survives_guarded_start_retry(tmp_path) ->
     )
     writer.record_snapshot(_snapshot(), recorded_at_epoch=1.0)
     replacement = tmp_path / "replacement"
-    replacement.write_text("external replacement")
+    replacement.write_bytes(
+        encode_record(StreamHeader(0, "external", WORKFLOW, 0.0, "6.0"))
+    )
     os.replace(replacement, path)
 
     state["free"] = 1
     writer.record_snapshot(_snapshot(epoch=2), recorded_at_epoch=2.0)
     assert writer.status.started is False
-    assert path.read_text() == "external replacement"
+    assert _records(path) == (StreamHeader(0, "external", WORKFLOW, 0.0, "6.0"),)
 
     state["free"] = 1000 * 1024 * 1024
     writer.record_snapshot(_snapshot(epoch=2), recorded_at_epoch=3.0)
@@ -813,7 +956,8 @@ def test_initial_write_failure_preserves_target_and_retry_starts_clean_stream(
     tmp_path, monkeypatch
 ) -> None:
     path = tmp_path / "events.jsonl"
-    path.write_text("preserve until complete")
+    original = encode_record(StreamHeader(0, "old", WORKFLOW, 0.0, "6.0"))
+    path.write_bytes(original)
     writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0, stream_id="s")
     real_write = os.write
     state = {"fail": True}
@@ -826,7 +970,7 @@ def test_initial_write_failure_preserves_target_and_retry_starts_clean_stream(
 
     monkeypatch.setattr(os, "write", fail_once)
     writer.record_snapshot(_snapshot(), recorded_at_epoch=1.0)
-    assert path.read_text() == "preserve until complete"
+    assert path.read_bytes() == original
     assert writer.status.started is False
 
     writer.record_snapshot(_snapshot(), recorded_at_epoch=2.0)
@@ -878,3 +1022,85 @@ def test_recovery_batch_write_failure_extends_gap_and_retries_atomically(
     assert (gap.first_missing_sequence, gap.last_missing_sequence) == (2, 4)
     assert isinstance(records[-1], CheckpointRecord)
     assert records[-1].reason == "recovery"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "x.dag.dagman.out",
+        "x.condor.sub",
+        "x.dag.rescue001",
+        "x.out.000",
+        "subworkflow.dag",
+        "events.jsonl",
+    ],
+)
+@pytest.mark.parametrize("replaced", [False, True])
+def test_writer_preserves_non_monitor_files(tmp_path, name, replaced):
+    path = tmp_path / name
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    if replaced:
+        writer.record_snapshot(_snapshot(), recorded_at_epoch=1)
+    other = tmp_path / "other"
+    original = b"precious workflow data\n"
+    other.write_bytes(original)
+    os.replace(other, path)
+    try:
+        with pytest.raises(
+            UnsafeEventLogPath, match="not a pegasus-monitor event stream"
+        ):
+            writer.record_snapshot(_snapshot(epoch=2), recorded_at_epoch=2)
+        assert path.read_bytes() == original
+    finally:
+        writer.close()
+
+
+def test_periodic_checkpoints_preserve_findings_without_reemitting(tmp_path):
+    path = tmp_path / "events.jsonl"
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0, checkpoint_interval=1)
+    finding = types.SimpleNamespace(
+        exec_job_id="compute_ID0001", code="held_unknown", summary="held", evidence=()
+    )
+    try:
+        for epoch in range(1, 6):
+            snapshot = _snapshot(epoch=epoch, state="JOB_HELD")
+            writer.record_snapshot(snapshot, recorded_at_epoch=float(epoch))
+            writer.record_diagnostics(
+                types.SimpleNamespace(
+                    findings=(finding,), new_findings=(finding,) if epoch == 1 else ()
+                ),
+                snapshot_epoch=snapshot.epoch,
+                recorded_at_epoch=float(epoch),
+            )
+    finally:
+        writer.close()
+    assert len([r for r in _records(path) if isinstance(r, DiagnosticRecord)]) == 1
+    result = ReplayEngine(path, speed=0).replay()
+    assert [r.code for r in result.current_diagnostics] == ["held_unknown"]
+
+
+def test_recovery_reemits_recorded_findings_at_unchanged_epoch(tmp_path):
+    path = tmp_path / "events.jsonl"
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    finding = types.SimpleNamespace(
+        exec_job_id="compute_ID0001", code="held_unknown", summary="held", evidence=()
+    )
+    snapshot = _snapshot(state="JOB_HELD")
+    batch = types.SimpleNamespace(findings=(finding,), new_findings=(finding,))
+    try:
+        writer.record_snapshot(snapshot, recorded_at_epoch=1)
+        writer.record_diagnostics(
+            batch, snapshot_epoch=snapshot.epoch, recorded_at_epoch=1
+        )
+        writer.max_log_bytes = 1
+        writer.record_snapshot(snapshot, recorded_at_epoch=2)
+        writer.max_log_bytes = None
+        writer.record_snapshot(snapshot, recorded_at_epoch=3)
+        batch.new_findings = ()
+        writer.record_diagnostics(
+            batch, snapshot_epoch=snapshot.epoch, recorded_at_epoch=3
+        )
+    finally:
+        writer.close()
+    result = ReplayEngine(path, speed=0).replay()
+    assert [record.code for record in result.current_diagnostics] == ["held_unknown"]

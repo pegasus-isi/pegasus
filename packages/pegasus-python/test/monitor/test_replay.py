@@ -21,6 +21,7 @@ from __future__ import annotations
 import builtins
 import gc
 import weakref
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 
@@ -227,6 +228,35 @@ def test_timing_is_frame_based_and_scaled_by_speed(tmp_path) -> None:
     assert sleeps == []
     with pytest.raises(ValueError, match="speed"):
         ReplayEngine(path, speed=-1)
+
+
+@pytest.mark.parametrize("diagnostic_epoch", [2, 3])
+def test_current_diagnostics_allow_noop_refresh(
+    diagnostic_epoch,
+) -> None:
+    initial = _snapshot(epoch=2)
+    diagnostic = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(diagnostic_epoch),
+        3.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "held_unknown",
+        DiagnosticSeverity.WARNING,
+        "Job is held by HTCondor",
+        (),
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 2.0, initial, "initial"),
+            diagnostic,
+        )
+    )
+
+    assert result.complete
+    assert result.snapshot == initial
+    assert result.current_diagnostics == (diagnostic,)
 
 
 def test_gap_discards_incremental_records_until_recovery_checkpoint() -> None:
@@ -554,3 +584,140 @@ def test_replay_identifies_checkpoint_without_materializing_json(monkeypatch) ->
 
     assert result.complete is True
     assert result.frames[-1].record_types == ("header", "checkpoint")
+
+
+@pytest.mark.parametrize(
+    "codes", [("held_unknown", "memory_exceeded"), ("exit_code_1", "exit_code_1")]
+)
+def test_diagnostic_replacement_supersedes_same_job(codes):
+    first = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(2),
+        2.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        codes[0],
+        DiagnosticSeverity.WARNING,
+        "first",
+        (),
+    )
+    second = replace(
+        first,
+        sequence=3,
+        snapshot_epoch=SnapshotEpoch(3),
+        code=codes[1],
+        summary="replacement",
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, _snapshot("JOB_HELD"), "initial"),
+            first,
+            second,
+        )
+    )
+    assert result.current_diagnostics == (second,)
+
+
+@pytest.mark.parametrize("checkpoint", [False, True])
+def test_unrelated_job_transition_retains_finding_until_problem_changes(checkpoint):
+    snapshot = _snapshot("JOB_HELD")
+    job = snapshot.jobs[0]
+    identity = JobAttemptIdentity(3, 11, 2)
+    other_transition = replace(
+        job.transition,
+        exec_job_id="other",
+        job_submit_seq=2,
+        identity=replace(job.transition.identity, job_instance_id=11),
+    )
+    other = replace(
+        job,
+        job_id=3,
+        exec_job_id="other",
+        current_attempt=identity,
+        attempts=(replace(job.attempts[0], identity=identity),),
+        transition=other_transition,
+    )
+    snapshot = replace(
+        snapshot,
+        jobs=(*snapshot.jobs, other),
+        watermarks=(
+            *snapshot.watermarks,
+            JobTransitionWatermark(11, 1, (other_transition.identity,)),
+        ),
+    )
+    finding = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        1.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "memory_exceeded",
+        DiagnosticSeverity.WARNING,
+        "held",
+        (),
+    )
+    transition = replace(
+        _job_transition("EXECUTE", timestamp="2", db_sequence=2),
+        exec_job_id="other",
+        job_submit_seq=2,
+        identity=DBTransitionIdentity(11, "EXECUTE", Decimal("2"), 2),
+    )
+    records = [
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, snapshot, "initial"),
+        finding,
+        JobTransitionRecord(3, "stream", SnapshotEpoch(2), 2.0, transition),
+    ]
+    if checkpoint:
+        updated = replay_records(records).snapshot
+        records.append(
+            CheckpointRecord(
+                4, "stream", 3.0, replace(updated, epoch=SnapshotEpoch(3)), "periodic"
+            )
+        )
+    assert replay_records(records).current_diagnostics == (finding,)
+    released = _job_transition("JOB_RELEASED", timestamp="4", db_sequence=4)
+    records.append(
+        JobTransitionRecord(len(records), "stream", SnapshotEpoch(4), 4.0, released)
+    )
+    assert replay_records(records).current_diagnostics == ()
+
+
+def test_checkpoint_attempt_change_expires_diagnostic():
+    snapshot = _snapshot("JOB_HELD")
+    finding = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        1.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "held_unknown",
+        DiagnosticSeverity.WARNING,
+        "held",
+        (),
+    )
+    job = snapshot.jobs[0]
+    attempt = replace(job.current_attempt, job_submit_seq=2)
+    changed = replace(
+        snapshot,
+        epoch=SnapshotEpoch(2),
+        recent_transitions=(replace(job.transition, job_submit_seq=2),),
+        jobs=(
+            replace(
+                job,
+                current_attempt=attempt,
+                transition=replace(job.transition, job_submit_seq=2),
+                attempts=(replace(job.attempts[0], identity=attempt),),
+            ),
+        ),
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, snapshot, "initial"),
+            finding,
+            CheckpointRecord(3, "stream", 2.0, changed, "structure_change"),
+        )
+    )
+    assert result.current_diagnostics == ()

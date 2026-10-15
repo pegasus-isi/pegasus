@@ -25,6 +25,7 @@ import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from hashlib import sha256
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -56,6 +57,8 @@ MAX_KICKSTART_NODES = 5000
 MAX_KICKSTART_DEPTH = 32
 MAX_EXCERPT_CHARS = 512
 MAX_SUGGESTIONS = 8
+_KICKSTART_RETRY_SECONDS = 5.0
+_KICKSTART_MAX_ATTEMPTS = 6
 _SAFE_JOB_COMPONENT = re.compile(r"^[A-Za-z0-9_.+@=-]{1,512}$")
 _AUTH_SECRET = re.compile(
     r"(?i)(bearer\s+|(?:authorization\s*:\s*)?basic\s+)([^\s,;|\"']+)"
@@ -711,6 +714,77 @@ def _latest_queue(
     return max(queue, default=None, key=lambda item: item.request.clock.monotonic)
 
 
+def _hold_reasons(results: Iterable[SchedulerQueryResult]) -> dict[str, str]:
+    queue = _latest_queue(results)
+    reasons: dict[str, str] = {}
+    if queue is not None:
+        for item in queue.evidence:
+            row = item.payload.to_json_dict()
+            node = str(row.get("DAGNodeName") or "")
+            reason = str(row.get("HoldReason") or "")
+            if node and reason:
+                reasons[node] = reason
+    return reasons
+
+
+def _diagnostic_inputs(
+    job: JobSnapshot, hold_reason: str | None, submit_dir: Path | None
+) -> tuple[object, ...]:
+    if job.lifecycle is Lifecycle.HELD:
+        return (job.provenance, hold_reason)
+    attempt = _current_attempt(job)
+    return (
+        job.provenance,
+        submit_dir,
+        None if attempt is None else attempt.stdout_path,
+        None if attempt is None else attempt.exit_code,
+        None if attempt is None else attempt.raw_wait_status,
+        _kickstart_identity(job, submit_dir),
+    )
+
+
+def _kickstart_identity(job: JobSnapshot, submit_dir: Path | None) -> tuple | None:
+    if submit_dir is None:
+        return None
+    attempt = _current_attempt(job)
+    relative = _safe_relative_path(
+        job.exec_job_id, None if attempt is None else attempt.stdout_path
+    )
+    if relative is None:
+        return None
+    try:
+        cursor = submit_dir.resolve(strict=True)
+        for part in relative.parts:
+            cursor = cursor / part
+            metadata = cursor.lstat()
+            if stat.S_ISLNK(metadata.st_mode):
+                return None
+        return (
+            metadata.st_dev,
+            metadata.st_ino,
+            metadata.st_size,
+            metadata.st_mtime_ns,
+        )
+    except OSError:
+        return None
+
+
+def _retry_kickstart(finding: DiagnosticFinding) -> bool:
+    return any(
+        evidence.source is SourceName.KICKSTART
+        and evidence.code == "kickstart_parse"
+        and evidence.payload.to_json_dict().get("error_code")
+        != "submit_dir_unavailable"
+        and evidence.payload.to_json_dict().get("status")
+        in {
+            KickstartReadStatus.MISSING.value,
+            KickstartReadStatus.MALFORMED.value,
+            KickstartReadStatus.UNREADABLE.value,
+        }
+        for evidence in finding.evidence
+    )
+
+
 def collect_diagnostics(
     snapshot: EffectiveSnapshot | CoordinatorSnapshot,
     scheduler_results: Sequence[SchedulerQueryResult] | None = None,
@@ -721,15 +795,7 @@ def collect_diagnostics(
     """Diagnose all currently held/failed jobs with no DB or scheduler calls."""
 
     effective, results = _effective_inputs(snapshot, scheduler_results)
-    queue = _latest_queue(results)
-    hold_reasons: dict[str, str] = {}
-    if queue is not None:
-        for item in queue.evidence:
-            row = item.payload.to_json_dict()
-            node = str(row.get("DAGNodeName") or "")
-            reason = str(row.get("HoldReason") or "")
-            if node and reason:
-                hold_reasons[node] = reason
+    hold_reasons = _hold_reasons(results)
     findings: list[DiagnosticFinding] = []
     for job in effective.jobs:
         if job_exec_ids is not None and job.exec_job_id not in job_exec_ids:
@@ -759,6 +825,9 @@ class DiagnosticsEngine:
     def __init__(self, stall_detector: StallDetector | None = None) -> None:
         self._stall_detector = stall_detector or StallDetector()
         self._active_findings: dict[tuple[Any, ...], DiagnosticFinding] = {}
+        self._active_inputs: dict[tuple[Any, ...], tuple[object, ...]] = {}
+        self._retry_after: dict[tuple[Any, ...], float] = {}
+        self._retry_attempts: dict[tuple[Any, ...], int] = {}
 
     def analyze(
         self,
@@ -770,6 +839,9 @@ class DiagnosticsEngine:
     ) -> DiagnosticsBatch:
         if snapshot.effective is None:
             self._active_findings.clear()
+            self._active_inputs.clear()
+            self._retry_after.clear()
+            self._retry_attempts.clear()
             return DiagnosticsBatch(errors=("authoritative_snapshot_unavailable",))
         problem_jobs = tuple(
             job
@@ -778,19 +850,50 @@ class DiagnosticsEngine:
         )
         problem_jobs_by_id = {job.exec_job_id: job for job in problem_jobs}
         current_keys = {self._problem_key(job): job for job in problem_jobs}
+        hold_reasons = _hold_reasons(snapshot.scheduler_results)
+        # An absent queue row is no evidence that a known hold reason changed.
+        for key, job in current_keys.items():
+            if job.lifecycle is Lifecycle.HELD and job.exec_job_id not in hold_reasons:
+                previous = self._active_inputs.get(key)
+                if previous is not None and previous[1]:
+                    hold_reasons[job.exec_job_id] = previous[1]
+        current_inputs = {
+            key: _diagnostic_inputs(job, hold_reasons.get(job.exec_job_id), submit_dir)
+            for key, job in current_keys.items()
+        }
         retained = {
             key: finding
             for key, finding in self._active_findings.items()
             if key in current_keys
         }
-        new_keys = set(current_keys) - set(retained)
-        if new_keys:
+        self._active_inputs = {
+            key: value for key, value in self._active_inputs.items() if key in retained
+        }
+        self._retry_after = {
+            key: value for key, value in self._retry_after.items() if key in retained
+        }
+        self._retry_attempts = {
+            key: value for key, value in self._retry_attempts.items() if key in retained
+        }
+        # Scheduler evidence can arrive after the job state. Retry incomplete
+        # kickstart reads with capped exponential backoff. File changes invalidate
+        # even successful parses and reset the retry budget.
+        now = snapshot.clock.monotonic
+        refresh_keys = {
+            key
+            for key in current_keys
+            if key not in retained
+            or current_inputs[key] != self._active_inputs.get(key)
+            or (key in self._retry_after and now >= self._retry_after[key])
+        }
+        emitted: list[DiagnosticFinding] = []
+        if refresh_keys:
             try:
                 diagnosed = collect_diagnostics(
                     snapshot,
                     submit_dir=submit_dir,
                     job_exec_ids=frozenset(
-                        current_keys[key].exec_job_id for key in new_keys
+                        current_keys[key].exec_job_id for key in refresh_keys
                     ),
                 )
             except (OSError, ValueError, TypeError, yaml.YAMLError) as error:
@@ -803,11 +906,34 @@ class DiagnosticsEngine:
                 if job is None:
                     continue
                 key = self._problem_key(job)
-                if key in new_keys:
+                if key in refresh_keys:
+                    if job.lifecycle is Lifecycle.HELD:
+                        finding = _hold_diagnostic(
+                            job, hold_reasons.get(job.exec_job_id)
+                        )
+                    if finding != retained.get(key):
+                        emitted.append(finding)
                     retained[key] = finding
+                    if current_inputs[key] != self._active_inputs.get(key):
+                        self._retry_attempts.pop(key, None)
+                    self._active_inputs[key] = current_inputs[key]
+                    attempts = self._retry_attempts.get(key, 0) + 1
+                    self._retry_attempts[key] = attempts
+                    self._retry_after.pop(key, None)
+                    if _retry_kickstart(finding) and attempts < _KICKSTART_MAX_ATTEMPTS:
+                        jitter = (
+                            int.from_bytes(
+                                sha256(job.exec_job_id.encode()).digest()[:2], "big"
+                            )
+                            / 65535
+                        )
+                        self._retry_after[key] = now + (
+                            _KICKSTART_RETRY_SECONDS
+                            * 2 ** (attempts - 1)
+                            * (1 + jitter)
+                        )
         else:
             errors = ()
-        emitted = tuple(finding for key, finding in retained.items() if key in new_keys)
         self._active_findings = retained
         stall = self._stall_detector.check(snapshot)
         idle = None
@@ -821,7 +947,9 @@ class DiagnosticsEngine:
                 workflow_owner=workflow_owner,
                 disabled_scheduler_kinds=disabled_scheduler_kinds,
             )
-        return DiagnosticsBatch(tuple(retained.values()), emitted, stall, idle, errors)
+        return DiagnosticsBatch(
+            tuple(retained.values()), tuple(emitted), stall, idle, errors
+        )
 
     @staticmethod
     def _problem_key(job: JobSnapshot) -> tuple[Any, ...]:

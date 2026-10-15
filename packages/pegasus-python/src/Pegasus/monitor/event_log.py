@@ -460,6 +460,7 @@ class EventLogWriter:
         self._known_job_transitions: set[DBTransitionIdentity] = set()
         self._known_workflow_transitions: set[DBWorkflowTransitionIdentity] = set()
         self._diagnostic_keys: set[tuple[object, ...]] = set()
+        self._diagnostics_need_refresh = False
         self._current_snapshot_epoch: SnapshotEpoch | None = None
         self._last_final_snapshot: DatabaseSnapshot | None = None
         self._pending_checkpoint_reason = "initial"
@@ -533,6 +534,8 @@ class EventLogWriter:
             reason = "database_replacement"
         elif structure != self._last_structure:
             reason = "structure_change"
+        elif self._missing_transitions(snapshot):
+            reason = "transition_gap"
         elif (
             self._last_checkpoint_epoch is None
             or now - self._last_checkpoint_epoch >= self.checkpoint_interval
@@ -583,7 +586,7 @@ class EventLogWriter:
     ) -> None:
         """Persist newly emitted diagnostics after recursive bounded redaction."""
 
-        if not self._started or self._closed:
+        if not self._started or self._closed or self._paused:
             return
         if snapshot_epoch != self._current_snapshot_epoch:
             raise ValueError(
@@ -593,13 +596,18 @@ class EventLogWriter:
             self._abandon_replaced_stream()
             return
         now = self._finite_now(recorded_at_epoch)
-        findings = tuple(getattr(diagnostics, "new_findings", ()))
+        findings = tuple(
+            getattr(diagnostics, "findings", getattr(diagnostics, "new_findings", ()))
+            if self._diagnostics_need_refresh
+            else getattr(diagnostics, "new_findings", ())
+        )
         for finding in findings:
             key = (
                 snapshot_epoch.value,
                 getattr(finding, "exec_job_id", None),
                 getattr(finding, "code", None),
                 getattr(finding, "summary", None),
+                tuple(getattr(finding, "evidence", ())),
             )
             if key in self._diagnostic_keys:
                 continue
@@ -643,6 +651,7 @@ class EventLogWriter:
             if not self._write_record(record):
                 return
             self._diagnostic_keys.add(key)
+        self._diagnostics_need_refresh = False
 
     def close(self) -> None:
         """Close the stream descriptor; closing never mutates workflow state."""
@@ -691,6 +700,8 @@ class EventLogWriter:
         self._gap_first = None
         self._gap_last = None
         self._apply_checkpoint(snapshot, recorded_at)
+        self._diagnostics_need_refresh = True
+        self._diagnostic_keys.clear()
         self._last_final_snapshot = snapshot if final else None
         self._pending_checkpoint_reason = "initial"
 
@@ -740,6 +751,8 @@ class EventLogWriter:
         self._gap_first = None
         self._gap_last = None
         self._apply_checkpoint(snapshot, recorded_at)
+        self._diagnostics_need_refresh = True
+        self._diagnostic_keys.clear()
         self._last_final_snapshot = snapshot if final else self._last_final_snapshot
 
     def _write_checkpoint(
@@ -751,6 +764,8 @@ class EventLogWriter:
         if not self._write_record(record):
             return
         self._apply_checkpoint(snapshot, recorded_at)
+        if reason in {"database_replacement", "transition_gap"}:
+            self._diagnostics_need_refresh = True
         if reason == "final":
             self._last_final_snapshot = snapshot
 
@@ -761,6 +776,33 @@ class EventLogWriter:
         self._known_job_transitions = _job_transition_identities(snapshot)
         self._known_workflow_transitions = _workflow_transition_identities(snapshot)
         self._current_snapshot_epoch = snapshot.epoch
+
+    def _missing_transitions(self, snapshot: DatabaseSnapshot) -> bool:
+        """Check that the bounded event suffix covers every new state head."""
+
+        recent_jobs = {item.identity for item in snapshot.recent_transitions}
+        for watermark in snapshot.watermarks:
+            for identity in watermark.identities_at_highest_seq:
+                if (
+                    identity not in self._known_job_transitions
+                    and identity not in recent_jobs
+                ):
+                    return True
+        for job in snapshot.jobs:
+            if (
+                job.transition is not None
+                and job.transition.identity not in self._known_job_transitions
+                and job.transition.identity not in recent_jobs
+            ):
+                return True
+        recent_workflows = {
+            item.identity for item in snapshot.recent_workflow_transitions
+        }
+        return any(
+            identity not in self._known_workflow_transitions
+            and identity not in recent_workflows
+            for identity in snapshot.workflow_watermark.identities
+        )
 
     def _reserve_gap(self, reason: GapReason) -> None:
         self._paused = True
@@ -805,6 +847,8 @@ class EventLogWriter:
     def _atomic_replace_stream(self, records: Sequence[EventRecord]) -> bool:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         original = self._safe_target_status()
+        if original is not None:
+            self._require_event_stream(original)
         temp_path = self.path.with_name(f".{self.path.name}.{uuid4().hex}.tmp")
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_APPEND
         if hasattr(os, "O_CLOEXEC"):
@@ -934,6 +978,28 @@ class EventLogWriter:
         self._validate_target_status(status)
         return status
 
+    def _require_event_stream(self, original: os.stat_result) -> None:
+        """Recognize a monitor header before replacing any existing file.
+
+        A valid header is sufficient: a crash may have torn the stream suffix.
+        A missing or torn header cannot safely identify a monitor-owned file.
+        """
+        flags = (
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        )
+        try:
+            with os.fdopen(os.open(self.path, flags), "rb") as stream:
+                opened = self._validate_open_fd(stream.fileno(), self.path)
+                if (opened.st_dev, opened.st_ino) != (original.st_dev, original.st_ino):
+                    raise UnsafeEventLogPath(f"event-log target changed: {self.path}")
+                header = decode_json_line(stream.readline(1024 * 1024))
+                if not isinstance(header, StreamHeader):
+                    raise ValueError("missing monitor stream header")
+        except (OSError, ValueError, EventLogFormatError) as error:
+            raise UnsafeEventLogPath(
+                f"refusing to replace a file that is not a pegasus-monitor event stream: {self.path}"
+            ) from error
+
     def _validate_target_status(self, status: os.stat_result) -> None:
         if (
             stat.S_ISLNK(status.st_mode)
@@ -951,7 +1017,16 @@ class EventLogWriter:
             unchanged = current is not None and (
                 current.st_dev,
                 current.st_ino,
-            ) == (original.st_dev, original.st_ino)
+                current.st_size,
+                current.st_mtime_ns,
+                current.st_ctime_ns,
+            ) == (
+                original.st_dev,
+                original.st_ino,
+                original.st_size,
+                original.st_mtime_ns,
+                original.st_ctime_ns,
+            )
         if not unchanged:
             raise UnsafeEventLogPath(
                 f"event-log target changed while opening: {self.path}"
@@ -1059,6 +1134,7 @@ class EventLogWriter:
         self._known_job_transitions.clear()
         self._known_workflow_transitions.clear()
         self._diagnostic_keys.clear()
+        self._diagnostics_need_refresh = False
         self._current_snapshot_epoch = None
         self._last_final_snapshot = None
 

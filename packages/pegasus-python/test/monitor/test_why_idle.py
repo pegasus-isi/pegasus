@@ -308,7 +308,10 @@ def test_resource_fit_analysis_is_bounded_at_source_caps() -> None:
     assert any(
         item.reason == "analysis_limit" for item in result.requirement_mismatches
     )
-    assert elapsed < 1.0
+    # Takes ~0.5s on CI-class x86, but Python 3.10's coverage tracer (tox runs
+    # --cov --cov-branch) more than doubles that. Leave headroom while still
+    # catching a regression to uncapped 4096x4096 pairwise analysis.
+    assert elapsed < 3.0
 
 
 def test_unique_queue_owner_is_used_without_environment_fallback(monkeypatch) -> None:

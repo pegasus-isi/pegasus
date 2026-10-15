@@ -20,8 +20,10 @@ from __future__ import annotations
 
 import asyncio
 import io
+import json
 import os
 import stat
+import threading
 import uuid
 from dataclasses import replace
 from pathlib import Path
@@ -30,15 +32,23 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .conftest import ROOT, create_run
+from .conftest import ROOT, create_run, insert_state
 
 from Pegasus.monitor import cli
+from Pegasus.monitor.coordinator import MonitorCoordinator
+from Pegasus.monitor.diagnostics import (
+    DiagnosticCategory,
+    DiagnosticFinding,
+    DiagnosticsEngine,
+)
 from Pegasus.monitor.event_log import EventLogWriter, encode_record, read_jsonl
 from Pegasus.monitor.models import (
     CheckpointRecord,
     ClockSample,
     DBRefreshMode,
     DBRefreshRequest,
+    DiagnosticRecord,
+    DiagnosticSeverity,
     GapRecord,
     JobTransitionRecord,
     SnapshotEpoch,
@@ -68,6 +78,146 @@ if TYPE_CHECKING:
 
 
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "event_log" / "schema-v1-golden.jsonl"
+
+
+@pytest.mark.parametrize("mode", ["--once", "--serve", "--serve-foreground"])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "diamond-0.stampede.db",
+        "diamond-0.stampede.db-wal",
+        "diamond-0.stampede.db-shm",
+        "diamond-0.stampede.db-journal",
+        "DIAMOND-0.stampede.db-journal",
+        "jobstate.log",
+        "braindump.yml",
+        "pegasus.properties",
+        "diamond-0.dag",
+    ],
+)
+def test_log_rejects_workflow_inputs_before_starting(
+    tmp_path, monkeypatch, mode, filename
+) -> None:
+    run = tmp_path / "run0001"
+    create_run(run)
+    braindump = run / "braindump.yml"
+    metadata = json.loads(braindump.read_text())
+    metadata["properties"] = "pegasus.properties"
+    braindump.write_text(json.dumps(metadata))
+    (run / "pegasus.properties").write_text("# workflow properties\n")
+    (run / "diamond-0.dag").write_text("# workflow DAG\n")
+    before = {path: path.read_bytes() for path in run.iterdir()}
+    monkeypatch.setattr(
+        cli, "_make_coordinator", lambda *_: pytest.fail("must reject before startup")
+    )
+    monkeypatch.setattr(
+        "Pegasus.monitor.server.launch_server",
+        lambda *_args, **_kwargs: pytest.fail("must reject before spawning"),
+    )
+    errors = io.StringIO()
+
+    assert (
+        cli.main(
+            [str(run), mode, "--no-condor", "--log", str(run / filename)],
+            stdout=io.StringIO(),
+            stderr=errors,
+        )
+        == 1
+    )
+    assert "overlaps workflow input" in errors.getvalue()
+    assert {path: path.read_bytes() for path in run.iterdir()} == before
+
+
+@pytest.mark.parametrize("alias", ["relative", "symlink_parent", "hardlink"])
+def test_log_rejects_aliases_of_workflow_database(tmp_path, alias) -> None:
+    run = tmp_path / "run0001"
+    database, _ = create_run(run)
+    if alias == "relative":
+        target = Path(os.path.relpath(database, Path.cwd()))
+    elif alias == "symlink_parent":
+        link = tmp_path / "alias"
+        link.symlink_to(run, target_is_directory=True)
+        target = link / database.name
+    else:
+        target = tmp_path / "alias.db"
+        os.link(database, target)
+    before = database.read_bytes()
+    errors = io.StringIO()
+
+    assert (
+        cli.main(
+            [str(run), "--once", "--no-condor", "--log", str(target)],
+            stdout=io.StringIO(),
+            stderr=errors,
+        )
+        == 1
+    )
+    assert "overlaps workflow input" in errors.getvalue()
+    assert database.read_bytes() == before
+
+
+@pytest.mark.parametrize("suffix", ["pid", "lock"])
+def test_server_metadata_cannot_replace_explicit_jobstate(tmp_path, suffix) -> None:
+    run = tmp_path / "run0001"
+    create_run(run)
+    tail = run / f".workflow-events.jsonl.{suffix}"
+    tail.write_text("100 INTERNAL *** MONITORD_STARTED ***\n")
+    before = tail.read_bytes()
+    errors = io.StringIO()
+
+    assert (
+        cli.main(
+            [
+                str(run),
+                "--serve-foreground",
+                "--no-condor",
+                "--jobstate-path",
+                str(tail),
+            ],
+            stdout=io.StringIO(),
+            stderr=errors,
+        )
+        == 1
+    )
+    assert "overlaps workflow input" in errors.getvalue()
+    assert tail.read_bytes() == before
+
+
+def test_late_diagnostic_is_visible_in_replay_once(tmp_path) -> None:
+    database, _ = create_run(tmp_path / "run0001", terminated=False)
+    insert_state(database, 100, "JOB_HELD", 125, 2)
+    initial = _refresh_snapshot(database)
+    path = tmp_path / "events.jsonl"
+    finding = DiagnosticFinding(
+        "cluster_ID0000001",
+        DiagnosticCategory.HELD,
+        DiagnosticSeverity.WARNING,
+        "held_unknown",
+        "Job is held by HTCondor",
+        (),
+        "db_confirmed",
+        (),
+    )
+    writer = EventLogWriter(path, ROOT, "6.0", min_free_mb=0)
+    writer.record_snapshot(initial, recorded_at_epoch=1000)
+    refreshed = replace(initial, epoch=SnapshotEpoch(2), snapshot_at_epoch=1002)
+    writer.record_snapshot(refreshed, recorded_at_epoch=1002)
+    writer.record_diagnostics(
+        SimpleNamespace(findings=(finding,), new_findings=(finding,)),
+        snapshot_epoch=refreshed.epoch,
+        recorded_at_epoch=1002,
+    )
+    writer.close()
+
+    replayed = ReplayEngine(path, speed=0, retain_frames=False).replay()
+    assert replayed.snapshot == initial
+    assert len(replayed.current_diagnostics) == 1
+    output = io.StringIO()
+    assert (
+        cli.main(["--replay", str(path), "--once"], stdout=output, stderr=io.StringIO())
+        == 0
+    )
+    assert finding.summary in output.getvalue()
 
 
 def _snapshot_signature(snapshot: object) -> tuple[object, ...]:
@@ -272,6 +422,87 @@ def test_disk_guard_recovers_at_an_authoritative_checkpoint(tmp_path: Path) -> N
     assert replayed.awaiting_checkpoint is False
     assert replayed.snapshot is not None
     assert _snapshot_signature(replayed.snapshot) == _snapshot_signature(snapshot)
+
+
+def test_diagnostic_capture_recovers_while_workflow_writer_continues(
+    tmp_path: Path, monkeypatch
+) -> None:
+    run = tmp_path / "run0001"
+    database, _tail = create_run(run, terminated=False)
+    disk = SimpleNamespace(free=1024**3)
+    event_log = tmp_path / "workflow-events.jsonl"
+    writer = EventLogWriter(
+        event_log, ROOT, "integration", min_free_mb=1, disk_usage=lambda _path: disk
+    )
+    recorder = cli._EventRecorder(writer)
+    coordinator = MonitorCoordinator(ROOT, StampedeReader(database, ROOT))
+    diagnostics = DiagnosticsEngine()
+    checkpoint_started = threading.Event()
+    finish_checkpoint = threading.Event()
+    write_records = writer._write_records
+
+    def delayed_recovery(fd, records):
+        if any(
+            isinstance(record, CheckpointRecord) and record.reason == "recovery"
+            for record in records
+        ):
+            checkpoint_started.set()
+            assert finish_checkpoint.wait(5)
+        write_records(fd, records)
+
+    monkeypatch.setattr(writer, "_write_records", delayed_recovery)
+
+    async def capture():
+        publication = coordinator.latest
+        analysis = SimpleNamespace(
+            diagnostics=diagnostics.analyze(publication, submit_dir=run)
+        )
+        await recorder.capture(coordinator, publication, analysis=analysis)
+
+    async def scenario():
+        try:
+            await coordinator.bootstrap()
+            await capture()
+            disk.free = 0
+            insert_state(database, 100, "JOB_HELD", 120, 2)
+            await coordinator.refresh_database_once()
+            await capture()
+            assert writer.status.paused
+            assert coordinator.latest.effective.jobs[0].state == "JOB_HELD"
+
+            disk.free = 1024**3
+            await coordinator.refresh_database_once()
+            recovery = asyncio.create_task(capture())
+            try:
+                assert await asyncio.to_thread(checkpoint_started.wait, 2)
+                # A real workflow DB commit must finish while the monitor is
+                # blocked writing its recovery checkpoint on another thread.
+                await asyncio.wait_for(
+                    asyncio.to_thread(
+                        insert_state, database, 100, "JOB_RELEASED", 130, 3
+                    ),
+                    timeout=2,
+                )
+            finally:
+                finish_checkpoint.set()
+                await recovery
+            assert not writer.status.paused
+            await coordinator.refresh_database_once()
+            await capture()
+            return coordinator.reconciler.database
+        finally:
+            finish_checkpoint.set()
+            await coordinator.close()
+            await recorder.close()
+
+    latest = asyncio.run(scenario())
+    assert latest.jobs[0].state == "JOB_RELEASED"
+    records = read_jsonl(event_log).records
+    assert any(isinstance(record, GapRecord) for record in records)
+    assert any(isinstance(record, DiagnosticRecord) for record in records)
+    replayed = ReplayEngine(event_log, speed=0).replay()
+    assert replayed.complete
+    assert _snapshot_signature(replayed.snapshot) == _snapshot_signature(latest)
 
 
 def test_gap_recovery_ignores_incremental_state_and_tolerates_torn_record(
@@ -480,3 +711,48 @@ def test_remote_reader_matches_replay_with_bounded_shell_free_ssh() -> None:
         RemoteLocation.parse("-oProxyCommand=bad:/tmp/events.jsonl")
     with pytest.raises(ValueError, match="SSH config"):
         RemoteJSONLReader("host:/tmp/events.jsonl", ssh_config="-unsafe")
+
+
+def test_log_validation_accepts_location_without_optional_paths(tmp_path):
+    from types import SimpleNamespace
+
+    args = SimpleNamespace(
+        log=str(tmp_path / "events.jsonl"), serve=False, serve_foreground=False
+    )
+    location = SimpleNamespace(
+        submit_dir=tmp_path, root_submit_dir=tmp_path, dag_name="workflow.dag"
+    )
+    assert cli._validated_event_log_path(args, location) == tmp_path / "events.jsonl"
+
+
+def test_foreground_reuses_validated_log_path(tmp_path, monkeypatch):
+    run = tmp_path / "run0001"
+    create_run(run)
+    log = tmp_path / "events.jsonl"
+    calls = []
+    original = cli._event_log_path
+
+    def event_log_path(*args):
+        calls.append(1)
+        assert len(calls) == 1, "event log path recomputed after validation"
+        return original(*args)
+
+    monkeypatch.setattr(cli, "_event_log_path", event_log_path)
+    errors = io.StringIO()
+    assert (
+        cli.main(
+            [
+                str(run),
+                "--serve-foreground",
+                "--no-condor",
+                "--no-live-events",
+                "--log",
+                str(log),
+            ],
+            stdout=io.StringIO(),
+            stderr=errors,
+        )
+        == 0
+    ), errors.getvalue()
+    assert len(calls) == 1
+    assert log.exists()

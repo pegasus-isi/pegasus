@@ -200,8 +200,12 @@ checkpoint. A replaced output file starts a new stream with a new
 ``stream_id`` and complete checkpoint.
 
 Event logs, server metadata, and singleton state use restrictive permissions
-and reject unsafe symlink or non-regular-file targets. Logging failures and
-capacity guards do not modify or stop the workflow.
+and reject unsafe symlink or non-regular-file targets. An existing event-log
+target is replaced only when it contains a valid pegasus-monitor stream header.
+The CLI also rejects output paths that overlap the located workflow database
+and its sidecars, live event log, braindump, properties, or root DAG file before
+monitoring starts.
+Logging failures and capacity guards do not modify or stop the workflow.
 
 
 Replay, Server, and Remote Modes

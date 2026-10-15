@@ -127,15 +127,9 @@ class ReplayResult:
 
     @property
     def current_diagnostics(self) -> tuple[DiagnosticRecord, ...]:
-        """Diagnostic results associated with the final snapshot epoch."""
+        """Latest findings for problems still active in the replayed state."""
 
-        if self.snapshot is None:
-            return ()
-        return tuple(
-            item
-            for item in self.diagnostics
-            if item.snapshot_epoch == self.snapshot.epoch
-        )
+        return self.diagnostics if self.snapshot is not None else ()
 
 
 class ReplayAccumulator:
@@ -156,7 +150,8 @@ class ReplayAccumulator:
         self._recent_transition_limit = recent_transition_limit
         self._recent_workflow_transition_limit = recent_workflow_transition_limit
         self._last_sequence: int | None = None
-        self._diagnostics: list[DiagnosticRecord] = []
+        self._diagnostics: dict[str, DiagnosticRecord] = {}
+        self._diagnostic_problems: dict[str, tuple[object, ...]] = {}
         self._enrichments: list[EnrichmentRecord] = []
         self._snapshot_cache: DatabaseSnapshot | None = None
         self._indexed = False
@@ -219,7 +214,7 @@ class ReplayAccumulator:
 
     @property
     def diagnostics(self) -> tuple[DiagnosticRecord, ...]:
-        return tuple(self._diagnostics)
+        return tuple(self._diagnostics.values())
 
     @property
     def enrichments(self) -> tuple[EnrichmentRecord, ...]:
@@ -267,7 +262,12 @@ class ReplayAccumulator:
         if isinstance(record, WorkflowTransitionRecord):
             return self._apply_workflow_transition(record)
         if isinstance(record, DiagnosticRecord):
-            self._diagnostics.append(record)
+            self._ensure_indexed_state()
+            job_id = str(record.target.to_json_dict().get("exec_job_id", ""))
+            index = self._job_indexes.get(job_id)
+            if index is not None:
+                self._diagnostics[job_id] = record
+                self._diagnostic_problems[job_id] = self._problem_key(self._jobs[index])
             return True
         if isinstance(record, EnrichmentRecord):
             if (
@@ -293,6 +293,7 @@ class ReplayAccumulator:
         self.awaiting_checkpoint = True
         self._last_sequence = 0
         self._diagnostics.clear()
+        self._diagnostic_problems.clear()
         self._enrichments.clear()
 
     def _sequence_is_contiguous(self, record: EventRecord) -> bool:
@@ -314,13 +315,18 @@ class ReplayAccumulator:
         assert self.header is not None
         if record.snapshot.workflow.workflow != self.header.workflow:
             raise ReplayStreamError("checkpoint workflow does not match stream header")
+        if self.awaiting_checkpoint:
+            self._diagnostics.clear()
+            self._diagnostic_problems.clear()
         self._load_snapshot(record.snapshot)
         self.awaiting_checkpoint = False
-        self._diagnostics = [
-            item
-            for item in self._diagnostics
-            if item.snapshot_epoch == record.snapshot.epoch
-        ]
+        active = {
+            job.exec_job_id: self._problem_key(job) for job in record.snapshot.jobs
+        }
+        for job_id in tuple(self._diagnostics):
+            if active.get(job_id) != self._diagnostic_problems[job_id]:
+                self._diagnostics.pop(job_id)
+                self._diagnostic_problems.pop(job_id)
         self._expire_enrichments(record.recorded_at_epoch)
 
     def prepare_for_checkpoint_decode(self) -> None:
@@ -433,9 +439,9 @@ class ReplayAccumulator:
         self._epoch = max(self._epoch, snapshot_epoch)
         self._snapshot_at_epoch = recorded_at_epoch
         self._snapshot_cache = None
-        self._diagnostics = [
-            item for item in self._diagnostics if item.snapshot_epoch == self._epoch
-        ]
+
+    def _problem_key(self, job: JobSnapshot) -> tuple[object, ...]:
+        return (self._generation, job.state, job.state_timestamp, job.current_attempt)
 
     def _remember_job_transition(self, transition: DBJobTransition) -> None:
         if transition.identity in self._recent_jobs:
@@ -528,6 +534,12 @@ class ReplayAccumulator:
                 state_timestamp=transition.identity.timestamp,
                 transition=transition,
             )
+        job_id = matching_job.exec_job_id
+        if job_id in self._diagnostics and self._diagnostic_problems[
+            job_id
+        ] != self._problem_key(self._jobs[matching_index]):
+            self._diagnostics.pop(job_id)
+            self._diagnostic_problems.pop(job_id)
         self._advance_snapshot(record)
         return True
 

@@ -415,6 +415,72 @@ def test_engine_rediagnoses_held_after_release_and_rehold() -> None:
     assert len(last.new_findings) == 1
 
 
+def test_engine_refreshes_late_hold_reason_without_duplicate_findings() -> None:
+    engine = DiagnosticsEngine()
+    job = _job("JOB_HELD")
+    first = engine.analyze(_publication(1, job))
+    assert first.findings[0].code == "held_unknown"
+    publication = replace(
+        _publication(2, job), scheduler_results=(_queue("Memory limit exceeded"),)
+    )
+    updated = engine.analyze(publication)
+    assert updated.findings[0].code == "memory_exceeded"
+    assert updated.new_findings == updated.findings
+    repeated = engine.analyze(replace(publication, sequence=3))
+    assert repeated.findings == updated.findings
+    assert repeated.new_findings == ()
+
+
+@pytest.mark.parametrize("initial_file", [None, "- mainjob: ["])
+def test_engine_retries_incomplete_kickstart_with_backoff(
+    tmp_path, monkeypatch, initial_file
+) -> None:
+    path = tmp_path / "result.out.000"
+    if initial_file is not None:
+        path.write_text(initial_file)
+    calls = []
+
+    def parse(*args, **kwargs):
+        calls.append(args)
+        return parse_kickstart_output(*args, **kwargs)
+
+    monkeypatch.setattr("Pegasus.monitor.diagnostics.parse_kickstart_output", parse)
+    engine = DiagnosticsEngine()
+    job = _job("JOB_FAILURE", stdout_path=path.name)
+    first = engine.analyze(_publication(1, job), submit_dir=tmp_path)
+    assert first.findings[0].code == "exit_code_1"
+    for sequence in (2, 3, 4, 5):
+        assert (
+            engine.analyze(
+                _publication(sequence, job), submit_dir=tmp_path
+            ).new_findings
+            == ()
+        )
+    assert len(calls) == 1
+    retry = engine.analyze(_publication(11, job), submit_dir=tmp_path)
+    assert retry.new_findings == ()
+    assert len(calls) == 2
+
+    _write_kickstart(path, stderr="No space left on device")
+    recovered = engine.analyze(_publication(12, job), submit_dir=tmp_path)
+    assert recovered.findings[0].code == "no_space"
+    assert recovered.new_findings == recovered.findings
+    assert len(calls) == 3
+    assert engine.analyze(_publication(20, job), submit_dir=tmp_path).new_findings == ()
+    assert len(calls) == 3
+
+
+def test_engine_refreshes_changed_attempt_evidence_without_state_change() -> None:
+    engine = DiagnosticsEngine()
+    job = _job("JOB_FAILURE")
+    first = engine.analyze(_publication(1, job))
+    assert first.findings[0].code == "exit_code_1"
+    changed = replace(job, attempts=(replace(job.attempts[0], raw_wait_status=512),))
+    updated = engine.analyze(_publication(2, changed))
+    assert updated.findings[0].code == "exit_code_2"
+    assert updated.new_findings == updated.findings
+
+
 def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
     jobs = tuple(_indexed_job(index) for index in range(1, 8001))
     effective = _effective_many(jobs)
@@ -457,3 +523,108 @@ def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
     elapsed = monotonic() - started
     assert len(batch.new_findings) == len(jobs)
     assert elapsed < 1.0
+
+
+@pytest.mark.parametrize("missing", [(), (_queue(""),)])
+def test_missing_queue_reason_does_not_downgrade_specific_finding(missing):
+    engine = DiagnosticsEngine()
+    job = _job("JOB_HELD")
+    known = engine.analyze(
+        replace(
+            _publication(1, job), scheduler_results=(_queue("Memory limit exceeded"),)
+        )
+    )
+    for sequence, results in [(2, missing), (3, (_queue("Memory limit exceeded"),))]:
+        batch = engine.analyze(
+            replace(_publication(sequence, job), scheduler_results=results)
+        )
+        assert batch.findings == known.findings
+        assert batch.new_findings == ()
+    released = engine.analyze(_publication(4, _job("JOB_RELEASED")))
+    assert released.findings == ()
+    assert (
+        engine.analyze(_publication(5, _job("JOB_HELD", timestamp="12")))
+        .findings[0]
+        .code
+        == "held_unknown"
+    )
+
+
+def test_unavailable_submit_directory_is_not_retried(monkeypatch):
+    from Pegasus.monitor import diagnostics
+
+    calls = []
+    real = diagnostics.collect_diagnostics
+
+    def collect(*args, **kwargs):
+        calls.append(1)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(diagnostics, "collect_diagnostics", collect)
+    engine = DiagnosticsEngine()
+    for sequence in (1, 10, 100, 1000):
+        engine.analyze(_publication(sequence, _job("JOB_FAILURE")))
+    assert len(calls) == 1
+    assert engine._retry_after == {}
+
+
+def test_kickstart_retries_are_bounded_and_staggered(tmp_path, monkeypatch):
+    calls = []
+
+    def parse(*args, **kwargs):
+        calls.append(args)
+        return parse_kickstart_output(*args, **kwargs)
+
+    monkeypatch.setattr("Pegasus.monitor.diagnostics.parse_kickstart_output", parse)
+    engine = DiagnosticsEngine()
+    job = _job("JOB_FAILURE", stdout_path="missing")
+    engine.analyze(_publication(1, job), submit_dir=tmp_path)
+    deadlines = []
+    now = 1
+    while engine._retry_after:
+        deadline = next(iter(engine._retry_after.values()))
+        deadlines.append(deadline - now)
+        now = deadline
+        publication = replace(_publication(2, job), clock=ClockSample(now, now))
+        engine.analyze(publication, submit_dir=tmp_path)
+    assert len(calls) == 6
+    assert all(b >= 2 * a - 1e-8 for a, b in zip(deadlines, deadlines[1:]))
+    engine.analyze(_publication(10000, job), submit_dir=tmp_path)
+    assert len(calls) == 6
+    _write_kickstart(tmp_path / "missing", stderr="No space left on device")
+    assert (
+        engine.analyze(_publication(10001, job), submit_dir=tmp_path).findings[0].code
+        == "no_space"
+    )
+    deadlines = []
+    for name in ("job1", "job2", "job3"):
+        engine = DiagnosticsEngine()
+        engine.analyze(
+            _publication(
+                1,
+                replace(
+                    job,
+                    exec_job_id=name,
+                    transition=replace(job.transition, exec_job_id=name),
+                ),
+            ),
+            submit_dir=tmp_path / name,
+        )
+        deadlines.append(next(iter(engine._retry_after.values())))
+    assert len(set(deadlines)) == 3
+
+
+@pytest.mark.parametrize("replacement", [False, True])
+def test_parseable_kickstart_changes_refresh_cached_finding(tmp_path, replacement):
+    path = tmp_path / "result.out.000"
+    _write_kickstart(path)
+    engine = DiagnosticsEngine()
+    job = _job("JOB_FAILURE", stdout_path=path.name)
+    engine.analyze(_publication(1, job), submit_dir=tmp_path)
+    target = tmp_path / "replacement" if replacement else path
+    _write_kickstart(target, stderr="No space left on device")
+    if replacement:
+        target.replace(path)
+    batch = engine.analyze(_publication(2, job), submit_dir=tmp_path)
+    assert batch.findings[0].code == "no_space"
+    assert batch.new_findings == batch.findings

@@ -720,6 +720,50 @@ def _event_log_path(args: argparse.Namespace, submit_dir: Path) -> Path:
     return Path(args.log).expanduser().absolute()
 
 
+def _validated_event_log_path(args: argparse.Namespace, location: object) -> Path:
+    """Reject monitor outputs that would replace a workflow input."""
+
+    from Pegasus.monitor.event_log import UnsafeEventLogPath
+
+    log_path = _event_log_path(args, Path(location.submit_dir))
+    outputs = [log_path]
+    if args.serve or args.serve_foreground:
+        paths = _server_paths_for_log(log_path)
+        outputs.extend((paths.metadata, paths.lock))
+    inputs = [
+        Path(value)
+        for name in (
+            "database_path",
+            "jobstate_path",
+            "braindump_path",
+            "root_braindump_path",
+            "properties_path",
+        )
+        if (value := getattr(location, name, None)) is not None
+    ]
+    if (database_path := getattr(location, "database_path", None)) is not None:
+        inputs.extend(
+            Path(f"{database_path}{suffix}") for suffix in ("-wal", "-shm", "-journal")
+        )
+    inputs.append(Path(location.root_submit_dir) / location.dag_name)
+    for output in outputs:
+        resolved = output.resolve()
+        for source in inputs:
+            if (
+                resolved == source.resolve()
+                or (
+                    output.name.casefold() == source.name.casefold()
+                    and output.parent.exists()
+                    and source.parent.exists()
+                    and output.parent.samefile(source.parent)
+                )
+            ) or (output.exists() and source.exists() and output.samefile(source)):
+                raise UnsafeEventLogPath(
+                    f"monitor output {output} overlaps workflow input {source}"
+                )
+    return log_path
+
+
 def _make_event_recorder(
     args: argparse.Namespace,
     location: object,
@@ -739,7 +783,7 @@ def _make_event_recorder(
         "dag_name": context.dag_name,
     }
     writer = EventLogWriter(
-        _event_log_path(args, Path(location.submit_dir)),
+        _validated_event_log_path(args, location),
         location.workflow,
         _version(),
         source_metadata=metadata,
@@ -1487,12 +1531,12 @@ async def _run(
                 jobstate_path=args.jobstate_path,
             )
             context = _load_display_context(location, runtime)
-            coordinator = _make_coordinator(args, location, runtime)
             recorder = (
                 _make_event_recorder(args, location, context)
                 if args.log is not None
                 else None
             )
+            coordinator = _make_coordinator(args, location, runtime)
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(f"pegasus-monitor: {error}", file=stderr)
             return 1
@@ -1675,10 +1719,10 @@ async def _run_server_foreground_mode(
 
     location = _locate_for_server(args, runtime)
     context = _load_display_context(location, runtime)
-    coordinator = _make_coordinator(args, location, runtime)
     recorder = _make_event_recorder(args, location, context)
+    coordinator = _make_coordinator(args, location, runtime)
     lifecycle = _HeadlessMonitorLifecycle(args, coordinator, context, runtime, recorder)
-    paths = _server_paths_for_log(_event_log_path(args, Path(location.submit_dir)))
+    paths = _server_paths_for_log(recorder.writer.path)
     await run_server_foreground(
         lifecycle,
         paths,
@@ -1734,7 +1778,7 @@ def _run_server_launch_mode(
     from Pegasus.monitor.server import launch_server
 
     location = _locate_for_server(args, runtime)
-    log_path = _event_log_path(args, Path(location.submit_dir))
+    log_path = _validated_event_log_path(args, location)
     result = launch_server(
         _server_foreground_argv(
             args,
