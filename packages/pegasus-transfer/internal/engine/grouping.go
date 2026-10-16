@@ -38,13 +38,42 @@ func sortEntries(entries []model.Entry) {
 	})
 }
 
+// containerProtos mirrors transfer.py's container_protos: source protocols
+// whose destination file type (docker vs. singularity) decides the handler.
+var containerProtos = map[string]bool{"docker": true, "shub": true, "library": true}
+
+// dispatchDstProto returns the destination key used for handler dispatch,
+// matching TransferHandlerHandle.__init__: a container source going to a
+// file:// destination with a file type becomes "file::<type>", so e.g. a
+// docker:// image with type singularity selects docker->file::singularity
+// (SingularityHandler) rather than docker->file (DockerHandler).
+func dispatchDstProto(t *model.Transfer) string {
+	if containerProtos[t.SrcProto()] && t.DstType() != "" && t.DstProto() == "file" {
+		return "file::" + t.DstType()
+	}
+	return t.DstProto()
+}
+
+// twoStageDownDst returns the destination key for the download leg of a
+// two-stage transfer, matching transfer.py's middle_in_proto: container
+// sources carry their destination type onto the local temp file so e.g.
+// docker->scp with type singularity becomes docker->file::singularity +
+// file->scp.
+func twoStageDownDst(t *model.Transfer) string {
+	if containerProtos[t.SrcProto()] && t.DstType() != "" {
+		return "file::" + t.DstType()
+	}
+	return "file"
+}
+
 // protoPair returns the (src, dst) protocol pair used for handler dispatch,
 // matching TransferHandlerBase.protocol_check's src=="" convention for
-// mkdir/remove.
+// mkdir/remove. For transfers, dst may carry a "::<type>" suffix (see
+// dispatchDstProto).
 func protoPair(e model.Entry) (src, dst string) {
 	switch v := e.(type) {
 	case *model.Transfer:
-		return v.SrcProto(), v.DstProto()
+		return v.SrcProto(), dispatchDstProto(v)
 	case *model.Mkdir:
 		return "", v.Proto()
 	case *model.Remove:
@@ -55,7 +84,9 @@ func protoPair(e model.Entry) (src, dst string) {
 
 // groupable mirrors transfer.py's transfers_groupable(): same concrete
 // type, never Mkdir, matching proto for Remove, and matching
-// groupable()+src/dst proto for Transfer.
+// groupable()+src/dst proto for Transfer. Unlike transfer.py, the dst
+// comparison uses dispatchDstProto, so container transfers with different
+// destination types never share a group (dispatch only looks at group[0]).
 func groupable(a, b model.Entry) bool {
 	switch av := a.(type) {
 	case *model.Mkdir:
@@ -68,7 +99,7 @@ func groupable(a, b model.Entry) bool {
 		if !ok || !av.Groupable() || !bv.Groupable() {
 			return false
 		}
-		return av.SrcProto() == bv.SrcProto() && av.DstProto() == bv.DstProto()
+		return av.SrcProto() == bv.SrcProto() && dispatchDstProto(av) == dispatchDstProto(bv)
 	}
 	return false
 }
@@ -110,8 +141,8 @@ func dispatch(ctx context.Context, registry *handler.Registry, group []model.Ent
 	src, dst := protoPair(group[0])
 	h := registry.Find(src, dst)
 	if h == nil {
-		if _, ok := group[0].(*model.Transfer); ok {
-			if down, up := findTwoStageHandlers(registry, src, dst); down != nil && up != nil {
+		if t, ok := group[0].(*model.Transfer); ok {
+			if down, up := findTwoStageHandlers(registry, src, twoStageDownDst(t), t.DstProto()); down != nil && up != nil {
 				log.Debug("no direct handler for protocol pair, splitting via local temp file",
 					"src", src, "dst", dst, "downHandler", down.Name(), "upHandler", up.Name())
 				return dispatchTwoStage(ctx, down, up, group, log)
@@ -155,19 +186,21 @@ func dispatch(ctx context.Context, registry *handler.Registry, group []model.Ent
 
 // findTwoStageHandlers looks for a pair of handlers that can bridge an
 // incompatible src->dst pair via a local temporary file: one that accepts
-// src->file (the "down" leg) and one that accepts file->dst (the "up" leg),
-// matching transfer.py's TransferHandlerHandle.__init__ split-transfer
-// fallback (the search it falls into once no single handler answers
-// protocol_check(src_proto, dst_proto) directly). "symlink" as a destination
-// is looked up as "file" instead, matching transfer.py's dst_proto override
-// right before that secondary-handler search -- the actual transfer built in
-// dispatchTwoStage still targets the real symlink:// destination.
-func findTwoStageHandlers(registry *handler.Registry, srcProto, dstProto string) (down, up handler.Handler) {
+// src->downDst (the "down" leg; downDst is "file", or "file::<type>" for
+// container sources, see twoStageDownDst) and one that accepts file->dst (the
+// "up" leg), matching transfer.py's TransferHandlerHandle.__init__
+// split-transfer fallback (the search it falls into once no single handler
+// answers protocol_check(src_proto, dst_proto) directly). "symlink" as a
+// destination is looked up as "file" instead, matching transfer.py's
+// dst_proto override right before that secondary-handler search -- the actual
+// transfer built in dispatchTwoStage still targets the real symlink://
+// destination.
+func findTwoStageHandlers(registry *handler.Registry, srcProto, downDst, dstProto string) (down, up handler.Handler) {
 	lookupDst := dstProto
 	if lookupDst == "symlink" {
 		lookupDst = "file"
 	}
-	down = registry.Find(srcProto, "file")
+	down = registry.Find(srcProto, downDst)
 	up = registry.Find("file", lookupDst)
 	if down == nil || up == nil {
 		return nil, nil
@@ -225,7 +258,13 @@ func runTwoStageTransfer(ctx context.Context, down, up handler.Handler, t *model
 	if err := downLeg.AddSrc(t.SrcSiteLabel(), t.SrcURL(), t.SrcType(), nil); err != nil {
 		return false, err
 	}
-	if err := downLeg.AddDst("local", "file://"+tmpName, "", nil); err != nil {
+	// container sources carry the destination type onto the temp file,
+	// mirroring twoStageDownDst
+	downType := ""
+	if containerProtos[t.SrcProto()] {
+		downType = t.DstType()
+	}
+	if err := downLeg.AddDst("local", "file://"+tmpName, downType, nil); err != nil {
 		return false, err
 	}
 
