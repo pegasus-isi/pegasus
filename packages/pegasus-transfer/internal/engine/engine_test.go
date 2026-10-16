@@ -55,6 +55,20 @@ func mustTransfer(t *testing.T, src, dst string) *model.Transfer {
 	return tr
 }
 
+// mustTypedTransfer is mustTransfer with a destination file type, as the
+// planner emits for container images ("type": "singularity" / "docker").
+func mustTypedTransfer(t *testing.T, src, dst, dstType string) *model.Transfer {
+	t.Helper()
+	tr := model.NewTransfer()
+	if err := tr.AddSrc("local", src, "", nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := tr.AddDst("local", dst, dstType, nil); err != nil {
+		t.Fatal(err)
+	}
+	return tr
+}
+
 func silentLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(discardWriter{}, nil))
 }
@@ -371,6 +385,114 @@ func TestRun_TwoStageSplit_DownloadFails(t *testing.T) {
 	}
 	if up.transferCalls.Load() != 0 {
 		t.Errorf("expected the upload leg to never run after a failed download, got %d calls", up.transferCalls.Load())
+	}
+}
+
+// containerFakes returns fakes with DockerHandler's and SingularityHandler's
+// protocol maps, registered in main.go's order (docker first) so tests prove
+// the destination type wins over registration order.
+func containerFakes() (docker, singularity *fakeHandler) {
+	docker = newFakeHandler([]string{"docker->file", "docker->file::docker"}, 0)
+	singularity = newFakeHandler([]string{
+		"shub->file", "shub->file::singularity",
+		"library->file", "library->file::singularity",
+		"docker->file::singularity",
+	}, 0)
+	return docker, singularity
+}
+
+// TestRun_ContainerDstTypeSelectsHandler reproduces the reported regression:
+// a Container.SINGULARITY image given as a docker:// URL was dispatched to
+// DockerHandler (docker->file) because the destination type was never added
+// to the lookup key, unlike transfer.py.
+func TestRun_ContainerDstTypeSelectsHandler(t *testing.T) {
+	cases := []struct {
+		name, src, dstType string
+		wantSingularity    bool
+	}{
+		{"docker as singularity", "docker://library/python:3.12-slim", "singularity", true},
+		{"docker as docker", "docker://library/python:3.12-slim", "docker", false},
+		{"docker untyped", "docker://library/python:3.12-slim", "", false},
+		{"shub as singularity", "shub://org/image", "singularity", true},
+		{"library as singularity", "library://org/image", "singularity", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			docker, singularity := containerFakes()
+			reg := handler.NewRegistry(docker, singularity)
+
+			entries := []model.Entry{mustTypedTransfer(t, tc.src, "file:///work/image.simg", tc.dstType)}
+
+			ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+			if !ok {
+				t.Fatal("expected success")
+			}
+			wantDocker, wantSing := int32(1), int32(0)
+			if tc.wantSingularity {
+				wantDocker, wantSing = 0, 1
+			}
+			if got := docker.transferCalls.Load(); got != wantDocker {
+				t.Errorf("docker handler calls = %d, want %d", got, wantDocker)
+			}
+			if got := singularity.transferCalls.Load(); got != wantSing {
+				t.Errorf("singularity handler calls = %d, want %d", got, wantSing)
+			}
+		})
+	}
+}
+
+// TestRun_NonContainerDstTypeIgnored makes sure the "::<type>" suffix is only
+// applied to container sources, matching transfer.py.
+func TestRun_NonContainerDstTypeIgnored(t *testing.T) {
+	fh := newFakeHandler([]string{"file->file"}, 0)
+	reg := handler.NewRegistry(fh)
+
+	entries := []model.Entry{mustTypedTransfer(t, "file:///a", "file:///b", "singularity")}
+
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if !ok {
+		t.Fatal("expected success")
+	}
+	if fh.transferCalls.Load() != 1 {
+		t.Errorf("expected file->file handler to run once, got %d calls", fh.transferCalls.Load())
+	}
+}
+
+func TestGroupable_ContainerDstTypeSplitsGroups(t *testing.T) {
+	a := mustTypedTransfer(t, "docker://img/a", "file:///a", "singularity")
+	b := mustTypedTransfer(t, "docker://img/b", "file:///b", "singularity")
+	c := mustTypedTransfer(t, "docker://img/c", "file:///c", "docker")
+
+	if !groupable(a, b) {
+		t.Error("expected same-type container transfers to be groupable")
+	}
+	if groupable(a, c) {
+		t.Error("expected container transfers with different destination types to not be groupable")
+	}
+}
+
+// TestRun_TwoStageSplit_ContainerCarriesDstType checks the down leg of a
+// split container transfer is looked up as docker->file::singularity,
+// matching transfer.py's middle_in_proto.
+func TestRun_TwoStageSplit_ContainerCarriesDstType(t *testing.T) {
+	docker, singularity := containerFakes()
+	up := newFakeHandler([]string{"file->scp"}, 0)
+	reg := handler.NewRegistry(docker, singularity, up)
+
+	entries := []model.Entry{mustTypedTransfer(t, "docker://library/python:3.12-slim", "scp://host/path/image.simg", "singularity")}
+
+	ok := Run(context.Background(), entries, Config{MaxAttempts: 1, NumThreads: 1, Registry: reg, Log: silentLogger()})
+	if !ok {
+		t.Fatal("expected the two-stage split to succeed")
+	}
+	if docker.transferCalls.Load() != 0 {
+		t.Errorf("expected the docker handler to never run, got %d calls", docker.transferCalls.Load())
+	}
+	if singularity.transferCalls.Load() != 1 {
+		t.Errorf("expected the singularity handler to run the download leg once, got %d calls", singularity.transferCalls.Load())
+	}
+	if up.transferCalls.Load() != 1 {
+		t.Errorf("expected the upload leg to run once, got %d calls", up.transferCalls.Load())
 	}
 }
 
