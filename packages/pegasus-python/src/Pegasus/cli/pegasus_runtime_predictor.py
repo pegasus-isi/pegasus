@@ -9,7 +9,7 @@ bin/pegasus-runtime-predictor delegates here so both source installs and
 pip installs use the same code path.
 
 Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
-    pegasus-runtime-predictor [--level N] [--job-id ID] <workflow.yml> <output_dir>
+    pegasus-runtime-predictor [--level N] [--job-sub FILE] <workflow.yml> <output_dir>
 """
 
 import fcntl
@@ -29,6 +29,7 @@ from Pegasus.runtime.predictor import (
     WorkflowRuntimePredictor,
     count_cluster_tasks,
     find_submit_dir,
+    parse_sub_file,
     patch_sub_file,
     scan_sub_files,
 )
@@ -137,7 +138,7 @@ def predict(
     workflow_yml,
     output_dir,
     target_level=None,
-    caller_job_id=None,
+    job_sub=None,
     lof_file=None,
     meta_files=None,
 ):
@@ -148,7 +149,7 @@ def predict(
     :param workflow_yml: path to the workflow YAML file
     :param output_dir: directory to write the predictions and timings to
     :param target_level: the DAG level to predict for, None for all levels
-    :param caller_job_id: the id of the job whose .sub file is to be patched
+    :param job_sub: path to the condor submit file of the job to be patched
     :param lof_file: LOF file listing the input files of the job
     :param meta_files: list of .meta files containing the sizes of the input
                        files of the job
@@ -257,13 +258,19 @@ def predict(
         )
         return
 
+    caller_job_id = None
+    sub_info = None
+    if job_sub:
+        caller_job_id, sub_info = parse_sub_file(Path(job_sub))
+        if caller_job_id is None:
+            print(
+                f"[pegasus-runtime-predictor] No job id found in {job_sub} — skipping patch",
+                file=sys.stderr,
+            )
+
     if caller_job_id:
         with open(json_path) as fh:
             data = json.load(fh)
-
-        submit_dir = find_submit_dir(workflow_yml)
-        sub_scan = scan_sub_files(submit_dir) if submit_dir else {}
-        sub_info = sub_scan.get(caller_job_id)
 
         # Direct match — individual (non-clustered) job
         pred = next(
@@ -351,10 +358,11 @@ def _split_comma_list(ctx, param, value):
     help="DAG level to compute predictions for, default all levels",
 )
 @click.option(
-    "--job-id",
-    "caller_job_id",
-    metavar="<ID>",
-    help="ID of the job invoking the prescript, whose .sub file is patched",
+    "--job-sub",
+    "job_sub",
+    type=click.Path(dir_okay=False),
+    metavar="<file>",
+    help="Condor submit file of the job invoking the prescript, which is patched",
 )
 @click.option(
     "--lof",
@@ -372,7 +380,7 @@ def _split_comma_list(ctx, param, value):
 )
 @click.argument("workflow-yml", type=click.Path(dir_okay=False))
 @click.argument("output-dir", type=click.Path(file_okay=False))
-def main(workflow_yml, output_dir, target_level, caller_job_id, lof_file, meta_files):
+def main(workflow_yml, output_dir, target_level, job_sub, lof_file, meta_files):
     """pegasus-runtime-predictor predicts the runtime of the jobs in a workflow.
 
     Called automatically as a DAGMan PRE script for a job. On error, empty
@@ -384,7 +392,7 @@ def main(workflow_yml, output_dir, target_level, caller_job_id, lof_file, meta_f
             workflow_yml,
             output_dir,
             target_level,
-            caller_job_id,
+            job_sub,
             lof_file=lof_file,
             meta_files=meta_files,
         )

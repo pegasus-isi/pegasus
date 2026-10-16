@@ -662,6 +662,55 @@ def read_meta_sizes(submit_dir: str) -> dict:
     return sizes
 
 
+def parse_sub_file(sub_path: Path):
+    """
+    Parse a single HTCondor .sub file, as described in :func:`scan_sub_files`.
+
+    Returns a ``(dax_job_id, info)`` tuple, or ``(None, None)`` if the file
+    cannot be read or belongs to an infrastructure job.
+    """
+    dax_job_id           = None
+    req_cpus             = None
+    req_memory           = None
+    cluster_in_file      = None
+    cluster_transformation = None
+    try:
+        lines = sub_path.read_text().splitlines()
+    except OSError:
+        return None, None
+
+    for raw in lines:
+        line = raw.strip()
+        m = re.match(r'\+pegasus_wf_dax_job_id\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m and m.group(1).lower() != "null":
+            dax_job_id = m.group(1)
+        m = re.match(r'request_cpus\s*=\s*(\d+)', line, re.IGNORECASE)
+        if m:
+            req_cpus = int(m.group(1))
+        m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
+        if m:
+            req_memory = float(m.group(1))
+        m = re.match(r'arguments\s*=\s*.*?(\S+\.in)\b', line, re.IGNORECASE)
+        if m:
+            in_path = sub_path.parent / m.group(1)
+            if in_path.exists():
+                cluster_in_file = str(in_path)
+        m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m:
+            cluster_transformation = m.group(1)
+
+    if not dax_job_id:
+        return None, None
+
+    return dax_job_id, {
+        "request_cpus":           req_cpus,
+        "request_memory_mb":      req_memory,
+        "sub_path":               str(sub_path),
+        "cluster_in_file":        cluster_in_file,
+        "cluster_transformation": cluster_transformation,
+    }
+
+
 def scan_sub_files(submit_dir: str) -> dict:
     """
     Parallel scan of all HTCondor .sub files in *submit_dir*.
@@ -686,51 +735,9 @@ def scan_sub_files(submit_dir: str) -> dict:
 
     sub_paths = list(sub_dir.rglob("*.sub"))
 
-    def _parse_one(sub_path: Path):
-        dax_job_id           = None
-        req_cpus             = None
-        req_memory           = None
-        cluster_in_file      = None
-        cluster_transformation = None
-        try:
-            lines = sub_path.read_text().splitlines()
-        except OSError:
-            return None, None
-
-        for raw in lines:
-            line = raw.strip()
-            m = re.match(r'\+pegasus_wf_dax_job_id\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
-            if m and m.group(1).lower() != "null":
-                dax_job_id = m.group(1)
-            m = re.match(r'request_cpus\s*=\s*(\d+)', line, re.IGNORECASE)
-            if m:
-                req_cpus = int(m.group(1))
-            m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
-            if m:
-                req_memory = float(m.group(1))
-            m = re.match(r'arguments\s*=\s*.*?(\S+\.in)\b', line, re.IGNORECASE)
-            if m:
-                in_path = sub_path.parent / m.group(1)
-                if in_path.exists():
-                    cluster_in_file = str(in_path)
-            m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
-            if m:
-                cluster_transformation = m.group(1)
-
-        if not dax_job_id:
-            return None, None
-
-        return dax_job_id, {
-            "request_cpus":           req_cpus,
-            "request_memory_mb":      req_memory,
-            "sub_path":               str(sub_path),
-            "cluster_in_file":        cluster_in_file,
-            "cluster_transformation": cluster_transformation,
-        }
-
     result = {}
     with ThreadPoolExecutor(max_workers=32) as executor:
-        futures = {executor.submit(_parse_one, p): p for p in sub_paths}
+        futures = {executor.submit(parse_sub_file, p): p for p in sub_paths}
         for future in as_completed(futures):
             job_id, info = future.result()
             if job_id:
