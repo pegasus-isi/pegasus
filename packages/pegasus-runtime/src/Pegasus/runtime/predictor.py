@@ -667,7 +667,8 @@ def parse_sub_file(sub_path: Path):
     Parse a single HTCondor .sub file, as described in :func:`scan_sub_files`.
 
     Returns a ``(dax_job_id, info)`` tuple, or ``(None, None)`` if the file
-    cannot be read or belongs to an infrastructure job.
+    cannot be read. ``dax_job_id`` is None for jobs without one, such as
+    clustered and infrastructure jobs.
     """
     dax_job_id           = None
     req_cpus             = None
@@ -698,9 +699,6 @@ def parse_sub_file(sub_path: Path):
         m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
         if m:
             cluster_transformation = m.group(1)
-
-    if not dax_job_id:
-        return None, None
 
     return dax_job_id, {
         "request_cpus":           req_cpus,
@@ -762,6 +760,26 @@ def count_cluster_tasks(in_file_path: str) -> int:
         ))
     except OSError:
         return 1
+
+
+def cluster_task_ids(in_file_path: str) -> List[str]:
+    """
+    Return the DAX job ids of the tasks in a Pegasus cluster .in file.
+
+    Each task is preceded by a monitord comment line of the form
+    ``#@ <task_number> <transformation> <dax_job_id>``.
+    Returns an empty list if the file cannot be read.
+    """
+    try:
+        lines = Path(in_file_path).read_text().splitlines()
+    except OSError:
+        return []
+    ids = []
+    for l in lines:
+        parts = l.split()
+        if len(parts) >= 4 and parts[0] == "#@":
+            ids.append(parts[3])
+    return ids
 
 
 # Keep old name as alias so existing code doesn't break
@@ -1132,18 +1150,82 @@ class WorkflowRuntimePredictor:
         output_dir = str(output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
-        # ── Step 1: resolve compute slot ──────────────────────────────────
+        slot    = self._resolve_slot()
+        results = self.predict_jobs(workflow, sub_resources=sub_resources,
+                                    submit_dir=output_dir, slot=slot)
+        if not results:
+            return []
+        ip_pct = results[0]["interval_pct"]
+
+        # ── Step 5: write CSV ──────────────────────────────────────────────
+        csv_path = os.path.join(output_dir, "runtime_predictions.csv")
+        pd.DataFrame(results).to_csv(csv_path, index=False)
+
+        # ── Step 6: write JSON with summary ───────────────────────────────
+        n_levels = max(r["dag_level"] for r in results) + 1
+        summary = {
+            "workflow_name":  getattr(workflow, "name", "unknown"),
+            "total_jobs":     len(results),
+            "dag_levels":     n_levels,
+            "status_counts":  dict(Counter(r["status"] for r in results)),
+            "interval_pct":   ip_pct,
+            "model_path":     self._cfg.model_path,
+            "slot_used":      slot,
+            "config": {
+                "sparse_threshold": self._ctx.sparse_thr,
+                "q_lo":             self._ctx.q_lo,
+                "q_hi":             self._ctx.q_hi,
+            },
+            "predictions":    results,
+        }
+        json_path = os.path.join(output_dir, "runtime_predictions.json")
+        with open(json_path, "w") as f:
+            json.dump(summary, f, indent=2)
+
+        # ── Step 7: inject native Pegasus job into the DAG ────────────────
+        # Mirrors stage-in/stage-out: runs on local site before all root jobs,
+        # produces runtime_predictions.json and .csv as DAG outputs.
+        self._inject_into_dag(workflow, output_dir)
+
+        return results
+
+    def _resolve_slot(self) -> dict:
+        """Resolve the compute slot, applying any slot overrides from config."""
         slot = _get_condor_slot()
-        # Apply any slot overrides from config
         if self._cfg.slot_hostname  is not None: slot["hostname"]  = self._cfg.slot_hostname
         if self._cfg.slot_cpu_count is not None: slot["cpu_count"] = self._cfg.slot_cpu_count
         if self._cfg.slot_cpu_speed is not None: slot["cpu_speed"] = self._cfg.slot_cpu_speed
         if self._cfg.slot_ram       is not None: slot["ram"]       = self._cfg.slot_ram
+        return slot
+
+    def predict_jobs(
+        self,
+        workflow,
+        sub_resources: Optional[dict] = None,
+        submit_dir: Optional[str] = None,
+        slot: Optional[dict] = None,
+    ) -> List[dict]:
+        """
+        Predict runtimes for the jobs in *workflow*, without writing any
+        output files or modifying the workflow.
+
+        :param workflow: a Pegasus Workflow object with the jobs to predict
+        :param sub_resources: optional ``{dax_job_id: {"request_cpus": int,
+            "request_memory_mb": float}}`` overriding YAML profile values
+        :param submit_dir: optional directory to read .meta file sizes from
+        :param slot: optional compute slot, resolved from condor if not given
+        :return: list of prediction dicts, one per job
+        """
+        if not self._cfg.enabled:
+            return []
+
+        # ── Step 1: resolve compute slot ──────────────────────────────────
+        slot = slot or self._resolve_slot()
 
         # ── Step 2: build feature matrix level-by-level, then collect all ───
         df = _extract_features(workflow, slot, self._ctx.arts,
                                sub_resources=sub_resources,
-                               submit_dir=output_dir)
+                               submit_dir=submit_dir)
         if df.empty:
             return []
 
@@ -1176,36 +1258,6 @@ class WorkflowRuntimePredictor:
                 "vae_anomaly_types":   anomaly_types[i],
                 "vae_latent_mu":       [round(float(v), 4) for v in latent_mu[i]],
             })
-
-        # ── Step 5: write CSV ──────────────────────────────────────────────
-        csv_path = os.path.join(output_dir, "runtime_predictions.csv")
-        pd.DataFrame(results).to_csv(csv_path, index=False)
-
-        # ── Step 6: write JSON with summary ───────────────────────────────
-        n_levels = int(df["dag_level"].max()) + 1 if not df.empty else 0
-        summary = {
-            "workflow_name":  getattr(workflow, "name", "unknown"),
-            "total_jobs":     len(results),
-            "dag_levels":     n_levels,
-            "status_counts":  dict(Counter(statuses)),
-            "interval_pct":   ip_pct,
-            "model_path":     self._cfg.model_path,
-            "slot_used":      slot,
-            "config": {
-                "sparse_threshold": self._ctx.sparse_thr,
-                "q_lo":             self._ctx.q_lo,
-                "q_hi":             self._ctx.q_hi,
-            },
-            "predictions":    results,
-        }
-        json_path = os.path.join(output_dir, "runtime_predictions.json")
-        with open(json_path, "w") as f:
-            json.dump(summary, f, indent=2)
-
-        # ── Step 7: inject native Pegasus job into the DAG ────────────────
-        # Mirrors stage-in/stage-out: runs on local site before all root jobs,
-        # produces runtime_predictions.json and .csv as DAG outputs.
-        self._inject_into_dag(workflow, output_dir)
 
         return results
 
