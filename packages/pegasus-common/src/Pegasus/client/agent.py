@@ -47,7 +47,7 @@ class AgentClient:
         :rtype: str
         :raises RuntimeError: if the HTTP request fails
         """
-        full_url = f"{self.url}/wf/analyze/ai/{workflow_id}"
+        full_url = f"{self.url}/v1/wf/analyze/{workflow_id}"
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {
             "client_version": self.client_version,
@@ -79,7 +79,7 @@ class AgentClient:
         :rtype: str
         :raises RuntimeError: if the HTTP request fails
         """
-        full_url = f"{self.url}/wf/statistics/ai/{workflow_id}"
+        full_url = f"{self.url}/v1/wf/statistics/{workflow_id}"
         headers = {"X-API-Key": self.token, "Content-Type": "application/json"}
         data = {
             "client_version": self.client_version,
