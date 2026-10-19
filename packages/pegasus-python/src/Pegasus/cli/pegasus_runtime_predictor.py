@@ -1,7 +1,8 @@
 """
 pegasus-runtime-predictor — Pegasus runtime prediction CLI.
 
-Installed as a console script via:
+Installed as the pegasus-runtime-predictor console script by the pegasus-wms
+wheel. The libraries it needs are installed with the runtime-prediction extra:
     pip install "pegasus-wms[runtime-prediction]"
 
 This module is the canonical implementation.  The standalone script at
@@ -25,13 +26,6 @@ import yaml
 
 from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.monitoring.metadata import Metadata
-from Pegasus.runtime.predictor import (
-    RuntimePredictionConfig,
-    WorkflowRuntimePredictor,
-    cluster_task_ids,
-    parse_sub_file,
-    patch_sub_file,
-)
 
 
 def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
@@ -189,6 +183,23 @@ def predict(
                        files of the job
     """
     _start_time = time.time()
+
+    # the libraries for runtime prediction are in an optional extra
+    try:
+        from Pegasus.runtime.predictor import (
+            RuntimePredictionConfig,
+            WorkflowRuntimePredictor,
+            cluster_task_ids,
+            parse_sub_file,
+            patch_sub_file,
+        )
+    except ImportError as e:
+        print(
+            f"[pegasus-runtime-predictor] Runtime prediction is not available ({e}). "
+            'Install it with: pip install "pegasus-wms[runtime-prediction]"',
+            file=sys.stderr,
+        )
+        return
 
     output_dir = str(Path(output_dir).resolve())
     os.makedirs(output_dir, exist_ok=True)

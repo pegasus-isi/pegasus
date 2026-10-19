@@ -95,6 +95,7 @@ pegasus-em             = "Pegasus.cli.main:pegasus_em"
 pegasus-config         = "Pegasus.cli.main:pegasus_config"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
+pegasus-runtime-predictor = "Pegasus.cli.pegasus_runtime_predictor:main"
 
 # C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
 # pegasus-transfer / pegasus-checkpoint / pegasus-integrity /
@@ -108,6 +109,14 @@ all = ["pegasus-wms[mysql,postgresql,cwl]"]
 postgresql = ["psycopg2"]
 mysql = ["pymysql"]
 cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
+# Runtime prediction (pegasus-runtime-predictor, Pegasus.runtime). The model
+# is a pickled PyTorch network plus scikit-learn feature transformers
+runtime-prediction = [
+    "torch>=1.13",
+    "scikit-learn>=1.0",
+    "numpy>=1.21",
+    "pandas>=1.3",
+]
 
 [tool.scikit-build]
 cmake.version = ">=3.20"
@@ -116,8 +125,9 @@ build-dir = "_cmake_build"
 editable.rebuild = true
 wheel.py-api = "py3"
 
-# Python package location — pegasus-python is the main package; pegasus-common
-# and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
+# Python package location — pegasus-python is the main package; pegasus-common,
+# pegasus-api and pegasus-runtime are merged into the wheel via CMake
+# install(DIRECTORY) in the top-level CMakeLists.txt.
 wheel.packages = ["packages/pegasus-python/src/Pegasus"]
 
 # Include non-git tracked files in the wheel and sdist (e.g., Java JARs, worker packages, etc.)
