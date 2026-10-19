@@ -25,6 +25,7 @@ from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
+from PythonSed import Sed, SedException
 
 warnings.filterwarnings("ignore")
 
@@ -804,6 +805,15 @@ def parse_sub_resources(submit_dir: str) -> dict:
     }
 
 
+# s/^\s*periodic_remove\s*=\s*(.*)$/periodic_remove = (\1) || .../
+# \1 matches to the existing periodic_remove expression. The timeout in
+# seconds is provided via python format option
+sed_pattern_update_periodic_remove = (
+    "s/^\\s*periodic_remove\\s*=\\s*(.*)$/periodic_remove = (\\1) || "
+    "((JobStatus == 2) \\&\\& ((CurrentTime - EnteredCurrentStatus) > {}))/"
+)
+
+
 def patch_sub_file(sub_path: str, prediction: dict) -> bool:
     """
     Inject predicted runtime ClassAds into a .sub file **in-place**.
@@ -831,42 +841,44 @@ def patch_sub_file(sub_path: str, prediction: dict) -> bool:
     timeout_s    = max(upper_s * 3, 3_600)
 
     try:
-        lines = path.read_text().splitlines()
-
-        # Find the queue line (always present in Pegasus .sub files)
-        queue_idx = next(
-            (i for i, l in enumerate(lines) if l.strip().lower().startswith("queue")),
-            None,
-        )
-        if queue_idx is None:
+        # ads are inserted before the queue line (always present in Pegasus
+        # .sub files)
+        if not any(
+            l.strip().lower().startswith("queue") for l in path.read_text().splitlines()
+        ):
             return False
-
-        # Update periodic_remove in the block before queue
-        before = []
-        for line in lines[:queue_idx]:
-            if re.match(r'periodic_remove\s*=', line.strip(), re.IGNORECASE):
-                existing = line.split("=", 1)[1].strip()
-                line = (
-                    f"periodic_remove = ({existing}) || "
-                    f"((JobStatus == 2) && "
-                    f"((CurrentTime - EnteredCurrentStatus) > {timeout_s}))"
-                )
-            before.append(line)
-
-        our_ads = [
-            f"+pegasus_predicted_runtime      = {predicted_s}",
-            f"+pegasus_predicted_runtime_low  = {lower_s}",
-            f"+pegasus_predicted_runtime_high = {upper_s}",
-            f'+pegasus_prediction_status      = "{status}"',
-        ]
-
-        # Result: classads → our ads → queue → comment block (original tail)
-        result = before + our_ads + lines[queue_idx:]
-        path.write_text("\n".join(result) + "\n")
-        return True
-
     except OSError:
         return False
+
+    our_ads = [
+        f"+pegasus_predicted_runtime      = {predicted_s}",
+        f"+pegasus_predicted_runtime_low  = {lower_s}",
+        f"+pegasus_predicted_runtime_high = {upper_s}",
+        f'+pegasus_prediction_status      = "{status}"',
+    ]
+
+    # 1. update periodic_remove to also remove jobs running past the timeout,
+    #    keeping the existing condition. & is escaped as it denotes the
+    #    matched string in a sed replacement
+    # 2. insert our ads before the queue line
+    sed_patterns = [
+        sed_pattern_update_periodic_remove.format(timeout_s),
+        "/^\\s*queue/i\\\n" + "\\\n".join(our_ads),
+    ]
+
+    sed = Sed(in_place="", regexp_extended=True)
+    for pattern in sed_patterns:
+        sed.load_string(pattern)
+
+    try:
+        sed.apply(str(path))
+    except SedException as e:
+        warnings.warn(f"Unable to patch submit file {path}: {e.message}")
+        return False
+    except OSError:
+        return False
+
+    return True
 
 
 def find_submit_dir(workflow_yml: str) -> str | None:
