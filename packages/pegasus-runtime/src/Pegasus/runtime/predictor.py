@@ -675,6 +675,8 @@ def parse_sub_file(sub_path: Path):
     req_memory           = None
     cluster_in_file      = None
     cluster_transformation = None
+    transformation       = None
+    resources            = {}
     try:
         lines = sub_path.read_text().splitlines()
     except OSError:
@@ -699,6 +701,13 @@ def parse_sub_file(sub_path: Path):
         m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
         if m:
             cluster_transformation = m.group(1)
+        m = re.match(r'\+pegasus_wf_xformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m:
+            transformation = m.group(1)
+        m = re.match(r'(pegasus_cores|pegasus_gpus|pegasus_memory_mb|pegasus_diskspace_mb)'
+                     r'\s*=\s*(\S+)', line)
+        if m:
+            resources[m.group(1)] = m.group(2)
 
     return dax_job_id, {
         "request_cpus":           req_cpus,
@@ -706,6 +715,10 @@ def parse_sub_file(sub_path: Path):
         "sub_path":               str(sub_path),
         "cluster_in_file":        cluster_in_file,
         "cluster_transformation": cluster_transformation,
+        # complete transformation name [namespace::]name[:version]
+        "transformation":         transformation,
+        # pegasus_cores, pegasus_gpus, pegasus_memory_mb, pegasus_diskspace_mb
+        **resources,
     }
 
 

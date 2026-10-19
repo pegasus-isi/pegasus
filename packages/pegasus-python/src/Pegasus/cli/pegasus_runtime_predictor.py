@@ -34,11 +34,8 @@ from Pegasus.runtime.predictor import (
 )
 
 
-def _load_jobs_from_yaml(path: str, job_ids, inputs: bool = True) -> Workflow:
-    """
-    Load only the jobs with the given ids from the workflow YAML file. The
-    input files of the jobs are only loaded if inputs is True.
-    """
+def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
+    """Load only the jobs with the given ids from the workflow YAML file."""
     with open(path) as f:
         data = yaml.safe_load(f)
 
@@ -55,8 +52,6 @@ def _load_jobs_from_yaml(path: str, job_ids, inputs: bool = True) -> Workflow:
         for u in jdata.get("uses", []):
             fi = File(u["lfn"])
             if u.get("type") == "input":
-                if not inputs:
-                    continue
                 if u.get("size"):
                     fi.size = int(u["size"])
                 job.add_inputs(fi)
@@ -69,6 +64,49 @@ def _load_jobs_from_yaml(path: str, job_ids, inputs: bool = True) -> Workflow:
         wf.add_jobs(job)
 
     return wf
+
+
+# pegasus_ keys in the condor submit file, and the condor profiles they map to
+_SUB_CONDOR_PROFILES = {
+    "pegasus_cores": "request_cpus",
+    "pegasus_gpus": "request_gpus",
+    "pegasus_memory_mb": "request_memory",
+    "pegasus_diskspace_mb": "request_disk",
+}
+
+
+def _split_tc_name(tc_name: str):
+    """Split a [namespace::]name[:version] transformation name into its parts."""
+    namespace, _, name = tc_name.rpartition("::")
+    name, _, version = name.partition(":")
+    return namespace or None, name, version or None
+
+
+def _job_from_sub(job_id: str, sub_info: dict) -> Job:
+    """
+    Create the job from the transformation name and the pegasus_ keys in its
+    condor submit file. The pegasus_ keys are added as condor profiles.
+    """
+    tc_name = sub_info.get("transformation")
+    if not tc_name:
+        print(
+            f"[pegasus-runtime-predictor] No transformation found in {sub_info['sub_path']}",
+            file=sys.stderr,
+        )
+        tc_name = "unknown"
+    namespace, name, version = _split_tc_name(tc_name)
+    job = Job(name, _id=job_id, namespace=namespace, version=version)
+
+    profiles = {}
+    for key, profile in _SUB_CONDOR_PROFILES.items():
+        if sub_info.get(key) is not None:
+            profiles[profile] = sub_info[key]
+    if "request_disk" in profiles:
+        # condor defaults to KiB for request_disk
+        profiles["request_disk"] += " MB"
+    if profiles:
+        job.add_profiles(Namespace.CONDOR, **profiles)
+    return job
 
 
 def _read_lof(lof_file: str) -> list:
@@ -141,7 +179,8 @@ def predict(
     passed, and patches it into the submit file. For a clustered job, the
     predictions for its constituent tasks are computed and aggregated.
 
-    :param workflow_yml: path to the workflow YAML file
+    :param workflow_yml: path to the workflow YAML file, to load the tasks of a
+                         clustered job from
     :param output_dir: directory to write the timings to
     :param job_sub: path to the condor submit file of the job to be patched
     :param target_level: the DAG level of the job, recorded in the timings
@@ -182,16 +221,20 @@ def predict(
     # label for the job in the log and the timings
     caller_job_id = dax_job_id or job_sub
 
-    print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
-    # the LOF lists the inputs of a clustered job as a whole, and not per
-    # task. so the inputs of the tasks are loaded from the workflow
-    wf = _load_jobs_from_yaml(workflow_yml, job_ids, inputs=bool(cluster_in_file))
-    missing = [jid for jid in job_ids if jid not in wf.jobs]
-    if missing:
-        print(
-            f"[pegasus-runtime-predictor] Job(s) not found in workflow: {', '.join(missing)}",
-            file=sys.stderr,
-        )
+    if cluster_in_file:
+        # the submit file and the LOF of a clustered job describe the cluster
+        # as a whole, and not its tasks. so the tasks are loaded from the workflow
+        print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
+        wf = _load_jobs_from_yaml(workflow_yml, job_ids)
+        missing = [jid for jid in job_ids if jid not in wf.jobs]
+        if missing:
+            print(
+                f"[pegasus-runtime-predictor] Job(s) not found in workflow: {', '.join(missing)}",
+                file=sys.stderr,
+            )
+    else:
+        wf = Workflow(dax_job_id, infer_dependencies=False)
+        wf.add_jobs(_job_from_sub(dax_job_id, sub_info))
 
     sizes = _read_meta_sizes(meta_files or [])
     print(
