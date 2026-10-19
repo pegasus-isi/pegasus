@@ -105,8 +105,11 @@ public abstract class Abstract implements ContainerShellWrapper {
     /** Boolean tracking if runtime prediction is enabled or not. */
     protected boolean mDoRuntimePrediction;
 
-    /** Boolean tracking if lof files are generated or not. */
-    protected boolean mGenerateLOF;
+    /**
+     * Boolean tracking if lof files are generated or not. That is determined whether stating of
+     * files is enabled or not.
+     */
+    protected boolean mDoStat;
 
     private Integrity mIntegrityHandler;
 
@@ -177,9 +180,18 @@ public abstract class Abstract implements ContainerShellWrapper {
         mTransfersOnHostOS = mProps.containerTransfersOnHOSTOS();
 
         // GH-2264 runtime prediction is enabled only if integrity checking
-        // is on and also generation of LOF files is on.
+        // is on and also generation of LOF files is on. that is determined
+        // if we are stating the files or not.
         mDoRuntimePrediction = (this.mDoIntegrityChecking && mProps.doRuntimePrediction());
-        mGenerateLOF = mProps.generateLOFFiles();
+
+        // stat is on unless disabled explicitly by the user
+        mDoStat = true;
+        String value = mProps.doStatWithKickstart();
+        if (value != null) {
+            // user specified a stat value .
+            mDoStat = edu.isi.pegasus.common.util.Boolean.parse(value, true);
+        }
+
         mPegasusRuntimePredictor = new PegasusRuntimePredictor();
         mPegasusRuntimePredictor.initialize(bag);
     }
@@ -564,9 +576,7 @@ public abstract class Abstract implements ContainerShellWrapper {
      */
     protected void enableForRuntimePrediction(Job job) {
         // safe-guards
-        if (!this.mDoRuntimePrediction
-                || !this.mGenerateLOF
-                || job.getJobType() != Job.COMPUTE_JOB) {
+        if (!this.mDoRuntimePrediction || !this.mDoStat || job.getJobType() != Job.COMPUTE_JOB) {
             // we only do prediction for compute jobs
             return;
         }
