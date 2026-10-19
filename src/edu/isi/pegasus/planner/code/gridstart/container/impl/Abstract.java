@@ -564,9 +564,9 @@ public abstract class Abstract implements ContainerShellWrapper {
      */
     protected void enableForRuntimePrediction(Job job) {
         // safe-guards
-        if (!(this.mDoRuntimePrediction
-                || this.mGenerateLOF
-                || job.getJobType() != Job.COMPUTE_JOB)) {
+        if (!this.mDoRuntimePrediction
+                || !this.mGenerateLOF
+                || job.getJobType() != Job.COMPUTE_JOB) {
             // we only do prediction for compute jobs
             return;
         }
