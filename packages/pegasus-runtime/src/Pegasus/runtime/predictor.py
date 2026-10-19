@@ -805,14 +805,39 @@ def parse_sub_resources(submit_dir: str) -> dict:
     }
 
 
+# the patterns below are applied every time the submit file is patched, e.g.
+# when the prescript is rerun on a job retry. To keep the patching idempotent,
+# whatever an earlier patch added is first removed and then added afresh.
+
+# s/^periodic_remove = \((.*)\) \|\| \(\(JobStatus == 2\) && ... > N\)\)$/periodic_remove = \1/
+# removes the runtime clause added by an earlier patch, restoring the original
+# periodic_remove expression that \1 matches to
+sed_pattern_strip_periodic_remove = (
+    "s/^\\s*periodic_remove\\s*=\\s*\\((.*)\\) \\|\\| "
+    "\\(\\(JobStatus == 2\\) && "
+    "\\(\\(CurrentTime - EnteredCurrentStatus\\) > [0-9]+\\)\\)$/periodic_remove = \\1/"
+)
+
 # s/^\s*periodic_remove\s*=\s*(.*)$/periodic_remove = (\1) || .../
 # \1 matches to the existing periodic_remove expression. The timeout in
 # seconds is provided via python format option
+# Example
+#   Original:  periodic_remove = ((JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800))
+#   Patched Version: periodic_remove = ((JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)) || ((JobStatus == 2) && ((CurrentTime - EnteredCurrentStatus) > 3600))
 sed_pattern_update_periodic_remove = (
     "s/^\\s*periodic_remove\\s*=\\s*(.*)$/periodic_remove = (\\1) || "
     "((JobStatus == 2) \\&\\& ((CurrentTime - EnteredCurrentStatus) > {}))/"
 )
 
+# removes the prediction classads inserted by an earlier patch
+# Example
+# +pegasus_predicted_runtime      = 145
+# +pegasus_predicted_runtime_low  = 0
+# +pegasus_predicted_runtime_high = 962
+# +pegasus_prediction_status      = "NORMAL"
+sed_pattern_delete_prediction_classads = (
+    "/^\\s*\\+pegasus_predict(ed_runtime(_low|_high)?|ion_status)\\s*=/d"
+)
 
 def patch_sub_file(sub_path: str, prediction: dict) -> bool:
     """
@@ -857,11 +882,14 @@ def patch_sub_file(sub_path: str, prediction: dict) -> bool:
         f'+pegasus_prediction_status      = "{status}"',
     ]
 
-    # 1. update periodic_remove to also remove jobs running past the timeout,
+    # 1. remove what an earlier patch of the file added
+    # 2. update periodic_remove to also remove jobs running past the timeout,
     #    keeping the existing condition. & is escaped as it denotes the
     #    matched string in a sed replacement
-    # 2. insert our ads before the queue line
+    # 3. insert our ads before the queue line
     sed_patterns = [
+        sed_pattern_strip_periodic_remove,
+        sed_pattern_delete_prediction_classads,
         sed_pattern_update_periodic_remove.format(timeout_s),
         "/^\\s*queue/i\\\n" + "\\\n".join(our_ads),
     ]
