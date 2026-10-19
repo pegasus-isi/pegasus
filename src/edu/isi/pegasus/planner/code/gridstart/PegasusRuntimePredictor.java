@@ -93,22 +93,27 @@ public class PegasusRuntimePredictor {
         String prescriptKey = Dagman.PRE_SCRIPT_KEY;
         if (job.dagmanVariables.containsKey(prescriptKey)) {
             mLogger.log(
-                    "Job %s already has a prescript associated with it - %s"
-                            .formatted(job.getID(), job.dagmanVariables.get(prescriptKey)),
+                    String.format(
+                            "Job %s already has a prescript associated with it - %s",
+                            job.getID(), job.dagmanVariables.get(prescriptKey)),
                     LogManager.WARNING_MESSAGE_LEVEL);
             return;
         }
         if (metaFiles.isEmpty()) {
             mLogger.log(
-                    "Job %s has no metafiles associated with it. Skipping pegasus-runtime-prediction for it."
-                            .formatted(job.getID()),
+                    String.format(
+                            "Job %s has no metafiles associated with it. Skipping"
+                                    + " pegasus-runtime-prediction for it.",
+                            job.getID()),
                     LogManager.WARNING_MESSAGE_LEVEL);
             return;
         }
         if (mWorkflowFile == null) {
             mLogger.log(
-                    "No workflow file to pass to pegasus-runtime-predictor. Skipping pegasus-runtime-prediction for job %s"
-                            .formatted(job.getID()),
+                    String.format(
+                            "No workflow file to pass to pegasus-runtime-predictor. Skipping"
+                                    + " pegasus-runtime-prediction for job %s",
+                            job.getID()),
                     LogManager.WARNING_MESSAGE_LEVEL);
             return;
         }
