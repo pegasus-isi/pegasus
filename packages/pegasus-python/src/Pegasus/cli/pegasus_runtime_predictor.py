@@ -24,6 +24,7 @@ import click
 import yaml
 
 from Pegasus.api import File, Job, Namespace, Workflow
+from Pegasus.monitoring.metadata import Metadata
 from Pegasus.runtime.predictor import (
     RuntimePredictionConfig,
     WorkflowRuntimePredictor,
@@ -33,8 +34,11 @@ from Pegasus.runtime.predictor import (
 )
 
 
-def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
-    """Load only the jobs with the given ids from the workflow YAML file."""
+def _load_jobs_from_yaml(path: str, job_ids, inputs: bool = True) -> Workflow:
+    """
+    Load only the jobs with the given ids from the workflow YAML file. The
+    input files of the jobs are only loaded if inputs is True.
+    """
     with open(path) as f:
         data = yaml.safe_load(f)
 
@@ -51,6 +55,8 @@ def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
         for u in jdata.get("uses", []):
             fi = File(u["lfn"])
             if u.get("type") == "input":
+                if not inputs:
+                    continue
                 if u.get("size"):
                     fi.size = int(u["size"])
                 job.add_inputs(fi)
@@ -65,33 +71,43 @@ def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
     return wf
 
 
-def _scan_actual_file_sizes(output_dir: str, wf: Workflow) -> dict:
-    """Scan output_dir and nearby scratch dirs for actual file sizes on disk."""
-    all_lfns = set()
-    for job in wf.jobs.values():
-        for fi in job.get_inputs() if hasattr(job, "get_inputs") else []:
-            all_lfns.add(fi.lfn)
-        for fi in job.get_outputs() if hasattr(job, "get_outputs") else []:
-            all_lfns.add(fi.lfn)
+def _read_lof(lof_file: str) -> list:
+    """Return the lfns listed in a LOF file, that has one lfn=... entry per line."""
+    lfns = []
+    with open(lof_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                lfns.append(line.split("=", 1)[0])
+    return lfns
 
-    size_map = {}
-    search_roots = [Path(output_dir)]
-    p = Path(output_dir).parent
-    for _ in range(4):
-        for candidate in (p / "scratch", p / "data", p):
-            if candidate.is_dir() and candidate != Path(output_dir):
-                search_roots.append(candidate)
-        p = p.parent
 
-    for root in search_roots:
+def _read_meta_sizes(meta_files) -> dict:
+    """Return the sizes in bytes of the files in the .meta files, indexed by lfn."""
+    sizes = {}
+    for meta_file in meta_files:
         try:
-            for path in root.rglob("*"):
-                if path.is_file() and path.name in all_lfns:
-                    size_map[path.name] = path.stat().st_size
-        except (PermissionError, OSError):
+            metadata_list = Metadata.load(meta_file)
+        except (OSError, ValueError) as e:
+            print(
+                f"[pegasus-runtime-predictor] Unable to read meta file {meta_file}: {e}",
+                file=sys.stderr,
+            )
             continue
+        for m in metadata_list:
+            size = m.get_attribute_value("size")
+            if m.get_type() == "file" and size is not None:
+                sizes[m.get_id()] = int(size)
+    return sizes
 
-    return size_map
+
+def _warn_no_size(lfn: str, job_id: str) -> None:
+    """Warn that an input file of a job has no size in the .meta files."""
+    print(
+        f"[pegasus-runtime-predictor] WARNING: No size found in meta files for input "
+        f"{lfn} of job {job_id}",
+        file=sys.stderr,
+    )
 
 
 def _append_prescript_timing(
@@ -126,11 +142,10 @@ def predict(
     predictions for its constituent tasks are computed and aggregated.
 
     :param workflow_yml: path to the workflow YAML file
-    :param output_dir: directory to read .meta file sizes from and write the
-                       timings to
+    :param output_dir: directory to write the timings to
     :param job_sub: path to the condor submit file of the job to be patched
     :param target_level: the DAG level of the job, recorded in the timings
-    :param lof_file: LOF file listing the input files of the job
+    :param lof_file: LOF file listing the lfns of the input files of the job
     :param meta_files: list of .meta files containing the sizes of the input
                        files of the job
     """
@@ -168,7 +183,9 @@ def predict(
     caller_job_id = dax_job_id or job_sub
 
     print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
-    wf = _load_jobs_from_yaml(workflow_yml, job_ids)
+    # the LOF lists the inputs of a clustered job as a whole, and not per
+    # task. so the inputs of the tasks are loaded from the workflow
+    wf = _load_jobs_from_yaml(workflow_yml, job_ids, inputs=bool(cluster_in_file))
     missing = [jid for jid in job_ids if jid not in wf.jobs]
     if missing:
         print(
@@ -176,18 +193,33 @@ def predict(
             file=sys.stderr,
         )
 
-    actual_sizes = _scan_actual_file_sizes(output_dir, wf)
-    if actual_sizes:
-        print(
-            f"[pegasus-runtime-predictor] Found {len(actual_sizes)} actual file size(s) on disk"
-        )
+    sizes = _read_meta_sizes(meta_files or [])
+    print(
+        f"[pegasus-runtime-predictor] Found {len(sizes)} file size(s) in "
+        f"{len(meta_files or [])} meta file(s)"
+    )
+    if cluster_in_file:
+        # files produced by other tasks in the cluster have no .meta entry yet
+        # and their sizes are estimated
+        produced = {fo.lfn for job in wf.jobs.values() for fo in job.get_outputs()}
         for job in wf.jobs.values():
-            for fi in job.get_inputs() if hasattr(job, "get_inputs") else []:
-                if fi.lfn in actual_sizes:
-                    fi.size = actual_sizes[fi.lfn]
-            for fi in job.get_outputs() if hasattr(job, "get_outputs") else []:
-                if fi.lfn in actual_sizes:
-                    fi.size = actual_sizes[fi.lfn]
+            for fi in job.get_inputs():
+                if fi.lfn in sizes:
+                    fi.size = sizes[fi.lfn]
+                elif fi.lfn not in produced:
+                    _warn_no_size(fi.lfn, job._id)
+    else:
+        lfns = _read_lof(lof_file) if lof_file else []
+        if not lfns:
+            print(
+                f"[pegasus-runtime-predictor] No input files found for {caller_job_id}",
+                file=sys.stderr,
+            )
+        for lfn in lfns:
+            if lfn not in sizes:
+                _warn_no_size(lfn, caller_job_id)
+        for job in wf.jobs.values():
+            job.add_inputs(*[File(lfn, size=sizes.get(lfn)) for lfn in lfns])
 
     cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
     predictor = WorkflowRuntimePredictor(cfg)
@@ -201,9 +233,7 @@ def predict(
         }
 
     _pred_start = time.time()
-    results = predictor.predict_jobs(
-        wf, sub_resources=sub_resources, submit_dir=output_dir
-    )
+    results = predictor.predict_jobs(wf, sub_resources=sub_resources)
     _pred_duration = time.time() - _pred_start
     print(
         f"[pegasus-runtime-predictor] {len(results)} job(s) predicted in {_pred_duration:.3f}s"
