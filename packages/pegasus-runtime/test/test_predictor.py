@@ -232,10 +232,10 @@ class TestPatchSubFile:
         })
         assert ok
         content = sub.read_text()
-        assert "+PredictedRuntime" in content
-        assert "+PredictedRuntimeLow" in content
-        assert "+PredictedRuntimeHigh" in content
-        assert '+PredictionStatus     = "NORMAL"' in content
+        assert "+pegasus_predicted_runtime" in content
+        assert "+pegasus_predicted_runtime_low" in content
+        assert "+pegasus_predicted_runtime_high" in content
+        assert '+pegasus_prediction_status      = "NORMAL"' in content
 
     def test_updates_periodic_remove(self, tmp_path):
         sub = tmp_path / "job.sub"
@@ -260,10 +260,10 @@ class TestPatchSubFile:
         patch_sub_file(str(sub), {"predicted_runtime_s": 30, "status": "SPARSE"})
         lines = sub.read_text().splitlines()
         queue_idx = next(i for i, l in enumerate(lines) if l.strip().lower().startswith("queue"))
-        # All +Predicted* lines must appear BEFORE queue
+        # All +pegasus_predicted* lines must appear BEFORE queue
         for line in lines[:queue_idx]:
             pass  # just ensure no IndexError
-        predicted_idx = next(i for i, l in enumerate(lines) if "+PredictedRuntime " in l)
+        predicted_idx = next(i for i, l in enumerate(lines) if "+pegasus_predicted_runtime " in l)
         assert predicted_idx < queue_idx
 
 

@@ -810,10 +810,10 @@ def patch_sub_file(sub_path: str, prediction: dict) -> bool:
 
     Called after prediction, before DAGMan submits the job.  Adds:
 
-    - ``+PredictedRuntime``     — median predicted seconds
-    - ``+PredictedRuntimeLow``  — lower-bound seconds
-    - ``+PredictedRuntimeHigh`` — upper-bound seconds
-    - ``+PredictionStatus``     — NORMAL / SPARSE / ZERO_SHOT / RULE_BASED
+    - ``+pegasus_predicted_runtime``      — median predicted seconds
+    - ``+pegasus_predicted_runtime_low``  — lower-bound seconds
+    - ``+pegasus_predicted_runtime_high`` — upper-bound seconds
+    - ``+pegasus_prediction_status``      — NORMAL / SPARSE / ZERO_SHOT / RULE_BASED
     - Updates ``periodic_remove`` to also kill jobs running > 3× upper bound
       (safety net; keeps the existing held-job removal condition).
 
@@ -854,10 +854,10 @@ def patch_sub_file(sub_path: str, prediction: dict) -> bool:
             before.append(line)
 
         our_ads = [
-            f"+PredictedRuntime     = {predicted_s}",
-            f"+PredictedRuntimeLow  = {lower_s}",
-            f"+PredictedRuntimeHigh = {upper_s}",
-            f'+PredictionStatus     = "{status}"',
+            f"+pegasus_predicted_runtime      = {predicted_s}",
+            f"+pegasus_predicted_runtime_low  = {lower_s}",
+            f"+pegasus_predicted_runtime_high = {upper_s}",
+            f'+pegasus_prediction_status      = "{status}"',
         ]
 
         # Result: classads → our ads → queue → comment block (original tail)
