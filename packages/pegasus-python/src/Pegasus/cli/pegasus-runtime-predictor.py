@@ -434,10 +434,15 @@ def main(
         "timestamp": datetime.datetime.now().isoformat(),
         "level": target_level,
     }
+
     std_out, std_err = io.StringIO(), io.StringIO()
+    start = time.time()
     with redirect_stdout(std_out), redirect_stderr(std_err):
         exitcode = _run(*args)
+
     log["exitcode"] = exitcode
+    # in seconds
+    log["duration"] = round(time.time() - start, 3)
     log["std_out"] = std_out.getvalue()
     log["std_err"] = std_err.getvalue()
 
