@@ -193,7 +193,7 @@ public abstract class Abstract implements ContainerShellWrapper {
         }
 
         mPegasusRuntimePredictor = new PegasusRuntimePredictor();
-        mPegasusRuntimePredictor.initialize(bag);
+        mPegasusRuntimePredictor.initialize(bag, dag);
     }
 
     /**

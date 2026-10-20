@@ -11,14 +11,18 @@ pip installs use the same code path.
 
 Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
     pegasus-runtime-predictor --job-sub FILE [--level N] [--lof FILE] [--meta FILES]
-                              <workflow.yml> <output_dir>
+                              [-l LOG] <workflow.yml> <output_dir>
 """
 
+import datetime
 import fcntl
+import io
+import json
 import os
 import sys
 import time
 import traceback
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import click
@@ -26,6 +30,10 @@ import yaml
 
 from Pegasus.api import File, Job, Namespace, Workflow
 from Pegasus.monitoring.metadata import Metadata
+
+
+class PredictorError(Exception):
+    """Raised when the runtime of a job cannot be predicted."""
 
 
 def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
@@ -194,23 +202,17 @@ def predict(
             patch_sub_file,
         )
     except ImportError as e:
-        print(
-            f"[pegasus-runtime-predictor] Runtime prediction is not available ({e}). "
-            'Install it with: pip install "pegasus-wms[runtime-prediction]"',
-            file=sys.stderr,
-        )
-        return
+        raise PredictorError(
+            f"Runtime prediction is not available ({e}). "
+            'Install it with: pip install "pegasus-wms[runtime-prediction]"'
+        ) from e
 
     output_dir = str(Path(output_dir).resolve())
     os.makedirs(output_dir, exist_ok=True)
 
     dax_job_id, sub_info = parse_sub_file(Path(job_sub))
     if sub_info is None:
-        print(
-            f"[pegasus-runtime-predictor] Unable to read {job_sub} — skipping prediction",
-            file=sys.stderr,
-        )
-        return
+        raise PredictorError(f"Unable to read submit file {job_sub}")
 
     # a clustered job has no dax job id of its own. predict for its tasks
     cluster_in_file = sub_info.get("cluster_in_file")
@@ -223,11 +225,7 @@ def predict(
         job_ids = [dax_job_id] if dax_job_id else []
 
     if not job_ids:
-        print(
-            f"[pegasus-runtime-predictor] No job id found in {job_sub} — skipping prediction",
-            file=sys.stderr,
-        )
-        return
+        raise PredictorError(f"No job id found in submit file {job_sub}")
 
     # label for the job in the log and the timings
     caller_job_id = dax_job_id or job_sub
@@ -310,16 +308,13 @@ def predict(
     elif results:
         pred = results[0]
 
-    if pred:
-        if patch_sub_file(sub_info["sub_path"], pred):
-            print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
-        else:
-            print(
-                f"[pegasus-runtime-predictor] Could not patch .sub for {caller_job_id}",
-                file=sys.stderr,
-            )
-    else:
-        print(f"[pegasus-runtime-predictor] No prediction found for {caller_job_id}")
+    if not pred:
+        raise PredictorError(f"No prediction found for {caller_job_id}")
+    if not patch_sub_file(sub_info["sub_path"], pred):
+        raise PredictorError(
+            f"Could not patch submit file {sub_info['sub_path']} for {caller_job_id}"
+        )
+    print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
 
     # ── Record how long this prescript invocation took ─────────────────────
     prescript_duration_s = time.time() - _start_time
@@ -330,6 +325,44 @@ def predict(
         f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
         f"{prescript_duration_s:.3f}s"
     )
+
+
+def _write_log(log_file: str, log: dict) -> None:
+    """
+    Append the log record for this invocation as a single JSON line to the
+    log file — safe for parallel SCRIPT PRE calls.
+    """
+    with open(log_file, "a", encoding="utf8") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            fh.write(json.dumps(log, ensure_ascii=False) + "\n")
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
+    """
+    Run the prediction, printing any error instead of raising it.
+
+    :return: the exitcode, 0 on success and 1 on error
+    """
+    try:
+        predict(
+            workflow_yml,
+            output_dir,
+            job_sub,
+            target_level,
+            lof_file=lof_file,
+            meta_files=meta_files,
+        )
+    except PredictorError as exc:
+        print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return 1
+    return 0
 
 
 def _split_comma_list(ctx, param, value):
@@ -369,29 +402,55 @@ def _split_comma_list(ctx, param, value):
     metavar="<file1,file2,...>",
     help="Comma separated .meta files containing the sizes of the input files of the job",
 )
+@click.option(
+    "-l",
+    "--log",
+    "log_file",
+    type=click.Path(dir_okay=False),
+    metavar="<file>",
+    help="Common log file to which the stdout/stderr of the invocation is "
+    "appended as a JSON record",
+)
 @click.argument("workflow-yml", type=click.Path(dir_okay=False))
 @click.argument("output-dir", type=click.Path(file_okay=False))
-def main(workflow_yml, output_dir, target_level, job_sub, lof_file, meta_files):
+def main(
+    workflow_yml, output_dir, target_level, job_sub, lof_file, meta_files, log_file
+):
     """pegasus-runtime-predictor predicts the runtime of a job in a workflow.
 
     Called automatically as a DAGMan PRE script for a job, to predict the
     runtime of the job, or of the tasks of a clustered job, and patch it into
-    the condor submit file of the job. On error, it exits 0, so that the
-    workflow continues.
+    the condor submit file of the job. On error, it exits with a non zero
+    exitcode. With -l, the stdout/stderr of the invocation is
+    appended as a JSON record to the log file instead.
     """
+    args = (workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files)
+    if not log_file:
+        sys.exit(_run(*args))
+
+    # capture stdout/stderr of the invocation to record in the log file
+    log = {
+        "name": job_sub,
+        "timestamp": datetime.datetime.now().isoformat(),
+        "level": target_level,
+    }
+    std_out, std_err = io.StringIO(), io.StringIO()
+    with redirect_stdout(std_out), redirect_stderr(std_err):
+        exitcode = _run(*args)
+    log["exitcode"] = exitcode
+    log["std_out"] = std_out.getvalue()
+    log["std_err"] = std_err.getvalue()
+
     try:
-        predict(
-            workflow_yml,
-            output_dir,
-            job_sub,
-            target_level,
-            lof_file=lof_file,
-            meta_files=meta_files,
+        _write_log(log_file, log)
+    except OSError as e:
+        print(
+            f"[pegasus-runtime-predictor] Unable to write to log file {log_file}: {e}",
+            file=sys.stderr,
         )
-    except Exception as exc:
-        print(f"[pegasus-runtime-predictor] ERROR: {exc}", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(0)  # exit 0 so the workflow continues
+        print(json.dumps(log), file=sys.stderr)
+
+    sys.exit(exitcode)
 
 
 if __name__ == "__main__":

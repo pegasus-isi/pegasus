@@ -14,8 +14,10 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.generator.Abstract;
 import edu.isi.pegasus.planner.code.generator.condor.CondorGenerator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -43,6 +45,12 @@ public class PegasusRuntimePredictor {
      */
     private static final String OUTPUT_DIRECTORY = ".";
 
+    /**
+     * The suffix for the common log file in the workflow submit directory, to which all the
+     * invocations of pegasus-runtime-predictor log.
+     */
+    public static final String LOG_SUFFIX = ".runtime-predictor.log";
+
     /** The LogManager object which is used to log all the messages. */
     protected LogManager mLogger;
 
@@ -55,20 +63,27 @@ public class PegasusRuntimePredictor {
     /** The path to the workflow file being planned. */
     protected String mWorkflowFile;
 
+    /** The common log file, relative to the workflow submit directory. */
+    protected String mLogFile;
+
     /** Defines the default encoding rules escape + with \+ encode single whitespace with + */
     public PegasusRuntimePredictor() {}
 
     /**
      * Initalizes the class
      *
-     * @param bag
+     * @param bag the bag of initialization objects
+     * @param dag the workflow being planned
      */
-    public void initialize(PegasusBag bag) {
+    public void initialize(PegasusBag bag, ADag dag) {
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mPredictorPath = this.getDefaultRuntimePredictorPath();
         String dax = bag.getPlannerOptions().getDAX();
         mWorkflowFile = (dax == null) ? null : new File(dax).getAbsolutePath();
+        mLogFile =
+                Abstract.getDAGFilename(
+                        bag.getPlannerOptions(), dag.getLabel(), dag.getIndex(), LOG_SUFFIX);
     }
 
     /**
@@ -80,7 +95,8 @@ public class PegasusRuntimePredictor {
      *
      * <pre>
      * pegasus-runtime-predictor --job-sub job.sub --level N --lof job.in.lof
-     *                           --meta a.meta,b.meta workflow.yml output-dir
+     *                           --meta a.meta,b.meta -l wf.runtime-predictor.log
+     *                           workflow.yml output-dir
      * </pre>
      *
      * @param job the <code>Job</code> object containing the job description of the job that has to
@@ -143,6 +159,7 @@ public class PegasusRuntimePredictor {
             args.replace(args.length() - 1, args.length(), "");
         }
 
+        args.append(" ").append("-l").append(" ").append(mLogFile);
         args.append(" ").append(mWorkflowFile);
         args.append(" ").append(OUTPUT_DIRECTORY);
 
