@@ -618,6 +618,10 @@ def pegasus_preflight_check():
     _run_script("pegasus-preflight-check", sys.argv[1:])
 
 
+def pegasus_runtime_predictor():
+    _run_script("pegasus-runtime-predictor", sys.argv[1:])
+
+
 def pegasus_service():
     _run_script("pegasus-service", sys.argv[1:])
 

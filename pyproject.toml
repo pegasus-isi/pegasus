@@ -95,7 +95,7 @@ pegasus-em             = "Pegasus.cli.main:pegasus_em"
 pegasus-config         = "Pegasus.cli.main:pegasus_config"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
-pegasus-runtime-predictor = "Pegasus.cli.pegasus_runtime_predictor:main"
+pegasus-runtime-predictor = "Pegasus.cli.main:pegasus_runtime_predictor"
 
 # C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
 # pegasus-transfer / pegasus-checkpoint / pegasus-integrity /
