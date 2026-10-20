@@ -34,7 +34,7 @@ def _make_client(mocker, client_version="5.2.0dev"):
 
 
 def test_analyze_posts_expected_contract(mocker):
-    """analyze() must POST to /wf/analyze/ai/<id> with the API key header and a
+    """analyze() must POST to /v1/wf/analyze/<id> with the API key header and a
     JSON body matching the service's WFAnalyzeRequest schema (client_version
     and analyze_stdout, both strings)."""
     client = _make_client(mocker)
@@ -47,7 +47,7 @@ def test_analyze_posts_expected_contract(mocker):
 
     assert result == "looks fine"
     args, kwargs = mock_post.call_args
-    assert args[0] == "https://api.pegasus-ai.org/wf/analyze/ai/wf-123"
+    assert args[0] == "https://api.pegasus-ai.org/v1/wf/analyze/wf-123"
     assert kwargs["headers"] == {
         "X-API-Key": "default",
         "Content-Type": "application/json",
@@ -129,7 +129,7 @@ def test_statistics_posts_expected_contract(mocker):
 
     assert result == "stats summary"
     args, kwargs = mock_post.call_args
-    assert args[0] == "https://api.pegasus-ai.org/wf/statistics/ai/wf-123"
+    assert args[0] == "https://api.pegasus-ai.org/v1/wf/statistics/wf-123"
     payload = kwargs["json"]
     assert payload == {
         "client_version": "5.2.0dev",
@@ -157,5 +157,5 @@ def test_url_and_token_come_from_properties(mocker):
     client.analyze("wf-123", "output")
 
     args, kwargs = mock_post.call_args
-    assert args[0] == "https://custom.example.org/wf/analyze/ai/wf-123"
+    assert args[0] == "https://custom.example.org/v1/wf/analyze/wf-123"
     assert kwargs["headers"]["X-API-Key"] == "mytoken"

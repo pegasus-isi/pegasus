@@ -52,7 +52,7 @@ make test
 # Python tests — run from the repo root against the pegasus-wms wheel; every
 # env on the same interpreter shares one venv (see tox.toml)
 make test-python                 # all three suites on $(PYTHON)'s version
-tox                              # all suites on 3.10 .. 3.14, then lint
+tox                              # all suites on 3.10 .. 3.15, then lint
 tox -e 3.12,3.13,lint            # chosen interpreters
 tox -e py                        # the interpreter running tox
 tox -m api                       # one package's suite (common, api, python)
