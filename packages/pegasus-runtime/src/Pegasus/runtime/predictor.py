@@ -1055,8 +1055,6 @@ def _extract_features(
             if not hasattr(job, "transformation"):
                 continue  # SubWorkflow
             ns = getattr(job, "namespace", None)
-            if ns in ("pegasus", "system"):
-                continue  # aux job
 
             condor  = _condor_profiles(job)
             sub_res = sub_resources.get(jid, {})
@@ -1279,6 +1277,8 @@ class WorkflowRuntimePredictor:
         df = _extract_features(workflow, slot, self._ctx.arts,
                                sub_resources=sub_resources,
                                submit_dir=submit_dir)
+        print(df)
+
         if df.empty:
             return []
 
