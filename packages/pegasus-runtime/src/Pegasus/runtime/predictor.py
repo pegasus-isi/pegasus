@@ -1041,6 +1041,8 @@ def _extract_features(
                 file_size_map[f.lfn] = float(f.size)
 
     # Override with real sizes from .meta files (highest priority)
+    # only set when we are trying to do prediction for the whole
+    # workflow.
     if submit_dir:
         meta_sizes = read_meta_sizes(submit_dir)
         file_size_map.update(meta_sizes)  # overwrites YAML sizes where known
@@ -1277,7 +1279,7 @@ class WorkflowRuntimePredictor:
         df = _extract_features(workflow, slot, self._ctx.arts,
                                sub_resources=sub_resources,
                                submit_dir=submit_dir)
-        print(df)
+        print( f"[pegasus-runtime-predictor] \n {df.to_string()}")
 
         if df.empty:
             return []

@@ -230,6 +230,8 @@ def predict(
     # label for the job in the log and the timings
     caller_job_id = dax_job_id or job_sub
 
+    # only in case of a clustered job, we need to parse the whole workflow.yml
+    # file to figure out information about consituent jobs.
     if cluster_in_file:
         # the submit file and the LOF of a clustered job describe the cluster
         # as a whole, and not its tasks. so the tasks are loaded from the workflow
@@ -245,6 +247,7 @@ def predict(
         wf = Workflow(dax_job_id, infer_dependencies=False)
         wf.add_jobs(_job_from_sub(dax_job_id, sub_info))
 
+    # read the sizes from the meta files passed
     sizes = _read_meta_sizes(meta_files or [])
     print(
         f"[pegasus-runtime-predictor] Found {len(sizes)} file size(s) in "
