@@ -1,17 +1,13 @@
 """
 PegasusOracle — Embedded Workflow Runtime Predictor
 
-Loads a trained PegasusOracle model (.pkl) and predicts runtimes for ALL
-jobs in a workflow in a single batch pass — no external API server required.
-
-Output written to the workflow output directory:
-  runtime_predictions.csv   — one row per job
-  runtime_predictions.json  — same data + summary (status counts, slot info)
+Loads a trained PegasusOracle model (.pkl) and predicts the runtime of a job,
+or of the tasks of a clustered job, and patches the prediction into the condor
+submit file of the job — no external API server required.
 
 Architecture matches pegasus_oracle.py exactly so the same .pkl file is portable.
 """
 
-import fcntl
 import json
 import math
 import os
@@ -987,9 +983,6 @@ class WorkflowRuntimePredictor:
 
         cfg = RuntimePredictionConfig.from_properties(props)
         WorkflowRuntimePredictor(cfg).predict("workflow.yml", "job.sub")
-
-    Output files:
-        prescript_timings.csv     — how long each prediction took, one row per job
     """
 
     def __init__(self, config: RuntimePredictionConfig):
@@ -1051,18 +1044,12 @@ class WorkflowRuntimePredictor:
         :param workflow_yml: path to the workflow YAML file, to load the tasks of a
                              clustered job from
         :param job_sub: path to the condor submit file of the job to be patched
-        :param target_level: the DAG level of the job, recorded in the timings
+        :param target_level: the DAG level of the job
         :param lof_file: LOF file listing the lfns of the input files of the job
         :param meta_files: list of .meta files containing the sizes of the input
                            files of the job
         :raises PredictorError: if the runtime of the job cannot be predicted
         """
-        _start_time = time.time()
-
-        # the timings are written to the output directory in the config
-        output_dir = str(Path(self._cfg.output_dir or ".").resolve())
-        os.makedirs(output_dir, exist_ok=True)
-
         dax_job_id, sub_info = parse_sub_file(Path(job_sub))
         if sub_info is None:
             raise PredictorError(f"Unable to read submit file {job_sub}")
@@ -1168,16 +1155,6 @@ class WorkflowRuntimePredictor:
                 f"Could not patch submit file {sub_info['sub_path']} for {caller_job_id}"
             )
         print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
-
-        # ── Record how long this prescript invocation took ─────────────────────
-        prescript_duration_s = time.time() - _start_time
-        _append_prescript_timing(
-            output_dir, caller_job_id, prescript_duration_s, target_level
-        )
-        print(
-            f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
-            f"{prescript_duration_s:.3f}s"
-        )
 
     def predict_job(
         self,
@@ -1365,21 +1342,3 @@ def _warn_no_size(lfn: str, job_id: str) -> None:
         f"{lfn} of job {job_id}",
         file=sys.stderr,
     )
-
-
-def _append_prescript_timing(
-    output_dir: str, job_id: str, duration_s: float, level
-) -> None:
-    """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
-    timing_csv = os.path.join(output_dir, "prescript_timings.csv")
-    header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
-    with open(timing_csv, "a") as fh:
-        fcntl.flock(fh, fcntl.LOCK_EX)
-        try:
-            if header_needed:
-                fh.write("job_id,dag_level,prescript_duration_s\n")
-            fh.write(
-                f"{job_id},{level if level is not None else ''},{duration_s:.3f}\n"
-            )
-        finally:
-            fcntl.flock(fh, fcntl.LOCK_UN)

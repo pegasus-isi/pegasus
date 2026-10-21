@@ -93,7 +93,7 @@ def _split_comma_list(ctx, param, value):
     "target_level",
     type=int,
     metavar="<N>",
-    help="DAG level of the job, recorded in the prescript timings",
+    help="DAG level of the job, recorded in the log file",
 )
 @click.option(
     "--job-sub",
