@@ -5,7 +5,8 @@ Installed as the pegasus-runtime-predictor console script by the pegasus-wms
 wheel. The libraries it needs are installed with the runtime-prediction extra:
     pip install "pegasus-wms[runtime-prediction]"
 
-The prediction itself is implemented by Pegasus.runtime.predictor.predict.
+The prediction itself is implemented by
+Pegasus.runtime.predictor.WorkflowRuntimePredictor.predict.
 The standalone script at bin/pegasus-runtime-predictor delegates here so both
 source installs and pip installs use the same code path.
 
@@ -47,7 +48,11 @@ def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
     """
     # the libraries for runtime prediction are in an optional extra
     try:
-        from Pegasus.runtime.predictor import PredictorError, predict
+        from Pegasus.runtime.predictor import (
+            PredictorError,
+            RuntimePredictionConfig,
+            WorkflowRuntimePredictor,
+        )
     except ImportError as e:
         print(
             f"[pegasus-runtime-predictor] ERROR: Runtime prediction is not available "
@@ -57,9 +62,9 @@ def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
         return 1
 
     try:
-        predict(
+        cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
+        WorkflowRuntimePredictor(cfg).predict(
             workflow_yml,
-            output_dir,
             job_sub,
             target_level,
             lof_file=lof_file,
