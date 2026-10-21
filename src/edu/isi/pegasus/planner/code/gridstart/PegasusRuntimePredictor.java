@@ -40,12 +40,6 @@ public class PegasusRuntimePredictor {
             "$(" + Condor.WF_SUBMIT_DIR_KEY + ")";
 
     /**
-     * The output directory passed to pegasus-runtime-predictor. Prescripts are run by DAGMan in the
-     * directory of the dag file, i.e. the workflow submit directory.
-     */
-    private static final String OUTPUT_DIRECTORY = ".";
-
-    /**
      * The suffix for the common log file in the workflow submit directory, to which all the
      * invocations of pegasus-runtime-predictor log.
      */
@@ -96,7 +90,7 @@ public class PegasusRuntimePredictor {
      * <pre>
      * pegasus-runtime-predictor --job-sub job.sub --level N --lof job.in.lof
      *                           --meta a.meta,b.meta -l wf.runtime-predictor.log
-     *                           workflow.yml output-dir
+     *                           workflow.yml
      * </pre>
      *
      * @param job the <code>Job</code> object containing the job description of the job that has to
@@ -161,7 +155,6 @@ public class PegasusRuntimePredictor {
 
         args.append(" ").append("-l").append(" ").append(mLogFile);
         args.append(" ").append(mWorkflowFile);
-        args.append(" ").append(OUTPUT_DIRECTORY);
 
         job.dagmanVariables.construct(prescriptKey, this.mPredictorPath);
         job.dagmanVariables.construct(Dagman.PRE_SCRIPT_ARGUMENTS_KEY, args.toString());

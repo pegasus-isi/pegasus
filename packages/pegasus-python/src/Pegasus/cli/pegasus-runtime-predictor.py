@@ -12,7 +12,7 @@ source installs and pip installs use the same code path.
 
 Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
     pegasus-runtime-predictor --job-sub FILE [--level N] [--lof FILE] [--meta FILES]
-                              [-l LOG] <workflow.yml> <output_dir>
+                              [-l LOG] <workflow.yml>
 """
 
 import datetime
@@ -40,7 +40,7 @@ def _write_log(log_file: str, log: dict) -> None:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
+def _run(workflow_yml, job_sub, target_level, lof_file, meta_files):
     """
     Run the prediction, printing any error instead of raising it.
 
@@ -62,7 +62,7 @@ def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
         return 1
 
     try:
-        cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
+        cfg = RuntimePredictionConfig(enabled=True)
         WorkflowRuntimePredictor(cfg).predict(
             workflow_yml,
             job_sub,
@@ -127,10 +127,7 @@ def _split_comma_list(ctx, param, value):
     "appended as a JSON record",
 )
 @click.argument("workflow-yml", type=click.Path(dir_okay=False))
-@click.argument("output-dir", type=click.Path(file_okay=False))
-def main(
-    workflow_yml, output_dir, target_level, job_sub, lof_file, meta_files, log_file
-):
+def main(workflow_yml, target_level, job_sub, lof_file, meta_files, log_file):
     """pegasus-runtime-predictor predicts the runtime of a job in a workflow.
 
     Called automatically as a DAGMan PRE script for a job, to predict the
@@ -139,7 +136,7 @@ def main(
     exitcode. With -l, the stdout/stderr of the invocation is
     appended as a JSON record to the log file instead.
     """
-    args = (workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files)
+    args = (workflow_yml, job_sub, target_level, lof_file, meta_files)
     if not log_file:
         sys.exit(_run(*args))
 
