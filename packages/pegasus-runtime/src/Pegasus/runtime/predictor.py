@@ -572,50 +572,6 @@ def _full_trans_name(job) -> str:
     return name
 
 
-def _build_dag_levels(workflow) -> List[List]:
-    """
-    Topological sort of workflow jobs into levels.
-
-    Level 0 = source jobs (no inputs from other jobs).
-    Level N = jobs whose all upstream jobs are in levels < N.
-
-    Returns a list of levels, each level is a list of (job_id, job) tuples.
-    """
-    # Map: file lfn → job_id that produces it
-    producer = {}
-    for jid, job in workflow.jobs.items():
-        for f in job.get_outputs() if hasattr(job, "get_outputs") else []:
-            producer[f.lfn] = jid
-
-    # Build dependency map: job_id → set of job_ids it depends on
-    deps = {jid: set() for jid in workflow.jobs}
-    for jid, job in workflow.jobs.items():
-        for f in job.get_inputs() if hasattr(job, "get_inputs") else []:
-            parent = producer.get(f.lfn)
-            if parent and parent != jid:
-                deps[jid].add(parent)
-
-    # Kahn's algorithm
-    levels   = []
-    assigned = set()
-    remaining = set(workflow.jobs.keys())
-
-    while remaining:
-        level = [
-            jid for jid in remaining
-            if deps[jid].issubset(assigned)
-        ]
-        if not level:
-            # cycle or unresolved — add remaining as one last level
-            level = list(remaining)
-        levels.append([(jid, workflow.jobs[jid]) for jid in level])
-        for jid in level:
-            assigned.add(jid)
-            remaining.discard(jid)
-
-    return levels
-
-
 def parse_sub_file(sub_path: Path):
     """
     Parse a single HTCondor .sub file, as described in :func:`scan_sub_files`.
@@ -675,42 +631,6 @@ def parse_sub_file(sub_path: Path):
         **resources,
     }
 
-
-def scan_sub_files(submit_dir: str) -> dict:
-    """
-    Parallel scan of all HTCondor .sub files in *submit_dir*.
-
-    Reads each file exactly once using a thread pool (32 workers) to
-    amortise NFS latency. For each file belonging to a user job (non-null
-    ``+pegasus_wf_dax_job_id``) extracts:
-
-    - ``request_cpus``          — CPUs requested
-    - ``request_memory_mb``     — memory requested (MB)
-    - ``sub_path``              — absolute path (for patching)
-    - ``cluster_in_file``       — path to .in file if clustered job
-    - ``cluster_transformation``— transformation name for clustered job
-
-    Infrastructure jobs (``+pegasus_wf_dax_job_id = "null"``) are skipped.
-    """
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
-    sub_dir = Path(submit_dir)
-    if not sub_dir.is_dir():
-        return {}
-
-    sub_paths = list(sub_dir.rglob("*.sub"))
-
-    result = {}
-    with ThreadPoolExecutor(max_workers=32) as executor:
-        futures = {executor.submit(parse_sub_file, p): p for p in sub_paths}
-        for future in as_completed(futures):
-            job_id, info = future.result()
-            if job_id:
-                result[job_id] = info
-
-    return result
-
-
 def count_cluster_tasks(in_file_path: str) -> int:
     """
     Count the number of tasks in a Pegasus cluster .in file.
@@ -747,15 +667,6 @@ def cluster_task_ids(in_file_path: str) -> List[str]:
         if len(parts) >= 4 and parts[0] == "#@":
             ids.append(parts[3])
     return ids
-
-
-# Keep old name as alias so existing code doesn't break
-def parse_sub_resources(submit_dir: str) -> dict:
-    """Alias for :func:`scan_sub_files` — returns resource dict only."""
-    return {
-        jid: {k: v for k, v in info.items() if k != "sub_path"}
-        for jid, info in scan_sub_files(submit_dir).items()
-    }
 
 
 # the patterns below are applied every time the submit file is patched, e.g.

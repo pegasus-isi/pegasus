@@ -135,40 +135,6 @@ class TestSynth:
 # scan_sub_files
 # ---------------------------------------------------------------------------
 
-class TestScanSubFiles:
-    def _make_sub(self, path: Path, dax_id: str, cpus: int = 1, mem: float = 1024.0):
-        path.write_text(
-            f'+pegasus_wf_dax_job_id = "{dax_id}"\n'
-            f"request_cpus = {cpus}\n"
-            f"request_memory = {mem}\n"
-            "queue\n"
-        )
-
-    def test_empty_dir(self, tmp_path):
-        assert scan_sub_files(str(tmp_path)) == {}
-
-    def test_nonexistent_dir(self):
-        assert scan_sub_files("/does/not/exist") == {}
-
-    def test_reads_sub_file(self, tmp_path):
-        self._make_sub(tmp_path / "job.sub", "job_id_1", cpus=4, mem=2048.0)
-        result = scan_sub_files(str(tmp_path))
-        assert "job_id_1" in result
-        assert result["job_id_1"]["request_cpus"] == 4
-        assert result["job_id_1"]["request_memory_mb"] == 2048.0
-
-    def test_skips_null_dax_id(self, tmp_path):
-        sub = tmp_path / "system.sub"
-        sub.write_text('+pegasus_wf_dax_job_id = "null"\nqueue\n')
-        assert scan_sub_files(str(tmp_path)) == {}
-
-    def test_nested_sub_file(self, tmp_path):
-        nested = tmp_path / "00" / "00"
-        nested.mkdir(parents=True)
-        self._make_sub(nested / "job.sub", "nested_job")
-        result = scan_sub_files(str(tmp_path))
-        assert "nested_job" in result
-
 
 # ---------------------------------------------------------------------------
 # patch_sub_file
