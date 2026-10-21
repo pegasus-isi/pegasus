@@ -22,7 +22,6 @@ from Pegasus.runtime.predictor import (
     _site,
     _synth,
     patch_sub_file,
-    read_meta_sizes,
     scan_sub_files,
 )
 

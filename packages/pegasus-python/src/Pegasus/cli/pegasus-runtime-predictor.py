@@ -5,9 +5,9 @@ Installed as the pegasus-runtime-predictor console script by the pegasus-wms
 wheel. The libraries it needs are installed with the runtime-prediction extra:
     pip install "pegasus-wms[runtime-prediction]"
 
-This module is the canonical implementation.  The standalone script at
-bin/pegasus-runtime-predictor delegates here so both source installs and
-pip installs use the same code path.
+The prediction itself is implemented by Pegasus.runtime.predictor.predict.
+The standalone script at bin/pegasus-runtime-predictor delegates here so both
+source installs and pip installs use the same code path.
 
 Usage (called automatically as a DAGMan SCRIPT PRE by the pegasus-plan wrapper):
     pegasus-runtime-predictor --job-sub FILE [--level N] [--lof FILE] [--meta FILES]
@@ -18,316 +18,12 @@ import datetime
 import fcntl
 import io
 import json
-import os
 import sys
 import time
 import traceback
 from contextlib import redirect_stderr, redirect_stdout
-from pathlib import Path
 
 import click
-import yaml
-
-from Pegasus.api import File, Job, Namespace, Workflow
-from Pegasus.monitoring.metadata import Metadata
-
-
-class PredictorError(Exception):
-    """Raised when the runtime of a job cannot be predicted."""
-
-
-def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
-    """Load only the jobs with the given ids from the workflow YAML file."""
-    with open(path) as f:
-        data = yaml.safe_load(f)
-
-    wf_name = data.get("name", "workflow")
-    wf = Workflow(wf_name, infer_dependencies=False)
-
-    for jdata in data.get("jobs", []):
-        jid = jdata.get("id", "")
-        if jid not in job_ids:
-            continue
-        trans = jdata.get("name", jdata.get("transformation", ""))
-        job = Job(trans, _id=jid)
-
-        for u in jdata.get("uses", []):
-            fi = File(u["lfn"])
-            if u.get("type") == "input":
-                if u.get("size"):
-                    fi.size = int(u["size"])
-                job.add_inputs(fi)
-            elif u.get("type") == "output":
-                job.add_outputs(fi)
-
-        for key, val in jdata.get("profiles", {}).get("condor", {}).items():
-            job.add_profiles(Namespace.CONDOR, **{key: str(val)})
-
-        wf.add_jobs(job)
-
-    return wf
-
-
-# pegasus_ keys in the condor submit file, and the condor profiles they map to
-_SUB_CONDOR_PROFILES = {
-    "pegasus_cores": "request_cpus",
-    "pegasus_gpus": "request_gpus",
-    "pegasus_memory_mb": "request_memory",
-    "pegasus_diskspace_mb": "request_disk",
-}
-
-
-def _split_tc_name(tc_name: str):
-    """Split a [namespace::]name[:version] transformation name into its parts."""
-    namespace, _, name = tc_name.rpartition("::")
-    name, _, version = name.partition(":")
-    return namespace or None, name, version or None
-
-
-def _job_from_sub(job_id: str, sub_info: dict) -> Job:
-    """
-    Create the job from the transformation name and the pegasus_ keys in its
-    condor submit file. The pegasus_ keys are added as condor profiles.
-    """
-    tc_name = sub_info.get("transformation")
-    if not tc_name:
-        print(
-            f"[pegasus-runtime-predictor] No transformation found in {sub_info['sub_path']}",
-            file=sys.stderr,
-        )
-        tc_name = "unknown"
-    namespace, name, version = _split_tc_name(tc_name)
-    job = Job(name, _id=job_id, namespace=namespace, version=version)
-
-    profiles = {}
-    for key, profile in _SUB_CONDOR_PROFILES.items():
-        if sub_info.get(key) is not None:
-            profiles[profile] = sub_info[key]
-    if "request_disk" in profiles:
-        # condor defaults to KiB for request_disk
-        profiles["request_disk"] += " MB"
-    if profiles:
-        job.add_profiles(Namespace.CONDOR, **profiles)
-    return job
-
-
-def _read_lof(lof_file: str) -> list:
-    """Return the lfns listed in a LOF file, that has one lfn=... entry per line."""
-    lfns = []
-    with open(lof_file) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#"):
-                lfns.append(line.split("=", 1)[0])
-    return lfns
-
-
-def _read_meta_sizes(meta_files) -> dict:
-    """Return the sizes in bytes of the files in the .meta files, indexed by lfn."""
-    sizes = {}
-    for meta_file in meta_files:
-        try:
-            metadata_list = Metadata.load(meta_file)
-        except (OSError, ValueError) as e:
-            print(
-                f"[pegasus-runtime-predictor] Unable to read meta file {meta_file}: {e}",
-                file=sys.stderr,
-            )
-            continue
-        for m in metadata_list:
-            size = m.get_attribute_value("size")
-            if m.get_type() == "file" and size is not None:
-                sizes[m.get_id()] = int(size)
-    return sizes
-
-
-def _warn_no_size(lfn: str, job_id: str) -> None:
-    """Warn that an input file of a job has no size in the .meta files."""
-    print(
-        f"[pegasus-runtime-predictor] WARNING: No size found in meta files for input "
-        f"{lfn} of job {job_id}",
-        file=sys.stderr,
-    )
-
-
-def _append_prescript_timing(
-    output_dir: str, job_id: str, duration_s: float, level
-) -> None:
-    """Append one row to prescript_timings.csv — safe for parallel SCRIPT PRE calls."""
-    timing_csv = os.path.join(output_dir, "prescript_timings.csv")
-    header_needed = not os.path.exists(timing_csv) or os.path.getsize(timing_csv) == 0
-    with open(timing_csv, "a") as fh:
-        fcntl.flock(fh, fcntl.LOCK_EX)
-        try:
-            if header_needed:
-                fh.write("job_id,dag_level,prescript_duration_s\n")
-            fh.write(
-                f"{job_id},{level if level is not None else ''},{duration_s:.3f}\n"
-            )
-        finally:
-            fcntl.flock(fh, fcntl.LOCK_UN)
-
-
-def predict(
-    workflow_yml,
-    output_dir,
-    job_sub,
-    target_level=None,
-    lof_file=None,
-    meta_files=None,
-):
-    """
-    Computes the runtime prediction for the job whose condor submit file is
-    passed, and patches it into the submit file. For a clustered job, the
-    predictions for its constituent tasks are computed and aggregated.
-
-    :param workflow_yml: path to the workflow YAML file, to load the tasks of a
-                         clustered job from
-    :param output_dir: directory to write the timings to
-    :param job_sub: path to the condor submit file of the job to be patched
-    :param target_level: the DAG level of the job, recorded in the timings
-    :param lof_file: LOF file listing the lfns of the input files of the job
-    :param meta_files: list of .meta files containing the sizes of the input
-                       files of the job
-    """
-    _start_time = time.time()
-
-    # the libraries for runtime prediction are in an optional extra
-    try:
-        from Pegasus.runtime.predictor import (
-            RuntimePredictionConfig,
-            WorkflowRuntimePredictor,
-            cluster_task_ids,
-            parse_sub_file,
-            patch_sub_file,
-        )
-    except ImportError as e:
-        raise PredictorError(
-            f"Runtime prediction is not available ({e}). "
-            'Install it with: pip install "pegasus-wms[runtime-prediction]"'
-        ) from e
-
-    output_dir = str(Path(output_dir).resolve())
-    os.makedirs(output_dir, exist_ok=True)
-
-    dax_job_id, sub_info = parse_sub_file(Path(job_sub))
-    if sub_info is None:
-        raise PredictorError(f"Unable to read submit file {job_sub}")
-
-    # a clustered job has no dax job id of its own. predict for its tasks
-    cluster_in_file = sub_info.get("cluster_in_file")
-    if cluster_in_file:
-        job_ids = cluster_task_ids(cluster_in_file)
-        print(f"[pegasus-runtime-predictor] Cluster detected: {job_sub}")
-        print(f"[pegasus-runtime-predictor]   .in file:        {cluster_in_file}")
-        print(f"[pegasus-runtime-predictor]   task count:      {len(job_ids)}")
-    else:
-        job_ids = [dax_job_id] if dax_job_id else []
-
-    if not job_ids:
-        raise PredictorError(f"No job id found in submit file {job_sub}")
-
-    # label for the job in the log and the timings
-    caller_job_id = dax_job_id or job_sub
-
-    # only in case of a clustered job, we need to parse the whole workflow.yml
-    # file to figure out information about consituent jobs.
-    if cluster_in_file:
-        # the submit file and the LOF of a clustered job describe the cluster
-        # as a whole, and not its tasks. so the tasks are loaded from the workflow
-        print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
-        wf = _load_jobs_from_yaml(workflow_yml, job_ids)
-        missing = [jid for jid in job_ids if jid not in wf.jobs]
-        if missing:
-            print(
-                f"[pegasus-runtime-predictor] Job(s) not found in workflow: {', '.join(missing)}",
-                file=sys.stderr,
-            )
-    else:
-        wf = Workflow(dax_job_id, infer_dependencies=False)
-        wf.add_jobs(_job_from_sub(dax_job_id, sub_info))
-
-    # read the sizes from the meta files passed
-    sizes = _read_meta_sizes(meta_files or [])
-    print(
-        f"[pegasus-runtime-predictor] Found {len(sizes)} file size(s) in "
-        f"{len(meta_files or [])} meta file(s)"
-    )
-    if cluster_in_file:
-        # files produced by other tasks in the cluster have no .meta entry yet
-        # and their sizes are estimated
-        produced = {fo.lfn for job in wf.jobs.values() for fo in job.get_outputs()}
-        for job in wf.jobs.values():
-            for fi in job.get_inputs():
-                if fi.lfn in sizes:
-                    fi.size = sizes[fi.lfn]
-                elif fi.lfn not in produced:
-                    _warn_no_size(fi.lfn, job._id)
-    else:
-        lfns = _read_lof(lof_file) if lof_file else []
-        if not lfns:
-            print(
-                f"[pegasus-runtime-predictor] No input files found for {caller_job_id}",
-                file=sys.stderr,
-            )
-        for lfn in lfns:
-            if lfn not in sizes:
-                _warn_no_size(lfn, caller_job_id)
-        for job in wf.jobs.values():
-            job.add_inputs(*[File(lfn, size=sizes.get(lfn)) for lfn in lfns])
-
-    cfg = RuntimePredictionConfig(enabled=True, output_dir=output_dir)
-    predictor = WorkflowRuntimePredictor(cfg)
-
-    # the resources in the submit file are for the job itself, and not the
-    # constituent tasks of a clustered job
-    sub_resources = {}
-    if dax_job_id:
-        sub_resources[dax_job_id] = {
-            k: v for k, v in sub_info.items() if k != "sub_path"
-        }
-
-    _pred_start = time.time()
-    results = predictor.predict_job(wf, sub_resources=sub_resources, level=target_level)
-    _pred_duration = time.time() - _pred_start
-    print(
-        f"[pegasus-runtime-predictor] {len(results)} job(s) predicted in {_pred_duration:.3f}s"
-    )
-
-    pred = None
-    if results and cluster_in_file:
-        # Clustered job — aggregate predictions for all constituent tasks
-        pred = {
-            "predicted_runtime_s": sum(p["predicted_runtime_s"] for p in results),
-            "upper_bound_s": sum(p["upper_bound_s"] for p in results),
-            "lower_bound_s": sum(p["lower_bound_s"] for p in results),
-            "status": "CLUSTERED",
-        }
-        print(
-            f"[pegasus-runtime-predictor] Cluster {caller_job_id}: "
-            f"{len(results)}/{len(job_ids)} tasks aggregated, "
-            f"total={pred['predicted_runtime_s']:.1f}s"
-        )
-    elif results:
-        pred = results[0]
-
-    if not pred:
-        raise PredictorError(f"No prediction found for {caller_job_id}")
-    if not patch_sub_file(sub_info["sub_path"], pred):
-        raise PredictorError(
-            f"Could not patch submit file {sub_info['sub_path']} for {caller_job_id}"
-        )
-    print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
-
-    # ── Record how long this prescript invocation took ─────────────────────
-    prescript_duration_s = time.time() - _start_time
-    _append_prescript_timing(
-        output_dir, caller_job_id, prescript_duration_s, target_level
-    )
-    print(
-        f"[pegasus-runtime-predictor] Prescript duration for {caller_job_id}: "
-        f"{prescript_duration_s:.3f}s"
-    )
 
 
 def _write_log(log_file: str, log: dict) -> None:
@@ -349,6 +45,17 @@ def _run(workflow_yml, output_dir, job_sub, target_level, lof_file, meta_files):
 
     :return: the exitcode, 0 on success and 1 on error
     """
+    # the libraries for runtime prediction are in an optional extra
+    try:
+        from Pegasus.runtime.predictor import PredictorError, predict
+    except ImportError as e:
+        print(
+            f"[pegasus-runtime-predictor] ERROR: Runtime prediction is not available "
+            f'({e}). Install it with: pip install "pegasus-wms[runtime-prediction]"',
+            file=sys.stderr,
+        )
+        return 1
+
     try:
         predict(
             workflow_yml,
