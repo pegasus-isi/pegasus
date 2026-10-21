@@ -288,7 +288,7 @@ def predict(
         }
 
     _pred_start = time.time()
-    results = predictor.predict_jobs(wf, sub_resources=sub_resources)
+    results = predictor.predict_job(wf, sub_resources=sub_resources, level=target_level)
     _pred_duration = time.time() - _pred_start
     print(
         f"[pegasus-runtime-predictor] {len(results)} job(s) predicted in {_pred_duration:.3f}s"

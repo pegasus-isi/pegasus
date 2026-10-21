@@ -131,43 +131,6 @@ class TestSynth:
         assert _synth(None) == "unknown"
 
 
-# ---------------------------------------------------------------------------
-# read_meta_sizes
-# ---------------------------------------------------------------------------
-
-class TestReadMetaSizes:
-    def test_empty_dir(self, tmp_path):
-        assert read_meta_sizes(str(tmp_path)) == {}
-
-    def test_nonexistent_dir(self):
-        assert read_meta_sizes("/does/not/exist") == {}
-
-    def test_reads_meta_file(self, tmp_path):
-        meta = [
-            {"_type": "file", "_id": "f.a", "_attributes": {"size": "1024"}},
-            {"_type": "file", "_id": "f.b", "_attributes": {"size": "2048"}},
-        ]
-        meta_file = tmp_path / "job.meta"
-        meta_file.write_text(json.dumps(meta))
-
-        sizes = read_meta_sizes(str(tmp_path))
-        assert sizes["f.a"] == 1024.0
-        assert sizes["f.b"] == 2048.0
-
-    def test_skips_missing_size(self, tmp_path):
-        meta = [{"_type": "file", "_id": "f.c", "_attributes": {}}]
-        (tmp_path / "job.meta").write_text(json.dumps(meta))
-        sizes = read_meta_sizes(str(tmp_path))
-        assert "f.c" not in sizes
-
-    def test_nested_meta_file(self, tmp_path):
-        nested = tmp_path / "00" / "00"
-        nested.mkdir(parents=True)
-        meta = [{"_type": "file", "_id": "f.d", "_attributes": {"size": "512"}}]
-        (nested / "x.meta").write_text(json.dumps(meta))
-        sizes = read_meta_sizes(str(tmp_path))
-        assert sizes["f.d"] == 512.0
-
 
 # ---------------------------------------------------------------------------
 # scan_sub_files

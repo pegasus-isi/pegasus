@@ -609,60 +609,6 @@ def _build_dag_levels(workflow) -> List[List]:
     return levels
 
 
-def read_meta_sizes(submit_dir: str) -> dict:
-    """
-    Scan all Pegasus ``.meta`` files under *submit_dir* and return a
-    mapping of **LFN → size in bytes** (float).
-
-    Pegasus writes one ``.meta`` file per job after it completes, e.g.::
-
-        run00XX/00/00/preprocess_0.meta
-
-    Each file is a JSON array of records::
-
-        [
-          {
-            "_type": "file",
-            "_id": "f.b1",
-            "_attributes": {"size": "1048576", "checksum.type": "sha256", ...}
-          },
-          ...
-        ]
-
-    The ``_id`` field is the LFN; ``_attributes.size`` is the file size in
-    bytes (stored as a string by Pegasus).  This function merges all
-    discovered records into one dict so ``_extract_features`` can seed
-    ``file_size_map`` with actual post-execution sizes rather than the
-    static ``File.size`` values from ``workflow.yml``.
-
-    Returns an empty dict if *submit_dir* does not exist or no ``.meta``
-    files are found.
-    """
-    sizes: dict = {}
-    root = Path(submit_dir)
-    if not root.is_dir():
-        return sizes
-
-    for meta_path in root.rglob("*.meta"):
-        try:
-            records = json.loads(meta_path.read_text())
-            if not isinstance(records, list):
-                continue
-            for rec in records:
-                lfn  = rec.get("_id", "")
-                attrs = rec.get("_attributes", {})
-                raw_size = attrs.get("size", "")
-                if lfn and raw_size:
-                    try:
-                        sizes[lfn] = float(raw_size)
-                    except (ValueError, TypeError):
-                        pass
-        except Exception:
-            continue
-
-    return sizes
-
-
 def parse_sub_file(sub_path: Path):
     """
     Parse a single HTCondor .sub file, as described in :func:`scan_sub_files`.
@@ -994,19 +940,14 @@ def find_submit_dir(workflow_yml: str) -> str | None:
 
 def _extract_features(
     workflow,
+    level: int,
     slot: dict,
     arts: dict,
-    sub_resources: Optional[dict] = None,
-    submit_dir: Optional[str] = None,
+    sub_resources: Optional[dict] = None
 ) -> pd.DataFrame:
     """
-    Build one feature row per job in the workflow using DAG-level traversal.
-
-    Walks the DAG level by level (topological order):
-      - Level 0 (source jobs): uses File.size directly — sizes are known
-      - Level N (middle/sink): input sizes are propagated from upstream outputs
-        using the output_ratio per transformation stored in arts, so middle
-        jobs get a realistic input_bytes_total instead of 0
+    Build one feature row per job in the workflow. In case of clustered jobs
+    the workflow consists of jobs making up the cluster
 
     ``sub_resources`` (optional) provides request_cpus / request_memory from
     HTCondor .sub files, keyed by DAX job ID.
@@ -1032,6 +973,8 @@ def _extract_features(
     file_size_map: dict = {}
 
     # Seed with static YAML sizes first (lowest priority)
+    # the workflow object only has one job unless it is a
+    # clustered job
     for jid, job in workflow.jobs.items():
         for f in (job.get_inputs() if hasattr(job, "get_inputs") else []):
             if hasattr(f, "size") and f.size:
@@ -1040,73 +983,59 @@ def _extract_features(
             if hasattr(f, "size") and f.size:
                 file_size_map[f.lfn] = float(f.size)
 
-    # Override with real sizes from .meta files (highest priority)
-    # only set when we are trying to do prediction for the whole
-    # workflow.
-    if submit_dir:
-        meta_sizes = read_meta_sizes(submit_dir)
-        file_size_map.update(meta_sizes)  # overwrites YAML sizes where known
-
     output_ratio = arts.get("output_ratio", {})
 
     rows      = []
     level_map = {}  # job_id → level index (for reporting)
 
-    for level_idx, level in enumerate(_build_dag_levels(workflow)):
-        for jid, job in level:
-            if not hasattr(job, "transformation"):
-                continue  # SubWorkflow
-            ns = getattr(job, "namespace", None)
+    for jid, job in workflow.jobs.items():
 
-            condor  = _condor_profiles(job)
-            sub_res = sub_resources.get(jid, {})
+        if not hasattr(job, "transformation"):
+            continue  # SubWorkflow
+        ns = getattr(job, "namespace", None)
 
-            # cpu_count: always the machine total (matches training-time kickstart data)
-            machine_cpus = slot["cpu_count"]
+        condor  = _condor_profiles(job)
+        sub_res = sub_resources.get(jid, {})
 
-            # request_cpus: what the job asked for (used for memory_pressure only)
-            req_cpus = (
-                sub_res.get("request_cpus")
-                or int(condor.get("request_cpus", 0))
-                or machine_cpus
-            )
+        # cpu_count: always the machine total (matches training-time kickstart data)
+        machine_cpus = slot["cpu_count"]
 
-            req_mem_mb = (
-                sub_res.get("request_memory_mb")
-                or float(condor.get("request_memory", 0))
-            )
-            ram_kb = req_mem_mb * 1_024 if req_mem_mb > 0 else slot["ram"]
+        # request_cpus: what the job asked for (used for memory_pressure only)
+        req_cpus = (
+            sub_res.get("request_cpus")
+            or int(condor.get("request_cpus", 0))
+            or machine_cpus
+        )
 
-            # site: prefer named execution site from job profiles over hostname
-            exec_site = _job_execution_site(job) or slot["hostname"]
+        req_mem_mb = (
+            sub_res.get("request_memory_mb")
+            or float(condor.get("request_memory", 0))
+        )
+        ram_kb = req_mem_mb * 1_024 if req_mem_mb > 0 else slot["ram"]
 
-            inputs            = job.get_inputs() if hasattr(job, "get_inputs") else []
-            input_files_count = len(inputs)
-            input_bytes_total = sum(
-                file_size_map.get(f.lfn, 0.0) for f in inputs
-            )
+        # site: prefer named execution site from job profiles over hostname
+        exec_site = _job_execution_site(job) or slot["hostname"]
 
-            rows.append({
-                "job_id":            jid,
-                "transformation":    _full_trans_name(job),
-                "dag_level":         level_idx,
-                "cpu_count":         machine_cpus,
-                "request_cpus":      req_cpus,
-                "cpu_speed":         slot["cpu_speed"],
-                "ram":               ram_kb,
-                "input_bytes_total": float(input_bytes_total),
-                "input_files_count": input_files_count,
-                "hostname":          exec_site,
-            })
-            level_map[jid] = level_idx
+        inputs            = job.get_inputs() if hasattr(job, "get_inputs") else []
+        input_files_count = len(inputs)
+        input_bytes_total = sum(
+            file_size_map.get(f.lfn, 0.0) for f in inputs
+        )
 
-            # Propagate estimated output sizes to downstream jobs
-            trans      = _full_trans_name(job)
-            ratio      = output_ratio.get(trans, 1.0)
-            est_output = input_bytes_total * ratio
-            for f in (job.get_outputs() if hasattr(job, "get_outputs") else []):
-                if f.lfn not in file_size_map:
-                    file_size_map[f.lfn] = est_output
+        rows.append({
+            "job_id":            jid,
+            "transformation":    _full_trans_name(job),
+            "dag_level":         level,
+            "cpu_count":         machine_cpus,
+            "request_cpus":      req_cpus,
+            "cpu_speed":         slot["cpu_speed"],
+            "ram":               ram_kb,
+            "input_bytes_total": float(input_bytes_total),
+            "input_files_count": input_files_count,
+            "hostname":          exec_site,
+        })
+        level_map[jid] = level
+
 
     return pd.DataFrame(rows) if rows else pd.DataFrame()
 
@@ -1177,70 +1106,6 @@ class WorkflowRuntimePredictor:
         if config.q_hi is not None:
             self._ctx.q_hi = config.q_hi
 
-    def predict(self, workflow, sub_resources: Optional[dict] = None) -> List[dict]:
-        """
-        Predict runtimes for all jobs in *workflow* and write output files.
-
-        Output directory is taken from ``config.output_dir``; if not set it
-        falls back to the workflow's submit dir (``workflow._submit_dir``) or
-        the current working directory.
-
-        :param workflow: a Pegasus Workflow object
-        :param sub_resources: optional dict from :func:`parse_sub_resources` —
-            ``{dax_job_id: {"request_cpus": int, "request_memory_mb": float}}``.
-            When provided, overrides YAML profile values for cpu_count and ram,
-            matching what was used at training time (values from .sub files).
-        :return: list of prediction dicts (one per job, same content as CSV rows)
-        """
-        if not self._cfg.enabled:
-            return []
-
-        output_dir = (
-            self._cfg.output_dir
-            or getattr(workflow, "_submit_dir", None)
-            or str(Path.cwd())
-        )
-        output_dir = str(output_dir)
-        os.makedirs(output_dir, exist_ok=True)
-
-        slot    = self._resolve_slot()
-        results = self.predict_jobs(workflow, sub_resources=sub_resources,
-                                    submit_dir=output_dir, slot=slot)
-        if not results:
-            return []
-        ip_pct = results[0]["interval_pct"]
-
-        # ── Step 5: write CSV ──────────────────────────────────────────────
-        csv_path = os.path.join(output_dir, "runtime_predictions.csv")
-        pd.DataFrame(results).to_csv(csv_path, index=False)
-
-        # ── Step 6: write JSON with summary ───────────────────────────────
-        n_levels = max(r["dag_level"] for r in results) + 1
-        summary = {
-            "workflow_name":  getattr(workflow, "name", "unknown"),
-            "total_jobs":     len(results),
-            "dag_levels":     n_levels,
-            "status_counts":  dict(Counter(r["status"] for r in results)),
-            "interval_pct":   ip_pct,
-            "model_path":     self._cfg.model_path,
-            "slot_used":      slot,
-            "config": {
-                "sparse_threshold": self._ctx.sparse_thr,
-                "q_lo":             self._ctx.q_lo,
-                "q_hi":             self._ctx.q_hi,
-            },
-            "predictions":    results,
-        }
-        json_path = os.path.join(output_dir, "runtime_predictions.json")
-        with open(json_path, "w") as f:
-            json.dump(summary, f, indent=2)
-
-        # ── Step 7: inject native Pegasus job into the DAG ────────────────
-        # Mirrors stage-in/stage-out: runs on local site before all root jobs,
-        # produces runtime_predictions.json and .csv as DAG outputs.
-        self._inject_into_dag(workflow, output_dir)
-
-        return results
 
     def _resolve_slot(self) -> dict:
         """Resolve the compute slot, applying any slot overrides from config."""
@@ -1251,11 +1116,11 @@ class WorkflowRuntimePredictor:
         if self._cfg.slot_ram       is not None: slot["ram"]       = self._cfg.slot_ram
         return slot
 
-    def predict_jobs(
+    def predict_job(
         self,
         workflow,
+        level,
         sub_resources: Optional[dict] = None,
-        submit_dir: Optional[str] = None,
         slot: Optional[dict] = None,
     ) -> List[dict]:
         """
@@ -1263,6 +1128,7 @@ class WorkflowRuntimePredictor:
         output files or modifying the workflow.
 
         :param workflow: a Pegasus Workflow object with the jobs to predict
+        :param level: the level at which the jobs are
         :param sub_resources: optional ``{dax_job_id: {"request_cpus": int,
             "request_memory_mb": float}}`` overriding YAML profile values
         :param submit_dir: optional directory to read .meta file sizes from
@@ -1276,9 +1142,8 @@ class WorkflowRuntimePredictor:
         slot = slot or self._resolve_slot()
 
         # ── Step 2: build feature matrix level-by-level, then collect all ───
-        df = _extract_features(workflow, slot, self._ctx.arts,
-                               sub_resources=sub_resources,
-                               submit_dir=submit_dir)
+        df = _extract_features(workflow, level, slot, self._ctx.arts,
+                               sub_resources=sub_resources)
         print( f"[pegasus-runtime-predictor] \n {df.to_string()}")
 
         if df.empty:
@@ -1315,131 +1180,3 @@ class WorkflowRuntimePredictor:
             })
 
         return results
-
-    def _inject_into_dag(self, workflow, output_dir: str) -> None:
-        """
-        Inject ONE ``pegasus-runtime-predictor`` job per DAG level.
-
-        Like stage-in (one per level), each prediction job:
-        - Runs BEFORE all user jobs at that level
-        - Runs AFTER all user jobs at the previous level
-        - Outputs level-specific runtime_predictions_L{N}.json/.csv
-
-        DAG shape after injection:
-            [pred-L0] → [user-L0-jobs]
-                              ↓
-                        [pred-L1] → [user-L1-jobs]
-                                          ↓
-                                    [pred-L2] → [user-L2-jobs]
-        """
-        import logging as _log
-        _logger = _log.getLogger(__name__)
-
-        import shutil as _shutil
-        from Pegasus.api import Job, Namespace, Transformation, TransformationCatalog, TransformationSite
-
-        # ── Inject TC entry so Pegasus can map the predictor to any site ──────
-        # Resolve binary path: prefer PATH lookup, fall back to location
-        # relative to this module (works for both installed and source layouts).
-        _pred_bin = _shutil.which("pegasus-runtime-predictor") or str(
-            Path(__file__).resolve().parent.parent.parent.parent.parent
-            / "bin" / "pegasus-runtime-predictor"
-        )
-        if workflow.transformation_catalog is None:
-            workflow.transformation_catalog = TransformationCatalog()
-        _existing_tc = {
-            t.name
-            for t in getattr(workflow.transformation_catalog, "transformations", {}).values()
-        }
-        if "pegasus-runtime-predictor" not in _existing_tc:
-            _pred_trans = Transformation("pegasus-runtime-predictor")
-            _pred_trans.add_sites(
-                TransformationSite("local",      _pred_bin, is_stageable=False),
-                TransformationSite("condorpool", _pred_bin, is_stageable=False)
-                    .add_profiles(Namespace.CONDOR, universe="local"),
-            )
-            workflow.transformation_catalog.add_transformations(_pred_trans)
-
-        # ── Also patch the external tc.yml in the workflow directory ──────────
-        # Pegasus may read an external tc.yml (from pegasus.properties or CWD)
-        # that overrides the inline TC. Write our entry there too so Pegasus
-        # always finds condorpool regardless of which TC source it prefers.
-        _pred_tc_entry = {
-            "name": "pegasus-runtime-predictor",
-            "sites": [
-                {"name": "local",      "pfn": _pred_bin, "type": "installed"},
-                {"name": "condorpool", "pfn": _pred_bin, "type": "installed",
-                 "profiles": {"condor": {"universe": "local"}}},
-            ],
-        }
-        for _tc_candidate in (
-            Path(output_dir).parent / "tc.yml",
-            Path(output_dir).parent / "tc.yaml",
-            Path("tc.yml"),
-            Path("tc.yaml"),
-        ):
-            if not _tc_candidate.exists():
-                continue
-            try:
-                import yaml as _yaml
-                _tc_data = _yaml.safe_load(_tc_candidate.read_text()) or {}
-                _trans = _tc_data.get("transformations", [])
-                if not any(t.get("name") == "pegasus-runtime-predictor" for t in _trans):
-                    _trans.append(_pred_tc_entry)
-                    _tc_data["transformations"] = _trans
-                    _tc_candidate.write_text(
-                        _yaml.dump(_tc_data, default_flow_style=False, sort_keys=False)
-                    )
-                    _logger.info(f"[runtime-predictor] Patched TC entry into {_tc_candidate}")
-            except Exception as _e:
-                _logger.warning(f"[runtime-predictor] Could not patch {_tc_candidate}: {_e}")
-            break  # only patch the first tc.yml found
-
-        # Idempotent: remove any existing predictor jobs before re-injecting.
-        # Prevents duplicate output-file errors if this method is called more
-        # than once (e.g. from a user script that calls predict() twice).
-        pred_job_ids = [
-            jid for jid, j in list(workflow.jobs.items())
-            if getattr(j, "transformation", "") == "pegasus-runtime-predictor"
-        ]
-        for jid in pred_job_ids:
-            workflow.jobs.pop(jid, None)
-        if pred_job_ids:
-            _logger.info(
-                f"[runtime-predictor] Removed {len(pred_job_ids)} stale predictor job(s)"
-            )
-
-        levels = _build_dag_levels(workflow)
-        if not levels:
-            _logger.warning("[runtime-predictor] DAG is empty — skipping")
-            return
-
-        prev_pred_job = None
-        for level_idx, level in enumerate(levels):
-            level_job_ids = [jid for jid, _ in level]
-
-            # Do NOT declare output files as Pegasus LFNs — the predictor writes
-            # them locally as side-effects and they never need to be staged.
-            # Declaring them caused "duplicate output file" planning errors when
-            # two code paths both tried to inject predictor jobs.
-            pred_job = (
-                Job("pegasus-runtime-predictor")
-                .add_args("workflow.yml", output_dir, f"--level={level_idx}")
-                .add_profiles(Namespace.PEGASUS, key="job.type", value="auxillary")
-                .add_profiles(Namespace.PEGASUS, key="label",    value=f"runtime-prediction-L{level_idx}")
-                .add_profiles(Namespace.SELECTOR, key="execution.site", value="local")
-                .add_profiles(Namespace.CONDOR,   key="universe",       value="local")
-            )
-
-            workflow.add_jobs(pred_job)
-            _logger.info(f"[runtime-predictor] Level {level_idx}: added {pred_job._id}")
-
-            # pred-LN → user jobs at level N
-            for jid in level_job_ids:
-                workflow.add_dependency(pred_job, children=[workflow.jobs[jid]])
-
-            # user jobs at level N-1 → pred-LN  (so pred-LN runs between levels)
-            if prev_pred_job is not None:
-                workflow.add_dependency(prev_pred_job, children=[pred_job])
-
-            prev_pred_job = pred_job
