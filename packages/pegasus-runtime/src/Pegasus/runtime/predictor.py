@@ -327,6 +327,19 @@ _DEFAULT_SLOT = {
 CONDOR_STATUS_CACHE_FILE    = "runtime-predictor.condor_status.json"
 CONDOR_STATUS_CACHE_MAX_AGE = 3_600   # seconds
 
+# the slot classads read by _get_condor_slot. only these are queried from
+# condor_status, to keep its output and the cache file small
+CONDOR_STATUS_ATTRIBUTES = [
+    "Name",
+    "Machine",
+    "Cpus",
+    "TotalSlotCpus",
+    "ProcessorSpeed",
+    "KFlops",
+    "TotalSlotMemory",
+    "Memory",
+]
+
 
 def _condor_status_json(cache_file: Optional[str] = None) -> Optional[list]:
     """
@@ -357,7 +370,9 @@ def _condor_status_json(cache_file: Optional[str] = None) -> Optional[list]:
 
     try:
         out = subprocess.check_output(
-            ["condor_status", "-json"], stderr=subprocess.DEVNULL, timeout=15)
+            ["condor_status", "-json",
+             "-attributes", ",".join(CONDOR_STATUS_ATTRIBUTES)],
+            stderr=subprocess.DEVNULL, timeout=15)
         slots_raw = json.loads(out)
     except Exception:
         return cached
