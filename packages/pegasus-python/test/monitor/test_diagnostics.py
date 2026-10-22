@@ -295,6 +295,13 @@ def test_redaction_covers_common_credential_forms(value: str, secret: str) -> No
     assert "<redacted>" in excerpt
 
 
+def test_redaction_strips_terminal_control_sequences() -> None:
+    value = "missing \x1b]0;pwned\x07file \x1b[2J\x9b31mred\x00 end"
+    excerpt = redact_excerpt(value, 512)
+    assert not any(ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F for c in excerpt)
+    assert excerpt == "missing ]0;pwned file [2J 31mred end"
+
+
 def test_redaction_is_linear_for_long_non_secret_text() -> None:
     started = monotonic()
     excerpt = redact_excerpt("a" * 100_000, 512)

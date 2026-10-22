@@ -1788,7 +1788,9 @@ def _run_server_launch_mode(
             log_path=log_path,
         ),
         _server_paths_for_log(log_path),
-        cwd=Path(location.submit_dir),
+        # Not the submit dir: `python -m` puts the cwd first on sys.path, and
+        # every path the server needs is already absolute.
+        cwd=Path("/"),
     )
     if result.completed:
         if not _server_wrote_final_log(log_path, previous_log):

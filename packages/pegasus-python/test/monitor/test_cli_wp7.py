@@ -27,7 +27,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from Pegasus.monitor import cli
+from Pegasus.monitor import cli, server
 from Pegasus.monitor.display import (
     DisplayAnalysis,
     DisplayContext,
@@ -535,6 +535,22 @@ def test_serve_accepts_server_that_finished_with_a_final_log(
     assert cli._run_server_launch_mode(SimpleNamespace(), object(), output) == 0
     assert "workflow already complete" in output.getvalue()
     assert str(log_path) in output.getvalue()
+
+
+def test_serve_launches_server_outside_the_submit_dir(tmp_path, monkeypatch) -> None:
+    _completed_launch(monkeypatch, tmp_path, "final")
+    completed = server.launch_server
+    launches: list[dict[str, object]] = []
+
+    def launch_server(*args: object, **kwargs: object) -> ServerLaunchResult:
+        launches.append(kwargs)
+        return completed(*args, **kwargs)
+
+    monkeypatch.setattr("Pegasus.monitor.server.launch_server", launch_server)
+    assert cli._run_server_launch_mode(SimpleNamespace(), object(), _Output()) == 0
+
+    # `python -m` puts the cwd first on sys.path; the submit dir must not be it.
+    assert launches[0]["cwd"] == Path("/")
 
 
 @pytest.mark.parametrize("server_writes", ["initial", None])

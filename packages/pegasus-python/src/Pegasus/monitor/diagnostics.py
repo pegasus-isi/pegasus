@@ -76,6 +76,8 @@ _PRIVATE_KEY = re.compile(
     re.DOTALL,
 )
 _HOME_PATH = re.compile(r"(?:/Users|/home)/[^/\s]+/[^\s|,;]*")
+# C0/C1 controls (ESC, CSI, OSC, ...) from job output must not reach the terminal.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 
 
 class DiagnosticCategory(str, Enum):
@@ -263,11 +265,12 @@ _RE_CONNECTION = re.compile(
 
 
 def redact_excerpt(value: str, maximum: int = MAX_EXCERPT_CHARS) -> str:
-    """Redact common secrets and user-home prefixes before bounding text."""
+    """Strip controls, redact secrets and user-home prefixes, then bound text."""
 
     if maximum < 4:
         raise ValueError("excerpt maximum must be at least four characters")
-    redacted = _PRIVATE_KEY.sub("<redacted-private-key>", value)
+    redacted = _CONTROL_CHARS.sub(" ", value)
+    redacted = _PRIVATE_KEY.sub("<redacted-private-key>", redacted)
     redacted = _AUTH_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
     redacted = _NAMED_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
     redacted = _URL_CREDENTIAL.sub(r"\1<redacted>@", redacted)
