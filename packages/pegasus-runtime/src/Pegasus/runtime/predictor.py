@@ -15,6 +15,7 @@ import pickle
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import warnings
 from collections import Counter
@@ -317,16 +318,72 @@ _DEFAULT_SLOT = {
 }
 
 
-def _get_condor_slot() -> dict:
+# the output of condor_status -json is cached in this file, in the workflow
+# submit directory, and refreshed once it is older than the max age
+CONDOR_STATUS_CACHE_FILE    = "runtime-predictor.condor_status.json"
+CONDOR_STATUS_CACHE_MAX_AGE = 3_600   # seconds
+
+
+def _condor_status_json(cache_dir: str = ".") -> Optional[list]:
     """
-    Query condor_status -json and return the highest-speed slot.
-    Falls back silently to defaults when condor is not available.
+    Return the parsed output of condor_status -json, from the cache file in
+    cache_dir if it was modified less than CONDOR_STATUS_CACHE_MAX_AGE seconds
+    ago. Otherwise, condor_status is run and the cache file is refreshed. If
+    condor_status fails, a stale cache file is used.
+
+    The cache_dir defaults to the current directory, as DAGMan runs the
+    prescripts in the directory of the dag file i.e. the workflow submit
+    directory.
+
+    :param cache_dir: the directory with the cache file
+    :return: the list of slot classads, or None if not available
     """
+    cache_file = os.path.join(cache_dir, CONDOR_STATUS_CACHE_FILE)
+
+    cached = None
     try:
-        out       = subprocess.check_output(
+        with open(cache_file) as f:
+            cached = json.load(f)
+        if time.time() - os.path.getmtime(cache_file) < CONDOR_STATUS_CACHE_MAX_AGE:
+            return cached
+    except (OSError, ValueError):
+        pass
+
+    try:
+        out = subprocess.check_output(
             ["condor_status", "-json"], stderr=subprocess.DEVNULL, timeout=15)
         slots_raw = json.loads(out)
     except Exception:
+        return cached
+
+    # write to a temporary file and rename it, so that prescripts running in
+    # parallel never read a partially written cache file
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", dir=cache_dir, prefix=CONDOR_STATUS_CACHE_FILE + ".",
+            delete=False
+        ) as f:
+            json.dump(slots_raw, f)
+        os.replace(f.name, cache_file)
+    except OSError as e:
+        print(
+            f"[pegasus-runtime-predictor] Unable to cache condor_status output "
+            f"to {cache_file}: {e}",
+            file=sys.stderr,
+        )
+
+    return slots_raw
+
+
+def _get_condor_slot(cache_dir: str = ".") -> dict:
+    """
+    Query condor_status -json and return the highest-speed slot.
+    Falls back silently to defaults when condor is not available.
+
+    :param cache_dir: the directory with the cached condor_status output
+    """
+    slots_raw = _condor_status_json(cache_dir)
+    if not slots_raw:
         return dict(_DEFAULT_SLOT)
 
     best = None
