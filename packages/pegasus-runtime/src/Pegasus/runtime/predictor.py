@@ -85,6 +85,10 @@ class RuntimePredictionConfig:
     slot_cpu_speed:   Optional[float] = None   # MHz
     slot_ram:         Optional[float] = None   # kB
 
+    # file the condor_status output is cached in (None = default name in the
+    # current directory)
+    condor_status_cache: Optional[str] = None
+
     @classmethod
     def from_properties(cls, props) -> "RuntimePredictionConfig":
         """
@@ -318,27 +322,29 @@ _DEFAULT_SLOT = {
 }
 
 
-# the output of condor_status -json is cached in this file, in the workflow
-# submit directory, and refreshed once it is older than the max age
+# the output of condor_status -json is cached in a file, by default this one in
+# the workflow submit directory, and refreshed once it is older than the max age
 CONDOR_STATUS_CACHE_FILE    = "runtime-predictor.condor_status.json"
 CONDOR_STATUS_CACHE_MAX_AGE = 3_600   # seconds
 
 
-def _condor_status_json(cache_dir: str = ".") -> Optional[list]:
+def _condor_status_json(cache_file: Optional[str] = None) -> Optional[list]:
     """
-    Return the parsed output of condor_status -json, from the cache file in
-    cache_dir if it was modified less than CONDOR_STATUS_CACHE_MAX_AGE seconds
-    ago. Otherwise, condor_status is run and the cache file is refreshed. If
-    condor_status fails, a stale cache file is used.
+    Return the parsed output of condor_status -json, from the cache file if it
+    was modified less than CONDOR_STATUS_CACHE_MAX_AGE seconds ago. Otherwise,
+    condor_status is run and the cache file is refreshed. If condor_status
+    fails, a stale cache file is used.
 
-    The cache_dir defaults to the current directory, as DAGMan runs the
-    prescripts in the directory of the dag file i.e. the workflow submit
-    directory.
+    The cache file defaults to CONDOR_STATUS_CACHE_FILE in the current
+    directory, as DAGMan runs the prescripts in the directory of the dag file
+    i.e. the workflow submit directory.
 
-    :param cache_dir: the directory with the cache file
+    :param cache_file: path to the cache file
     :return: the list of slot classads, or None if not available
     """
-    cache_file = os.path.join(cache_dir, CONDOR_STATUS_CACHE_FILE)
+    cache_file = cache_file or CONDOR_STATUS_CACHE_FILE
+    cache_dir = os.path.dirname(cache_file) or "."
+    cache_name = os.path.basename(cache_file)
 
     cached = None
     try:
@@ -360,7 +366,7 @@ def _condor_status_json(cache_dir: str = ".") -> Optional[list]:
     # parallel never read a partially written cache file
     try:
         with tempfile.NamedTemporaryFile(
-            "w", dir=cache_dir, prefix=CONDOR_STATUS_CACHE_FILE + ".",
+            "w", dir=cache_dir, prefix=cache_name + ".",
             delete=False
         ) as f:
             json.dump(slots_raw, f)
@@ -375,14 +381,14 @@ def _condor_status_json(cache_dir: str = ".") -> Optional[list]:
     return slots_raw
 
 
-def _get_condor_slot(cache_dir: str = ".") -> dict:
+def _get_condor_slot(cache_file: Optional[str] = None) -> dict:
     """
     Query condor_status -json and return the highest-speed slot.
     Falls back silently to defaults when condor is not available.
 
-    :param cache_dir: the directory with the cached condor_status output
+    :param cache_file: path to the file the condor_status output is cached in
     """
-    slots_raw = _condor_status_json(cache_dir)
+    slots_raw = _condor_status_json(cache_file)
     if not slots_raw:
         return dict(_DEFAULT_SLOT)
 
@@ -1078,7 +1084,7 @@ class WorkflowRuntimePredictor:
 
     def _resolve_slot(self) -> dict:
         """Resolve the compute slot, applying any slot overrides from config."""
-        slot = _get_condor_slot()
+        slot = _get_condor_slot(self._cfg.condor_status_cache)
         if self._cfg.slot_hostname  is not None: slot["hostname"]  = self._cfg.slot_hostname
         if self._cfg.slot_cpu_count is not None: slot["cpu_count"] = self._cfg.slot_cpu_count
         if self._cfg.slot_cpu_speed is not None: slot["cpu_speed"] = self._cfg.slot_cpu_speed

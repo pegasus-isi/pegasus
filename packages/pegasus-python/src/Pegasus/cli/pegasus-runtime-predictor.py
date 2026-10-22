@@ -40,7 +40,17 @@ def _write_log(log_file: str, log: dict) -> None:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def _run(workflow_yml, job_sub, target_level, lof_file, meta_files):
+def _condor_status_cache(log_file: str) -> str:
+    """
+    Return the file to cache the condor_status output in, placed next to the
+    log file and named after it, with the .log suffix replaced by
+    .condor_status.json
+    """
+    base = log_file[: -len(".log")] if log_file.endswith(".log") else log_file
+    return base + ".condor_status.json"
+
+
+def _run(workflow_yml, job_sub, target_level, lof_file, meta_files, log_file):
     """
     Run the prediction, printing any error instead of raising it.
 
@@ -62,7 +72,10 @@ def _run(workflow_yml, job_sub, target_level, lof_file, meta_files):
         return 1
 
     try:
-        cfg = RuntimePredictionConfig(enabled=True)
+        cfg = RuntimePredictionConfig(
+            enabled=True,
+            condor_status_cache=_condor_status_cache(log_file) if log_file else None,
+        )
         WorkflowRuntimePredictor(cfg).predict(
             workflow_yml,
             job_sub,
@@ -124,7 +137,8 @@ def _split_comma_list(ctx, param, value):
     type=click.Path(dir_okay=False),
     metavar="<file>",
     help="Common log file to which the stdout/stderr of the invocation is "
-    "appended as a JSON record",
+    "appended as a JSON record. The condor_status output is cached next to it, "
+    "in a file with the .log suffix replaced by .condor_status.json",
 )
 @click.argument("workflow-yml", type=click.Path(dir_okay=False))
 def main(workflow_yml, target_level, job_sub, lof_file, meta_files, log_file):
@@ -134,9 +148,10 @@ def main(workflow_yml, target_level, job_sub, lof_file, meta_files, log_file):
     runtime of the job, or of the tasks of a clustered job, and patch it into
     the condor submit file of the job. On error, it exits with a non zero
     exitcode. With -l, the stdout/stderr of the invocation is
-    appended as a JSON record to the log file instead.
+    appended as a JSON record to the log file instead, and the output of
+    condor_status is cached next to it.
     """
-    args = (workflow_yml, job_sub, target_level, lof_file, meta_files)
+    args = (workflow_yml, job_sub, target_level, lof_file, meta_files, log_file)
     if not log_file:
         sys.exit(_run(*args))
 
