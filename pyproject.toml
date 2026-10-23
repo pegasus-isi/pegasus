@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
-version = "6.0.0.dev0"
+version = "6.0.0.dev2264"
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"

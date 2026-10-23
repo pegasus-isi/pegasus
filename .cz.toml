@@ -2,7 +2,7 @@
 name = "cz_conventional_commits"
 tag_format = "$version"
 version_scheme = "pep440"
-version = "6.0.0.dev0"
+version = "6.0.0.dev2264"
 version_files = [
     "build.properties",
     "CITATION.cff:version",
