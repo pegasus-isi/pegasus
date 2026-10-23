@@ -589,3 +589,44 @@ def test_detached_foreground_argv_preserves_scoped_options() -> None:
     assert "--diagnose" in argv
     assert "/tmp/events.jsonl" in argv
     assert argv[-1] == "run0001"
+
+
+@pytest.mark.parametrize("remote", [False, True])
+@pytest.mark.parametrize("once", [False, True])
+def test_midrun_stream_is_not_final_in_redirected_output(tmp_path, remote, once):
+    from Pegasus.monitor.models import StreamHeader
+
+    records = read_jsonl(GOLDEN).records
+    header = next(r for r in records if isinstance(r, StreamHeader))
+    checkpoint = next(r for r in records if isinstance(r, CheckpointRecord))
+    workflow = replace(
+        checkpoint.snapshot.workflow, state="WORKFLOW_STARTED", status=None
+    )
+    checkpoint = replace(
+        checkpoint, snapshot=replace(checkpoint.snapshot, workflow=workflow)
+    )
+    records = (header, checkpoint)
+    path = tmp_path / "midrun.jsonl"
+    path.write_bytes(b"".join(encode_record(r) for r in records))
+
+    class Reader:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def read(self, cursor):
+            return SimpleNamespace(records=records, cursor=cursor, at_eof=True)
+
+    runtime = replace(cli._load_replay_runtime(), remote_reader_type=Reader)
+    args = ["--remote", "host:/tmp/events"] if remote else ["--replay", str(path)]
+    output, errors = _Output(), _Output()
+    assert (
+        cli.main(
+            [*args, *(["--once"] if once else [])],
+            runtime=runtime,
+            stdout=output,
+            stderr=errors,
+        )
+        == 0
+    ), errors.getvalue()
+    assert "FINAL" not in output.getvalue()
+    assert "ONCE" in output.getvalue()

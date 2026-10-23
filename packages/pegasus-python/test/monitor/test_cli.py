@@ -446,7 +446,10 @@ def test_once_arms_tail_queries_queue_and_always_closes(tmp_path):
     assert cli.main(["--once", str(tmp_path)], runtime=runtime, stdout=output) == 0
     assert calls.tail == 1
     assert calls.scheduler == 1
-    assert calls.scheduler_queries == [SchedulerQueryKind.QUEUE]
+    assert calls.scheduler_queries == [
+        SchedulerQueryKind.QUEUE,
+        SchedulerQueryKind.HISTORY,
+    ]
     assert calls.coordinator_closed == 1
     assert output.getvalue() == "rendered\n"
 
@@ -486,7 +489,7 @@ def test_credentials_are_forwarded_without_process_global_mutation(tmp_path):
     }
 
 
-def test_why_idle_queries_exact_read_only_sources_without_history(tmp_path):
+def test_completed_why_idle_queries_history_too(tmp_path):
     runtime, calls = _runtime(tmp_path)
     assert (
         cli.main(["--why-idle", str(tmp_path)], runtime=runtime, stdout=_Output()) == 0
@@ -496,8 +499,8 @@ def test_why_idle_queries_exact_read_only_sources_without_history(tmp_path):
         SchedulerQueryKind.POOL,
         SchedulerQueryKind.PRIORITY,
         SchedulerQueryKind.NEGOTIATOR,
+        SchedulerQueryKind.HISTORY,
     ]
-    assert SchedulerQueryKind.HISTORY not in calls.scheduler_queries
     assert calls.coordinator_closed == 1
 
 
@@ -751,3 +754,12 @@ def test_once_diagnose_no_condor_does_not_query_history(tmp_path):
         == 0
     )
     assert calls.scheduler_queries == []
+
+
+def test_redirected_diagnose_defaults_to_once(tmp_path):
+    runtime, calls = _runtime(tmp_path)
+    assert (
+        cli.main(["--diagnose", str(tmp_path)], runtime=runtime, stdout=_Output()) == 0
+    )
+    assert calls.coordinator_closed == 1
+    assert SchedulerQueryKind.HISTORY in calls.scheduler_queries

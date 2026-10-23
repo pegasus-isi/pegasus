@@ -48,6 +48,7 @@ from Pegasus.monitor.models import (
     TailJobEvent,
     TailWorkflowEvent,
 )
+from Pegasus.monitor.scheduler_evidence import removed_jobs, workflow_removal_reason
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -315,9 +316,13 @@ def _scheduler_display(
     queue = _scheduler_row(job, "queue", attempt)
     history = _scheduler_row(job, "history", attempt)
     row = queue if queue is not None else history
+    if history is not None and history.get("JobStatus") == 3:
+        row = history
     if row is None:
         return "-", "-", "-"
-    if queue is not None:
+    if row.get("JobStatus") == 3:
+        status = "REMOVED"
+    elif queue is not None:
         status = {
             1: "IDLE",
             2: "RUN",
@@ -528,17 +533,31 @@ def _status_panel(
     done = succeeded + failed
     total = len(jobs)
     state = Text()
-    if snapshot.authoritative_complete and effective.workflow.status == 0:
+    removals = removed_jobs(jobs, snapshot.scheduler_results)
+    removal_reason = workflow_removal_reason(snapshot)
+    if removal_reason is not None:
+        from Pegasus.monitor.diagnostics import redact_excerpt
+
+        state.append("REMOVED", style="bold yellow")
+        state.append(f" ({redact_excerpt(removal_reason)})", style="yellow")
+    elif snapshot.authoritative_complete and effective.workflow.status == 0:
         state.append("SUCCESS", style="bold green")
     elif snapshot.authoritative_complete:
         state.append("FAILED", style="bold red")
     else:
         state.append(effective.workflow.state, style="bold cyan")
+    if removals:
+        state.append(f"  removed {len(removals)} (HTCondor)", style="yellow")
     state.append(f"  {done}/{total} terminal", style="white")
-    state.append(f"  run {counts[Lifecycle.RUNNING]}", style="cyan")
-    state.append(f"  queued {counts[Lifecycle.QUEUED]}", style="yellow")
-    if counts[Lifecycle.HELD]:
-        state.append(f"  held {counts[Lifecycle.HELD]}", style="magenta")
+    active_counts = dict(counts)
+    if removals:
+        for job in jobs:
+            if job.exec_job_id in removals:
+                active_counts[job.lifecycle] -= 1
+    state.append(f"  run {active_counts[Lifecycle.RUNNING]}", style="cyan")
+    state.append(f"  queued {active_counts[Lifecycle.QUEUED]}", style="yellow")
+    if active_counts[Lifecycle.HELD]:
+        state.append(f"  held {active_counts[Lifecycle.HELD]}", style="magenta")
     if failed:
         state.append(f"  failed {failed}", style="red")
     if effective.pending_overlay_count:
@@ -593,7 +612,7 @@ def _job_panel(
         table.add_column("Request", no_wrap=True)
         table.add_column("Host", ratio=2, overflow="ellipsis")
     if not compact:
-        table.add_column("Source", ratio=1, overflow="ellipsis")
+        table.add_column("Source", ratio=1, overflow="ellipsis", no_wrap=True)
     state_lag = False
     for job in jobs:
         attempt = _current_attempt(job)

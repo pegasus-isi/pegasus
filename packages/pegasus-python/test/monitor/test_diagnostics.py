@@ -971,3 +971,39 @@ def test_hold_code_does_not_join_previous_retry():
         collect_diagnostics(_effective(_job("JOB_HELD")), (result,))[0].code
         == "held_unknown"
     )
+
+
+@pytest.mark.parametrize("state", ["JOB_HELD", "SUBMIT", "EXECUTE"])
+def test_removed_job_replaces_stale_hold_or_queue_diagnostic(state):
+    result = _scheduler_observation(3, kind=SchedulerQueryKind.HISTORY)
+    evidence = result.evidence[0]
+    result = replace(
+        result,
+        evidence=(
+            replace(
+                evidence,
+                payload=FrozenPayload.from_mapping(
+                    {
+                        **evidence.payload.to_json_dict(),
+                        "RemoveReason": "Removed by user alice",
+                    }
+                ),
+            ),
+        ),
+    )
+    engine = DiagnosticsEngine()
+    engine.analyze(
+        replace(
+            _publication(1, _job("JOB_HELD")), scheduler_results=(_queue("manual"),)
+        )
+    )
+    publication = replace(_publication(2, _job(state)), scheduler_results=(result,))
+    finding = engine.analyze(publication).findings[0]
+    assert finding.code == "job_removed"
+    assert "Removed by user alice" in finding.summary
+    assert collect_diagnostics(publication)[0] == finding
+
+
+def test_removal_does_not_join_old_retry():
+    result = _scheduler_observation(3, kind=SchedulerQueryKind.HISTORY, cluster=9)
+    assert collect_diagnostics(_effective(_job("SUBMIT")), (result,)) == ()

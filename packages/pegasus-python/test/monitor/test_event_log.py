@@ -1316,3 +1316,49 @@ def test_old_attempt_records_remain_readable_without_runtime():
     payload = attempt.to_json_dict()
     payload.pop("runtime_seconds", None)
     assert _job_attempt(payload).runtime_seconds is None
+
+
+def test_orderly_finish_records_stopped_without_completing_workflow(tmp_path):
+    from Pegasus.monitor.replay import ReplayEngine
+
+    path = tmp_path / "events.jsonl"
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    snapshot = _snapshot()
+    writer.record_snapshot(snapshot)
+    writer.finish()
+    writer.close()
+    assert _records(path)[-1].reason == "stopped"
+    result = ReplayEngine(path, speed=0).replay()
+    assert result.complete
+    assert result.stop_reason == "stopped"
+    assert result.snapshot == snapshot
+
+
+def test_size_limit_reserves_a_closing_gap(tmp_path):
+    from Pegasus.monitor.replay import ReplayEngine
+
+    path = tmp_path / "events.jsonl"
+    writer = EventLogWriter(path, WORKFLOW, "6.0", min_free_mb=0)
+    writer.record_snapshot(_snapshot())
+    writer.max_log_bytes = path.stat().st_size + 1024
+    writer.record_snapshot(_snapshot(), final=True)
+    with pytest.raises(RuntimeError, match="size_limit"):
+        writer.check_logging()
+    writer.finish()
+    writer.close()
+    assert path.stat().st_size <= writer.max_log_bytes
+    assert isinstance(_records(path)[-1], GapRecord)
+    result = ReplayEngine(path, speed=0).replay()
+    assert result.stop_reason == "size_limit"
+    assert result.awaiting_checkpoint
+
+
+def test_initial_disk_guard_is_reported(tmp_path):
+    writer = EventLogWriter(
+        tmp_path / "events.jsonl", WORKFLOW, "6.0", min_free_mb=99999999
+    )
+    writer.record_snapshot(_snapshot())
+    with pytest.raises(RuntimeError, match="disk_guard"):
+        writer.check_logging()
+    assert not writer.path.exists()
+    writer.close()

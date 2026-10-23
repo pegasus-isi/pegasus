@@ -478,6 +478,7 @@ class EventLogWriter:
         self._current_snapshot_epoch: SnapshotEpoch | None = None
         self._last_final_snapshot: DatabaseSnapshot | None = None
         self._pending_checkpoint_reason = "initial"
+        self._latest_snapshot: DatabaseSnapshot | None = None
 
     @property
     def status(self) -> EventLogStatus:
@@ -520,6 +521,7 @@ class EventLogWriter:
 
         self._ensure_open_state()
         self._validate_snapshot(snapshot)
+        self._latest_snapshot = snapshot
         now = self._finite_now(recorded_at_epoch)
         if not self._started:
             self._start_stream(
@@ -688,6 +690,54 @@ class EventLogWriter:
         original = self._safe_target_status()
         if original is not None:
             self._require_event_stream(original)
+
+    def check_logging(self) -> None:
+        """Make an unavailable requested log visible to CLI/server callers."""
+        if not self._started or (
+            self._paused and self._pause_reason is GapReason.SIZE_LIMIT
+        ):
+            reason = self._pause_reason.value
+            raise EventLogError(
+                f"logging stopped ({reason}): {self.path}; "
+                "check --min-free-mb, --max-log-mb and available disk space"
+            )
+
+    def finish(self) -> None:
+        """Write a closing checkpoint without claiming workflow completion."""
+        if self._closed or not self._started or not self._active_path_matches():
+            return
+        if not self._paused and self._latest_snapshot is not None:
+            if self._latest_snapshot != self._last_final_snapshot:
+                self._write_checkpoint(
+                    self._latest_snapshot, self._finite_now(None), "stopped"
+                )
+        if self._paused and self._gap_first is not None:
+            # Normal writes reserve 1 KiB so a size-limit gap still fits under
+            # the hard cap. Do not bypass the free-space floor or path checks.
+            record = GapRecord(
+                self._sequence + 1,
+                self.stream_id,
+                self._finite_now(None),
+                self._pause_reason,
+                self._gap_first,
+                self._gap_last,
+            )
+            size = _encoded_records_size((record,))
+            if (
+                self._capacity_failure_for(
+                    self._active_fd(), size, recovering=False, reserve=0
+                )
+                is None
+            ):
+                start = self._expected_size()
+                try:
+                    self._write_records(self._active_fd(), (record,))
+                except OSError:
+                    self._rollback_partial_write(self._active_fd(), start)
+                    raise
+                self._sequence = record.sequence
+                self._set_expected_size(start + size)
+        os.fsync(self._active_fd())
 
     def close(self) -> None:
         """Close the stream descriptor; closing never mutates workflow state."""
@@ -925,6 +975,8 @@ class EventLogWriter:
             encoded_size = _encoded_records_size(records)
             reason = self._capacity_failure_for(fd, encoded_size, recovering=False)
             if reason is not None:
+                self._paused = True
+                self._pause_reason = reason
                 return False
             self._write_records(fd, records)
             os.fsync(fd)
@@ -982,14 +1034,14 @@ class EventLogWriter:
         )
 
     def _capacity_failure_for(
-        self, fd: int, encoded_size: int, *, recovering: bool
+        self, fd: int, encoded_size: int, *, recovering: bool, reserve: int = 1024
     ) -> GapReason | None:
         try:
             opened = os.fstat(fd)
         except OSError:
             return GapReason.DISK_GUARD
         if self.max_log_bytes is not None:
-            if opened.st_size + encoded_size > self.max_log_bytes:
+            if opened.st_size + encoded_size + reserve > self.max_log_bytes:
                 return GapReason.SIZE_LIMIT
         if self.min_free_bytes <= 0:
             return None

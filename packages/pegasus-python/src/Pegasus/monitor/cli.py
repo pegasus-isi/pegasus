@@ -667,6 +667,9 @@ class _EventRecorder:
                 )
                 if cancelled is not None:
                     raise cancelled
+                check = getattr(self.writer, "check_logging", None)
+                if check is not None:
+                    check()
             diagnostics = getattr(analysis, "diagnostics", None)
             if diagnostics is not None:
                 cancelled = await self._call_writer(
@@ -684,7 +687,14 @@ class _EventRecorder:
             if self._closed:
                 return
             self._closed = True
-            cancelled = await self._call_writer("close", self.writer.close)
+            try:
+                finish = getattr(self.writer, "finish", None)
+                if finish is not None:
+                    cancelled = await self._call_writer("finish", finish)
+                    if cancelled is not None:
+                        raise cancelled
+            finally:
+                cancelled = await self._call_writer("close", self.writer.close)
             if cancelled is not None:
                 raise cancelled
 
@@ -1096,7 +1106,9 @@ def _run_replay_mode(
     if args.once:
         result = engine.replay()
         if not result.complete or result.snapshot is None:
-            raise RuntimeError("replay has no complete checkpoint")
+            raise RuntimeError(
+                f"replay has no complete checkpoint (stream: {result.stop_reason or 'incomplete'})"
+            )
         publication = _replay_publication(
             result.snapshot,
             sequence=1,
@@ -1104,13 +1116,21 @@ def _run_replay_mode(
             awaiting_checkpoint=result.awaiting_checkpoint,
         )
         analysis = _replay_analysis(publication, result.current_diagnostics, runtime)
+        if result.stop_reason == "stopped":
+            stdout.write("Stream stopped by recorder; workflow may still be running.\n")
         width = getattr(stdout, "width", 120)
         stdout.write(
             runtime.render_text(
                 context,
                 publication,
                 analysis,
-                _replay_options(args, runtime, width=width, live=False, final=True),
+                _replay_options(
+                    args,
+                    runtime,
+                    width=width,
+                    live=False,
+                    final=publication.authoritative_complete,
+                ),
                 width=max(40, width),
             )
         )
@@ -1155,7 +1175,11 @@ def _run_replay_mode(
             with runtime.rendering_gc_guard():
                 manager.__exit__(*sys.exc_info())
     if not result.complete:
-        raise RuntimeError("replay ended while awaiting a recovery checkpoint")
+        raise RuntimeError(
+            f"replay ended while awaiting a recovery checkpoint (stream: {result.stop_reason or 'incomplete'})"
+        )
+    if result.stop_reason == "stopped":
+        stdout.write("Stream stopped by recorder; workflow may still be running.\n")
     return 0
 
 
@@ -1240,8 +1264,20 @@ async def _run_remote_mode(
             if args.once:
                 if result.at_eof:
                     if accumulator.snapshot is None or accumulator.awaiting_checkpoint:
-                        raise RuntimeError("remote stream has no complete checkpoint")
+                        raise RuntimeError(
+                            f"remote stream has no complete checkpoint (stream: {accumulator.stop_reason or 'incomplete'})"
+                        )
                     break
+            elif result.at_eof and accumulator.stop_reason in {
+                "stopped",
+                "final",
+                "size_limit",
+            }:
+                if accumulator.awaiting_checkpoint:
+                    raise RuntimeError(
+                        f"remote stream stopped: {accumulator.stop_reason}"
+                    )
+                break
             elif (
                 accumulator.snapshot is not None
                 and not accumulator.awaiting_checkpoint
@@ -1261,7 +1297,11 @@ async def _run_remote_mode(
                 manager.__exit__(*sys.exc_info())
 
     if latest_publication is None or latest_analysis is None or context is None:
-        raise RuntimeError("remote stream has no complete checkpoint")
+        raise RuntimeError(
+            f"remote stream has no complete checkpoint (stream: {accumulator.stop_reason or 'incomplete'})"
+        )
+    if accumulator.stop_reason == "stopped":
+        stdout.write("Stream stopped by recorder; workflow may still be running.\n")
     if args.once:
         width = getattr(stdout, "width", 120)
         stdout.write(
@@ -1269,7 +1309,13 @@ async def _run_remote_mode(
                 context,
                 latest_publication,
                 latest_analysis,
-                _replay_options(args, runtime, width=width, live=False, final=True),
+                _replay_options(
+                    args,
+                    runtime,
+                    width=width,
+                    live=False,
+                    final=latest_publication.authoritative_complete,
+                ),
                 width=max(40, width),
             )
         )
@@ -1298,7 +1344,7 @@ async def _run_once(
             )
         else:
             kinds = (runtime.scheduler_kind.QUEUE,)
-        if args.diagnose:
+        if args.diagnose or snapshot.authoritative_complete:
             kinds = (*kinds, runtime.scheduler_kind.HISTORY)
         snapshot = await _query_once(coordinator, kinds) or snapshot
     analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
@@ -1503,7 +1549,7 @@ async def _run_live(
                 width=console.width,
                 height=console.height,
                 live=False,
-                final=True,
+                final=final_snapshot.authoritative_complete,
             )
             with runtime.rendering_gc_guard():
                 console.print(
@@ -1659,6 +1705,11 @@ class _HeadlessMonitorLifecycle:
         last_sequence = 0
         while not self.stop.is_set():
             current = self.coordinator.latest or publication
+            if current.authoritative_complete and not self.args.no_condor:
+                await self.coordinator.poll_scheduler_once(
+                    self.runtime.scheduler_kind.HISTORY
+                )
+                current = self.coordinator.latest or current
             if current.sequence > last_sequence:
                 await self.recorder.capture(
                     self.coordinator,
@@ -1884,13 +1935,7 @@ def main(
     errors = stderr or sys.stderr
 
     if args.replay or args.remote:
-        one_shot = args.once
-        if not one_shot and not output.isatty():
-            print(
-                "pegasus-monitor: replay/remote live mode requires a TTY; use --once",
-                file=errors,
-            )
-            return 1
+        args.once = args.once or not output.isatty()
         selected_replay = runtime or _load_replay_runtime()
         try:
             if args.replay:
@@ -1903,6 +1948,8 @@ def main(
             return 1
 
     server_action = args.stop_server is not None or args.serve or args.serve_foreground
+    if args.diagnose and not server_action and not output.isatty():
+        args.once = True
     one_shot = args.once or args.why_idle
     if not server_action and not one_shot and not output.isatty():
         print(

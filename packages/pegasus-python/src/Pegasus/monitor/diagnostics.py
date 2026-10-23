@@ -23,7 +23,7 @@ import os
 import re
 import stat
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from enum import Enum
 from hashlib import sha256
@@ -49,6 +49,7 @@ from Pegasus.monitor.scheduler_evidence import (
     hold_reason_codes,
     hold_reasons,
     is_held,
+    removed_jobs,
     scheduler_rows,
 )
 from Pegasus.monitor.stall_detector import StallDetector, StallEventKind, StallResult
@@ -958,6 +959,28 @@ def _retry_kickstart(finding: DiagnosticFinding) -> bool:
     )
 
 
+def _removal_diagnostic(job: JobSnapshot, row: Mapping[str, Any]) -> DiagnosticFinding:
+    reason = redact_excerpt(
+        str(row.get("RemoveReason") or "Removal reason unavailable")
+    )
+    return DiagnosticFinding(
+        job.exec_job_id,
+        DiagnosticCategory.FAILED,
+        DiagnosticSeverity.WARNING,
+        "job_removed",
+        f"Job was removed from HTCondor; {reason}",
+        ("Check who removed the workflow before planning a restart.",),
+        job.provenance.value,
+        (
+            DiagnosticEvidence(
+                SourceName.CONDOR_HISTORY,
+                "job_removed",
+                FrozenPayload.from_mapping({"reason_excerpt": reason, "JobStatus": 3}),
+            ),
+        ),
+    )
+
+
 def collect_diagnostics(
     snapshot: EffectiveSnapshot | CoordinatorSnapshot,
     scheduler_results: Sequence[SchedulerQueryResult] | None = None,
@@ -977,11 +1000,14 @@ def collect_diagnostics(
     }
     queue_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.QUEUE)
     history_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.HISTORY)
+    removals = removed_jobs(effective.jobs, results)
     findings: list[DiagnosticFinding] = []
     for job in effective.jobs:
         if job_exec_ids is not None and job.exec_job_id not in job_exec_ids:
             continue
-        if is_held(job, queue_rows):
+        if job.exec_job_id in removals and job.lifecycle is not Lifecycle.FAILED:
+            findings.append(_removal_diagnostic(job, removals[job.exec_job_id]))
+        elif is_held(job, queue_rows):
             findings.append(
                 _hold_diagnostic(
                     job,
@@ -1026,6 +1052,26 @@ def collect_diagnostics(
                     else None,
                     codes.get(job.exec_job_id),
                 )
+            )
+    for index, finding in enumerate(findings):
+        if finding.exec_job_id in removals and finding.code != "job_removed":
+            row = removals[finding.exec_job_id]
+            reason = redact_excerpt(
+                str(row.get("RemoveReason") or "Removal reason unavailable")
+            )
+            findings[index] = replace(
+                finding,
+                summary=f"{finding.summary}; removed from HTCondor: {reason}",
+                evidence=(
+                    *finding.evidence,
+                    DiagnosticEvidence(
+                        SourceName.CONDOR_HISTORY,
+                        "job_removed",
+                        FrozenPayload.from_mapping(
+                            {"reason_excerpt": reason, "JobStatus": 3}
+                        ),
+                    ),
+                ),
             )
     return tuple(findings)
 
@@ -1093,10 +1139,13 @@ class DiagnosticsEngine:
                 or self._problem_key(job) in self._active_findings
             ):
                 reasons[job.exec_job_id] = self._preceding_holds[key]
+        removals = removed_jobs(snapshot.effective.jobs, snapshot.scheduler_results)
         problem_jobs = tuple(
             job
             for job in snapshot.effective.jobs
-            if job.lifecycle is Lifecycle.FAILED or is_held(job, queue_rows)
+            if job.lifecycle is Lifecycle.FAILED
+            or is_held(job, queue_rows)
+            or job.exec_job_id in removals
         )
         problem_jobs_by_id = {job.exec_job_id: job for job in problem_jobs}
         current_keys = {self._problem_key(job): job for job in problem_jobs}
@@ -1104,6 +1153,7 @@ class DiagnosticsEngine:
             key: (
                 *_diagnostic_inputs(job, reasons.get(job.exec_job_id), submit_dir),
                 codes.get(job.exec_job_id),
+                str(removals.get(job.exec_job_id)),
             )
             for key, job in current_keys.items()
         }
@@ -1155,7 +1205,7 @@ class DiagnosticsEngine:
                     continue
                 key = self._problem_key(job)
                 if key in refresh_keys:
-                    if is_held(job, queue_rows):
+                    if job.exec_job_id not in removals and is_held(job, queue_rows):
                         finding = _hold_diagnostic(
                             job,
                             reasons.get(job.exec_job_id),

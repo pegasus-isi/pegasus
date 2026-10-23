@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 from time import monotonic
 
@@ -381,3 +382,44 @@ def test_stale_queue_does_not_override_recorded_hold():
     result = analyze_why_idle(_snapshot("JOB_HELD"), (queue,))
     assert result.queued_jobs == 0
     assert any("HELD" in item for item in result.findings)
+
+
+def test_scheduler_id_before_submit_event_is_not_unsubmitted():
+    snapshot = _snapshot(None)
+    job = snapshot.jobs[0]
+    job = replace(job, attempts=(replace(job.attempts[0], scheduler_id="10.0"),))
+    result = analyze_why_idle(replace(snapshot, jobs=(job,)))
+    assert result.queued_jobs == 1
+    assert result.unsubmitted_jobs == 0
+
+
+def test_free_capacity_after_long_idle_execution_suggests_targeted_retry():
+    snapshot = replace(_snapshot("JOB_EVICTED"), published_at_epoch=1000)
+    queue = _queue(NumJobStarts=1, EnteredCurrentStatus=600)
+    pool = _result(
+        SchedulerQueryKind.POOL,
+        [
+            {
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "Cpus": 4,
+                "Memory": 4096,
+                "Disk": 10000,
+                "Gpus": 0,
+            }
+        ],
+    )
+    result = analyze_why_idle(snapshot, (queue, pool))
+    assert any("fit the resources of a free slot" in f for f in result.findings)
+    assert any("condor_hold JOBID" in s for s in result.suggestions)
+    recent = replace(snapshot, published_at_epoch=700)
+    assert not any(
+        "condor_hold" in s for s in analyze_why_idle(recent, (queue, pool)).suggestions
+    )
+
+
+def test_removed_job_is_not_offered_as_waiting_for_a_slot():
+    snapshot = _snapshot("JOB_HELD")
+    result = analyze_why_idle(snapshot, (_queue(JobStatus=3),))
+    assert result.idle_jobs == ()
+    assert not any("HELD by HTCondor" in f for f in result.findings)

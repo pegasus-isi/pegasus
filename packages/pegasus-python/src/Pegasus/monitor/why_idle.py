@@ -34,6 +34,7 @@ from Pegasus.monitor.scheduler_evidence import (
     hold_reasons,
     is_held,
     observed_lifecycle,
+    removed_jobs,
     scheduler_rows,
 )
 
@@ -319,7 +320,12 @@ def analyze_why_idle(
     queue_rows = _rows(queue)
     pool_rows = _rows(pool)
     current_queue = scheduler_rows(effective.jobs, supplied, SchedulerQueryKind.QUEUE)
-    held_jobs = tuple(job for job in effective.jobs if is_held(job, current_queue))
+    removals = removed_jobs(effective.jobs, supplied)
+    held_jobs = tuple(
+        job
+        for job in effective.jobs
+        if job.exec_job_id not in removals and is_held(job, current_queue)
+    )
     reasons = hold_reasons(effective.jobs, supplied)
     idle = tuple(
         IdleJob(
@@ -331,7 +337,8 @@ def analyze_why_idle(
             else job.provenance.value,
         )
         for job in effective.jobs
-        if (state := observed_lifecycle(job, current_queue))
+        if job.exec_job_id not in removals
+        and (state := observed_lifecycle(job, current_queue))
         in {Lifecycle.QUEUED, Lifecycle.UNSUBMITTED}
     )
     queued = tuple(item for item in idle if item.state is Lifecycle.QUEUED)
@@ -415,6 +422,7 @@ def analyze_why_idle(
     ] = {}
     fit_budget = [MAX_RESOURCE_FIT_COMPARISONS]
     fit_limit_reached = False
+    fitting_jobs = []
     if pool_state in {SourceDisposition.HEALTHY, SourceDisposition.STALE}:
         for row in matched_queue_rows:
             requested = (
@@ -426,6 +434,7 @@ def analyze_why_idle(
             if requested in fit_cache:
                 reason = fit_cache[requested]
                 if reason is None:
+                    fitting_jobs.append(row)
                     continue
             elif fit_budget[0] <= 0:
                 reason = "analysis_limit"
@@ -437,6 +446,7 @@ def analyze_why_idle(
                 )
                 if available_fit is True:
                     fit_cache[requested] = None
+                    fitting_jobs.append(row)
                     continue
                 physical_fit, physical_exhausted = _any_slot_fits(
                     requested, physical_slots, fit_budget
@@ -470,6 +480,31 @@ def analyze_why_idle(
                     else None,
                 )
             )
+        if (
+            fitting_jobs
+            and pool_state is SourceDisposition.HEALTHY
+            and queue_state is SourceDisposition.HEALTHY
+        ):
+            findings.append(
+                f"{len(fitting_jobs)} queued job(s) fit the resources of a free slot; "
+                "ClassAd Requirements and scheduler policy may still prevent matching."
+            )
+            evicted = any(
+                _integer(row.get("NumJobStarts")) > 0
+                and effective.published_at_epoch
+                - (
+                    _number(row.get("EnteredCurrentStatus"))
+                    or effective.published_at_epoch
+                )
+                >= 300
+                for row in fitting_jobs
+            )
+            if evicted:
+                suggestions.append(
+                    "A previously started job has been idle for at least 5 minutes despite free capacity. "
+                    "After checking condor_q -better-analyze, consider a targeted condor_hold JOBID "
+                    "followed by condor_release JOBID to retry scheduling."
+                )
         if mismatches:
             findings.append(
                 f"{len(mismatches)} queued job(s) have no confirmed fit on an available single slot."

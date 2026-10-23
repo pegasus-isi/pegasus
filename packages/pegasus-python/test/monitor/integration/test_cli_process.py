@@ -158,3 +158,72 @@ def test_tail_only_live_process_exits_cleanly_on_sigint(tmp_path: Path) -> None:
             process.kill()
             process.wait(timeout=2.0)
         os.close(master)
+
+
+def test_initial_disk_floor_fails_visibly_without_a_log(tmp_path):
+    run = tmp_path / "run0001"
+    create_run(run, terminated=False)
+    log = tmp_path / "events.jsonl"
+    result = run_monitor(
+        "--once",
+        "--no-condor",
+        "--log",
+        str(log),
+        "--min-free-mb",
+        "99999999",
+        str(run),
+    )
+    assert result.returncode == 1
+    assert "disk_guard" in result.stderr
+    assert "--min-free-mb" in result.stderr
+    assert not log.exists()
+
+
+def test_stop_running_server_writes_closing_checkpoint(tmp_path):
+    from Pegasus.monitor.event_log import read_jsonl
+    from Pegasus.monitor.models import CheckpointRecord
+
+    run = tmp_path / "run0001"
+    create_run(run, terminated=False)
+    log = tmp_path / "events.jsonl"
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "Pegasus.monitor.cli",
+            "--serve-foreground",
+            "--no-condor",
+            "--log",
+            str(log),
+            "--min-free-mb",
+            "0",
+            str(run),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=environment(),
+    )
+    metadata = log.with_name(f".{log.name}.pid")
+    try:
+        deadline = time.monotonic() + 5
+        while not (log.exists() and metadata.exists()):
+            assert process.poll() is None
+            assert time.monotonic() < deadline
+            time.sleep(0.02)
+        result = run_monitor("--stop-server", str(metadata))
+        assert result.returncode == 0, result.stderr
+        stdout, stderr = process.communicate(timeout=5)
+        assert process.returncode == 0, stderr
+        last = read_jsonl(log).records[-1]
+        assert isinstance(last, CheckpointRecord)
+        assert last.reason == "stopped"
+        assert last.snapshot.workflow.state != "WORKFLOW_TERMINATED"
+        replay = run_monitor("--replay", str(log))
+        assert replay.returncode == 0, replay.stderr
+        assert "Stream stopped" in replay.stdout
+        assert "FINAL" not in replay.stdout
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.communicate(timeout=5)

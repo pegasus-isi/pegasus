@@ -230,6 +230,18 @@ The CLI also rejects output paths that overlap the located workflow database
 and its sidecars, live event log, braindump, properties, or root DAG file before
 monitoring starts.
 Logging failures and capacity guards do not modify or stop the workflow.
+If the initial checkpoint cannot be written, the command reports the logging
+failure on stderr and exits nonzero. A size cap stops recording with a
+``size_limit`` gap record; 1 KiB of the cap is reserved for this marker.
+A cap too small for the initial checkpoint and marker fails before creating
+the log. Temporary free-space shortages after startup still pause logging
+until space recovers.
+
+An orderly recorder shutdown, including ``--stop-server`` while a workflow is
+running, writes a checkpoint with reason ``stopped``. This closes the recording
+without declaring the workflow complete. A completed workflow uses reason
+``final``. Replay and remote consumers report stopped streams and size-limit
+gaps explicitly; reaching the end of a mid-run stream does not imply completion.
 
 
 Replay, Server, and Remote Modes
@@ -239,7 +251,10 @@ Replay and remote consumers use the same typed schema and renderer. They
 tolerate an incomplete trailing line, reject unsupported schemas, and discard
 incomplete post-gap state until a checkpoint restores authority. Stream
 replacement is detected by ``stream_id``, not file size. Replay never opens
-workflow sources. Remote mode validates the SSH target and path, invokes SSH
+workflow sources. With redirected output, ``--replay``, ``--remote``, and
+``--diagnose`` automatically produce one snapshot, as ``--once`` does.
+On a TTY these options retain their interactive behavior. Ordinary live
+monitoring still requires a TTY, and ``--why-idle`` remains one-shot. Remote mode validates the SSH target and path, invokes SSH
 without a local shell, bounds each read and captured error output, and resumes
 by byte offset.
 
@@ -255,6 +270,25 @@ PID and does not signal a reused or mismatched PID.
 ``--replay``, ``--remote``, or ``--stop-server`` *PID_FILE*. Server modes cannot be
 combined with ``--once`` or ``--why-idle``. ``--ssh-config`` and
 ``--ssh-identity`` require ``--remote``.
+
+
+Removal and Idle Evidence
+=========================
+
+Completed local snapshots and server runs query HTCondor history unless
+``--no-condor`` is set. Removed jobs show ``REMOVED`` in the Scheduler column,
+with the recorded Pegasus state retained separately. They are excluded from
+active running, queued, and held counts. Removal diagnostics include the
+scheduler's removal reason while preserving any recorded failure cause.
+The workflow banner reports ``REMOVED`` when the selected DAGMan was removed;
+removal of child jobs alone does not establish workflow removal.
+
+Why Idle treats a current attempt with a scheduler ID as submitted even before
+its submit event arrives. It reports numeric resource fit on free slots
+without claiming that ClassAd Requirements or policy match. For previously
+started jobs idle for at least five minutes despite available capacity, it
+suggests inspecting ``condor_q -better-analyze`` and considering a targeted
+hold/release to retry scheduling.
 
 
 Runtime Reporting

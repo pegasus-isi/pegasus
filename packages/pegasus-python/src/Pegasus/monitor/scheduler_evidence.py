@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from Pegasus.monitor.coordinator import CoordinatorSnapshot
+
 from Pegasus.monitor.models import (
     HealthState,
     JobSnapshot,
@@ -91,6 +93,10 @@ def observed_lifecycle(
         return {1: Lifecycle.QUEUED, 2: Lifecycle.RUNNING, 5: Lifecycle.HELD}.get(
             row.get("JobStatus"), job.lifecycle
         )
+    if job.lifecycle is Lifecycle.UNSUBMITTED and any(
+        a.identity == job.current_attempt and a.scheduler_id for a in job.attempts
+    ):
+        return Lifecycle.QUEUED
     return job.lifecycle
 
 
@@ -120,3 +126,50 @@ def hold_reasons(
             if reason:
                 reasons[name] = str(reason)
     return reasons
+
+
+def removed_jobs(
+    jobs: Sequence[JobSnapshot], results: Sequence[SchedulerQueryResult]
+) -> dict[str, dict[str, Any]]:
+    """Return attempt-matched removal evidence; history closes stale queue ads."""
+    rows = scheduler_rows(jobs, results, SchedulerQueryKind.QUEUE)
+    rows.update(scheduler_rows(jobs, results, SchedulerQueryKind.HISTORY))
+    return {name: row for name, row in rows.items() if row.get("JobStatus") == 3}
+
+
+def workflow_removal_reason(snapshot: CoordinatorSnapshot) -> str | None:
+    """Identify removal of DAGMan itself, not failure-triggered child cleanup."""
+    if snapshot.effective is None or not snapshot.authoritative_complete:
+        return None
+    transition = snapshot.effective.workflow.transition
+    reason = "" if transition is None else (transition.reason or "").lower()
+    if "removed" in reason or "condor_rm" in reason:
+        return transition.reason
+    dag_rows = []
+    for result in snapshot.scheduler_results:
+        if (
+            result.request.workflow != snapshot.effective.workflow.workflow
+            or result.health.state is not HealthState.HEALTHY
+            or result.request.kind
+            not in {SchedulerQueryKind.QUEUE, SchedulerQueryKind.HISTORY}
+        ):
+            continue
+        for evidence in result.evidence:
+            row = {**evidence.target.to_json_dict(), **evidence.payload.to_json_dict()}
+            if row.get("JobUniverse") == 7:
+                dag_rows.append(row)
+    if not dag_rows:
+        return None
+    latest = max(
+        dag_rows, key=lambda row: (row.get("QDate", 0), row.get("ClusterId", 0))
+    )
+    if snapshot.effective.workflow.restart_count:
+        ended = latest.get("CompletionDate", latest.get("EnteredCurrentStatus", 0))
+        started = snapshot.effective.workflow.started_at
+        if started is None or ended < started:
+            return None
+    return (
+        str(latest.get("RemoveReason") or "DAGMan was removed")
+        if latest.get("JobStatus") == 3
+        else None
+    )

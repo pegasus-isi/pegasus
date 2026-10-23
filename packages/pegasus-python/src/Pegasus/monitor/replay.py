@@ -121,6 +121,7 @@ class ReplayResult:
     ignored_records: int
     stream_replacements: int
     trailing_bytes: bytes = b""
+    stop_reason: str | None = None
 
     @property
     def complete(self) -> bool:
@@ -147,6 +148,7 @@ class ReplayAccumulator:
         if recent_transition_limit <= 0 or recent_workflow_transition_limit <= 0:
             raise ValueError("replay recent-transition limits must be positive")
         self.header: StreamHeader | None = None
+        self.stop_reason: str | None = None
         self.awaiting_checkpoint = True
         self.ignored_records = 0
         self.stream_replacements = 0
@@ -250,6 +252,7 @@ class ReplayAccumulator:
         self._last_sequence = record.sequence
 
         if isinstance(record, GapRecord):
+            self.stop_reason = record.reason.value
             self.awaiting_checkpoint = True
             return self._epoch is not None
         if isinstance(record, CheckpointRecord):
@@ -260,6 +263,10 @@ class ReplayAccumulator:
             return False
 
         self._expire_enrichments(record.recorded_at_epoch)
+        if isinstance(
+            record, (JobAttemptRecord, JobTransitionRecord, WorkflowTransitionRecord)
+        ):
+            self.stop_reason = None
         if isinstance(record, JobAttemptRecord):
             return self._apply_job_attempt(record)
         if isinstance(record, JobTransitionRecord):
@@ -294,6 +301,7 @@ class ReplayAccumulator:
         if self.header is not None:
             self.stream_replacements += 1
         self.header = header
+        self.stop_reason = None
         self._clear_snapshot_state()
         self.awaiting_checkpoint = True
         self._last_sequence = 0
@@ -324,6 +332,9 @@ class ReplayAccumulator:
             self._diagnostics.clear()
             self._diagnostic_problems.clear()
         self._load_snapshot(record.snapshot)
+        self.stop_reason = (
+            record.reason if record.reason in {"stopped", "final"} else None
+        )
         self.awaiting_checkpoint = False
         active = {
             job.exec_job_id: self._problem_key(job) for job in record.snapshot.jobs
@@ -829,6 +840,7 @@ def _process_records(
         accumulator.ignored_records,
         accumulator.stream_replacements,
         trailing_bytes(),
+        accumulator.stop_reason,
     )
 
 
