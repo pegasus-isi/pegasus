@@ -24,7 +24,7 @@ def append_log() -> None:
                 "_CONDOR_SEC_TOKEN_DIRECTORY",
                 "X509_USER_CERT",
                 "X509_USER_KEY",
-                "_CONDOR_PASSWORD_FILE",
+                "_CONDOR_SEC_PASSWORD_FILE",
             )
         },
     }

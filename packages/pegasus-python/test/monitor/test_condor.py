@@ -852,6 +852,7 @@ def test_child_environment_is_minimal_isolated_and_parent_unchanged(
 ) -> None:
     log = tmp_path / "environment.jsonl"
     monkeypatch.setenv("SECRET_PARENT", "must-not-leak")
+    monkeypatch.setenv("_CONDOR_SEC_PASSWORD_FILE", "/wrong/inherited-password")
     monkeypatch.delenv("CONDOR_CONFIG", raising=False)
     config = CondorObserverConfig(
         token="/private/token-dir",
@@ -876,9 +877,10 @@ def test_child_environment_is_minimal_isolated_and_parent_unchanged(
         "_CONDOR_SEC_TOKEN_DIRECTORY": "/private/token-dir",
         "X509_USER_CERT": "/private/cert.pem",
         "X509_USER_KEY": "/private/key.pem",
-        "_CONDOR_PASSWORD_FILE": "/private/password",
+        "_CONDOR_SEC_PASSWORD_FILE": "/private/password",
     }
     assert os.environ["SECRET_PARENT"] == "must-not-leak"
+    assert os.environ["_CONDOR_SEC_PASSWORD_FILE"] == "/wrong/inherited-password"
     assert "CONDOR_CONFIG" not in os.environ
 
 

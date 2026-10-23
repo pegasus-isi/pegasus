@@ -446,7 +446,7 @@ def _build_environment(config: CondorObserverConfig) -> dict[str, str]:
         "_CONDOR_SEC_TOKEN_DIRECTORY": config.token,
         "X509_USER_CERT": config.cert,
         "X509_USER_KEY": config.key,
-        "_CONDOR_PASSWORD_FILE": config.password_file,
+        "_CONDOR_SEC_PASSWORD_FILE": config.password_file,
         "CONDOR_CONFIG": config.condor_config,
     }
     environment.update(
