@@ -32,6 +32,7 @@ from Pegasus.monitor.diagnostics import (
     KickstartReadStatus,
     collect_diagnostics,
     parse_kickstart_output,
+    parse_pegasuslite_stderr,
     redact_excerpt,
 )
 from Pegasus.monitor.models import (
@@ -801,3 +802,118 @@ def test_previous_attempt_cause_does_not_follow_retry(tmp_path):
     finding = engine.analyze(_publication(2, job), submit_dir=tmp_path).findings[0]
     assert finding.code == "exit_code_2"
     assert "application exit code 42" not in finding.summary
+
+
+def _lite_job(stderr_path="job.err.000", stdout_path="job.out.000"):
+    job = _job("JOB_ABORTED", stdout_path=stdout_path)
+    return replace(job, attempts=(replace(job.attempts[0], stderr_path=stderr_path),))
+
+
+def test_pegasuslite_exit_is_distinct_from_kickstart_and_recorded_status(tmp_path):
+    _write_kickstart(tmp_path / "job.out.000", exit_code=0)
+    with (tmp_path / "job.out.000").open("a") as stream:
+        stream.write(
+            "\n  start: 2026-10-23T00:38:42.864+00:00\n  date: 2026-10-23\n---------------pegasus-multipart\n- integrity_verification_attempts: []\n"
+        )
+    (tmp_path / "job.err.000").write_text(
+        "password=do-not-show\nPegasusLite: exitcode 71, tool originally exited with exitcode 3\n"
+    )
+    finding = collect_diagnostics(
+        _effective(_lite_job()), (_scheduler_observation(),), submit_dir=tmp_path
+    )[0]
+    assert finding.code == "output_missing"
+    assert "tool exit code 3" in finding.summary
+    assert "Kickstart process exit code 0" in finding.summary
+    assert "recorded job exit code 1" in finding.summary
+    assert "do-not-show" not in str(finding)
+    evidence = next(e for e in finding.evidence if e.source is SourceName.PEGASUS_LITE)
+    assert evidence.payload.to_json_dict()["tool_exit_code"] == 3
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "tool originally exited with exitcode 3",
+        "PegasusLite: exitcode 71, tool originally exited with exitcode 999",
+        "PegasusLite: exitcode 71, tool originally exited with exitcode 3\nPegasusLite: exitcode 71, tool originally exited with exitcode 4",
+    ],
+)
+def test_pegasuslite_requires_unambiguous_producer_summary(tmp_path, text):
+    (tmp_path / "job.err.000").write_text(text)
+    assert parse_pegasuslite_stderr(tmp_path, _lite_job()).tool_exit_code is None
+
+
+@pytest.mark.parametrize("path", ["../secret", "/etc/passwd", "a/../../secret"])
+def test_pegasuslite_rejects_unsafe_paths(tmp_path, path):
+    assert (
+        parse_pegasuslite_stderr(tmp_path, _lite_job(stderr_path=path)).status
+        is KickstartReadStatus.REJECTED
+    )
+
+
+def test_pegasuslite_rejects_symlinks_and_oversized_files(tmp_path):
+    path = tmp_path / "job.err.000"
+    path.symlink_to(tmp_path / "outside")
+    assert (
+        parse_pegasuslite_stderr(tmp_path, _lite_job()).status
+        is KickstartReadStatus.REJECTED
+    )
+    path.unlink()
+    path.write_bytes(b"x" * (1024 * 1024 + 1))
+    assert (
+        parse_pegasuslite_stderr(tmp_path, _lite_job()).status
+        is KickstartReadStatus.TOO_LARGE
+    )
+
+
+def test_late_pegasuslite_stderr_refreshes_diagnosis(tmp_path):
+    _write_kickstart(tmp_path / "job.out.000", exit_code=0)
+    engine = DiagnosticsEngine()
+    publication = _publication(1, _lite_job())
+    assert (
+        "tool exit code 3"
+        not in engine.analyze(publication, submit_dir=tmp_path).findings[0].summary
+    )
+    (tmp_path / "job.err.000").write_text(
+        "PegasusLite: exitcode 71, tool originally exited with exitcode 3\n"
+    )
+    assert (
+        "tool exit code 3"
+        in engine.analyze(publication, submit_dir=tmp_path).findings[0].summary
+    )
+
+
+def test_pegasuslite_uses_recorded_retry_path(tmp_path):
+    (tmp_path / "job.err.000").write_text(
+        "PegasusLite: exitcode 71, tool originally exited with exitcode 3\n"
+    )
+    (tmp_path / "job.err.001").write_text(
+        "PegasusLite: exitcode 72, tool originally exited with exitcode 7\n"
+    )
+    result = parse_pegasuslite_stderr(tmp_path, _lite_job("job.err.001", "job.out.001"))
+    assert result.tool_exit_code == 7
+
+
+def test_manual_and_unknown_hold_reasons_are_visible_and_redacted():
+    for reason, code in [
+        ("via condor_hold (by user ubuntu)", "user_hold"),
+        ("site maintenance token=secret", "held_unknown"),
+    ]:
+        finding = collect_diagnostics(_effective(_job("JOB_HELD")), (_queue(reason),))[
+            0
+        ]
+        assert finding.code == code
+        assert reason.split(" token=")[0] in finding.summary
+        assert "secret" not in finding.summary
+
+
+def test_kickstart_accepts_pegasuslite_multipart_metadata(tmp_path):
+    path = tmp_path / "job.out.000"
+    _write_kickstart(path, exit_code=0)
+    with path.open("a") as output:
+        output.write(
+            "\n---------------pegasus-multipart\n- integrity_verification_attempts: []\n"
+        )
+    result = parse_kickstart_output(tmp_path, "job", "job.out.000")
+    assert result.status is KickstartReadStatus.AVAILABLE
+    assert result.info.exit_code == 0

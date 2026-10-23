@@ -80,14 +80,22 @@ def scheduler_rows(
     return selected
 
 
-def is_held(job: JobSnapshot, queue_rows: Mapping[str, Mapping[str, Any]]) -> bool:
-    """A fresh queue state can explain a hold or release before the log does."""
+def observed_lifecycle(
+    job: JobSnapshot, queue_rows: Mapping[str, Mapping[str, Any]]
+) -> Lifecycle:
+    """Use fresh scheduler observations for explanations, without changing history."""
     if job.lifecycle in {Lifecycle.FAILED, Lifecycle.SUCCEEDED}:
-        return False
+        return job.lifecycle
     row = queue_rows.get(job.exec_job_id)
-    if row is not None and row.get("JobStatus") is not None:
-        return row["JobStatus"] == 5
-    return job.lifecycle is Lifecycle.HELD
+    if row is not None:
+        return {1: Lifecycle.QUEUED, 2: Lifecycle.RUNNING, 5: Lifecycle.HELD}.get(
+            row.get("JobStatus"), job.lifecycle
+        )
+    return job.lifecycle
+
+
+def is_held(job: JobSnapshot, queue_rows: Mapping[str, Mapping[str, Any]]) -> bool:
+    return observed_lifecycle(job, queue_rows) is Lifecycle.HELD
 
 
 def hold_reasons(

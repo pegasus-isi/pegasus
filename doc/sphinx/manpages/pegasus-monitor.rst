@@ -66,7 +66,11 @@ Options
    unknown rather than treated as workflow failure. Actionable verdicts appear
    before pool statistics, and one-shot reports do not use the live display
    line limit. Fresh queue observations also explain held jobs while the
-   recorded Pegasus lifecycle is catching up.
+   recorded Pegasus lifecycle is catching up. A fresh idle queue observation
+   is included even if the recorded state still says held or unsubmitted.
+   Evicted jobs are queued, not held; same-time release events take precedence
+   over eviction events. The job table labels the recorded lifecycle and
+   scheduler observation separately.
 
 **--remap-submit-dir** {**auto**, **always**, **never**}
    Control remapping of paths recorded at planning time onto the local
@@ -82,7 +86,15 @@ Options
    a preceding hold reason and distinguish the application exit code, when
    Kickstart output is available, from the recorded job exit code. One-shot
    diagnostics query history as well as the queue, so a restarted monitor can
-   recover hold reasons retained by HTCondor.
+   recover hold reasons retained by HTCondor. Manual and unclassified holds
+   include their redacted reason.
+
+   When the current attempt's PegasusLite stderr contains an explicit exit
+   summary, diagnostics report the tool exit code separately from the
+   PegasusLite wrapper, Kickstart process, and recorded job exit codes. Reads
+   remain bounded to 1 MiB and reject unsafe paths and symlinks. These results
+   use the ``pegasus_lite`` diagnostic evidence source in event streams; use
+   the updated monitor when replaying or remotely reading such streams.
 
 **--log** [*PATH*]
    Write canonical schema-version-1 JSONL while monitoring locally. If *PATH*

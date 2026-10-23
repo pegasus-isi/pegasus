@@ -362,3 +362,22 @@ def test_explicit_owner_takes_precedence_and_negotiator_is_optional() -> None:
     assert result.workflow_owner == "planner"
     assert result.negotiation_matches == 0
     assert any("over 60 seconds" in item for item in result.suggestions)
+
+
+def test_queue_idle_explains_delayed_hold_or_eviction():
+    for state in ("JOB_HELD", "JOB_RELEASED", "JOB_EVICTED", None):
+        result = analyze_why_idle(_snapshot(state), (_queue(),))
+        assert result.queued_jobs == 1
+        assert result.unsubmitted_jobs == 0
+        assert result.idle_jobs[0].provenance == "condor_queue"
+        assert not any("HELD" in item for item in result.findings)
+
+
+def test_stale_queue_does_not_override_recorded_hold():
+    from dataclasses import replace
+
+    queue = _queue()
+    queue = replace(queue, health=replace(queue.health, state=HealthState.STALE))
+    result = analyze_why_idle(_snapshot("JOB_HELD"), (queue,))
+    assert result.queued_jobs == 0
+    assert any("HELD" in item for item in result.findings)

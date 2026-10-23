@@ -186,7 +186,7 @@ def test_narrow_render_omits_wide_columns(tmp_path):
     )
 
     assert "Job" in text
-    assert "State" in text
+    assert "Recorded" in text
     assert "Site" not in text
     assert "Runtime" not in text
 
@@ -634,3 +634,54 @@ def test_why_idle_live_keeps_verdict_before_truncation():
     assert "exceeds_single_slot_capacity" in text
     assert "Reduce the request" in text
     assert "omitted" in text
+
+
+def test_scheduler_hold_is_labeled_separately_from_unsubmitted_record(tmp_path):
+    snapshot = _snapshot()
+    job = snapshot.effective.jobs[0]
+    job.lifecycle = Lifecycle.UNSUBMITTED
+    job.scheduler = FrozenPayload.from_mapping(
+        {"queue": {"DAGNodeName": job.exec_job_id, "JobStatus": 5}}
+    )
+    text = render_text(_context(tmp_path), snapshot, width=120)
+    assert "Recorded" in text
+    assert "Scheduler" in text
+    assert "UNSUBMITTED" in text
+    assert "HELD" in text
+    assert "may be newer" in text
+
+
+def test_priority_line_avoids_float_noise():
+    from io import StringIO
+
+    from Pegasus.monitor.display import _why_idle_panel
+    from Pegasus.monitor.why_idle import IdleAnalysis, PrioritySummary
+
+    idle = IdleAnalysis(
+        (),
+        0,
+        0,
+        "alice",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        PrioritySummary("alice", "alice", 507.5380000000001, 0.0, 1, 0),
+        None,
+        None,
+        (),
+        (),
+        (),
+        (),
+    )
+    stream = StringIO()
+    Console(file=stream, width=120, color_system=None).print(
+        _why_idle_panel(idle, DisplayOptions(live=False))
+    )
+    assert "effective 507.538" in stream.getvalue()
+    assert "507.538000" not in stream.getvalue()

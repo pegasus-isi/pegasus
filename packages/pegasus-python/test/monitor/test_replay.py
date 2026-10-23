@@ -721,3 +721,27 @@ def test_checkpoint_attempt_change_expires_diagnostic():
         )
     )
     assert result.current_diagnostics == ()
+
+
+def test_hold_release_delayed_eviction_replays_as_queued():
+    records = [
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+    ]
+    for sequence, state, timestamp in [
+        (2, "JOB_HELD", "2"),
+        (3, "JOB_RELEASED", "3"),
+        (4, "JOB_EVICTED", "243"),
+    ]:
+        records.append(
+            JobTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(timestamp),
+                _job_transition(state, timestamp=timestamp, db_sequence=sequence),
+            )
+        )
+    result = replay_records(records)
+    assert result.snapshot.jobs[0].state == "JOB_EVICTED"
+    assert result.snapshot.jobs[0].lifecycle.value == "queued"

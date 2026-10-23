@@ -1272,6 +1272,9 @@ def test_final_hold_cause_and_application_exit_survive_replay(tmp_path):
         1.0,
         1.0,
     )
+    (tmp_path / "result.err.000").write_text(
+        "PegasusLite: exitcode 71, tool originally exited with exitcode 3\n"
+    )
     findings = collect_diagnostics(
         effective,
         submit_dir=tmp_path,
@@ -1292,6 +1295,8 @@ def test_final_hold_cause_and_application_exit_survive_replay(tmp_path):
         accumulator.consume(record)
     finding = accumulator.diagnostics[0]
     assert finding.code == "output_missing"
-    assert "application exit code 42" in finding.summary
+    assert "tool exit code 3" in finding.summary
+    assert "Kickstart process exit code 42" in finding.summary
+    assert any(e.source is SourceName.PEGASUS_LITE for e in finding.evidence)
     assert "recorded job exit code 1" in finding.summary
     assert "secret-value" not in (tmp_path / "events.jsonl").read_text()

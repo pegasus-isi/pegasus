@@ -542,7 +542,7 @@ def _job_panel(
     table.add_column("Job", ratio=3, overflow="ellipsis", no_wrap=True)
     if wide:
         table.add_column("Transformation", ratio=2, overflow="ellipsis")
-    table.add_column("State", width=9, no_wrap=True)
+    table.add_column("Recorded", width=11, no_wrap=True)
     if compact:
         table.add_column("Try/Exit/RSS", justify="right", no_wrap=True)
     else:
@@ -551,15 +551,22 @@ def _job_panel(
         table.add_column("Runtime", justify="right", no_wrap=True)
         table.add_column("Exit", justify="right", no_wrap=True)
         table.add_column("RSS", justify="right", no_wrap=True)
-    table.add_column("Live", ratio=1, overflow="ellipsis", no_wrap=True)
+    table.add_column("Scheduler", ratio=1, overflow="ellipsis", no_wrap=True)
     if wide:
         table.add_column("Request", no_wrap=True)
         table.add_column("Host", ratio=2, overflow="ellipsis")
     if not compact:
         table.add_column("Source", ratio=1, overflow="ellipsis")
+    state_lag = False
     for job in jobs:
         attempt = _current_attempt(job)
         live_status, request, host = _scheduler_display(job, attempt)
+        observed = {
+            "IDLE": Lifecycle.QUEUED,
+            "RUN": Lifecycle.RUNNING,
+            "HELD": Lifecycle.HELD,
+        }.get(live_status)
+        state_lag |= observed is not None and observed is not job.lifecycle
         runtime = None
         if attempt is not None and attempt.start_time is not None:
             end = attempt.end_time or Decimal(str(snapshot.clock.epoch))
@@ -599,6 +606,8 @@ def _job_panel(
         if not compact:
             values.append(job.provenance.value.replace("_", " "))
         table.add_row(*values)
+    if state_lag:
+        table.caption = "Recorded = Pegasus lifecycle; Scheduler = HTCondor observation (may be newer)."
     title = f"Jobs ({len(jobs)} shown"
     if total > len(jobs):
         title += f" of {total}"
@@ -791,6 +800,10 @@ def _diagnostics_panel(
     )
 
 
+def _priority_number(value: float | None) -> str:
+    return "unknown" if value is None else f"{value:.3f}".rstrip("0").rstrip(".")
+
+
 def _why_idle_panel(
     analysis: IdleAnalysis | None, options: DisplayOptions
 ) -> Panel | None:
@@ -868,8 +881,8 @@ def _why_idle_panel(
         lines.append(
             Text(
                 f"priority {analysis.priority.principal}: "
-                f"effective {analysis.priority.effective_priority}  "
-                f"real {analysis.priority.real_priority}  "
+                f"effective {_priority_number(analysis.priority.effective_priority)}  "
+                f"real {_priority_number(analysis.priority.real_priority)}  "
                 f"used {analysis.priority.resources_used}  "
                 f"better users {analysis.priority.better_priority_users}",
                 style="dim",

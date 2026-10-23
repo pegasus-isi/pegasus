@@ -24,6 +24,7 @@ import re
 import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, datetime
 from enum import Enum
 from hashlib import sha256
 from pathlib import Path
@@ -139,6 +140,16 @@ class KickstartReadResult:
 
 
 @dataclass(frozen=True, slots=True)
+class PegasusLiteResult:
+    status: KickstartReadStatus
+    relative_path: str | None = None
+    tool_exit_code: int | None = None
+    wrapper_exit_code: int | None = None
+    excerpt: str = ""
+    error_code: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class DiagnosticFinding:
     exec_job_id: str
     category: DiagnosticCategory
@@ -160,6 +171,12 @@ class DiagnosticsBatch:
 
 
 _HOLD_PATTERNS: tuple[tuple[re.Pattern[str], str, str, tuple[str, ...]], ...] = (
+    (
+        re.compile(r"\bvia condor_hold\b", re.I),
+        "user_hold",
+        "Job was held by a user",
+        ("Confirm the reason for the manual hold before releasing the job.",),
+    ),
     (
         re.compile(r"Transfer output files failure.*No such file", re.I),
         "output_missing",
@@ -341,7 +358,7 @@ def _bounded_yaml(
     elif isinstance(value, (list, tuple)):
         for item in value:
             _bounded_yaml(item, depth=depth + 1, budget=budget)
-    elif not isinstance(value, (str, int, float, bool, type(None))):
+    elif not isinstance(value, (str, int, float, bool, date, datetime, type(None))):
         raise ValueError("kickstart YAML value has unsupported type")
 
 
@@ -357,34 +374,10 @@ def _read_bounded(descriptor: int, maximum_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-def parse_kickstart_output(
-    submit_dir: Path,
-    exec_job_id: str,
-    stdout_file: str | None = None,
-    *,
-    maximum_bytes: int = MAX_KICKSTART_BYTES,
-) -> KickstartReadResult:
-    """Read one local kickstart file without following an attacker-controlled path."""
-
-    if maximum_bytes <= 0 or maximum_bytes > MAX_KICKSTART_BYTES:
-        raise ValueError(f"maximum_bytes must be in 1..{MAX_KICKSTART_BYTES}")
-    relative = _safe_relative_path(exec_job_id, stdout_file)
-    if stdout_file is None and relative is not None:
-        nested = parse_kickstart_output(
-            submit_dir, exec_job_id, str(relative), maximum_bytes=maximum_bytes
-        )
-        if nested.status is not KickstartReadStatus.MISSING:
-            return nested
-        return parse_kickstart_output(
-            submit_dir,
-            exec_job_id,
-            f"{exec_job_id}.out.000",
-            maximum_bytes=maximum_bytes,
-        )
-    if relative is None:
-        return KickstartReadResult(
-            KickstartReadStatus.REJECTED, error_code="unsafe_path"
-        )
+def _read_output_file(
+    submit_dir: Path, relative: Path, maximum_bytes: int
+) -> bytes | KickstartReadResult:
+    """Read a bounded regular file under the submit directory, without symlinks."""
     try:
         base = submit_dir.resolve(strict=True)
         if not base.is_dir():
@@ -443,8 +436,47 @@ def parse_kickstart_output(
         return KickstartReadResult(
             KickstartReadStatus.TOO_LARGE, str(relative), error_code="size_limit"
         )
+    return content
+
+
+def parse_kickstart_output(
+    submit_dir: Path,
+    exec_job_id: str,
+    stdout_file: str | None = None,
+    *,
+    maximum_bytes: int = MAX_KICKSTART_BYTES,
+) -> KickstartReadResult:
+    """Read one local kickstart file without following an attacker-controlled path."""
+
+    if maximum_bytes <= 0 or maximum_bytes > MAX_KICKSTART_BYTES:
+        raise ValueError(f"maximum_bytes must be in 1..{MAX_KICKSTART_BYTES}")
+    relative = _safe_relative_path(exec_job_id, stdout_file)
+    if stdout_file is None and relative is not None:
+        nested = parse_kickstart_output(
+            submit_dir, exec_job_id, str(relative), maximum_bytes=maximum_bytes
+        )
+        if nested.status is not KickstartReadStatus.MISSING:
+            return nested
+        return parse_kickstart_output(
+            submit_dir,
+            exec_job_id,
+            f"{exec_job_id}.out.000",
+            maximum_bytes=maximum_bytes,
+        )
+    if relative is None:
+        return KickstartReadResult(
+            KickstartReadStatus.REJECTED, error_code="unsafe_path"
+        )
+    content = _read_output_file(submit_dir, relative, maximum_bytes)
+    if isinstance(content, KickstartReadResult):
+        return content
     try:
         text = content.decode("utf-8")
+        # PegasusLite appends separate metadata after this line. It is not part
+        # of the invocation YAML (and may have a different format).
+        text = re.split(r"(?m)^---------------pegasus-multipart\r?$", text, maxsplit=1)[
+            0
+        ]
         tokens = yaml.scan(text)
         forbidden = (yaml.AliasToken, yaml.AnchorToken, yaml.TagToken)
         if any(isinstance(token, forbidden) for token in tokens):
@@ -552,6 +584,7 @@ def _hold_diagnostic(
                     match_suggestions,
                 )
                 break
+        summary += f": {redact_excerpt(reason, 256)}"
     evidence = (
         _state_evidence(job),
         DiagnosticEvidence(
@@ -621,15 +654,73 @@ def _stderr_diagnosis(
     return None
 
 
+def _stderr_paths(job: JobSnapshot) -> tuple[Path, ...]:
+    attempt = _current_attempt(job)
+    if attempt is not None and attempt.stderr_path:
+        path = _safe_relative_path(job.exec_job_id, attempt.stderr_path)
+        return () if path is None else (path,)
+    if attempt is not None and attempt.stdout_path:
+        name, count = re.subn(r"\.out(\.\d+)$", r".err\1", attempt.stdout_path)
+        path = _safe_relative_path(job.exec_job_id, name) if count else None
+        return () if path is None else (path,)
+    if len(job.attempts) > 1 or not _SAFE_JOB_COMPONENT.fullmatch(job.exec_job_id):
+        return ()
+    name = f"{job.exec_job_id}.err.000"
+    return (Path("00") / "00" / name, Path(name))
+
+
+def parse_pegasuslite_stderr(submit_dir: Path, job: JobSnapshot) -> PegasusLiteResult:
+    """Read only this attempt's stderr and recognize PegasusLite's exact summary."""
+    paths = _stderr_paths(job)
+    if not paths:
+        return PegasusLiteResult(
+            KickstartReadStatus.REJECTED, error_code="unknown_or_unsafe_stderr_path"
+        )
+    for relative in paths:
+        content = _read_output_file(submit_dir, relative, MAX_KICKSTART_BYTES)
+        if isinstance(content, KickstartReadResult):
+            if content.status is KickstartReadStatus.MISSING:
+                continue
+            return PegasusLiteResult(
+                content.status, str(relative), error_code=content.error_code
+            )
+        matches = list(
+            re.finditer(
+                rb"(?m)^PegasusLite: exitcode ([0-9]{1,3}), tool originally exited with exitcode ([0-9]{1,3})[ \t]*\r?$",
+                content,
+            )
+        )
+        pairs = {(int(m[1]), int(m[2])) for m in matches}
+        if len(pairs) != 1 or any(code > 255 for pair in pairs for code in pair):
+            return PegasusLiteResult(
+                KickstartReadStatus.AVAILABLE,
+                str(relative),
+                error_code="summary_missing_or_ambiguous",
+            )
+        wrapper, tool = pairs.pop()
+        return PegasusLiteResult(
+            KickstartReadStatus.AVAILABLE,
+            str(relative),
+            tool,
+            wrapper,
+            redact_excerpt(matches[-1][0].decode("ascii")),
+        )
+    return PegasusLiteResult(
+        KickstartReadStatus.MISSING, str(paths[-1]), error_code="not_found"
+    )
+
+
 def _failure_diagnostic(
     job: JobSnapshot,
     kickstart: KickstartReadResult,
     preceding_hold: str | None = None,
     hold_source: SourceName = SourceName.CONDOR_QUEUE,
+    pegasuslite: PegasusLiteResult | None = None,
 ) -> DiagnosticFinding:
     attempt = _current_attempt(job)
     info = kickstart.info
-    exit_code = _real_exit_code(attempt, info)
+    tool_exit = None if pegasuslite is None else pegasuslite.tool_exit_code
+    exit_code = tool_exit if tool_exit is not None else _real_exit_code(attempt, info)
     specific = _stderr_diagnosis(
         None if info is None else info.stderr_analysis, exit_code
     )
@@ -651,7 +742,12 @@ def _failure_diagnostic(
         if specific is None and hold.code != "held_unknown":
             code = hold.code
         suggestions = tuple(dict.fromkeys((*hold.suggestions, *suggestions)))
-    if info is not None and info.exit_code is not None:
+    if tool_exit is not None:
+        summary += f" (tool exit code {tool_exit}; PegasusLite exit code {pegasuslite.wrapper_exit_code}"
+        if info is not None and info.exit_code is not None:
+            summary += f"; Kickstart process exit code {info.exit_code}"
+        summary += f"; recorded job exit code {_real_exit_code(attempt, None)})"
+    elif info is not None and info.exit_code is not None:
         recorded_exit = _real_exit_code(attempt, None)
         summary += f" (application exit code {info.exit_code}"
         if recorded_exit is not None:
@@ -685,6 +781,7 @@ def _failure_diagnostic(
     if info is not None:
         kickstart_payload.update(
             {
+                "process_exit_code": info.exit_code,
                 "application_exit_code": info.exit_code,
                 "stderr_excerpt": info.stderr_excerpt,
                 "stdout_excerpt": info.stdout_excerpt,
@@ -699,6 +796,26 @@ def _failure_diagnostic(
             FrozenPayload.from_mapping(kickstart_payload),
         )
     )
+    if (
+        pegasuslite is not None
+        and pegasuslite.status is not KickstartReadStatus.MISSING
+    ):
+        evidence.append(
+            DiagnosticEvidence(
+                SourceName.PEGASUS_LITE,
+                "pegasuslite_stderr",
+                FrozenPayload.from_mapping(
+                    {
+                        "status": pegasuslite.status.value,
+                        "relative_path": pegasuslite.relative_path,
+                        "tool_exit_code": pegasuslite.tool_exit_code,
+                        "wrapper_exit_code": pegasuslite.wrapper_exit_code,
+                        "excerpt": pegasuslite.excerpt,
+                        "error_code": pegasuslite.error_code,
+                    }
+                ),
+            )
+        )
     return DiagnosticFinding(
         job.exec_job_id,
         DiagnosticCategory.FAILED,
@@ -756,9 +873,11 @@ def _diagnostic_inputs(
         hold_reason,
         submit_dir,
         None if attempt is None else attempt.stdout_path,
+        None if attempt is None else attempt.stderr_path,
         None if attempt is None else attempt.exit_code,
         None if attempt is None else attempt.raw_wait_status,
         _kickstart_identity(job, submit_dir),
+        _output_identities(submit_dir, _stderr_paths(job)) if submit_dir else None,
     )
 
 
@@ -775,6 +894,10 @@ def _kickstart_identity(job: JobSnapshot, submit_dir: Path | None) -> tuple | No
     paths = (
         (relative,) if stdout_path else (relative, Path(f"{job.exec_job_id}.out.000"))
     )
+    return _output_identities(submit_dir, paths)
+
+
+def _output_identities(submit_dir: Path, paths: tuple[Path, ...]) -> tuple:
     identities = []
     for path in paths:
         try:
@@ -865,6 +988,9 @@ def collect_diagnostics(
                     if job.exec_job_id in history_rows
                     and job.exec_job_id not in queue_rows
                     else SourceName.CONDOR_QUEUE,
+                    parse_pegasuslite_stderr(submit_dir, job)
+                    if submit_dir is not None
+                    else None,
                 )
             )
     return tuple(findings)

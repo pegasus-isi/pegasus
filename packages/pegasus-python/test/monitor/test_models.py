@@ -338,7 +338,7 @@ def test_known_normalization_and_unknown_states() -> None:
     assert normalize_job_state("JOB_FAILURE") == "JOB_FAILURE"
     assert normalize_job_state("future_state") == "FUTURE_STATE"
     assert job_lifecycle("future_state") is Lifecycle.OTHER
-    assert job_lifecycle("JOB_EVICTED") is Lifecycle.HELD
+    assert job_lifecycle("JOB_EVICTED") is Lifecycle.QUEUED
 
 
 def test_held_pair_and_synthetic_terminal_equivalence() -> None:
@@ -1503,3 +1503,20 @@ print(json.dumps(sorted(name for name in sys.modules if name == 'rich' or name.s
     )
 
     assert json.loads(result.stdout) == []
+
+
+def test_eviction_tie_order_agrees_with_stampede_sql():
+    import sqlite3
+
+    from Pegasus.monitor.stampede import _STATE_PRECEDENCE_SQL
+
+    with sqlite3.connect(":memory:") as connection:
+        connection.execute("CREATE TABLE js (state TEXT)")
+        for state in ("JOB_EVICTED", "JOB_RELEASED", "JOB_HELD", "EXECUTE"):
+            connection.execute("DELETE FROM js")
+            connection.execute("INSERT INTO js VALUES (?)", (state,))
+            assert connection.execute(
+                f"SELECT {_STATE_PRECEDENCE_SQL} FROM js"
+            ).fetchone()[0] == state_precedence(state)
+    assert state_precedence("JOB_EVICTED") < state_precedence("JOB_RELEASED")
+    assert state_precedence("JOB_EVICTED") < state_precedence("JOB_HELD")

@@ -168,6 +168,7 @@ class SourceName(str, Enum):
     CONDOR_PRIORITY = "condor_priority"
     CONDOR_NEGOTIATOR = "condor_negotiator"
     KICKSTART = "kickstart"
+    PEGASUS_LITE = "pegasus_lite"
 
 
 class HealthState(str, Enum):
@@ -278,7 +279,7 @@ _LIFECYCLES = {
     "EXECUTE": Lifecycle.RUNNING,
     "JOB_HELD": Lifecycle.HELD,
     "JOB_RELEASED": Lifecycle.QUEUED,
-    "JOB_EVICTED": Lifecycle.HELD,
+    "JOB_EVICTED": Lifecycle.QUEUED,
     "JOB_TERMINATED": Lifecycle.POST,
     "POST_SCRIPT_STARTED": Lifecycle.POST,
     "POST_SCRIPT_TERMINATED": Lifecycle.POST,
@@ -318,7 +319,7 @@ _STATE_PRECEDENCE = {
     "IMAGE_SIZE": 31,
     "REMOTE_ERROR": 32,
     "JOB_HELD": 40,
-    "JOB_EVICTED": 45,
+    "JOB_EVICTED": 24,
     "JOB_TERMINATED": 50,
     "POST_SCRIPT_STARTED": 60,
     "POST_SCRIPT_TERMINATED": 61,

@@ -26,12 +26,16 @@ from typing import TYPE_CHECKING, Any
 from Pegasus.monitor.models import (
     EffectiveSnapshot,
     HealthState,
-    JobSnapshot,
     Lifecycle,
     SchedulerQueryKind,
     SchedulerQueryResult,
 )
-from Pegasus.monitor.scheduler_evidence import hold_reasons, is_held, scheduler_rows
+from Pegasus.monitor.scheduler_evidence import (
+    hold_reasons,
+    is_held,
+    observed_lifecycle,
+    scheduler_rows,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -287,9 +291,8 @@ def _any_slot_fits(
 
 
 def _queue_rows_for_jobs(
-    jobs: Sequence[JobSnapshot], rows: Sequence[Mapping[str, Any]]
+    wanted: set[str], rows: Sequence[Mapping[str, Any]]
 ) -> list[Mapping[str, Any]]:
-    wanted = {job.exec_job_id for job in jobs if job.lifecycle is Lifecycle.QUEUED}
     return [
         row
         for row in rows
@@ -319,10 +322,17 @@ def analyze_why_idle(
     held_jobs = tuple(job for job in effective.jobs if is_held(job, current_queue))
     reasons = hold_reasons(effective.jobs, supplied)
     idle = tuple(
-        IdleJob(job.exec_job_id, job.lifecycle, job.type_desc, job.provenance.value)
+        IdleJob(
+            job.exec_job_id,
+            state,
+            job.type_desc,
+            "condor_queue"
+            if job.exec_job_id in current_queue
+            else job.provenance.value,
+        )
         for job in effective.jobs
-        if job.lifecycle in {Lifecycle.QUEUED, Lifecycle.UNSUBMITTED}
-        and not is_held(job, current_queue)
+        if (state := observed_lifecycle(job, current_queue))
+        in {Lifecycle.QUEUED, Lifecycle.UNSUBMITTED}
     )
     queued = tuple(item for item in idle if item.state is Lifecycle.QUEUED)
     unsubmitted = tuple(item for item in idle if item.state is Lifecycle.UNSUBMITTED)
@@ -352,7 +362,12 @@ def analyze_why_idle(
     queue_state = _effective_disposition(
         SchedulerQueryKind.QUEUE, queue, disabled_scheduler_kinds
     )
-    matched_queue_rows = _queue_rows_for_jobs(effective.jobs, queue_rows)
+    matched_queue_rows = _queue_rows_for_jobs(
+        {item.exec_job_id for item in queued},
+        list(current_queue.values())
+        if queue_state is SourceDisposition.HEALTHY
+        else queue_rows,
+    )
     if queued and queue_state is SourceDisposition.HEALTHY_EMPTY:
         findings.append(
             "The workflow queue query succeeded but returned no matching idle ClassAds."
