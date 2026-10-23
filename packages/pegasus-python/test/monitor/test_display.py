@@ -554,3 +554,83 @@ def test_why_idle_detail_and_diagnostics_precede_row_heavy_panels(tmp_path):
     assert "machines 3" in flat
     assert "cycle 4.5s" in flat
     assert "better users 2" in flat
+
+
+@pytest.mark.parametrize("width", [40, 80, 120])
+def test_why_idle_once_keeps_verdict_and_all_findings(tmp_path, width):
+    from Pegasus.monitor.why_idle import IdleAnalysis, ResourceMismatch
+
+    idle = IdleAnalysis(
+        (),
+        1,
+        0,
+        None,
+        16,
+        16,
+        16384,
+        16384,
+        0,
+        0,
+        1,
+        16,
+        16,
+        None,
+        10.0,
+        1,
+        (ResourceMismatch("huge", 1, 10000000, 0, 0, "exceeds_single_slot_capacity"),),
+        tuple(f"finding number {n}" for n in range(30)),
+        ("last suggestion",),
+        (),
+    )
+    text = render_text(
+        _context(tmp_path),
+        _snapshot(),
+        DisplayAnalysis(why_idle=idle),
+        DisplayOptions(live=False, analysis_line_limit=8),
+        width=width,
+    )
+    compact = "".join(text.split())
+    assert "exceeds_single_slot_capacity" in compact
+    assert "10000000" in compact
+    assert "findingnumber29" in compact
+    assert "lastsuggestion" in compact
+    assert "additionalline(s)omitted" not in compact
+
+
+def test_why_idle_live_keeps_verdict_before_truncation():
+    from io import StringIO
+
+    from Pegasus.monitor.display import _why_idle_panel
+    from Pegasus.monitor.why_idle import IdleAnalysis, ResourceMismatch
+
+    idle = IdleAnalysis(
+        (),
+        1,
+        0,
+        None,
+        16,
+        16,
+        16384,
+        16384,
+        0,
+        0,
+        1,
+        16,
+        16,
+        None,
+        10.0,
+        1,
+        (ResourceMismatch("huge", 1, 10000000, 0, 0, "exceeds_single_slot_capacity"),),
+        tuple(f"finding number {n}" for n in range(30)),
+        (),
+        (),
+    )
+    stream = StringIO()
+    console = Console(file=stream, width=80, color_system=None)
+    console.print(
+        _why_idle_panel(idle, DisplayOptions(live=True, analysis_line_limit=3))
+    )
+    text = stream.getvalue()
+    assert "exceeds_single_slot_capacity" in text
+    assert "Reduce the request" in text
+    assert "omitted" in text

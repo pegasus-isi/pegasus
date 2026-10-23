@@ -1298,6 +1298,8 @@ async def _run_once(
             )
         else:
             kinds = (runtime.scheduler_kind.QUEUE,)
+        if args.diagnose:
+            kinds = (*kinds, runtime.scheduler_kind.HISTORY)
         snapshot = await _query_once(coordinator, kinds) or snapshot
     analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
     if recorder is not None:

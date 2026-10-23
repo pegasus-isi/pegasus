@@ -63,7 +63,10 @@ Options
 **--why-idle**
    Produce a one-shot report with bounded queue, pool, priority, and negotiator
    evidence explaining idle jobs. Missing optional evidence is reported as
-   unknown rather than treated as workflow failure.
+   unknown rather than treated as workflow failure. Actionable verdicts appear
+   before pool statistics, and one-shot reports do not use the live display
+   line limit. Fresh queue observations also explain held jobs while the
+   recorded Pegasus lifecycle is catching up.
 
 **--remap-submit-dir** {**auto**, **always**, **never**}
    Control remapping of paths recorded at planning time onto the local
@@ -73,7 +76,13 @@ Options
    Add bounded failure, hold, kickstart, and stall diagnostics. Diagnostic
    source failures degrade the report instead of changing workflow state. When
    event logging is active, redacted diagnostic results are also recorded as
-   derived evidence; they never change replayed workflow or job state.
+   derived evidence; they never change replayed workflow or job state. Fresh
+   queue observations can report a hold or release before the job log does.
+   Evidence is matched to the current job attempt. Final failure reports retain
+   a preceding hold reason and distinguish the application exit code, when
+   Kickstart output is available, from the recorded job exit code. One-shot
+   diagnostics query history as well as the queue, so a restarted monitor can
+   recover hold reasons retained by HTCondor.
 
 **--log** [*PATH*]
    Write canonical schema-version-1 JSONL while monitoring locally. If *PATH*

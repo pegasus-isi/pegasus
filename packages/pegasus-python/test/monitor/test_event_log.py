@@ -1247,3 +1247,51 @@ def test_recovery_reemits_recorded_findings_at_unchanged_epoch(tmp_path):
         writer.close()
     result = ReplayEngine(path, speed=0).replay()
     assert [record.code for record in result.current_diagnostics] == ["held_unknown"]
+
+
+def test_final_hold_cause_and_application_exit_survive_replay(tmp_path):
+    from Pegasus.monitor.diagnostics import collect_diagnostics
+    from Pegasus.monitor.models import EffectiveSnapshot
+
+    snapshot = _snapshot(state="JOB_ABORTED")
+    job = snapshot.jobs[0]
+    job = replace(
+        job,
+        attempts=(replace(job.attempts[0], exit_code=1, stdout_path="result.out.000"),),
+    )
+    snapshot = replace(snapshot, jobs=(job,))
+    (tmp_path / "result.out.000").write_text(
+        "- mainjob:\n    status:\n      regular_exitcode: 42\n"
+    )
+    effective = EffectiveSnapshot(
+        snapshot.epoch,
+        snapshot.workflow,
+        snapshot.jobs,
+        snapshot.generation,
+        None,
+        1.0,
+        1.0,
+    )
+    findings = collect_diagnostics(
+        effective,
+        submit_dir=tmp_path,
+        preceding_holds={
+            job.exec_job_id: "Transfer output files failure: No such file token=secret-value"
+        },
+    )
+    writer = EventLogWriter(tmp_path / "events.jsonl", WORKFLOW, "6.0", min_free_mb=0)
+    writer.record_snapshot(snapshot, recorded_at_epoch=1.0)
+    writer.record_diagnostics(
+        types.SimpleNamespace(new_findings=findings),
+        snapshot_epoch=snapshot.epoch,
+        recorded_at_epoch=2.0,
+    )
+    writer.close()
+    accumulator = ReplayAccumulator()
+    for record in _records(tmp_path / "events.jsonl"):
+        accumulator.consume(record)
+    finding = accumulator.diagnostics[0]
+    assert finding.code == "output_missing"
+    assert "application exit code 42" in finding.summary
+    assert "recorded job exit code 1" in finding.summary
+    assert "secret-value" not in (tmp_path / "events.jsonl").read_text()

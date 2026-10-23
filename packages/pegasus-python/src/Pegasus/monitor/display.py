@@ -761,7 +761,7 @@ def _diagnostics_panel(
                 style="bold red" if active else "green",
             )
         )
-    for finding in batch.findings[:20]:
+    for finding in batch.findings[:20] if options.live else batch.findings:
         lines.append(
             Text(
                 f"{finding.exec_job_id}: {finding.summary} [{finding.code}]",
@@ -770,14 +770,22 @@ def _diagnostics_panel(
         )
         lines.extend(
             Text(f"  Suggestion: {suggestion}", style="cyan")
-            for suggestion in finding.suggestions[:3]
+            for suggestion in (
+                finding.suggestions[:3] if options.live else finding.suggestions
+            )
         )
     for error in batch.errors:
         lines.append(Text(error, style="yellow"))
     if not lines:
         lines.append(Text("No active diagnostic findings", style="dim"))
     return Panel(
-        Group(*_bounded_lines(lines, options.analysis_line_limit)),
+        Group(
+            *(
+                _bounded_lines(lines, options.analysis_line_limit)
+                if options.live
+                else lines
+            )
+        ),
         title="Diagnostics",
         padding=(0, 1),
     )
@@ -789,6 +797,26 @@ def _why_idle_panel(
     if analysis is None:
         return None
     lines: list[Text] = []
+    for mismatch in analysis.requirement_mismatches:
+        lines.append(
+            Text(
+                f"{mismatch.exec_job_id}: {mismatch.reason} "
+                f"(requested memory {mismatch.requested_memory_mb} MiB)",
+                style="yellow",
+            )
+        )
+        if mismatch.reason == "exceeds_single_slot_capacity":
+            lines.append(
+                Text(
+                    "Suggestion: Reduce the request or use a resource with sufficient per-slot capacity.",
+                    style="cyan",
+                )
+            )
+    lines.extend(Text(item, style="yellow") for item in analysis.findings)
+    lines.extend(
+        Text(f"Suggestion: {item}", style="cyan") for item in analysis.suggestions
+    )
+
     lines.append(
         Text(
             f"queued {analysis.queued_jobs}  unsubmitted {analysis.unsubmitted_jobs}",
@@ -801,7 +829,9 @@ def _why_idle_panel(
                 "idle jobs: "
                 + ", ".join(
                     f"{job.exec_job_id}({job.state.value})"
-                    for job in analysis.idle_jobs[:8]
+                    for job in (
+                        analysis.idle_jobs[:8] if options.live else analysis.idle_jobs
+                    )
                 ),
                 style="dim",
             )
@@ -845,12 +875,6 @@ def _why_idle_panel(
                 style="dim",
             )
         )
-    lines.extend(Text(item, style="yellow") for item in analysis.findings[:20])
-    lines.extend(
-        Text(f"Suggestion: {item}", style="cyan") for item in analysis.suggestions[:10]
-    )
-    for mismatch in analysis.requirement_mismatches[:10]:
-        lines.append(Text(f"{mismatch.exec_job_id}: {mismatch.reason}", style="yellow"))
     for source in analysis.sources:
         lines.append(
             Text(
@@ -859,7 +883,13 @@ def _why_idle_panel(
             )
         )
     return Panel(
-        Group(*_bounded_lines(lines, options.analysis_line_limit)),
+        Group(
+            *(
+                _bounded_lines(lines, options.analysis_line_limit)
+                if options.live
+                else lines
+            )
+        ),
         title="Why Idle",
         padding=(0, 1),
     )

@@ -31,6 +31,7 @@ from Pegasus.monitor.models import (
     SchedulerQueryKind,
     SchedulerQueryResult,
 )
+from Pegasus.monitor.scheduler_evidence import hold_reasons, is_held, scheduler_rows
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -314,18 +315,28 @@ def analyze_why_idle(
     negotiator = results.get(SchedulerQueryKind.NEGOTIATOR)
     queue_rows = _rows(queue)
     pool_rows = _rows(pool)
+    current_queue = scheduler_rows(effective.jobs, supplied, SchedulerQueryKind.QUEUE)
+    held_jobs = tuple(job for job in effective.jobs if is_held(job, current_queue))
+    reasons = hold_reasons(effective.jobs, supplied)
     idle = tuple(
         IdleJob(job.exec_job_id, job.lifecycle, job.type_desc, job.provenance.value)
         for job in effective.jobs
         if job.lifecycle in {Lifecycle.QUEUED, Lifecycle.UNSUBMITTED}
+        and not is_held(job, current_queue)
     )
     queued = tuple(item for item in idle if item.state is Lifecycle.QUEUED)
     unsubmitted = tuple(item for item in idle if item.state is Lifecycle.UNSUBMITTED)
-    findings: list[str] = []
+    # Import here to share bounded redaction without an import cycle.
+    from Pegasus.monitor.diagnostics import redact_excerpt
+
+    findings: list[str] = [
+        f"{job.exec_job_id}: HELD by HTCondor; {redact_excerpt(reasons.get(job.exec_job_id, 'hold reason unavailable'))}"
+        for job in held_jobs
+    ]
     suggestions: list[str] = []
     mismatches: list[ResourceMismatch] = []
 
-    if not idle:
+    if not idle and not held_jobs:
         findings.append("No queued or unsubmitted jobs are present in this workflow.")
     if unsubmitted:
         findings.append(

@@ -723,3 +723,31 @@ def test_braindump_context_falls_back_to_dag_stem(tmp_path):
     runtime = replace(runtime, render_text=render_text)
     assert cli.main(["--once", str(tmp_path)], runtime=runtime, stdout=_Output()) == 0
     assert captured["context"].label == "diamond-0"
+
+
+@pytest.mark.parametrize("extra", [[], ["--why-idle"]])
+def test_once_diagnose_queries_history_for_removed_jobs(tmp_path, extra):
+    runtime, calls = _runtime(tmp_path)
+    assert (
+        cli.main(
+            ["--once", "--diagnose", *extra, str(tmp_path)],
+            runtime=runtime,
+            stdout=_Output(),
+        )
+        == 0
+    )
+    assert SchedulerQueryKind.QUEUE in calls.scheduler_queries
+    assert SchedulerQueryKind.HISTORY in calls.scheduler_queries
+
+
+def test_once_diagnose_no_condor_does_not_query_history(tmp_path):
+    runtime, calls = _runtime(tmp_path)
+    assert (
+        cli.main(
+            ["--once", "--diagnose", "--no-condor", str(tmp_path)],
+            runtime=runtime,
+            stdout=_Output(),
+        )
+        == 0
+    )
+    assert calls.scheduler_queries == []

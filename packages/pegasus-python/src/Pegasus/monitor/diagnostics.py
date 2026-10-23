@@ -44,11 +44,12 @@ from Pegasus.monitor.models import (
     SchedulerQueryResult,
     SourceName,
 )
+from Pegasus.monitor.scheduler_evidence import hold_reasons, is_held, scheduler_rows
 from Pegasus.monitor.stall_detector import StallDetector, StallEventKind, StallResult
 from Pegasus.monitor.why_idle import IdleAnalysis, analyze_why_idle
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
 
     from Pegasus.monitor.coordinator import CoordinatorSnapshot
 
@@ -368,6 +369,18 @@ def parse_kickstart_output(
     if maximum_bytes <= 0 or maximum_bytes > MAX_KICKSTART_BYTES:
         raise ValueError(f"maximum_bytes must be in 1..{MAX_KICKSTART_BYTES}")
     relative = _safe_relative_path(exec_job_id, stdout_file)
+    if stdout_file is None and relative is not None:
+        nested = parse_kickstart_output(
+            submit_dir, exec_job_id, str(relative), maximum_bytes=maximum_bytes
+        )
+        if nested.status is not KickstartReadStatus.MISSING:
+            return nested
+        return parse_kickstart_output(
+            submit_dir,
+            exec_job_id,
+            f"{exec_job_id}.out.000",
+            maximum_bytes=maximum_bytes,
+        )
     if relative is None:
         return KickstartReadResult(
             KickstartReadStatus.REJECTED, error_code="unsafe_path"
@@ -521,7 +534,9 @@ def _real_exit_code(
         return None
 
 
-def _hold_diagnostic(job: JobSnapshot, reason: str | None) -> DiagnosticFinding:
+def _hold_diagnostic(
+    job: JobSnapshot, reason: str | None, source: SourceName = SourceName.CONDOR_QUEUE
+) -> DiagnosticFinding:
     summary = "Job is held by HTCondor"
     code = "held_unknown"
     suggestions = (
@@ -540,7 +555,7 @@ def _hold_diagnostic(job: JobSnapshot, reason: str | None) -> DiagnosticFinding:
     evidence = (
         _state_evidence(job),
         DiagnosticEvidence(
-            SourceName.CONDOR_QUEUE,
+            source,
             "hold_reason" if reason else "hold_reason_unavailable",
             FrozenPayload.from_mapping(
                 {"reason_excerpt": redact_excerpt(reason or "No hold reason available")}
@@ -607,7 +622,10 @@ def _stderr_diagnosis(
 
 
 def _failure_diagnostic(
-    job: JobSnapshot, kickstart: KickstartReadResult
+    job: JobSnapshot,
+    kickstart: KickstartReadResult,
+    preceding_hold: str | None = None,
+    hold_source: SourceName = SourceName.CONDOR_QUEUE,
 ) -> DiagnosticFinding:
     attempt = _current_attempt(job)
     info = kickstart.info
@@ -625,6 +643,20 @@ def _failure_diagnostic(
         suggestions = _FAILURE_SUGGESTIONS.get(exit_code, _FAILURE_SUGGESTIONS[None])
     else:
         code, summary, suggestions = specific
+    hold = (
+        _hold_diagnostic(job, preceding_hold, hold_source) if preceding_hold else None
+    )
+    if hold is not None:
+        summary += f"; preceding hold: {hold.summary}"
+        if specific is None and hold.code != "held_unknown":
+            code = hold.code
+        suggestions = tuple(dict.fromkeys((*hold.suggestions, *suggestions)))
+    if info is not None and info.exit_code is not None:
+        recorded_exit = _real_exit_code(attempt, None)
+        summary += f" (application exit code {info.exit_code}"
+        if recorded_exit is not None:
+            summary += f"; recorded job exit code {recorded_exit}"
+        summary += ")"
     evidence: list[DiagnosticEvidence] = [
         _state_evidence(job),
         DiagnosticEvidence(
@@ -632,7 +664,7 @@ def _failure_diagnostic(
             "current_attempt_exit",
             FrozenPayload.from_mapping(
                 {
-                    "exit_code": exit_code,
+                    "exit_code": _real_exit_code(attempt, None),
                     "raw_wait_status": None
                     if attempt is None
                     else attempt.raw_wait_status,
@@ -643,6 +675,8 @@ def _failure_diagnostic(
             ),
         ),
     ]
+    if hold is not None:
+        evidence.extend(hold.evidence[1:])
     kickstart_payload: dict[str, Any] = {
         "status": kickstart.status.value,
         "relative_path": kickstart.relative_path,
@@ -651,6 +685,7 @@ def _failure_diagnostic(
     if info is not None:
         kickstart_payload.update(
             {
+                "application_exit_code": info.exit_code,
                 "stderr_excerpt": info.stderr_excerpt,
                 "stdout_excerpt": info.stdout_excerpt,
                 "executable": info.executable,
@@ -710,26 +745,6 @@ def _effective_inputs(
     )
 
 
-def _latest_queue(
-    results: Iterable[SchedulerQueryResult],
-) -> SchedulerQueryResult | None:
-    queue = [item for item in results if item.request.kind is SchedulerQueryKind.QUEUE]
-    return max(queue, default=None, key=lambda item: item.request.clock.monotonic)
-
-
-def _hold_reasons(results: Iterable[SchedulerQueryResult]) -> dict[str, str]:
-    queue = _latest_queue(results)
-    reasons: dict[str, str] = {}
-    if queue is not None:
-        for item in queue.evidence:
-            row = item.payload.to_json_dict()
-            node = str(row.get("DAGNodeName") or "")
-            reason = str(row.get("HoldReason") or "")
-            if node and reason:
-                reasons[node] = reason
-    return reasons
-
-
 def _diagnostic_inputs(
     job: JobSnapshot, hold_reason: str | None, submit_dir: Path | None
 ) -> tuple[object, ...]:
@@ -738,6 +753,7 @@ def _diagnostic_inputs(
     attempt = _current_attempt(job)
     return (
         job.provenance,
+        hold_reason,
         submit_dir,
         None if attempt is None else attempt.stdout_path,
         None if attempt is None else attempt.exit_code,
@@ -750,26 +766,35 @@ def _kickstart_identity(job: JobSnapshot, submit_dir: Path | None) -> tuple | No
     if submit_dir is None:
         return None
     attempt = _current_attempt(job)
-    relative = _safe_relative_path(
-        job.exec_job_id, None if attempt is None else attempt.stdout_path
-    )
+    stdout_path = None if attempt is None else attempt.stdout_path
+    if stdout_path is None and len(job.attempts) > 1:
+        return None
+    relative = _safe_relative_path(job.exec_job_id, stdout_path)
     if relative is None:
         return None
-    try:
-        cursor = submit_dir.resolve(strict=True)
-        for part in relative.parts:
-            cursor = cursor / part
-            metadata = cursor.lstat()
-            if stat.S_ISLNK(metadata.st_mode):
-                return None
-        return (
-            metadata.st_dev,
-            metadata.st_ino,
-            metadata.st_size,
-            metadata.st_mtime_ns,
-        )
-    except OSError:
-        return None
+    paths = (
+        (relative,) if stdout_path else (relative, Path(f"{job.exec_job_id}.out.000"))
+    )
+    identities = []
+    for path in paths:
+        try:
+            cursor = submit_dir.resolve(strict=True)
+            for part in path.parts:
+                cursor = cursor / part
+                metadata = cursor.lstat()
+                if stat.S_ISLNK(metadata.st_mode):
+                    return None
+            identities.append(
+                (
+                    metadata.st_dev,
+                    metadata.st_ino,
+                    metadata.st_size,
+                    metadata.st_mtime_ns,
+                )
+            )
+        except OSError:
+            identities.append(None)
+    return tuple(identities)
 
 
 def _retry_kickstart(finding: DiagnosticFinding) -> bool:
@@ -794,31 +819,54 @@ def collect_diagnostics(
     *,
     submit_dir: Path | None = None,
     job_exec_ids: frozenset[str] | None = None,
+    preceding_holds: Mapping[str, str] | None = None,
 ) -> tuple[DiagnosticFinding, ...]:
     """Diagnose all currently held/failed jobs with no DB or scheduler calls."""
 
     effective, results = _effective_inputs(snapshot, scheduler_results)
-    hold_reasons = _hold_reasons(results)
+    reasons = {**(preceding_holds or {}), **hold_reasons(effective.jobs, results)}
+    queue_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.QUEUE)
+    history_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.HISTORY)
     findings: list[DiagnosticFinding] = []
     for job in effective.jobs:
         if job_exec_ids is not None and job.exec_job_id not in job_exec_ids:
             continue
-        if job.lifecycle is Lifecycle.HELD:
-            findings.append(_hold_diagnostic(job, hold_reasons.get(job.exec_job_id)))
+        if is_held(job, queue_rows):
+            findings.append(_hold_diagnostic(job, reasons.get(job.exec_job_id)))
         elif job.lifecycle is Lifecycle.FAILED:
             attempt = _current_attempt(job)
-            kickstart = (
-                parse_kickstart_output(
+            if submit_dir is None:
+                kickstart = KickstartReadResult(
+                    KickstartReadStatus.MISSING, error_code="submit_dir_unavailable"
+                )
+            elif (
+                attempt is not None
+                and attempt.stdout_path is None
+                and len(job.attempts) > 1
+            ):
+                # A conventional .out.000 belongs to the first attempt. Without
+                # a recorded output path, retries must not reuse that evidence.
+                kickstart = KickstartReadResult(
+                    KickstartReadStatus.MISSING,
+                    error_code="current_attempt_output_unknown",
+                )
+            else:
+                kickstart = parse_kickstart_output(
                     submit_dir,
                     job.exec_job_id,
                     None if attempt is None else attempt.stdout_path,
                 )
-                if submit_dir is not None
-                else KickstartReadResult(
-                    KickstartReadStatus.MISSING, error_code="submit_dir_unavailable"
+            findings.append(
+                _failure_diagnostic(
+                    job,
+                    kickstart,
+                    reasons.get(job.exec_job_id),
+                    SourceName.CONDOR_HISTORY
+                    if job.exec_job_id in history_rows
+                    and job.exec_job_id not in queue_rows
+                    else SourceName.CONDOR_QUEUE,
                 )
             )
-            findings.append(_failure_diagnostic(job, kickstart))
     return tuple(findings)
 
 
@@ -827,6 +875,7 @@ class DiagnosticsEngine:
 
     def __init__(self, stall_detector: StallDetector | None = None) -> None:
         self._stall_detector = stall_detector or StallDetector()
+        self._preceding_holds: dict[tuple[object, ...], str] = {}
         self._active_findings: dict[tuple[Any, ...], DiagnosticFinding] = {}
         self._active_inputs: dict[tuple[Any, ...], tuple[object, ...]] = {}
         self._retry_after: dict[tuple[Any, ...], float] = {}
@@ -841,27 +890,46 @@ class DiagnosticsEngine:
         disabled_scheduler_kinds: frozenset[SchedulerQueryKind] = frozenset(),
     ) -> DiagnosticsBatch:
         if snapshot.effective is None:
+            self._preceding_holds.clear()
             self._active_findings.clear()
             self._active_inputs.clear()
             self._retry_after.clear()
             self._retry_attempts.clear()
             return DiagnosticsBatch(errors=("authoritative_snapshot_unavailable",))
+        queue_rows = scheduler_rows(
+            snapshot.effective.jobs,
+            snapshot.scheduler_results,
+            SchedulerQueryKind.QUEUE,
+        )
+        reasons = hold_reasons(snapshot.effective.jobs, snapshot.scheduler_results)
+        attempt_keys = {
+            (job.workflow, job.exec_job_id, job.current_attempt)
+            for job in snapshot.effective.jobs
+        }
+        self._preceding_holds = {
+            key: value
+            for key, value in self._preceding_holds.items()
+            if key in attempt_keys
+        }
+        for job in snapshot.effective.jobs:
+            key = (job.workflow, job.exec_job_id, job.current_attempt)
+            reason = reasons.get(job.exec_job_id)
+            if reason:
+                self._preceding_holds[key] = reason
+            elif key in self._preceding_holds and (
+                job.lifecycle is Lifecycle.FAILED
+                or self._problem_key(job) in self._active_findings
+            ):
+                reasons[job.exec_job_id] = self._preceding_holds[key]
         problem_jobs = tuple(
             job
             for job in snapshot.effective.jobs
-            if job.lifecycle in {Lifecycle.HELD, Lifecycle.FAILED}
+            if job.lifecycle is Lifecycle.FAILED or is_held(job, queue_rows)
         )
         problem_jobs_by_id = {job.exec_job_id: job for job in problem_jobs}
         current_keys = {self._problem_key(job): job for job in problem_jobs}
-        hold_reasons = _hold_reasons(snapshot.scheduler_results)
-        # An absent queue row is no evidence that a known hold reason changed.
-        for key, job in current_keys.items():
-            if job.lifecycle is Lifecycle.HELD and job.exec_job_id not in hold_reasons:
-                previous = self._active_inputs.get(key)
-                if previous is not None and previous[1]:
-                    hold_reasons[job.exec_job_id] = previous[1]
         current_inputs = {
-            key: _diagnostic_inputs(job, hold_reasons.get(job.exec_job_id), submit_dir)
+            key: _diagnostic_inputs(job, reasons.get(job.exec_job_id), submit_dir)
             for key, job in current_keys.items()
         }
         retained = {
@@ -895,6 +963,7 @@ class DiagnosticsEngine:
                 diagnosed = collect_diagnostics(
                     snapshot,
                     submit_dir=submit_dir,
+                    preceding_holds=reasons,
                     job_exec_ids=frozenset(
                         current_keys[key].exec_job_id for key in refresh_keys
                     ),
@@ -910,10 +979,8 @@ class DiagnosticsEngine:
                     continue
                 key = self._problem_key(job)
                 if key in refresh_keys:
-                    if job.lifecycle is Lifecycle.HELD:
-                        finding = _hold_diagnostic(
-                            job, hold_reasons.get(job.exec_job_id)
-                        )
+                    if is_held(job, queue_rows):
+                        finding = _hold_diagnostic(job, reasons.get(job.exec_job_id))
                     if finding != retained.get(key):
                         emitted.append(finding)
                     retained[key] = finding

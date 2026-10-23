@@ -635,3 +635,169 @@ def test_parseable_kickstart_changes_refresh_cached_finding(tmp_path, replacemen
     batch = engine.analyze(_publication(2, job), submit_dir=tmp_path)
     assert batch.findings[0].code == "no_space"
     assert batch.new_findings == batch.findings
+
+
+def _scheduler_observation(
+    status=5, *, kind=SchedulerQueryKind.QUEUE, health=HealthState.HEALTHY, cluster=10
+):
+    result = _queue("Transfer output files failure: No such file token=secret-value")
+    source = (
+        SourceName.CONDOR_QUEUE
+        if kind is SchedulerQueryKind.QUEUE
+        else SourceName.CONDOR_HISTORY
+    )
+    return replace(
+        result,
+        request=replace(result.request, kind=kind),
+        health=SourceHealth(source, health, 20.0),
+        evidence=(
+            SchedulerEvidence(
+                kind,
+                FrozenPayload.from_mapping({"ClusterId": cluster, "ProcId": 0}),
+                FrozenPayload.from_mapping(
+                    {
+                        "DAGNodeName": "job",
+                        "JobStatus": status,
+                        "HoldReason": "Transfer output files failure: No such file token=secret-value",
+                    }
+                ),
+            ),
+        ),
+    )
+
+
+def test_queue_hold_is_visible_before_log_and_clears_on_release():
+    from Pegasus.monitor.why_idle import analyze_why_idle
+
+    job = _job("EXECUTE")
+    engine = DiagnosticsEngine()
+    held = replace(_publication(1, job), scheduler_results=(_scheduler_observation(),))
+    batch = engine.analyze(held)
+    assert batch.findings[0].code == "output_missing"
+    assert "secret-value" not in str(batch.findings)
+    assert "HELD" in analyze_why_idle(held).findings[0]
+    assert held.effective.jobs[0].state == "EXECUTE"
+    released = replace(
+        _publication(2, job), scheduler_results=(_scheduler_observation(2),)
+    )
+    assert not engine.analyze(released).findings
+    assert not any("HELD" in finding for finding in analyze_why_idle(released).findings)
+    assert engine.analyze(replace(held, sequence=3)).new_findings
+
+
+@pytest.mark.parametrize(
+    "health", [HealthState.STALE, HealthState.DISABLED, HealthState.UNAVAILABLE]
+)
+def test_unhealthy_queue_does_not_invent_active_hold(health):
+    snapshot = replace(
+        _publication(1, _job("EXECUTE")),
+        scheduler_results=(_scheduler_observation(health=health),),
+    )
+    assert not DiagnosticsEngine().analyze(snapshot).findings
+
+
+def test_hold_evidence_does_not_cross_attempt_or_workflow():
+    job = _job("EXECUTE")
+    wrong_attempt = replace(
+        _publication(1, job), scheduler_results=(_scheduler_observation(cluster=9),)
+    )
+    assert not DiagnosticsEngine().analyze(wrong_attempt).findings
+    result = _scheduler_observation()
+    result = replace(
+        result,
+        request=replace(result.request, workflow=WorkflowIdentity("other", "other")),
+    )
+    assert not collect_diagnostics(_effective(job), (result,))
+
+
+def test_hold_cause_survives_abort_and_restart(tmp_path):
+    engine = DiagnosticsEngine()
+    held = replace(
+        _publication(1, _job("EXECUTE")), scheduler_results=(_scheduler_observation(),)
+    )
+    engine.analyze(held)
+    _write_kickstart(tmp_path / "job.out.000", exit_code=42)
+    failed = _publication(2, _job("JOB_ABORTED"))
+    finding = engine.analyze(failed, submit_dir=tmp_path).findings[0]
+    assert finding.code == "output_missing"
+    assert "preceding hold" in finding.summary
+    assert "application exit code 42" in finding.summary
+    assert "recorded job exit code 1" in finding.summary
+    assert "secret-value" not in str(finding)
+    restarted = replace(
+        failed,
+        scheduler_results=(_scheduler_observation(3, kind=SchedulerQueryKind.HISTORY),),
+    )
+    again = DiagnosticsEngine().analyze(restarted, submit_dir=tmp_path).findings[0]
+    assert again.code == "output_missing"
+    assert "application exit code 42" in again.summary
+    app_evidence = next(
+        item for item in again.evidence if item.source is SourceName.KICKSTART
+    )
+    assert app_evidence.payload.to_json_dict()["application_exit_code"] == 42
+
+
+def test_flat_kickstart_fallback_remains_bounded(tmp_path):
+    _write_kickstart(tmp_path / "job.out.000", exit_code=42)
+    assert parse_kickstart_output(tmp_path, "job").info.exit_code == 42
+    assert (
+        parse_kickstart_output(tmp_path, "job", maximum_bytes=10).status
+        is KickstartReadStatus.TOO_LARGE
+    )
+    (tmp_path / "job.out.000").unlink()
+    (tmp_path / "job.out.000").symlink_to(tmp_path / "outside")
+    assert (
+        parse_kickstart_output(tmp_path, "job").status is KickstartReadStatus.REJECTED
+    )
+
+
+def test_flat_kickstart_update_invalidates_cached_diagnosis(tmp_path):
+    engine = DiagnosticsEngine()
+    publication = _publication(1, _job("JOB_FAILURE"))
+    _write_kickstart(tmp_path / "job.out.000", exit_code=42)
+    assert (
+        engine.analyze(publication, submit_dir=tmp_path).findings[0].code
+        == "exit_code_42"
+    )
+    _write_kickstart(tmp_path / "job.out.000", exit_code=127)
+    assert (
+        engine.analyze(publication, submit_dir=tmp_path).findings[0].code
+        == "exit_code_127"
+    )
+
+
+def test_fresh_release_overrides_delayed_held_log():
+    publication = replace(
+        _publication(1, _job("JOB_HELD")),
+        scheduler_results=(_scheduler_observation(2),),
+    )
+    assert not DiagnosticsEngine().analyze(publication).findings
+
+
+def test_previous_attempt_cause_does_not_follow_retry(tmp_path):
+    engine = DiagnosticsEngine()
+    engine.analyze(
+        replace(
+            _publication(1, _job("JOB_HELD")),
+            scheduler_results=(_scheduler_observation(),),
+        )
+    )
+    job = _job("JOB_ABORTED")
+    new_identity = JobAttemptIdentity(1, 3, 4)
+    job = replace(
+        job,
+        attempts=(
+            *job.attempts,
+            JobAttempt(new_identity, scheduler_id="11.0", exit_code=2),
+        ),
+        current_attempt=new_identity,
+        transition=replace(
+            job.transition,
+            job_submit_seq=4,
+            identity=replace(job.transition.identity, job_instance_id=3),
+        ),
+    )
+    _write_kickstart(tmp_path / "job.out.000", exit_code=42)
+    finding = engine.analyze(_publication(2, job), submit_dir=tmp_path).findings[0]
+    assert finding.code == "exit_code_2"
+    assert "application exit code 42" not in finding.summary
