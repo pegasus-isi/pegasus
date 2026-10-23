@@ -653,11 +653,17 @@ def parse_sub_file(sub_path: Path):
     Returns a ``(dax_job_id, info)`` tuple, or ``(None, None)`` if the file
     cannot be read. ``dax_job_id`` is None for jobs without one, such as
     clustered and infrastructure jobs.
+
+    A job is a clustered job if the basename of its submit file starts with
+    ``merge_`` and its ``+pegasus_cluster_size`` is greater than 1. Its tasks
+    are then listed in the ``.in`` file with the same basename, that is
+    returned as ``cluster_in_file``.
     """
     dax_job_id           = None
     req_cpus             = None
     req_memory           = None
     cluster_in_file      = None
+    cluster_size         = None
     cluster_transformation = None
     transformation       = None
     resources            = {}
@@ -677,11 +683,9 @@ def parse_sub_file(sub_path: Path):
         m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
         if m:
             req_memory = float(m.group(1))
-        m = re.match(r'arguments\s*=\s*.*?(\S+\.in)\b', line, re.IGNORECASE)
+        m = re.match(r'\+pegasus_cluster_size\s*=\s*"?(\d+)"?', line, re.IGNORECASE)
         if m:
-            in_path = sub_path.parent / m.group(1)
-            if in_path.exists():
-                cluster_in_file = str(in_path)
+            cluster_size = int(m.group(1))
         m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
         if m:
             cluster_transformation = m.group(1)
@@ -693,11 +697,15 @@ def parse_sub_file(sub_path: Path):
         if m:
             resources[m.group(1)] = m.group(2)
 
+    if sub_path.name.startswith("merge_") and (cluster_size or 0) > 1:
+        cluster_in_file = str(sub_path.with_suffix(".in"))
+
     return dax_job_id, {
         "request_cpus":           req_cpus,
         "request_memory_mb":      req_memory,
         "sub_path":               str(sub_path),
         "cluster_in_file":        cluster_in_file,
+        "cluster_size":           cluster_size,
         "cluster_transformation": cluster_transformation,
         # complete transformation name [namespace::]name[:version]
         "transformation":         transformation,
