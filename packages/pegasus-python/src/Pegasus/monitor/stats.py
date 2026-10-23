@@ -271,8 +271,14 @@ def compute_workflow_stats(
         attempt = _current_attempt(job)
         if attempt is None:
             continue
-        if attempt.start_time is not None and attempt.end_time is not None:
-            duration = float(attempt.end_time - attempt.start_time)
+        if attempt.end_time is not None and (
+            attempt.runtime_seconds is not None or attempt.start_time is not None
+        ):
+            duration = float(
+                attempt.runtime_seconds
+                if attempt.runtime_seconds is not None
+                else attempt.end_time - attempt.start_time
+            )
             if duration > 0:
                 durations.append((duration, _display_name(job)))
         if attempt.maxrss_kb is not None and attempt.maxrss_kb > 0:

@@ -677,7 +677,14 @@ def test_attempt_changes_are_incremental_and_replay_exactly(tmp_path) -> None:
         jobs=(
             replace(
                 job,
-                attempts=(job.attempts[0], replace(job.attempts[1], site="remote")),
+                attempts=(
+                    job.attempts[0],
+                    replace(
+                        job.attempts[1],
+                        site="remote",
+                        runtime_seconds=Decimal("300.004"),
+                    ),
+                ),
             ),
         ),
     )
@@ -1300,3 +1307,12 @@ def test_final_hold_cause_and_application_exit_survive_replay(tmp_path):
     assert any(e.source is SourceName.PEGASUS_LITE for e in finding.evidence)
     assert "recorded job exit code 1" in finding.summary
     assert "secret-value" not in (tmp_path / "events.jsonl").read_text()
+
+
+def test_old_attempt_records_remain_readable_without_runtime():
+    from Pegasus.monitor.event_log import _job_attempt
+
+    attempt = _snapshot().jobs[0].attempts[0]
+    payload = attempt.to_json_dict()
+    payload.pop("runtime_seconds", None)
+    assert _job_attempt(payload).runtime_seconds is None

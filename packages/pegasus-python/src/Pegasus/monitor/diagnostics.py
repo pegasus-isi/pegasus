@@ -45,7 +45,12 @@ from Pegasus.monitor.models import (
     SchedulerQueryResult,
     SourceName,
 )
-from Pegasus.monitor.scheduler_evidence import hold_reasons, is_held, scheduler_rows
+from Pegasus.monitor.scheduler_evidence import (
+    hold_reason_codes,
+    hold_reasons,
+    is_held,
+    scheduler_rows,
+)
 from Pegasus.monitor.stall_detector import StallDetector, StallEventKind, StallResult
 from Pegasus.monitor.why_idle import IdleAnalysis, analyze_why_idle
 
@@ -184,7 +189,7 @@ _HOLD_PATTERNS: tuple[tuple[re.Pattern[str], str, str, tuple[str, ...]], ...] = 
         (
             "Check the job stdout and stderr for the reason the output was not created.",
             "Verify declared output names match the executable's output names.",
-            "Run pegasus-analyzer on the submit directory for full context.",
+            "Run pegasus-analyzer on the submit directory.",
         ),
     ),
     (
@@ -567,17 +572,26 @@ def _real_exit_code(
 
 
 def _hold_diagnostic(
-    job: JobSnapshot, reason: str | None, source: SourceName = SourceName.CONDOR_QUEUE
+    job: JobSnapshot,
+    reason: str | None,
+    source: SourceName = SourceName.CONDOR_QUEUE,
+    hold_code: int | None = None,
 ) -> DiagnosticFinding:
     summary = "Job is held by HTCondor"
     code = "held_unknown"
     suggestions = (
         "Inspect the full HoldReason and site policy before releasing the job.",
-        "Run pegasus-analyzer on the submit directory for Pegasus-level context.",
+        "Run pegasus-analyzer on the submit directory.",
     )
+    if hold_code == 1:
+        code = "user_hold"
+        summary = "Job was held by a user"
+        suggestions = (
+            "Confirm the reason for the manual hold before releasing the job.",
+        )
     if reason:
         for pattern, match_code, match_summary, match_suggestions in _HOLD_PATTERNS:
-            if pattern.search(reason):
+            if hold_code != 1 and pattern.search(reason):
                 code, summary, suggestions = (
                     match_code,
                     match_summary,
@@ -591,7 +605,12 @@ def _hold_diagnostic(
             source,
             "hold_reason" if reason else "hold_reason_unavailable",
             FrozenPayload.from_mapping(
-                {"reason_excerpt": redact_excerpt(reason or "No hold reason available")}
+                {
+                    "reason_excerpt": redact_excerpt(
+                        reason or "No hold reason available"
+                    ),
+                    "hold_reason_code": hold_code,
+                }
             ),
         ),
     )
@@ -716,6 +735,7 @@ def _failure_diagnostic(
     preceding_hold: str | None = None,
     hold_source: SourceName = SourceName.CONDOR_QUEUE,
     pegasuslite: PegasusLiteResult | None = None,
+    hold_code: int | None = None,
 ) -> DiagnosticFinding:
     attempt = _current_attempt(job)
     info = kickstart.info
@@ -735,7 +755,9 @@ def _failure_diagnostic(
     else:
         code, summary, suggestions = specific
     hold = (
-        _hold_diagnostic(job, preceding_hold, hold_source) if preceding_hold else None
+        _hold_diagnostic(job, preceding_hold, hold_source, hold_code)
+        if preceding_hold
+        else None
     )
     if hold is not None:
         summary += f"; preceding hold: {hold.summary}"
@@ -943,11 +965,16 @@ def collect_diagnostics(
     submit_dir: Path | None = None,
     job_exec_ids: frozenset[str] | None = None,
     preceding_holds: Mapping[str, str] | None = None,
+    preceding_hold_codes: Mapping[str, int] | None = None,
 ) -> tuple[DiagnosticFinding, ...]:
     """Diagnose all currently held/failed jobs with no DB or scheduler calls."""
 
     effective, results = _effective_inputs(snapshot, scheduler_results)
     reasons = {**(preceding_holds or {}), **hold_reasons(effective.jobs, results)}
+    codes = {
+        **(preceding_hold_codes or {}),
+        **hold_reason_codes(effective.jobs, results),
+    }
     queue_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.QUEUE)
     history_rows = scheduler_rows(effective.jobs, results, SchedulerQueryKind.HISTORY)
     findings: list[DiagnosticFinding] = []
@@ -955,7 +982,13 @@ def collect_diagnostics(
         if job_exec_ids is not None and job.exec_job_id not in job_exec_ids:
             continue
         if is_held(job, queue_rows):
-            findings.append(_hold_diagnostic(job, reasons.get(job.exec_job_id)))
+            findings.append(
+                _hold_diagnostic(
+                    job,
+                    reasons.get(job.exec_job_id),
+                    hold_code=codes.get(job.exec_job_id),
+                )
+            )
         elif job.lifecycle is Lifecycle.FAILED:
             attempt = _current_attempt(job)
             if submit_dir is None:
@@ -991,6 +1024,7 @@ def collect_diagnostics(
                     parse_pegasuslite_stderr(submit_dir, job)
                     if submit_dir is not None
                     else None,
+                    codes.get(job.exec_job_id),
                 )
             )
     return tuple(findings)
@@ -1002,6 +1036,7 @@ class DiagnosticsEngine:
     def __init__(self, stall_detector: StallDetector | None = None) -> None:
         self._stall_detector = stall_detector or StallDetector()
         self._preceding_holds: dict[tuple[object, ...], str] = {}
+        self._preceding_hold_codes: dict[tuple[object, ...], int] = {}
         self._active_findings: dict[tuple[Any, ...], DiagnosticFinding] = {}
         self._active_inputs: dict[tuple[Any, ...], tuple[object, ...]] = {}
         self._retry_after: dict[tuple[Any, ...], float] = {}
@@ -1017,6 +1052,7 @@ class DiagnosticsEngine:
     ) -> DiagnosticsBatch:
         if snapshot.effective is None:
             self._preceding_holds.clear()
+            self._preceding_hold_codes.clear()
             self._active_findings.clear()
             self._active_inputs.clear()
             self._retry_after.clear()
@@ -1028,6 +1064,7 @@ class DiagnosticsEngine:
             SchedulerQueryKind.QUEUE,
         )
         reasons = hold_reasons(snapshot.effective.jobs, snapshot.scheduler_results)
+        codes = hold_reason_codes(snapshot.effective.jobs, snapshot.scheduler_results)
         attempt_keys = {
             (job.workflow, job.exec_job_id, job.current_attempt)
             for job in snapshot.effective.jobs
@@ -1037,8 +1074,17 @@ class DiagnosticsEngine:
             for key, value in self._preceding_holds.items()
             if key in attempt_keys
         }
+        self._preceding_hold_codes = {
+            key: value
+            for key, value in self._preceding_hold_codes.items()
+            if key in attempt_keys
+        }
         for job in snapshot.effective.jobs:
             key = (job.workflow, job.exec_job_id, job.current_attempt)
+            if job.exec_job_id in codes:
+                self._preceding_hold_codes[key] = codes[job.exec_job_id]
+            elif key in self._preceding_hold_codes:
+                codes[job.exec_job_id] = self._preceding_hold_codes[key]
             reason = reasons.get(job.exec_job_id)
             if reason:
                 self._preceding_holds[key] = reason
@@ -1055,7 +1101,10 @@ class DiagnosticsEngine:
         problem_jobs_by_id = {job.exec_job_id: job for job in problem_jobs}
         current_keys = {self._problem_key(job): job for job in problem_jobs}
         current_inputs = {
-            key: _diagnostic_inputs(job, reasons.get(job.exec_job_id), submit_dir)
+            key: (
+                *_diagnostic_inputs(job, reasons.get(job.exec_job_id), submit_dir),
+                codes.get(job.exec_job_id),
+            )
             for key, job in current_keys.items()
         }
         retained = {
@@ -1090,6 +1139,7 @@ class DiagnosticsEngine:
                     snapshot,
                     submit_dir=submit_dir,
                     preceding_holds=reasons,
+                    preceding_hold_codes=codes,
                     job_exec_ids=frozenset(
                         current_keys[key].exec_job_id for key in refresh_keys
                     ),
@@ -1106,7 +1156,11 @@ class DiagnosticsEngine:
                 key = self._problem_key(job)
                 if key in refresh_keys:
                     if is_held(job, queue_rows):
-                        finding = _hold_diagnostic(job, reasons.get(job.exec_job_id))
+                        finding = _hold_diagnostic(
+                            job,
+                            reasons.get(job.exec_job_id),
+                            hold_code=codes.get(job.exec_job_id),
+                        )
                     if finding != retained.get(key):
                         emitted.append(finding)
                     retained[key] = finding

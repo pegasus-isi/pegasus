@@ -31,6 +31,7 @@ from Pegasus.monitor.display import (
     DisplayAnalysis,
     DisplayContext,
     DisplayOptions,
+    _job_runtime,
     _scheduler_display,
     _visible_jobs,
     render_text,
@@ -685,3 +686,48 @@ def test_priority_line_avoids_float_noise():
     )
     assert "effective 507.538" in stream.getvalue()
     assert "507.538000" not in stream.getvalue()
+
+
+@pytest.mark.parametrize("status", [1, 5, 7])
+def test_runtime_does_not_advance_while_execution_is_stopped(status):
+    from Pegasus.monitor.models import JobAttempt, JobAttemptIdentity
+
+    attempt = JobAttempt(
+        JobAttemptIdentity(1, 1, 1), scheduler_id="10.0", start_time=Decimal(100)
+    )
+    job = _job("job", Lifecycle.RUNNING)
+    job.attempts = (attempt,)
+    job.current_attempt = attempt.identity
+    job.scheduler = FrozenPayload.from_mapping(
+        {"queue": {"ClusterId": 10, "ProcId": 0, "JobStatus": status}}
+    )
+    assert _job_runtime(job, attempt, 900) is None
+
+
+def test_runtime_uses_current_execution_then_recorded_duration():
+    from dataclasses import replace
+
+    from Pegasus.monitor.models import JobAttempt, JobAttemptIdentity
+
+    attempt = JobAttempt(
+        JobAttemptIdentity(1, 1, 1), scheduler_id="10.0", start_time=Decimal(100)
+    )
+    job = _job("job", Lifecycle.RUNNING)
+    job.attempts = (attempt,)
+    job.current_attempt = attempt.identity
+    job.scheduler = FrozenPayload.from_mapping(
+        {
+            "queue": {
+                "ClusterId": 10,
+                "ProcId": 0,
+                "JobStatus": 2,
+                "JobCurrentStartDate": 800,
+            }
+        }
+    )
+    assert _job_runtime(job, attempt, 900) == 100
+    job.lifecycle = Lifecycle.SUCCEEDED
+    attempt = replace(
+        attempt, end_time=Decimal(1100), runtime_seconds=Decimal("300.004")
+    )
+    assert _job_runtime(job, attempt, 1200) == Decimal("300.004")

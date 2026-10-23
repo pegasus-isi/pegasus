@@ -968,12 +968,18 @@ class JobAttempt:
     stdout_path: str | None = None
     stderr_path: str | None = None
     maxrss_kb: int | None = None
+    runtime_seconds: Decimal | None = None
 
     def __post_init__(self) -> None:
         for name in ("submit_time", "start_time", "end_time"):
             value = getattr(self, name)
             if value is not None:
                 object.__setattr__(self, name, db_timestamp(value))
+        if self.runtime_seconds is not None:
+            duration = db_timestamp(self.runtime_seconds)
+            if duration < 0:
+                raise ValueError("runtime_seconds must be nonnegative")
+            object.__setattr__(self, "runtime_seconds", duration)
         if self.maxrss_kb is not None:
             _require_nonnegative("maxrss_kb", self.maxrss_kb)
 
@@ -990,6 +996,11 @@ class JobAttempt:
             "stdout_path": self.stdout_path,
             "stderr_path": self.stderr_path,
             "maxrss_kb": self.maxrss_kb,
+            **(
+                {"runtime_seconds": _json_value(self.runtime_seconds)}
+                if self.runtime_seconds is not None
+                else {}
+            ),
         }
 
 

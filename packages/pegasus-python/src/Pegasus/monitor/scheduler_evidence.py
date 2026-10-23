@@ -98,6 +98,18 @@ def is_held(job: JobSnapshot, queue_rows: Mapping[str, Mapping[str, Any]]) -> bo
     return observed_lifecycle(job, queue_rows) is Lifecycle.HELD
 
 
+def hold_reason_codes(
+    jobs: Sequence[JobSnapshot], results: Sequence[SchedulerQueryResult]
+) -> dict[str, int]:
+    codes = {}
+    for kind in (SchedulerQueryKind.HISTORY, SchedulerQueryKind.QUEUE):
+        for name, row in scheduler_rows(jobs, results, kind).items():
+            code = row.get("HoldReasonCode")
+            if isinstance(code, int) and not isinstance(code, bool):
+                codes[name] = code
+    return codes
+
+
 def hold_reasons(
     jobs: Sequence[JobSnapshot], results: Sequence[SchedulerQueryResult]
 ) -> dict[str, str]:

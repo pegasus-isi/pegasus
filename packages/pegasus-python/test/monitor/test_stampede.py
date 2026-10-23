@@ -1640,3 +1640,50 @@ def test_rollback_journal_database_is_observable(tmp_path):
     result = StampedeReader(path, ROOT).refresh(_request())
 
     assert result.snapshot is not None
+
+
+@pytest.mark.parametrize(
+    "mode", [DBRefreshMode.CURRENT_SNAPSHOT, DBRefreshMode.BOUNDED_SUFFIX]
+)
+def test_runtime_excludes_holds_and_refreshes_late_invocations(tmp_path, mode):
+    path = _create_database(tmp_path / "workflow.db")
+    with _writer(path) as connection:
+        connection.execute("ALTER TABLE invocation ADD COLUMN remote_duration NUMERIC")
+        connection.execute(
+            "UPDATE invocation SET remote_duration = 900 WHERE task_submit_seq < 1"
+        )
+        connection.executemany(
+            "INSERT INTO jobstate VALUES (?,?,?,?,?)",
+            [
+                (200, "EXECUTE", "120", 3, None),
+                (200, "JOB_HELD", "130", 4, "manual"),
+                (200, "JOB_RELEASED", "500", 5, None),
+                (200, "JOB_EVICTED", "600", 6, None),
+                (200, "EXECUTE", "700", 7, None),
+                (200, "JOB_SUCCESS", "1002", 8, None),
+            ],
+        )
+    reader = StampedeReader(path, ROOT)
+    first = reader.refresh(_request())
+    assert first.snapshot is not None
+    attempt = first.snapshot.jobs[1].attempts[0]
+    assert attempt.start_time == Decimal(700)
+    assert attempt.runtime_seconds is None
+    with _writer(path) as connection:
+        connection.execute(
+            "UPDATE invocation SET remote_duration = 300.004 WHERE invocation_id = 5"
+        )
+    result = reader.refresh(
+        _request(
+            epoch=2,
+            mode=mode,
+            prior=first.generation,
+            job_watermarks=(first.snapshot.watermarks[0],)
+            if mode is DBRefreshMode.BOUNDED_SUFFIX
+            else (),
+        )
+    )
+    assert result.snapshot is not None
+    assert result.snapshot.jobs[1].attempts[0].runtime_seconds == Decimal("300.004")
+    bootstrap = StampedeReader(path, ROOT).refresh(_request())
+    assert bootstrap.snapshot.jobs[1].attempts[0].runtime_seconds == Decimal("300.004")

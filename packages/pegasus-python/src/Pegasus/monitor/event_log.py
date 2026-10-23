@@ -1340,6 +1340,7 @@ def _job_attempt(value: object) -> JobAttempt:
         _optional_string(item.get("stdout_path"), "stdout_path"),
         _optional_string(item.get("stderr_path"), "stderr_path"),
         _optional_integer(item.get("maxrss_kb"), "maxrss_kb"),
+        item.get("runtime_seconds"),
     )
 
 

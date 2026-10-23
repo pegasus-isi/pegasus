@@ -256,6 +256,43 @@ def _scheduler_row(
     return row
 
 
+def _job_runtime(
+    job: JobSnapshot, attempt: object | None, now: float
+) -> Decimal | None:
+    """Recorded invocation time, or elapsed time in the current execution.
+
+    Never advance a wall clock while a job is held, idle, or awaiting POST.
+    """
+    if attempt is None:
+        return None
+    duration = getattr(attempt, "runtime_seconds", None)
+    start = getattr(attempt, "start_time", None)
+    end = getattr(attempt, "end_time", None)
+    queue = _scheduler_row(job, "queue", attempt)
+    status = None if queue is None else queue.get("JobStatus")
+    if job.lifecycle in {Lifecycle.SUCCEEDED, Lifecycle.FAILED, Lifecycle.POST}:
+        if duration is not None:
+            return duration
+        return (
+            max(Decimal(0), end - start)
+            if start is not None and end is not None
+            else None
+        )
+    if status in {1, 5, 7} or (
+        status is None and job.lifecycle is not Lifecycle.RUNNING
+    ):
+        return None
+    if status == 2:
+        current_start = _number(queue.get("JobCurrentStartDate"))
+        if current_start is not None and current_start > 0:
+            start = Decimal(str(current_start))
+    if start is None:
+        return None
+    if job.lifecycle is Lifecycle.RUNNING and job.state_timestamp is not None:
+        start = max(start, job.state_timestamp)
+    return max(Decimal(0), Decimal(str(now)) - start)
+
+
 def _number(value: object) -> float | None:
     try:
         result = float(value)  # type: ignore[arg-type]
@@ -567,10 +604,7 @@ def _job_panel(
             "HELD": Lifecycle.HELD,
         }.get(live_status)
         state_lag |= observed is not None and observed is not job.lifecycle
-        runtime = None
-        if attempt is not None and attempt.start_time is not None:
-            end = attempt.end_time or Decimal(str(snapshot.clock.epoch))
-            runtime = max(Decimal(0), end - attempt.start_time)
+        runtime = _job_runtime(job, attempt, snapshot.clock.epoch)
         values: list[RenderableType] = [
             Text(job.exec_job_id, overflow="ellipsis"),
         ]

@@ -257,6 +257,17 @@ combined with ``--once`` or ``--why-idle``. ``--ssh-config`` and
 ``--ssh-identity`` require ``--remote``.
 
 
+Runtime Reporting
+=================
+
+Completed job runtimes use the current attempt's recorded main-invocation
+durations (summed for clustered tasks), excluding held and queued time. Until
+those records arrive, the monitor measures from the latest execution start.
+For running jobs, Runtime estimates the current execution only; held and idle
+jobs show ``-`` instead of advancing a wall clock. These durations are preserved
+in event streams and replay.
+
+
 Return Value
 ============
 

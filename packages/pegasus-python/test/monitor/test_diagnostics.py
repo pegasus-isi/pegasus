@@ -822,6 +822,9 @@ def test_pegasuslite_exit_is_distinct_from_kickstart_and_recorded_status(tmp_pat
         _effective(_lite_job()), (_scheduler_observation(),), submit_dir=tmp_path
     )[0]
     assert finding.code == "output_missing"
+    assert (
+        sum("pegasus-analyzer" in suggestion for suggestion in finding.suggestions) == 1
+    )
     assert "tool exit code 3" in finding.summary
     assert "Kickstart process exit code 0" in finding.summary
     assert "recorded job exit code 1" in finding.summary
@@ -917,3 +920,54 @@ def test_kickstart_accepts_pegasuslite_multipart_metadata(tmp_path):
     result = parse_kickstart_output(tmp_path, "job", "job.out.000")
     assert result.status is KickstartReadStatus.AVAILABLE
     assert result.info.exit_code == 0
+
+
+def test_manual_hold_code_overrides_custom_reason_and_refreshes_cached_finding():
+    reason = "Pause for memory policy investigation"
+    result = _queue(reason)
+    job = _job("JOB_HELD")
+    publication = replace(_publication(1, job), scheduler_results=(result,))
+    engine = DiagnosticsEngine()
+    assert engine.analyze(publication).findings[0].code == "policy_hold"
+    evidence = result.evidence[0]
+    coded = replace(
+        result,
+        evidence=(
+            replace(
+                evidence,
+                payload=FrozenPayload.from_mapping(
+                    {**evidence.payload.to_json_dict(), "HoldReasonCode": 1}
+                ),
+            ),
+        ),
+    )
+    manual = replace(publication, scheduler_results=(coded,))
+    finding = engine.analyze(manual).findings[0]
+    assert finding.code == "user_hold"
+    assert reason in finding.summary
+    assert finding.evidence[-1].payload.to_json_dict()["hold_reason_code"] == 1
+    assert collect_diagnostics(_effective(job), (coded,))[0].code == "user_hold"
+    failed = engine.analyze(_publication(2, _job("JOB_FAILURE"))).findings[0]
+    assert failed.code == "user_hold"
+    assert "preceding hold: Job was held by a user" in failed.summary
+
+
+def test_hold_code_does_not_join_previous_retry():
+    result = _queue("maintenance")
+    evidence = result.evidence[0]
+    result = replace(
+        result,
+        evidence=(
+            replace(
+                evidence,
+                target=FrozenPayload.from_mapping({"ClusterId": 9, "ProcId": 0}),
+                payload=FrozenPayload.from_mapping(
+                    {**evidence.payload.to_json_dict(), "HoldReasonCode": 1}
+                ),
+            ),
+        ),
+    )
+    assert (
+        collect_diagnostics(_effective(_job("JOB_HELD")), (result,))[0].code
+        == "held_unknown"
+    )

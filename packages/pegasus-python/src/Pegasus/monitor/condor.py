@@ -80,6 +80,7 @@ _QUEUE_ATTRIBUTES = (
     "RemoteHost",
     "QDate",
     "JobStartDate",
+    "JobCurrentStartDate",
     "DAGNodeName",
     "Owner",
     "HoldReason",

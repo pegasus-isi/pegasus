@@ -209,6 +209,7 @@ class _AttemptRow:
     stdout_file: str | None
     stderr_file: str | None
     raw_wait_status: int | None
+    runtime_seconds: Decimal | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -988,17 +989,19 @@ class StampedeReader:
             """,
             (wf_id,),
         ).fetchall()
+        duration, runtime_join = self._runtime_join(connection)
         attempt_rows = connection.execute(
-            """
+            f"""
             SELECT ji.job_id, ji.job_instance_id, ji.job_submit_seq,
                    ji.sched_id, ji.site, ji.stdout_file, ji.stderr_file,
-                   ji.exitcode
+                   ji.exitcode, {duration} AS runtime_seconds
             FROM job_instance AS ji
             JOIN job AS j ON j.job_id = ji.job_id
+            {runtime_join}
             WHERE j.wf_id = ?
             ORDER BY ji.job_id, ji.job_submit_seq, ji.job_instance_id
             """,
-            (wf_id,),
+            (wf_id, wf_id) if runtime_join else (wf_id,),
         ).fetchall()
         task_rows = connection.execute(
             """
@@ -1057,6 +1060,7 @@ class StampedeReader:
                 stdout_file=_field(row, "stdout_file", 5),  # type: ignore[arg-type]
                 stderr_file=_field(row, "stderr_file", 6),  # type: ignore[arg-type]
                 raw_wait_status=_optional_int(_field(row, "exitcode", 7), "exitcode"),
+                runtime_seconds=_field(row, "runtime_seconds", 8),
             )
             if attempt.job_instance_id in seen_instances:
                 raise StampedeReadError(
@@ -1311,20 +1315,41 @@ class StampedeReader:
             )
         return result
 
+    @staticmethod
+    def _runtime_join(connection: sqlite3.Connection) -> tuple[str, str]:
+        columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(invocation)")
+        }
+        if "remote_duration" not in columns:
+            return "NULL", ""
+        return (
+            "runtime.duration",
+            """
+            LEFT JOIN (
+                SELECT job_instance_id, SUM(remote_duration) AS duration
+                FROM invocation
+                WHERE wf_id = ? AND task_submit_seq >= 1 AND remote_duration >= 0
+                GROUP BY job_instance_id
+            ) AS runtime ON runtime.job_instance_id = ji.job_instance_id
+        """,
+        )
+
     def _load_attempt_rows(
         self, connection: sqlite3.Connection, wf_id: int
     ) -> dict[int, tuple[_AttemptRow, ...]]:
+        duration, runtime_join = self._runtime_join(connection)
         rows = connection.execute(
-            """
+            f"""
             SELECT ji.job_id, ji.job_instance_id, ji.job_submit_seq,
                    ji.sched_id, ji.site, ji.stdout_file, ji.stderr_file,
-                   ji.exitcode
+                   ji.exitcode, {duration} AS runtime_seconds
             FROM job_instance AS ji
             JOIN job AS j ON j.job_id = ji.job_id
+            {runtime_join}
             WHERE j.wf_id = ?
             ORDER BY ji.job_id, ji.job_submit_seq, ji.job_instance_id
             """,
-            (wf_id,),
+            (wf_id, wf_id) if runtime_join else (wf_id,),
         ).fetchall()
         grouped: dict[int, list[_AttemptRow]] = defaultdict(list)
         seen_instances: set[int] = set()
@@ -1339,6 +1364,7 @@ class StampedeReader:
                 stdout_file=row["stdout_file"],
                 stderr_file=row["stderr_file"],
                 raw_wait_status=_optional_int(row["exitcode"], "exitcode"),
+                runtime_seconds=row["runtime_seconds"],
             )
             if attempt.job_instance_id in seen_instances:
                 raise StampedeReadError(
@@ -1459,7 +1485,7 @@ class StampedeReader:
             SELECT js.job_instance_id,
                    MIN(CASE WHEN js.state IN ({submit_placeholders})
                             THEN js.timestamp END) AS submit_time,
-                   MIN(CASE WHEN js.state = 'EXECUTE'
+                   MAX(CASE WHEN js.state = 'EXECUTE'
                             THEN js.timestamp END) AS start_time,
                    MAX(CASE WHEN js.state IN ({terminal_placeholders})
                             THEN js.timestamp END) AS end_time
@@ -1498,7 +1524,7 @@ class StampedeReader:
                        MAX(js.jobstate_submit_seq) AS highest_seq,
                        MIN(CASE WHEN js.state IN ({submit_placeholders})
                                 THEN js.timestamp END) AS submit_time,
-                       MIN(CASE WHEN js.state = 'EXECUTE'
+                       MAX(CASE WHEN js.state = 'EXECUTE'
                                 THEN js.timestamp END) AS start_time,
                        MAX(CASE WHEN js.state IN ({terminal_placeholders})
                                 THEN js.timestamp END) AS end_time
@@ -1614,7 +1640,7 @@ class StampedeReader:
                    NULL AS jobstate_submit_seq, NULL AS reason,
                    MIN(CASE WHEN js.state IN ({submit_placeholders})
                             THEN js.timestamp END) AS submit_time,
-                   MIN(CASE WHEN js.state = 'EXECUTE'
+                   MAX(CASE WHEN js.state = 'EXECUTE'
                             THEN js.timestamp END) AS start_time,
                    MAX(CASE WHEN js.state IN ({terminal_placeholders})
                             THEN js.timestamp END) AS end_time
@@ -1979,6 +2005,7 @@ class StampedeReader:
                         stdout_path=row.stdout_file,
                         stderr_path=row.stderr_file,
                         maxrss_kb=maxrss.get(row.job_instance_id),
+                        runtime_seconds=row.runtime_seconds,
                     )
                 )
             current_attempt = attempts[-1].identity if attempts else None
