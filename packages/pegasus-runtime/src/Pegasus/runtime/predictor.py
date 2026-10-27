@@ -697,7 +697,7 @@ def parse_sub_file(sub_path: Path):
         if m:
             resources[m.group(1)] = m.group(2)
 
-    if sub_path.name.startswith("merge_") and (cluster_size or 0) > 1:
+    if sub_path.name.startswith("merge_") and (cluster_size or 0) >= 1:
         cluster_in_file = str(sub_path.with_suffix(".in"))
 
     return dax_job_id, {
