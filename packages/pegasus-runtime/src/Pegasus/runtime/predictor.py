@@ -697,6 +697,20 @@ def parse_sub_file(sub_path: Path):
         if m:
             resources[m.group(1)] = m.group(2)
 
+
+    for key in ("pegasus_memory_mb", "pegasus_diskspace_mb"):
+        # sanity check to make sure they are not any condor expressions
+        # e.g. pegasus_memory_mb = ifthenelse( (LastHoldReasonCode=!=34 && LastHoldReasonCode=!=26), InitialRequestMemory, int(1.75 * NumJobStarts * MemoryUsage) )
+        # for time being if an expression then just set it to 0 .
+        # eventually maybe try to evaluate it, but will need to query condor_q at runtime
+        if key in resources:
+            try:
+                # check if we can cast to float or not
+                float(resources[key])
+            except:
+                # set the value to 0 as we cannot convert to float
+                resources[key] = '0'
+
     if sub_path.name.startswith("merge_") and (cluster_size or 0) >= 1:
         cluster_in_file = str(sub_path.with_suffix(".in"))
 
