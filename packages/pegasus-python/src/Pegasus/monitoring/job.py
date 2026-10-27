@@ -127,6 +127,10 @@ class Job:
         "pegasus_gpus": "req_gpus",
         "pegasus_memory_mb": "req_memory_mb",
         "pegasus_diskspace_mb": "req_diskspace_mb",
+        "pegasus_predicted_runtime": "pred_runtime",
+        "pegasus_predicted_runtime_low": "pred_runtime_low",
+        "pegasus_predicted_runtime_high": "pred_runtime_high",
+        "pegasus_prediction_status": "pred_status",
     }
 
     # Variables that describe a job, as per the Stampede schema
