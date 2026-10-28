@@ -19,6 +19,9 @@ TOPDIR=`pwd`
 # other instances of similar tests
 UUID=`uuidgen`
 
+# determine TEST_NAME
+TESTDIR=$(cd $testdir && pwd)
+TEST_NAME=`basename $TESTDIR`
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
@@ -51,11 +54,11 @@ sites:
       url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
-    path: "/scitech/shared/scratch-90-days/bamboo/scratch/$(UUID)"
+    path: "/scitech/shared/scratch-90-days/bamboo/scratch/$(TEST_NAME)/$(UUID)"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch/$(UUID)"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch/$(TEST_NAME)/$(UUID)"
   profiles:
     env:
       PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA"
