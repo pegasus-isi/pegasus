@@ -15,6 +15,11 @@ fi
 
 TOPDIR=`pwd`
 
+# unique part of shared directory paths to make sure we do not conflict with
+# other instances of similar tests
+UUID=`uuidgen`
+
+
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
@@ -46,11 +51,11 @@ sites:
       url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/outputs"
    -
     type: "sharedScratch"
-    path: "/scitech/shared/scratch-90-days/bamboo/scratch"
+    path: "/scitech/shared/scratch-90-days/bamboo/scratch/$(UUID)"
     fileServers:
      -
       operation: "all"
-      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch"
+      url: "scp://bamboo@submit.isi.edu/scitech/shared/scratch-90-days/bamboo/scratch/$(UUID)"
   profiles:
     env:
       PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$CI_COMMIT_SHORT_SHA"
