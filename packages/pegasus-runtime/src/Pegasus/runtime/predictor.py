@@ -711,7 +711,13 @@ def parse_sub_file(sub_path: Path):
                 # set the value to 0 as we cannot convert to float
                 resources[key] = '0'
 
-    if sub_path.name.startswith("merge_") and (cluster_size or 0) >= 1:
+    if (sub_path.name.startswith("merge_") and
+            (cluster_size or 0) >= 1 and
+             (transformation or "").startswith("pegasus::")):
+        # to detect a clustered job we need to also check
+        # transformation is in pegasus namespace . allows us
+        # to distinguish users compute jobs that might have
+        # a tx name starting with merge_ suffix.
         cluster_in_file = str(sub_path.with_suffix(".in"))
 
     return dax_job_id, {
