@@ -396,6 +396,10 @@ class Job:
         my_result = None
         my_site = None
 
+        # make sure stamp is an int and not float to
+        # avoid string formatting errors
+        stamp = int(stamp)
+
         # Update stat record for submit file
         try:
             my_stats = os.stat(submit_file)
