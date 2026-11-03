@@ -97,3 +97,65 @@ def test_removed_workflow_final_snapshot_queries_history(tmp_path, width, diagno
     assert "held 1" not in text
     if diagnose:
         assert "Removed because DAGMan was removed" in text
+
+
+@pytest.mark.parametrize(
+    ("removed_at", "expected"), [(500, "REMOVED"), (300, "FAILED")]
+)
+def test_restarted_workflow_removal_uses_removal_time_without_completion_date(
+    tmp_path, removed_at, expected
+):
+    run = tmp_path / "run0001"
+    database, _ = create_run(run, terminated=True)
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE workflowstate SET status=1 WHERE state='WORKFLOW_TERMINATED'"
+        )
+        connection.executemany(
+            "INSERT INTO workflowstate VALUES (?, ?, ?, ?, ?, NULL)",
+            [
+                (1, "WORKFLOW_STARTED", 400, 1, None),
+                (1, "WORKFLOW_TERMINATED", 500, 1, 1),
+            ],
+        )
+    dag = {
+        "ClusterId": 999,
+        "ProcId": 0,
+        "JobUniverse": 7,
+        "JobStatus": 3,
+        "QDate": 395,
+        "CompletionDate": 0,
+        "EnteredCurrentStatus": removed_at,
+        "RemoveReason": "Removed by user alice",
+    }
+
+    class Scheduler:
+        def query(self, request):
+            history = request.kind is SchedulerQueryKind.HISTORY
+            source = SourceName.CONDOR_HISTORY if history else SourceName.CONDOR_QUEUE
+            return SchedulerQueryResult(
+                request,
+                SourceHealth(source, HealthState.HEALTHY, request.clock.epoch),
+                0.0,
+                evidence=tuple(
+                    SchedulerEvidence(
+                        request.kind,
+                        FrozenPayload.from_mapping(
+                            {k: row[k] for k in ("ClusterId", "ProcId")}
+                        ),
+                        FrozenPayload.from_mapping(row),
+                    )
+                    for row in ([dag] if history else [])
+                ),
+            )
+
+    runtime = replace(cli._load_runtime(), scheduler_factory=lambda **_: Scheduler())
+    output, errors = io.StringIO(), io.StringIO()
+    output.width = 140
+    args = ["--once", "--no-live-events", str(run)]
+    assert cli.main(args, runtime=runtime, stdout=output, stderr=errors) == 0, (
+        errors.getvalue()
+    )
+    text = output.getvalue()
+    assert expected in text
+    assert ("Removed by user alice" in text) is (expected == "REMOVED")

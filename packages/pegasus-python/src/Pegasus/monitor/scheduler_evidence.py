@@ -164,7 +164,8 @@ def workflow_removal_reason(snapshot: CoordinatorSnapshot) -> str | None:
         dag_rows, key=lambda row: (row.get("QDate", 0), row.get("ClusterId", 0))
     )
     if snapshot.effective.workflow.restart_count:
-        ended = latest.get("CompletionDate", latest.get("EnteredCurrentStatus", 0))
+        # A removed job may carry CompletionDate = 0; fall back to the removal time.
+        ended = latest.get("CompletionDate") or latest.get("EnteredCurrentStatus", 0)
         started = snapshot.effective.workflow.started_at
         if started is None or ended < started:
             return None
