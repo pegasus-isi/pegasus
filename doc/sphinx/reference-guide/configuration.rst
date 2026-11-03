@@ -2764,7 +2764,7 @@ Monitoring Properties
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | | Property Key: pegasus.catalog.master.url              | | This property specifies the destination for the workflow               |
     | | Profile Key: N/A                                      | | dashboard database. By default, the workflow dashboard                 |
-    | | Scope : Properties                                    | | database defaults to a sqlite database named workflow.db                |
+    | | Scope : Properties                                    | | database defaults to a sqlite database named workflow.db               |
     | | Since : 4.2                                           | | in the $HOME/.pegasus directory. This is database is                   |
     | | Type: String                                          | | shared for all workflows run as a particular user. Users               |
     | | Default :                                             | | can specify an alternative database by using a SQLAlchemy              |
@@ -2863,6 +2863,28 @@ Monitoring Properties
     | | Since : 4.6                                           | | to the arguments given to pegasus-monitord.                            |
     | | Type :String                                          |                                                                          |
     | | Default : N/A                                         |                                                                          |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | | Property Key: pegasus.runtime.prediction              | | This property determines whether the planner adds a                    |
+    | | Profile Key: N/A                                      | | DAGMan PRE script to compute jobs, that invokes                        |
+    | | Scope : Properties                                    | | pegasus-runtime-predictor to predict the runtime of                    |
+    | | Since : 6.0.0                                         | | the job before it is submitted. The prediction is                      |
+    | | Type : Boolean                                        | | added to the job's submit file as +pegasus_predicted_*                 |
+    | | Default : true                                        | | ClassAds, and is included by pegasus-monitord in the                   |
+    | | See Also : pegasus.integrity.checking                 | | composite event for the job.                                           |
+    | | See Also : pegasus.gridstart.kickstart.stat           |                                                                          |
+    |                                                         | | Runtime prediction is done only if integrity checking                  |
+    |                                                         | | is enabled and kickstart stats the files of the job,                   |
+    |                                                         | | as the PRE script needs the sizes of the input files                   |
+    |                                                         | | of the job. It requires the runtime-prediction extra:                  |
+    |                                                         |                                                                          |
+    |                                                         | ::                                                                       |
+    |                                                         |                                                                          |
+    |                                                         |    pip install "pegasus-wms[runtime-prediction]"                         |
+    |                                                         |                                                                          |
+    |                                                         | | If the PRE script fails, for example because the                       |
+    |                                                         | | extra is not installed, DAGMan fails the job. Set                      |
+    |                                                         | | this property to false to disable runtime prediction.                  |
+    |                                                         | | See :ref:`runtime-prediction` for details.                             |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
 
 .. _job-clustering-props:
