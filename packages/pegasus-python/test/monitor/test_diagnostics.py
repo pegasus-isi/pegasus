@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from decimal import Decimal
-from time import monotonic
+from time import thread_time
 
 import pytest
 
@@ -304,9 +304,9 @@ def test_redaction_strips_terminal_control_sequences() -> None:
 
 
 def test_redaction_is_linear_for_long_non_secret_text() -> None:
-    started = monotonic()
+    started = thread_time()
     excerpt = redact_excerpt("a" * 100_000, 512)
-    elapsed = monotonic() - started
+    elapsed = thread_time() - started
     assert len(excerpt) == 512
     assert elapsed < 0.25
 
@@ -489,8 +489,8 @@ def test_engine_refreshes_changed_attempt_evidence_without_state_change() -> Non
     assert updated.new_findings == updated.findings
 
 
-def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
-    jobs = tuple(_indexed_job(index) for index in range(1, 8001))
+def _engine_analyze_cpu_seconds(monkeypatch, count: int) -> float:
+    jobs = tuple(_indexed_job(index) for index in range(1, count + 1))
     effective = _effective_many(jobs)
     publication = CoordinatorSnapshot(
         sequence=1,
@@ -526,11 +526,20 @@ def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
     engine = DiagnosticsEngine(
         StallDetector(StallDetectorConfig(startup_grace_seconds=9999))
     )
-    started = monotonic()
+    started = thread_time()
     batch = engine.analyze(publication)
-    elapsed = monotonic() - started
+    elapsed = thread_time() - started
     assert len(batch.new_findings) == len(jobs)
-    assert elapsed < 1.0
+    return elapsed
+
+
+def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
+    # Compare growth rather than a fixed budget: line-tracing coverage on
+    # Python < 3.12 roughly doubles CPU time but cancels out of the ratio.
+    # Quadrupling the jobs costs ~4x when linear and ~16x when quadratic.
+    small = min(_engine_analyze_cpu_seconds(monkeypatch, 2000) for _ in range(2))
+    large = _engine_analyze_cpu_seconds(monkeypatch, 8000)
+    assert large < 8 * max(small, 0.005)
 
 
 @pytest.mark.parametrize("missing", [(), (_queue(""),)])
