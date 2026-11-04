@@ -21,7 +21,7 @@ The make build command creates a wheel based distribution containing whole of Pe
 $ deactivate (if you are in the build environment)
 $ python3 -m venv ~/pegasus-env
 $ source ~/pegasus-env/bin/activate
-$ pip3 install  --force-reinstall dist/pegasus_wms-6.0.0.dev0-py3-none-macosx_14_0_x86_64.whl 
+$ pip3 install  --force-reinstall dist/pegasus_wms-6.0.0.dev0-py3-none-macosx_14_0_x86_64.whl
 ```
 
 ## Working with Branches
@@ -31,7 +31,7 @@ If you are working on a branch, it is good to name the branch related to a [GitH
 Once branched, do a build of pegasus and install it in the pegasus-env virtual environment as described before. Note the version number by running the `pegasus-version` command.
 
 ```
-(pegasus-env)$ pegasus-version 
+(pegasus-env)$ pegasus-version
 6.0.0.dev0
 ```
 
@@ -41,7 +41,7 @@ In your branch it is good to bump the version.
 $ cz bump --yes --allow-no-commit --version-files-only [major.minor.patch].dev[issue-number]
 ```
 
-For e.g.  cz bump --yes --allow-no-commit --version-files-only 6.0.0.dev2264
+For e.g. cz bump --yes --allow-no-commit --version-files-only 6.0.0.dev2264
 
 This ensures that nightly builds have your issue branch number, and you can also run end to end testing pipelines in GitLab.
 
@@ -53,7 +53,7 @@ Before merging the branch ensure that you change the version back to the version
 $ cz bump --yes --allow-no-commit --version-files-only [major.minor.patch].dev0
 ```
 
-For e.g.  cz bump --yes --allow-no-commit --version-files-only 6.0.0.dev0
+For e.g. cz bump --yes --allow-no-commit --version-files-only 6.0.0.dev0
 
 ## Build System
 
