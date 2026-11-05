@@ -1120,3 +1120,31 @@ def test_transfer_failure_includes_redacted_transfer_reason(tmp_path, reason):
     assert reason in finding.summary
     assert "TOP_SECRET" not in finding.summary
     assert "\x1b" not in finding.summary
+
+
+@pytest.mark.parametrize("state", ["JOB_HELD", "SUBMIT", "EXECUTE"])
+def test_removal_retains_preceding_hold_for_same_attempt(state):
+    engine = DiagnosticsEngine()
+    engine.analyze(
+        replace(
+            _publication(1, _job("JOB_HELD")),
+            scheduler_results=(_queue("Job exceeded memory limit"),),
+        )
+    )
+    history = _scheduler_observation(3, kind=SchedulerQueryKind.HISTORY)
+    history = replace(
+        history,
+        evidence=(
+            replace(
+                history.evidence[0],
+                payload=FrozenPayload.from_mapping(
+                    {"DAGNodeName": "job", "JobStatus": 3}
+                ),
+            ),
+        ),
+    )
+    removed = replace(_publication(2, _job(state)), scheduler_results=(history,))
+    finding = engine.analyze(removed).findings[0]
+    assert finding.code == "job_removed"
+    assert "preceding hold: Job exceeded its memory limit" in finding.summary
+    assert any(item.code == "hold_reason" for item in finding.evidence)

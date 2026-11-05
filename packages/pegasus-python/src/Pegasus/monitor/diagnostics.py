@@ -997,16 +997,29 @@ def _retry_kickstart(finding: DiagnosticFinding) -> bool:
     )
 
 
-def _removal_diagnostic(job: JobSnapshot, row: Mapping[str, Any]) -> DiagnosticFinding:
+def _removal_diagnostic(
+    job: JobSnapshot,
+    row: Mapping[str, Any],
+    preceding_hold: str | None = None,
+    hold_code: int | None = None,
+) -> DiagnosticFinding:
     reason = redact_excerpt(
         str(row.get("RemoveReason") or "Removal reason unavailable")
     )
+    hold = (
+        _hold_diagnostic(job, preceding_hold, SourceName.CONDOR_HISTORY, hold_code)
+        if preceding_hold
+        else None
+    )
+    summary = f"Job was removed from HTCondor; {reason}"
+    if hold is not None:
+        summary += f"; preceding hold: {hold.summary}"
     return DiagnosticFinding(
         job.exec_job_id,
         DiagnosticCategory.FAILED,
         DiagnosticSeverity.WARNING,
         "job_removed",
-        f"Job was removed from HTCondor; {reason}",
+        summary,
         ("Check who removed the workflow before planning a restart.",),
         job.provenance.value,
         (
@@ -1015,6 +1028,7 @@ def _removal_diagnostic(job: JobSnapshot, row: Mapping[str, Any]) -> DiagnosticF
                 "job_removed",
                 FrozenPayload.from_mapping({"reason_excerpt": reason, "JobStatus": 3}),
             ),
+            *(hold.evidence[1:] if hold is not None else ()),
         ),
     )
 
@@ -1044,7 +1058,14 @@ def collect_diagnostics(
         if job_exec_ids is not None and job.exec_job_id not in job_exec_ids:
             continue
         if job.exec_job_id in removals and job.lifecycle is not Lifecycle.FAILED:
-            findings.append(_removal_diagnostic(job, removals[job.exec_job_id]))
+            findings.append(
+                _removal_diagnostic(
+                    job,
+                    removals[job.exec_job_id],
+                    reasons.get(job.exec_job_id),
+                    codes.get(job.exec_job_id),
+                )
+            )
         elif is_held(job, queue_rows):
             findings.append(
                 _hold_diagnostic(
@@ -1149,6 +1170,7 @@ class DiagnosticsEngine:
         )
         reasons = hold_reasons(snapshot.effective.jobs, snapshot.scheduler_results)
         codes = hold_reason_codes(snapshot.effective.jobs, snapshot.scheduler_results)
+        removals = removed_jobs(snapshot.effective.jobs, snapshot.scheduler_results)
         attempt_keys = {
             (job.workflow, job.exec_job_id, job.current_attempt)
             for job in snapshot.effective.jobs
@@ -1174,10 +1196,10 @@ class DiagnosticsEngine:
                 self._preceding_holds[key] = reason
             elif key in self._preceding_holds and (
                 job.lifecycle is Lifecycle.FAILED
+                or job.exec_job_id in removals
                 or self._problem_key(job) in self._active_findings
             ):
                 reasons[job.exec_job_id] = self._preceding_holds[key]
-        removals = removed_jobs(snapshot.effective.jobs, snapshot.scheduler_results)
         problem_jobs = tuple(
             job
             for job in snapshot.effective.jobs
