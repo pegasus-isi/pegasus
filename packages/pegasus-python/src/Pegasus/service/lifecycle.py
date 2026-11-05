@@ -8,6 +8,7 @@ from flask import Response, abort, current_app, g, make_response, request, url_f
 from Pegasus import user
 from Pegasus.service.auth import (  # noqa: F401
     BaseAuthentication,
+    LocalTokenAuthentication,
     NoAuthentication,
     PAMAuthentication,
 )
@@ -135,14 +136,11 @@ def authorization():
 
     if current_app.config["PROCESS_SWITCHING"]:
         # If required, set uid and gid of handler process
-        if os.getuid() != user_info.uid:
-            if os.getuid() != 0:
-                log.error(
-                    "Pegasus service must run as root to enable process switching"
-                )
-                return make_response(
-                    "Pegasus service must run as root to enable process switching", 500
-                )
+        if os.getuid() != user_info.uid and os.getuid() != 0:
+            log.error("Pegasus service must run as root to enable process switching")
+            return make_response(
+                "Pegasus service must run as root to enable process switching", 500
+            )
 
         os.setgid(user_info.gid)
         os.setuid(user_info.uid)
