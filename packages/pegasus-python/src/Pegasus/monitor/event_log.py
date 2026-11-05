@@ -953,7 +953,15 @@ class EventLogWriter:
         return True
 
     def _atomic_replace_stream(self, records: Sequence[EventRecord]) -> bool:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        # Path.mkdir(parents=True) applies mode only to the leaf directory.
+        # Create each missing ancestor privately, without chmod on existing ones.
+        missing = []
+        parent = self.path.parent
+        while not parent.exists():
+            missing.append(parent)
+            parent = parent.parent
+        for parent in reversed(missing):
+            parent.mkdir(mode=0o700, exist_ok=True)
         original = self._safe_target_status()
         if original is not None:
             self._require_event_stream(original)

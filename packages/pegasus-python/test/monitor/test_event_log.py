@@ -1362,3 +1362,22 @@ def test_initial_disk_guard_is_reported(tmp_path):
         writer.check_logging()
     assert not writer.path.exists()
     writer.close()
+
+
+def test_new_log_parent_directories_are_private_without_chmod_existing(tmp_path):
+    parent = tmp_path / "existing"
+    parent.mkdir(mode=0o755)
+    parent.chmod(0o755)
+    path = parent / "private" / "nested" / "events.jsonl"
+    previous_umask = os.umask(0)
+    try:
+        writer = EventLogWriter(path, WORKFLOW, "test")
+        try:
+            writer.record_snapshot(_snapshot())
+        finally:
+            writer.close()
+    finally:
+        os.umask(previous_umask)
+    assert parent.stat().st_mode & 0o777 == 0o755
+    assert path.parent.stat().st_mode & 0o777 == 0o700
+    assert path.parent.parent.stat().st_mode & 0o777 == 0o700
