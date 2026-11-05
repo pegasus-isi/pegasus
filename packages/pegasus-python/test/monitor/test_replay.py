@@ -745,3 +745,23 @@ def test_hold_release_delayed_eviction_replays_as_queued():
     result = replay_records(records)
     assert result.snapshot.jobs[0].state == "JOB_EVICTED"
     assert result.snapshot.jobs[0].lifecycle.value == "queued"
+
+
+def test_checkpoint_removal_evidence_clears_on_checkpoint_or_restart():
+    accumulator = ReplayAccumulator()
+    accumulator.consume(StreamHeader(0, "stream", WORKFLOW, 1, "test"))
+    removed = CheckpointRecord(1, "stream", 1, _snapshot(), "final", "Removed by user")
+    accumulator.consume(removed)
+    assert accumulator.workflow_removal_reason == "Removed by user"
+    accumulator.consume(replace(removed, sequence=2, workflow_removal_reason=None))
+    assert accumulator.workflow_removal_reason is None
+    accumulator.consume(replace(removed, sequence=3))
+    transition = replace(
+        _snapshot().workflow.transition,
+        restart_count=1,
+        identity=DBWorkflowTransitionIdentity(1, "WORKFLOW_STARTED", Decimal(10)),
+    )
+    accumulator.consume(
+        WorkflowTransitionRecord(4, "stream", SnapshotEpoch(2), 10, transition)
+    )
+    assert accumulator.workflow_removal_reason is None

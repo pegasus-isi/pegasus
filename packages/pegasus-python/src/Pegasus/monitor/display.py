@@ -164,6 +164,7 @@ class DisplayAnalysis:
     diagnostics: DiagnosticsBatch | None = None
     why_idle: IdleAnalysis | None = None
     errors: tuple[str, ...] = field(default_factory=tuple)
+    workflow_removal_reason: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "errors", tuple(self.errors))
@@ -551,7 +552,9 @@ def _status_panel(
     total = len(jobs)
     state = Text()
     removals = removed_jobs(jobs, snapshot.scheduler_results)
-    removal_reason = workflow_removal_reason(snapshot)
+    removal_reason = analysis.workflow_removal_reason or workflow_removal_reason(
+        snapshot
+    )
     if removal_reason is not None:
         from Pegasus.monitor.diagnostics import redact_excerpt
 

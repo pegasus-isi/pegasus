@@ -106,6 +106,7 @@ class ReplayFrame:
     enrichments: tuple[EnrichmentRecord, ...]
     record_types: tuple[str, ...]
     awaiting_checkpoint: bool
+    workflow_removal_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +123,7 @@ class ReplayResult:
     stream_replacements: int
     trailing_bytes: bytes = b""
     stop_reason: str | None = None
+    workflow_removal_reason: str | None = None
 
     @property
     def complete(self) -> bool:
@@ -149,6 +151,7 @@ class ReplayAccumulator:
             raise ValueError("replay recent-transition limits must be positive")
         self.header: StreamHeader | None = None
         self.stop_reason: str | None = None
+        self.workflow_removal_reason: str | None = None
         self.awaiting_checkpoint = True
         self.ignored_records = 0
         self.stream_replacements = 0
@@ -301,6 +304,7 @@ class ReplayAccumulator:
         if self.header is not None:
             self.stream_replacements += 1
         self.header = header
+        self.workflow_removal_reason = None
         self.stop_reason = None
         self._clear_snapshot_state()
         self.awaiting_checkpoint = True
@@ -332,6 +336,7 @@ class ReplayAccumulator:
             self._diagnostics.clear()
             self._diagnostic_problems.clear()
         self._load_snapshot(record.snapshot)
+        self.workflow_removal_reason = record.workflow_removal_reason
         self.stop_reason = (
             record.reason if record.reason in {"stopped", "final"} else None
         )
@@ -620,6 +625,7 @@ class ReplayAccumulator:
         assert watermark is not None
         self._remember_workflow_transition(transition)
         if transition.restart_count > workflow.restart_count:
+            self.workflow_removal_reason = None
             watermark = WorkflowTransitionWatermark(
                 WorkflowRestartIdentity(
                     workflow.workflow, workflow.wf_id, transition.restart_count
@@ -795,6 +801,7 @@ def _process_records(
                 accumulator.enrichments,
                 tuple(frame_types),
                 accumulator.awaiting_checkpoint,
+                accumulator.workflow_removal_reason,
             )
             if previous_frame_time is not None and speed > 0:
                 delay = max(0.0, frame.recorded_at_epoch - previous_frame_time) / speed
@@ -841,6 +848,7 @@ def _process_records(
         accumulator.stream_replacements,
         trailing_bytes(),
         accumulator.stop_reason,
+        accumulator.workflow_removal_reason,
     )
 
 

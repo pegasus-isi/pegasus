@@ -642,3 +642,104 @@ def test_serve_relaunch_terminates_options_before_target(target):
     assert child.serve_foreground
     assert child.target == target
     assert not child.diagnose
+
+
+@pytest.mark.parametrize("remote", [False, True])
+def test_recorded_workflow_removal_is_visible_in_replay(tmp_path, remote):
+    from Pegasus.monitor.event_log import EventLogWriter
+    from Pegasus.monitor.models import (
+        ClockSample,
+        FrozenPayload,
+        HealthState,
+        SchedulerEvidence,
+        SchedulerQueryRequest,
+        SchedulerQueryResult,
+        SourceHealth,
+        SourceName,
+    )
+    from Pegasus.monitor.replay import ReplayEngine
+
+    snapshot = next(
+        record.snapshot
+        for record in read_jsonl(GOLDEN).records
+        if isinstance(record, CheckpointRecord)
+    )
+    transition = replace(
+        snapshot.workflow.transition,
+        identity=replace(
+            snapshot.workflow.transition.identity,
+            state="WORKFLOW_TERMINATED",
+            timestamp=100,
+        ),
+        status=1,
+    )
+    snapshot = replace(
+        snapshot,
+        workflow=replace(
+            snapshot.workflow,
+            state="WORKFLOW_TERMINATED",
+            status=1,
+            ended_at=100,
+            transition=transition,
+        ),
+        recent_workflow_transitions=(*snapshot.recent_workflow_transitions, transition),
+        workflow_watermark=replace(
+            snapshot.workflow_watermark,
+            identities=(*snapshot.workflow_watermark.identities, transition.identity),
+        ),
+    )
+    publication = cli._replay_publication(snapshot, sequence=1, recorded_at_epoch=100)
+    history = SchedulerQueryResult(
+        SchedulerQueryRequest(
+            snapshot.workflow.workflow,
+            SchedulerQueryKind.HISTORY,
+            ClockSample(100, 100),
+            5,
+            10,
+        ),
+        SourceHealth(SourceName.CONDOR_HISTORY, HealthState.HEALTHY, 100),
+        0,
+        (
+            SchedulerEvidence(
+                SchedulerQueryKind.HISTORY,
+                FrozenPayload.from_mapping({"ClusterId": 900, "ProcId": 0}),
+                FrozenPayload.from_mapping(
+                    {
+                        "JobUniverse": 7,
+                        "JobStatus": 3,
+                        "RemoveReason": "Removed by pegasus-remove token=TOP_SECRET",
+                        "EnteredCurrentStatus": 100,
+                    }
+                ),
+            ),
+        ),
+    )
+    publication = replace(publication, scheduler_results=(history,))
+    path = tmp_path / "removed.jsonl"
+    writer = EventLogWriter(path, snapshot.workflow.workflow, "test")
+    writer.record_publication(publication, snapshot)
+    writer.finish()
+    writer.close()
+    result = ReplayEngine(path, speed=0).replay()
+    assert (
+        result.workflow_removal_reason == "Removed by pegasus-remove token=<redacted>"
+    )
+    assert result.snapshot == snapshot  # Scheduler evidence never rewrites DB truth.
+    records = read_jsonl(path).records
+
+    class FakeReader:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def read(self, cursor):
+            return SimpleNamespace(records=records, cursor=object(), at_eof=True)
+
+    runtime = replace(cli._load_replay_runtime(), remote_reader_type=FakeReader)
+    output, errors = _Output(), _Output()
+    args = ["--remote", "host:file"] if remote else ["--replay", str(path)]
+    assert (
+        cli.main([*args, "--once"], stdout=output, stderr=errors, runtime=runtime) == 0
+    )
+    assert "REMOVED" in output.getvalue()
+    assert "pegasus-remove" in output.getvalue()
+    assert "TOP_SECRET" not in output.getvalue()

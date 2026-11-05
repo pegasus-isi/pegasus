@@ -599,6 +599,7 @@ def _replay_analysis(
     publication: object,
     diagnostics: tuple[object, ...],
     runtime: ReplayRuntime,
+    workflow_removal_reason: str | None = None,
 ) -> object:
     errors = tuple(
         f"{item.severity.value}: {item.summary}" for item in diagnostics[-20:]
@@ -607,7 +608,15 @@ def _replay_analysis(
         stats = runtime.compute_stats(publication)
     except (TypeError, ValueError, ArithmeticError):
         stats = None
-    return runtime.display_analysis_type(stats=stats, errors=errors)
+    return runtime.display_analysis_type(
+        stats=stats,
+        errors=errors,
+        **(
+            {"workflow_removal_reason": workflow_removal_reason}
+            if workflow_removal_reason is not None
+            else {}
+        ),
+    )
 
 
 def _replay_options(
@@ -1122,7 +1131,12 @@ def _run_replay_mode(
             recorded_at_epoch=result.snapshot.snapshot_at_epoch,
             awaiting_checkpoint=result.awaiting_checkpoint,
         )
-        analysis = _replay_analysis(publication, result.current_diagnostics, runtime)
+        analysis = _replay_analysis(
+            publication,
+            result.current_diagnostics,
+            runtime,
+            result.workflow_removal_reason,
+        )
         if result.stop_reason == "stopped":
             stdout.write("Stream stopped by recorder; workflow may still be running.\n")
         width = getattr(stdout, "width", 120)
@@ -1158,7 +1172,9 @@ def _run_replay_mode(
             recorded_at_epoch=frame.recorded_at_epoch,
             awaiting_checkpoint=frame.awaiting_checkpoint,
         )
-        analysis = _replay_analysis(publication, frame.diagnostics, runtime)
+        analysis = _replay_analysis(
+            publication, frame.diagnostics, runtime, frame.workflow_removal_reason
+        )
         options = _replay_options(args, runtime, width=console.width, live=True)
         renderable = runtime.render_dashboard(context, publication, analysis, options)
         if manager is None:
@@ -1245,7 +1261,10 @@ async def _run_remote_mode(
                     awaiting_checkpoint=accumulator.awaiting_checkpoint,
                 )
                 latest_analysis = _replay_analysis(
-                    latest_publication, accumulator.diagnostics, runtime
+                    latest_publication,
+                    accumulator.diagnostics,
+                    runtime,
+                    accumulator.workflow_removal_reason,
                 )
                 if not args.once:
                     options = _replay_options(

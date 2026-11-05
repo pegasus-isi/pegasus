@@ -233,6 +233,9 @@ def _iter_checkpoint_bytes(record: CheckpointRecord) -> Iterator[bytes]:
     yield from _iter_snapshot_bytes(record.snapshot)
     yield b',"reason":'
     yield from _iter_json_bytes(record.reason)
+    if record.workflow_removal_reason is not None:
+        yield b',"workflow_removal_reason":'
+        yield from _iter_json_bytes(record.workflow_removal_reason)
     yield b"}\n"
 
 
@@ -339,6 +342,9 @@ def _decode_record(value: object, *, destructive: bool) -> EventRecord:
                     destructive=destructive,
                 ),
                 _string(payload.get("reason"), "reason"),
+                _optional_string(
+                    payload.get("workflow_removal_reason"), "workflow_removal_reason"
+                ),
             )
         if record_type == "gap":
             if payload.get("next_checkpoint_required") is not True:
@@ -478,6 +484,7 @@ class EventLogWriter:
         self._current_snapshot_epoch: SnapshotEpoch | None = None
         self._last_final_snapshot: DatabaseSnapshot | None = None
         self._pending_checkpoint_reason = "initial"
+        self._workflow_removal_reason: str | None = None
         self._latest_snapshot: DatabaseSnapshot | None = None
 
     @property
@@ -508,7 +515,22 @@ class EventLogWriter:
             self._clock() if publication_epoch is None else publication_epoch
         )
         final = bool(getattr(publication, "authoritative_complete", False))
-        self.record_snapshot(database, recorded_at_epoch=recorded_at, final=final)
+        from Pegasus.monitor.diagnostics import redact_excerpt
+        from Pegasus.monitor.scheduler_evidence import workflow_removal_reason
+
+        reason = (
+            workflow_removal_reason(publication)
+            if getattr(publication, "effective", None) is not None
+            else None
+        )
+        self.record_snapshot(
+            database,
+            recorded_at_epoch=recorded_at,
+            final=final,
+            workflow_removal_reason=redact_excerpt(reason)
+            if reason is not None
+            else None,
+        )
 
     def record_snapshot(
         self,
@@ -516,11 +538,14 @@ class EventLogWriter:
         *,
         recorded_at_epoch: float | None = None,
         final: bool = False,
+        workflow_removal_reason: str | None = None,
     ) -> None:
         """Emit transitions or a checkpoint for one authoritative DB snapshot."""
 
         self._ensure_open_state()
         self._validate_snapshot(snapshot)
+        removal_changed = workflow_removal_reason != self._workflow_removal_reason
+        self._workflow_removal_reason = workflow_removal_reason
         self._latest_snapshot = snapshot
         now = self._finite_now(recorded_at_epoch)
         if not self._started:
@@ -538,7 +563,7 @@ class EventLogWriter:
         if self._paused:
             self._recover(snapshot, now, final=final)
             return
-        if final and snapshot == self._last_final_snapshot:
+        if final and snapshot == self._last_final_snapshot and not removal_changed:
             self._current_snapshot_epoch = snapshot.epoch
             return
 
@@ -547,6 +572,8 @@ class EventLogWriter:
         attempt_changes = self._attempt_changes(snapshot)
         if final:
             reason = "final"
+        elif removal_changed:
+            reason = "scheduler_evidence"
         elif snapshot.generation != self._last_generation:
             reason = "database_replacement"
         elif structure != self._last_structure or attempt_changes is None:
@@ -771,12 +798,24 @@ class EventLogWriter:
             self.source_metadata,
         )
         checkpoint = CheckpointRecord(
-            1, self.stream_id, recorded_at, snapshot, checkpoint_reason
+            1,
+            self.stream_id,
+            recorded_at,
+            snapshot,
+            checkpoint_reason,
+            workflow_removal_reason=self._workflow_removal_reason,
         )
         records: list[EventRecord] = [header, checkpoint]
         if final:
             records.append(
-                CheckpointRecord(2, self.stream_id, recorded_at, snapshot, "final")
+                CheckpointRecord(
+                    2,
+                    self.stream_id,
+                    recorded_at,
+                    snapshot,
+                    "final",
+                    workflow_removal_reason=self._workflow_removal_reason,
+                )
             )
         if not self._atomic_replace_stream(records):
             return
@@ -819,6 +858,7 @@ class EventLogWriter:
             recorded_at,
             snapshot,
             "recovery",
+            workflow_removal_reason=self._workflow_removal_reason,
         )
         records: list[EventRecord] = [gap, checkpoint]
         if final:
@@ -829,6 +869,7 @@ class EventLogWriter:
                     recorded_at,
                     snapshot,
                     "final",
+                    workflow_removal_reason=self._workflow_removal_reason,
                 )
             )
         if not self._write_recovery_batch(records):
@@ -845,7 +886,12 @@ class EventLogWriter:
         self, snapshot: DatabaseSnapshot, recorded_at: float, reason: str
     ) -> None:
         record = CheckpointRecord(
-            self._next_sequence(), self.stream_id, recorded_at, snapshot, reason
+            self._next_sequence(),
+            self.stream_id,
+            recorded_at,
+            snapshot,
+            reason,
+            workflow_removal_reason=self._workflow_removal_reason,
         )
         if not self._write_record(record):
             return

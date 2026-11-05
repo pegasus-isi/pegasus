@@ -2157,6 +2157,8 @@ class CheckpointRecord:
     recorded_at_epoch: float
     snapshot: DatabaseSnapshot
     reason: str
+    # Scheduler evidence is separate from the authoritative DB snapshot.
+    workflow_removal_reason: str | None = None
 
     def __post_init__(self) -> None:
         _validate_stream_record(self.sequence, self.stream_id, self.recorded_at_epoch)
@@ -2164,7 +2166,7 @@ class CheckpointRecord:
             raise TypeError("canonical checkpoints require a DatabaseSnapshot")
 
     def to_json_dict(self) -> dict[str, JSONValue]:
-        return _record_json(
+        payload = _record_json(
             "checkpoint",
             self.sequence,
             stream_id=self.stream_id,
@@ -2172,6 +2174,10 @@ class CheckpointRecord:
             snapshot=self.snapshot,
             reason=self.reason,
         )
+
+        if self.workflow_removal_reason is not None:
+            payload["workflow_removal_reason"] = self.workflow_removal_reason
+        return payload
 
 
 @dataclass(frozen=True, slots=True)
