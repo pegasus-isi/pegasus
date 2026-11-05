@@ -1038,3 +1038,47 @@ def test_kickstart_open_is_nonblocking_during_fifo_swap(tmp_path, monkeypatch):
     result = parse_kickstart_output(tmp_path, "job", path.name)
     assert result.status is KickstartReadStatus.REJECTED
     assert result.error_code == "file_changed"
+
+
+@pytest.mark.parametrize(
+    "unit", ["Permission denied ", "-----BEGIN A PRIVATE KEY-----"]
+)
+def test_adversarial_stderr_and_redaction_have_bounded_growth(unit):
+    from Pegasus.monitor.diagnostics import _analyze_stderr
+
+    def elapsed(size):
+        value = (unit * (size // len(unit) + 1))[:size]
+        started = thread_time()
+        _analyze_stderr(value)
+        redact_excerpt(value)
+        return thread_time() - started
+
+    small = min(elapsed(16 * 1024) for _ in range(2))
+    large = elapsed(256 * 1024)
+    # Linear growth allows 16x input plus scheduling/timer noise, not quadratic
+    # 256x growth. The noise allowance also keeps sub-millisecond runs stable.
+    assert large < max(0.1, small * 24)
+
+
+def test_stderr_analysis_uses_bounded_tail(monkeypatch):
+    from Pegasus.monitor import diagnostics
+
+    class BoundedPattern:
+        def finditer(self, value):
+            assert len(value) <= 64 * 1024
+            return ()
+
+    monkeypatch.setattr(diagnostics, "_RE_MISSING_FILE", BoundedPattern())
+    result = diagnostics._analyze_stderr(
+        "x" * (256 * 1024) + "\nStarting transfers - attempt 3\nSome transfers failed"
+    )
+    assert result.transfers_failed
+    assert result.transfer_attempts == 3
+
+
+def test_private_key_redaction_preserves_complete_and_incomplete_blocks():
+    value = "before -----BEGIN A PRIVATE KEY-----secret-----END B PRIVATE KEY----- after -----BEGIN PRIVATE KEY-----unfinished"
+    assert (
+        redact_excerpt(value)
+        == "before <redacted-private-key> after -----BEGIN PRIVATE KEY-----unfinished"
+    )

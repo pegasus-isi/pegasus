@@ -64,6 +64,7 @@ if TYPE_CHECKING:
 MAX_KICKSTART_BYTES = 1024 * 1024
 MAX_KICKSTART_NODES = 5000
 MAX_KICKSTART_DEPTH = 32
+MAX_STDERR_CHARS = 64 * 1024
 MAX_EXCERPT_CHARS = 512
 MAX_SUGGESTIONS = 8
 _KICKSTART_RETRY_SECONDS = 5.0
@@ -80,10 +81,8 @@ _NAMED_SECRET = re.compile(
     r"([^\s,;|\"']+)"
 )
 _URL_CREDENTIAL = re.compile(r"(?i)([a-z][a-z0-9+.-]{0,31}://)[^/@\s]+@")
-_PRIVATE_KEY = re.compile(
-    r"-----BEGIN [^-]*PRIVATE KEY-----.*?-----END [^-]*PRIVATE KEY-----",
-    re.DOTALL,
-)
+_PRIVATE_KEY = re.compile(r"-----BEGIN [^-]*PRIVATE KEY-----")
+_PRIVATE_KEY_END = re.compile(r"-----END [^-]*PRIVATE KEY-----")
 _HOME_PATH = re.compile(r"(?:/Users|/home)/[^/\s]+/[^\s|,;]*")
 
 
@@ -280,11 +279,31 @@ _RE_MISSING_FILE = re.compile(r"Expected local file does not exist:\s*(.+)", re.
 _RE_TRANSFER_ATTEMPT = re.compile(r"Starting transfers - attempt (\d+)", re.I)
 _RE_TRANSFERS_FAILED = re.compile(r"Some transfers failed", re.I)
 _RE_INTEGRITY_ERROR = re.compile(r"integrity verification failed", re.I)
-_RE_PERMISSION_DENIED = re.compile(r"Permission denied.*?:\s*(.+)", re.I)
+_RE_PERMISSION_DENIED = re.compile(r"Permission denied[^:\r\n]{0,512}:\s*(.+)", re.I)
 _RE_NO_SPACE = re.compile(r"No space left on device", re.I)
 _RE_CONNECTION = re.compile(
     r"Connection refused|Connection timed out|Network is unreachable", re.I
 )
+
+
+def _redact_private_keys(value: str) -> str:
+    # Search forward once for an END marker. A regex spanning BEGIN to END
+    # retries the entire suffix for each unmatched BEGIN in hostile output.
+    parts = []
+    offset = 0
+    while begin := _PRIVATE_KEY.search(value, offset):
+        end = value.find("-----END ", begin.end())
+        while end >= 0:
+            closing = _PRIVATE_KEY_END.match(value, end)
+            if closing is not None:
+                break
+            end = value.find("-----END ", end + 1)
+        if end < 0:
+            break
+        parts.extend((value[offset : begin.start()], "<redacted-private-key>"))
+        offset = closing.end()
+    parts.append(value[offset:])
+    return "".join(parts)
 
 
 def redact_excerpt(value: str, maximum: int = MAX_EXCERPT_CHARS) -> str:
@@ -293,7 +312,7 @@ def redact_excerpt(value: str, maximum: int = MAX_EXCERPT_CHARS) -> str:
     if maximum < 4:
         raise ValueError("excerpt maximum must be at least four characters")
     redacted = sanitize_display(value)
-    redacted = _PRIVATE_KEY.sub("<redacted-private-key>", redacted)
+    redacted = _redact_private_keys(redacted)
     redacted = _AUTH_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
     redacted = _NAMED_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
     redacted = _URL_CREDENTIAL.sub(r"\1<redacted>@", redacted)
@@ -305,6 +324,8 @@ def redact_excerpt(value: str, maximum: int = MAX_EXCERPT_CHARS) -> str:
 
 
 def _analyze_stderr(stderr: str) -> StderrAnalysis:
+    # Transfer retry numbers and terminal failure summaries are at the end.
+    stderr = stderr[-MAX_STDERR_CHARS:]
     missing = tuple(
         dict.fromkeys(
             redact_excerpt(match.group(1), 256)
