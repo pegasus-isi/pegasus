@@ -14,8 +14,8 @@ Submit and monitor ensembles of workflows
 Commands
 ========
 
-**server** [-d]
-   Start the ensemble manager server.
+**server** [-d] [-p *PORT*]
+   Start the ensemble manager server. It listens on 127.0.0.1 only.
 
 **ensembles**
    List ensembles.
@@ -75,6 +75,15 @@ Common Options
 
 
 
+Server Options
+==============
+
+**-p** *PORT*; \ **--port** *PORT*
+   Port to listen on (1024-65535). Overrides **EM_PORT** in the configuration
+   file. The default port is derived from your UID.
+
+
+
 Create and Config Options
 =========================
 
@@ -99,3 +108,35 @@ Triggers Options
 
 **-l**; \ **--long**
    Use long listing format.
+
+
+
+Configuration
+=============
+
+No configuration file is required. Settings can optionally be placed in
+``~/.pegasus/service.json``; keys must be UPPERCASE, e.g.
+
+   ::
+
+      {
+          "EM_PORT": 8000,
+          "EM_INTERVAL": 60
+      }
+
+**EM_PORT**
+   Port the server listens on and the client connects to. **server -p**
+   takes precedence.
+
+**AUTHENTICATION**
+   Defaults to **LocalTokenAuthentication**: on startup the server writes its
+   port and a random access token to ``~/.pegasus/em.server.json`` (mode
+   0600), and the client reads that file automatically. Other users on the
+   same machine cannot read the token and therefore cannot use your ensemble
+   manager. A new token is created each time the server starts.
+
+   Set it to **NoAuthentication** to disable authentication. This lets any
+   user who can connect to 127.0.0.1 run commands as you, so do not use it on
+   shared machines such as cluster login nodes. Set it to
+   **PAMAuthentication** to authenticate with **USERNAME** and **PASSWORD**
+   from the configuration file.
