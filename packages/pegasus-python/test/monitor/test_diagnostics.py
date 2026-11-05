@@ -1016,3 +1016,25 @@ def test_removed_job_replaces_stale_hold_or_queue_diagnostic(state):
 def test_removal_does_not_join_old_retry():
     result = _scheduler_observation(3, kind=SchedulerQueryKind.HISTORY, cluster=9)
     assert collect_diagnostics(_effective(_job("SUBMIT")), (result,)) == ()
+
+
+def test_kickstart_open_is_nonblocking_during_fifo_swap(tmp_path, monkeypatch):
+    import os
+
+    from Pegasus.monitor import diagnostics
+
+    path = tmp_path / "job.out"
+    path.write_text("regular file")
+    real_open = os.open
+
+    def swap_before_open(candidate, flags):
+        # Assert before opening, so the vulnerable implementation cannot hang.
+        assert flags & os.O_NONBLOCK
+        path.unlink()
+        os.mkfifo(path)
+        return real_open(candidate, flags)
+
+    monkeypatch.setattr(diagnostics.os, "open", swap_before_open)
+    result = parse_kickstart_output(tmp_path, "job", path.name)
+    assert result.status is KickstartReadStatus.REJECTED
+    assert result.error_code == "file_changed"
