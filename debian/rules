@@ -62,6 +62,7 @@ install: build
 	# boto3, globus-sdk, ...) cannot conflict with or shadow distro packages.
 	$(PYTHON3) -m venv debian/pegasus/usr/lib/pegasus/venv
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --upgrade pip
+	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --no-deps "torch==2.15.0+cpu" --index-url https://download.pytorch.org/whl/cpu
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install dist/pegasus_wms-*.whl
 
 	# The venv was created under debian/pegasus; strip that build-time prefix from
