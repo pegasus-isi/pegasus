@@ -173,9 +173,12 @@ class Scheduler:
 
 
 async def eventually(predicate, timeout=2):
-    async with asyncio.timeout(timeout):
+    # asyncio.timeout() is 3.11+; the package supports 3.10.
+    async def wait():
         while not predicate():
             await asyncio.sleep(0.001)
+
+    await asyncio.wait_for(wait(), timeout)
 
 
 class Scenario:
