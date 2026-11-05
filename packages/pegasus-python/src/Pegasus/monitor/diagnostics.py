@@ -109,6 +109,7 @@ class StderrAnalysis:
     permission_denied: tuple[str, ...] = ()
     no_space: bool = False
     connection_error: bool = False
+    transfer_reason: str = ""
 
     @property
     def has_findings(self) -> bool:
@@ -339,6 +340,16 @@ def _analyze_stderr(stderr: str) -> StderrAnalysis:
             for match in _RE_PERMISSION_DENIED.finditer(stderr)
         )
     )
+    transfer_reason = next(
+        (
+            redact_excerpt(line)
+            for line in reversed(stderr.splitlines())
+            if "source file does not exist or is not readable" in line.lower()
+            or " transfer failed" in line.lower()
+            or ("failed" in line.lower() and "error=" in line.lower())
+        ),
+        "",
+    )
     return StderrAnalysis(
         missing,
         max(attempts, default=1),
@@ -347,6 +358,7 @@ def _analyze_stderr(stderr: str) -> StderrAnalysis:
         denied,
         bool(_RE_NO_SPACE.search(stderr)),
         bool(_RE_CONNECTION.search(stderr)),
+        transfer_reason,
     )
 
 
@@ -665,7 +677,8 @@ def _stderr_diagnosis(
     if analysis.transfers_failed:
         return (
             "transfer_failed",
-            f"File transfer failed after {analysis.transfer_attempts} attempt(s)",
+            f"File transfer failed after {analysis.transfer_attempts} attempt(s)"
+            + (f": {analysis.transfer_reason}" if analysis.transfer_reason else ""),
             ("Inspect transfer stderr and network/disk availability.",),
         )
     if analysis.integrity_error:

@@ -1082,3 +1082,41 @@ def test_private_key_redaction_preserves_complete_and_incomplete_blocks():
         redact_excerpt(value)
         == "before <redacted-private-key> after -----BEGIN PRIVATE KEY-----unfinished"
     )
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "source file does not exist or is not readable src=/data/phantom.txt",
+        "source file does not exist or is not readable src=/data/locked.txt",
+        'http transfer failed url=http://localhost:1/input error="connect: connection refused"',
+        'cp failed src=/data/input error="permission denied"',
+    ],
+)
+def test_transfer_failure_includes_redacted_transfer_reason(tmp_path, reason):
+    import yaml
+
+    path = tmp_path / "stage.out.000"
+    path.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "mainjob": {"status": {"regular_exitcode": 1}},
+                    "files": {
+                        "stderr": {
+                            "data": "Starting transfers - attempt 3\n"
+                            + reason
+                            + " token=TOP_SECRET\x1b[2J\nSome transfers failed! See above, and possibly stderr.\n"
+                        }
+                    },
+                }
+            ]
+        )
+    )
+    finding = collect_diagnostics(
+        _effective(_job("JOB_FAILURE", stdout_path=path.name)), submit_dir=tmp_path
+    )[0]
+    assert finding.code == "transfer_failed"
+    assert reason in finding.summary
+    assert "TOP_SECRET" not in finding.summary
+    assert "\x1b" not in finding.summary
