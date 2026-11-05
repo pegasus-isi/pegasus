@@ -426,6 +426,10 @@ class MonitorCoordinator:
             await self.publish()
         return result
 
+    def request_scheduler_history(self) -> None:
+        """Wake the serialized scheduler loop without waiting for its provider."""
+        self._scheduler_wakeup.set()
+
     async def poll_scheduler_once(
         self, kind: SchedulerQueryKind, *, publish: bool = True
     ) -> SchedulerQueryResult | None:

@@ -122,6 +122,7 @@ _HISTORY_ATTRIBUTES = (
     "QDate",
     "JobStartDate",
     "CompletionDate",
+    "EnteredCurrentStatus",
     "RemoteWallClockTime",
     "RemoteUserCpu",
     "RemoteSysCpu",

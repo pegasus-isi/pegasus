@@ -137,6 +137,43 @@ def removed_jobs(
     return {name: row for name, row in rows.items() if row.get("JobStatus") == 3}
 
 
+def workflow_end_observed(snapshot: CoordinatorSnapshot) -> bool:
+    """Require a healthy observation of this execution's terminal DAGMan ad.
+
+    Empty queue results and child-only history can precede DAGMan's arrival in
+    history. Their query timestamps alone cannot close the finalization race.
+    """
+    if snapshot.effective is None or not snapshot.authoritative_complete:
+        return False
+    workflow = snapshot.effective.workflow
+    ended_at = workflow.ended_at
+    if ended_at is None and workflow.transition is not None:
+        ended_at = workflow.transition.identity.timestamp
+    if ended_at is None:
+        return False
+    for result in snapshot.scheduler_results:
+        if (
+            result.request.workflow != workflow.workflow
+            or result.health.state is not HealthState.HEALTHY
+            or result.request.kind
+            not in {SchedulerQueryKind.QUEUE, SchedulerQueryKind.HISTORY}
+            or result.health.checked_at_epoch < ended_at
+        ):
+            continue
+        for evidence in result.evidence:
+            row = {**evidence.target.to_json_dict(), **evidence.payload.to_json_dict()}
+            # Removed jobs can have CompletionDate = 0, as in HTCondor 25.
+            ended = row.get("CompletionDate") or row.get("EnteredCurrentStatus")
+            if (
+                row.get("JobUniverse") == 7
+                and row.get("JobStatus") in {3, 4}
+                and isinstance(ended, (int, float))
+                and ended >= ended_at
+            ):
+                return True
+    return False
+
+
 def workflow_removal_reason(snapshot: CoordinatorSnapshot) -> str | None:
     """Identify removal of DAGMan itself, not failure-triggered child cleanup."""
     if snapshot.effective is None or not snapshot.authoritative_complete:

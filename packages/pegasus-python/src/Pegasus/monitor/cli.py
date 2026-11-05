@@ -44,6 +44,11 @@ TARGET may be a submit directory, a workflow base directory, or a
 braindump.yml file. The latest numeric run is selected for a workflow base.
 """
 
+# Allow DAGMan to leave the queue and reach history after Stampede terminates.
+# Match the normal queue cadence, with a hard bound independent of backoff.
+SERVER_FINAL_EVIDENCE_GRACE_SECONDS = 30.0
+SERVER_FINAL_HISTORY_INTERVAL_SECONDS = 5.0
+
 
 def _positive_float(value: str) -> float:
     try:
@@ -661,6 +666,7 @@ class _EventRecorder:
         *,
         analysis: object | None = None,
         force: bool = False,
+        final: bool | None = None,
     ) -> None:
         async with self._lock:
             if self._closed:
@@ -677,6 +683,7 @@ class _EventRecorder:
                     self.writer.record_publication,
                     selected,
                     database,
+                    **({"final": final} if final is not None else {}),
                 )
                 self._last_publication_sequence = max(
                     self._last_publication_sequence, selected.sequence
@@ -1685,13 +1692,20 @@ async def _run(
 async def _close_monitor_resources(
     coordinator: object,
     recorder: _EventRecorder | None,
+    *,
+    final: bool | None = None,
 ) -> tuple[BaseException, ...]:
     """Attempt final capture and both closes, retaining errors in call order."""
 
     errors: list[BaseException] = []
     if recorder is not None and coordinator.latest is not None:
         try:
-            await recorder.capture(coordinator, coordinator.latest, force=True)
+            await recorder.capture(
+                coordinator,
+                coordinator.latest,
+                force=True,
+                **({"final": final} if final is not None else {}),
+            )
         except BaseException as error:
             errors.append(error)
     try:
@@ -1725,6 +1739,36 @@ class _HeadlessMonitorLifecycle:
         self.ready = asyncio.Event()
         self.stop = asyncio.Event()
         self._closed = False
+        self._final_allowed = False
+
+    async def _await_final_scheduler_evidence(self, current: object) -> object:
+        from Pegasus.monitor.scheduler_evidence import workflow_end_observed
+
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + SERVER_FINAL_EVIDENCE_GRACE_SECONDS
+        next_poll = loop.time()
+        while not self.stop.is_set():
+            current = self.coordinator.latest or current
+            now = loop.time()
+            if (
+                not current.authoritative_complete
+                or current.effective.workflow.status == 0
+                or workflow_end_observed(current)
+                or now >= deadline
+            ):
+                return current
+            if now >= next_poll:
+                # The coordinator owns query cancellation. Waiting here on a
+                # query (or its serialization lock) could exceed the deadline.
+                self.coordinator.request_scheduler_history()
+                next_poll = now + SERVER_FINAL_HISTORY_INTERVAL_SECONDS
+            try:
+                await asyncio.wait_for(
+                    self.stop.wait(), timeout=min(0.1, deadline - now)
+                )
+            except asyncio.TimeoutError:
+                pass
+        return current
 
     async def run(self) -> None:
         diagnostics_engine = (
@@ -1735,10 +1779,17 @@ class _HeadlessMonitorLifecycle:
         while not self.stop.is_set():
             current = self.coordinator.latest or publication
             if current.authoritative_complete and not self.args.no_condor:
-                await self.coordinator.poll_scheduler_once(
-                    self.runtime.scheduler_kind.HISTORY
-                )
-                current = self.coordinator.latest or current
+                if current.effective.workflow.status == 0:
+                    # Preserve the successful-workflow query and stream shape.
+                    await self.coordinator.poll_scheduler_once(
+                        self.runtime.scheduler_kind.HISTORY
+                    )
+                    current = self.coordinator.latest or current
+                else:
+                    current = await self._await_final_scheduler_evidence(current)
+                    if self.stop.is_set():
+                        return
+            self._final_allowed = current.authoritative_complete
             if current.sequence > last_sequence:
                 await self.recorder.capture(
                     self.coordinator,
@@ -1775,7 +1826,13 @@ class _HeadlessMonitorLifecycle:
             return
         self._closed = True
         self.stop.set()
-        errors = await _close_monitor_resources(self.coordinator, self.recorder)
+        errors = await _close_monitor_resources(
+            self.coordinator,
+            self.recorder,
+            # An interruption during grace is an orderly recorder stop, even
+            # though its last authoritative DB snapshot is already terminal.
+            final=None if self._final_allowed else False,
+        )
         if errors:
             raise errors[0]
 

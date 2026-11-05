@@ -504,6 +504,8 @@ class EventLogWriter:
         self,
         publication: object,
         database: DatabaseSnapshot | None,
+        *,
+        final: bool | None = None,
     ) -> None:
         """Record one coordinator publication using only its authoritative base."""
 
@@ -514,7 +516,8 @@ class EventLogWriter:
         recorded_at = float(
             self._clock() if publication_epoch is None else publication_epoch
         )
-        final = bool(getattr(publication, "authoritative_complete", False))
+        if final is None:
+            final = bool(getattr(publication, "authoritative_complete", False))
         from Pegasus.monitor.diagnostics import redact_excerpt
         from Pegasus.monitor.scheduler_evidence import workflow_removal_reason
 
