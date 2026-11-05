@@ -49,6 +49,7 @@ from Pegasus.monitor.models import (
     TailWorkflowEvent,
 )
 from Pegasus.monitor.scheduler_evidence import removed_jobs, workflow_removal_reason
+from Pegasus.monitor.terminal import sanitize_display
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -419,7 +420,8 @@ def _header(
         title.append(" FINAL ", style="bold white on blue")
     elif snapshot.has_authoritative_base:
         title.append(
-            " LIVE " if options.live else " ONCE ", style="bold white on green"
+            sanitize_display(" LIVE " if options.live else " ONCE "),
+            style="bold white on green",
         )
     else:
         title.append(" DB FAILED / LIVE UNCONFIRMED ", style="bold black on yellow")
@@ -427,30 +429,39 @@ def _header(
     grid = Table.grid(expand=True)
     grid.add_column(ratio=1)
     grid.add_column(justify="right", no_wrap=True)
-    grid.add_row(title, Text(_timestamp(snapshot.clock.epoch), style="dim"))
+    grid.add_row(
+        title, Text(sanitize_display(_timestamp(snapshot.clock.epoch)), style="dim")
+    )
     details = Text()
-    details.append(context.label, style="bold yellow")
+    details.append(sanitize_display(context.label), style="bold yellow")
     details.append("  uuid ", style="dim")
-    details.append(_short_uuid(context.wf_uuid), style="cyan")
+    details.append(sanitize_display(_short_uuid(context.wf_uuid)), style="cyan")
     details.append("  owner ", style="dim")
-    details.append(context.owner or "unknown", style="cyan")
-    version = Text(f"Pegasus {context.planner_version}", style="dim")
+    details.append(sanitize_display(context.owner or "unknown"), style="cyan")
+    version = Text(sanitize_display(f"Pegasus {context.planner_version}"), style="dim")
     grid.add_row(details, version)
     return Panel(grid, padding=(0, 1), style="on grey7")
 
 
 def _health_label(health: SourceHealth) -> Text:
     text = Text()
-    text.append(health.source.value.replace("_", " "), style="bold")
+    text.append(sanitize_display(health.source.value.replace("_", " ")), style="bold")
     text.append(" ")
-    text.append(health.state.value.upper(), style=_HEALTH_STYLE[health.state])
+    text.append(
+        sanitize_display(health.state.value.upper()), style=_HEALTH_STYLE[health.state]
+    )
     if health.last_good_age is not None:
         suffix = "+" if health.last_good_age.capped else ""
-        text.append(f" ({health.last_good_age.seconds:.0f}{suffix}s old)", style="dim")
+        text.append(
+            sanitize_display(f" ({health.last_good_age.seconds:.0f}{suffix}s old)"),
+            style="dim",
+        )
     if health.pending_count:
-        text.append(f" [{health.pending_count} pending]", style="yellow")
+        text.append(
+            sanitize_display(f" [{health.pending_count} pending]"), style="yellow"
+        )
     if health.error_code:
-        text.append(f" {health.error_code}", style="dim red")
+        text.append(sanitize_display(f" {health.error_code}"), style="dim red")
     return text
 
 
@@ -484,19 +495,23 @@ def _health_panel(snapshot: CoordinatorSnapshot, options: DisplayOptions) -> Pan
                 continue
             entries.append(
                 Text(
-                    f"{source.replace('_', ' ')} WAITING (not yet polled)",
+                    sanitize_display(
+                        f"{source.replace('_', ' ')} WAITING (not yet polled)"
+                    ),
                     style="yellow",
                 )
             )
     if snapshot.publisher_failures:
         entries.append(
             Text(
-                f"display publisher degraded ({snapshot.publisher_failures} failures)",
+                sanitize_display(
+                    f"display publisher degraded ({snapshot.publisher_failures} failures)"
+                ),
                 style="yellow",
             )
         )
     for name, detail in snapshot.coordinator_errors.to_json_dict().items():
-        entries.append(Text(f"{name}: {detail}", style="red"))
+        entries.append(Text(sanitize_display(f"{name}: {detail}"), style="red"))
     columns = 2 if options.width >= 88 else 1
     grid = Table.grid(expand=True, padding=(0, 2))
     for _ in range(columns):
@@ -517,8 +532,10 @@ def _status_panel(
         body = Text()
         body.append("Stampede authority is unavailable. ", style="bold yellow")
         body.append(
-            f"{len(snapshot.unconfirmed_tail_events)} bounded live event(s) are visible; "
-            "job counts and completion are intentionally withheld.",
+            sanitize_display(
+                f"{len(snapshot.unconfirmed_tail_events)} bounded live event(s) are visible; "
+                "job counts and completion are intentionally withheld."
+            ),
             style="yellow",
         )
         return Panel(body, title="Workflow Status", padding=(0, 1))
@@ -539,41 +556,59 @@ def _status_panel(
         from Pegasus.monitor.diagnostics import redact_excerpt
 
         state.append("REMOVED", style="bold yellow")
-        state.append(f" ({redact_excerpt(removal_reason)})", style="yellow")
+        state.append(
+            sanitize_display(f" ({redact_excerpt(removal_reason)})"), style="yellow"
+        )
     elif snapshot.authoritative_complete and effective.workflow.status == 0:
         state.append("SUCCESS", style="bold green")
     elif snapshot.authoritative_complete:
         state.append("FAILED", style="bold red")
     else:
-        state.append(effective.workflow.state, style="bold cyan")
+        state.append(sanitize_display(effective.workflow.state), style="bold cyan")
     if removals:
-        state.append(f"  removed {len(removals)} (HTCondor)", style="yellow")
-    state.append(f"  {done}/{total} terminal", style="white")
+        state.append(
+            sanitize_display(f"  removed {len(removals)} (HTCondor)"), style="yellow"
+        )
+    state.append(sanitize_display(f"  {done}/{total} terminal"), style="white")
     active_counts = dict(counts)
     if removals:
         for job in jobs:
             if job.exec_job_id in removals:
                 active_counts[job.lifecycle] -= 1
-    state.append(f"  run {active_counts[Lifecycle.RUNNING]}", style="cyan")
-    state.append(f"  queued {active_counts[Lifecycle.QUEUED]}", style="yellow")
+    state.append(
+        sanitize_display(f"  run {active_counts[Lifecycle.RUNNING]}"), style="cyan"
+    )
+    state.append(
+        sanitize_display(f"  queued {active_counts[Lifecycle.QUEUED]}"), style="yellow"
+    )
     if active_counts[Lifecycle.HELD]:
-        state.append(f"  held {active_counts[Lifecycle.HELD]}", style="magenta")
+        state.append(
+            sanitize_display(f"  held {active_counts[Lifecycle.HELD]}"), style="magenta"
+        )
     if failed:
-        state.append(f"  failed {failed}", style="red")
+        state.append(sanitize_display(f"  failed {failed}"), style="red")
     if effective.pending_overlay_count:
         state.append(
-            f"  pending overlay {effective.pending_overlay_count}", style="yellow"
+            sanitize_display(f"  pending overlay {effective.pending_overlay_count}"),
+            style="yellow",
         )
     if analysis.stats is not None:
-        state.append(f"  elapsed {_duration(analysis.stats.wall_time)}", style="dim")
+        state.append(
+            sanitize_display(f"  elapsed {_duration(analysis.stats.wall_time)}"),
+            style="dim",
+        )
     provenance = Text()
-    provenance.append(f"workflow {effective.workflow.provenance.value}", style="dim")
     provenance.append(
-        "  jobs: "
-        + ", ".join(
-            f"{source.value}={provenance_counts[source]}"
-            for source in Provenance
-            if provenance_counts[source]
+        sanitize_display(f"workflow {effective.workflow.provenance.value}"), style="dim"
+    )
+    provenance.append(
+        sanitize_display(
+            "  jobs: "
+            + ", ".join(
+                f"{source.value}={provenance_counts[source]}"
+                for source in Provenance
+                if provenance_counts[source]
+            )
         ),
         style="dim",
     )
@@ -625,7 +660,7 @@ def _job_panel(
         state_lag |= observed is not None and observed is not job.lifecycle
         runtime = _job_runtime(job, attempt, snapshot.clock.epoch)
         values: list[RenderableType] = [
-            Text(job.exec_job_id, overflow="ellipsis"),
+            Text(sanitize_display(job.exec_job_id), overflow="ellipsis"),
         ]
         if wide:
             values.append(
@@ -634,7 +669,10 @@ def _job_panel(
                 else job.type_desc
             )
         values.append(
-            Text(job.lifecycle.value.upper(), style=_STATE_STYLE[job.lifecycle])
+            Text(
+                sanitize_display(job.lifecycle.value.upper()),
+                style=_STATE_STYLE[job.lifecycle],
+            )
         )
         exit_code = (
             "-"
@@ -658,7 +696,12 @@ def _job_panel(
             values.extend((request, host))
         if not compact:
             values.append(job.provenance.value.replace("_", " "))
-        table.add_row(*values)
+        table.add_row(
+            *(
+                Text(sanitize_display(value)) if isinstance(value, str) else value
+                for value in values
+            )
+        )
     if state_lag:
         table.caption = "Recorded = Pegasus lifecycle; Scheduler = HTCondor observation (may be newer)."
     title = f"Jobs ({len(jobs)} shown"
@@ -717,9 +760,9 @@ def _events_panel(snapshot: CoordinatorSnapshot, options: DisplayOptions) -> Pan
         style = "yellow" if provenance.startswith("LIVE") else "green"
         table.add_row(
             datetime.fromtimestamp(when).strftime("%H:%M:%S"),
-            target,
-            state,
-            Text(provenance, style=style),
+            Text(sanitize_display(target)),
+            Text(sanitize_display(state)),
+            Text(sanitize_display(provenance), style=style),
         )
     if not visible:
         table.add_row("-", "-", "No recent events", "-")
@@ -760,7 +803,9 @@ def _pool_panel(snapshot: CoordinatorSnapshot) -> Panel | None:
             if name in summary and summary[name] is not None:
                 if text:
                     text.append("  ")
-                text.append(f"{name.replace('_', ' ')} {summary[name]}")
+                text.append(
+                    sanitize_display(f"{name.replace('_', ' ')} {summary[name]}")
+                )
     return Panel(text, title="HTCondor Pool", padding=(0, 1))
 
 
@@ -805,7 +850,7 @@ def _bounded_lines(lines: list[Text], limit: int) -> list[Text]:
         return lines
     omitted = len(lines) - max(1, limit - 1)
     return lines[: max(1, limit - 1)] + [
-        Text(f"... {omitted} additional line(s) omitted", style="dim")
+        Text(sanitize_display(f"... {omitted} additional line(s) omitted"), style="dim")
     ]
 
 
@@ -819,25 +864,29 @@ def _diagnostics_panel(
         active = batch.stall.event.value == "stall_detected"
         lines.append(
             Text(
-                f"{'STALL' if active else 'STALL RESOLVED'}: {batch.stall.summary}",
+                sanitize_display(
+                    f"{'STALL' if active else 'STALL RESOLVED'}: {batch.stall.summary}"
+                ),
                 style="bold red" if active else "green",
             )
         )
     for finding in batch.findings[:20] if options.live else batch.findings:
         lines.append(
             Text(
-                f"{finding.exec_job_id}: {finding.summary} [{finding.code}]",
+                sanitize_display(
+                    f"{finding.exec_job_id}: {finding.summary} [{finding.code}]"
+                ),
                 style=("red" if finding.severity.value == "error" else "yellow"),
             )
         )
         lines.extend(
-            Text(f"  Suggestion: {suggestion}", style="cyan")
+            Text(sanitize_display(f"  Suggestion: {suggestion}"), style="cyan")
             for suggestion in (
                 finding.suggestions[:3] if options.live else finding.suggestions
             )
         )
     for error in batch.errors:
-        lines.append(Text(error, style="yellow"))
+        lines.append(Text(sanitize_display(error), style="yellow"))
     if not lines:
         lines.append(Text("No active diagnostic findings", style="dim"))
     return Panel(
@@ -866,8 +915,10 @@ def _why_idle_panel(
     for mismatch in analysis.requirement_mismatches:
         lines.append(
             Text(
-                f"{mismatch.exec_job_id}: {mismatch.reason} "
-                f"(requested memory {mismatch.requested_memory_mb} MiB)",
+                sanitize_display(
+                    f"{mismatch.exec_job_id}: {mismatch.reason} "
+                    f"(requested memory {mismatch.requested_memory_mb} MiB)"
+                ),
                 style="yellow",
             )
         )
@@ -878,25 +929,34 @@ def _why_idle_panel(
                     style="cyan",
                 )
             )
-    lines.extend(Text(item, style="yellow") for item in analysis.findings)
     lines.extend(
-        Text(f"Suggestion: {item}", style="cyan") for item in analysis.suggestions
+        Text(sanitize_display(item), style="yellow") for item in analysis.findings
+    )
+    lines.extend(
+        Text(sanitize_display(f"Suggestion: {item}"), style="cyan")
+        for item in analysis.suggestions
     )
 
     lines.append(
         Text(
-            f"queued {analysis.queued_jobs}  unsubmitted {analysis.unsubmitted_jobs}",
+            sanitize_display(
+                f"queued {analysis.queued_jobs}  unsubmitted {analysis.unsubmitted_jobs}"
+            ),
             style="bold",
         )
     )
     if analysis.idle_jobs:
         lines.append(
             Text(
-                "idle jobs: "
-                + ", ".join(
-                    f"{job.exec_job_id}({job.state.value})"
-                    for job in (
-                        analysis.idle_jobs[:8] if options.live else analysis.idle_jobs
+                sanitize_display(
+                    "idle jobs: "
+                    + ", ".join(
+                        f"{job.exec_job_id}({job.state.value})"
+                        for job in (
+                            analysis.idle_jobs[:8]
+                            if options.live
+                            else analysis.idle_jobs
+                        )
                     )
                 ),
                 style="dim",
@@ -917,34 +977,40 @@ def _why_idle_panel(
         if value is not None:
             capacity.append(f"{label} {value}")
     if capacity:
-        lines.append(Text("pool: " + "  ".join(capacity), style="dim"))
+        lines.append(
+            Text(sanitize_display("pool: " + "  ".join(capacity)), style="dim")
+        )
     if (
         analysis.negotiation_cycle_seconds is not None
         or analysis.negotiation_matches is not None
     ):
         lines.append(
             Text(
-                "negotiation: "
-                f"cycle {analysis.negotiation_cycle_seconds}s  "
-                f"matches {analysis.negotiation_matches}",
+                sanitize_display(
+                    "negotiation: "
+                    f"cycle {analysis.negotiation_cycle_seconds}s  "
+                    f"matches {analysis.negotiation_matches}"
+                ),
                 style="dim",
             )
         )
     if analysis.priority is not None:
         lines.append(
             Text(
-                f"priority {analysis.priority.principal}: "
-                f"effective {_priority_number(analysis.priority.effective_priority)}  "
-                f"real {_priority_number(analysis.priority.real_priority)}  "
-                f"used {analysis.priority.resources_used}  "
-                f"better users {analysis.priority.better_priority_users}",
+                sanitize_display(
+                    f"priority {analysis.priority.principal}: "
+                    f"effective {_priority_number(analysis.priority.effective_priority)}  "
+                    f"real {_priority_number(analysis.priority.real_priority)}  "
+                    f"used {analysis.priority.resources_used}  "
+                    f"better users {analysis.priority.better_priority_users}"
+                ),
                 style="dim",
             )
         )
     for source in analysis.sources:
         lines.append(
             Text(
-                f"{source.kind.value}: {source.disposition.value}",
+                sanitize_display(f"{source.kind.value}: {source.disposition.value}"),
                 style="dim",
             )
         )
@@ -1003,7 +1069,10 @@ def render_dashboard(
         panels.append(
             Panel(
                 Group(
-                    *(Text(error, style="yellow") for error in selected_analysis.errors)
+                    *(
+                        Text(sanitize_display(error), style="yellow")
+                        for error in selected_analysis.errors
+                    )
                 ),
                 title="Analysis Health",
                 padding=(0, 1),

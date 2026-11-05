@@ -763,3 +763,27 @@ def test_redirected_diagnose_defaults_to_once(tmp_path):
     )
     assert calls.coordinator_closed == 1
     assert SchedulerQueryKind.HISTORY in calls.scheduler_queries
+
+
+@pytest.mark.parametrize("mode", ["--remote", "--replay", "--serve"])
+def test_cli_errors_strip_terminal_controls(monkeypatch, mode):
+    def fail(*args, **kwargs):
+        raise RuntimeError("ssh/condor: café界\x1b]0;PWNED\x07\x9b2J")
+
+    monkeypatch.setattr(cli, "_run_replay_mode", fail)
+    monkeypatch.setattr(cli, "_run_remote_mode", fail)
+    monkeypatch.setattr(cli, "_run_server_launch_mode", fail)
+    output, errors = _Output(), _Output()
+    assert (
+        cli.main([mode, "host:file"], stdout=output, stderr=errors, runtime=object())
+        == 1
+    )
+    assert "café界" in errors.getvalue()
+    assert "\x1b" not in errors.getvalue()
+    assert "\x9b" not in errors.getvalue()
+
+
+def test_parser_errors_strip_terminal_controls(capsys):
+    with pytest.raises(SystemExit):
+        cli.build_parser().parse_args(["--evil\x1b[2J"])
+    assert "\x1b" not in capsys.readouterr().err

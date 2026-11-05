@@ -30,6 +30,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TextIO
 
+from Pegasus.monitor.terminal import sanitize_display
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -95,10 +97,15 @@ def _temporary_sigterm_handler(callback: Callable[[int, object | None], None]):
         signal.signal(signal.SIGTERM, previous)
 
 
+class _TerminalSafeParser(argparse.ArgumentParser):
+    def error(self, message: str) -> None:
+        super().error(sanitize_display(message))
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build exactly the version 1 parser without constructing any source."""
 
-    parser = argparse.ArgumentParser(
+    parser = _TerminalSafeParser(
         prog="pegasus-monitor",
         description=DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1587,7 +1594,7 @@ async def _run(
             )
             coordinator = _make_coordinator(args, location, runtime)
         except (OSError, TypeError, ValueError, RuntimeError) as error:
-            print(f"pegasus-monitor: {error}", file=stderr)
+            print(sanitize_display(f"pegasus-monitor: {error}"), file=stderr)
             return 1
 
         operation = asyncio.create_task(
@@ -1628,7 +1635,7 @@ async def _run(
             else:
                 result = await operation
         except (OSError, TypeError, ValueError, RuntimeError) as error:
-            print(f"pegasus-monitor: {error}", file=stderr)
+            print(sanitize_display(f"pegasus-monitor: {error}"), file=stderr)
             result = 1
         finally:
             if not operation.done():
@@ -1648,7 +1655,10 @@ async def _run(
                 )
                 if cancellation is not None:
                     raise cancellation
-                print(f"pegasus-monitor: {cleanup_errors[0]}", file=stderr)
+                print(
+                    sanitize_display(f"pegasus-monitor: {cleanup_errors[0]}"),
+                    file=stderr,
+                )
                 result = 1
         return result
 
@@ -1851,13 +1861,15 @@ def _run_server_launch_mode(
                 "server exited before recording a complete event log"
             )
         print(
-            f"pegasus-monitor server pid {result.pid} finished: "
-            f"workflow already complete; log {log_path}",
+            sanitize_display(
+                f"pegasus-monitor server pid {result.pid} finished: "
+                f"workflow already complete; log {log_path}"
+            ),
             file=stdout,
         )
         return 0
     print(
-        f"pegasus-monitor server pid {result.pid}; log {log_path}",
+        sanitize_display(f"pegasus-monitor server pid {result.pid}; log {log_path}"),
         file=stdout,
     )
     return 0
@@ -1915,7 +1927,9 @@ def _run_stop_server_mode(
     else:
         paths = _explicit_server_paths(Path(args.stop_server))
     result = stop_server(paths)
-    print(f"pegasus-monitor server: {result.status.value}", file=stdout)
+    print(
+        sanitize_display(f"pegasus-monitor server: {result.status.value}"), file=stdout
+    )
     return 0
 
 
@@ -1944,7 +1958,7 @@ def main(
         except KeyboardInterrupt:
             return 0
         except (OSError, TypeError, ValueError, RuntimeError) as error:
-            print(f"pegasus-monitor: {error}", file=errors)
+            print(sanitize_display(f"pegasus-monitor: {error}"), file=errors)
             return 1
 
     server_action = args.stop_server is not None or args.serve or args.serve_foreground
@@ -1969,7 +1983,7 @@ def main(
     except KeyboardInterrupt:
         return 0
     except (OSError, TypeError, ValueError, RuntimeError) as error:
-        print(f"pegasus-monitor: {error}", file=errors)
+        print(sanitize_display(f"pegasus-monitor: {error}"), file=errors)
         return 1
 
     try:

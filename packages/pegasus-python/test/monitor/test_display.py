@@ -731,3 +731,115 @@ def test_runtime_uses_current_execution_then_recorded_duration():
         attempt, end_time=Decimal(1100), runtime_seconds=Decimal("300.004")
     )
     assert _job_runtime(job, attempt, 1200) == Decimal("300.004")
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "label",
+        "owner",
+        "planner_version",
+        "job",
+        "site",
+        "transformation",
+        "diagnostic",
+        "error",
+    ],
+)
+def test_untrusted_display_fields_strip_terminal_controls(tmp_path, field):
+    from dataclasses import replace
+
+    from Pegasus.monitor.diagnostics import (
+        DiagnosticCategory,
+        DiagnosticFinding,
+        DiagnosticsBatch,
+    )
+    from Pegasus.monitor.models import DiagnosticSeverity
+
+    payload = "café界\x1b]0;PWNED\x07\x1b[2J\x9b31m\x00\x7f"
+    context = _context(tmp_path)
+    snapshot = _snapshot()
+    analysis = DisplayAnalysis()
+    job = snapshot.effective.jobs[0]
+    if field in {"label", "owner", "planner_version"}:
+        context = replace(context, **{field: payload})
+    elif field == "job":
+        job.exec_job_id = payload
+    elif field == "transformation":
+        job.transformations = (payload,)
+    elif field == "site":
+        job.current_attempt = "attempt"
+        job.attempts = (
+            SimpleNamespace(
+                identity="attempt",
+                site=payload,
+                exit_code=None,
+                maxrss_kb=None,
+                sched_id=None,
+            ),
+        )
+    elif field == "diagnostic":
+        analysis = DisplayAnalysis(
+            diagnostics=DiagnosticsBatch(
+                findings=(
+                    DiagnosticFinding(
+                        payload,
+                        DiagnosticCategory.HELD,
+                        DiagnosticSeverity.WARNING,
+                        payload,
+                        payload,
+                        (payload,),
+                        "db_confirmed",
+                        (),
+                    ),
+                )
+            )
+        )
+    else:
+        analysis = DisplayAnalysis(errors=(payload,))
+    text = render_text(
+        context,
+        snapshot,
+        analysis,
+        DisplayOptions(show_all_jobs=True, width=250, live=False),
+        width=250,
+    )
+    assert "café界" in text
+    assert not any(
+        ord(char) < 32 and char != "\n" or 127 <= ord(char) <= 159 for char in text
+    )
+
+
+@pytest.mark.parametrize("field", ["site", "transformation"])
+def test_untrusted_table_markup_cannot_generate_terminal_hyperlinks(tmp_path, field):
+    import io
+
+    from Pegasus.monitor.display import render_dashboard
+
+    snapshot = _snapshot()
+    job = snapshot.effective.jobs[0]
+    payload = "[link=https://untrusted.example]café界[/link]"
+    if field == "transformation":
+        job.transformations = (payload,)
+    else:
+        job.current_attempt = "attempt"
+        job.attempts = (
+            SimpleNamespace(
+                identity="attempt",
+                site=payload,
+                exit_code=None,
+                maxrss_kb=None,
+                sched_id=None,
+            ),
+        )
+    stream = io.StringIO()
+    console = Console(
+        file=stream, force_terminal=True, width=250, _environ={"TERM": "xterm-256color"}
+    )
+    console.print(
+        render_dashboard(
+            _context(tmp_path), snapshot, options=DisplayOptions(width=250)
+        )
+    )
+    assert "\x1b]8;" not in stream.getvalue()
+    assert "[link=" in stream.getvalue()

@@ -53,6 +53,7 @@ from Pegasus.monitor.scheduler_evidence import (
     scheduler_rows,
 )
 from Pegasus.monitor.stall_detector import StallDetector, StallEventKind, StallResult
+from Pegasus.monitor.terminal import sanitize_display
 from Pegasus.monitor.why_idle import IdleAnalysis, analyze_why_idle
 
 if TYPE_CHECKING:
@@ -84,8 +85,6 @@ _PRIVATE_KEY = re.compile(
     re.DOTALL,
 )
 _HOME_PATH = re.compile(r"(?:/Users|/home)/[^/\s]+/[^\s|,;]*")
-# C0/C1 controls (ESC, CSI, OSC, ...) from job output must not reach the terminal.
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 
 
 class DiagnosticCategory(str, Enum):
@@ -293,7 +292,7 @@ def redact_excerpt(value: str, maximum: int = MAX_EXCERPT_CHARS) -> str:
 
     if maximum < 4:
         raise ValueError("excerpt maximum must be at least four characters")
-    redacted = _CONTROL_CHARS.sub(" ", value)
+    redacted = sanitize_display(value)
     redacted = _PRIVATE_KEY.sub("<redacted-private-key>", redacted)
     redacted = _AUTH_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
     redacted = _NAMED_SECRET.sub(lambda match: f"{match.group(1)}<redacted>", redacted)
