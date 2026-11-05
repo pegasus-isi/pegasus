@@ -630,3 +630,15 @@ def test_midrun_stream_is_not_final_in_redirected_output(tmp_path, remote, once)
     ), errors.getvalue()
     assert "FINAL" not in output.getvalue()
     assert "ONCE" in output.getvalue()
+
+
+@pytest.mark.parametrize("target", ["--diagnose", "-workflow", "run0001"])
+def test_serve_relaunch_terminates_options_before_target(target):
+    parser = cli.build_parser()
+    args = parser.parse_args(["--serve", "--", target])
+    argv = cli._server_foreground_argv(args)
+    assert argv[-2:] == ["--", target]
+    child = parser.parse_args(argv[3:])
+    assert child.serve_foreground
+    assert child.target == target
+    assert not child.diagnose

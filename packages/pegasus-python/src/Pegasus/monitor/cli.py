@@ -1830,7 +1830,7 @@ def _server_foreground_argv(
         _append_option(argv, f"--{name.replace('_', '-')}", normalized)
     if args.log not in (None, "auto"):
         _append_option(argv, "--log", log_path or args.log)
-    argv.append(target or args.target)
+    argv.extend(("--", target or args.target))
     return argv
 
 
