@@ -134,6 +134,7 @@ class KickstartInfo:
     duration_seconds: float | None = None
     transformation: str = ""
     stderr_analysis: StderrAnalysis | None = None
+    scheduler_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -564,6 +565,10 @@ def parse_kickstart_output(
         _as_float(mainjob.get("duration")),
         redact_excerpt(str(data.get("transformation") or ""), 256),
         _analyze_stderr(stderr) if stderr else None,
+        str(data["jobids"]["condor"])
+        if isinstance(data.get("jobids"), Mapping)
+        and data["jobids"].get("condor") is not None
+        else None,
     )
     return KickstartReadResult(KickstartReadStatus.AVAILABLE, str(relative), info)
 
@@ -923,10 +928,82 @@ def _effective_inputs(
     )
 
 
+def _unfinished_stdout_paths(job: JobSnapshot) -> tuple[Path, ...]:
+    attempt = _current_attempt(job)
+    recorded = None if attempt is None else attempt.stdout_path
+    relative = _safe_relative_path(job.exec_job_id, recorded)
+    if relative is None:
+        return ()
+    rotated = (
+        (relative,) if recorded else (relative, Path(f"{job.exec_job_id}.out.000"))
+    )
+    unrotated = tuple(
+        Path(re.sub(r"\.out\.\d+$", ".out", str(path))) for path in rotated
+    )
+    # Unknown retry paths must never pick up a first-attempt .000 record.
+    if not recorded and len(job.attempts) > 1:
+        rotated = ()
+    return tuple(dict.fromkeys((*unrotated, *rotated)))
+
+
+def _unfinished_diagnostic(
+    job: JobSnapshot, finding: DiagnosticFinding, submit_dir: Path
+) -> DiagnosticFinding:
+    attempt = _current_attempt(job)
+    for path in _unfinished_stdout_paths(job):
+        kickstart = parse_kickstart_output(submit_dir, job.exec_job_id, str(path))
+        if kickstart.status is KickstartReadStatus.MISSING:
+            continue
+        info = kickstart.info
+        if info is None:
+            return finding
+        if path.suffix == ".out":
+            scheduler_id = None if attempt is None else attempt.scheduler_id
+            if (
+                info.scheduler_id is not None and info.scheduler_id != scheduler_id
+            ) or (
+                len(job.attempts) > 1
+                and (not scheduler_id or info.scheduler_id != scheduler_id)
+            ):
+                return finding
+        pegasuslite = None
+        if attempt is not None:
+            stderr_path = re.sub(r"\.out(\.\d+)?$", r".err\1", str(path))
+            stderr_job = replace(
+                job,
+                attempts=tuple(
+                    replace(item, stderr_path=stderr_path)
+                    if item.identity == attempt.identity
+                    else item
+                    for item in job.attempts
+                ),
+            )
+            pegasuslite = parse_pegasuslite_stderr(submit_dir, stderr_job)
+        exit_code = info.exit_code
+        if pegasuslite is not None and pegasuslite.tool_exit_code is not None:
+            exit_code = pegasuslite.tool_exit_code
+        if exit_code is None or exit_code == 0:
+            return finding
+        detail = _failure_diagnostic(job, kickstart, pegasuslite=pegasuslite)
+        return replace(
+            finding,
+            summary=f"Tool exited {exit_code} → {finding.summary}",
+            evidence=(
+                *finding.evidence,
+                *(
+                    item
+                    for item in detail.evidence
+                    if item.source in {SourceName.KICKSTART, SourceName.PEGASUS_LITE}
+                ),
+            ),
+        )
+    return finding
+
+
 def _diagnostic_inputs(
     job: JobSnapshot, hold_reason: str | None, submit_dir: Path | None
 ) -> tuple[object, ...]:
-    if job.lifecycle is Lifecycle.HELD:
+    if job.lifecycle is Lifecycle.HELD and submit_dir is None:
         return (job.provenance, hold_reason)
     attempt = _current_attempt(job)
     return (
@@ -939,6 +1016,19 @@ def _diagnostic_inputs(
         None if attempt is None else attempt.raw_wait_status,
         _kickstart_identity(job, submit_dir),
         _output_identities(submit_dir, _stderr_paths(job)) if submit_dir else None,
+        _output_identities(
+            submit_dir,
+            tuple(
+                path
+                for stdout in _unfinished_stdout_paths(job)
+                for path in (
+                    stdout,
+                    Path(re.sub(r"\.out(\.\d+)?$", r".err\1", str(stdout))),
+                )
+            ),
+        )
+        if submit_dir
+        else None,
     )
 
 
@@ -1112,6 +1202,15 @@ def collect_diagnostics(
                     codes.get(job.exec_job_id),
                 )
             )
+    if submit_dir is not None:
+        by_id = {job.exec_job_id: job for job in effective.jobs}
+        findings = [
+            _unfinished_diagnostic(by_id[finding.exec_job_id], finding, submit_dir)
+            if finding.category is DiagnosticCategory.HELD
+            or finding.code == "job_removed"
+            else finding
+            for finding in findings
+        ]
     for index, finding in enumerate(findings):
         if finding.exec_job_id in removals and finding.code != "job_removed":
             row = removals[finding.exec_job_id]
@@ -1265,7 +1364,14 @@ class DiagnosticsEngine:
                     continue
                 key = self._problem_key(job)
                 if key in refresh_keys:
-                    if job.exec_job_id not in removals and is_held(job, queue_rows):
+                    if (
+                        (
+                            submit_dir is None
+                            or finding.category is not DiagnosticCategory.HELD
+                        )
+                        and job.exec_job_id not in removals
+                        and is_held(job, queue_rows)
+                    ):
                         finding = _hold_diagnostic(
                             job,
                             reasons.get(job.exec_job_id),

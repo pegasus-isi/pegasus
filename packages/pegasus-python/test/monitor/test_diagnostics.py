@@ -1148,3 +1148,83 @@ def test_removal_retains_preceding_hold_for_same_attempt(state):
     assert finding.code == "job_removed"
     assert "preceding hold: Job exceeded its memory limit" in finding.summary
     assert any(item.code == "hold_reason" for item in finding.evidence)
+
+
+@pytest.mark.parametrize("removed", [False, True])
+@pytest.mark.parametrize("nested", [False, True])
+def test_unrotated_kickstart_leads_held_or_removed_diagnosis(tmp_path, removed, nested):
+    import yaml
+
+    directory = tmp_path / "00" / "00" if nested else tmp_path
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "job.out").write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "invocation": True,
+                    "jobids": {"condor": "10.0"},
+                    "mainjob": {"status": {"regular_exitcode": 1}},
+                    "files": {"stdout": {"data": "tool failed before creating output"}},
+                }
+            ]
+        )
+    )
+    result = _scheduler_observation(
+        3 if removed else 5,
+        kind=SchedulerQueryKind.HISTORY if removed else SchedulerQueryKind.QUEUE,
+    )
+    publication = replace(
+        _publication(1, _job("JOB_HELD")), scheduler_results=(result,)
+    )
+    finding = DiagnosticsEngine().analyze(publication, submit_dir=tmp_path).findings[0]
+    assert finding.summary.startswith("Tool exited 1 → ")
+    assert "expected file was not created" in finding.summary
+    assert finding.code == ("job_removed" if removed else "output_missing")
+    assert any(item.source is SourceName.KICKSTART for item in finding.evidence)
+
+
+def test_late_unrotated_output_refreshes_held_diagnosis(tmp_path):
+    engine = DiagnosticsEngine()
+    publication = replace(
+        _publication(1, _job("JOB_HELD")), scheduler_results=(_scheduler_observation(),)
+    )
+    assert (
+        "Tool exited"
+        not in engine.analyze(publication, submit_dir=tmp_path).findings[0].summary
+    )
+    _write_kickstart(tmp_path / "job.out", exit_code=1)
+    (tmp_path / "job.err").write_text(
+        "PegasusLite: exitcode 1, tool originally exited with exitcode 42\n"
+    )
+    finding = engine.analyze(
+        replace(publication, sequence=2), submit_dir=tmp_path
+    ).findings[0]
+    assert finding.summary.startswith("Tool exited 42 → ")
+
+
+def test_unrotated_output_from_previous_attempt_is_not_used(tmp_path):
+    import yaml
+
+    job = _job("JOB_HELD")
+    job = replace(
+        job,
+        attempts=(
+            JobAttempt(JobAttemptIdentity(1, 1, 2), scheduler_id="9.0"),
+            *job.attempts,
+        ),
+    )
+    path = tmp_path / "job.out"
+    path.write_text(
+        yaml.safe_dump(
+            [
+                {
+                    "jobids": {"condor": "9.0"},
+                    "mainjob": {"status": {"regular_exitcode": 42}},
+                }
+            ]
+        )
+    )
+    finding = collect_diagnostics(
+        _effective(job), (_scheduler_observation(),), submit_dir=tmp_path
+    )[0]
+    assert "42" not in finding.summary
