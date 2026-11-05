@@ -51,10 +51,9 @@ dependencies = [
     "sqlalchemy!=2.1.0",  # 2.1.0 sdist has duplicate extras in pyproject.toml; uv refuses to build it
     "pymysql",
     # runtime-prediction model is a pickled PyTorch network plus scikit-learn feature transformers
-    "torch>=2.14",
+    "torch=2.14",
     "scikit-learn>=1.0",
-    #"numpy>=1.21,<2.0",
-    "numpy>=1.21,<3.0",
+    "numpy>=2.0,<3.0",
     "pandas>=1.3",
     # Note: there is no more worker-runtime Python dependency here.
     # boto3 (S3) and globus-sdk (Globus Online) were both dropped once
