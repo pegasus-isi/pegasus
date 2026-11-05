@@ -7,6 +7,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
 
 from Pegasus.service import cache
+from Pegasus.service._config import load_user_config
 from Pegasus.service._encoder import PegasusJsonEncoder
 from Pegasus.service.base import BooleanConverter
 from Pegasus.service.filters import register_jinja2_filters
@@ -81,13 +82,6 @@ def run(host="localhost", port=5000, debug=True, verbose=logging.INFO, **kwargs)
     log.info("Exiting")
 
 
-def _load_user_config(app):
-    # Load user configuration
-    conf = os.path.expanduser("~/.pegasus/service.py")
-    if os.path.isfile(conf):
-        app.config.from_pyfile(conf)
-
-
 def create_app(config=None, env="development"):
     """Configure app."""
     # Environment
@@ -98,7 +92,7 @@ def create_app(config=None, env="development"):
     # Flask Configuration
     app.config.from_object("Pegasus.service.defaults")
     # app.config.from_object("Pegasus.service.config.%sConfig" % env.capitalize())
-    _load_user_config(app)
+    load_user_config(app)
     app.config.update(config or {})
 
     if "PEGASUS_ENV" in os.environ:
