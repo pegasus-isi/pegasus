@@ -96,9 +96,8 @@ PYTHON=$(pwd)/_build_venv/bin/python make build-worker dist-wheel
 %{buildroot}%{pegasus_venv}/bin/pip install dist/pegasus_wms-*.whl
 
 # Remove PyTorch's standalone test executable.
-find %{buildroot}%{pegasus_venv} -type f \
-    -path '*/site-packages/torch/bin/test_jit' -delete
-    
+find %{buildroot}%{pegasus_venv} -type f -path '*/site-packages/torch/bin/test_jit' -delete
+
 # The venv was created under %{buildroot}, so its generated script shebangs and
 # pyvenv.cfg embed that build-time prefix. Strip it so the paths are correct once
 # installed. (bin/python is a symlink to the system interpreter, already correct.)
