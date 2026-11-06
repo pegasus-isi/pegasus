@@ -62,17 +62,6 @@ dependencies = [
     # packages/pegasus-transfer/CLAUDE.md for the decision record.
 ]
 
-# need explicit source torch from a different index
-# so that we are NOT pulling any gpu dependencies.
-# runtime prediction only requires cpu
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[tool.uv.sources]
-torch = { index = "pytorch-cpu" }
-
 [project.urls]
 Documentation = "https://pegasus.isi.edu/documentation/"
 Repository = "https://github.com/pegasus-isi/pegasus"
