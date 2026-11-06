@@ -122,7 +122,11 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 	dh_installdeb
-	dh_shlibdeps -X/usr/lib/pegasus/venv/lib/python*/site-packages/scipy.libs/ -X/usr/lib/pegasus/venv/lib/python*/site-packages/torch/
+	# -X is a plain substring match on the file path (no globs). Skip the
+	# pip-wheel extension modules of scipy and torch and the libraries they
+	# vendor in scipy.libs/ and torch.libs/: those are not owned by any
+	# Debian package, so dpkg-shlibdeps cannot resolve them.
+	dh_shlibdeps -Xsite-packages/scipy -Xsite-packages/torch -Xsite-packages/nvidia
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
