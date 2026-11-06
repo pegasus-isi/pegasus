@@ -122,7 +122,7 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 	dh_installdeb
-	dh_shlibdeps -X/usr/lib/pegasus/venv
+	dh_shlibdeps -X/usr/lib/pegasus/venv/lib/python*/site-packages/scipy.libs/ -X/usr/lib/pegasus/venv/lib/python*/site-packages/torch/
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
