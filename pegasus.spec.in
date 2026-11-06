@@ -92,7 +92,7 @@ PYTHON=$(pwd)/_build_venv/bin/python make build-worker dist-wheel
 # globus-sdk, ...) cannot conflict with or shadow distro python packages.
 /usr/bin/python%{pegasus_python} -m venv %{buildroot}%{pegasus_venv}
 %{buildroot}%{pegasus_venv}/bin/pip install --upgrade pip
-%{buildroot}%{pegasus_venv}/bin/pip install --no-deps "torch>=2.14" --index-url https://download.pytorch.org/whl/cpu
+#%{buildroot}%{pegasus_venv}/bin/pip install --no-deps "torch>=2.14" --index-url https://download.pytorch.org/whl/cpu
 %{buildroot}%{pegasus_venv}/bin/pip install dist/pegasus_wms-*.whl
 
 # Remove PyTorch's standalone test executable.
