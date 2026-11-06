@@ -62,6 +62,20 @@ install: build
 	# boto3, globus-sdk, ...) cannot conflict with or shadow distro packages.
 	$(PYTHON3) -m venv debian/pegasus/usr/lib/pegasus/venv
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --upgrade pip
+
+	# Runtime prediction only needs the CPU build of torch. Install it from the
+	# PyTorch CPU index before the wheel, using the wheel's own torch requirement
+	# (release-tools/get-torch-requirement) so the two never drift; the wheel
+	# install then finds torch already satisfied instead of pulling PyPI's CUDA
+	# build (nvidia-*, triton: several GB of GPU libraries). --no-deps keeps the
+	# CPU index to torch alone; torch's own deps (sympy, networkx, ...) come from
+	# PyPI with the wheel.
+	torch_req=$$(debian/pegasus/usr/lib/pegasus/venv/bin/python \
+	    release-tools/get-torch-requirement dist/pegasus_wms-*.whl); \
+	if [ -n "$$torch_req" ]; then \
+	    debian/pegasus/usr/lib/pegasus/venv/bin/pip install --no-deps "$$torch_req" \
+	        --index-url https://download.pytorch.org/whl/cpu; \
+	fi
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install dist/pegasus_wms-*.whl
 
 	# The venv was created under debian/pegasus; strip that build-time prefix from
@@ -126,7 +140,7 @@ binary-arch: build install
 	# pip-wheel extension modules of scipy and torch and the libraries they
 	# vendor in scipy.libs/ and torch.libs/: those are not owned by any
 	# Debian package, so dpkg-shlibdeps cannot resolve them.
-	dh_shlibdeps -Xsite-packages/scipy -Xsite-packages/torch -Xsite-packages/nvidia
+	dh_shlibdeps -Xsite-packages/scipy -Xsite-packages/torch
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

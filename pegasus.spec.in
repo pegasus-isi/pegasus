@@ -95,25 +95,12 @@ PYTHON=$(pwd)/_build_venv/bin/python make build-worker dist-wheel
 
 # Runtime prediction only needs the CPU build of torch. Install it from the
 # PyTorch CPU index before the wheel, using the wheel's own torch requirement
-# so the two never drift; the wheel install then finds torch already satisfied
-# instead of pulling PyPI's CUDA build (nvidia-*, triton: several GB, and libs
-# whose build-host RPATHs fail check-rpaths). --no-deps keeps the CPU index to
-# torch alone; torch's own deps (sympy, networkx, ...) come from PyPI with the
-# wheel.
-torch_req=$(%{buildroot}%{pegasus_venv}/bin/python - dist/pegasus_wms-*.whl <<'EOF'
-import email.parser, re, sys, zipfile
-
-with zipfile.ZipFile(sys.argv[1]) as whl:
-    meta = next(n for n in whl.namelist() if n.endswith(".dist-info/METADATA"))
-    msg = email.parser.Parser().parsestr(whl.read(meta).decode())
-for req in msg.get_all("Requires-Dist") or []:
-    spec = req.split(";")[0].strip()
-    name = re.match(r"[A-Za-z0-9._-]+", spec).group(0)
-    if re.sub(r"[-_.]+", "-", name).lower() == "torch":
-        print(spec)
-        break
-EOF
-)
+# (release-tools/get-torch-requirement) so the two never drift; the wheel
+# install then finds torch already satisfied instead of pulling PyPI's CUDA
+# build (nvidia-*, triton: several GB, and libs whose build-host RPATHs fail
+# check-rpaths). --no-deps keeps the CPU index to torch alone; torch's own deps
+# (sympy, networkx, ...) come from PyPI with the wheel.
+torch_req=$(%{buildroot}%{pegasus_venv}/bin/python release-tools/get-torch-requirement dist/pegasus_wms-*.whl)
 if [ -n "$torch_req" ]; then
     %{buildroot}%{pegasus_venv}/bin/pip install --no-deps "$torch_req" \
         --index-url https://download.pytorch.org/whl/cpu

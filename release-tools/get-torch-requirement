@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""
+Print the torch requirement (e.g. "torch>=2.14") declared by a Pegasus wheel.
+
+The RPM and Debian builds use it to install the CPU-only build of torch from
+the PyTorch CPU index before installing the wheel, so the version always
+matches the wheel's own requirement and pip does not pull PyPI's CUDA build.
+Any environment marker (e.g. an extra) is dropped. Prints nothing if the wheel
+does not depend on torch.
+
+Usage: release-tools/get-torch-requirement dist/pegasus_wms-*.whl
+"""
+
+import email.parser
+import re
+import sys
+import zipfile
+
+
+def torch_requirement(wheel):
+    with zipfile.ZipFile(wheel) as whl:
+        meta = next(n for n in whl.namelist() if n.endswith(".dist-info/METADATA"))
+        msg = email.parser.Parser().parsestr(whl.read(meta).decode())
+
+    for req in msg.get_all("Requires-Dist") or []:
+        spec = req.split(";")[0].strip()
+        name = re.match(r"[A-Za-z0-9._-]+", spec).group(0)
+        if re.sub(r"[-_.]+", "-", name).lower() == "torch":
+            return spec
+    return None
+
+
+def main():
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} WHEEL", file=sys.stderr)
+        return 1
+
+    spec = torch_requirement(sys.argv[1])
+    if spec:
+        print(spec)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
