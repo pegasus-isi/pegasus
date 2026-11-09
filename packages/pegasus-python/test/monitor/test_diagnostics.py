@@ -537,8 +537,10 @@ def test_engine_problem_lookup_is_linear_at_scale(monkeypatch) -> None:
     # Compare growth rather than a fixed budget: line-tracing coverage on
     # Python < 3.12 roughly doubles CPU time but cancels out of the ratio.
     # Quadrupling the jobs costs ~4x when linear and ~16x when quadratic.
-    small = min(_engine_analyze_cpu_seconds(monkeypatch, 2000) for _ in range(2))
-    large = _engine_analyze_cpu_seconds(monkeypatch, 8000)
+    # Take the best of three at both sizes so one noisy run (GC, scheduling)
+    # cannot push a linear engine past the bound.
+    small = min(_engine_analyze_cpu_seconds(monkeypatch, 2000) for _ in range(3))
+    large = min(_engine_analyze_cpu_seconds(monkeypatch, 8000) for _ in range(3))
     assert large < 8 * max(small, 0.005)
 
 
