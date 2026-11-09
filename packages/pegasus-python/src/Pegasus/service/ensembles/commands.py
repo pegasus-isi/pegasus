@@ -1,7 +1,9 @@
 import argparse
+import getpass
 import json
 import logging
 import os
+import socket
 import sys
 import time
 from urllib import parse as urlparse
@@ -10,6 +12,15 @@ import requests
 
 from Pegasus.command import Command, CompoundCommand, LoggingCommand
 from Pegasus.db.ensembles import EnsembleStates, EnsembleWorkflowStates, TriggerType
+from Pegasus.service._config import (
+    em_runtime_path,
+    generate_token,
+    is_process_alive,
+    read_em_runtime,
+    remove_em_runtime,
+    validate_port,
+    write_em_runtime,
+)
 from Pegasus.service.ensembles import emapp, manager
 from Pegasus.service.ensembles.trigger import TriggerManager
 
@@ -18,34 +29,139 @@ log = logging.getLogger(__name__)
 EM_PORT_MIN = 7919
 EM_PORT_MAX = 65535
 
+EM_HOST = "127.0.0.1"
+CONFIG_FILE_HINT = "~/.pegasus/service.json"
+
+
+class EMClientError(Exception):
+    pass
+
 
 def _compute_em_port(uid: int) -> int:
     return EM_PORT_MIN + (uid % (EM_PORT_MAX - EM_PORT_MIN))
 
 
-EM_PORT = _compute_em_port(os.getuid())
+def _configured_port():
+    value = emapp.config.get("EM_PORT")
+    if value is None:
+        return None
+    return validate_port(value, source=f"EM_PORT in {CONFIG_FILE_HINT}")
+
+
+def resolve_server_port(cli_port=None) -> int:
+    """--port > EM_PORT > UID-derived."""
+    if cli_port is not None:
+        return validate_port(cli_port, source="--port")
+    port = _configured_port()
+    if port is not None:
+        return port
+    return _compute_em_port(os.getuid())
+
+
+def resolve_client_port(runtime=None) -> int:
+    """Runtime file > EM_PORT > UID-derived."""
+    if runtime and runtime.get("port") is not None:
+        try:
+            return validate_port(runtime["port"], source=str(em_runtime_path()))
+        except ValueError as e:
+            log.warning("%s", e)
+    port = _configured_port()
+    if port is not None:
+        return port
+    return _compute_em_port(os.getuid())
+
+
+def _port_available(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind((host, port))
+        except OSError:
+            return False
+    return True
 
 
 class EnsembleClientCommand(Command):
     def __init__(self):
         Command.__init__(self)
-        self.endpoint = f"http://127.0.0.1:{EM_PORT:d}/"
-        self.username = emapp.config["USERNAME"]
-        if not self.username:
-            raise Exception("Specify USERNAME in configuration")
-        self.password = emapp.config["PASSWORD"]
-        if not self.password:
-            raise Exception("Specify PASSWORD in configuration")
+        self.port = None
+        self.endpoint = None
+        self.auth = None
+
+    def connect(self):
+        """Find the server and credentials; lazy so --help works without a server."""
+        if self.endpoint is None:
+            runtime = read_em_runtime()
+            auth = self._credentials(runtime)
+            self.port = resolve_client_port(runtime)
+            self.endpoint = f"http://{EM_HOST}:{self.port:d}/"
+            self.auth = auth
+
+    def _credentials(self, runtime):
+        authclass = emapp.config.get("AUTHENTICATION")
+
+        if authclass == "LocalTokenAuthentication":
+            token = (runtime or {}).get("token")
+            if not token:
+                raise EMClientError(
+                    f"Ensemble manager is not running (no access token in "
+                    f"{em_runtime_path()}). Start it with `pegasus em server`."
+                )
+            return (getpass.getuser(), token)
+
+        if authclass == "NoAuthentication":
+            return None
+
+        username = emapp.config.get("USERNAME")
+        if not username:
+            raise EMClientError(
+                f"Specify USERNAME in {CONFIG_FILE_HINT} "
+                f"(required by AUTHENTICATION={authclass})"
+            )
+        password = emapp.config.get("PASSWORD")
+        if not password:
+            raise EMClientError(
+                f"Specify PASSWORD in {CONFIG_FILE_HINT} "
+                f"(required by AUTHENTICATION={authclass})"
+            )
+        return (username, password)
 
     def _request(self, method, path, **kwargs):
+        try:
+            self.connect()
+        except (EMClientError, ValueError) as e:
+            print("ERROR:", e)
+            sys.exit(1)
+
         headers = {"accept": "application/json"}
-        defaults = {"auth": (self.username, self.password), "headers": headers}
+        defaults = {"auth": self.auth, "headers": headers}
         defaults.update(kwargs)
         url = urlparse.urljoin(self.endpoint, path)
-        response = requests.request(method, url, **defaults)
+        try:
+            response = requests.request(method, url, **defaults)
+        except requests.exceptions.ConnectionError:
+            print(
+                f"ERROR: Unable to connect to the ensemble manager at {self.endpoint}. "
+                "Is `pegasus em server` running on port "
+                f"{self.port}?"
+            )
+            sys.exit(1)
 
         if 200 <= response.status_code < 300:
             return response
+
+        if response.status_code == 401:
+            if emapp.config.get("AUTHENTICATION") == "LocalTokenAuthentication":
+                print(
+                    "ERROR: The ensemble manager rejected the access token in "
+                    f"{em_runtime_path()}. Restart `pegasus em server` and retry."
+                )
+            else:
+                print(
+                    "ERROR: The ensemble manager rejected the credentials. Check "
+                    f"USERNAME and PASSWORD in {CONFIG_FILE_HINT}."
+                )
+            sys.exit(1)
 
         try:
             result = response.json()
@@ -53,7 +169,7 @@ class EnsembleClientCommand(Command):
         except Exception:
             print("ERROR:", response.text)
 
-        exit(1)
+        sys.exit(1)
 
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
@@ -88,36 +204,100 @@ class ServerCommand(LoggingCommand):
             default=None,
             help="Enable debugging",
         )
+        self.parser.add_option(
+            "-p",
+            "--port",
+            action="store",
+            type="int",
+            dest="port",
+            default=None,
+            help=(
+                "Port to listen on (127.0.0.1 only). Overrides EM_PORT in "
+                f"{CONFIG_FILE_HINT}; default is derived from your UID "
+                f"({_compute_em_port(os.getuid())})"
+            ),
+        )
 
     def run(self):
+        if os.getuid() == 0:
+            log.fatal("The ensemble manager should not be run as root")
+            sys.exit(1)
+
         if self.options.debug:
             emapp.config.update(DEBUG=True)
             logging.getLogger().setLevel(logging.DEBUG)
 
-        # We only start the ensemble manager if we are not debugging
-        # or if we are debugging and Werkzeug is restarting. This
-        # prevents us from having two ensemble managers running in
-        # the debug case.
+        try:
+            port = resolve_server_port(self.options.port)
+        except ValueError as e:
+            log.fatal("%s", e)
+            sys.exit(1)
+
+        # With the debug reloader, the parent writes the runtime file and the
+        # child (WERKZEUG_RUN_MAIN) reuses its token.
         WERKZEUG_RUN_MAIN = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
-        DEBUG = emapp.config.get("DEBUG", False)
-        if (not DEBUG) or WERKZEUG_RUN_MAIN:
-            # Make sure the environment is OK for the ensemble manager
-            try:
-                manager.check_environment()
-            except manager.EMError as e:
-                log.warning(f"{e.message}: Ensemble manager disabled")
-            else:
-                em_mgr = manager.EnsembleManager()
-                em_mgr.start()
+        use_token = emapp.config.get("AUTHENTICATION") == "LocalTokenAuthentication"
+        owner = not WERKZEUG_RUN_MAIN
 
-                trigger_mgr = TriggerManager()
-                trigger_mgr.start()
+        if owner:
+            existing = read_em_runtime()
+            if (
+                existing
+                and existing.get("pid") != os.getpid()
+                and is_process_alive(existing.get("pid"))
+            ):
+                log.fatal(
+                    "An ensemble manager is already running (pid %s, port %s). "
+                    "Stop it first.",
+                    existing.get("pid"),
+                    existing.get("port"),
+                )
+                sys.exit(1)
 
-        if os.getuid() == 0:
-            log.fatal("The ensemble manager should not be run as root")
-            exit(1)
+            if not _port_available(EM_HOST, port):
+                log.fatal(
+                    "Port %d is in use; choose another with --port or EM_PORT in %s",
+                    port,
+                    CONFIG_FILE_HINT,
+                )
+                sys.exit(1)
 
-        emapp.run(port=EM_PORT, host="127.0.0.1")
+            token = generate_token() if use_token else None
+            path = write_em_runtime(port, token)
+            log.info("Wrote ensemble manager runtime file %s", path)
+        else:
+            runtime = read_em_runtime() or {}
+            token = runtime.get("token")
+            if use_token and not token:
+                log.fatal("Missing access token in %s", em_runtime_path())
+                sys.exit(1)
+
+        emapp.config["EM_TOKEN"] = token
+
+        try:
+            # We only start the ensemble manager if we are not debugging
+            # or if we are debugging and Werkzeug is restarting. This
+            # prevents us from having two ensemble managers running in
+            # the debug case.
+            DEBUG = emapp.config.get("DEBUG", False)
+            if (not DEBUG) or WERKZEUG_RUN_MAIN:
+                # Make sure the environment is OK for the ensemble manager
+                try:
+                    manager.check_environment()
+                except manager.EMError as e:
+                    log.warning(f"{e}: Ensemble manager disabled")
+                else:
+                    em_mgr = manager.EnsembleManager()
+                    em_mgr.start()
+
+                    trigger_mgr = TriggerManager()
+                    trigger_mgr.start()
+
+            log.info("Ensemble manager listening on http://%s:%d/", EM_HOST, port)
+            emapp.run(port=port, host=EM_HOST)
+        finally:
+            if owner:
+                remove_em_runtime()
 
         log.info("Exiting")
 

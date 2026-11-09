@@ -21,7 +21,8 @@ DEBUG = False
 # The secret key used by Flask to encrypt session keys
 SECRET_KEY = os.urandom(24)
 
-# Authentication method to use (NoAuthentication or PAMAuthentication)
+# Authentication method (NoAuthentication or PAMAuthentication).
+# The ensemble manager defaults to LocalTokenAuthentication.
 AUTHENTICATION = "PAMAuthentication"
 PROCESS_SWITCHING = True
 
@@ -43,6 +44,9 @@ USERNAME = ""
 PASSWORD = ""
 
 # ENSEMBLE MANAGER CONFIGURATION
+
+# Ensemble manager port (default: derived from UID)
+# EM_PORT = 8000
 
 # Workflow processing interval in seconds
 EM_INTERVAL = 60

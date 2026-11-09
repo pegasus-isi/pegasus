@@ -10,9 +10,19 @@ Service Administration
 Service Configuration
 ---------------------
 
-Create a file called service.py in $HOME/.pegasus OR modify the
-lib/pegasus/python/Pegasus/service/defaults.py file. The service can be
-configured using the properties described below.
+The service can optionally be configured by creating a JSON file called
+``service.json`` in ``$HOME/.pegasus``, using the properties described below.
+Property names must be UPPERCASE. For example:
+
+::
+
+   {
+       "AUTHENTICATION": "PAMAuthentication",
+       "PROCESS_SWITCHING": false,
+       "ADMIN_USERS": ["alice", "bob"]
+   }
+
+If the file does not exist, the defaults below are used.
 
 .. table:: Pegasus Service Configuration Options
 
@@ -30,10 +40,13 @@ configured using the properties described below.
    PEGASUS_SERVICE_URL_PREFIX None              Adds a prefix to the default base URL ie `/<PEGASUS_SERVICE_URL_PREFIX>/`.
    USERNAME                   ''                The username which pegasus-em client uses to connect to the pegasus-em server.
    PASSWORD                   ''                The password which pegasus-em client uses to connect to the pegasus-em server.
+   EM_PORT                    UID-derived       EM_PORT specifies the port on which the ensemble manager (pegasus-em) listens on 127.0.0.1, and to which the pegasus-em client connects. By default it is derived from the user's UID. `pegasus-em server --port` takes precedence.
    ========================== ================= ======================================================================================================================================================================================================================================================================================================================================================================================================================================
 
-All clients that connect to the web API will require the USERNAME and
-PASSWORD settings in the configuration file.
+Clients that connect to the web API using PAMAuthentication require the
+USERNAME and PASSWORD settings in the configuration file. The ensemble manager
+defaults to LocalTokenAuthentication, which needs no credentials; see
+:ref:`cli-pegasus-em`.
 
 Running the Service
 -------------------

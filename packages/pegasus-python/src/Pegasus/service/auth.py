@@ -3,13 +3,15 @@ Authentication backends for the Pegasus service.
 
 :class:`NoAuthentication` is used in single-user deployments; :class:`PAMAuthentication`
 delegates to the system PAM stack for multi-user or remote deployments.
+:class:`LocalTokenAuthentication` (ensemble manager default) checks a per-server token.
 """
 
+import hmac
 import logging
 import os
 
 import pamela
-from flask import g
+from flask import current_app, g
 
 from Pegasus import user
 
@@ -62,3 +64,18 @@ class PAMAuthentication(BaseAuthentication):
 
     def get_user(self):
         return user.get_user_by_username(self.username)
+
+
+class LocalTokenAuthentication(BaseAuthentication):
+    """Checks the per-server token (sent as the password); acts as the service owner."""
+
+    def authenticate(self):
+        expected = current_app.config.get("EM_TOKEN")
+        if not expected or not self.password:
+            return False
+        return hmac.compare_digest(
+            self.password.encode("utf-8"), expected.encode("utf-8")
+        )
+
+    def get_user(self):
+        return user.get_user_by_uid(os.getuid())
