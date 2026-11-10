@@ -23,6 +23,7 @@ stages:
   - lint
   - test
   - build
+  - packaging-tests
   - deploy
   - release
   - e2e-tests
@@ -365,6 +366,56 @@ Docs:
       - doc/sphinx/warn.log
   dependencies: []
   tags:
+    - docker
+
+# Test packaging
+#  - use clean upstream images here, not our build envs
+
+RPMs:
+  <<: *retry-and-timeout
+  stage: packaging-tests
+  parallel:
+    matrix:
+      - ARCH:
+          - x86_64_v3
+          - arm64
+  image: almalinux:10
+  needs:
+    - "RHEL_v3: [x86_64_v3, rhel_10]"
+    - "RHEL_v3: [arm64, rhel_10]"
+  script:
+    - ls -l dist/rpm/
+    - dnf -y install dnf-plugins-core epel-release
+    - dnf config-manager --set-enabled crb
+    - dnf -y install ./dist/rpm/pegasus-*.el10.$(uname -m).rpm
+    - pegasus-version
+    - pegasus-kickstart /bin/true > /dev/null
+  tags:
+    - ${ARCH}
+    - docker
+
+DEBs:
+  <<: *retry-and-timeout
+  stage: packaging-tests
+  parallel:
+    matrix:
+      - ARCH:
+          - x86_64
+          - arm64
+  image: debian:trixie
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+  needs:
+    - "Debian: [x86_64, deb_13]"
+    - "Debian: [arm64, deb_13]"
+  script:
+    - ls -l dist/deb/
+    - apt-get -y update
+    - apt-get -y install ./dist/deb/pegasus_*debian13_$(dpkg --print-architecture).deb
+    - pegasus-version
+    - pegasus-kickstart /bin/true > /dev/null
+  tags:
+    - ${ARCH}
     - docker
 
 # Deploy packages
