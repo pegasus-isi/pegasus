@@ -443,7 +443,10 @@ def _load_display_context(location: object, runtime: RuntimeComponents) -> objec
     braindump_path = Path(location.braindump_path)
     with braindump_path.open("r", encoding="utf-8") as stream:
         data = braindump.load(stream)
-    dag_stem = Path(location.dag_name).name.removesuffix(".dag")
+    # The locator's dag_name is the root's, which names the shared database.
+    # A sub-workflow is presented under the DAG of its own braindump.
+    dag_name = str(data.dag or location.dag_name)
+    dag_stem = Path(dag_name).name.removesuffix(".dag")
     return runtime.display_context_type(
         label=str(data.dax_label or data.pegasus_wf_name or dag_stem),
         owner=str(data.user) if data.user else None,
@@ -460,7 +463,7 @@ def _load_display_context(location: object, runtime: RuntimeComponents) -> objec
         ),
         wf_uuid=location.workflow.wf_uuid,
         root_wf_uuid=location.workflow.root_wf_uuid,
-        dag_name=str(location.dag_name),
+        dag_name=dag_name,
     )
 
 
@@ -1855,25 +1858,44 @@ def _json_requested(argv: list[str] | None) -> bool:
 
 
 def _json_usage_error(
-    parser: _TerminalSafeParser, argv: list[str] | None, stdout: TextIO
+    parser: _TerminalSafeParser,
+    argv: list[str] | None,
+    stdout: TextIO,
+    args: argparse.Namespace | None = None,
 ) -> None:
-    """Report an argparse failure as a document; argparse still exits 2."""
+    """Report an argparse failure as a document; argparse still exits 2.
 
-    from Pegasus.monitor.json_output import JsonEmitter, envelope
+    ``args`` is the parsed command line when the arguments parsed and only
+    their combination was rejected; the document then names what was asked.
+    When parsing itself failed, the target cannot be told from an option value.
+    """
 
-    values = sys.argv[1:] if argv is None else argv
-    modes = tuple(
-        name
-        for name, flag in (
-            ("once", "--once"),
-            ("diagnose", "--diagnose"),
-            ("why_idle", "--why-idle"),
+    from Pegasus.monitor.json_output import JsonEmitter, envelope, requested_modes
+
+    if args is not None:
+        modes = requested_modes(args)
+        origin = "replay" if args.replay else "remote" if args.remote else "live"
+        target = args.replay or args.remote or args.target
+    else:
+        values = sys.argv[1:] if argv is None else argv
+        modes = tuple(
+            name
+            for name, flag in (
+                ("once", "--once"),
+                ("diagnose", "--diagnose"),
+                ("why_idle", "--why-idle"),
+            )
+            if flag in values
         )
-        if flag in values
-    )
+        origin, target = "live", None
     emitter = JsonEmitter(
         stdout,
-        envelope(monitor_version=_version(), modes=modes, origin="live", target=None),
+        envelope(
+            monitor_version=_version(),
+            modes=modes,
+            origin=origin,
+            target=None if target is None else str(target),
+        ),
     )
     emitter.fail("usage_error", parser.usage_error or "invalid arguments")
     emitter.emit(2)
@@ -2211,12 +2233,13 @@ def main(
     parser = build_parser()
     output = stdout or sys.stdout
     errors = stderr or sys.stderr
+    args = None
     try:
         args = parser.parse_args(argv)
         _validate_mode_args(parser, args)
     except SystemExit as stop:
         if stop.code == 2 and _json_requested(argv):
-            _json_usage_error(parser, argv, output)
+            _json_usage_error(parser, argv, output, args)
         raise
 
     emitter = None

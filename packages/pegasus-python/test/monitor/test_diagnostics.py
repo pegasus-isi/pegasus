@@ -1230,3 +1230,65 @@ def test_unrotated_output_from_previous_attempt_is_not_used(tmp_path):
         _effective(job), (_scheduler_observation(),), submit_dir=tmp_path
     )[0]
     assert "42" not in finding.summary
+
+
+def _held_with_recorded_reason(reason: str | None) -> JobSnapshot:
+    job = _job("JOB_HELD")
+    return replace(job, transition=replace(job.transition, reason=reason))
+
+
+def test_recorded_hold_reason_classifies_the_job_without_the_queue() -> None:
+    # Trial sample diagnose-held-nocondor.json: Stampede's jobstate row carries
+    # " via condor_hold (by user submit)" while --no-condor reported held_unknown.
+    job = _held_with_recorded_reason(" via condor_hold (by user submit)")
+
+    finding = collect_diagnostics(_effective(job), ())[0]
+
+    assert finding.code == "user_hold"
+    assert finding.summary == (
+        "Job was held by a user: via condor_hold (by user submit)"
+    )
+    reason = finding.evidence[1]
+    assert reason.source is SourceName.STAMPEDE
+    assert reason.code == "hold_reason"
+    assert reason.payload.to_json_dict() == {
+        "reason_excerpt": "via condor_hold (by user submit)",
+        "hold_reason_code": None,
+    }
+
+
+def test_engine_classifies_a_recorded_hold_reason_without_the_queue() -> None:
+    job = _held_with_recorded_reason(" via condor_hold (by user submit)")
+
+    batch = DiagnosticsEngine().analyze(_publication(1, job))
+
+    assert [finding.code for finding in batch.findings] == ["user_hold"]
+    assert batch.findings[0].evidence[1].source is SourceName.STAMPEDE
+
+
+def test_queue_hold_reason_still_wins_over_the_recorded_one() -> None:
+    job = _held_with_recorded_reason("Error from slot1: memory usage exceeded")
+
+    finding = collect_diagnostics(
+        _effective(job), (_queue("via condor_hold (by user submit)"),)
+    )[0]
+
+    assert finding.code == "user_hold"
+    assert finding.evidence[1].source is SourceName.CONDOR_QUEUE
+
+
+def test_missing_hold_reason_never_cites_an_unqueried_queue() -> None:
+    job = _held_with_recorded_reason(None)
+
+    unqueried = collect_diagnostics(_effective(job), ())[0].evidence[1]
+    queried = collect_diagnostics(_effective(job), (_queue(""),))[0].evidence[1]
+
+    assert unqueried.code == queried.code == "hold_reason_unavailable"
+    assert unqueried.source is SourceName.STAMPEDE
+    assert unqueried.payload.to_json_dict()["reason_excerpt"] == (
+        "No hold reason recorded; the HTCondor queue was not queried"
+    )
+    assert queried.source is SourceName.CONDOR_QUEUE
+    assert queried.payload.to_json_dict()["reason_excerpt"] == (
+        "No hold reason available"
+    )

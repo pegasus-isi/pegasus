@@ -1003,3 +1003,86 @@ def test_text_one_shot_output_is_unchanged_by_the_json_seam(tmp_path):
     assert cli.main(["--once", str(tmp_path)], runtime=runtime, stdout=output) == 0
     assert output.getvalue() == "rendered\n"
     assert calls.documents == []
+
+
+def test_sub_workflow_context_names_its_own_dag_not_the_root_one(tmp_path):
+    # Trial sample once-hier-sub.json: workflow.dag_name was pm-root-0.dag for a
+    # sub-workflow whose braindump says pm-inner-0.dag.
+    from Pegasus.monitor.locator import WorkflowLocator
+
+    def braindump(directory, wf_uuid, dag, label):
+        directory.mkdir(parents=True)
+        (directory / "braindump.yml").write_text(
+            json.dumps(
+                {
+                    "wf_uuid": wf_uuid,
+                    "root_wf_uuid": "root-uuid",
+                    "submit_dir": str(directory),
+                    "basedir": str(tmp_path),
+                    "dag": dag,
+                    "dax_label": label,
+                    "user": "submit",
+                    "planner_version": "6.0.0.dev0",
+                    "jsd": "jobstate.log",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    root = tmp_path / "run0002"
+    child = root / "00" / "00" / "pm-inner_subwf.000"
+    braindump(root, "root-uuid", "pm-root-0.dag", "pm-root")
+    braindump(child, "child-uuid", "pm-inner-0.dag", "pm-inner")
+    runtime = cli._load_runtime()
+
+    sub_location = WorkflowLocator().locate(child)
+    sub = cli._load_display_context(sub_location, runtime)
+    top = cli._load_display_context(WorkflowLocator().locate(root), runtime)
+
+    assert (sub.wf_uuid, sub.root_wf_uuid) == ("child-uuid", "root-uuid")
+    assert sub.dag_name == "pm-inner-0.dag"
+    assert sub.label == "pm-inner"
+    assert sub.submit_dir == child.resolve()
+    assert sub.root_submit_dir == root.resolve()
+    # The shared Stampede database is still named after the root DAG.
+    assert sub_location.database_path == root.resolve() / "pm-root-0.stampede.db"
+    assert top.dag_name == "pm-root-0.dag"
+
+
+@pytest.mark.parametrize(
+    ("arguments", "modes", "origin", "target"),
+    [
+        # Trial sample error-usage-json-serve.json: target was null.
+        (["--json", "--serve", "run0001"], [], "live", "run0001"),
+        (["--once", "--json", "--serve", "run0001"], ["once"], "live", "run0001"),
+        (
+            ["--json", "--dia", "--why", "run0001", "--stop-server"],
+            ["diagnose", "why_idle"],
+            "live",
+            "run0001",
+        ),
+        (
+            ["--json", "--once", "--replay", "events.jsonl", "--log", "x.jsonl"],
+            ["once"],
+            "replay",
+            "events.jsonl",
+        ),
+        # Nothing parsed: the target cannot be told from an option value.
+        (["--json", "--once", "--interval", "nan", "run0001"], ["once"], "live", None),
+    ],
+)
+def test_json_usage_error_names_the_parsed_target_and_modes(
+    arguments, modes, origin, target, capsys
+):
+    output = _Output()
+
+    with pytest.raises(SystemExit) as raised:
+        cli.main(arguments, stdout=output)
+
+    capsys.readouterr()
+    assert raised.value.code == 2
+    document = _document(output)
+    assert document["error"]["code"] == "usage_error"
+    assert document["modes"] == modes
+    assert document["origin"] == origin
+    assert document["target"] == target

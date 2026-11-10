@@ -81,6 +81,8 @@
       "authoritative_complete",
       "removal_reason",
       "job_counts",
+      "job_counts_source",
+      "observed_job_counts",
       "pending_tail_events"
     ],
     "job_counts": [
@@ -95,6 +97,19 @@
       "succeeded",
       "failed",
       "other"
+    ],
+    "observed_job_counts": [
+      "total",
+      "unsubmitted",
+      "pre",
+      "queued",
+      "running",
+      "held",
+      "post",
+      "succeeded",
+      "failed",
+      "other",
+      "removed"
     ],
     "snapshot": [
       "epoch",
@@ -149,7 +164,9 @@
       "last_progress_epoch",
       "seconds_since_progress",
       "job_counts",
-      "thresholds"
+      "thresholds",
+      "observed_job_counts",
+      "scheduler"
     ],
     "stall_job_counts": [
       "total",
@@ -165,6 +182,11 @@
       "running_plateau_seconds",
       "idle_threshold_seconds",
       "startup_grace_seconds"
+    ],
+    "stall_scheduler": [
+      "queue_queried",
+      "dagman_in_queue",
+      "jobs_in_queue"
     ],
     "why_idle": [
       "available",
@@ -280,6 +302,10 @@
     "failed",
     "other"
   ],
+  "job_counts_sources": {
+    "job_counts": "stampede: the lifecycle Stampede records for each job. It trails HTCondor by the delay with which pegasus-monitord records state and keeps the last recorded state of a job that was removed.",
+    "observed_job_counts": "job_counts after applying a healthy condor_queue or condor_history result, when sources[] shows one was queried: an unfinished job takes the lifecycle the queue shows, and a job HTCondor removed, or that was unfinished when its workflow ended, is counted as removed. Without a queried queue only the workflow-end rule applies."
+  },
   "finding_categories": [
     "held",
     "failed"
@@ -318,20 +344,35 @@
     "all_held",
     "no_semantic_progress",
     "running_plateau",
-    "idle_too_long"
+    "idle_too_long",
+    "no_scheduler_activity"
+  ],
+  "stall_kinds_live_only": [
+    "running_plateau"
+  ],
+  "stall_kinds_one_shot_only": [
+    "no_scheduler_activity"
+  ],
+  "stall_rules": [
+    "Lifecycles are those of observed_job_counts. 'In flight' means pre, queued, running, held or post; 'unfinished' means not succeeded and not failed.",
+    "no_scheduler_activity: jobs are unfinished and either a queried queue shows neither DAGMan nor any job of the workflow, or no job is in flight; and seconds_since_progress >= no_progress_seconds. stall.scheduler.dagman_in_queue is false when a queried queue shows no DAGMan job.",
+    "all_held: at least one job is in flight and every job in flight is held. Unsubmitted jobs do not prevent it. No time threshold.",
+    "jobs_running (not stalled): a job is running. One sample cannot tell a long job from a stuck one, so running_plateau is never reported here.",
+    "idle_too_long, no_semantic_progress: jobs are queued and none is running, for idle_threshold_seconds or no_progress_seconds, as in the live detector."
   ],
   "stall_reasons": {
     "stalled": [
       "all_held",
       "no_semantic_progress",
-      "running_plateau",
-      "idle_too_long"
+      "idle_too_long",
+      "no_scheduler_activity"
     ],
     "not_stalled": [
       "workflow_complete",
       "no_jobs_submitted",
       "startup_grace",
-      "within_thresholds"
+      "within_thresholds",
+      "jobs_running"
     ],
     "not_assessed": [
       "authoritative_snapshot_unavailable",

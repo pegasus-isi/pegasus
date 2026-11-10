@@ -34,6 +34,7 @@ from Pegasus.monitor.scheduler_evidence import (
     hold_reasons,
     is_held,
     observed_lifecycle,
+    recorded_hold_reason,
     removed_jobs,
     scheduler_rows,
 )
@@ -87,6 +88,12 @@ class IdleJob:
         }
 
 
+MAX_REPORTED_MISMATCHES = 1000
+SUGGEST_REDUCE_REQUEST = (
+    "Reduce the request or use a resource with sufficient per-slot capacity."
+)
+
+
 @dataclass(frozen=True, slots=True)
 class ResourceMismatch:
     exec_job_id: str
@@ -96,6 +103,21 @@ class ResourceMismatch:
     requested_gpus: int | None
     reason: str
     requirements: str | None = None
+
+    @property
+    def finding(self) -> str:
+        """The line the text report prints for this job."""
+
+        return (
+            f"{self.exec_job_id}: {self.reason} "
+            f"(requested memory {self.requested_memory_mb} MiB)"
+        )
+
+    @property
+    def suggestion(self) -> str | None:
+        if self.reason == "exceeds_single_slot_capacity":
+            return SUGGEST_REDUCE_REQUEST
+        return None
 
     def to_json_dict(self) -> dict[str, object]:
         return {
@@ -152,6 +174,21 @@ class IdleAnalysis:
     suggestions: tuple[str, ...]
     sources: tuple[SourceAssessment, ...]
 
+    @property
+    def report_findings(self) -> tuple[str, ...]:
+        """Every finding line of the text report: per-job mismatches first."""
+
+        listed = self.requirement_mismatches[:MAX_REPORTED_MISMATCHES]
+        return (*(item.finding for item in listed), *self.findings)
+
+    @property
+    def report_suggestions(self) -> tuple[str, ...]:
+        """Every distinct suggestion of the text report, in its order."""
+
+        listed = self.requirement_mismatches[:MAX_REPORTED_MISMATCHES]
+        mismatch = (item.suggestion for item in listed if item.suggestion)
+        return tuple(dict.fromkeys((*mismatch, *self.suggestions)))
+
     def to_json_dict(self) -> dict[str, object]:
         """Group the analysis by the question each part answers."""
 
@@ -183,8 +220,8 @@ class IdleAnalysis:
                 "last_cycle_seconds": self.negotiation_cycle_seconds,
                 "last_cycle_matches": self.negotiation_matches,
             },
-            "findings": list(self.findings),
-            "suggestions": list(self.suggestions),
+            "findings": list(self.report_findings),
+            "suggestions": list(self.report_suggestions),
             "sources": [item.to_json_dict() for item in self.sources],
         }
 
@@ -420,7 +457,12 @@ def analyze_why_idle(
     from Pegasus.monitor.diagnostics import redact_excerpt
 
     findings: list[str] = [
-        f"{job.exec_job_id}: HELD by HTCondor; {redact_excerpt(reasons.get(job.exec_job_id, 'hold reason unavailable'))}"
+        f"{job.exec_job_id}: HELD by HTCondor; "
+        + redact_excerpt(
+            reasons.get(job.exec_job_id)
+            or recorded_hold_reason(job)
+            or "hold reason unavailable"
+        )
         for job in held_jobs
     ]
     suggestions: list[str] = []

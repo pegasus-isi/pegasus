@@ -423,3 +423,52 @@ def test_removed_job_is_not_offered_as_waiting_for_a_slot():
     result = analyze_why_idle(snapshot, (_queue(JobStatus=3),))
     assert result.idle_jobs == ()
     assert not any("HELD by HTCondor" in f for f in result.findings)
+
+
+def test_json_findings_and_suggestions_are_those_of_the_text_report() -> None:
+    # Trial sample why-idle-unmatchable.json beside held/whyidle.text.txt: the
+    # text report named the job and suggested reducing the request, the JSON
+    # document carried both only under resource_fit.
+    pool = _result(
+        SchedulerQueryKind.POOL,
+        [
+            {
+                "Name": "slot1@pmtrial",
+                "SlotType": "Partitionable",
+                "State": "Unclaimed",
+                "Activity": "Idle",
+                "Cpus": 3,
+                "Memory": 5899,
+                "TotalSlotCpus": 4,
+                "TotalSlotMemory": 7947,
+            }
+        ],
+    )
+    result = analyze_why_idle(
+        _snapshot("SUBMIT"), (_queue(RequestMemory=9000000), pool)
+    )
+
+    line = "job1: exceeds_single_slot_capacity (requested memory 9000000 MiB)"
+    reduce = "Reduce the request or use a resource with sufficient per-slot capacity."
+    assert line not in result.findings
+    document = result.to_json_dict()
+    assert document["findings"][0] == line
+    assert document["findings"][1:] == list(result.findings)
+    assert document["suggestions"][0] == reduce
+    assert document["suggestions"][1:] == list(result.suggestions)
+    assert document["resource_fit"]["mismatches"][0]["reason"] == (
+        "exceeds_single_slot_capacity"
+    )
+
+
+def test_held_finding_uses_the_recorded_reason_without_the_queue() -> None:
+    held = _job(1, "JOB_HELD")
+    held = replace(
+        held,
+        transition=replace(held.transition, reason=" via condor_hold (by user x)"),
+    )
+    snapshot = replace(_snapshot(None), jobs=(held,))
+
+    result = analyze_why_idle(snapshot)
+
+    assert result.findings[0] == "job1: HELD by HTCondor; via condor_hold (by user x)"

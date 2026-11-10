@@ -346,6 +346,13 @@ def test_documents_match_the_contract_file(tmp_path: Path) -> None:
     assert list(document["why_idle"]) == sections["why_idle"]
     assert list(document["stall"]["job_counts"]) == sections["stall_job_counts"]
     assert list(document["stall"]["thresholds"]) == sections["stall_thresholds"]
+    assert list(document["stall"]["scheduler"]) == sections["stall_scheduler"]
+    for counts in (
+        document["summary"]["observed_job_counts"],
+        document["stall"]["observed_job_counts"],
+    ):
+        assert list(counts) == sections["observed_job_counts"]
+    assert document["summary"]["job_counts_source"] == "stampede"
     assert list(document["why_idle"]["pool"]) == sections["why_idle_pool"]
     assert list(document["why_idle"]["priority"]) == sections["why_idle_priority"]
     assert document["stall"]["reason"] in contract["stall_reasons"]["stalled"]
@@ -373,6 +380,11 @@ def test_contract_names_every_hold_code_and_error_code() -> None:
         value for name, value in vars(json_output).items() if name.startswith("ERROR_")
     }
     assert contract["stall_kinds"] == [kind.value for kind in StallKind]
+    reasons = contract["stall_reasons"]["stalled"]
+    assert set(reasons) == set(contract["stall_kinds"]) - set(
+        contract["stall_kinds_live_only"]
+    )
+    assert set(contract["stall_kinds_one_shot_only"]) <= set(reasons)
 
 
 def test_no_condor_reports_disabled_sources_not_absent_findings(
@@ -542,3 +554,45 @@ def test_replay_without_checkpoint_is_a_structured_error(tmp_path: Path) -> None
     assert document["origin"] == "replay"
     assert document["error"]["code"] in {"invalid_event_log", "no_complete_checkpoint"}
     assert stderr.startswith("pegasus-monitor: ")
+
+
+def test_no_condor_classifies_a_hold_from_the_reason_stampede_recorded(
+    tmp_path: Path,
+) -> None:
+    # Trial sample diagnose-held-nocondor.json: held_unknown, with evidence
+    # citing condor_queue although that source was disabled.
+    run = _problem_run(tmp_path)
+
+    code, document, _stderr = _monitor(
+        "--diagnose", "--why-idle", "--json", "--no-condor", str(run)
+    )
+
+    assert code == 0
+    unqueried = {
+        source["source"] for source in document["sources"] if not source["queried"]
+    }
+    assert "condor_queue" in unqueried
+    findings = {
+        item["target"]["exec_job_id"]: item
+        for item in document["diagnostics"]["findings"]
+    }
+    held = findings["held_ID0000002"]
+    # The fixture's recorded reason is the bare word "memory", which matches
+    # no hold pattern; the point is that the reason is found and attributed.
+    assert held["code"] == "held_unknown"
+    assert held["summary"] == "Job is held by HTCondor: memory"
+    assert held["evidence"][1] == {
+        "source": "stampede",
+        "code": "hold_reason",
+        "payload": {"hold_reason_code": None, "reason_excerpt": "memory"},
+    }
+    for finding in findings.values():
+        assert not {item["source"] for item in finding["evidence"]} & unqueried
+    assert (
+        "held_ID0000002: HELD by HTCondor; memory" in document["why_idle"]["findings"]
+    )
+    assert document["stall"]["scheduler"] == {
+        "queue_queried": False,
+        "dagman_in_queue": None,
+        "jobs_in_queue": None,
+    }

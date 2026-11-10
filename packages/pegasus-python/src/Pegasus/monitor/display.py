@@ -918,20 +918,12 @@ def _why_idle_panel(
     for mismatch in analysis.requirement_mismatches:
         lines.append(
             Text(
-                sanitize_display(
-                    f"{mismatch.exec_job_id}: {mismatch.reason} "
-                    f"(requested memory {mismatch.requested_memory_mb} MiB)"
-                ),
+                sanitize_display(mismatch.finding),
                 style="yellow",
             )
         )
-        if mismatch.reason == "exceeds_single_slot_capacity":
-            lines.append(
-                Text(
-                    "Suggestion: Reduce the request or use a resource with sufficient per-slot capacity.",
-                    style="cyan",
-                )
-            )
+        if mismatch.suggestion is not None:
+            lines.append(Text(f"Suggestion: {mismatch.suggestion}", style="cyan"))
     lines.extend(
         Text(sanitize_display(item), style="yellow") for item in analysis.findings
     )

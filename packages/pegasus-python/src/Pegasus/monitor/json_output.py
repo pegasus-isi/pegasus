@@ -31,7 +31,10 @@ from Pegasus.monitor.models import (
     SourceName,
     _json_value,
 )
-from Pegasus.monitor.scheduler_evidence import workflow_removal_reason
+from Pegasus.monitor.scheduler_evidence import (
+    observed_job_counts,
+    workflow_removal_reason,
+)
 from Pegasus.monitor.stall_detector import assess_stall_once
 from Pegasus.monitor.terminal import sanitize_display
 
@@ -259,6 +262,13 @@ def _summary(snapshot: object, removal_reason: str | None) -> dict[str, Any] | N
             "total": len(effective.jobs),
             "compute": compute,
             **counts,
+        },
+        # job_counts is what Stampede recorded; the queue may already know
+        # better, and Stampede never records a removed job's end.
+        "job_counts_source": SourceName.STAMPEDE.value,
+        "observed_job_counts": {
+            "total": len(effective.jobs),
+            **observed_job_counts(snapshot),
         },
         "pending_tail_events": snapshot.pending_tail_events,
     }

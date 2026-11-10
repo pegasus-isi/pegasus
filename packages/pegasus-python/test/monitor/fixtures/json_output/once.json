@@ -149,6 +149,20 @@
       "failed": 1,
       "other": 0
     },
+    "job_counts_source": "stampede",
+    "observed_job_counts": {
+      "total": 4,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0,
+      "removed": 0
+    },
     "pending_tail_events": 0
   },
   "snapshot": {
@@ -637,6 +651,24 @@
       "running_plateau_seconds": 120.0,
       "idle_threshold_seconds": 120.0,
       "startup_grace_seconds": 60.0
+    },
+    "observed_job_counts": {
+      "total": 4,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0,
+      "removed": 0
+    },
+    "scheduler": {
+      "queue_queried": true,
+      "dagman_in_queue": false,
+      "jobs_in_queue": 2
     }
   },
   "why_idle": null,

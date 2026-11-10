@@ -104,6 +104,20 @@ def is_held(job: JobSnapshot, queue_rows: Mapping[str, Mapping[str, Any]]) -> bo
     return observed_lifecycle(job, queue_rows) is Lifecycle.HELD
 
 
+def recorded_hold_reason(job: JobSnapshot) -> str | None:
+    """Hold reason Stampede recorded with the job's JOB_HELD transition.
+
+    The queue is the fresher source, but this is the only one left when
+    HTCondor is not queried.
+    """
+
+    transition = job.transition
+    if transition is None or job.lifecycle is not Lifecycle.HELD:
+        return None
+    reason = (getattr(transition, "reason", None) or "").strip()
+    return reason or None
+
+
 def hold_reason_codes(
     jobs: Sequence[JobSnapshot], results: Sequence[SchedulerQueryResult]
 ) -> dict[str, int]:
@@ -135,6 +149,86 @@ def removed_jobs(
     rows = scheduler_rows(jobs, results, SchedulerQueryKind.QUEUE)
     rows.update(scheduler_rows(jobs, results, SchedulerQueryKind.HISTORY))
     return {name: row for name, row in rows.items() if row.get("JobStatus") == 3}
+
+
+_IN_SCHEDULER = frozenset(
+    {
+        Lifecycle.PRE,
+        Lifecycle.QUEUED,
+        Lifecycle.RUNNING,
+        Lifecycle.HELD,
+        Lifecycle.POST,
+    }
+)
+REMOVED = "removed"
+
+
+def observed_job_counts(snapshot: CoordinatorSnapshot) -> dict[str, int]:
+    """Count jobs by lifecycle after applying what the scheduler shows.
+
+    Stampede lags the queue by seconds to minutes and never records the end
+    of a job that was removed with its workflow. A healthy queue observation
+    replaces the recorded lifecycle of an unfinished job, and a job that
+    HTCondor removed, or that was still unfinished when its workflow ended,
+    is counted as ``removed`` instead of as queued, running or held.
+    """
+
+    counts = dict.fromkeys((item.value for item in Lifecycle), 0)
+    counts[REMOVED] = 0
+    if snapshot.effective is None:
+        return counts
+    jobs = snapshot.effective.jobs
+    results = snapshot.scheduler_results
+    queue_rows = scheduler_rows(jobs, results, SchedulerQueryKind.QUEUE)
+    removals = removed_jobs(jobs, results)
+    for job in jobs:
+        lifecycle = observed_lifecycle(job, queue_rows)
+        gone = job.exec_job_id in removals or snapshot.authoritative_complete
+        if lifecycle in _IN_SCHEDULER and gone:
+            counts[REMOVED] += 1
+        else:
+            counts[lifecycle.value] += 1
+    return counts
+
+
+def queue_observation(
+    snapshot: CoordinatorSnapshot,
+) -> tuple[bool, bool | None, int | None]:
+    """Report ``(queried, dagman_in_queue, jobs_in_queue)`` for the workflow.
+
+    ``queried`` is true only for a healthy queue result. ``dagman_in_queue``
+    is null when the queue was not queried, or when the result reached its
+    row limit without showing DAGMan, which may then be among the omitted
+    rows.
+    """
+
+    if snapshot.effective is None:
+        return False, None, None
+    workflow = snapshot.effective.workflow.workflow
+    latest = max(
+        (
+            result
+            for result in snapshot.scheduler_results
+            if result.request.kind is SchedulerQueryKind.QUEUE
+            and result.request.workflow == workflow
+        ),
+        key=lambda result: result.request.clock.monotonic,
+        default=None,
+    )
+    if latest is None or latest.health.state is not HealthState.HEALTHY:
+        return False, None, None
+    dagman = False
+    jobs = 0
+    for evidence in latest.evidence:
+        row = evidence.payload.to_json_dict()
+        if row.get("JobStatus") in {3, 4}:
+            continue
+        if row.get("JobUniverse") == 7:
+            dagman = True
+        else:
+            jobs += 1
+    truncated = len(latest.evidence) >= latest.request.result_limit
+    return True, (dagman or (None if truncated else False)), jobs
 
 
 def workflow_end_observed(snapshot: CoordinatorSnapshot) -> bool:

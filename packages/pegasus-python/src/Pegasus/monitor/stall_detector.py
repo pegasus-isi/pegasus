@@ -31,6 +31,10 @@ from Pegasus.monitor.models import (
     Provenance,
     SourceName,
 )
+from Pegasus.monitor.scheduler_evidence import (
+    observed_job_counts,
+    queue_observation,
+)
 
 if TYPE_CHECKING:
     from Pegasus.monitor.coordinator import CoordinatorSnapshot
@@ -41,6 +45,8 @@ class StallKind(str, Enum):
     NO_SEMANTIC_PROGRESS = "no_semantic_progress"
     RUNNING_PLATEAU = "running_plateau"
     IDLE_TOO_LONG = "idle_too_long"
+    # One-shot assessment only: the live detector never reports it.
+    NO_SCHEDULER_ACTIVITY = "no_scheduler_activity"
 
 
 class StallEventKind(str, Enum):
@@ -344,7 +350,8 @@ class StallAssessment:
     The live :class:`StallDetector` times silence on a monotonic clock and
     confirms a condition over two publications. One sample cannot do either,
     so this measures the wall-clock age of the newest recorded state change
-    instead and reports the method it used.
+    instead and reports the method it used. It also cannot tell a long job
+    from a stuck one, so a job that is running is never reported as a stall.
     """
 
     status: StallAssessmentStatus
@@ -362,6 +369,10 @@ class StallAssessment:
     queued_jobs: int = 0
     unsubmitted_jobs: int = 0
     config: StallDetectorConfig = StallDetectorConfig()
+    observed_counts: tuple[tuple[str, int], ...] = ()
+    queue_queried: bool = False
+    dagman_in_queue: bool | None = None
+    jobs_in_queue: int | None = None
 
     def to_json_dict(self) -> dict[str, object]:
         assessed = self.status is not StallAssessmentStatus.NOT_ASSESSED
@@ -393,6 +404,16 @@ class StallAssessment:
                 "idle_threshold_seconds": self.config.idle_threshold_seconds,
                 "startup_grace_seconds": self.config.startup_grace_seconds,
             },
+            "observed_job_counts": (
+                {"total": self.total_jobs, **dict(self.observed_counts)}
+                if self.observed_counts
+                else None
+            ),
+            "scheduler": {
+                "queue_queried": self.queue_queried,
+                "dagman_in_queue": self.dagman_in_queue,
+                "jobs_in_queue": self.jobs_in_queue,
+            },
         }
 
 
@@ -416,6 +437,19 @@ def assess_stall_once(
     The result separates "not stalled" from "not assessed": a missing
     authoritative base, an unhealthy Stampede source, or a snapshot with no
     timestamps cannot support either verdict.
+
+    The verdict uses the lifecycle the HTCondor queue shows for each job when
+    the snapshot carries a healthy queue result, and the recorded one
+    otherwise. In order:
+
+    * nothing of the workflow is left in HTCondor, or no job is in flight,
+      while jobs are unfinished, for ``no_progress_seconds``:
+      ``no_scheduler_activity``;
+    * every job in flight is held: ``all_held``, whatever is still
+      unsubmitted behind it;
+    * a job is running: not stalled, however long it has run;
+    * otherwise jobs are only waiting, and the live detector's idle
+      conditions and thresholds apply.
     """
 
     config = config or StallDetectorConfig()
@@ -432,6 +466,8 @@ def assess_stall_once(
     total = len(effective.jobs)
     last_progress = _last_progress_epoch(effective)
     elapsed = None if last_progress is None else max(0.0, now - last_progress)
+    observed = observed_job_counts(snapshot)
+    queried, dagman, in_queue = queue_observation(snapshot)
 
     def result(
         status: StallAssessmentStatus,
@@ -455,13 +491,21 @@ def assess_stall_once(
             counts[Lifecycle.QUEUED],
             counts[Lifecycle.UNSUBMITTED],
             config,
+            tuple(observed.items()),
+            queried,
+            dagman,
+            in_queue,
         )
+
+    def stalled(kind: StallKind, summary: str) -> StallAssessment:
+        return result(StallAssessmentStatus.STALLED, kind.value, kind, summary)
 
     if snapshot.authoritative_complete:
         return result(StallAssessmentStatus.NOT_STALLED, "workflow_complete")
     if not _observation_available(snapshot):
         return result(StallAssessmentStatus.NOT_ASSESSED, "stampede_not_healthy")
-    if total == 0 or counts[Lifecycle.UNSUBMITTED] == total:
+    nothing_submitted = counts[Lifecycle.UNSUBMITTED] == total
+    if total == 0 or (nothing_submitted and elapsed is None):
         return result(StallAssessmentStatus.NOT_STALLED, "no_jobs_submitted")
     if elapsed is None:
         return result(StallAssessmentStatus.NOT_ASSESSED, "progress_time_unavailable")
@@ -471,10 +515,68 @@ def assess_stall_once(
         and now - float(started_at) < config.startup_grace_seconds
     ):
         return result(StallAssessmentStatus.NOT_STALLED, "startup_grace")
-    kind, summary = _classify(counts, total, elapsed, config)
+
+    live = {lifecycle: observed[lifecycle.value] for lifecycle in Lifecycle}
+    held = live[Lifecycle.HELD]
+    running = live[Lifecycle.RUNNING]
+    in_flight = (
+        held
+        + running
+        + live[Lifecycle.QUEUED]
+        + live[Lifecycle.PRE]
+        + live[Lifecycle.POST]
+    )
+    unfinished = total - live[Lifecycle.SUCCEEDED] - live[Lifecycle.FAILED]
+    quiet = elapsed >= config.no_progress_seconds
+    if unfinished > 0 and queried and dagman is False and in_queue == 0:
+        # The recorded states of any job still "in flight" are stale: HTCondor
+        # holds neither DAGMan nor a job of this workflow.
+        if quiet:
+            return stalled(
+                StallKind.NO_SCHEDULER_ACTIVITY,
+                f"HTCondor shows no DAGMan job and no job of this workflow in "
+                f"the queue, {unfinished} job(s) are unfinished, and no state "
+                f"change was recorded for {elapsed:.0f}s",
+            )
+        return result(StallAssessmentStatus.NOT_STALLED, "within_thresholds")
+    if in_flight == 0 and unfinished > 0:
+        if quiet:
+            if not queried:
+                scheduler = "the HTCondor queue was not queried"
+            elif dagman:
+                scheduler = "DAGMan is still in the HTCondor queue"
+            else:
+                scheduler = "DAGMan was not confirmed in the HTCondor queue"
+            return stalled(
+                StallKind.NO_SCHEDULER_ACTIVITY,
+                f"{unfinished} job(s) are unfinished but none is queued, "
+                f"running or held, and no state change was recorded for "
+                f"{elapsed:.0f}s; {scheduler}",
+            )
+        return result(
+            StallAssessmentStatus.NOT_STALLED,
+            "no_jobs_submitted" if nothing_submitted else "within_thresholds",
+        )
+    if held > 0 and held == in_flight:
+        waiting = live[Lifecycle.UNSUBMITTED]
+        behind = f"; {waiting} unsubmitted job(s) wait behind them" if waiting else ""
+        return stalled(
+            StallKind.ALL_HELD,
+            f"All {held} submitted, unfinished job(s) are held{behind}",
+        )
+    if running > 0:
+        return result(
+            StallAssessmentStatus.NOT_STALLED,
+            "jobs_running",
+            summary=(
+                f"{running} job(s) running; no state change recorded for "
+                f"{elapsed:.0f}s, which one sample cannot tell from a long job"
+            ),
+        )
+    kind, summary = _classify(live, total, elapsed, config)
     if kind is None:
         return result(StallAssessmentStatus.NOT_STALLED, "within_thresholds")
-    return result(StallAssessmentStatus.STALLED, kind.value, kind, summary)
+    return stalled(kind, summary)
 
 
 def _counts(jobs) -> dict[Lifecycle, int]:

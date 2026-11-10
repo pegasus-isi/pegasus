@@ -37,6 +37,7 @@ from Pegasus.monitor.models import (
     DiagnosticSeverity,
     EffectiveSnapshot,
     FrozenPayload,
+    HealthState,
     JobAttempt,
     JobSnapshot,
     Lifecycle,
@@ -49,6 +50,7 @@ from Pegasus.monitor.scheduler_evidence import (
     hold_reason_codes,
     hold_reasons,
     is_held,
+    recorded_hold_reason,
     removed_jobs,
     scheduler_rows,
 )
@@ -626,12 +628,32 @@ def _real_exit_code(
         return None
 
 
+def _queue_observed(results: Sequence[SchedulerQueryResult]) -> bool:
+    return any(
+        result.request.kind is SchedulerQueryKind.QUEUE
+        and result.health.state is HealthState.HEALTHY
+        for result in results
+    )
+
+
 def _hold_diagnostic(
     job: JobSnapshot,
     reason: str | None,
     source: SourceName = SourceName.CONDOR_QUEUE,
     hold_code: int | None = None,
+    queue_observed: bool = True,
 ) -> DiagnosticFinding:
+    unavailable = "No hold reason available"
+    if not reason:
+        # The queue is the freshest source, but Stampede keeps the reason too
+        # and is the only one left when HTCondor is not queried.
+        recorded = recorded_hold_reason(job)
+        if recorded or not queue_observed:
+            source = _state_evidence(job).source
+        if recorded:
+            reason = recorded
+        elif not queue_observed:
+            unavailable = "No hold reason recorded; the HTCondor queue was not queried"
     summary = "Job is held by HTCondor"
     code = "held_unknown"
     suggestions = (
@@ -661,9 +683,7 @@ def _hold_diagnostic(
             "hold_reason" if reason else "hold_reason_unavailable",
             FrozenPayload.from_mapping(
                 {
-                    "reason_excerpt": redact_excerpt(
-                        reason or "No hold reason available"
-                    ),
+                    "reason_excerpt": redact_excerpt(reason or unavailable),
                     "hold_reason_code": hold_code,
                 }
             ),
@@ -1174,6 +1194,7 @@ def collect_diagnostics(
                     job,
                     reasons.get(job.exec_job_id),
                     hold_code=codes.get(job.exec_job_id),
+                    queue_observed=_queue_observed(results),
                 )
             )
         elif job.lifecycle is Lifecycle.FAILED:
@@ -1388,6 +1409,7 @@ class DiagnosticsEngine:
                             job,
                             reasons.get(job.exec_job_id),
                             hold_code=codes.get(job.exec_job_id),
+                            queue_observed=_queue_observed(snapshot.scheduler_results),
                         )
                     if finding != retained.get(key):
                         emitted.append(finding)

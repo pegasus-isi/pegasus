@@ -367,7 +367,7 @@ def test_pool_normalization_matches_partitionable_slot_behavior(fake_bin: Path) 
         "idle_cpus": 6,
         "idle_gpus": 2,
         "idle_memory_mb": 12288,
-        "idle_slots": 1,
+        "idle_slots": 2,
         "load_avg": 1.5,
         "machines": 2,
         "os_arch": "LINUX/AARCH64, LINUX/X86_64",
@@ -376,7 +376,7 @@ def test_pool_normalization_matches_partitionable_slot_behavior(fake_bin: Path) 
         "total_disk_kb": 800000,
         "total_gpus": 2,
         "total_memory_mb": 24576,
-        "total_slots": 2,
+        "total_slots": 3,
     }
 
 
@@ -425,9 +425,9 @@ def test_pool_uses_partitionable_flags_and_parent_link_without_double_counting(
     summary = payload_dict(result.summary)
 
     assert summary["machines"] == 1
-    assert summary["total_slots"] == 2
+    assert summary["total_slots"] == 3
     assert summary["claimed_slots"] == 1
-    assert summary["idle_slots"] == 1
+    assert summary["idle_slots"] == 2
     assert summary["total_cpus"] == 10
     assert summary["idle_cpus"] == 6
     assert summary["total_memory_mb"] == 18000
@@ -1000,3 +1000,89 @@ def test_observer_configuration_copies_environment_mapping() -> None:
     assert config.environment["EXAMPLE"] == "first"
     with pytest.raises(TypeError):
         config.environment["EXAMPLE"] = "nope"  # type: ignore[index]
+
+
+_TRIAL_PARENT = {
+    "Name": "slot1@pmtrial",
+    "Machine": "pmtrial",
+    "SlotType": "Partitionable",
+    "PartitionableSlot": True,
+    "State": "Unclaimed",
+    "Activity": "Idle",
+    "TotalSlotCpus": 4,
+    "TotalSlotMemory": 7947,
+}
+_TRIAL_CHILD = {
+    "Name": "slot1_2@pmtrial",
+    "Machine": "pmtrial",
+    "SlotType": "Dynamic",
+    "State": "Claimed",
+    "Activity": "Busy",
+    "Cpus": 1,
+    "Memory": 2048,
+}
+
+
+@pytest.mark.parametrize(
+    ("rows", "total", "idle", "claimed", "other", "idle_cpus"),
+    [
+        # condor_status: "Total 1 ... Unclaimed 1" (held3/condor-state-idle-pool.txt)
+        ([{**_TRIAL_PARENT, "Cpus": 4, "Memory": 7947}], 1, 1, 0, 0, 4),
+        # condor_status: "Total 2 ... Claimed 1 Unclaimed 1" (held/condor-state.txt)
+        ([{**_TRIAL_PARENT, "Cpus": 3, "Memory": 5899}, _TRIAL_CHILD], 2, 1, 1, 0, 3),
+        # A fully carved-out parent is still a slot, but nothing can start on it.
+        ([{**_TRIAL_PARENT, "Cpus": 0, "Memory": 0}, _TRIAL_CHILD], 2, 0, 1, 1, 0),
+    ],
+)
+def test_pool_counts_a_partitionable_slot_as_condor_status_does(
+    fake_bin: Path, tmp_path: Path, rows, total, idle, claimed, other, idle_cpus
+) -> None:
+    # Trial sample why-idle-unmatchable-idle-pool.json: one idle partitionable
+    # slot with 4 CPUs was reported as total_slots 0, idle_slots 0.
+    payload = tmp_path / "trial-pool.json"
+    payload.write_text(json.dumps(rows), encoding="utf-8")
+
+    result = observer(fake_bin, payload=payload).query(request(SchedulerQueryKind.POOL))
+    summary = payload_dict(result.summary)
+
+    assert summary["machines"] == 1
+    assert summary["total_slots"] == total
+    assert summary["idle_slots"] == idle
+    assert summary["claimed_slots"] == claimed
+    assert summary["other_slots"] == other
+    assert summary["total_cpus"] == 4
+    assert summary["idle_cpus"] == idle_cpus
+
+
+def test_classad_expressions_are_emitted_as_their_text(
+    fake_bin: Path, tmp_path: Path
+) -> None:
+    # Trial samples carried "/Expr(...)/" in Requirements and RequestDisk.
+    payload = tmp_path / "expression-queue.json"
+    payload.write_text(
+        json.dumps(
+            [
+                {
+                    "ClusterId": 7,
+                    "ProcId": 0,
+                    "DAGNodeName": "job",
+                    "JobStatus": 1,
+                    "pegasus_wf_uuid": WORKFLOW.wf_uuid,
+                    "RequestDisk": "/Expr(DiskUsage)/",
+                    "Requirements": '/Expr((TARGET.Arch == "X86_64") && '
+                    "(TARGET.Memory >= RequestMemory))/",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = observer(fake_bin, payload=payload).query(
+        request(SchedulerQueryKind.QUEUE)
+    )
+    row = payload_dict(result.evidence[0].payload)
+
+    assert row["RequestDisk"] == "DiskUsage"
+    assert row["Requirements"] == (
+        '(TARGET.Arch == "X86_64") && (TARGET.Memory >= RequestMemory)'
+    )

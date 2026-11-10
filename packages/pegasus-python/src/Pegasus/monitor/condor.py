@@ -778,6 +778,10 @@ def _clean_scalar(value: Any) -> Any:
     if isinstance(value, float):
         return value if math.isfinite(value) else _DROP
     if isinstance(value, str):
+        # condor_q -json wraps an unevaluated expression as "/Expr(<text>)/".
+        # Consumers want the expression, not HTCondor's JSON escape for it.
+        if value.startswith("/Expr(") and value.endswith(")/"):
+            value = value[6:-2]
         if len(value) <= MAX_PAYLOAD_STRING_CHARS:
             return value
         return f"{value[: MAX_PAYLOAD_STRING_CHARS - 3]}..."
@@ -996,6 +1000,13 @@ def _pool_summary(rows: Sequence[Mapping[str, Any]]) -> FrozenPayload:
             total_gpus = _int_value(row.get("TotalSlotGPUs")) or gpus
             summary["total_gpus"] += total_gpus
             summary["idle_gpus"] += gpus
+            # condor_status lists the parent as a slot of its own. It can
+            # still start a job only while it has CPUs left to carve out.
+            summary["total_slots"] += 1
+            if cpus > 0 and str(row.get("State", "Unclaimed")) == "Unclaimed":
+                summary["idle_slots"] += 1
+            else:
+                summary["other_slots"] += 1
             continue
 
         summary["total_slots"] += 1
