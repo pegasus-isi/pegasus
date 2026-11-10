@@ -336,7 +336,11 @@ Every document has the same top-level keys:
 
 ``modes``, ``origin``, ``target``
    The requested modes in the order ``once``, ``diagnose``, ``why_idle``; the
-   origin ``live``, ``replay``, or ``remote``; and the target as given.
+   origin ``live``, ``replay``, or ``remote``; and the target as given. A
+   ``usage_error`` document carries them too when the arguments parsed and
+   only their combination was rejected; ``modes`` names one-shot modes only,
+   so it is empty for ``--json --serve``. When the arguments did not parse,
+   ``target`` is null.
 
 ``exit_code``, ``error``
    The process exit status and, exactly when it is nonzero, an object with a
@@ -345,7 +349,9 @@ Every document has the same top-level keys:
 
 ``workflow``
    ``wf_uuid``, ``root_wf_uuid``, ``submit_dir``, label, owner, and DAG name.
-   ``is_sub_workflow`` is true when the target is itself a subworkflow.
+   ``is_sub_workflow`` is true when the target is itself a subworkflow; the
+   label, owner, DAG name, and submit directory are then the subworkflow's
+   own, not the root's.
    ``sub_workflows`` counts and names the subworkflow jobs of this workflow;
    ``aggregated`` is always false because their jobs are not included.
 
@@ -361,6 +367,15 @@ Every document has the same top-level keys:
 ``summary``
    Workflow state, status, start and end times, completion, removal reason,
    and ``job_counts`` by lifecycle. Null without an authoritative snapshot.
+   ``job_counts`` is what Stampede recorded, as ``job_counts_source`` says:
+   it trails HTCondor by the time pegasus-monitord takes to record a state,
+   and keeps the last recorded state of a job that was removed, so it can
+   show no held job beside a hold finding, or a queued job in a workflow that
+   has ended. ``observed_job_counts`` corrects for both. When ``sources``
+   shows that ``condor_queue`` or ``condor_history`` was queried, an
+   unfinished job is counted under the lifecycle the queue shows; and a job
+   that HTCondor removed, or that was unfinished when its workflow ended, is
+   counted as ``removed``.
 
 ``stats``
    The statistics of the text report. Unknown values are omitted.
@@ -405,7 +420,11 @@ limits ``events``, and ``events_omitted`` counts the rest.
 ``--diagnose`` fills ``diagnostics.findings``. Each finding has a ``target``
 (workflow and ``exec_job_id``), a ``category`` of ``held`` or ``failed``, a
 ``severity``, a stable ``code``, a ``summary``, ``suggestions``, and the
-bounded, redacted ``evidence`` behind it. Hold codes are ``user_hold``,
+bounded, redacted ``evidence`` behind it. Each evidence item names the
+``source`` it was read from. The hold reason comes from ``condor_queue`` when
+the queue was queried and from ``stampede`` otherwise, so ``--no-condor``
+classifies a hold from the reason pegasus-monitord recorded; evidence never
+cites a source that was not queried. Hold codes are ``user_hold``,
 ``output_missing``, ``output_transfer_failed``, ``input_transfer_failed``,
 ``memory_exceeded``, ``disk_exceeded``, ``walltime_exceeded``,
 ``credential_failure``, ``shadow_exception``, ``dns_failure``,
@@ -431,7 +450,13 @@ bounded, redacted ``evidence`` behind it. Hold codes are ``user_hold``,
 ``pool`` capacity, ``resource_fit.mismatches`` for jobs that fit no available
 slot, the owner's fair-share ``priority``, the last ``negotiator`` cycle, the
 ``findings`` and ``suggestions`` of the text report, and the ``sources`` the
-analysis could use. ``idle_jobs`` and ``mismatches`` list at most 1000 entries
+analysis could use. ``findings`` and ``suggestions`` hold every such line of
+the text report, including the one it prints for each resource mismatch, with
+repeated suggestions listed once. ``pool.total_slots`` counts slots as
+``condor_status`` lists them, a partitionable slot included;
+``pool.idle_slots`` counts unclaimed slots, a partitionable slot only while
+it has CPUs left to hand out. ClassAd expressions such as ``requirements``
+are given as the expression text. ``idle_jobs`` and ``mismatches`` list at most 1000 entries
 each, with the remainder counted in ``idle_jobs_omitted`` and
 ``mismatches_omitted``.
 
@@ -461,22 +486,55 @@ because the stream holds no scheduler evidence.
 a monotonic clock and confirms a condition over two refreshes, so a single
 sample can never report a confirmed stall. One-shot JSON therefore reports a
 separate, stateless assessment. It takes the newest state change recorded for
-the workflow or any job, measures its age against the local wall clock, and
-applies the live detector's conditions and thresholds. ``stall.method`` is
-``snapshot_timestamps`` and ``stall.confirmed`` is always false. The result
-depends on the monitoring host's clock agreeing with the recorded timestamps
-and trails the workflow by the delay with which pegasus-monitord records
-state. For replay and remote origins it describes the recorded snapshot as of
-``observed_at_epoch``, not the present.
+the workflow or any job and measures its age against the local wall clock.
+``stall.method`` is ``snapshot_timestamps`` and ``stall.confirmed`` is always
+false. The result depends on the monitoring host's clock agreeing with the
+recorded timestamps and trails the workflow by the delay with which
+pegasus-monitord records state. For replay and remote origins it describes the
+recorded snapshot as of ``observed_at_epoch``, not the present.
+
+The assessment counts jobs as ``observed_job_counts`` does, so a hold that
+only the HTCondor queue knows of yet is seen at once. ``stall.job_counts``
+remains the recorded counts and ``stall.observed_job_counts`` the ones the
+verdict used. ``stall.scheduler`` reports whether a healthy queue result was
+available (``queue_queried``), whether it showed the workflow's DAGMan job
+(``dagman_in_queue``, null when unknown), and how many of the workflow's jobs
+it showed (``jobs_in_queue``). A job is *in flight* when it is in a pre
+script, queued, running, held, or in a post script, and *unfinished* until it
+has succeeded or failed. The conditions are applied in this order:
+
+``no_scheduler_activity``
+   Jobs are unfinished, no state change was recorded for
+   ``no_progress_seconds``, and either a queried queue shows neither DAGMan
+   nor any job of the workflow, or no job is in flight. This is a workflow
+   whose DAGMan has died, is held, or has stopped submitting, as opposed to
+   one that is slow. ``scheduler.dagman_in_queue`` is false and ``summary``
+   says so when HTCondor was queried and has no DAGMan job for the workflow.
+   The live detector does not report this kind.
+
+``all_held``
+   At least one job is in flight and every job in flight is held. Jobs still
+   unsubmitted behind the held ones do not prevent it. No time threshold
+   applies.
+
+``jobs_running`` (not stalled)
+   A job is running. One sample cannot tell a long job from a stuck one, so a
+   running job is never reported as a stall, however long it has run, and the
+   live detector's ``running_plateau`` is not reported here.
+   ``seconds_since_progress`` still gives the age of the last state change.
+
+``idle_too_long``, ``no_semantic_progress``
+   Jobs are queued and none is running, with no state change for
+   ``idle_threshold_seconds`` or ``no_progress_seconds`` respectively, as in
+   the live detector.
 
 ``stall.assessed`` separates "not stalled" from "not assessed". When it is
 false, ``stall.stalled`` is null and ``stall.reason`` is
 ``authoritative_snapshot_unavailable``, ``stampede_not_healthy``, or
 ``progress_time_unavailable``. When it is true and ``stalled`` is false, the
-reason is ``workflow_complete``, ``no_jobs_submitted``, ``startup_grace``, or
-``within_thresholds``. When ``stalled`` is true, ``reason`` and ``kind`` name
-the condition: ``all_held``, ``idle_too_long``, ``running_plateau``, or
-``no_semantic_progress``.
+reason is ``workflow_complete``, ``no_jobs_submitted``, ``startup_grace``,
+``jobs_running``, or ``within_thresholds``. When ``stalled`` is true,
+``reason`` and ``kind`` both name the condition.
 
 Error codes and their exit statuses:
 
