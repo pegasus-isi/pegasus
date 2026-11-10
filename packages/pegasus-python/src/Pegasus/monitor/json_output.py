@@ -375,11 +375,13 @@ def build_document(
     condor_disabled: bool = False,
     event_limit: int = 15,
     stream: Mapping[str, Any] | None = None,
+    local_activity: object | None = None,
 ) -> dict[str, Any]:
     """Fill the envelope from one already-acquired publication and analysis.
 
     Nothing here reads a file or queries a source: every value comes from the
-    snapshot and analysis the text renderer would have received.
+    snapshot and analysis the text renderer would have received, and from the
+    ``local_activity`` the caller read from the submit directory.
     """
 
     document = dict(base)
@@ -391,7 +393,7 @@ def build_document(
     document["workflow"] = _workflow(context, effective)
     document["sources"] = _sources(snapshot, condor_disabled=condor_disabled)
     document["summary"] = _summary(snapshot, removal_reason)
-    document["stall"] = assess_stall_once(snapshot).to_json_dict()
+    document["stall"] = assess_stall_once(snapshot, local=local_activity).to_json_dict()
     document["stream"] = None if stream is None else dict(stream)
     document["analysis_errors"] = [_text(error, 256) for error in analysis_errors]
     if stats is not None:

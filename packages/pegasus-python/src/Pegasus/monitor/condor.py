@@ -103,6 +103,9 @@ _QUEUE_ATTRIBUTES = (
     "BytesRecvd",
     "pegasus_wf_uuid",
     "pegasus_root_wf_uuid",
+    # Identify the workflow's own DAGMan job: see _dagman_tree_rows.
+    "DAGManJobId",
+    "Iwd",
 )
 
 _HISTORY_ATTRIBUTES = (
@@ -201,6 +204,8 @@ _STALE_AFTER_SECONDS = {
     SchedulerQueryKind.PRIORITY: 300.0,
     SchedulerQueryKind.NEGOTIATOR: 300.0,
 }
+
+_SCHEDULER_UNIVERSE = 7
 
 _JOB_STATUS_NAMES = {
     1: "idle",
@@ -350,18 +355,69 @@ def _classad_string(value: str) -> str:
 
 
 def build_workflow_constraint(
-    workflow: WorkflowIdentity, *, tree_scope: bool = False
+    workflow: WorkflowIdentity,
+    *,
+    tree_scope: bool = False,
+    dagman_tree: bool = False,
 ) -> str:
     """Return the exact reviewed Pegasus ClassAd constraint.
 
     Version 1 callers use the selected ``pegasus_wf_uuid``.  Root UUID scope is
     available only through the explicit ``tree_scope`` setting for the future
     workflow-tree coordinator; it is never inferred from the two UUID values.
+
+    ``dagman_tree`` widens the queue query of a sub-workflow by the
+    scheduler-universe jobs of its workflow tree. A sub-workflow's DAGMan is a
+    job of its parent and carries the parent's ``pegasus_wf_uuid``, so the
+    selected UUID alone never returns it. The planner writes the root UUID
+    into every job ad of the tree, DAGMan jobs included.
     """
 
     if tree_scope:
         return f"pegasus_root_wf_uuid =?= {_classad_string(workflow.root_wf_uuid)}"
-    return f"pegasus_wf_uuid =?= {_classad_string(workflow.wf_uuid)}"
+    selected = f"pegasus_wf_uuid =?= {_classad_string(workflow.wf_uuid)}"
+    if dagman_tree and _widens_to_dagman_tree(workflow, tree_scope):
+        return (
+            f"{selected} || (JobUniverse =?= {_SCHEDULER_UNIVERSE} && "
+            f"pegasus_root_wf_uuid =?= {_classad_string(workflow.root_wf_uuid)})"
+        )
+    return selected
+
+
+def _widens_to_dagman_tree(workflow: WorkflowIdentity, tree_scope: bool) -> bool:
+    return not tree_scope and workflow.wf_uuid != workflow.root_wf_uuid
+
+
+def _dagman_tree_rows(
+    request: SchedulerQueryRequest,
+    config: CondorObserverConfig,
+    rows: Sequence[Mapping[str, Any]],
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]]]:
+    """Split a widened queue result into the workflow's rows and the rest.
+
+    Only the rows the widening asked for are set aside: scheduler-universe
+    jobs of the same tree that belong to another workflow. Anything else
+    still has to pass the workflow scope check.
+    """
+
+    if request.kind is not SchedulerQueryKind.QUEUE or not _widens_to_dagman_tree(
+        request.workflow, config.tree_scope
+    ):
+        return list(rows), []
+    own: list[Mapping[str, Any]] = []
+    related: list[Mapping[str, Any]] = []
+    for row in rows:
+        if (
+            _case_insensitive_value(row, "JobUniverse") == _SCHEDULER_UNIVERSE
+            and _case_insensitive_value(row, "pegasus_root_wf_uuid")
+            == request.workflow.root_wf_uuid
+            and _case_insensitive_value(row, "pegasus_wf_uuid")
+            != request.workflow.wf_uuid
+        ):
+            related.append(row)
+        else:
+            own.append(row)
+    return own, related
 
 
 def _build_command(
@@ -370,7 +426,9 @@ def _build_command(
     """Construct only one of the five allowlisted read operations."""
 
     constraint = build_workflow_constraint(
-        request.workflow, tree_scope=config.tree_scope
+        request.workflow,
+        tree_scope=config.tree_scope,
+        dagman_tree=request.kind is SchedulerQueryKind.QUEUE,
     )
     if request.kind is SchedulerQueryKind.QUEUE:
         command = [
@@ -1172,8 +1230,9 @@ class CondorObserver(SchedulerProvider):
             else:
                 rows = _strict_json_list(stdout, command[0])
                 allowed = _ATTRIBUTES_BY_KIND[request.kind]
+            rows, related = _dagman_tree_rows(request, self.config, rows)
             _validate_workflow_scope(request, self.config, rows)
-            return self._success_result(request, rows, allowed)
+            return self._success_result(request, rows, allowed, related)
         except CondorObserverError as error:
             return self._failure_result(
                 request, error, record_failure=error.code != "cancelled"
@@ -1195,6 +1254,7 @@ class CondorObserver(SchedulerProvider):
         request: SchedulerQueryRequest,
         rows: Sequence[Mapping[str, Any]],
         allowed_attributes: Sequence[str] | None,
+        related: Sequence[Mapping[str, Any]] = (),
     ) -> SchedulerQueryResult:
         normalized_rows = [_normalize_ad(row, allowed_attributes) for row in rows]
         observed = _to_evidence(request.kind, normalized_rows, allowed_attributes)
@@ -1230,6 +1290,11 @@ class CondorObserver(SchedulerProvider):
             backoff_seconds=0.0,
             evidence=cached[: request.result_limit],
             summary=summary,
+            # Never cached: a failed query must not reuse another moment's
+            # view of which DAGMan jobs were alive.
+            related=_to_evidence(request.kind, related, allowed_attributes)[
+                : request.result_limit
+            ],
         )
 
     def _merge_history(

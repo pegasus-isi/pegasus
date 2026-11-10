@@ -1476,6 +1476,8 @@ async def _run_once(
     if recorder is not None:
         await recorder.capture(coordinator, snapshot, analysis=analysis, force=True)
     if emitter is not None:
+        from Pegasus.monitor.scheduler_evidence import read_local_activity
+
         emitter.document = _json_document(
             runtime,
             emitter.base,
@@ -1487,6 +1489,14 @@ async def _run_once(
             analysis_errors=analysis.errors,
             condor_disabled=args.no_condor,
             event_limit=args.events,
+            # Read after the sources, so a file written since is never older
+            # than the queue result it is compared with.
+            local_activity=read_local_activity(
+                snapshot,
+                submit_dir=context.submit_dir,
+                recorded_submit_dir=context.recorded_submit_dir,
+                dag_name=context.dag_name,
+            ),
         )
     else:
         width = getattr(stdout, "width", 120)

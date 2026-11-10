@@ -202,7 +202,15 @@ def test_every_query_kind_uses_only_reviewed_read_arguments(
         mutation in joined
         for mutation in ("condor_rm", "condor_hold", "condor_release", "-set")
     )
-    if kind in {SchedulerQueryKind.QUEUE, SchedulerQueryKind.HISTORY}:
+    if kind is SchedulerQueryKind.QUEUE:
+        # WORKFLOW is a sub-workflow: its queue query also asks for the
+        # DAGMan jobs of its tree, and for nothing else of the tree.
+        constraint = argv[argv.index("-constraint") + 1]
+        assert constraint == (
+            'pegasus_wf_uuid =?= "wf-selected" || '
+            '(JobUniverse =?= 7 && pegasus_root_wf_uuid =?= "wf-root")'
+        )
+    elif kind is SchedulerQueryKind.HISTORY:
         constraint = argv[argv.index("-constraint") + 1]
         assert constraint == 'pegasus_wf_uuid =?= "wf-selected"'
         assert "pegasus_root_wf_uuid =?=" not in constraint
@@ -225,6 +233,152 @@ def test_tree_scope_must_be_explicit(fake_bin: Path, tmp_path: Path) -> None:
     assert isinstance(argv, list)
     constraint = argv[argv.index("-constraint") + 1]
     assert constraint == 'pegasus_root_wf_uuid =?= "wf-root"'
+
+
+def test_root_workflow_queue_query_is_not_widened(
+    fake_bin: Path, tmp_path: Path
+) -> None:
+    log = tmp_path / "commands.jsonl"
+    root = WorkflowIdentity("wf-root", "wf-root")
+    payload = tmp_path / "queue.json"
+    payload.write_text("[]", encoding="utf-8")
+    provider = observer(fake_bin, payload=payload, log=log)
+
+    provider.query(request(SchedulerQueryKind.QUEUE, workflow=root))
+
+    argv = read_log(log)[0]["argv"]
+    assert isinstance(argv, list)
+    assert argv[argv.index("-constraint") + 1] == 'pegasus_wf_uuid =?= "wf-root"'
+    attributes = argv[argv.index("-attributes") + 1].split(",")
+    assert {"DAGManJobId", "Iwd", "JobUniverse", "Cmd"} <= set(attributes)
+
+
+def test_widened_constraint_quotes_both_uuids() -> None:
+    workflow = WorkflowIdentity('wf" || true || "', 'root" || true || "')
+
+    assert build_workflow_constraint(workflow, dagman_tree=True) == (
+        'pegasus_wf_uuid =?= "wf\\" || true || \\"" || (JobUniverse =?= 7 && '
+        'pegasus_root_wf_uuid =?= "root\\" || true || \\"")'
+    )
+    root = WorkflowIdentity("same", "same")
+    assert build_workflow_constraint(root, dagman_tree=True) == (
+        'pegasus_wf_uuid =?= "same"'
+    )
+
+
+def test_sub_workflow_queue_keeps_tree_dagman_rows_apart_from_its_jobs(
+    fake_bin: Path, tmp_path: Path
+) -> None:
+    # hier3-sub/condor_q.attrs.midrun.txt: the root's wrapper (385), the
+    # sub-workflow's DAGMan (391, a job of the root) and the sub-workflow's
+    # one job (395).
+    rows = [
+        {
+            "ClusterId": 385,
+            "ProcId": 0,
+            "JobUniverse": 7,
+            "JobStatus": 2,
+            "Cmd": "/usr/lib/pegasus/venv/bin/pegasus-dagman",
+            "Iwd": "/runs/run0001",
+            "pegasus_wf_uuid": "wf-root",
+            "pegasus_root_wf_uuid": "wf-root",
+        },
+        {
+            "ClusterId": 391,
+            "ProcId": 0,
+            "JobUniverse": 7,
+            "JobStatus": 2,
+            "Cmd": "/usr/bin/condor_dagman",
+            "Iwd": "/runs/run0001/00/00/./inner_subwf",
+            "DAGManJobId": 385,
+            "RequestCpus": 1,
+            "pegasus_wf_uuid": "wf-root",
+            "pegasus_root_wf_uuid": "wf-root",
+        },
+        {
+            "ClusterId": 395,
+            "ProcId": 0,
+            "JobUniverse": 5,
+            "JobStatus": 2,
+            "DAGNodeName": "proc_inner_a",
+            "DAGManJobId": 391,
+            "RequestCpus": 1,
+            "pegasus_wf_uuid": "wf-selected",
+            "pegasus_root_wf_uuid": "wf-root",
+        },
+    ]
+    payload = tmp_path / "queue.json"
+    payload.write_text(json.dumps(rows), encoding="utf-8")
+    provider = observer(fake_bin, payload=payload)
+
+    result = provider.query(request(SchedulerQueryKind.QUEUE))
+
+    assert result.health.state is HealthState.HEALTHY
+    assert [item.target.to_json_dict()["ClusterId"] for item in result.evidence] == [
+        395
+    ]
+    related = [item.payload.to_json_dict() for item in result.related]
+    assert [row["ClusterId"] for row in related] == [385, 391]
+    assert related[1]["DAGManJobId"] == 385
+    assert related[1]["Iwd"] == "/runs/run0001/00/00/./inner_subwf"
+    assert result.evidence[0].payload.to_json_dict()["DAGManJobId"] == 391
+    # The summary describes the workflow's jobs only.
+    summary = payload_dict(result.summary)
+    assert summary["total_jobs"] == 1
+    assert summary["requested_cpus"] == 1
+    assert summary["status_counts"]["running"] == 1
+
+
+@pytest.mark.parametrize(
+    "foreign",
+    [
+        pytest.param(
+            {"JobUniverse": 5, "pegasus_root_wf_uuid": "wf-root"},
+            id="a-job-of-another-workflow-in-the-tree",
+        ),
+        pytest.param(
+            {"JobUniverse": 7, "pegasus_root_wf_uuid": "wf-other-root"},
+            id="a-dagman-of-another-tree",
+        ),
+        pytest.param({"JobUniverse": 7}, id="a-dagman-with-no-root-uuid"),
+    ],
+)
+def test_widened_queue_still_rejects_rows_it_did_not_ask_for(
+    fake_bin: Path, tmp_path: Path, foreign: dict[str, object]
+) -> None:
+    payload = tmp_path / "foreign.json"
+    row = {"ClusterId": 77, "ProcId": 0, "JobStatus": 2, "pegasus_wf_uuid": "wf-x"}
+    payload.write_text(json.dumps([row | foreign]), encoding="utf-8")
+    provider = observer(fake_bin, payload=payload)
+
+    result = provider.query(request(SchedulerQueryKind.QUEUE))
+
+    assert result.health.error_code == "scope_mismatch"
+    assert result.related == ()
+
+
+def test_related_rows_are_not_served_from_the_cache_after_a_failure(
+    fake_bin: Path, tmp_path: Path, mode_file: Path
+) -> None:
+    row = {
+        "ClusterId": 391,
+        "ProcId": 0,
+        "JobUniverse": 7,
+        "JobStatus": 2,
+        "pegasus_wf_uuid": "wf-root",
+        "pegasus_root_wf_uuid": "wf-root",
+    }
+    payload = tmp_path / "queue.json"
+    payload.write_text(json.dumps([row]), encoding="utf-8")
+    provider = observer(fake_bin, payload=payload, mode_file=mode_file)
+
+    first = provider.query(request(SchedulerQueryKind.QUEUE))
+    mode_file.write_text("nonzero", encoding="utf-8")
+    second = provider.query(request(SchedulerQueryKind.QUEUE, epoch=101.0))
+
+    assert len(first.related) == 1
+    assert second.health.state is not HealthState.HEALTHY
+    assert second.related == ()
 
 
 @pytest.mark.parametrize("scope_value", [None, "wf-foreign"])

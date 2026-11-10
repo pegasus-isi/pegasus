@@ -668,8 +668,15 @@
     "scheduler": {
       "queue_queried": true,
       "dagman_in_queue": false,
-      "jobs_in_queue": 2
-    }
+      "jobs_in_queue": 2,
+      "queue_complete": true,
+      "dagman_cluster_id": null,
+      "dagman_is_wrapper": null,
+      "recorded_jobs_missing": 0
+    },
+    "last_activity_epoch": 130.0,
+    "seconds_since_activity": 870.0,
+    "activity_source": "stampede"
   },
   "why_idle": null,
   "stream": null,

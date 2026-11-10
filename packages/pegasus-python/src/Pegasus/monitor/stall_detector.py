@@ -32,8 +32,10 @@ from Pegasus.monitor.models import (
     SourceName,
 )
 from Pegasus.monitor.scheduler_evidence import (
+    LocalActivity,
+    QueueObservation,
+    observe_queue,
     observed_job_counts,
-    queue_observation,
 )
 
 if TYPE_CHECKING:
@@ -352,6 +354,10 @@ class StallAssessment:
     so this measures the wall-clock age of the newest recorded state change
     instead and reports the method it used. It also cannot tell a long job
     from a stuck one, so a job that is running is never reported as a stall.
+
+    ``last_progress_epoch`` is Stampede's newest record. Stampede trails the
+    queue, so quiet time is measured from ``last_activity_epoch``: the later
+    of that record and the last write to the workflow's DAGMan files.
     """
 
     status: StallAssessmentStatus
@@ -370,9 +376,22 @@ class StallAssessment:
     unsubmitted_jobs: int = 0
     config: StallDetectorConfig = StallDetectorConfig()
     observed_counts: tuple[tuple[str, int], ...] = ()
-    queue_queried: bool = False
-    dagman_in_queue: bool | None = None
-    jobs_in_queue: int | None = None
+    queue: QueueObservation = QueueObservation()
+    last_activity_epoch: float | None = None
+    seconds_since_activity: float | None = None
+    activity_source: str | None = None
+
+    @property
+    def queue_queried(self) -> bool:
+        return self.queue.queried
+
+    @property
+    def dagman_in_queue(self) -> bool | None:
+        return self.queue.dagman_in_queue
+
+    @property
+    def jobs_in_queue(self) -> int | None:
+        return self.queue.jobs_in_queue
 
     def to_json_dict(self) -> dict[str, object]:
         assessed = self.status is not StallAssessmentStatus.NOT_ASSESSED
@@ -410,10 +429,17 @@ class StallAssessment:
                 else None
             ),
             "scheduler": {
-                "queue_queried": self.queue_queried,
-                "dagman_in_queue": self.dagman_in_queue,
-                "jobs_in_queue": self.jobs_in_queue,
+                "queue_queried": self.queue.queried,
+                "dagman_in_queue": self.queue.dagman_in_queue,
+                "jobs_in_queue": self.queue.jobs_in_queue,
+                "queue_complete": self.queue.complete if self.queue.queried else None,
+                "dagman_cluster_id": self.queue.dagman_cluster_id,
+                "dagman_is_wrapper": self.queue.dagman_is_wrapper,
+                "recorded_jobs_missing": self.queue.recorded_jobs_missing,
             },
+            "last_activity_epoch": self.last_activity_epoch,
+            "seconds_since_activity": self.seconds_since_activity,
+            "activity_source": self.activity_source,
         }
 
 
@@ -429,8 +455,13 @@ def _last_progress_epoch(effective) -> float | None:
     return max(known, default=None)
 
 
+STAMPEDE_ACTIVITY = SourceName.STAMPEDE.value
+
+
 def assess_stall_once(
-    snapshot: CoordinatorSnapshot, config: StallDetectorConfig | None = None
+    snapshot: CoordinatorSnapshot,
+    config: StallDetectorConfig | None = None,
+    local: LocalActivity | None = None,
 ) -> StallAssessment:
     """Assess one publication from its own timestamps, without detector state.
 
@@ -440,11 +471,14 @@ def assess_stall_once(
 
     The verdict uses the lifecycle the HTCondor queue shows for each job when
     the snapshot carries a healthy queue result, and the recorded one
-    otherwise. In order:
+    otherwise. Quiet time runs from the later of Stampede's newest record and
+    ``local``'s newest DAGMan file write, because Stampede trails the queue.
+    In order:
 
-    * nothing of the workflow is left in HTCondor, or no job is in flight,
-      while jobs are unfinished, for ``no_progress_seconds``:
-      ``no_scheduler_activity``;
+    * ``no_scheduler_activity`` after ``no_progress_seconds`` of quiet, while
+      jobs are unfinished and any of: the queue shows neither the workflow's
+      DAGMan nor a job of it; a complete queue result shows DAGMan but none
+      of the jobs recorded as queued, running or held; no job is in flight;
     * every job in flight is held: ``all_held``, whatever is still
       unsubmitted behind it;
     * a job is running: not stalled, however long it has run;
@@ -467,7 +501,24 @@ def assess_stall_once(
     last_progress = _last_progress_epoch(effective)
     elapsed = None if last_progress is None else max(0.0, now - last_progress)
     observed = observed_job_counts(snapshot)
-    queried, dagman, in_queue = queue_observation(snapshot)
+    queue = observe_queue(snapshot, frozenset() if local is None else local.dagman_iwds)
+    queried, dagman, in_queue = (
+        queue.queried,
+        queue.dagman_in_queue,
+        queue.jobs_in_queue,
+    )
+
+    # A file server's clock can run ahead of this host's. A write "in the
+    # future" is treated as happening now: the age is never negative, and a
+    # verdict is delayed by the difference between the clocks, not for good.
+    written = None if local is None or local.epoch is None else min(local.epoch, now)
+    last_activity, activity_source = last_progress, None
+    if last_progress is not None:
+        activity_source = STAMPEDE_ACTIVITY
+        if written is not None and written > last_progress:
+            assert local is not None
+            last_activity, activity_source = written, local.source
+    quiet_for = None if last_activity is None else max(0.0, now - last_activity)
 
     def result(
         status: StallAssessmentStatus,
@@ -492,9 +543,10 @@ def assess_stall_once(
             counts[Lifecycle.UNSUBMITTED],
             config,
             tuple(observed.items()),
-            queried,
-            dagman,
-            in_queue,
+            queue,
+            last_activity,
+            quiet_for,
+            activity_source,
         )
 
     def stalled(kind: StallKind, summary: str) -> StallAssessment:
@@ -507,7 +559,7 @@ def assess_stall_once(
     nothing_submitted = counts[Lifecycle.UNSUBMITTED] == total
     if total == 0 or (nothing_submitted and elapsed is None):
         return result(StallAssessmentStatus.NOT_STALLED, "no_jobs_submitted")
-    if elapsed is None:
+    if elapsed is None or quiet_for is None:
         return result(StallAssessmentStatus.NOT_ASSESSED, "progress_time_unavailable")
     started_at = effective.workflow.started_at
     if (
@@ -527,7 +579,14 @@ def assess_stall_once(
         + live[Lifecycle.POST]
     )
     unfinished = total - live[Lifecycle.SUCCEEDED] - live[Lifecycle.FAILED]
-    quiet = elapsed >= config.no_progress_seconds
+    quiet = quiet_for >= config.no_progress_seconds
+    if activity_source == STAMPEDE_ACTIVITY:
+        silence = f"no state change was recorded for {elapsed:.0f}s"
+    else:
+        silence = (
+            f"no state change was recorded for {elapsed:.0f}s and DAGMan's "
+            f"files were last written {quiet_for:.0f}s ago"
+        )
     if unfinished > 0 and queried and dagman is False and in_queue == 0:
         # The recorded states of any job still "in flight" are stale: HTCondor
         # holds neither DAGMan nor a job of this workflow.
@@ -535,8 +594,31 @@ def assess_stall_once(
             return stalled(
                 StallKind.NO_SCHEDULER_ACTIVITY,
                 f"HTCondor shows no DAGMan job and no job of this workflow in "
-                f"the queue, {unfinished} job(s) are unfinished, and no state "
-                f"change was recorded for {elapsed:.0f}s",
+                f"the queue, {unfinished} job(s) are unfinished, and {silence}",
+            )
+        return result(StallAssessmentStatus.NOT_STALLED, "within_thresholds")
+    missing = queue.recorded_jobs_missing or 0
+    if unfinished > 0 and queue.complete and in_queue == 0 and missing > 0:
+        # DAGMan's job is in the queue but nothing it should be managing is.
+        # Stampede alone cannot say so: it also reads like this for as long
+        # as monitord is behind. A DAGMan that is alive writes its files as
+        # jobs leave the queue, so only quiet files make this a stall.
+        if quiet:
+            if queue.dagman_is_wrapper:
+                what = (
+                    f"The pegasus-dagman wrapper job "
+                    f"({queue.dagman_cluster_id}) is in the HTCondor queue, "
+                    f"which does not show that condor_dagman is alive, but"
+                )
+            else:
+                what = (
+                    f"The DAGMan job ({queue.dagman_cluster_id}) is in the "
+                    f"HTCondor queue but"
+                )
+            return stalled(
+                StallKind.NO_SCHEDULER_ACTIVITY,
+                f"{what} none of the {missing} job(s) recorded as queued, "
+                f"running or held is, and {silence}",
             )
         return result(StallAssessmentStatus.NOT_STALLED, "within_thresholds")
     if in_flight == 0 and unfinished > 0:
@@ -550,8 +632,7 @@ def assess_stall_once(
             return stalled(
                 StallKind.NO_SCHEDULER_ACTIVITY,
                 f"{unfinished} job(s) are unfinished but none is queued, "
-                f"running or held, and no state change was recorded for "
-                f"{elapsed:.0f}s; {scheduler}",
+                f"running or held, and {silence}; {scheduler}",
             )
         return result(
             StallAssessmentStatus.NOT_STALLED,
@@ -573,7 +654,7 @@ def assess_stall_once(
                 f"{elapsed:.0f}s, which one sample cannot tell from a long job"
             ),
         )
-    kind, summary = _classify(live, total, elapsed, config)
+    kind, summary = _classify(live, total, quiet_for, config)
     if kind is None:
         return result(StallAssessmentStatus.NOT_STALLED, "within_thresholds")
     return stalled(kind, summary)

@@ -357,12 +357,46 @@ def test_documents_match_the_contract_file(tmp_path: Path) -> None:
     assert list(document["why_idle"]["priority"]) == sections["why_idle_priority"]
     assert document["stall"]["reason"] in contract["stall_reasons"]["stalled"]
     assert document["stall"]["method"] == contract["stall_method"]
+    assert document["stall"]["activity_source"] in contract["stall_activity_sources"]
     for finding in document["diagnostics"]["findings"]:
         assert finding["category"] in contract["finding_categories"]
         assert finding["severity"] in contract["finding_severities"]
         assert list(finding["target"]) == sections["finding_target"]
     for source in document["sources"]:
         assert source["state"] in contract["source_states"]
+
+
+def test_stall_quiet_time_runs_from_the_workflows_dagman_files(tmp_path: Path) -> None:
+    # Stampede's newest record is at 130 and the fixed clock reads 1000. The
+    # queue shows one idle job, so on Stampede's clock this is idle_too_long.
+    run = _problem_run(tmp_path)
+    _code, document, _stderr = _monitor(
+        "--once", "--json", "--no-condor", str(run), runtime=_runtime()
+    )
+    dag = document["workflow"]["dag_name"]
+    scheduler = _fake_scheduler(tmp_path)
+
+    def stall() -> dict:
+        _code, document, _stderr = _monitor(
+            "--once", "--json", str(run), runtime=_runtime(scheduler)
+        )
+        return document["stall"]
+
+    before = stall()
+    (run / f"{dag}.dagman.out").write_text("DAGMan\n", encoding="utf-8")
+    os.utime(run / f"{dag}.dagman.out", (950.0, 950.0))
+    (run / f"{dag}.nodes.log").write_text("005 (1000.000.000)\n", encoding="utf-8")
+    os.utime(run / f"{dag}.nodes.log", (990.0, 990.0))
+    after = stall()
+
+    assert (before["stalled"], before["kind"]) == (True, "idle_too_long")
+    assert before["last_activity_epoch"] == before["last_progress_epoch"] == 130.0
+    assert before["activity_source"] == "stampede"
+    assert (after["stalled"], after["reason"]) == (False, "within_thresholds")
+    assert after["last_progress_epoch"] == 130.0
+    assert after["last_activity_epoch"] == 990.0
+    assert after["seconds_since_activity"] == 10.0
+    assert after["activity_source"] == "nodes_log"
 
 
 def test_contract_names_every_hold_code_and_error_code() -> None:
@@ -595,4 +629,8 @@ def test_no_condor_classifies_a_hold_from_the_reason_stampede_recorded(
         "queue_queried": False,
         "dagman_in_queue": None,
         "jobs_in_queue": None,
+        "queue_complete": None,
+        "dagman_cluster_id": None,
+        "dagman_is_wrapper": None,
+        "recorded_jobs_missing": None,
     }

@@ -18,6 +18,8 @@
 
 from __future__ import annotations
 
+import os
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -191,6 +193,223 @@ def observed_job_counts(snapshot: CoordinatorSnapshot) -> dict[str, int]:
     return counts
 
 
+_SCHEDULER_UNIVERSE = 7
+_LEFT_QUEUE = frozenset({3, 4})
+_DAGMAN_WRAPPER = "pegasus-dagman"
+_RECORDED_IN_QUEUE = frozenset({Lifecycle.QUEUED, Lifecycle.RUNNING, Lifecycle.HELD})
+
+DAGMAN_OUT = "dagman_out"
+NODES_LOG = "nodes_log"
+
+
+@dataclass(frozen=True, slots=True)
+class LocalActivity:
+    """What the workflow's submit directory shows, read once by the caller.
+
+    ``epoch`` is the newest modification time of the files DAGMan and the
+    schedd write as the workflow moves: ``<dag>.dagman.out`` and
+    ``<dag>.nodes.log``. ``dagman_iwds`` holds the ``Iwd`` values, as the
+    queue reported them, that resolve to the workflow's submit directory.
+    """
+
+    epoch: float | None = None
+    source: str | None = None
+    dagman_iwds: frozenset[str] = frozenset()
+
+
+def _mtime(path: str) -> float | None:
+    try:
+        return os.stat(path).st_mtime
+    except (OSError, ValueError):
+        return None
+
+
+def _same_directory(left: str, right: str) -> bool:
+    try:
+        return os.path.realpath(left) == os.path.realpath(right)
+    except (OSError, ValueError):
+        return False
+
+
+def read_local_activity(
+    snapshot: CoordinatorSnapshot,
+    *,
+    submit_dir: str | os.PathLike[str],
+    recorded_submit_dir: str | os.PathLike[str] | None,
+    dag_name: str,
+) -> LocalActivity:
+    """Stat the workflow's own DAGMan files and resolve queued DAGMan ``Iwd``s.
+
+    A missing or unreadable file contributes nothing. HTCondor reports the
+    directory a sub-workflow's DAGMan was started in, which Pegasus makes a
+    symlink to the submit directory, so the two are compared resolved. A path
+    recorded on another host is compared by its last component under the
+    local copy of the same parent directory.
+    """
+
+    local = os.fspath(submit_dir)
+    recorded = None if recorded_submit_dir is None else os.fspath(recorded_submit_dir)
+    dag = os.path.basename(dag_name)
+    stamps = [
+        (stamp, source)
+        for stamp, source in (
+            (_mtime(os.path.join(local, f"{dag}.dagman.out")), DAGMAN_OUT),
+            (_mtime(os.path.join(local, f"{dag}.nodes.log")), NODES_LOG),
+        )
+        if stamp is not None
+    ]
+    epoch, source = max(stamps, default=(None, None))
+
+    iwds = set()
+    latest = max(
+        (
+            result
+            for result in getattr(snapshot, "scheduler_results", ())
+            if result.request.kind is SchedulerQueryKind.QUEUE
+        ),
+        key=lambda result: result.request.clock.monotonic,
+        default=None,
+    )
+    for evidence in () if latest is None else latest.related:
+        iwd = evidence.payload.to_json_dict().get("Iwd")
+        if not isinstance(iwd, str) or not iwd:
+            continue
+        candidates = [iwd]
+        if recorded is not None and os.path.normpath(
+            os.path.dirname(iwd)
+        ) == os.path.normpath(os.path.dirname(recorded)):
+            candidates.append(
+                os.path.join(os.path.dirname(local), os.path.basename(iwd))
+            )
+        if any(_same_directory(candidate, local) for candidate in candidates) or (
+            recorded is not None and os.path.normpath(iwd) == os.path.normpath(recorded)
+        ):
+            iwds.add(iwd)
+    return LocalActivity(epoch, source, frozenset(iwds))
+
+
+@dataclass(frozen=True, slots=True)
+class QueueObservation:
+    """What one healthy queue result says about the workflow's own DAGMan.
+
+    ``complete`` is false when the result reached its row limit: rows may be
+    missing, so the absence of a job proves nothing. ``dagman_is_wrapper``
+    says the DAGMan row is the ``pegasus-dagman`` wrapper that runs
+    ``condor_dagman`` as a child, which can outlive it.
+    ``recorded_jobs_missing`` counts the jobs Stampede records as queued,
+    running or held that a complete result does not show.
+    """
+
+    queried: bool = False
+    complete: bool = False
+    dagman_in_queue: bool | None = None
+    jobs_in_queue: int | None = None
+    dagman_cluster_id: int | None = None
+    dagman_is_wrapper: bool | None = None
+    recorded_jobs_missing: int | None = None
+
+
+def _latest_queue(snapshot: CoordinatorSnapshot) -> SchedulerQueryResult | None:
+    if snapshot.effective is None:
+        return None
+    workflow = snapshot.effective.workflow.workflow
+    return max(
+        (
+            result
+            for result in snapshot.scheduler_results
+            if result.request.kind is SchedulerQueryKind.QUEUE
+            and result.request.workflow == workflow
+        ),
+        key=lambda result: result.request.clock.monotonic,
+        default=None,
+    )
+
+
+def _cluster(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value if value > 0 else None
+
+
+def _in_queue(evidence: Sequence[Any]) -> list[dict[str, Any]]:
+    rows = (item.payload.to_json_dict() for item in evidence)
+    return [row for row in rows if row.get("JobStatus") not in _LEFT_QUEUE]
+
+
+def observe_queue(
+    snapshot: CoordinatorSnapshot, dagman_iwds: frozenset[str] = frozenset()
+) -> QueueObservation:
+    """Find the workflow's own DAGMan job and count its jobs in the queue.
+
+    A root workflow's DAGMan is the scheduler-universe row of the workflow
+    that no DAGMan submitted, so it has no ``DAGManJobId``. Every other
+    scheduler-universe row of a workflow is a sub-workflow it is running, and
+    counts as one of its jobs.
+
+    A sub-workflow's DAGMan is a job of its parent and is not among the
+    workflow's own rows. It is the row whose ``ClusterId`` the workflow's
+    queued jobs name in ``DAGManJobId``, looked up among the DAGMan jobs of
+    the tree; when the workflow has nothing queued, it is the DAGMan job whose
+    ``Iwd`` is the submit directory. Neither test reads the row's workflow
+    UUID, which is the parent's at any depth.
+    """
+
+    latest = _latest_queue(snapshot)
+    if latest is None or latest.health.state is not HealthState.HEALTHY:
+        return QueueObservation()
+    assert snapshot.effective is not None
+    identity = snapshot.effective.workflow.workflow
+    own = _in_queue(latest.evidence)
+    related = _in_queue(latest.related)
+
+    def is_dagman(row: Mapping[str, Any]) -> bool:
+        return row.get("JobUniverse") == _SCHEDULER_UNIVERSE
+
+    if identity.wf_uuid == identity.root_wf_uuid:
+        dagmans = [
+            row
+            for row in own
+            if is_dagman(row) and _cluster(row.get("DAGManJobId")) is None
+        ]
+        jobs = len(own) - len(dagmans)
+    else:
+        jobs = len(own)
+        by_cluster = {
+            row.get("ClusterId"): row for row in (*related, *own) if is_dagman(row)
+        }
+        parents = {_cluster(row.get("DAGManJobId")) for row in own} - {None}
+        if parents:
+            dagmans = [by_cluster[c] for c in sorted(parents) if c in by_cluster]
+        else:
+            dagmans = [row for row in related if row.get("Iwd") in dagman_iwds]
+
+    complete = len(latest.evidence) + len(latest.related) < latest.request.result_limit
+    dagman = dagmans[0] if dagmans else None
+    missing = None
+    if complete:
+        matched = scheduler_rows(
+            snapshot.effective.jobs, (latest,), SchedulerQueryKind.QUEUE
+        )
+        missing = sum(
+            job.lifecycle in _RECORDED_IN_QUEUE and job.exec_job_id not in matched
+            for job in snapshot.effective.jobs
+        )
+    command = None if dagman is None else dagman.get("Cmd")
+    return QueueObservation(
+        queried=True,
+        complete=complete,
+        dagman_in_queue=True if dagman is not None else (False if complete else None),
+        jobs_in_queue=jobs,
+        dagman_cluster_id=None if dagman is None else _cluster(dagman.get("ClusterId")),
+        dagman_is_wrapper=(
+            None
+            if dagman is None or not isinstance(command, str)
+            else os.path.basename(command) == _DAGMAN_WRAPPER
+        ),
+        recorded_jobs_missing=missing,
+    )
+
+
 def queue_observation(
     snapshot: CoordinatorSnapshot,
 ) -> tuple[bool, bool | None, int | None]:
@@ -202,33 +421,8 @@ def queue_observation(
     rows.
     """
 
-    if snapshot.effective is None:
-        return False, None, None
-    workflow = snapshot.effective.workflow.workflow
-    latest = max(
-        (
-            result
-            for result in snapshot.scheduler_results
-            if result.request.kind is SchedulerQueryKind.QUEUE
-            and result.request.workflow == workflow
-        ),
-        key=lambda result: result.request.clock.monotonic,
-        default=None,
-    )
-    if latest is None or latest.health.state is not HealthState.HEALTHY:
-        return False, None, None
-    dagman = False
-    jobs = 0
-    for evidence in latest.evidence:
-        row = evidence.payload.to_json_dict()
-        if row.get("JobStatus") in {3, 4}:
-            continue
-        if row.get("JobUniverse") == 7:
-            dagman = True
-        else:
-            jobs += 1
-    truncated = len(latest.evidence) >= latest.request.result_limit
-    return True, (dagman or (None if truncated else False)), jobs
+    observed = observe_queue(snapshot)
+    return observed.queried, observed.dagman_in_queue, observed.jobs_in_queue
 
 
 def workflow_end_observed(snapshot: CoordinatorSnapshot) -> bool:

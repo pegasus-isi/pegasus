@@ -2083,9 +2083,18 @@ class SchedulerQueryResult:
     backoff_seconds: float
     evidence: tuple[SchedulerEvidence, ...] = ()
     summary: FrozenPayload = field(default_factory=FrozenPayload)
+    # Queue rows that are not jobs of the requested workflow: the DAGMan jobs
+    # of its workflow tree, fetched to find a sub-workflow's own DAGMan. Only
+    # the one-shot stall assessment reads them.
+    related: tuple[SchedulerEvidence, ...] = ()
 
     def __post_init__(self) -> None:
         evidence = tuple(self.evidence)
+        related = tuple(self.related)
+        if related and self.request.kind is not SchedulerQueryKind.QUEUE:
+            raise ValueError("only a queue result carries related rows")
+        if any(item.kind is not self.request.kind for item in related):
+            raise ValueError("related scheduler rows must match the request kind")
         if self.health.source is not _SCHEDULER_SOURCE_BY_KIND[self.request.kind]:
             raise ValueError("scheduler health source must match the request kind")
         if self.health.checked_at_epoch != self.request.clock.epoch:
@@ -2103,6 +2112,7 @@ class SchedulerQueryResult:
         ):
             raise ValueError("backoff_seconds must be finite and between 0 and 300")
         object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "related", related)
 
 
 @runtime_checkable

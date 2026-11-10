@@ -166,7 +166,10 @@
       "job_counts",
       "thresholds",
       "observed_job_counts",
-      "scheduler"
+      "scheduler",
+      "last_activity_epoch",
+      "seconds_since_activity",
+      "activity_source"
     ],
     "stall_job_counts": [
       "total",
@@ -186,7 +189,11 @@
     "stall_scheduler": [
       "queue_queried",
       "dagman_in_queue",
-      "jobs_in_queue"
+      "jobs_in_queue",
+      "queue_complete",
+      "dagman_cluster_id",
+      "dagman_is_wrapper",
+      "recorded_jobs_missing"
     ],
     "why_idle": [
       "available",
@@ -353,9 +360,16 @@
   "stall_kinds_one_shot_only": [
     "no_scheduler_activity"
   ],
+  "stall_activity_sources": [
+    "stampede",
+    "dagman_out",
+    "nodes_log"
+  ],
   "stall_rules": [
     "Lifecycles are those of observed_job_counts. 'In flight' means pre, queued, running, held or post; 'unfinished' means not succeeded and not failed.",
-    "no_scheduler_activity: jobs are unfinished and either a queried queue shows neither DAGMan nor any job of the workflow, or no job is in flight; and seconds_since_progress >= no_progress_seconds. stall.scheduler.dagman_in_queue is false when a queried queue shows no DAGMan job.",
+    "Quiet time is seconds_since_activity, measured from last_activity_epoch: the later of last_progress_epoch (Stampede's newest record) and the last write to the workflow's own <dag>.dagman.out or <dag>.nodes.log, whichever activity_source names. A file time later than observed_at_epoch counts as observed_at_epoch. Without a readable file, and for replay and remote origins, it is last_progress_epoch.",
+    "no_scheduler_activity: jobs are unfinished, seconds_since_activity >= no_progress_seconds, and one of: (1) a queried queue shows neither the workflow's DAGMan nor any job of it; (2) a complete queue result shows no job of the workflow although Stampede records recorded_jobs_missing of them as queued, running or held, which is what a DAGMan that died behind its wrapper job looks like; (3) no job is in flight. Jobs in PRE or POST scripts are never counted missing. A queue result that is unhealthy, or that reached its row limit (queue_complete false), never satisfies (2).",
+    "stall.scheduler.dagman_in_queue is about the workflow's own DAGMan job: for a root workflow the scheduler-universe job no DAGMan submitted, for a sub-workflow the job its queued jobs name in DAGManJobId or, with none queued, the one started in its submit directory. It is false when a complete queue result shows no such job. dagman_is_wrapper is true when that job is pegasus-dagman, which runs condor_dagman as a child and can outlive it. A sub-workflow DAGMan job counts in the jobs_in_queue of its parent.",
     "all_held: at least one job is in flight and every job in flight is held. Unsubmitted jobs do not prevent it. No time threshold.",
     "jobs_running (not stalled): a job is running. One sample cannot tell a long job from a stuck one, so running_plateau is never reported here.",
     "idle_too_long, no_semantic_progress: jobs are queued and none is running, for idle_threshold_seconds or no_progress_seconds, as in the live detector."
