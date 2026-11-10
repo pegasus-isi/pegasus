@@ -2875,15 +2875,14 @@ Monitoring Properties
     |                                                         | | Runtime prediction is done only if integrity checking                  |
     |                                                         | | is enabled and kickstart stats the files of the job,                   |
     |                                                         | | as the PRE script needs the sizes of the input files                   |
-    |                                                         | | of the job. It requires the runtime-prediction extra:                  |
+    |                                                         | | of the job. The model is run on the CPU with ONNX                      |
+    |                                                         | | Runtime; the libraries it needs are installed with                     |
+    |                                                         | | Pegasus.                                                               |
     |                                                         |                                                                          |
-    |                                                         | ::                                                                       |
-    |                                                         |                                                                          |
-    |                                                         |    pip install "pegasus-wms[runtime-prediction]"                         |
-    |                                                         |                                                                          |
-    |                                                         | | If the PRE script fails, for example because the                       |
-    |                                                         | | extra is not installed, DAGMan fails the job. Set                      |
-    |                                                         | | this property to false to disable runtime prediction.                  |
+    |                                                         | | If the PRE script fails, for example because it                        |
+    |                                                         | | cannot read the submit file of the job, DAGMan fails                   |
+    |                                                         | | the job. Set this property to false to disable                         |
+    |                                                         | | runtime prediction.                                                    |
     |                                                         | | See :ref:`runtime-prediction` for details.                             |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
 

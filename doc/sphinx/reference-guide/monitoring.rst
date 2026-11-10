@@ -522,23 +522,17 @@ script with a job only if all of the following hold:
 
 -  The job has at least one ``.meta`` file among its input files.
 
-The Python libraries that ``pegasus-runtime-predictor`` needs (PyTorch,
-scikit-learn, NumPy and pandas) are not installed with Pegasus by default.
-Install them on the submit host with the ``runtime-prediction`` extra:
-
-::
-
-   pip install "pegasus-wms[runtime-prediction]"
-
-The extra requires NumPy older than 2.0, which is only available for
-Python 3.12 and older.
+The model is run on the CPU with ONNX Runtime, so no GPU is needed. The Python
+libraries that ``pegasus-runtime-predictor`` needs (ONNX Runtime,
+scikit-learn, NumPy and pandas) are installed with Pegasus, so no additional
+setup is needed on the submit host.
 
 .. note::
 
    ``pegasus-runtime-predictor`` exits with a non-zero exitcode if it cannot
-   predict the runtime of a job, for example if the ``runtime-prediction``
-   extra is not installed. DAGMan treats a failed PRE script as a failure of
-   the job. If you cannot install the extra, disable runtime prediction:
+   predict the runtime of a job, for example if it cannot read the job's
+   submit file or the model returns no prediction. DAGMan treats a failed PRE
+   script as a failure of the job. To disable runtime prediction:
 
    ::
 
