@@ -1,0 +1,5 @@
+{"event_type":"workflow_start","timestamp":1600.0,"wf_uuid":"00000000-0000-4000-8000-000000000008","dax_label":"completed","user":"test-user","planner_version":"test","submit_dir":"SANITIZED"}
+{"event_type":"jobs_init","timestamp":1600.0,"wf_uuid":"00000000-0000-4000-8000-000000000008","total_jobs":1,"jobs":[{"job_id":8,"exec_job_id":"compute_done","type_desc":"compute"}]}
+{"event_type":"job_state","timestamp":1601.0,"wf_uuid":"00000000-0000-4000-8000-000000000008","job_id":8,"job_instance_id":80,"jobstate_submit_seq":0,"exec_job_id":"compute_done","type_desc":"compute","state":"POST_SCRIPT_SUCCESS","exitcode":0}
+{"event_type":"workflow_state","timestamp":1602.0,"wf_uuid":"00000000-0000-4000-8000-000000000008","state":"WORKFLOW_TERMINATED","status":0,"wf_end":1602.0}
+{"event_type":"workflow_end","timestamp":1602.1,"wf_uuid":"00000000-0000-4000-8000-000000000008","wf_state":"WORKFLOW_TERMINATED","wf_status":0,"wf_end":1602.0,"total_jobs":1,"done":1,"failed":0,"elapsed":2.0}

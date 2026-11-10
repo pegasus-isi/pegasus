@@ -216,6 +216,19 @@ RHEL:
   image: pegasus/buildenv:${OS}
   script:
     - PEGASUS_BUILD_MPI=1 PYTHON=python3.12 make build dist-rpm
+    # Smoke-test the pegasus-monitor console script from the freshly built wheel.
+    - |
+      python3.12 -m venv _monitor_smoke
+      _monitor_smoke/bin/pip install --quiet dist/pegasus_wms-*.whl
+      _monitor_smoke/bin/pegasus-monitor --help
+      _monitor_smoke/bin/pegasus monitor --help
+      if _monitor_smoke/bin/pegasus-monitor --not-a-real-option; then
+        echo "pegasus-monitor unexpectedly accepted an invalid option"
+        exit 1
+      else
+        test "$?" -eq 2
+      fi
+      rm -rf _monitor_smoke
     # Only the rhel_8 wheel is published: it has the lowest glibc of any build
     # image and an x86-64-v1 baseline.
     - if [ "${OS}" = "rhel_8" ]; then make repair-wheel; else rm -f dist/pegasus_wms-*.whl; fi
@@ -358,6 +371,7 @@ Docs:
     - env
   script:
     - make clean build-java doc-dist
+    - test -f dist/pegasus-$(release-tools/getversion)/share/man/man1/pegasus-monitor.1
   artifacts:
     paths:
       - dist/pegasus-doc-*.tar.gz

@@ -26,6 +26,7 @@ Command Line Tools
     ../manpages/pegasus-keg.rst
     ../manpages/pegasus-kickstart.rst
     ../manpages/pegasus-metadata.rst
+    ../manpages/pegasus-monitor.rst
     ../manpages/pegasus-monitord.rst
     ../manpages/pegasus-mpi-cluster.rst
     ../manpages/pegasus-mpi-keg.rst

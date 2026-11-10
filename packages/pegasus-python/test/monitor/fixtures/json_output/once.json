@@ -1,0 +1,684 @@
+{
+  "format": "pegasus-monitor-json",
+  "format_version": 1,
+  "monitor_version": "<VERSION>",
+  "generated_at_epoch": "<NOW>",
+  "generated_at": "<NOW>",
+  "observed_at_epoch": 1000.0,
+  "modes": [
+    "once"
+  ],
+  "origin": "live",
+  "target": "<SUBMIT_DIR>",
+  "exit_code": 0,
+  "error": null,
+  "workflow": {
+    "wf_uuid": "root-uuid",
+    "root_wf_uuid": "root-uuid",
+    "is_sub_workflow": false,
+    "submit_dir": "<SUBMIT_DIR>",
+    "label": "integration-diamond",
+    "owner": "integration-user",
+    "dag_name": "diamond-0.dag",
+    "planner_version": "5.2.0-dev",
+    "sub_workflows": {
+      "count": 1,
+      "aggregated": false,
+      "exec_job_ids": [
+        "subwf_ID0000004"
+      ],
+      "exec_job_ids_omitted": 0
+    }
+  },
+  "sources": [
+    {
+      "source": "stampede",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": {
+        "seconds": 0.0,
+        "maximum_seconds": 2592000.0,
+        "capped": false
+      },
+      "stale_after_seconds": 10.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "live_tail",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_queue",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": 10.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_history",
+      "state": "not_queried",
+      "checked_at_epoch": null,
+      "last_success_epoch": null,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": false
+    },
+    {
+      "source": "condor_pool",
+      "state": "not_queried",
+      "checked_at_epoch": null,
+      "last_success_epoch": null,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": false
+    },
+    {
+      "source": "condor_priority",
+      "state": "not_queried",
+      "checked_at_epoch": null,
+      "last_success_epoch": null,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": false
+    },
+    {
+      "source": "condor_negotiator",
+      "state": "not_queried",
+      "checked_at_epoch": null,
+      "last_success_epoch": null,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": false
+    }
+  ],
+  "summary": {
+    "workflow_state": "WORKFLOW_STARTED",
+    "workflow_status": null,
+    "restart_count": 0,
+    "started_at": "100",
+    "ended_at": null,
+    "provenance": "db_confirmed",
+    "authoritative_complete": false,
+    "removal_reason": null,
+    "job_counts": {
+      "total": 4,
+      "compute": 3,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0
+    },
+    "job_counts_source": "stampede",
+    "observed_job_counts": {
+      "total": 4,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0,
+      "removed": 0
+    },
+    "pending_tail_events": 0
+  },
+  "snapshot": {
+    "epoch": 2,
+    "published_at_epoch": 1000.0,
+    "db_generation": {
+      "generation": 0,
+      "device": "<DEVICE>",
+      "inode": "<INODE>"
+    },
+    "tail_generation": {
+      "generation": 1,
+      "device": "<DEVICE>",
+      "inode": "<INODE>"
+    },
+    "pending_overlay_count": 0,
+    "workflow": {
+      "workflow": {
+        "wf_uuid": "root-uuid",
+        "root_wf_uuid": "root-uuid"
+      },
+      "wf_id": 1,
+      "state": "WORKFLOW_STARTED",
+      "status": null,
+      "restart_count": 0,
+      "started_at": "100",
+      "ended_at": null,
+      "transition": {
+        "workflow": {
+          "wf_uuid": "root-uuid",
+          "root_wf_uuid": "root-uuid"
+        },
+        "identity": {
+          "wf_id": 1,
+          "state": "WORKFLOW_STARTED",
+          "timestamp": "100"
+        },
+        "restart_count": 0,
+        "status": null,
+        "reason": null
+      },
+      "provenance": "db_confirmed",
+      "pending_tail": []
+    },
+    "jobs": [
+      {
+        "workflow": {
+          "wf_uuid": "root-uuid",
+          "root_wf_uuid": "root-uuid"
+        },
+        "job_id": 10,
+        "exec_job_id": "cluster_ID0000001",
+        "type_desc": "compute",
+        "task_count": 2,
+        "transformations": [
+          "example::alpha",
+          "example::beta"
+        ],
+        "attempts": [
+          {
+            "identity": {
+              "job_id": 10,
+              "job_instance_id": 100,
+              "job_submit_seq": 1
+            },
+            "scheduler_id": "1000.0",
+            "site": "local",
+            "submit_time": "110",
+            "start_time": null,
+            "end_time": null,
+            "raw_wait_status": null,
+            "exit_code": null,
+            "stdout_path": null,
+            "stderr_path": null,
+            "maxrss_kb": null
+          }
+        ],
+        "current_attempt": {
+          "job_id": 10,
+          "job_instance_id": 100,
+          "job_submit_seq": 1
+        },
+        "state": "SUBMIT",
+        "state_timestamp": "110",
+        "transition": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "cluster_ID0000001",
+          "job_submit_seq": 1,
+          "identity": {
+            "job_instance_id": 100,
+            "state": "SUBMIT",
+            "timestamp": "110",
+            "jobstate_submit_seq": 1
+          },
+          "reason": null
+        },
+        "provenance": "db_confirmed",
+        "pending_tail": [],
+        "scheduler": {
+          "queue": {
+            "ClusterId": 1000,
+            "DAGNodeName": "cluster_ID0000001",
+            "JobStatus": 1,
+            "Owner": "integration-user",
+            "ProcId": 0,
+            "QDate": 110,
+            "RequestCpus": 64,
+            "RequestDisk": 102400,
+            "RequestGpus": 0,
+            "RequestMemory": 4096,
+            "pegasus_root_wf_uuid": "root-uuid",
+            "pegasus_wf_uuid": "root-uuid"
+          }
+        },
+        "lifecycle": "queued",
+        "is_compute": true
+      },
+      {
+        "workflow": {
+          "wf_uuid": "root-uuid",
+          "root_wf_uuid": "root-uuid"
+        },
+        "job_id": 20,
+        "exec_job_id": "held_ID0000002",
+        "type_desc": "compute",
+        "task_count": 1,
+        "transformations": [
+          "example::held"
+        ],
+        "attempts": [
+          {
+            "identity": {
+              "job_id": 20,
+              "job_instance_id": 200,
+              "job_submit_seq": 2
+            },
+            "scheduler_id": "1001.0",
+            "site": "local",
+            "submit_time": "111",
+            "start_time": null,
+            "end_time": null,
+            "raw_wait_status": null,
+            "exit_code": null,
+            "stdout_path": null,
+            "stderr_path": null,
+            "maxrss_kb": null
+          }
+        ],
+        "current_attempt": {
+          "job_id": 20,
+          "job_instance_id": 200,
+          "job_submit_seq": 2
+        },
+        "state": "JOB_HELD",
+        "state_timestamp": "125",
+        "transition": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "held_ID0000002",
+          "job_submit_seq": 2,
+          "identity": {
+            "job_instance_id": 200,
+            "state": "JOB_HELD",
+            "timestamp": "125",
+            "jobstate_submit_seq": 2
+          },
+          "reason": "memory"
+        },
+        "provenance": "db_confirmed",
+        "pending_tail": [],
+        "scheduler": {
+          "queue": {
+            "ClusterId": 1001,
+            "DAGNodeName": "held_ID0000002",
+            "HoldReason": "Job has gone over memory limit of 4096 megabytes",
+            "HoldReasonCode": 34,
+            "JobStatus": 5,
+            "Owner": "integration-user",
+            "ProcId": 0,
+            "RequestCpus": 1,
+            "RequestMemory": 4096,
+            "pegasus_root_wf_uuid": "root-uuid",
+            "pegasus_wf_uuid": "root-uuid"
+          }
+        },
+        "lifecycle": "held",
+        "is_compute": true
+      },
+      {
+        "workflow": {
+          "wf_uuid": "root-uuid",
+          "root_wf_uuid": "root-uuid"
+        },
+        "job_id": 40,
+        "exec_job_id": "failed_ID0000003",
+        "type_desc": "compute",
+        "task_count": 1,
+        "transformations": [
+          "example::failed"
+        ],
+        "attempts": [
+          {
+            "identity": {
+              "job_id": 40,
+              "job_instance_id": 400,
+              "job_submit_seq": 3
+            },
+            "scheduler_id": "1003.0",
+            "site": "local",
+            "submit_time": "112",
+            "start_time": "113",
+            "end_time": "130",
+            "raw_wait_status": 1,
+            "exit_code": -1,
+            "stdout_path": null,
+            "stderr_path": null,
+            "maxrss_kb": null
+          }
+        ],
+        "current_attempt": {
+          "job_id": 40,
+          "job_instance_id": 400,
+          "job_submit_seq": 3
+        },
+        "state": "JOB_FAILURE",
+        "state_timestamp": "130",
+        "transition": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "failed_ID0000003",
+          "job_submit_seq": 3,
+          "identity": {
+            "job_instance_id": 400,
+            "state": "JOB_FAILURE",
+            "timestamp": "130",
+            "jobstate_submit_seq": 3
+          },
+          "reason": null
+        },
+        "provenance": "db_confirmed",
+        "pending_tail": [],
+        "scheduler": {},
+        "lifecycle": "failed",
+        "is_compute": true
+      },
+      {
+        "workflow": {
+          "wf_uuid": "root-uuid",
+          "root_wf_uuid": "root-uuid"
+        },
+        "job_id": 50,
+        "exec_job_id": "subwf_ID0000004",
+        "type_desc": "dax",
+        "task_count": 1,
+        "transformations": [],
+        "attempts": [],
+        "current_attempt": null,
+        "state": null,
+        "state_timestamp": null,
+        "transition": null,
+        "provenance": "db_confirmed",
+        "pending_tail": [],
+        "scheduler": {},
+        "lifecycle": "unsubmitted",
+        "is_compute": false
+      }
+    ],
+    "events": [
+      {
+        "order": 1,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "cluster_ID0000001",
+          "job_submit_seq": 1,
+          "identity": {
+            "job_instance_id": 100,
+            "state": "SUBMIT",
+            "timestamp": "110",
+            "jobstate_submit_seq": 1
+          },
+          "reason": null
+        }
+      },
+      {
+        "order": 2,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "held_ID0000002",
+          "job_submit_seq": 2,
+          "identity": {
+            "job_instance_id": 200,
+            "state": "SUBMIT",
+            "timestamp": "111",
+            "jobstate_submit_seq": 1
+          },
+          "reason": null
+        }
+      },
+      {
+        "order": 3,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "failed_ID0000003",
+          "job_submit_seq": 3,
+          "identity": {
+            "job_instance_id": 400,
+            "state": "SUBMIT",
+            "timestamp": "112",
+            "jobstate_submit_seq": 1
+          },
+          "reason": null
+        }
+      },
+      {
+        "order": 4,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "failed_ID0000003",
+          "job_submit_seq": 3,
+          "identity": {
+            "job_instance_id": 400,
+            "state": "EXECUTE",
+            "timestamp": "113",
+            "jobstate_submit_seq": 2
+          },
+          "reason": null
+        }
+      },
+      {
+        "order": 5,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "held_ID0000002",
+          "job_submit_seq": 2,
+          "identity": {
+            "job_instance_id": 200,
+            "state": "JOB_HELD",
+            "timestamp": "125",
+            "jobstate_submit_seq": 2
+          },
+          "reason": "memory"
+        }
+      },
+      {
+        "order": 6,
+        "provenance": "db_confirmed",
+        "kind": "db_job_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "exec_job_id": "failed_ID0000003",
+          "job_submit_seq": 3,
+          "identity": {
+            "job_instance_id": 400,
+            "state": "JOB_FAILURE",
+            "timestamp": "130",
+            "jobstate_submit_seq": 3
+          },
+          "reason": null
+        }
+      },
+      {
+        "order": 7,
+        "provenance": "db_confirmed",
+        "kind": "db_workflow_transition",
+        "event": {
+          "workflow": {
+            "wf_uuid": "root-uuid",
+            "root_wf_uuid": "root-uuid"
+          },
+          "identity": {
+            "wf_id": 1,
+            "state": "WORKFLOW_STARTED",
+            "timestamp": "100"
+          },
+          "restart_count": 0,
+          "status": null,
+          "reason": null
+        }
+      }
+    ],
+    "events_omitted": 0
+  },
+  "stats": {
+    "total_jobs": 4,
+    "compute_jobs": 3,
+    "infra_jobs": 1,
+    "succeeded": 0,
+    "failed": 1,
+    "held": 1,
+    "unsubmitted": 1,
+    "queued": 1,
+    "running": 0,
+    "wall_time": 900.0,
+    "total_compute_time": 17.0,
+    "parallelism": 0.01888888888888889,
+    "dur_min": 17.0,
+    "dur_max": 17.0,
+    "dur_mean": 17.0,
+    "dur_median": 17.0,
+    "longest_job_name": "example::failed",
+    "shortest_job_name": "example::failed",
+    "authoritative_final": false,
+    "workflow_provenance": "db_confirmed",
+    "db_confirmed_jobs": 4,
+    "tail_overlay_jobs": 0,
+    "tail_pending_jobs": 0,
+    "provisional_jobs": 0,
+    "pending_jobs": 0,
+    "scheduler_coverage": [
+      {
+        "kind": "history",
+        "health": "unavailable",
+        "evidence_count": 0,
+        "matched_current_jobs": 0,
+        "eligible_current_jobs": 3,
+        "complete": false
+      },
+      {
+        "kind": "pool",
+        "health": "unavailable",
+        "evidence_count": 0,
+        "matched_current_jobs": 0,
+        "eligible_current_jobs": 0,
+        "complete": false
+      }
+    ]
+  },
+  "diagnostics": null,
+  "stall": {
+    "assessed": true,
+    "stalled": true,
+    "reason": "idle_too_long",
+    "kind": "idle_too_long",
+    "summary": "1 job(s) queued with no running jobs and no semantic progress for 870s",
+    "method": "snapshot_timestamps",
+    "confirmed": false,
+    "observed_at_epoch": 1000.0,
+    "last_progress_epoch": 130.0,
+    "seconds_since_progress": 870.0,
+    "job_counts": {
+      "total": 4,
+      "succeeded": 0,
+      "failed": 1,
+      "held": 1,
+      "running": 0,
+      "queued": 1,
+      "unsubmitted": 1
+    },
+    "thresholds": {
+      "no_progress_seconds": 60.0,
+      "running_plateau_seconds": 120.0,
+      "idle_threshold_seconds": 120.0,
+      "startup_grace_seconds": 60.0
+    },
+    "observed_job_counts": {
+      "total": 4,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0,
+      "removed": 0
+    },
+    "scheduler": {
+      "queue_queried": true,
+      "dagman_in_queue": false,
+      "jobs_in_queue": 2,
+      "queue_complete": true,
+      "dagman_cluster_id": null,
+      "dagman_is_wrapper": null,
+      "recorded_jobs_missing": 0
+    },
+    "last_activity_epoch": 130.0,
+    "seconds_since_activity": 870.0,
+    "activity_source": "stampede"
+  },
+  "why_idle": null,
+  "stream": null,
+  "analysis_errors": []
+}

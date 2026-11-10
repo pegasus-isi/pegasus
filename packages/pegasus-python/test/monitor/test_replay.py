@@ -1,0 +1,767 @@
+"""Tests for deterministic, source-free monitor event-log replay."""
+
+##
+#  Copyright 2026 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+from __future__ import annotations
+
+import builtins
+import gc
+import weakref
+from dataclasses import replace
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from Pegasus.monitor import replay as replay_module
+from Pegasus.monitor.event_log import EventLogFormatError, encode_record
+from Pegasus.monitor.models import (
+    CheckpointRecord,
+    DatabaseGeneration,
+    DatabaseSnapshot,
+    DBJobTransition,
+    DBTransitionIdentity,
+    DBWorkflowTransition,
+    DBWorkflowTransitionIdentity,
+    DiagnosticEvidence,
+    DiagnosticRecord,
+    DiagnosticSeverity,
+    EnrichmentRecord,
+    FrozenPayload,
+    GapReason,
+    GapRecord,
+    JobAttempt,
+    JobAttemptIdentity,
+    JobSnapshot,
+    JobTransitionRecord,
+    JobTransitionWatermark,
+    Provenance,
+    SnapshotEpoch,
+    SourceName,
+    StreamHeader,
+    WorkflowIdentity,
+    WorkflowRestartIdentity,
+    WorkflowSnapshot,
+    WorkflowTransitionRecord,
+    WorkflowTransitionWatermark,
+)
+from Pegasus.monitor.replay import (
+    ReplayAccumulator,
+    ReplayEngine,
+    ReplayStreamError,
+    replay_records,
+)
+
+WORKFLOW = WorkflowIdentity("wf-selected", "wf-root")
+GENERATION = DatabaseGeneration(1, 10, 20)
+
+
+def _job_transition(
+    state: str,
+    *,
+    timestamp: str,
+    db_sequence: int,
+) -> DBJobTransition:
+    return DBJobTransition(
+        WORKFLOW,
+        "compute_ID0001",
+        1,
+        DBTransitionIdentity(10, state, Decimal(timestamp), db_sequence),
+    )
+
+
+def _snapshot(
+    state: str = "SUBMIT",
+    *,
+    timestamp: str = "1",
+    db_sequence: int = 1,
+    epoch: int = 1,
+) -> DatabaseSnapshot:
+    transition = _job_transition(state, timestamp=timestamp, db_sequence=db_sequence)
+    attempt_identity = JobAttemptIdentity(2, 10, 1)
+    attempt = JobAttempt(
+        attempt_identity,
+        scheduler_id="100.0",
+        site="local",
+        submit_time=Decimal("1"),
+    )
+    job = JobSnapshot(
+        WORKFLOW,
+        2,
+        "compute_ID0001",
+        "compute",
+        1,
+        ("example::compute",),
+        (attempt,),
+        attempt_identity,
+        state,
+        Decimal(timestamp),
+        transition,
+        Provenance.DB_CONFIRMED,
+    )
+    workflow_transition = DBWorkflowTransition(
+        WORKFLOW,
+        DBWorkflowTransitionIdentity(1, "WORKFLOW_STARTED", Decimal("1")),
+        0,
+        0,
+    )
+    workflow = WorkflowSnapshot(
+        WORKFLOW,
+        1,
+        "WORKFLOW_STARTED",
+        0,
+        0,
+        Decimal("1"),
+        None,
+        workflow_transition,
+    )
+    return DatabaseSnapshot(
+        SnapshotEpoch(epoch),
+        GENERATION,
+        float(epoch),
+        workflow,
+        (job,),
+        (transition,),
+        (workflow_transition,),
+        (JobTransitionWatermark(10, db_sequence, (transition.identity,)),),
+        WorkflowTransitionWatermark(
+            WorkflowRestartIdentity(WORKFLOW, 1, 0),
+            (workflow_transition.identity,),
+        ),
+    )
+
+
+def _header(stream_id: str, timestamp: float = 1.0) -> StreamHeader:
+    return StreamHeader(0, stream_id, WORKFLOW, timestamp, "6.0")
+
+
+def _write(path: Path, *records: object, torn: bytes = b"") -> None:
+    path.write_bytes(b"".join(encode_record(record) for record in records) + torn)
+
+
+def test_normal_replay_reconstructs_db_state_and_preserves_evidence() -> None:
+    initial = _snapshot()
+    execute = _job_transition("EXECUTE", timestamp="2", db_sequence=2)
+    diagnostic = DiagnosticRecord(
+        3,
+        "stream",
+        SnapshotEpoch(2),
+        2.1,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "running",
+        DiagnosticSeverity.INFO,
+        "job is running",
+        (
+            DiagnosticEvidence(
+                SourceName.CONDOR_QUEUE,
+                "matched",
+                FrozenPayload.from_mapping({"slots": 1}),
+            ),
+        ),
+    )
+    enrichment = EnrichmentRecord(
+        4,
+        "stream",
+        SnapshotEpoch(2),
+        2.2,
+        SourceName.CONDOR_QUEUE,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        FrozenPayload.from_mapping({"job_status": 2}),
+        100.0,
+    )
+
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, initial, "initial"),
+            JobTransitionRecord(2, "stream", SnapshotEpoch(2), 2.0, execute),
+            diagnostic,
+            enrichment,
+        )
+    )
+
+    assert result.complete is True
+    assert result.snapshot is not None
+    assert result.snapshot.jobs[0].state == "EXECUTE"
+    assert result.snapshot.jobs[0].provenance is Provenance.DB_CONFIRMED
+    assert result.current_diagnostics == (diagnostic,)
+    assert result.enrichments == (enrichment,)
+    assert result.snapshot.jobs[0].scheduler.fields == ()
+
+
+def test_timing_is_frame_based_and_scaled_by_speed(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    execute = _job_transition("EXECUTE", timestamp="2", db_sequence=2)
+    _write(
+        path,
+        _header("stream", 10.1),
+        CheckpointRecord(1, "stream", 10.1, _snapshot(), "initial"),
+        JobTransitionRecord(2, "stream", SnapshotEpoch(2), 14.1, execute),
+    )
+    sleeps: list[float] = []
+    seen: list[str] = []
+
+    result = ReplayEngine(path, speed=2.0, sleep=sleeps.append).replay(
+        lambda frame: seen.append(frame.snapshot.jobs[0].state or "")
+    )
+
+    assert sleeps == [2.0]
+    assert seen == ["SUBMIT", "EXECUTE"]
+    assert [frame.recorded_at_epoch for frame in result.frames] == [10.1, 14.1]
+
+    sleeps.clear()
+    ReplayEngine(path, speed=0, sleep=sleeps.append).replay()
+    assert sleeps == []
+    with pytest.raises(ValueError, match="speed"):
+        ReplayEngine(path, speed=-1)
+
+
+@pytest.mark.parametrize("diagnostic_epoch", [2, 3])
+def test_current_diagnostics_allow_noop_refresh(
+    diagnostic_epoch,
+) -> None:
+    initial = _snapshot(epoch=2)
+    diagnostic = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(diagnostic_epoch),
+        3.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "held_unknown",
+        DiagnosticSeverity.WARNING,
+        "Job is held by HTCondor",
+        (),
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 2.0, initial, "initial"),
+            diagnostic,
+        )
+    )
+
+    assert result.complete
+    assert result.snapshot == initial
+    assert result.current_diagnostics == (diagnostic,)
+
+
+def test_gap_discards_incremental_records_until_recovery_checkpoint() -> None:
+    ignored = _job_transition("EXECUTE", timestamp="2", db_sequence=2)
+    recovered = _snapshot("JOB_HELD", timestamp="3", db_sequence=3, epoch=3)
+    success = _job_transition("JOB_SUCCESS", timestamp="4", db_sequence=4)
+
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+            GapRecord(4, "stream", 2.0, GapReason.DISK_GUARD, 2, 3),
+            JobTransitionRecord(5, "stream", SnapshotEpoch(2), 3.0, ignored),
+            CheckpointRecord(6, "stream", 4.0, recovered, "recovery"),
+            JobTransitionRecord(7, "stream", SnapshotEpoch(4), 5.0, success),
+        )
+    )
+
+    assert result.complete is True
+    assert result.ignored_records == 1
+    assert result.snapshot is not None
+    assert result.snapshot.jobs[0].state == "JOB_SUCCESS"
+    assert ignored.identity not in {
+        item.identity for item in result.snapshot.recent_transitions
+    }
+
+
+def test_replacement_header_resets_state_and_waits_for_its_checkpoint() -> None:
+    old_execute = _job_transition("EXECUTE", timestamp="2", db_sequence=2)
+    pre_checkpoint = _job_transition("JOB_FAILURE", timestamp="8", db_sequence=8)
+    replacement = _snapshot("JOB_HELD", timestamp="9", db_sequence=9, epoch=1)
+
+    result = replay_records(
+        (
+            _header("old"),
+            CheckpointRecord(1, "old", 1.0, _snapshot(), "initial"),
+            JobTransitionRecord(2, "old", SnapshotEpoch(2), 2.0, old_execute),
+            _header("new", 10.0),
+            JobTransitionRecord(1, "new", SnapshotEpoch(1), 10.1, pre_checkpoint),
+            CheckpointRecord(2, "new", 10.2, replacement, "initial"),
+        )
+    )
+
+    assert result.stream_replacements == 1
+    assert result.ignored_records == 1
+    assert result.header is not None and result.header.stream_id == "new"
+    assert result.snapshot == replacement
+    assert result.diagnostics == ()
+    assert result.enrichments == ()
+
+
+def test_same_sequence_transitions_have_deterministic_final_precedence() -> None:
+    failure = _job_transition("JOB_FAILURE", timestamp="2", db_sequence=2)
+    success = _job_transition("JOB_SUCCESS", timestamp="2", db_sequence=2)
+    terminated = DBWorkflowTransition(
+        WORKFLOW,
+        DBWorkflowTransitionIdentity(1, "WORKFLOW_TERMINATED", Decimal("3")),
+        0,
+        0,
+    )
+    records = (
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+        JobTransitionRecord(2, "stream", SnapshotEpoch(2), 2.0, failure),
+        JobTransitionRecord(3, "stream", SnapshotEpoch(2), 2.0, success),
+        WorkflowTransitionRecord(4, "stream", SnapshotEpoch(3), 3.0, terminated),
+    )
+
+    first = replay_records(records)
+    second = replay_records(records)
+
+    assert first.snapshot == second.snapshot
+    assert first.snapshot is not None
+    assert first.snapshot.jobs[0].state == "JOB_SUCCESS"
+    assert first.snapshot.workflow.state == "WORKFLOW_TERMINATED"
+    assert first.snapshot.workflow.ended_at == Decimal("3")
+    assert first.snapshot.watermarks[0].identities_at_highest_seq == (
+        failure.identity,
+        success.identity,
+    )
+
+
+def test_accumulator_bounds_incremental_transition_feeds_and_materializes_lazily() -> (
+    None
+):
+    accumulator = ReplayAccumulator(
+        recent_transition_limit=8,
+        recent_workflow_transition_limit=3,
+    )
+    assert accumulator.consume(_header("stream")) is False
+    initial = _snapshot()
+    assert (
+        accumulator.consume(CheckpointRecord(1, "stream", 1.0, initial, "initial"))
+        is True
+    )
+    assert accumulator.snapshot is initial
+
+    for sequence in range(2, 34):
+        transition = _job_transition(
+            "EXECUTE",
+            timestamp=str(sequence),
+            db_sequence=sequence,
+        )
+        assert accumulator.consume(
+            JobTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(sequence),
+                transition,
+            )
+        )
+        assert accumulator._snapshot_cache is None
+
+    snapshot = accumulator.snapshot
+    assert snapshot is not None
+    assert len(snapshot.recent_transitions) == 8
+    assert snapshot.recent_transitions[-1].identity.jobstate_submit_seq == 33
+    assert snapshot.jobs[0].transition is not None
+    assert snapshot.jobs[0].transition.identity.jobstate_submit_seq == 33
+
+
+def test_accumulator_bounds_workflow_transition_feed() -> None:
+    accumulator = ReplayAccumulator(recent_workflow_transition_limit=3)
+    accumulator.consume(_header("stream"))
+    accumulator.consume(CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"))
+
+    for sequence in range(2, 10):
+        transition = DBWorkflowTransition(
+            WORKFLOW,
+            DBWorkflowTransitionIdentity(1, "WORKFLOW_STARTED", Decimal(str(sequence))),
+            sequence - 1,
+            0,
+        )
+        assert accumulator.consume(
+            WorkflowTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(sequence),
+                transition,
+            )
+        )
+
+    snapshot = accumulator.snapshot
+    assert snapshot is not None
+    assert len(snapshot.recent_workflow_transitions) == 3
+    assert snapshot.workflow.restart_count == 8
+
+
+def test_torn_tail_is_retained_but_complete_malformed_record_fails(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    _write(
+        path,
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+        torn=b'{"schema_version":1,"record_type":"job_transition"',
+    )
+
+    result = ReplayEngine(path, speed=0).replay()
+    assert result.complete is True
+    assert result.trailing_bytes.startswith(b'{"schema_version"')
+
+    path.write_bytes(path.read_bytes() + b"\n")
+    with pytest.raises(EventLogFormatError):
+        ReplayEngine(path, speed=0).replay()
+
+    path.write_bytes(b"")
+    with pytest.raises(ReplayStreamError, match="empty"):
+        ReplayEngine(path, speed=0).replay()
+
+
+def test_replay_never_imports_or_calls_live_workflow_sources(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "events.jsonl"
+    _write(
+        path,
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+    )
+    forbidden = {
+        "Pegasus.monitor.stampede",
+        "Pegasus.monitor.live_events",
+        "Pegasus.monitor.condor",
+        "Pegasus.monitor.diagnostics",
+        "Pegasus.monitor.locator",
+        "Pegasus.monitor.remote",
+    }
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name in forbidden:
+            raise AssertionError(f"live source imported during replay: {name}")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+
+    result = ReplayEngine(path, speed=0).replay()
+    assert result.complete is True
+
+
+def test_engine_streams_without_read_bytes_and_can_discard_frames(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "events.jsonl"
+    records: list[object] = [
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+    ]
+    for sequence in range(2, 102):
+        records.append(
+            EnrichmentRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(1),
+                float(sequence),
+                SourceName.CONDOR_QUEUE,
+                FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+                FrozenPayload.from_mapping({"sequence": sequence}),
+                None,
+            )
+        )
+    _write(path, *records)
+    monkeypatch.setattr(
+        Path,
+        "read_bytes",
+        lambda _self: pytest.fail("ReplayEngine must stream instead of read_bytes"),
+    )
+    frames: list[int] = []
+
+    result = ReplayEngine(path, speed=0, retain_frames=False).replay(
+        lambda _frame: frames.append(1)
+    )
+
+    assert result.complete is True
+    assert result.frames == ()
+    assert len(frames) == 101
+    assert len(result.enrichments) == 1
+    assert result.enrichments[0].payload.to_json_dict()["sequence"] == 101
+
+
+def test_streaming_replay_enforces_record_limit_and_tolerates_bounded_torn_tail(
+    tmp_path,
+) -> None:
+    path = tmp_path / "events.jsonl"
+    header = encode_record(_header("stream"))
+    checkpoint = encode_record(
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+    )
+    maximum = max(len(header), len(checkpoint))
+    path.write_bytes(header + checkpoint + b"{" + b"x" * 20)
+
+    result = ReplayEngine(path, speed=0, max_record_bytes=maximum).replay()
+    assert result.complete is True
+    assert result.trailing_bytes.startswith(b"{")
+
+    path.write_bytes(header + checkpoint + b"{" + b"x" * (maximum + 1))
+    with pytest.raises(EventLogFormatError, match="byte limit"):
+        ReplayEngine(path, speed=0, max_record_bytes=maximum).replay()
+
+
+def test_streaming_iterator_releases_a_yielded_checkpoint_before_next_decode(
+    tmp_path, monkeypatch
+) -> None:
+    path = tmp_path / "events.jsonl"
+    line = b'{"schema_version":1,"record_type":"checkpoint","x":1}\n'
+    path.write_bytes(line + line)
+    references = []
+
+    class DecodedRecord:
+        pass
+
+    def decode(_line):
+        record = DecodedRecord()
+        references.append(weakref.ref(record))
+        return record
+
+    monkeypatch.setattr(replay_module, "decode_json_line", decode)
+    state = replay_module._StreamState()
+    records = iter(replay_module._iter_jsonl_records(path, 1024, state))
+
+    assert next(records) is replay_module._CHECKPOINT_DECODE_BOUNDARY
+    first = next(records)
+    del first
+    assert next(records) is replay_module._CHECKPOINT_DECODE_BOUNDARY
+    gc.collect()
+    assert references[0]() is None
+
+
+def test_checkpoint_text_inside_enrichment_does_not_reset_replay(tmp_path) -> None:
+    path = tmp_path / "events.jsonl"
+    header = _header("stream")
+    checkpoint = CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+    enrichment = EnrichmentRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        2.0,
+        SourceName.CONDOR_QUEUE,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        FrozenPayload.from_mapping({"record_type": "checkpoint"}),
+        None,
+    )
+    _write(path, header, checkpoint, enrichment)
+
+    result = ReplayEngine(path, speed=0).replay()
+
+    assert result.complete is True
+    assert result.snapshot is not None
+    assert result.ignored_records == 0
+    assert result.enrichments == (enrichment,)
+
+
+def test_replay_identifies_checkpoint_without_materializing_json(monkeypatch) -> None:
+    header = _header("stream")
+    checkpoint = CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial")
+
+    def reject_json_conversion(_record):
+        raise AssertionError("replay must not materialize checkpoint JSON")
+
+    monkeypatch.setattr(CheckpointRecord, "to_json_dict", reject_json_conversion)
+
+    result = replay_records((header, checkpoint))
+
+    assert result.complete is True
+    assert result.frames[-1].record_types == ("header", "checkpoint")
+
+
+@pytest.mark.parametrize(
+    "codes", [("held_unknown", "memory_exceeded"), ("exit_code_1", "exit_code_1")]
+)
+def test_diagnostic_replacement_supersedes_same_job(codes):
+    first = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(2),
+        2.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        codes[0],
+        DiagnosticSeverity.WARNING,
+        "first",
+        (),
+    )
+    second = replace(
+        first,
+        sequence=3,
+        snapshot_epoch=SnapshotEpoch(3),
+        code=codes[1],
+        summary="replacement",
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, _snapshot("JOB_HELD"), "initial"),
+            first,
+            second,
+        )
+    )
+    assert result.current_diagnostics == (second,)
+
+
+@pytest.mark.parametrize("checkpoint", [False, True])
+def test_unrelated_job_transition_retains_finding_until_problem_changes(checkpoint):
+    snapshot = _snapshot("JOB_HELD")
+    job = snapshot.jobs[0]
+    identity = JobAttemptIdentity(3, 11, 2)
+    other_transition = replace(
+        job.transition,
+        exec_job_id="other",
+        job_submit_seq=2,
+        identity=replace(job.transition.identity, job_instance_id=11),
+    )
+    other = replace(
+        job,
+        job_id=3,
+        exec_job_id="other",
+        current_attempt=identity,
+        attempts=(replace(job.attempts[0], identity=identity),),
+        transition=other_transition,
+    )
+    snapshot = replace(
+        snapshot,
+        jobs=(*snapshot.jobs, other),
+        watermarks=(
+            *snapshot.watermarks,
+            JobTransitionWatermark(11, 1, (other_transition.identity,)),
+        ),
+    )
+    finding = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        1.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "memory_exceeded",
+        DiagnosticSeverity.WARNING,
+        "held",
+        (),
+    )
+    transition = replace(
+        _job_transition("EXECUTE", timestamp="2", db_sequence=2),
+        exec_job_id="other",
+        job_submit_seq=2,
+        identity=DBTransitionIdentity(11, "EXECUTE", Decimal("2"), 2),
+    )
+    records = [
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, snapshot, "initial"),
+        finding,
+        JobTransitionRecord(3, "stream", SnapshotEpoch(2), 2.0, transition),
+    ]
+    if checkpoint:
+        updated = replay_records(records).snapshot
+        records.append(
+            CheckpointRecord(
+                4, "stream", 3.0, replace(updated, epoch=SnapshotEpoch(3)), "periodic"
+            )
+        )
+    assert replay_records(records).current_diagnostics == (finding,)
+    released = _job_transition("JOB_RELEASED", timestamp="4", db_sequence=4)
+    records.append(
+        JobTransitionRecord(len(records), "stream", SnapshotEpoch(4), 4.0, released)
+    )
+    assert replay_records(records).current_diagnostics == ()
+
+
+def test_checkpoint_attempt_change_expires_diagnostic():
+    snapshot = _snapshot("JOB_HELD")
+    finding = DiagnosticRecord(
+        2,
+        "stream",
+        SnapshotEpoch(1),
+        1.0,
+        FrozenPayload.from_mapping({"exec_job_id": "compute_ID0001"}),
+        "held_unknown",
+        DiagnosticSeverity.WARNING,
+        "held",
+        (),
+    )
+    job = snapshot.jobs[0]
+    attempt = replace(job.current_attempt, job_submit_seq=2)
+    changed = replace(
+        snapshot,
+        epoch=SnapshotEpoch(2),
+        recent_transitions=(replace(job.transition, job_submit_seq=2),),
+        jobs=(
+            replace(
+                job,
+                current_attempt=attempt,
+                transition=replace(job.transition, job_submit_seq=2),
+                attempts=(replace(job.attempts[0], identity=attempt),),
+            ),
+        ),
+    )
+    result = replay_records(
+        (
+            _header("stream"),
+            CheckpointRecord(1, "stream", 1.0, snapshot, "initial"),
+            finding,
+            CheckpointRecord(3, "stream", 2.0, changed, "structure_change"),
+        )
+    )
+    assert result.current_diagnostics == ()
+
+
+def test_hold_release_delayed_eviction_replays_as_queued():
+    records = [
+        _header("stream"),
+        CheckpointRecord(1, "stream", 1.0, _snapshot(), "initial"),
+    ]
+    for sequence, state, timestamp in [
+        (2, "JOB_HELD", "2"),
+        (3, "JOB_RELEASED", "3"),
+        (4, "JOB_EVICTED", "243"),
+    ]:
+        records.append(
+            JobTransitionRecord(
+                sequence,
+                "stream",
+                SnapshotEpoch(sequence),
+                float(timestamp),
+                _job_transition(state, timestamp=timestamp, db_sequence=sequence),
+            )
+        )
+    result = replay_records(records)
+    assert result.snapshot.jobs[0].state == "JOB_EVICTED"
+    assert result.snapshot.jobs[0].lifecycle.value == "queued"
+
+
+def test_checkpoint_removal_evidence_clears_on_checkpoint_or_restart():
+    accumulator = ReplayAccumulator()
+    accumulator.consume(StreamHeader(0, "stream", WORKFLOW, 1, "test"))
+    removed = CheckpointRecord(1, "stream", 1, _snapshot(), "final", "Removed by user")
+    accumulator.consume(removed)
+    assert accumulator.workflow_removal_reason == "Removed by user"
+    accumulator.consume(replace(removed, sequence=2, workflow_removal_reason=None))
+    assert accumulator.workflow_removal_reason is None
+    accumulator.consume(replace(removed, sequence=3))
+    transition = replace(
+        _snapshot().workflow.transition,
+        restart_count=1,
+        identity=DBWorkflowTransitionIdentity(1, "WORKFLOW_STARTED", Decimal(10)),
+    )
+    accumulator.consume(
+        WorkflowTransitionRecord(4, "stream", SnapshotEpoch(2), 10, transition)
+    )
+    assert accumulator.workflow_removal_reason is None

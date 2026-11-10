@@ -1,0 +1,418 @@
+{
+  "format": "pegasus-monitor-json",
+  "format_version": 1,
+  "compatibility": "Adding a key or an enumeration value keeps format_version. Removing or renaming a key, or changing the type or meaning of an existing one, increments it. Consumers must ignore keys they do not know.",
+  "modes": {
+    "once": "Fills snapshot. Honors --events for snapshot.events; lists every job regardless of --all-jobs.",
+    "diagnose": "Fills diagnostics.",
+    "why_idle": "Fills why_idle.",
+    "always": "workflow, sources, summary, stats and stall are filled for every mode whenever an authoritative Stampede snapshot exists. A section whose mode was not requested is null."
+  },
+  "origins": [
+    "live",
+    "replay",
+    "remote"
+  ],
+  "sections": {
+    "envelope": [
+      "format",
+      "format_version",
+      "monitor_version",
+      "generated_at_epoch",
+      "generated_at",
+      "observed_at_epoch",
+      "modes",
+      "origin",
+      "target",
+      "exit_code",
+      "error",
+      "workflow",
+      "sources",
+      "summary",
+      "snapshot",
+      "stats",
+      "diagnostics",
+      "stall",
+      "why_idle",
+      "stream",
+      "analysis_errors"
+    ],
+    "error": [
+      "code",
+      "message"
+    ],
+    "workflow": [
+      "wf_uuid",
+      "root_wf_uuid",
+      "is_sub_workflow",
+      "submit_dir",
+      "label",
+      "owner",
+      "dag_name",
+      "planner_version",
+      "sub_workflows"
+    ],
+    "sub_workflows": [
+      "count",
+      "aggregated",
+      "exec_job_ids",
+      "exec_job_ids_omitted"
+    ],
+    "source": [
+      "source",
+      "state",
+      "checked_at_epoch",
+      "last_success_epoch",
+      "last_good_age",
+      "stale_after_seconds",
+      "consecutive_failures",
+      "pending_count",
+      "error_code",
+      "detail",
+      "queried"
+    ],
+    "summary": [
+      "workflow_state",
+      "workflow_status",
+      "restart_count",
+      "started_at",
+      "ended_at",
+      "provenance",
+      "authoritative_complete",
+      "removal_reason",
+      "job_counts",
+      "job_counts_source",
+      "observed_job_counts",
+      "pending_tail_events"
+    ],
+    "job_counts": [
+      "total",
+      "compute",
+      "unsubmitted",
+      "pre",
+      "queued",
+      "running",
+      "held",
+      "post",
+      "succeeded",
+      "failed",
+      "other"
+    ],
+    "observed_job_counts": [
+      "total",
+      "unsubmitted",
+      "pre",
+      "queued",
+      "running",
+      "held",
+      "post",
+      "succeeded",
+      "failed",
+      "other",
+      "removed"
+    ],
+    "snapshot": [
+      "epoch",
+      "published_at_epoch",
+      "db_generation",
+      "tail_generation",
+      "pending_overlay_count",
+      "workflow",
+      "jobs",
+      "events",
+      "events_omitted"
+    ],
+    "snapshot_job_additions": [
+      "lifecycle",
+      "is_compute"
+    ],
+    "diagnostics": [
+      "available",
+      "reason",
+      "origin",
+      "findings",
+      "errors"
+    ],
+    "finding": [
+      "target",
+      "category",
+      "severity",
+      "code",
+      "summary",
+      "suggestions",
+      "evidence"
+    ],
+    "finding_target": [
+      "workflow",
+      "exec_job_id",
+      "job_provenance"
+    ],
+    "evidence": [
+      "source",
+      "code",
+      "payload"
+    ],
+    "stall": [
+      "assessed",
+      "stalled",
+      "reason",
+      "kind",
+      "summary",
+      "method",
+      "confirmed",
+      "observed_at_epoch",
+      "last_progress_epoch",
+      "seconds_since_progress",
+      "job_counts",
+      "thresholds",
+      "observed_job_counts",
+      "scheduler",
+      "last_activity_epoch",
+      "seconds_since_activity",
+      "activity_source"
+    ],
+    "stall_job_counts": [
+      "total",
+      "succeeded",
+      "failed",
+      "held",
+      "running",
+      "queued",
+      "unsubmitted"
+    ],
+    "stall_thresholds": [
+      "no_progress_seconds",
+      "running_plateau_seconds",
+      "idle_threshold_seconds",
+      "startup_grace_seconds"
+    ],
+    "stall_scheduler": [
+      "queue_queried",
+      "dagman_in_queue",
+      "jobs_in_queue",
+      "queue_complete",
+      "dagman_cluster_id",
+      "dagman_is_wrapper",
+      "recorded_jobs_missing"
+    ],
+    "why_idle": [
+      "available",
+      "reason",
+      "workflow_owner",
+      "queued_jobs",
+      "unsubmitted_jobs",
+      "idle_jobs",
+      "pool",
+      "resource_fit",
+      "priority",
+      "negotiator",
+      "findings",
+      "suggestions",
+      "sources",
+      "idle_jobs_omitted"
+    ],
+    "why_idle_idle_job": [
+      "exec_job_id",
+      "state",
+      "type_desc",
+      "provenance"
+    ],
+    "why_idle_pool": [
+      "machines",
+      "total_slots",
+      "idle_slots",
+      "total_cpus",
+      "idle_cpus",
+      "total_memory_mb",
+      "idle_memory_mb",
+      "total_gpus",
+      "idle_gpus"
+    ],
+    "why_idle_resource_fit": [
+      "mismatches",
+      "mismatches_omitted"
+    ],
+    "why_idle_mismatch": [
+      "exec_job_id",
+      "requested_cpus",
+      "requested_memory_mb",
+      "requested_disk_kb",
+      "requested_gpus",
+      "reason",
+      "requirements"
+    ],
+    "why_idle_priority": [
+      "owner",
+      "principal",
+      "effective_priority",
+      "real_priority",
+      "resources_used",
+      "better_priority_users"
+    ],
+    "why_idle_negotiator": [
+      "last_cycle_seconds",
+      "last_cycle_matches"
+    ],
+    "why_idle_source": [
+      "kind",
+      "disposition",
+      "evidence_count",
+      "error_code"
+    ],
+    "unavailable_section": [
+      "available",
+      "reason"
+    ],
+    "stream": [
+      "stop_reason",
+      "stopped_by_recorder"
+    ]
+  },
+  "model_codecs": {
+    "snapshot.workflow": "WorkflowSnapshot.to_json_dict()",
+    "snapshot.jobs[]": "JobSnapshot.to_json_dict() plus snapshot_job_additions",
+    "snapshot.events[]": "EffectiveEvent.to_json_dict()",
+    "sources[]": "SourceHealth.to_json_dict() plus queried",
+    "stats": "WorkflowStats.to_dict(); keys whose value is unknown are omitted",
+    "evidence[]": "DiagnosticEvidence.to_json_dict() after the JSONL log's redaction"
+  },
+  "sources": [
+    "stampede",
+    "live_tail",
+    "condor_queue",
+    "condor_history",
+    "condor_pool",
+    "condor_priority",
+    "condor_negotiator"
+  ],
+  "source_states": [
+    "healthy",
+    "waiting",
+    "stale",
+    "degraded",
+    "gap",
+    "reattaching",
+    "resync",
+    "failed_unconfirmed",
+    "unavailable",
+    "disabled",
+    "not_queried"
+  ],
+  "lifecycles": [
+    "unsubmitted",
+    "pre",
+    "queued",
+    "running",
+    "held",
+    "post",
+    "succeeded",
+    "failed",
+    "other"
+  ],
+  "job_counts_sources": {
+    "job_counts": "stampede: the lifecycle Stampede records for each job. It trails HTCondor by the delay with which pegasus-monitord records state and keeps the last recorded state of a job that was removed.",
+    "observed_job_counts": "job_counts after applying a healthy condor_queue or condor_history result, when sources[] shows one was queried: an unfinished job takes the lifecycle the queue shows, and a job HTCondor removed, or that was unfinished when its workflow ended, is counted as removed. Without a queried queue only the workflow-end rule applies."
+  },
+  "finding_categories": [
+    "held",
+    "failed"
+  ],
+  "finding_severities": [
+    "info",
+    "warning",
+    "error"
+  ],
+  "hold_codes": [
+    "user_hold",
+    "output_missing",
+    "output_transfer_failed",
+    "input_transfer_failed",
+    "memory_exceeded",
+    "disk_exceeded",
+    "walltime_exceeded",
+    "credential_failure",
+    "shadow_exception",
+    "dns_failure",
+    "container_failure",
+    "policy_hold",
+    "held_unknown"
+  ],
+  "failure_codes": [
+    "exit_code_<N>",
+    "exit_code_unknown",
+    "job_removed"
+  ],
+  "diagnostics_origins": {
+    "analysis": "Computed by this run; category and suggestions are present.",
+    "event_log": "Read from a replayed or remote JSONL stream, which never stored category or suggestions; both are null."
+  },
+  "stall_method": "snapshot_timestamps",
+  "stall_kinds": [
+    "all_held",
+    "no_semantic_progress",
+    "running_plateau",
+    "idle_too_long",
+    "no_scheduler_activity"
+  ],
+  "stall_kinds_live_only": [
+    "running_plateau"
+  ],
+  "stall_kinds_one_shot_only": [
+    "no_scheduler_activity"
+  ],
+  "stall_activity_sources": [
+    "stampede",
+    "dagman_out",
+    "nodes_log"
+  ],
+  "stall_rules": [
+    "Lifecycles are those of observed_job_counts. 'In flight' means pre, queued, running, held or post; 'unfinished' means not succeeded and not failed.",
+    "Quiet time is seconds_since_activity, measured from last_activity_epoch: the later of last_progress_epoch (Stampede's newest record) and the last write to the workflow's own <dag>.dagman.out or <dag>.nodes.log, whichever activity_source names. A file time later than observed_at_epoch counts as observed_at_epoch. Without a readable file, and for replay and remote origins, it is last_progress_epoch.",
+    "no_scheduler_activity: jobs are unfinished, seconds_since_activity >= no_progress_seconds, and one of: (1) a queried queue shows neither the workflow's DAGMan nor any job of it; (2) a complete queue result shows no job of the workflow although Stampede records recorded_jobs_missing of them as queued, running or held, which is what a DAGMan that died behind its wrapper job looks like; (3) no job is in flight. Jobs in PRE or POST scripts are never counted missing. A queue result that is unhealthy, or that reached its row limit (queue_complete false), never satisfies (2).",
+    "stall.scheduler.dagman_in_queue is about the workflow's own DAGMan job: for a root workflow the scheduler-universe job no DAGMan submitted, for a sub-workflow the job its queued jobs name in DAGManJobId or, with none queued, the one started in its submit directory. It is false when a complete queue result shows no such job. dagman_is_wrapper is true when that job is pegasus-dagman, which runs condor_dagman as a child and can outlive it. A sub-workflow DAGMan job counts in the jobs_in_queue of its parent.",
+    "all_held: at least one job is in flight and every job in flight is held. Unsubmitted jobs do not prevent it. No time threshold.",
+    "jobs_running (not stalled): a job is running. One sample cannot tell a long job from a stuck one, so running_plateau is never reported here.",
+    "idle_too_long, no_semantic_progress: jobs are queued and none is running, for idle_threshold_seconds or no_progress_seconds, as in the live detector."
+  ],
+  "stall_reasons": {
+    "stalled": [
+      "all_held",
+      "no_semantic_progress",
+      "idle_too_long",
+      "no_scheduler_activity"
+    ],
+    "not_stalled": [
+      "workflow_complete",
+      "no_jobs_submitted",
+      "startup_grace",
+      "within_thresholds",
+      "jobs_running"
+    ],
+    "not_assessed": [
+      "authoritative_snapshot_unavailable",
+      "stampede_not_healthy",
+      "progress_time_unavailable"
+    ]
+  },
+  "unavailable_reasons": [
+    "authoritative_snapshot_unavailable",
+    "analysis_failed",
+    "scheduler_evidence_not_recorded"
+  ],
+  "exit_codes": {
+    "0": "A document with error null.",
+    "1": "A document whose error names a runtime failure.",
+    "2": "A document whose error.code is usage_error; argparse also prints usage to stderr."
+  },
+  "error_codes": {
+    "usage_error": 2,
+    "workflow_location_error": 1,
+    "no_authoritative_snapshot": 1,
+    "no_complete_checkpoint": 1,
+    "invalid_event_log": 1,
+    "io_error": 1,
+    "interrupted": 1,
+    "cleanup_failed": 1,
+    "monitor_error": 1
+  }
+}

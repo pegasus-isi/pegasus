@@ -161,6 +161,10 @@ cli.add_command(
     name="metadata",
 )
 cli.add_command(
+    _script_cmd("monitor", "pegasus-monitor", "Live terminal monitor for a workflow"),
+    name="monitor",
+)
+cli.add_command(
     _script_cmd("monitord", "pegasus-monitord", "Pegasus monitoring daemon"),
     name="monitord",
 )
@@ -584,6 +588,10 @@ def pegasus_statistics():
 
 def pegasus_remove():
     _run_script("pegasus-remove", sys.argv[1:])
+
+
+def pegasus_monitor():
+    _run_script("pegasus-monitor", sys.argv[1:])
 
 
 def pegasus_monitord():

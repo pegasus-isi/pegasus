@@ -1,0 +1,127 @@
+schema_version: 1
+recorded_on: '2026-08-17'
+source:
+  repository: /Users/stealey/GitHub/pegasusai/workflow-monitor
+  license: Apache-2.0
+  baseline:
+    branch: main
+    commit: 358d7ff22231882000e3741121a2ac92745831ef
+    subject: 'Merge pull request #8 from pegasus-isi/fix/review-findings'
+    selection: >-
+      Canonical merged complete monitor behavior; exclude unmerged plugin
+      architecture and its plugin-specific CLI surface.
+  compared_lines:
+    - branch: main
+      commit: 358d7ff22231882000e3741121a2ac92745831ef
+      relationship: selected canonical baseline
+    - branch: fix/review-findings
+      commit: b2f44e89adb8a33fd6898282a5796629313f9ab9
+      relationship: tree-identical to main; upstream-gone branch, not selected
+    - branch: monitord-plugin-adapter
+      commit: 3ae923351023178cf7bcc2c52eaf1c3ab3946745
+      relationship: >-
+        Adds plugin architecture, --condor-poll, and 12 plugin tests (760
+        total vs. 748 on main); ClassAd hardening is review input only.
+    - branch: monitord-plugin-live
+      commit: 5e772ce1c3b22ded607ef62ecca063ba3b6823e3
+      relationship: >-
+        Unmerged experimental line containing stampede_stream.py and the
+        plugin/live-source path; rejected by plan decision 6.
+    - branch: pegasus-monitord
+      commit: c78d516443f55b41f76080297fb5ab57dea57997
+      relationship: ancestor of the rejected live experiment
+  signature_drift:
+    baseline: >-
+      StampedeDB.get_events_since(after_ts, include_boundary=False), returning
+      job_instance_id and jobstate_submit_seq
+    adapter: >-
+      Same API and return identity fields as canonical main
+    live_line: >-
+      Older exclusive-boundary API; do not copy its stream integration
+attribution:
+  policy: >-
+    A later production-file owner applies the standard Pegasus Apache-2.0/USC-ISI
+    header while absorbing or adapting a mapped workflow-monitor module.
+  source_license: Apache-2.0
+  destination_license: Apache-2.0
+  wp0_action: records provenance only; does not pre-header future production files
+  dependency_cleanups:
+    - dependency: build>=1.4.0
+      source_status: incorrectly listed as runtime dependency
+      destination_action: do not absorb; build tooling only
+    - dependency: pip>=26.0.1
+      source_status: incorrectly listed as runtime dependency
+      destination_action: do not absorb; installation tooling only
+    - dependency: rich>=13.0
+      destination_action: use existing Pegasus dependency
+    - dependency: pyyaml>=6.0
+      destination_action: use existing Pegasus dependency
+    - dependency: htcondor
+      destination_action: optional enrichment only; no mandatory runtime dependency
+source_to_destination:
+  - source: src/workflow_monitor/braindump.py
+    destination: Pegasus/monitor/locator.py
+    owner_wp: WP2
+  - source: src/workflow_monitor/db.py
+    destination: Pegasus/monitor/stampede.py
+    owner_wp: WP2
+  - source: src/workflow_monitor/stampede_stream.py
+    destination: none
+    owner_wp: none
+    note: rejected live/plugin architecture; replace with live_events.py plus reconcile.py
+  - source: src/workflow_monitor/htcondor_poll.py
+    destination: Pegasus/monitor/condor.py
+    owner_wp: WP5
+  - source: src/workflow_monitor/stats.py
+    destination: Pegasus/monitor/stats.py
+    owner_wp: WP6a
+  - source: src/workflow_monitor/diagnostics.py
+    destination: Pegasus/monitor/diagnostics.py
+    owner_wp: WP6a
+  - source: src/workflow_monitor/stall_detector.py
+    destination: Pegasus/monitor/stall_detector.py
+    owner_wp: WP6a
+  - source: src/workflow_monitor/why_idle.py
+    destination: Pegasus/monitor/why_idle.py
+    owner_wp: WP6a
+  - source: src/workflow_monitor/display.py
+    destination: Pegasus/monitor/display.py
+    owner_wp: WP6b
+  - source: src/workflow_monitor/cli.py
+    destination: Pegasus/monitor/cli.py
+    owner_wp: WP6b/WP7
+  - source: src/workflow_monitor/event_log.py
+    destination: Pegasus/monitor/event_log.py
+    owner_wp: WP7
+  - source: src/workflow_monitor/replay.py
+    destination: Pegasus/monitor/replay.py
+    owner_wp: WP7
+  - source: src/workflow_monitor/server.py
+    destination: Pegasus/monitor/server.py
+    owner_wp: WP7
+  - source: src/workflow_monitor/remote.py
+    destination: Pegasus/monitor/remote.py
+    owner_wp: WP7
+  - source: src/workflow_monitor/monitord_plugin.py
+    destination: none
+    owner_wp: none
+    note: plan non-goal; no plugin dependency
+behavioral_suite:
+  canonical:
+    recorded_suite_count: 748
+    command: >-
+      PYTHONPATH=/private/tmp/workflow-monitor-review.vrys8O/main/src
+      /Users/stealey/GitHub/pegasusai/workflow-monitor/.venv/bin/python
+      -m pytest -q
+    result: passed
+    passed: 748
+    duration_seconds: 1.28
+    note: >-
+      Used the existing local virtual environment with the archived canonical
+      src tree first on PYTHONPATH; no network access was required.
+  supporting_adapter_checkout:
+    command: 'UV_CACHE_DIR=/private/tmp/pegasus-monitor-uv-cache uv run pytest -q'
+    result: passed
+    passed: 760
+    warnings: 1
+    warning: read-only source checkout prevented pytest cache write

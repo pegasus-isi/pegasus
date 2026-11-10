@@ -27,10 +27,207 @@ important. Pegasus comes with a series of utilities that can be used to
 monitor and debug workflows both in real-time as well as after execution
 is already completed.
 
+.. _monitoring-pegasus-monitor:
+
+pegasus-monitor
+---------------
+
+``pegasus-monitor`` is the native, richer live view for one Pegasus workflow.
+It can attach after a workflow has started without advance configuration:
+
+::
+
+   $ pegasus-monitor /Workflow/dags/run0001
+
+The default interactive view combines three kinds of evidence while keeping
+their authority separate:
+
+* The local Stampede SQLite database is the authoritative source for complete
+  history, job metadata, counts, and workflow completion. It is opened
+  read-only with short queries.
+* New ``jobstate.log`` records are displayed immediately as a provisional live
+  overlay, then retired when the same transition appears in Stampede. This is
+  what lets a late-started monitor recover old history from the database while
+  still showing new events before the next database commit.
+* Optional HTCondor queue, history, pool, priority, and negotiator queries add
+  scheduler context. They are bounded and never determine Pegasus job state.
+
+The live file is written before the corresponding Stampede update, so this
+precedence avoids both missed recent events and duplicate counts. A tail gap,
+rotation, or truncation causes a database catch-up and reattach. If Stampede is
+temporarily locked, the display keeps its last-good base and safe pending
+overlay. If Stampede becomes permanently unavailable, the header reports
+``DB FAILED / LIVE UNCONFIRMED``: recent activity may remain visible, but the
+monitor does not claim authoritative counts or completion.
+
+Source badges report states including ``WAITING``, ``STALE``, ``GAP``,
+``REATTACHING``, ``RESYNC``, ``UNAVAILABLE``, and ``DISABLED`` together with
+last-good age. An unavailable optional source does not terminate the TUI.
+``Ctrl-C`` exits cleanly and does not alter DAGMan, pegasus-monitord, the
+schedd, or any workflow job.
+
+For scripts, redirected output, or a single report, use ``--once``:
+
+::
+
+   $ pegasus-monitor --once /Workflow/dags/run0001
+
+One-shot mode requires an authoritative Stampede snapshot and exits nonzero if
+one cannot be read. Live mode requires a terminal. ``--no-live-events`` uses
+Stampede polling only, while ``--jobstate-path`` selects an explicit live event
+file. The default Stampede interval is two seconds.
+
+Scheduler observation is optional. Queue polling normally occurs every five
+seconds, history and pool polling every 30 seconds, and priority/negotiator
+queries only for ``--why-idle`` or a confirmed stall. Queries use exact
+``pegasus_wf_uuid`` constraints where job scope applies, execute one at a time,
+have deadlines and output limits, and back off on failure. Use ``--no-condor``
+for a hard guarantee that no HTCondor executable or binding is invoked:
+
+::
+
+   $ pegasus-monitor --no-condor /Workflow/dags/run0001
+
+``--schedd`` and ``--collector`` select daemons. ``--token``, ``--cert``,
+``--key``, and ``--password-file`` provide optional credentials to a copied
+subprocess environment; they do not modify the parent process configuration,
+and credential values are redacted from diagnostic details.
+
+Use ``--diagnose`` for bounded hold, exit-code, kickstart, and stall findings,
+or ``--why-idle`` for a one-shot explanation using available scheduler
+evidence. Missing evidence is identified as unknown instead of inferred as a
+workflow failure.
+
+Programs that need these results should add ``--json`` to a one-shot mode
+instead of parsing the text report:
+
+::
+
+   $ pegasus-monitor --diagnose --json /Workflow/dags/run0001
+   $ pegasus-monitor --once --diagnose --why-idle --json /Workflow/dags/run0001
+
+``--json`` writes exactly one JSON document to standard output, including on
+failure, where its ``error`` object carries a stable code and the exit status
+is unchanged. The document reports the health of every source, so a consumer
+can tell that there were no findings from the monitor being unable to look.
+``--once`` adds the full job snapshot, ``--diagnose`` the hold and failure
+findings with their classification codes and suggestions, and ``--why-idle``
+the pool, resource-fit, priority, and negotiator analysis as structured
+fields. Every document also carries a ``stall`` assessment derived from the
+snapshot's own timestamps; because one sample cannot confirm a stall the way
+the live view does, it is labelled ``"confirmed": false``, and
+``"assessed": false`` distinguishes "not assessed" from "not stalled". The
+document has its own ``format_version``, independent of the event log's
+schema version: additive changes keep it, while removals and renames
+increment it. It is intended for on-demand use; each invocation starts a new
+process and reads the sources afresh.
+
+Recording monitor events
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``--log`` to record canonical JSONL while retaining the local live or
+one-shot display. The default path is ``workflow-events.jsonl`` in the submit
+directory. Put the workflow target before a pathless ``--log`` because its
+optional argument may otherwise be interpreted as the log path:
+
+::
+
+   $ pegasus-monitor /Workflow/dags/run0001 --log
+   $ pegasus-monitor --log=/archive/montage-events.jsonl /Workflow/dags/run0001
+
+The JSONL stream contains DB-confirmed state rather than the provisional live
+overlay. It begins with a versioned header and complete Stampede checkpoint,
+uses monotonically increasing sequence numbers, and writes another complete
+checkpoint every five minutes by default, after recovery or stream/database
+replacement, and at authoritative completion. With ``--diagnose``, redacted
+``diagnostic_result`` records preserve derived evidence without changing
+workflow or job state.
+
+``--min-free-mb`` sets the free-space floor (200 MB by default; 0 disables the
+floor), and ``--max-log-mb`` sets an optional hard size limit. If a capacity or
+writer guard pauses logging, workflow monitoring continues. When writing can
+resume safely, the stream records a gap followed immediately by a DB-confirmed
+recovery checkpoint. Consumers ignore incomplete incremental state after a gap
+until that checkpoint. Event-log and server files use restrictive permissions
+and unsafe symlink or non-regular-file targets are rejected.
+
+Headless servers, replay, and remote viewing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An explicit ``--serve`` starts a detached headless monitor and writes the same
+canonical stream. It is the only mode that starts a background server; normal
+``pegasus-monitor`` use remains attached to the terminal. Only one server may
+own an event-log path. ``--serve-foreground`` provides the same lifecycle for
+process supervisors and troubleshooting.
+
+::
+
+   $ pegasus-monitor --serve --diagnose /Workflow/dags/run0001
+   $ pegasus-monitor /Workflow/dags/run0001 --stop-server
+
+The default server uses hidden PID metadata and a lock adjacent to
+``workflow-events.jsonl``. For ``--log=/archive/montage-events.jsonl``, stop the
+server with its explicit adjacent metadata path:
+
+::
+
+   $ pegasus-monitor --stop-server /archive/.montage-events.jsonl.pid
+
+Server shutdown verifies the recorded process-birth identity before signaling
+and refuses a stale or reused PID.
+
+``--replay`` renders a saved stream without opening Stampede,
+``jobstate.log``, kickstart output, or HTCondor. Replay uses the original timing
+by default; ``--speed`` changes the multiplier, and ``--speed 0`` disables
+delays. Use ``--once`` for a non-interactive rendering of the latest complete
+DB-confirmed state:
+
+::
+
+   $ pegasus-monitor --replay workflow-events.jsonl --speed 0
+   $ pegasus-monitor --replay workflow-events.jsonl --once
+
+``--remote`` incrementally reads a server stream over bounded SSH and never
+queries workflow sources on the remote host. It uses byte offsets, validates
+the SSH target and path, invokes SSH without a local shell, and bounds command
+time and output. ``--sync-interval`` controls polling and defaults to five
+seconds; ``--ssh-config`` and ``--ssh-identity`` select local SSH files.
+
+::
+
+   $ pegasus-monitor --remote user@submit.example:/Workflow/dags/run0001/workflow-events.jsonl
+   $ pegasus-monitor --remote user@submit.example:/Workflow/dags/run0001/workflow-events.jsonl --once
+
+Live replay and remote views require a terminal. Their ``--once`` forms do not;
+remote one-shot reads through the current end of the file before rendering the
+latest complete DB-confirmed state. Both modes tolerate a torn trailing record,
+detect replacement by the stream's ``stream_id`` rather than file size, and
+wait for the replacement stream's checkpoint before trusting new state.
+
+The replay, remote, serve, foreground-server, and stop-server modes are
+mutually exclusive. ``--log`` cannot be combined with replay, remote, or
+stop-server. Server modes cannot be combined with ``--once`` or
+``--why-idle``. SSH configuration and identity options require ``--remote``.
+
+Version 1 monitors exactly one workflow UUID. It does not aggregate
+subworkflows; select a subworkflow directory separately when needed. Only local
+SQLite Stampede databases are supported. PostgreSQL and MySQL database URLs are
+reported as unsupported rather than opened or translated. The monitor neither
+loads nor configures a pegasus-monitord plugin.
+
+See the :ref:`pegasus-monitor manual page <cli-pegasus-monitor>` for its exact
+options and exit statuses.
+
 .. _monitoring-pegasus-status:
 
 pegasus-status
 --------------
+
+``pegasus-status --watch`` remains supported, unchanged, and not deprecated.
+It is the established queue and DAG progress view; ``pegasus-monitor`` adds the
+hybrid Stampede/live-event view, source health, richer diagnostics, canonical
+recording, replay, and remote viewing. Users may choose either tool for its
+respective presentation and data needs.
 
 To monitor the execution of the workflow run the ``pegasus-status``
 command as suggested by the output of the ``pegasus-run`` command.

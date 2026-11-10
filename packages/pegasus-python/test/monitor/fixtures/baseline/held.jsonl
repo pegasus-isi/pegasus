@@ -1,0 +1,4 @@
+{"event_type":"workflow_start","timestamp":1200.0,"wf_uuid":"00000000-0000-4000-8000-000000000003","dax_label":"held","user":"test-user","planner_version":"test","submit_dir":"SANITIZED"}
+{"event_type":"jobs_init","timestamp":1200.0,"wf_uuid":"00000000-0000-4000-8000-000000000003","total_jobs":1,"jobs":[{"job_id":3,"exec_job_id":"compute_held","type_desc":"compute"}]}
+{"event_type":"job_state","timestamp":1201.0,"wf_uuid":"00000000-0000-4000-8000-000000000003","job_id":3,"job_instance_id":30,"jobstate_submit_seq":0,"exec_job_id":"compute_held","type_desc":"compute","state":"JOB_HELD"}
+{"event_type":"htcondor_poll","timestamp":1201.1,"wf_uuid":"00000000-0000-4000-8000-000000000003","jobs":[{"DAGNodeName":"compute_held","JobStatus":5,"HoldReason":"SANITIZED hold reason","HoldReasonCode":12,"ClusterId":1,"ProcId":0}]}
