@@ -60,7 +60,13 @@ Requires:       java-17-openjdk-headless, python311
 # library at runtime as long as some MPI implementation is installed; which
 # one is up to the admin, same as the wheel (see auditwheel --exclude in
 # Makefile's repair-wheel).
-%global __requires_exclude ^lib(mpi|mpicxx)\\.so\\.12.*$
+#
+# The venv's numpy/scipy wheels also vendor hash-renamed libs (auditwheel:
+# libgfortran-<hash>, libgomp-<hash>, libquadmath-<hash>, libscipy_openblas-<hash>,
+# ...). They resolve via the wheels' own RUNPATH, so drop any such lib from
+# Requires and don't advertise them as Provides.
+%global __requires_exclude ^(lib(mpi|mpicxx)\\.so\\.12|lib[A-Za-z0-9_]+-[0-9a-f]{8}.*\\.so.*)
+%global __provides_exclude_from ^%{pegasus_venv}/.*$
 
 # Turn off automatic Python bytecompilation
 %undefine __brp_python_bytecompile
