@@ -120,7 +120,7 @@ public abstract class AbstractContainer extends Abstract {
         if (this.mTransfersOnHostOS) {
             sb.append("pegasus_lite_section_start stage_in").append('\n');
             sb.append(super.inputFilesToPegasusLite(job));
-            sb.append(super.enableForIntegrity(job, ""));
+            sb.append(super.enableForIntegrityAndRuntimePrediction(job, ""));
             sb.append("pegasus_lite_section_end stage_in").append('\n');
         }
 
@@ -237,7 +237,9 @@ public abstract class AbstractContainer extends Abstract {
         if (!this.mTransfersOnHostOS) {
             sb.append(super.inputFilesToPegasusLite(job));
             // PM-1305 the integrity check should happen in the container
-            sb.append(super.enableForIntegrity(job, Abstract.CONTAINER_MESSAGE_PREFIX));
+            sb.append(
+                    super.enableForIntegrityAndRuntimePrediction(
+                            job, Abstract.CONTAINER_MESSAGE_PREFIX));
         }
 
         appendStderrFragment(sb, Abstract.CONTAINER_MESSAGE_PREFIX, "Launching user task");

@@ -2351,7 +2351,7 @@ public class Job extends Data implements GraphNodeContent {
     /**
      * Returns the workflow submit directory as a classad internally in the job
      *
-     * @returnthe workflow submit dir where the .dag file is generated.
+     * @return the workflow submit dir where the .dag file is generated.
      */
     public String getWFSubmitDirClassAd() {
         return (String) this.condorVariables.get(Condor.WF_SUBMIT_DIR_KEY);

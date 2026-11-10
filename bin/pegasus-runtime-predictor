@@ -1,0 +1,2 @@
+#!/bin/sh
+exec ${PEGASUS_PYTHON:-python3} -m Pegasus.cli.pegasus-runtime-predictor "$@"

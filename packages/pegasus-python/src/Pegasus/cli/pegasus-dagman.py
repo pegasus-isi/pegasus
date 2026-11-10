@@ -255,7 +255,7 @@ if __name__ == "__main__":
                     else:
                         monitord_current_restarts = 0
                     # backoff with upper limit
-                    backoff = min(math.exp(monitord_current_restarts + 3), 3600)
+                    backoff = int(min(math.exp(monitord_current_restarts + 3), 3600))
                     logger.info(
                         "monitord last exited with status %s", monitord.returncode
                     )

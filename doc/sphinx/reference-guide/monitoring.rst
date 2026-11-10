@@ -438,6 +438,179 @@ pegasus statistics:
    the mean, min, max, and average values take into account the
    multiplier factor.
 
+.. _runtime-prediction:
+
+Job Runtime Prediction
+======================
+
+Pegasus can predict how long each compute job in a workflow will run, just
+before the job is submitted. The prediction is made by
+``pegasus-runtime-predictor``, using a machine learning model that ships with
+Pegasus. It is recorded in the job's HTCondor submit file, from where
+``pegasus-monitord`` picks it up and includes it in the
+:ref:`composite event <stampede_job_inst_composite_event>` for the job.
+
+How it works
+------------
+
+The planner associates a DAGMan PRE script with each compute job, that invokes
+``pegasus-runtime-predictor``. DAGMan runs the PRE script on the submit host,
+in the workflow submit directory, just before it submits the job. For example:
+
+::
+
+   pegasus-runtime-predictor --job-sub 00/00/findrange_ID0000002.sub --level 2 \
+       --lof 00/00/findrange_ID0000002.in.lof \
+       --meta ./00/00/preprocess_ID0000001.meta \
+       -l diamond-0.runtime-predictor.log /path/to/workflow.yml
+
+``pegasus-runtime-predictor`` then:
+
+1. Reads the job's transformation (``+pegasus_wf_xformation``) and resource
+   requests (``pegasus_cores``, ``pegasus_gpus``, ``pegasus_memory_mb`` and
+   ``pegasus_diskspace_mb``) from the job's submit file passed with
+   ``--job-sub``. Memory and disk requests that are HTCondor expressions,
+   rather than numbers, are treated as 0.
+
+2. Reads the input files of the job from the job's input LOF file passed with
+   ``--lof``, and their sizes in bytes from the ``.meta`` files passed with
+   ``--meta``. These are the ``.meta`` files written by ``pegasus-exitcode``
+   for the parent jobs, that generate or stage in the inputs. A warning is
+   logged for any input file that has no size in them.
+
+3. Queries ``condor_status`` for the CPU count, CPU speed and memory of the
+   compute slots in the pool. To avoid querying the collector for every job,
+   the output is cached in the submit directory, and ``condor_status`` is run
+   again only once the cache is more than an hour old.
+
+4. Predicts the runtime of the job and adds the prediction to the job's submit
+   file as the ClassAds described below. It also extends the job's
+   ``periodic_remove`` expression, so that HTCondor removes the job if it runs
+   for more than three times the upper bound of the prediction (at least an
+   hour). Since the PRE script is run again when a job is retried, the
+   ClassAds and the ``periodic_remove`` clause are replaced each time, and not
+   added again.
+
+Clustered jobs
+~~~~~~~~~~~~~~
+
+For a clustered job (a ``merge_`` job, whose transformation is in the
+``pegasus`` namespace), the runtime of each of its tasks is predicted. The
+tasks are listed in the cluster's ``.in`` file next to its submit file, and
+their details are read from the workflow file. The predictions for the tasks
+are added up, and recorded for the clustered job with the status
+``CLUSTERED``.
+
+Requirements
+------------
+
+Runtime prediction is enabled by default. The planner associates the PRE
+script with a job only if all of the following hold:
+
+-  The property ``pegasus.runtime.prediction`` is not set to ``false``.
+
+-  Integrity checking is enabled, i.e. ``pegasus.integrity.checking`` is not
+   set to ``none``. It is integrity checking that generates the ``.meta``
+   files with the sizes of the input files.
+
+-  Kickstart stats the files of the job, i.e.
+   ``pegasus.gridstart.kickstart.stat`` is not set to ``false``. This is what
+   generates the job's LOF files.
+
+-  The job is a compute job, or a clustered job, launched via kickstart in
+   PegasusLite.
+
+-  The job has at least one ``.meta`` file among its input files.
+
+The model is run on the CPU with ONNX Runtime, so no GPU is needed. The Python
+libraries that ``pegasus-runtime-predictor`` needs (ONNX Runtime,
+scikit-learn, NumPy and pandas) are installed with Pegasus, so no additional
+setup is needed on the submit host.
+
+.. note::
+
+   ``pegasus-runtime-predictor`` exits with a non-zero exitcode if it cannot
+   predict the runtime of a job, for example if it cannot read the job's
+   submit file or the model returns no prediction. DAGMan treats a failed PRE
+   script as a failure of the job. To disable runtime prediction:
+
+   ::
+
+      pegasus.runtime.prediction = false
+
+Prediction ClassAds
+-------------------
+
+The prediction is added to the job's submit file as the following ClassAds.
+``pegasus-monitord`` includes them in the
+:ref:`stampede.job_inst.composite <stampede_job_inst_composite_event>` event
+for the job, under the keys in the second column.
+
+.. table:: Runtime Prediction ClassAds
+
+   ==================================== ====================== ==================================================
+   ClassAd                              Composite Event Key    Description
+   ==================================== ====================== ==================================================
+   ``+pegasus_predicted_runtime``       ``pred_runtime``       Predicted runtime of the job in seconds.
+   ``+pegasus_predicted_runtime_low``   ``pred_runtime_low``   Lower bound of the predicted runtime in seconds.
+   ``+pegasus_predicted_runtime_high``  ``pred_runtime_high``  Upper bound of the predicted runtime in seconds.
+   ``+pegasus_prediction_status``       ``pred_status``        How the prediction was made. See below.
+   ==================================== ====================== ==================================================
+
+The prediction status is one of:
+
+-  ``NORMAL``: the model has been trained on enough runs of the job's
+   transformation.
+
+-  ``SPARSE``: the model has seen only a few runs of the transformation, and
+   the prediction is based on statistics of those runs instead.
+
+-  ``ZERO_SHOT``: the model has not seen the transformation before, and the
+   prediction is based only on the job's inputs and resources. Expect it to
+   be less accurate.
+
+-  ``RULE_BASED``: the transformation has a fixed runtime estimate, such as
+   for auxiliary transformations, instead of a model prediction.
+
+-  ``CLUSTERED``: the job is a clustered job, and the prediction is the sum of
+   the predictions for its tasks.
+
+For example, a job's submit file after prediction contains
+
+::
+
+   periodic_remove = ((JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)) || ((JobStatus == 2) && ((CurrentTime - EnteredCurrentStatus) > 3600))
+   +pegasus_predicted_runtime      = 149
+   +pegasus_predicted_runtime_low  = 0
+   +pegasus_predicted_runtime_high = 860
+   +pegasus_prediction_status      = "NORMAL"
+   queue
+
+Files in the submit directory
+-----------------------------
+
+``pegasus-runtime-predictor`` writes the following files in the workflow
+submit directory:
+
+-  ``<dag>.runtime-predictor.log``: contains a record of each invocation of
+   ``pegasus-runtime-predictor``, one JSON object per line, similar to the
+   ``<dag>.exitcode.log`` written by ``pegasus-exitcode``. Each record has
+   the keys
+
+   -  ``name``: the submit file of the job
+   -  ``timestamp``: when the invocation started
+   -  ``level``: the level of the job in the workflow
+   -  ``exitcode``: the exitcode of ``pegasus-runtime-predictor``. 0 on
+      success, else the prediction failed.
+   -  ``duration``: how long the invocation took in seconds
+   -  ``std_out`` and ``std_err``: the output of the invocation, including any
+      warnings and errors
+
+   Look in this file to find out why the runtime of a job was not predicted.
+
+-  ``<dag>.runtime-predictor.condor_status.json``: the cached output of
+   ``condor_status``. It is refreshed once it is more than an hour old.
+
 .. _stampede-wf-events:
 
 Stampede Workflow Events
@@ -1783,6 +1956,33 @@ The events are described in detail below
                     mandatory true;
                     description
                       "number of integrity errors encountered";
+                  }
+
+                  leaf pred_runtime {
+                    type int32;
+                    units "seconds";
+                    description
+                      "the predicted runtime of the job. See Job Runtime Prediction";
+                  }
+
+                  leaf pred_runtime_low {
+                    type int32;
+                    units "seconds";
+                    description
+                      "the lower bound of the predicted runtime of the job";
+                  }
+
+                  leaf pred_runtime_high {
+                    type int32;
+                    units "seconds";
+                    description
+                      "the upper bound of the predicted runtime of the job";
+                  }
+
+                  leaf pred_status {
+                    type string;
+                    description
+                      "how the runtime of the job was predicted. One of NORMAL, SPARSE, ZERO_SHOT, RULE_BASED or CLUSTERED";
                   }
       }  // container stampede.job_inst.composite
 

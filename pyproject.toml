@@ -4,11 +4,11 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
-version = "6.0.0.dev0"
+version = "6.0.0.dev2264"
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.15"
 authors = [
     { name = "Pegasus Team", email = "pegasus@isi.edu" },
 ]
@@ -26,7 +26,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3.15",
     "Programming Language :: Java",
     "Programming Language :: C",
     "Topic :: Scientific/Engineering",
@@ -50,6 +49,12 @@ dependencies = [
     # Database
     "sqlalchemy!=2.1.0",  # 2.1.0 sdist has duplicate extras in pyproject.toml; uv refuses to build it
     "pymysql",
+    # runtime-prediction model is a pickled PyTorch network plus scikit-learn feature transformers
+    # the inference is done using onnxruntime
+    "onnxruntime>=1.20",
+    "scikit-learn>=1.0",
+    "numpy>=2.0,<3.0",
+    "pandas>=1.3",
     # Note: there is no more worker-runtime Python dependency here.
     # boto3 (S3) and globus-sdk (Globus Online) were both dropped once
     # their respective tools (pegasus-s3/pegasus-transfer, then
@@ -95,6 +100,7 @@ pegasus-em             = "Pegasus.cli.main:pegasus_em"
 pegasus-config         = "Pegasus.cli.main:pegasus_config"
 pegasus-halt           = "Pegasus.cli.main:pegasus_halt"
 pegasus-configure-glite = "Pegasus.cli.main:pegasus_configure_glite"
+pegasus-runtime-predictor = "Pegasus.cli.main:pegasus_runtime_predictor"
 
 # C binaries (pegasus-kickstart, pegasus-cluster, pegasus-keg) and the Go
 # pegasus-transfer / pegasus-checkpoint / pegasus-integrity /
@@ -109,6 +115,7 @@ postgresql = ["psycopg2"]
 mysql = ["pymysql"]
 cwl = ["cwl-utils==0.11", "jsonschema==3.2.0"]
 
+
 [tool.scikit-build]
 cmake.version = ">=3.20"
 cmake.build-type = "Release"
@@ -116,8 +123,9 @@ build-dir = "_cmake_build"
 editable.rebuild = true
 wheel.py-api = "py3"
 
-# Python package location — pegasus-python is the main package; pegasus-common
-# and pegasus-api are merged into the wheel via CMake install(DIRECTORY) below.
+# Python package location — pegasus-python is the main package; pegasus-common,
+# pegasus-api and pegasus-runtime are merged into the wheel via CMake
+# install(DIRECTORY) in the top-level CMakeLists.txt.
 wheel.packages = ["packages/pegasus-python/src/Pegasus"]
 
 # Include non-git tracked files in the wheel and sdist (e.g., Java JARs, worker packages, etc.)

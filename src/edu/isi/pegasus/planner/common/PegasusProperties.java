@@ -105,6 +105,8 @@ public class PegasusProperties implements Cloneable {
 
     public static final String PEGASUS_INTEGRITY_CHECKING_KEY = "pegasus.integrity.checking";
 
+    public static final String PEGASUS_RUNTIME_PREDICTION_KEY = "pegasus.runtime.prediction";
+
     public static final String PEGASUS_TRANSFER_BYPASS_INPUT_STAGING_PROPERTY_KEY =
             "pegasus.transfer.bypass.input.staging";
 
@@ -2328,6 +2330,18 @@ public class PegasusProperties implements Cloneable {
      */
     public boolean allowClusteringOfSingleJobs() {
         return Boolean.parse(mProps.getProperty("pegasus.clusterer.allow.single"), false);
+    }
+
+    /**
+     * Returns a boolean indicating whether to enable runtime prediction or not.
+     *
+     * <p>Referred to by the "pegasus.runtime.prediction" property.
+     *
+     * @return the value specified in the properties file, else true
+     * @see #PEGASUS_RUNTIME_PREDICTION_KEY
+     */
+    public boolean doRuntimePrediction() {
+        return Boolean.parse(mProps.getProperty(PEGASUS_RUNTIME_PREDICTION_KEY), true);
     }
 
     /**

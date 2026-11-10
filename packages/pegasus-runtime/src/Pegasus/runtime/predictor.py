@@ -1,0 +1,1408 @@
+"""
+PegasusOracle — Embedded Workflow Runtime Predictor
+
+Loads a PegasusOracle ONNX model and preprocessing metadata and predicts the runtime of a job,
+or of the tasks of a clustered job, and patches the prediction into the condor
+submit file of the job — no external API server required.
+
+Architecture matches pegasus_oracle.py exactly so the same .pkl file is portable.
+"""
+
+import json
+import math
+import os
+import pickle
+import re
+import subprocess
+import sys
+import tempfile
+import time
+import warnings
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Optional, Union
+
+import numpy as np
+import pandas as pd
+import yaml
+import onnxruntime as ort
+
+# Standalone ModelContext inference does not need Pegasus or PythonSed.
+try:
+    from PythonSed import Sed, SedException
+except ImportError:
+    Sed = None
+    SedException = Exception
+
+try:
+    from Pegasus.api import File, Job, Namespace, Workflow
+except ImportError:
+    File = Job = Namespace = Workflow = None
+
+try:
+    from Pegasus.monitoring.metadata import Metadata
+except ImportError:
+    Metadata = None
+
+warnings.filterwarnings("ignore")
+
+# Default model location: <package>/models/preprocessing.pkl
+# Drop the trained .pkl there and leave model_path unset — it is found automatically.
+_MODELS_DIR    = Path(__file__).parent / "models"
+_DEFAULT_MODEL = _MODELS_DIR / "pegasus_oracle.onnx"
+
+
+# ─────────────────────────────────────────────
+# 0. CONFIGURATION
+# ─────────────────────────────────────────────
+
+@dataclass
+class RuntimePredictionConfig:
+    """
+    Configuration for the workflow-level runtime predictor.
+
+    All fields are optional — unset values fall back to the model's own
+    defaults or to condor_status discovery.
+
+    Can be built manually or loaded from Pegasus properties::
+
+        cfg = RuntimePredictionConfig.from_properties(props)
+
+    Pegasus property keys
+    ---------------------
+    pegasus.runtime.prediction.enable          : "true" / "false"
+    pegasus.runtime.prediction.model.path      : /path/to/pegasus_oracle.onnx
+    pegasus.runtime.prediction.output.dir      : /path/to/output/dir
+    pegasus.runtime.prediction.sparse.threshold: integer  (default: model value)
+    pegasus.runtime.prediction.interval.low    : float 0–1 (default: 0.05)
+    pegasus.runtime.prediction.interval.high   : float 0–1 (default: 0.95)
+    pegasus.runtime.prediction.slot.hostname   : override condor_status hostname
+    pegasus.runtime.prediction.slot.cpu.count  : override cpu count
+    pegasus.runtime.prediction.slot.cpu.speed  : override cpu speed (MHz)
+    pegasus.runtime.prediction.slot.ram        : override RAM (kB)
+    """
+
+    # core
+    enabled:          bool            = True
+    model_path:       Optional[str]   = None
+    output_dir:       Optional[str]   = None
+
+    # model overrides (None = use value from loaded .pkl)
+    sparse_threshold: Optional[int]   = None
+    q_lo:             Optional[float] = None   # e.g. 0.05
+    q_hi:             Optional[float] = None   # e.g. 0.95
+
+    # condor slot overrides (None = query condor_status)
+    slot_hostname:    Optional[str]   = None
+    slot_cpu_count:   Optional[int]   = None
+    slot_cpu_speed:   Optional[float] = None   # MHz
+    slot_ram:         Optional[float] = None   # kB
+
+    # file the condor_status output is cached in (None = default name in the
+    # current directory)
+    condor_status_cache: Optional[str] = None
+
+    @classmethod
+    def from_properties(cls, props) -> "RuntimePredictionConfig":
+        """
+        Build a config from a Pegasus :py:class:`~Pegasus.api.properties.Properties`
+        object or any dict-like mapping of pegasus property keys to values.
+
+        :param props: Properties object or dict with pegasus property keys
+        :return: RuntimePredictionConfig
+        """
+        def _get(key, default=None):
+            try:
+                return props[key]
+            except (KeyError, TypeError):
+                return default
+
+        def _float(key):
+            v = _get(key)
+            return float(v) if v is not None else None
+
+        def _int(key):
+            v = _get(key)
+            return int(v) if v is not None else None
+
+        def _bool(key, default=True):
+            v = _get(key)
+            if v is None:
+                return default
+            return str(v).lower() in ("true", "1", "yes")
+
+        return cls(
+            enabled          = _bool("pegasus.runtime.prediction.enable"),
+            model_path       = _get("pegasus.runtime.prediction.model.path"),
+            output_dir       = _get("pegasus.runtime.prediction.output.dir"),
+            sparse_threshold = _int("pegasus.runtime.prediction.sparse.threshold"),
+            q_lo             = _float("pegasus.runtime.prediction.interval.low"),
+            q_hi             = _float("pegasus.runtime.prediction.interval.high"),
+            slot_hostname    = _get("pegasus.runtime.prediction.slot.hostname"),
+            slot_cpu_count   = _int("pegasus.runtime.prediction.slot.cpu.count"),
+            slot_cpu_speed   = _float("pegasus.runtime.prediction.slot.cpu.speed"),
+            slot_ram         = _float("pegasus.runtime.prediction.slot.ram"),
+        )
+
+
+# ─────────────────────────────────────────────
+# 1. NEURAL ARCHITECTURE  (must match pegasus_oracle.py)
+# ─────────────────────────────────────────────
+
+
+# ─────────────────────────────────────────────
+# 2. FEATURE ENGINEERING  (must match pegasus_oracle.py)
+# ─────────────────────────────────────────────
+
+NUMERIC_COLS = [
+    "log_anchor_runtime", "log_cpu_power", "log_ram",
+    "log_input_bytes", "log_io_intensity", "log_compute_intensity",
+    "memory_pressure", "site_encoded", "log_input_files_count",
+]
+
+RULE_BASED = {
+    "system::chmod", "pegasus::transfer", "sleep",
+    "pegasus::cleanup", "pegasus::dirmanager",
+    "pegasus::checkpoint:4.0", "preprocess", "mkdir",
+    "merge", "hello", "world",
+}
+
+
+def _synth(j):
+    return re.split(r"[-_]", str(j))[0] if j and not pd.isna(j) else "unknown"
+
+
+def _site(h):
+    """
+    Map a hostname or Pegasus site name to the integer encoding used during training.
+    0=ISI, 1=WSU/Hellbender, 2=Anvil/Purdue, 3=Stampede/TACC, 4=Expanse/SDSC, 5=other.
+    Extended to cover dominant hostname patterns in the training data.
+    """
+    h = str(h).lower()
+    for k, v in [
+        ("isi",        0),
+        ("wsu",        1), ("hellbender",  1), ("wustl",      1),
+        ("anvil",      2), ("purdue",      2),
+        ("stampede",   3), ("tacc",        3), ("frontera",   3),
+        ("expanse",    4), ("sdsc",        4),
+    ]:
+        if k in h:
+            return v
+    return 5  # OSG / unknown — largest bucket in training (73 % of rows)
+
+
+def _bytes_bin(b):
+    if b <= 0:   return 0
+    if b < 1e4:  return 1
+    if b < 1e5:  return 2
+    if b < 1e6:  return 3
+    if b < 1e7:  return 4
+    if b < 1e8:  return 5
+    return 6
+
+
+def _bucket_key(row):
+    return (
+        _bytes_bin(row.get("input_bytes_total", 0)),
+        int(row.get("cpu_count", 1)),
+        _site(str(row.get("hostname", ""))),
+    )
+
+
+def _transform_names(transformations, vec, svd):
+    names = [str(t) if t else "unknown" for t in transformations]
+    return svd.transform(vec.transform(names)).astype(np.float32)
+
+
+def _make_features(df: pd.DataFrame, a: dict):
+    df = df.copy()
+    df["synth"] = df["job_id"].apply(_synth) if "job_id" in df.columns else "unknown"
+    for col, mm in a.get("res_med", {}).items():
+        if col in df.columns:
+            df[col] = df[col].replace(0, np.nan).fillna(
+                df["synth"].map(mm)).fillna(a["global_median"])
+    t           = (df["transformation"].map(a.get("trans_map", {}))
+                   if "transformation" in df.columns
+                   else pd.Series(np.nan, index=df.index))
+    s           = df["synth"].map(a.get("synth_map", {}))
+    df["_bkey"] = df.apply(_bucket_key, axis=1)
+    b_fallback  = df["_bkey"].map(a.get("bucket_map", {}))
+    df["anchor_runtime"]        = t.fillna(s).fillna(b_fallback).fillna(
+                                    a.get("global_median", 0))
+    df["log_anchor_runtime"]    = np.log1p(df["anchor_runtime"])
+    df["cpu_power"]             = df.get("cpu_count", 1) * df.get("cpu_speed", 1000)
+    df["log_cpu_power"]         = np.log1p(df["cpu_power"])
+    df["log_ram"]               = np.log1p(df.get("ram", 0))
+    df["log_input_bytes"]       = np.log1p(df.get("input_bytes_total", 0))
+    df["io_intensity"]          = (df.get("input_bytes_total", 0) /
+                                   (df.get("input_files_count", 0) + 1))
+    df["log_io_intensity"]      = np.log1p(df["io_intensity"])
+    df["compute_intensity"]     = (df.get("input_bytes_total", 0) /
+                                   (df["cpu_power"] + 1e-6))
+    df["log_compute_intensity"] = np.log1p(df["compute_intensity"])
+    # memory_pressure uses request_cpus (what the job asked for) so it reflects
+    # the per-CPU memory allocation, not the machine total.
+    req_cpus_col = df["request_cpus"] if "request_cpus" in df.columns else df.get("cpu_count", 1)
+    df["memory_pressure"]       = df.get("ram", 0) / (req_cpus_col + 1e-6)
+    df["site_encoded"]          = (df["hostname"].apply(_site)
+                                   if "hostname" in df.columns else 0)
+    df["log_input_files_count"] = np.log1p(df.get("input_files_count", 0))
+    name_emb = _transform_names(
+        df.get("transformation", pd.Series(["unknown"] * len(df))),
+        a["name_vec"], a["name_svd"])
+    return df.fillna(0), name_emb
+
+
+def _assemble_X(df_eng, name_emb, numeric_cols):
+    return np.concatenate(
+        [df_eng[numeric_cols].values.astype(np.float32), name_emb], axis=1)
+
+
+# ─────────────────────────────────────────────
+# 3. CONDOR SLOT  (from extract_features.py)
+# ─────────────────────────────────────────────
+
+_DEFAULT_SLOT = {
+    "name":      "unknown",
+    "cpu_count": 4,
+    "cpu_speed": 2600.0,
+    "ram":       8_388_608.0,   # 8 GB in kB
+    "hostname":  "unknown",
+}
+
+
+# the output of condor_status -json is cached in a file, by default this one in
+# the workflow submit directory, and refreshed once it is older than the max age
+CONDOR_STATUS_CACHE_FILE    = "runtime-predictor.condor_status.json"
+CONDOR_STATUS_CACHE_MAX_AGE = 3_600   # seconds
+
+# the slot classads read by _get_condor_slot. only these are queried from
+# condor_status, to keep its output and the cache file small
+CONDOR_STATUS_ATTRIBUTES = [
+    "Name",
+    "Machine",
+    "Cpus",
+    "TotalSlotCpus",
+    "ProcessorSpeed",
+    "KFlops",
+    "TotalSlotMemory",
+    "Memory",
+]
+
+
+def _condor_status_json(cache_file: Optional[str] = None) -> Optional[list]:
+    """
+    Return the parsed output of condor_status -json, from the cache file if it
+    was modified less than CONDOR_STATUS_CACHE_MAX_AGE seconds ago. Otherwise,
+    condor_status is run and the cache file is refreshed. If condor_status
+    fails, a stale cache file is used.
+
+    The cache file defaults to CONDOR_STATUS_CACHE_FILE in the current
+    directory, as DAGMan runs the prescripts in the directory of the dag file
+    i.e. the workflow submit directory.
+
+    :param cache_file: path to the cache file
+    :return: the list of slot classads, or None if not available
+    """
+    cache_file = cache_file or CONDOR_STATUS_CACHE_FILE
+    cache_dir = os.path.dirname(cache_file) or "."
+    cache_name = os.path.basename(cache_file)
+
+    cached = None
+    try:
+        with open(cache_file) as f:
+            cached = json.load(f)
+        if time.time() - os.path.getmtime(cache_file) < CONDOR_STATUS_CACHE_MAX_AGE:
+            return cached
+    except (OSError, ValueError):
+        pass
+
+    try:
+        out = subprocess.check_output(
+            ["condor_status", "-json",
+             "-attributes", ",".join(CONDOR_STATUS_ATTRIBUTES)],
+            stderr=subprocess.DEVNULL, timeout=15)
+        slots_raw = json.loads(out)
+    except Exception:
+        return cached
+
+    # write to a temporary file and rename it, so that prescripts running in
+    # parallel never read a partially written cache file
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", dir=cache_dir, prefix=cache_name + ".",
+            delete=False
+        ) as f:
+            json.dump(slots_raw, f)
+        os.replace(f.name, cache_file)
+    except OSError as e:
+        print(
+            f"[pegasus-runtime-predictor] Unable to cache condor_status output "
+            f"to {cache_file}: {e}",
+            file=sys.stderr,
+        )
+
+    return slots_raw
+
+
+def _get_condor_slot(cache_file: Optional[str] = None) -> dict:
+    """
+    Query condor_status -json and return the highest-speed slot.
+    Falls back silently to defaults when condor is not available.
+
+    :param cache_file: path to the file the condor_status output is cached in
+    """
+    slots_raw = _condor_status_json(cache_file)
+    if not slots_raw:
+        return dict(_DEFAULT_SLOT)
+
+    best = None
+    for s in slots_raw:
+        name = str(s.get("Name", s.get("Machine", "unknown")))
+        if re.search(r"slot\d+_\d+", name):
+            continue  # skip dynamic sub-slots
+
+        cpu_speed = float(s.get("ProcessorSpeed", 0))
+        if cpu_speed == 0:
+            kflops    = float(s.get("KFlops", 0))
+            cpu_speed = round(kflops / 1_000, 1) if kflops > 0 else 2_600.0
+
+        slot = {
+            "name":      name,
+            "cpu_count": int(s.get("Cpus", s.get("TotalSlotCpus", 1))),
+            "cpu_speed": cpu_speed,
+            "ram":       float(s.get("TotalSlotMemory",
+                                     s.get("Memory", 8_192))) * 1_024,
+            "hostname":  str(s.get("Machine", name)),
+        }
+        if best is None or slot["cpu_speed"] > best["cpu_speed"]:
+            best = slot
+
+    return best or dict(_DEFAULT_SLOT)
+
+
+# ─────────────────────────────────────────────
+# 4. MODEL CONTEXT  (inference only, matches api.py)
+# ─────────────────────────────────────────────
+
+class ModelContext:
+    def __init__(self, path: str):
+        # The caller supplies the ONNX path. Preprocessing is loaded automatically.
+        onnx_path = Path(path)
+        if not onnx_path.is_file():
+            raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
+        preprocessing_path = onnx_path.with_name("preprocessing.pkl")
+        if not preprocessing_path.is_file():
+            raise FileNotFoundError(f"Preprocessing artifact not found: {preprocessing_path}")
+        # Only load trusted preprocessing files; pickle can execute arbitrary code.
+        with open(preprocessing_path, "rb") as f:
+            payload = pickle.load(f)
+
+        self.scaler = payload["scaler"]
+        self.numeric_cols = payload["numeric_cols"]
+        self.arts = payload["arts"]
+        self.q_lo = payload["q_lo"]
+        self.q_hi = payload["q_hi"]
+        self.rule_map = payload["rule_map"]
+        self.lat_dim = payload["lat_dim"]
+        self.input_dim = payload["input_dim"]
+        self.sparse_thr = payload.get("sparse_thr", 10)
+
+        if not onnx_path.is_file():
+            raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
+        self.session = ort.InferenceSession(
+            str(onnx_path), providers=["CPUExecutionProvider"]
+        )
+        actual_dim = self.session.get_inputs()[0].shape[-1]
+        if isinstance(actual_dim, int) and actual_dim != self.input_dim:
+            raise ValueError(f"ONNX input dimension {actual_dim} != {self.input_dim}")
+        self.input_name = self.session.get_inputs()[0].name
+
+        self.known_trans = set(self.arts["trans_map"].keys())
+        self.trans_counts = self.arts.get("trans_counts", {})
+        self.smart_rule = self.arts.get("smart_rule", {})
+        self._bare_to_canonical = {}
+        for cname in self.known_trans:
+            bare = re.sub(r":[^:]+$", "", re.sub(r"^[^:]+::", "", cname))
+            if (bare not in self._bare_to_canonical or
+                    self.trans_counts.get(cname, 0) >
+                    self.trans_counts.get(self._bare_to_canonical[bare], 0)):
+                self._bare_to_canonical[bare] = cname
+
+    def _resolve_name(self, t: str) -> str:
+        """
+        Resolve a raw transformation name to its canonical training-data name.
+        Four-step lookup (each step only runs if the previous one misses):
+          1. Exact match in known_trans / rule_map / smart_rule
+          2. Strip namespace prefix  e.g. "diamond::findrange:4.0" → "findrange:4.0"
+          3. Strip version suffix    e.g. "findrange:4.0" → "findrange"
+          4. Reverse bare-name map   e.g. "preprocess" → "diamond::preprocess:4.0"
+        Returns the original name unchanged if nothing matches (ZERO_SHOT).
+        """
+        if t in self.known_trans or t in self.rule_map or t in self.smart_rule:
+            return t
+        base = re.sub(r"^[^:]+::", "", t)
+        if base in self.known_trans or base in self.rule_map or base in self.smart_rule:
+            return base
+        base2 = re.sub(r":[^:]+$", "", base)
+        if base2 in self.known_trans or base2 in self.rule_map or base2 in self.smart_rule:
+            return base2
+        bare = re.sub(r":[^:]+$", "", re.sub(r"^[^:]+::", "", t))
+        canonical = self._bare_to_canonical.get(bare)
+        if canonical:
+            return canonical
+        return t
+
+    def predict(self, df: pd.DataFrame):
+        # Resolve transformation names to canonical training names before feature
+        # engineering so that anchor_runtime and name embeddings both benefit.
+        if "transformation" in df.columns:
+            df = df.copy()
+            df["transformation"] = df["transformation"].apply(self._resolve_name)
+        df_eng, name_emb = _make_features(df, self.arts)
+        X = self.scaler.transform(_assemble_X(df_eng, name_emb, self.numeric_cols))
+        X = np.asarray(X, dtype=np.float32)
+        pm, pl, ph, recon, mu, lv = self.session.run(
+            None, {self.input_name: X}
+        )
+
+        p_med  = np.expm1(pm.flatten())
+        p_low  = np.clip(np.expm1(pl.flatten()), 0, None)
+        p_high = np.expm1(ph.flatten())
+
+        # ── VAE interpretation ─────────────────────────────────────────────
+        # Per-feature squared reconstruction error: shape (N, input_dim).
+        # Tells us WHICH feature is most responsible for the anomaly.
+        per_feat_err = ((X - recon) ** 2)   # (N, input_dim)
+        recon_err    = per_feat_err.mean(axis=1)            # (N,) — overall error
+
+        # KL divergence per job — how unusual is the latent encoding.
+        kl = (0.5 * (mu ** 2 + np.exp(lv) - lv - 1).sum(axis=1))
+
+        # Anomaly score [0,1]: sigmoid-normalised combination of recon error + KL.
+        raw_anomaly   = recon_err + 0.1 * kl
+        anomaly_score = 1.0 / (1.0 + np.exp(-2.0 * (raw_anomaly - raw_anomaly.mean()
+                                                       ) / (raw_anomaly.std() + 1e-8)))
+
+        vae_confidence = np.clip(1.0 - anomaly_score, 0.0, 1.0)
+        latent_mu      = mu   # (N, lat_dim)
+
+        # ── Anomaly type: which feature group drives the reconstruction error ──
+        # Map feature index → human-readable anomaly category.
+        # Indices 0-8 = numeric_cols; indices 9+ = name-embedding dims.
+        _FEAT_TYPE = {
+            0: "unknown_transformation",   # log_anchor_runtime  — no training history
+            1: "unusual_cpu",              # log_cpu_power
+            2: "unusual_memory",           # log_ram
+            3: "unusual_data_size",        # log_input_bytes
+            4: "unusual_io_pattern",       # log_io_intensity
+            5: "unusual_compute_pattern",  # log_compute_intensity
+            6: "unusual_memory_cpu_ratio", # memory_pressure
+            7: "unusual_site",             # site_encoded
+            8: "unusual_file_count",       # log_input_files_count
+        }
+        _NAME_EMB_TYPE = "unknown_transformation_name"  # dims 9+ = TF-IDF name embedding
+
+        def _anomaly_types(feat_errors: np.ndarray) -> list:
+            """
+            Return a sorted list of (anomaly_type, contribution_pct) for the
+            top contributing feature groups, highest first.
+            Only groups contributing > 5 % of total error are included.
+            """
+            total = feat_errors.sum() + 1e-12
+            # Group name-embedding dims (9+) as one bucket
+            scores: dict = {}
+            for idx, err in enumerate(feat_errors):
+                key = _FEAT_TYPE.get(idx, _NAME_EMB_TYPE)
+                scores[key] = scores.get(key, 0.0) + err
+            ranked = sorted(scores.items(), key=lambda x: -x[1])
+            return [
+                {"type": k, "contribution_pct": round(float(100.0 * v / total), 1)}
+                for k, v in ranked
+                if v / total > 0.05
+            ]
+
+        anomaly_types = [_anomaly_types(per_feat_err[i]) for i in range(len(per_feat_err))]
+
+        # Widen the prediction interval for high-anomaly jobs (up to 2×).
+        interval_scale = 1.0 + anomaly_score
+        p_mid   = (p_low + p_high) / 2.0
+        half    = (p_high - p_low) / 2.0
+        p_low   = np.maximum(0, p_mid - half * interval_scale)
+        p_high  = p_mid + half * interval_scale
+
+        # transformation column was already resolved by _resolve_name above;
+        # re-resolve here only to determine the status label per row.
+        statuses = []
+        for i, row in enumerate(df.itertuples(index=False)):
+            trans = getattr(row, "transformation", "")
+            n_train = self.trans_counts.get(trans, 0)
+            if trans in self.rule_map:
+                rv        = self.rule_map[trans]
+                p_med[i]  = rv
+                p_low[i]  = rv * 0.5
+                p_high[i] = rv * 2.0
+                statuses.append("RULE_BASED")
+            elif n_train < self.sparse_thr and trans in self.smart_rule:
+                sr        = self.smart_rule[trans]
+                p_med[i]  = sr["median"]
+                p_low[i]  = sr["low"]
+                p_high[i] = sr["high"]
+                statuses.append("SPARSE")
+            elif trans not in self.known_trans:
+                statuses.append("ZERO_SHOT")
+            else:
+                statuses.append("NORMAL")
+
+        return p_med, p_low, p_high, statuses, anomaly_score, vae_confidence, latent_mu, anomaly_types
+
+
+# ─────────────────────────────────────────────
+# 5. FEATURE EXTRACTION FROM WORKFLOW OBJECT
+# ─────────────────────────────────────────────
+
+def _job_execution_site(job) -> Optional[str]:
+    """
+    Extract the execution site name from a job's profiles.
+    Checks selector.execution.site and pegasus.execution.site in that order.
+    Returns None if not set — caller falls back to slot hostname.
+    """
+    for ns_key, profs in job.profiles.items():
+        ns_val = ns_key.value if hasattr(ns_key, "value") else str(ns_key)
+        if ns_val in ("selector", "pegasus"):
+            for k, v in (profs.items() if hasattr(profs, "items") else profs):
+                if str(k).lower() in ("execution.site", "executionsite"):
+                    return str(v)
+    return None
+
+
+def _condor_profiles(job) -> dict:
+    """Return the Condor-namespace profile dict from a job, key-agnostic."""
+    for ns_key, profs in job.profiles.items():
+        ns_val = ns_key.value if hasattr(ns_key, "value") else str(ns_key)
+        if ns_val == "condor":
+            return dict(profs)
+    return {}
+
+
+def _full_trans_name(job) -> str:
+    """Build the canonical transformation name: [namespace::]name[:version]."""
+    name = getattr(job, "transformation", None) or "unknown"
+    ns   = getattr(job, "namespace",      None)
+    ver  = getattr(job, "version",        None)
+    if ns:
+        name = f"{ns}::{name}"
+    if ver:
+        name = f"{name}:{ver}"
+    return name
+
+
+def parse_sub_file(sub_path: Path):
+    """
+    Parse a single HTCondor .sub file, as described in :func:`scan_sub_files`.
+
+    Returns a ``(dax_job_id, info)`` tuple, or ``(None, None)`` if the file
+    cannot be read. ``dax_job_id`` is None for jobs without one, such as
+    clustered and infrastructure jobs.
+
+    A job is a clustered job if the basename of its submit file starts with
+    ``merge_`` and its ``+pegasus_cluster_size`` is greater than 1. Its tasks
+    are then listed in the ``.in`` file with the same basename, that is
+    returned as ``cluster_in_file``.
+    """
+    dax_job_id           = None
+    req_cpus             = None
+    req_memory           = None
+    cluster_in_file      = None
+    cluster_size         = None
+    cluster_transformation = None
+    transformation       = None
+    resources            = {}
+    try:
+        lines = sub_path.read_text().splitlines()
+    except OSError:
+        return None, None
+
+    for raw in lines:
+        line = raw.strip()
+        m = re.match(r'\+pegasus_wf_dax_job_id\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m and m.group(1).lower() != "null":
+            dax_job_id = m.group(1)
+        m = re.match(r'request_cpus\s*=\s*(\d+)', line, re.IGNORECASE)
+        if m:
+            req_cpus = int(m.group(1))
+        m = re.match(r'request_memory\s*=\s*([\d.]+)', line, re.IGNORECASE)
+        if m:
+            req_memory = float(m.group(1))
+        m = re.match(r'\+pegasus_cluster_size\s*=\s*"?(\d+)"?', line, re.IGNORECASE)
+        if m:
+            cluster_size = int(m.group(1))
+        m = re.match(r'\+pegasus_wf_transformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m:
+            cluster_transformation = m.group(1)
+        m = re.match(r'\+pegasus_wf_xformation\s*=\s*"?([^"\s]+)"?', line, re.IGNORECASE)
+        if m:
+            transformation = m.group(1)
+        m = re.match(r'(pegasus_cores|pegasus_gpus|pegasus_memory_mb|pegasus_diskspace_mb)'
+                     r'\s*=\s*(\S+)', line)
+        if m:
+            resources[m.group(1)] = m.group(2)
+
+
+    for key in ("pegasus_memory_mb", "pegasus_diskspace_mb"):
+        # sanity check to make sure they are not any condor expressions
+        # e.g. pegasus_memory_mb = ifthenelse( (LastHoldReasonCode=!=34 && LastHoldReasonCode=!=26), InitialRequestMemory, int(1.75 * NumJobStarts * MemoryUsage) )
+        # for time being if an expression then just set it to 0 .
+        # eventually maybe try to evaluate it, but will need to query condor_q at runtime
+        if key in resources:
+            try:
+                # check if we can cast to float or not
+                float(resources[key])
+            except:
+                # set the value to 0 as we cannot convert to float
+                resources[key] = '0'
+
+    if (sub_path.name.startswith("merge_") and
+            (cluster_size or 0) >= 1 and
+             (transformation or "").startswith("pegasus::")):
+        # to detect a clustered job we need to also check
+        # transformation is in pegasus namespace . allows us
+        # to distinguish users compute jobs that might have
+        # a tx name starting with merge_ suffix.
+        cluster_in_file = str(sub_path.with_suffix(".in"))
+
+    return dax_job_id, {
+        "request_cpus":           req_cpus,
+        "request_memory_mb":      req_memory,
+        "sub_path":               str(sub_path),
+        "cluster_in_file":        cluster_in_file,
+        "cluster_size":           cluster_size,
+        "cluster_transformation": cluster_transformation,
+        # complete transformation name [namespace::]name[:version]
+        "transformation":         transformation,
+        # pegasus_cores, pegasus_gpus, pegasus_memory_mb, pegasus_diskspace_mb
+        **resources,
+    }
+
+def count_cluster_tasks(in_file_path: str) -> int:
+    """
+    Count the number of tasks in a Pegasus cluster .in file.
+
+    The .in file has one task per non-empty, non-comment line.
+    Comment lines start with # (e.g. #@ task_count=5).
+    Returns 1 if the file cannot be read (safe fallback).
+    """
+    try:
+        lines = Path(in_file_path).read_text().splitlines()
+        return max(1, sum(
+            1 for l in lines
+            if l.strip() and not l.strip().startswith("#")
+        ))
+    except OSError:
+        return 1
+
+
+def cluster_task_ids(in_file_path: str) -> List[str]:
+    """
+    Return the DAX job ids of the tasks in a Pegasus cluster .in file.
+
+    Each task is preceded by a monitord comment line of the form
+    ``#@ <task_number> <transformation> <dax_job_id>``.
+    Returns an empty list if the file cannot be read.
+    """
+    try:
+        lines = Path(in_file_path).read_text().splitlines()
+    except OSError:
+        return []
+    ids = []
+    for l in lines:
+        parts = l.split()
+        if len(parts) >= 4 and parts[0] == "#@":
+            ids.append(parts[3])
+    return ids
+
+
+# the patterns below are applied every time the submit file is patched, e.g.
+# when the prescript is rerun on a job retry. To keep the patching idempotent,
+# whatever an earlier patch added is first removed and then added afresh.
+
+# s/^periodic_remove = \((.*)\) \|\| \(\(JobStatus == 2\) && ... > N\)\)$/periodic_remove = \1/
+# removes the runtime clause added by an earlier patch, restoring the original
+# periodic_remove expression that \1 matches to
+sed_pattern_strip_periodic_remove = (
+    "s/^\\s*periodic_remove\\s*=\\s*\\((.*)\\) \\|\\| "
+    "\\(\\(JobStatus == 2\\) && "
+    "\\(\\(CurrentTime - EnteredCurrentStatus\\) > [0-9]+\\)\\)$/periodic_remove = \\1/"
+)
+
+# s/^\s*periodic_remove\s*=\s*(.*)$/periodic_remove = (\1) || .../
+# \1 matches to the existing periodic_remove expression. The timeout in
+# seconds is provided via python format option
+# Example
+#   Original:  periodic_remove = ((JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800))
+#   Patched Version: periodic_remove = ((JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 1800)) || ((JobStatus == 2) && ((CurrentTime - EnteredCurrentStatus) > 3600))
+sed_pattern_update_periodic_remove = (
+    "s/^\\s*periodic_remove\\s*=\\s*(.*)$/periodic_remove = (\\1) || "
+    "((JobStatus == 2) \\&\\& ((CurrentTime - EnteredCurrentStatus) > {}))/"
+)
+
+# removes the prediction classads inserted by an earlier patch
+# Example
+# +pegasus_predicted_runtime      = 145
+# +pegasus_predicted_runtime_low  = 0
+# +pegasus_predicted_runtime_high = 962
+# +pegasus_prediction_status      = "NORMAL"
+sed_pattern_delete_prediction_classads = (
+    "/^\\s*\\+pegasus_predict(ed_runtime(_low|_high)?|ion_status)\\s*=/d"
+)
+
+def patch_sub_file(sub_path: str, prediction: dict) -> bool:
+    """
+    Inject predicted runtime ClassAds into a .sub file **in-place**.
+
+    Called after prediction, before DAGMan submits the job.  Adds:
+
+    - ``+pegasus_predicted_runtime``      — median predicted seconds
+    - ``+pegasus_predicted_runtime_low``  — lower-bound seconds
+    - ``+pegasus_predicted_runtime_high`` — upper-bound seconds
+    - ``+pegasus_prediction_status``      — NORMAL / SPARSE / ZERO_SHOT / RULE_BASED
+    - Updates ``periodic_remove`` to also kill jobs running > 3× upper bound
+      (safety net; keeps the existing held-job removal condition).
+
+    Returns True on success, False if the file could not be patched.
+    """
+    if Sed is None:
+        raise ImportError("PythonSed is required to patch HTCondor submit files")
+    path = Path(sub_path)
+    if not path.is_file():
+        return False
+
+    predicted_s  = max(1, int(prediction.get("predicted_runtime_s", 0)))
+    upper_s      = max(predicted_s, int(prediction.get("upper_bound_s",  predicted_s * 2)))
+    lower_s      = max(0,           int(prediction.get("lower_bound_s",  0)))
+    status       = str(prediction.get("status", "UNKNOWN"))
+    # Kill if running longer than 3× upper bound (minimum 1 h)
+    timeout_s    = max(upper_s * 3, 3_600)
+
+    try:
+        # ads are inserted before the queue line (always present in Pegasus
+        # .sub files)
+        if not any(
+            l.strip().lower().startswith("queue") for l in path.read_text().splitlines()
+        ):
+            return False
+    except OSError:
+        return False
+
+    our_ads = [
+        f"+pegasus_predicted_runtime      = {predicted_s}",
+        f"+pegasus_predicted_runtime_low  = {lower_s}",
+        f"+pegasus_predicted_runtime_high = {upper_s}",
+        f'+pegasus_prediction_status      = "{status}"',
+    ]
+
+    # 1. remove what an earlier patch of the file added
+    # 2. update periodic_remove to also remove jobs running past the timeout,
+    #    keeping the existing condition. & is escaped as it denotes the
+    #    matched string in a sed replacement
+    # 3. insert our ads before the queue line
+    sed_patterns = [
+        sed_pattern_strip_periodic_remove,
+        sed_pattern_delete_prediction_classads,
+        sed_pattern_update_periodic_remove.format(timeout_s),
+        "/^\\s*queue/i\\\n" + "\\\n".join(our_ads),
+    ]
+
+    sed = Sed(in_place="", regexp_extended=True)
+    for pattern in sed_patterns:
+        sed.load_string(pattern)
+
+    try:
+        sed.apply(str(path))
+    except SedException as e:
+        warnings.warn(f"Unable to patch submit file {path}: {e.message}")
+        return False
+    except OSError:
+        return False
+
+    return True
+
+
+def find_submit_dir(workflow_yml: str) -> str | None:
+    """
+    Locate the Pegasus submit ROOT for the **current** workflow run.
+
+    Uses ``$PEGASUS_WF_UUID`` (always present in the job environment) to
+    match the exact braindump.yml for this run — avoids returning an older
+    run's submit directory when multiple runs exist side-by-side.
+
+    Tries in order:
+    1. ``$PEGASUS_SUBMIT_DIR`` / ``$_PEGASUS_SUBMIT_DIR`` env vars.
+    2. Walk up from CWD looking for ``braindump.yml`` matching the UUID.
+    3. Search under the workflow YAML directory, UUID-matched first,
+       then any braindump as fallback.
+    4. ``submit/`` subtree under the workflow YAML directory.
+    """
+    wf_uuid = os.environ.get("PEGASUS_WF_UUID", "")
+
+    def _check_braindump(path: Path) -> str | None:
+        """Return submit dir from braindump if UUID matches (or as fallback)."""
+        try:
+            import yaml as _yaml
+            data = _yaml.safe_load(path.read_text()) or {}
+            sd = data.get("submit_dir") or str(path.parent)
+            if Path(sd).is_dir():
+                return sd
+        except Exception:
+            if path.parent.is_dir():
+                return str(path.parent)
+        return None
+
+    # 1. Explicit Pegasus env var
+    for var in ("PEGASUS_SUBMIT_DIR", "_PEGASUS_SUBMIT_DIR"):
+        sd = os.environ.get(var)
+        if sd and Path(sd).is_dir():
+            return sd
+
+    # 2. Walk up from CWD — find braindump with matching UUID first
+    for candidate in [Path.cwd()] + list(Path.cwd().parents)[:8]:
+        bd = candidate / "braindump.yml"
+        if bd.is_file():
+            try:
+                import yaml as _yaml
+                data = _yaml.safe_load(bd.read_text()) or {}
+                if not wf_uuid or data.get("wf_uuid") == wf_uuid:
+                    sd = _check_braindump(bd)
+                    if sd:
+                        return sd
+            except Exception:
+                pass
+
+    # 3. Search under the workflow YAML directory
+    wf_dir = Path(workflow_yml).resolve().parent
+    all_braindumps = []
+    for search_root in [wf_dir] + list(wf_dir.parents)[:2]:
+        all_braindumps += list(search_root.rglob("braindump.yml"))
+
+    # UUID-matched pass first
+    if wf_uuid:
+        for bd in all_braindumps:
+            try:
+                import yaml as _yaml
+                data = _yaml.safe_load(bd.read_text()) or {}
+                if data.get("wf_uuid") == wf_uuid:
+                    sd = _check_braindump(bd)
+                    if sd:
+                        return sd
+            except Exception:
+                pass
+
+    # Fallback: most recently modified braindump (= current run)
+    for bd in sorted(all_braindumps, key=lambda p: p.stat().st_mtime, reverse=True):
+        sd = _check_braindump(bd)
+        if sd:
+            return sd
+
+    # 4. submit/ subtree
+    submit_sub = wf_dir / "submit"
+    if submit_sub.is_dir():
+        return str(submit_sub)
+
+    return None
+
+
+def _extract_features(
+    workflow,
+    level: int,
+    slot: dict,
+    arts: dict,
+    sub_resources: Optional[dict] = None
+) -> pd.DataFrame:
+    """
+    Build one feature row per job in the workflow. In case of clustered jobs
+    the workflow consists of jobs making up the cluster
+
+    ``sub_resources`` (optional) provides request_cpus / request_memory from
+    HTCondor .sub files, keyed by DAX job ID.
+
+    cpu_count semantics: the training data records the actual machine's CPU count
+    from kickstart output (e.g. a 64-CPU node shows cpu_count=64 regardless of
+    how many CPUs the job requested).  We therefore always use slot["cpu_count"]
+    (the machine total from condor_status) for the model's cpu_count feature.
+    request_cpus is only used to derive memory_pressure (ram / request_cpus),
+    which captures the per-CPU memory allocation requested by the job.
+
+    SubWorkflow and Pegasus/system auxiliary jobs are skipped at every level.
+    """
+    sub_resources = sub_resources or {}
+
+    # file lfn → size in bytes.
+    # Priority (highest wins):
+    #   1. Actual size from .meta files written by completed jobs
+    #   2. Static File.size declared in workflow.yml
+    # .meta files are written by Pegasus after each job completes, so for
+    # level N predictors (N ≥ 1) the level N-1 outputs already have .meta
+    # files with exact sizes — far more accurate than workflow.yml estimates.
+    file_size_map: dict = {}
+
+    # Seed with static YAML sizes first (lowest priority)
+    # the workflow object only has one job unless it is a
+    # clustered job
+    for jid, job in workflow.jobs.items():
+        for f in (job.get_inputs() if hasattr(job, "get_inputs") else []):
+            if hasattr(f, "size") and f.size:
+                file_size_map[f.lfn] = float(f.size)
+        for f in (job.get_outputs() if hasattr(job, "get_outputs") else []):
+            if hasattr(f, "size") and f.size:
+                file_size_map[f.lfn] = float(f.size)
+
+    output_ratio = arts.get("output_ratio", {})
+
+    rows      = []
+    level_map = {}  # job_id → level index (for reporting)
+
+    for jid, job in workflow.jobs.items():
+
+        if not hasattr(job, "transformation"):
+            continue  # SubWorkflow
+        ns = getattr(job, "namespace", None)
+
+        condor  = _condor_profiles(job)
+        sub_res = sub_resources.get(jid, {})
+
+        # cpu_count: always the machine total (matches training-time kickstart data)
+        machine_cpus = slot["cpu_count"]
+
+        # request_cpus: what the job asked for (used for memory_pressure only)
+        req_cpus = (
+            sub_res.get("request_cpus")
+            or int(condor.get("request_cpus", 0))
+            or machine_cpus
+        )
+
+        req_mem_mb = (
+            sub_res.get("request_memory_mb")
+            or float(condor.get("request_memory", 0))
+        )
+        ram_kb = req_mem_mb * 1_024 if req_mem_mb > 0 else slot["ram"]
+
+        # site: prefer named execution site from job profiles over hostname
+        exec_site = _job_execution_site(job) or slot["hostname"]
+
+        inputs            = job.get_inputs() if hasattr(job, "get_inputs") else []
+        input_files_count = len(inputs)
+        input_bytes_total = sum(
+            file_size_map.get(f.lfn, 0.0) for f in inputs
+        )
+
+        rows.append({
+            "job_id":            jid,
+            "transformation":    _full_trans_name(job),
+            "dag_level":         level,
+            "cpu_count":         machine_cpus,
+            "request_cpus":      req_cpus,
+            "cpu_speed":         slot["cpu_speed"],
+            "ram":               ram_kb,
+            "input_bytes_total": float(input_bytes_total),
+            "input_files_count": input_files_count,
+            "hostname":          exec_site,
+        })
+        level_map[jid] = level
+
+
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+# ─────────────────────────────────────────────
+# 6. WORKFLOW-LEVEL PREDICTOR
+# ─────────────────────────────────────────────
+
+class WorkflowRuntimePredictor:
+    """
+    Runtime predictor for a job in a workflow.
+
+    Loads the PegasusOracle model once, predicts the runtime of the job whose
+    condor submit file is passed, or of the tasks of a clustered job, and
+    patches the prediction into the submit file.
+
+    Usage — explicit config::
+
+        cfg = RuntimePredictionConfig(
+            model_path  = "pegasus_oracle.onnx",
+            output_dir  = "/submit/dir",
+            q_lo        = 0.10,
+            q_hi        = 0.90,
+        )
+        predictor = WorkflowRuntimePredictor(cfg)
+        predictor.predict("workflow.yml", "00/00/job_ID0000001.sub",
+                          lof_file="00/00/job_ID0000001.in.lof",
+                          meta_files=["00/00/parent_ID0000000.meta"])
+
+    Usage — from pegasus.properties::
+
+        cfg = RuntimePredictionConfig.from_properties(props)
+        WorkflowRuntimePredictor(cfg).predict("workflow.yml", "job.sub")
+    """
+
+    def __init__(self, config: RuntimePredictionConfig):
+        """
+        :param config: :py:class:`RuntimePredictionConfig` instance
+        :raises ValueError: if config.model_path is not set
+        :raises FileNotFoundError: if the model file does not exist
+        :raises ImportError: if ONNX Runtime or scikit-learn are not installed
+        """
+        if not config.model_path:
+            if _DEFAULT_MODEL.exists():
+                config.model_path = str(_DEFAULT_MODEL)
+            else:
+                raise ValueError(
+                    "No preprocessing file found. Either set pegasus.runtime.prediction.model.path "
+                    "in pegasus.properties, or place pegasus_oracle.onnx in: "
+                    f"{_MODELS_DIR}"
+                )
+        if not os.path.isfile(config.model_path):
+            raise FileNotFoundError(
+                f"Model not found: {config.model_path}. "
+                "Train the model via pegasus_oracle.py and place the .pkl in "
+                f"{_MODELS_DIR} or set pegasus.runtime.prediction.model.path."
+            )
+        if Workflow is None:
+            raise ImportError("Pegasus.api is required for workflow integration; standalone ModelContext inference works without it")
+        self._cfg        = config
+        self._ctx        = ModelContext(config.model_path)
+
+        # Apply config overrides to the loaded model context
+        if config.sparse_threshold is not None:
+            self._ctx.sparse_thr = config.sparse_threshold
+        if config.q_lo is not None:
+            self._ctx.q_lo = config.q_lo
+        if config.q_hi is not None:
+            self._ctx.q_hi = config.q_hi
+
+
+    def _resolve_slot(self) -> dict:
+        """Resolve the compute slot, applying any slot overrides from config."""
+        slot = _get_condor_slot(self._cfg.condor_status_cache)
+        if self._cfg.slot_hostname  is not None: slot["hostname"]  = self._cfg.slot_hostname
+        if self._cfg.slot_cpu_count is not None: slot["cpu_count"] = self._cfg.slot_cpu_count
+        if self._cfg.slot_cpu_speed is not None: slot["cpu_speed"] = self._cfg.slot_cpu_speed
+        if self._cfg.slot_ram       is not None: slot["ram"]       = self._cfg.slot_ram
+        return slot
+
+    def predict(
+        self,
+        workflow_yml,
+        job_sub,
+        target_level=None,
+        lof_file=None,
+        meta_files=None,
+    ):
+        """
+        Computes the runtime prediction for the job whose condor submit file is
+        passed, and patches it into the submit file. For a clustered job, the
+        predictions for its constituent tasks are computed and aggregated.
+
+        :param workflow_yml: path to the workflow YAML file, to load the tasks of a
+                             clustered job from
+        :param job_sub: path to the condor submit file of the job to be patched
+        :param target_level: the DAG level of the job
+        :param lof_file: LOF file listing the lfns of the input files of the job
+        :param meta_files: list of .meta files containing the sizes of the input
+                           files of the job
+        :raises PredictorError: if the runtime of the job cannot be predicted
+        """
+        dax_job_id, sub_info = parse_sub_file(Path(job_sub))
+        if sub_info is None:
+            raise PredictorError(f"Unable to read submit file {job_sub}")
+
+        # a clustered job has no dax job id of its own. predict for its tasks
+        cluster_in_file = sub_info.get("cluster_in_file")
+        if cluster_in_file:
+            job_ids = cluster_task_ids(cluster_in_file)
+            print(f"[pegasus-runtime-predictor] Cluster detected: {job_sub}")
+            print(f"[pegasus-runtime-predictor]   .in file:        {cluster_in_file}")
+            print(f"[pegasus-runtime-predictor]   task count:      {len(job_ids)}")
+        else:
+            job_ids = [dax_job_id] if dax_job_id else []
+
+        if not job_ids:
+            raise PredictorError(f"No job id found in submit file {job_sub}")
+
+        # label for the job in the log and the timings
+        caller_job_id = dax_job_id or job_sub
+
+        # only in case of a clustered job, we need to parse the whole workflow.yml
+        # file to figure out information about consituent jobs.
+        if cluster_in_file:
+            # the submit file and the LOF of a clustered job describe the cluster
+            # as a whole, and not its tasks. so the tasks are loaded from the workflow
+            print(f"[pegasus-runtime-predictor] Reading workflow: {workflow_yml}")
+            wf = _load_jobs_from_yaml(workflow_yml, job_ids)
+            missing = [jid for jid in job_ids if jid not in wf.jobs]
+            if missing:
+                print(
+                    f"[pegasus-runtime-predictor] Job(s) not found in workflow: {', '.join(missing)}",
+                    file=sys.stderr,
+                )
+        else:
+            wf = Workflow(dax_job_id, infer_dependencies=False)
+            wf.add_jobs(_job_from_sub(dax_job_id, sub_info))
+
+        # read the sizes from the meta files passed
+        sizes = _read_meta_sizes(meta_files or [])
+        print(
+            f"[pegasus-runtime-predictor] Found {len(sizes)} file size(s) in "
+            f"{len(meta_files or [])} meta file(s)"
+        )
+        if cluster_in_file:
+            # files produced by other tasks in the cluster have no .meta entry yet
+            # and their sizes are estimated
+            produced = {fo.lfn for job in wf.jobs.values() for fo in job.get_outputs()}
+            for job in wf.jobs.values():
+                for fi in job.get_inputs():
+                    if fi.lfn in sizes:
+                        fi.size = sizes[fi.lfn]
+                    elif fi.lfn not in produced:
+                        _warn_no_size(fi.lfn, job._id)
+        else:
+            lfns = _read_lof(lof_file) if lof_file else []
+            if not lfns:
+                print(
+                    f"[pegasus-runtime-predictor] No input files found for {caller_job_id}",
+                    file=sys.stderr,
+                )
+            for lfn in lfns:
+                if lfn not in sizes:
+                    _warn_no_size(lfn, caller_job_id)
+            for job in wf.jobs.values():
+                job.add_inputs(*[File(lfn, size=sizes.get(lfn)) for lfn in lfns])
+
+        # the resources in the submit file are for the job itself, and not the
+        # constituent tasks of a clustered job
+        sub_resources = {}
+        if dax_job_id:
+            sub_resources[dax_job_id] = {
+                k: v for k, v in sub_info.items() if k != "sub_path"
+            }
+
+        _pred_start = time.time()
+        results = self.predict_job(wf, sub_resources=sub_resources, level=target_level)
+        _pred_duration = time.time() - _pred_start
+        print(
+            f"[pegasus-runtime-predictor] {len(results)} job(s) predicted in {_pred_duration:.3f}s"
+        )
+
+        pred = None
+        if results and cluster_in_file:
+            # Clustered job — aggregate predictions for all constituent tasks
+            pred = {
+                "predicted_runtime_s": sum(p["predicted_runtime_s"] for p in results),
+                "upper_bound_s": sum(p["upper_bound_s"] for p in results),
+                "lower_bound_s": sum(p["lower_bound_s"] for p in results),
+                "status": "CLUSTERED",
+            }
+            print(
+                f"[pegasus-runtime-predictor] Cluster {caller_job_id}: "
+                f"{len(results)}/{len(job_ids)} tasks aggregated, "
+                f"total={pred['predicted_runtime_s']:.1f}s"
+            )
+        elif results:
+            pred = results[0]
+
+        if not pred:
+            raise PredictorError(f"No prediction found for {caller_job_id}")
+        if not patch_sub_file(sub_info["sub_path"], pred):
+            raise PredictorError(
+                f"Could not patch submit file {sub_info['sub_path']} for {caller_job_id}"
+            )
+        print(f"[pegasus-runtime-predictor] Patched .sub for {caller_job_id}")
+
+    def predict_job(
+        self,
+        workflow,
+        level,
+        sub_resources: Optional[dict] = None,
+        slot: Optional[dict] = None,
+    ) -> List[dict]:
+        """
+        Predict runtimes for the jobs in *workflow*, without writing any
+        output files or modifying the workflow.
+
+        :param workflow: a Pegasus Workflow object with the jobs to predict
+        :param level: the level at which the jobs are
+        :param sub_resources: optional ``{dax_job_id: {"request_cpus": int,
+            "request_memory_mb": float}}`` overriding YAML profile values
+        :param submit_dir: optional directory to read .meta file sizes from
+        :param slot: optional compute slot, resolved from condor if not given
+        :return: list of prediction dicts, one per job
+        """
+        if not self._cfg.enabled:
+            return []
+
+        # ── Step 1: resolve compute slot ──────────────────────────────────
+        slot = slot or self._resolve_slot()
+
+        # ── Step 2: build feature matrix level-by-level, then collect all ───
+        df = _extract_features(workflow, level, slot, self._ctx.arts,
+                               sub_resources=sub_resources)
+        print( f"[pegasus-runtime-predictor] \n {df.to_string()}")
+
+        if df.empty:
+            return []
+
+        # ── Step 3: single batch forward pass + VAE interpretation ───────────
+        p_med, p_low, p_high, statuses, anomaly, confidence, latent_mu, anomaly_types = \
+            self._ctx.predict(df)
+        ip_pct = int(round((self._ctx.q_hi - self._ctx.q_lo) * 100))
+
+        # ── Step 4: assemble result rows ───────────────────────────────────
+        results = []
+        for i, row in enumerate(df.itertuples(index=False)):
+            results.append({
+                "job_id":              row.job_id,
+                "transformation":      row.transformation,
+                "dag_level":           int(row.dag_level),
+                "status":              statuses[i],
+                "predicted_runtime_s": round(float(p_med[i]), 1),
+                "lower_bound_s":       round(float(p_low[i]),  1),
+                "upper_bound_s":       round(float(p_high[i]), 1),
+                "interval_pct":        ip_pct,
+                "min_wall_time_mins":  max(1, math.ceil(float(p_low[i])  / 60)),
+                "max_wall_time_mins":  max(1, math.ceil(float(p_high[i]) / 60)),
+                "input_files_count":   int(row.input_files_count),
+                "input_bytes_total":   float(row.input_bytes_total),
+                "cpu_count":           int(row.cpu_count),
+                "hostname":            row.hostname,
+                # VAE interpretation
+                "vae_anomaly_score":   round(float(anomaly[i]),    4),
+                "vae_confidence":      round(float(confidence[i]), 4),
+                "vae_anomaly_types":   anomaly_types[i],
+                "vae_latent_mu":       [round(float(v), 4) for v in latent_mu[i]],
+            })
+
+        return results
+
+
+# ─────────────────────────────────────────────
+# 7. PER JOB PREDICTION (invoked by pegasus-runtime-predictor)
+# ─────────────────────────────────────────────
+
+class PredictorError(Exception):
+    """Raised when the runtime of a job cannot be predicted."""
+
+
+def _load_jobs_from_yaml(path: str, job_ids) -> Workflow:
+    """Load only the jobs with the given ids from the workflow YAML file."""
+    with open(path) as f:
+        data = yaml.safe_load(f)
+
+    wf_name = data.get("name", "workflow")
+    wf = Workflow(wf_name, infer_dependencies=False)
+
+    for jdata in data.get("jobs", []):
+        jid = jdata.get("id", "")
+        if jid not in job_ids:
+            continue
+        trans = jdata.get("name", jdata.get("transformation", ""))
+        job = Job(trans, _id=jid)
+
+        for u in jdata.get("uses", []):
+            fi = File(u["lfn"])
+            if u.get("type") == "input":
+                if u.get("size"):
+                    fi.size = int(u["size"])
+                job.add_inputs(fi)
+            elif u.get("type") == "output":
+                job.add_outputs(fi)
+
+        for key, val in jdata.get("profiles", {}).get("condor", {}).items():
+            job.add_profiles(Namespace.CONDOR, **{key: str(val)})
+
+        wf.add_jobs(job)
+
+    return wf
+
+
+# pegasus_ keys in the condor submit file, and the condor profiles they map to
+_SUB_CONDOR_PROFILES = {
+    "pegasus_cores": "request_cpus",
+    "pegasus_gpus": "request_gpus",
+    "pegasus_memory_mb": "request_memory",
+    "pegasus_diskspace_mb": "request_disk",
+}
+
+
+def _split_tc_name(tc_name: str):
+    """Split a [namespace::]name[:version] transformation name into its parts."""
+    namespace, _, name = tc_name.rpartition("::")
+    name, _, version = name.partition(":")
+    return namespace or None, name, version or None
+
+
+def _job_from_sub(job_id: str, sub_info: dict) -> Job:
+    """
+    Create the job from the transformation name and the pegasus_ keys in its
+    condor submit file. The pegasus_ keys are added as condor profiles.
+    """
+    tc_name = sub_info.get("transformation")
+    if not tc_name:
+        print(
+            f"[pegasus-runtime-predictor] No transformation found in {sub_info['sub_path']}",
+            file=sys.stderr,
+        )
+        tc_name = "unknown"
+    namespace, name, version = _split_tc_name(tc_name)
+    job = Job(name, _id=job_id, namespace=namespace, version=version)
+
+    profiles = {}
+    for key, profile in _SUB_CONDOR_PROFILES.items():
+        if sub_info.get(key) is not None:
+            profiles[profile] = sub_info[key]
+    if "request_disk" in profiles:
+        # condor defaults to KiB for request_disk
+        profiles["request_disk"] += " MB"
+    if profiles:
+        job.add_profiles(Namespace.CONDOR, **profiles)
+    return job
+
+
+def _read_lof(lof_file: str) -> list:
+    """Return the lfns listed in a LOF file, that has one lfn=... entry per line."""
+    lfns = []
+    with open(lof_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                lfns.append(line.split("=", 1)[0])
+    return lfns
+
+
+def _read_meta_sizes(meta_files) -> dict:
+    """Return the sizes in bytes of the files in the .meta files, indexed by lfn."""
+    if Metadata is None and meta_files:
+        raise ImportError("Pegasus.monitoring.metadata is required to read .meta files; use the Pegasus installation providing this module")
+    sizes = {}
+    for meta_file in meta_files:
+        try:
+            metadata_list = Metadata.load(meta_file)
+        except (OSError, ValueError) as e:
+            print(
+                f"[pegasus-runtime-predictor] Unable to read meta file {meta_file}: {e}",
+                file=sys.stderr,
+            )
+            continue
+        for m in metadata_list:
+            size = m.get_attribute_value("size")
+            if m.get_type() == "file" and size is not None:
+                sizes[m.get_id()] = int(size)
+    return sizes
+
+
+def _warn_no_size(lfn: str, job_id: str) -> None:
+    """Warn that an input file of a job has no size in the .meta files."""
+    print(
+        f"[pegasus-runtime-predictor] WARNING: No size found in meta files for input "
+        f"{lfn} of job {job_id}",
+        file=sys.stderr,
+    )

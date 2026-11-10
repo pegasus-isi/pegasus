@@ -62,6 +62,7 @@ install: build
 	# boto3, globus-sdk, ...) cannot conflict with or shadow distro packages.
 	$(PYTHON3) -m venv debian/pegasus/usr/lib/pegasus/venv
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install --upgrade pip
+
 	debian/pegasus/usr/lib/pegasus/venv/bin/pip install dist/pegasus_wms-*.whl
 
 	# The venv was created under debian/pegasus; strip that build-time prefix from
@@ -122,7 +123,11 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 	dh_installdeb
-	dh_shlibdeps
+	# -X is a plain substring match on the file path (no globs). Skip scipy's
+	# pip-wheel extension modules and the libraries it vendors in scipy.libs/:
+	# those are not owned by any Debian package, so dpkg-shlibdeps cannot
+	# resolve them.
+	dh_shlibdeps -Xsite-packages/scipy
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

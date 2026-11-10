@@ -8,3 +8,8 @@ pegasus.gridstart = None
 pegasus.catalog.transformation.mapper = Staged
 pegasus.transfer.worker.package = True
 pegasus.clusterer.preference = Runtime
+
+# turn off runtime prediction, as we
+# don't stat files if job is not
+# launched via kickstart
+pegasus.runtime.prediction = false

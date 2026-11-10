@@ -8,3 +8,8 @@ pegasus.catalog.replica.file ./conf/rc.data
 # we want it to be turned on and then be off
 # automatically for findrange jobs
 pegasus.integrity.checking = full
+
+# turn off runtime prediction, as we
+# don't stat files if job is not
+# launched via kickstart
+pegasus.runtime.prediction = false

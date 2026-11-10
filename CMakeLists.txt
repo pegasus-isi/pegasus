@@ -113,8 +113,9 @@ set(WORKER_DEST  "${_data_base}/worker-packages")
 set(SCHEMA_DEST  "${_data_base}/schema")
 set(ETC_DEST     "${_data_base}/etc")
 
-# Python sub-packages: merge pegasus-common and pegasus-api into the wheel
-# alongside pegasus-python (handled by wheel.packages). The former
+# Python sub-packages: merge pegasus-common, pegasus-api and pegasus-runtime
+# (runtime prediction, including its model .pkl) into the wheel alongside
+# pegasus-python (handled by wheel.packages). The former
 # pegasus-worker Python package is gone — every CLI tool it held (transfer,
 # s3, checkpoint, integrity, globus-online(-init)) was rewritten in Go and is
 # installed as a compiled binary further down instead. The isolated,
@@ -124,6 +125,8 @@ if(DEFINED SKBUILD_PLATLIB_DIR)
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-common/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
     install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-api/src/Pegasus/"
+            DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/packages/pegasus-runtime/src/Pegasus/"
             DESTINATION "${SKBUILD_PLATLIB_DIR}/Pegasus")
 endif()
 

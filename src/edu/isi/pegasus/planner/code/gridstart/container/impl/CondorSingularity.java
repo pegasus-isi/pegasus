@@ -89,7 +89,7 @@ public class CondorSingularity extends AbstractContainer {
         if (this.mTransfersOnHostOS) {
             sb.append("pegasus_lite_section_start stage_in").append('\n');
             sb.append(super.inputFilesToPegasusLite(job));
-            sb.append(super.enableForIntegrity(job, ""));
+            sb.append(super.enableForIntegrityAndRuntimePrediction(job, ""));
             sb.append("pegasus_lite_section_end stage_in").append('\n');
         }
 
