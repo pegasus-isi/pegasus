@@ -119,6 +119,9 @@ def test_tail_only_live_process_exits_cleanly_on_sigint(tmp_path: Path) -> None:
         stderr=slave,
         env={**environment(), "TERM": "xterm-256color"},
         close_fds=True,
+        # A child inherits an ignored SIGINT, and Python then never installs
+        # its KeyboardInterrupt handler. Some CI runners start jobs that way.
+        preexec_fn=lambda: signal.signal(signal.SIGINT, signal.SIG_DFL),
     )
     os.close(slave)
     try:
@@ -152,7 +155,10 @@ def test_tail_only_live_process_exits_cleanly_on_sigint(tmp_path: Path) -> None:
             if chunk:
                 output.extend(chunk)
         returncode = process.poll()
-        assert returncode is not None, output.decode(errors="replace")
+        assert returncode is not None, (
+            f"parent SIGINT disposition: {signal.getsignal(signal.SIGINT)!r}\n"
+            f"{output.decode(errors='replace')}"
+        )
         assert returncode == 0
     finally:
         if process.poll() is None:
