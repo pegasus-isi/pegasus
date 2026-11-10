@@ -96,6 +96,12 @@ Options
    use the ``pegasus_lite`` diagnostic evidence source in event streams; use
    the updated monitor when replaying or remotely reading such streams.
 
+**--json**
+   Write one JSON document to standard output instead of the text report. It
+   requires ``--once``, ``--diagnose``, or ``--why-idle``, always runs one
+   shot even on a terminal, and cannot be combined with ``--serve``,
+   ``--serve-foreground``, or ``--stop-server``. See `JSON Output`_.
+
 **--log** [*PATH*]
    Write canonical schema-version-1 JSONL while monitoring locally. If *PATH*
    is omitted, the file is ``SUBMIT_DIR/workflow-events.jsonl``. Because the
@@ -302,6 +308,202 @@ jobs show ``-`` instead of advancing a wall clock. These durations are preserved
 in event streams and replay.
 
 
+JSON Output
+===========
+
+``--json`` replaces the text report of a one-shot mode with exactly one JSON
+document on standard output: a single line of ASCII, terminated by a newline,
+with no terminal control sequences. Warnings and the usual error text still go
+to standard error. A document is written on failure too, so standard output is
+always valid JSON.
+
+The document is a separate contract from the ``--log`` event stream. It
+carries ``format`` (``pegasus-monitor-json``) and ``format_version`` rather
+than the stream's ``schema_version``, and it includes HTCondor evidence,
+diagnostic suggestions, the why-idle analysis, and a stall assessment, none of
+which the event stream records. Adding a key or an enumeration value keeps
+``format_version``; removing or renaming a key, or changing its type or
+meaning, increments it. Consumers should ignore keys they do not recognize.
+
+Every document has the same top-level keys:
+
+``format``, ``format_version``, ``monitor_version``
+   Contract identity and the Pegasus version that wrote the document.
+
+``generated_at_epoch``, ``generated_at``, ``observed_at_epoch``
+   When the document was written (epoch seconds and ISO 8601 UTC) and the
+   clock reading of the snapshot it describes.
+
+``modes``, ``origin``, ``target``
+   The requested modes in the order ``once``, ``diagnose``, ``why_idle``; the
+   origin ``live``, ``replay``, or ``remote``; and the target as given.
+
+``exit_code``, ``error``
+   The process exit status and, exactly when it is nonzero, an object with a
+   stable ``code`` and a human-readable ``message``. Otherwise ``error`` is
+   null.
+
+``workflow``
+   ``wf_uuid``, ``root_wf_uuid``, ``submit_dir``, label, owner, and DAG name.
+   ``is_sub_workflow`` is true when the target is itself a subworkflow.
+   ``sub_workflows`` counts and names the subworkflow jobs of this workflow;
+   ``aggregated`` is always false because their jobs are not included.
+
+``sources``
+   One entry each for ``stampede``, ``live_tail``, ``condor_queue``,
+   ``condor_history``, ``condor_pool``, ``condor_priority``, and
+   ``condor_negotiator``, with its health ``state``, ``error_code``, and
+   ``queried``. The state ``disabled`` means the source was turned off, for
+   example by ``--no-condor``; ``not_queried`` means this mode did not need
+   it. An empty result from a source that is not ``healthy`` means the monitor
+   could not look, not that there was nothing to find.
+
+``summary``
+   Workflow state, status, start and end times, completion, removal reason,
+   and ``job_counts`` by lifecycle. Null without an authoritative snapshot.
+
+``stats``
+   The statistics of the text report. Unknown values are omitted.
+
+``stall``
+   The one-shot stall assessment described below.
+
+``snapshot``, ``diagnostics``, ``why_idle``
+   The sections of ``--once``, ``--diagnose``, and ``--why-idle``. A section
+   whose mode was not requested is null. A requested section that could not be
+   produced is ``{"available": false, "reason": ...}``.
+
+``stream``
+   For replay and remote origins, the stream's ``stop_reason`` and whether the
+   recorder stopped it while the workflow may still have been running.
+
+``analysis_errors``
+   Names of analyses that failed, as in the text report.
+
+``--once`` fills ``snapshot`` with the workflow record, every job with all of
+its attempts, and the most recent events. It uses the same serialization as
+checkpoints in the event stream and adds ``lifecycle`` and ``is_compute`` to
+each job. Every job is listed regardless of ``--all-jobs``; ``--events``
+limits ``events``, and ``events_omitted`` counts the rest.
+
+::
+
+   $ pegasus-monitor --once --json run0001
+   {"format":"pegasus-monitor-json","format_version":1,"modes":["once"],
+    "origin":"live","exit_code":0,"error":null,
+    "workflow":{"wf_uuid":"...","root_wf_uuid":"...","submit_dir":"/w/run0001",
+                "sub_workflows":{"count":0,"aggregated":false,...},...},
+    "sources":[{"source":"stampede","state":"healthy","queried":true,...},...],
+    "summary":{"workflow_state":"WORKFLOW_STARTED","workflow_status":null,
+               "job_counts":{"total":4,"queued":1,"held":1,"failed":1,...},...},
+    "snapshot":{"workflow":{...},
+                "jobs":[{"exec_job_id":"analyze_ID0000002","lifecycle":"held",
+                         "is_compute":true,"attempts":[{...}],...},...],
+                "events":[...],"events_omitted":0},
+    "stats":{...},"stall":{...},"diagnostics":null,"why_idle":null,...}
+
+``--diagnose`` fills ``diagnostics.findings``. Each finding has a ``target``
+(workflow and ``exec_job_id``), a ``category`` of ``held`` or ``failed``, a
+``severity``, a stable ``code``, a ``summary``, ``suggestions``, and the
+bounded, redacted ``evidence`` behind it. Hold codes are ``user_hold``,
+``output_missing``, ``output_transfer_failed``, ``input_transfer_failed``,
+``memory_exceeded``, ``disk_exceeded``, ``walltime_exceeded``,
+``credential_failure``, ``shadow_exception``, ``dns_failure``,
+``container_failure``, ``policy_hold``, and ``held_unknown``. Failure codes are
+``exit_code_<N>``, ``exit_code_unknown``, and ``job_removed``.
+
+::
+
+   $ pegasus-monitor --diagnose --json run0001
+   {"format":"pegasus-monitor-json","format_version":1,"modes":["diagnose"],...,
+    "snapshot":null,
+    "diagnostics":{"available":true,"reason":null,"origin":"analysis","errors":[],
+      "findings":[{"target":{"workflow":{...},"exec_job_id":"analyze_ID0000002",
+                             "job_provenance":"db_confirmed"},
+                   "category":"held","severity":"warning","code":"memory_exceeded",
+                   "summary":"Job exceeded its memory limit: ...",
+                   "suggestions":["Increase the job memory request if the observed use is expected.",
+                                  "Inspect the executable for unexpectedly high memory growth."],
+                   "evidence":[{"source":"condor_queue","code":"hold_reason",
+                                "payload":{"hold_reason_code":34,...}},...]}]},...}
+
+``--why-idle`` fills ``why_idle`` with structured fields: the idle jobs,
+``pool`` capacity, ``resource_fit.mismatches`` for jobs that fit no available
+slot, the owner's fair-share ``priority``, the last ``negotiator`` cycle, the
+``findings`` and ``suggestions`` of the text report, and the ``sources`` the
+analysis could use. ``idle_jobs`` and ``mismatches`` list at most 1000 entries
+each, with the remainder counted in ``idle_jobs_omitted`` and
+``mismatches_omitted``.
+
+::
+
+   $ pegasus-monitor --why-idle --json run0001
+   {"format":"pegasus-monitor-json","format_version":1,"modes":["why_idle"],...,
+    "why_idle":{"available":true,"reason":null,"queued_jobs":1,"unsubmitted_jobs":1,
+      "idle_jobs":[{"exec_job_id":"preprocess_ID0000001","state":"queued",...}],
+      "pool":{"machines":2,"total_cpus":12,"idle_cpus":6,...},
+      "resource_fit":{"mismatches":[{"exec_job_id":"preprocess_ID0000001",
+                                     "requested_cpus":64,
+                                     "reason":"exceeds_single_slot_capacity",...}],
+                      "mismatches_omitted":0},
+      "priority":{"effective_priority":12.5,"better_priority_users":1,...},
+      "negotiator":{"last_cycle_seconds":4.5,"last_cycle_matches":12},
+      "findings":[...],"suggestions":[...],
+      "sources":[{"kind":"queue","disposition":"healthy",...},...]},...}
+
+The modes may be combined in one invocation. With ``--replay`` or ``--remote``
+the document is built from the recorded stream: ``diagnostics.origin`` is
+``event_log`` and each finding's ``category`` and ``suggestions`` are null
+because the stream does not record them, and ``why_idle`` is unavailable
+because the stream holds no scheduler evidence.
+
+**Stall assessment.** The live stall detector is stateful: it times silence on
+a monotonic clock and confirms a condition over two refreshes, so a single
+sample can never report a confirmed stall. One-shot JSON therefore reports a
+separate, stateless assessment. It takes the newest state change recorded for
+the workflow or any job, measures its age against the local wall clock, and
+applies the live detector's conditions and thresholds. ``stall.method`` is
+``snapshot_timestamps`` and ``stall.confirmed`` is always false. The result
+depends on the monitoring host's clock agreeing with the recorded timestamps
+and trails the workflow by the delay with which pegasus-monitord records
+state. For replay and remote origins it describes the recorded snapshot as of
+``observed_at_epoch``, not the present.
+
+``stall.assessed`` separates "not stalled" from "not assessed". When it is
+false, ``stall.stalled`` is null and ``stall.reason`` is
+``authoritative_snapshot_unavailable``, ``stampede_not_healthy``, or
+``progress_time_unavailable``. When it is true and ``stalled`` is false, the
+reason is ``workflow_complete``, ``no_jobs_submitted``, ``startup_grace``, or
+``within_thresholds``. When ``stalled`` is true, ``reason`` and ``kind`` name
+the condition: ``all_held``, ``idle_too_long``, ``running_plateau``, or
+``no_semantic_progress``.
+
+Error codes and their exit statuses:
+
+``usage_error`` (2)
+   Invalid arguments or mode combination. The usage text is also printed to
+   standard error.
+
+``workflow_location_error`` (1)
+   The target could not be resolved to one workflow run.
+
+``no_authoritative_snapshot`` (1)
+   No Stampede snapshot could be read. ``workflow`` and ``sources`` are still
+   filled, so the document shows which source failed.
+
+``no_complete_checkpoint`` (1), ``invalid_event_log`` (1)
+   A replayed or remote stream had no usable checkpoint, or was malformed.
+
+``io_error`` (1), ``cleanup_failed`` (1), ``monitor_error`` (1)
+   A file or source could not be read, a source failed to close, or another
+   runtime failure occurred.
+
+``interrupted`` (1)
+   The command was interrupted or terminated before it had a result. This
+   differs from the text modes, which return 0 on a clean interrupt: a
+   document without a result is reported as an error.
+
+
 Return Value
 ============
 
@@ -311,6 +513,10 @@ interrupt. It returns 1 for target resolution, source initialization, replay,
 remote, or server runtime errors, non-TTY live invocation, or an unavailable
 authoritative checkpoint or Stampede snapshot in ``--once`` mode. Argument
 errors and invalid mode combinations return the standard argparse status 2.
+
+With ``--json`` the same statuses apply and are repeated in the document's
+``exit_code``, with one exception: an interrupt before any result returns 1.
+See `JSON Output`_ for the error codes.
 
 
 Examples
@@ -322,6 +528,8 @@ Examples
    pegasus-monitor --once --no-condor /workflows/montage/run0001
    pegasus-monitor --diagnose /workflows/montage/run0001
    pegasus-monitor --why-idle --collector collector.example.org run0001
+   pegasus-monitor --diagnose --json /workflows/montage/run0001
+   pegasus-monitor --once --diagnose --why-idle --json run0001 > report.json
    pegasus-monitor /workflows/montage/run0001 --log
    pegasus-monitor --serve --diagnose /workflows/montage/run0001
    pegasus-monitor --remote user@submit.example:/workflows/montage/run0001/workflow-events.jsonl

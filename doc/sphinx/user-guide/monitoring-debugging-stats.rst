@@ -98,6 +98,30 @@ or ``--why-idle`` for a one-shot explanation using available scheduler
 evidence. Missing evidence is identified as unknown instead of inferred as a
 workflow failure.
 
+Programs that need these results should add ``--json`` to a one-shot mode
+instead of parsing the text report:
+
+::
+
+   $ pegasus-monitor --diagnose --json /Workflow/dags/run0001
+   $ pegasus-monitor --once --diagnose --why-idle --json /Workflow/dags/run0001
+
+``--json`` writes exactly one JSON document to standard output, including on
+failure, where its ``error`` object carries a stable code and the exit status
+is unchanged. The document reports the health of every source, so a consumer
+can tell that there were no findings from the monitor being unable to look.
+``--once`` adds the full job snapshot, ``--diagnose`` the hold and failure
+findings with their classification codes and suggestions, and ``--why-idle``
+the pool, resource-fit, priority, and negotiator analysis as structured
+fields. Every document also carries a ``stall`` assessment derived from the
+snapshot's own timestamps; because one sample cannot confirm a stall the way
+the live view does, it is labelled ``"confirmed": false``, and
+``"assessed": false`` distinguishes "not assessed" from "not stalled". The
+document has its own ``format_version``, independent of the event log's
+schema version: additive changes keep it, while removals and renames
+increment it. It is intended for on-demand use; each invocation starts a new
+process and reads the sources afresh.
+
 Recording monitor events
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
