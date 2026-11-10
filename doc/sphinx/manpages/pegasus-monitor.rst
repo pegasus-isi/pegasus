@@ -455,7 +455,9 @@ the text report, including the one it prints for each resource mismatch, with
 repeated suggestions listed once. ``pool.total_slots`` counts slots as
 ``condor_status`` lists them, a partitionable slot included;
 ``pool.idle_slots`` counts unclaimed slots, a partitionable slot only while
-it has CPUs left to hand out. ClassAd expressions such as ``requirements``
+it has CPUs left to hand out. A partitionable slot whose CPUs are all handed
+out is therefore not counted idle, although ``condor_status`` lists it as
+Unclaimed and Idle. ClassAd expressions such as ``requirements``
 are given as the expression text. ``idle_jobs`` and ``mismatches`` list at most 1000 entries
 each, with the remainder counted in ``idle_jobs_omitted`` and
 ``mismatches_omitted``.
@@ -488,29 +490,110 @@ sample can never report a confirmed stall. One-shot JSON therefore reports a
 separate, stateless assessment. It takes the newest state change recorded for
 the workflow or any job and measures its age against the local wall clock.
 ``stall.method`` is ``snapshot_timestamps`` and ``stall.confirmed`` is always
-false. The result depends on the monitoring host's clock agreeing with the
-recorded timestamps and trails the workflow by the delay with which
-pegasus-monitord records state. For replay and remote origins it describes the
-recorded snapshot as of ``observed_at_epoch``, not the present.
+false. For replay and remote origins it describes the recorded snapshot as of
+``observed_at_epoch``, not the present.
+
+pegasus-monitord records state seconds to minutes after HTCondor acts, so the
+recorded timestamps alone make a workflow look quiet when it is not. For a
+live workflow the assessment therefore also reads the modification times of
+the workflow's own ``<dag>.dagman.out`` and ``<dag>.nodes.log`` in its submit
+directory, a sub-workflow's in its own directory. DAGMan writes the first as
+it submits jobs, reads their events, and is removed; the schedd writes job
+events to the second as they happen, whether or not DAGMan is alive.
+``stall.last_progress_epoch`` and ``seconds_since_progress`` remain the
+recorded state change. ``stall.last_activity_epoch`` is the later of that and
+the newest of the two files, ``seconds_since_activity`` its age, and
+``activity_source`` names which it was: ``stampede``, ``dagman_out``, or
+``nodes_log``. Every time threshold below is applied to
+``seconds_since_activity``. A file that is missing or cannot be read is
+ignored, and with neither file the assessment uses the recorded timestamps
+alone.
+
+The result depends on the monitoring host's clock agreeing with the recorded
+timestamps and, where the submit directory is on a shared filesystem, with
+the file server's clock. A file time later than the local clock is treated as
+the present, so a file server that runs ahead delays a stall verdict by the
+difference between the clocks; it does not produce a negative age.
+
+Because DAGMan writes ``<dag>.dagman.out`` a few seconds after the event it
+reports, a stall is first reported that much later than the recorded
+timestamps alone would report it. HTCondor also documents that DAGMan, after
+``DAGMAN_PENDING_REPORT_INTERVAL`` seconds (600 by default) without a job
+event, writes a report of its pending nodes to that file. Each such report
+restarts the quiet period: a workflow already reported as ``idle_too_long``
+or ``no_semantic_progress`` reads ``within_thresholds`` again for
+``no_progress_seconds`` after it, and reaches ``idle_too_long`` again after
+``idle_threshold_seconds``.
 
 The assessment counts jobs as ``observed_job_counts`` does, so a hold that
 only the HTCondor queue knows of yet is seen at once. ``stall.job_counts``
 remains the recorded counts and ``stall.observed_job_counts`` the ones the
-verdict used. ``stall.scheduler`` reports whether a healthy queue result was
-available (``queue_queried``), whether it showed the workflow's DAGMan job
-(``dagman_in_queue``, null when unknown), and how many of the workflow's jobs
-it showed (``jobs_in_queue``). A job is *in flight* when it is in a pre
-script, queued, running, held, or in a post script, and *unfinished* until it
-has succeeded or failed. The conditions are applied in this order:
+verdict used. A job is *in flight* when it is in a pre script, queued,
+running, held, or in a post script, and *unfinished* until it has succeeded
+or failed.
+
+``stall.scheduler`` describes the queue result the verdict used:
+
+``queue_queried``
+   A healthy queue result was available. The fields below are null without
+   one.
+
+``queue_complete``
+   The result did not reach its row limit. When false, rows may be missing
+   and the absence of a job proves nothing.
+
+``dagman_in_queue``, ``dagman_cluster_id``
+   Whether the queue shows the workflow's own DAGMan job, and its cluster. For
+   a top-level workflow that is the scheduler-universe job that no DAGMan
+   submitted. A sub-workflow's DAGMan is a job of its parent workflow: it is
+   the job that the sub-workflow's queued jobs name as their DAGMan or, when
+   none is queued, the DAGMan job started in the sub-workflow's submit
+   directory. ``dagman_in_queue`` is null when the result is incomplete and
+   does not show the job.
+
+``dagman_is_wrapper``
+   The DAGMan job is ``pegasus-dagman``, which runs ``condor_dagman`` as a
+   child process and can stay in the queue after ``condor_dagman`` has died.
+   When true, ``dagman_in_queue`` shows that the wrapper is alive, not
+   DAGMan. It is false for a sub-workflow, whose queue job is
+   ``condor_dagman`` itself.
+
+``jobs_in_queue``
+   How many jobs of the workflow the queue shows. A running sub-workflow
+   counts as one job of its parent. The DAGMan jobs found for a sub-workflow
+   are not its jobs and are counted nowhere else in the document.
+
+``recorded_jobs_missing``
+   How many jobs are recorded as queued, running or held but are not in a
+   complete queue result. Jobs in pre or post scripts are not in the queue
+   and are never counted. Null when the result is incomplete.
+
+The conditions are applied in this order:
 
 ``no_scheduler_activity``
-   Jobs are unfinished, no state change was recorded for
-   ``no_progress_seconds``, and either a queried queue shows neither DAGMan
-   nor any job of the workflow, or no job is in flight. This is a workflow
-   whose DAGMan has died, is held, or has stopped submitting, as opposed to
-   one that is slow. ``scheduler.dagman_in_queue`` is false and ``summary``
-   says so when HTCondor was queried and has no DAGMan job for the workflow.
-   The live detector does not report this kind.
+   Jobs are unfinished, ``seconds_since_activity`` has reached
+   ``no_progress_seconds``, and one of the following holds. This is a
+   workflow whose DAGMan has died, is held, or has stopped submitting, as
+   opposed to one that is slow. The live detector does not report this kind.
+
+   * A queried queue shows neither the workflow's DAGMan job nor any job of
+     the workflow. ``scheduler.dagman_in_queue`` is false.
+   * A complete queue result shows the DAGMan job but no job of the workflow,
+     although ``recorded_jobs_missing`` jobs are recorded as queued, running
+     or held. ``dagman_in_queue`` is true, ``jobs_in_queue`` is 0, and
+     ``summary`` names the DAGMan job. With ``dagman_is_wrapper`` true this
+     is ``condor_dagman`` killed behind its wrapper. An incomplete or
+     unhealthy queue result never satisfies this condition, and neither does
+     a monitord that is merely behind, because a working DAGMan keeps writing
+     its files.
+   * No job is in flight.
+
+   Two cases are not detected. While a job orphaned by a dead DAGMan is
+   still in the queue the workflow reads ``jobs_running``, which one sample
+   cannot tell from a long job; it is reported ``no_progress_seconds`` after
+   that job's last event. A workflow whose only jobs in flight are recorded
+   in pre or post scripts reads ``within_thresholds`` for as long as that is
+   recorded, whether or not DAGMan is alive.
 
 ``all_held``
    At least one job is in flight and every job in flight is held. Jobs still
@@ -524,9 +607,9 @@ has succeeded or failed. The conditions are applied in this order:
    ``seconds_since_progress`` still gives the age of the last state change.
 
 ``idle_too_long``, ``no_semantic_progress``
-   Jobs are queued and none is running, with no state change for
-   ``idle_threshold_seconds`` or ``no_progress_seconds`` respectively, as in
-   the live detector.
+   Jobs are queued and none is running, with ``seconds_since_activity`` at
+   ``idle_threshold_seconds`` or ``no_progress_seconds`` respectively. The
+   conditions and thresholds are the live detector's.
 
 ``stall.assessed`` separates "not stalled" from "not assessed". When it is
 false, ``stall.stalled`` is null and ``stall.reason`` is
