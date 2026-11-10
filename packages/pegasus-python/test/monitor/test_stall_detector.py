@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 
 from Pegasus.monitor.coordinator import CoordinatorSnapshot
@@ -41,10 +42,12 @@ from Pegasus.monitor.models import (
     WorkflowSnapshot,
 )
 from Pegasus.monitor.stall_detector import (
+    StallAssessmentStatus,
     StallDetector,
     StallDetectorConfig,
     StallEventKind,
     StallKind,
+    assess_stall_once,
 )
 
 WORKFLOW = WorkflowIdentity("wf-stall", "wf-stall")
@@ -255,3 +258,83 @@ def test_stall_evidence_includes_live_pending_source() -> None:
         (SourceName.STAMPEDE, "authoritative_base"),
         (SourceName.LIVE_TAIL, "live_overlay"),
     ]
+
+
+# The helper stamps the job's last state change at epoch 10, the workflow start
+# at epoch 1, and uses its ``monotonic`` argument as the wall clock too.
+
+
+def test_one_shot_assessment_ages_the_last_recorded_state_change() -> None:
+    assessment = assess_stall_once(_publication(1, 200, 1, "SUBMIT"))
+
+    assert assessment.status is StallAssessmentStatus.STALLED
+    assert assessment.kind is StallKind.IDLE_TOO_LONG
+    assert assessment.last_progress_epoch == 10
+    assert assessment.seconds_since_progress == 190
+    document = assessment.to_json_dict()
+    assert document["assessed"] is True
+    assert document["stalled"] is True
+    assert document["reason"] == "idle_too_long"
+    assert document["method"] == "snapshot_timestamps"
+    assert document["confirmed"] is False
+    assert document["job_counts"]["queued"] == 1
+
+
+def test_one_shot_assessment_applies_the_live_detector_thresholds() -> None:
+    quiet = assess_stall_once(_publication(1, 65, 1, "EXECUTE"))
+    silent = assess_stall_once(_publication(1, 100, 1, "EXECUTE"))
+    plateau = assess_stall_once(_publication(1, 200, 1, "EXECUTE"))
+    held = assess_stall_once(_publication(1, 100, 1, "JOB_HELD"))
+
+    assert quiet.status is StallAssessmentStatus.NOT_STALLED
+    assert quiet.reason == "within_thresholds"
+    assert silent.kind is StallKind.NO_SEMANTIC_PROGRESS
+    assert plateau.kind is StallKind.RUNNING_PLATEAU
+    assert held.kind is StallKind.ALL_HELD
+
+
+def test_one_shot_assessment_honors_startup_grace_and_completion() -> None:
+    starting = assess_stall_once(_publication(1, 30, 1, "JOB_HELD"))
+    finished = assess_stall_once(
+        _publication(1, 5000, 1, "JOB_SUCCESS", terminated=True)
+    )
+
+    assert starting.status is StallAssessmentStatus.NOT_STALLED
+    assert starting.reason == "startup_grace"
+    assert finished.status is StallAssessmentStatus.NOT_STALLED
+    assert finished.reason == "workflow_complete"
+    assert finished.to_json_dict()["stalled"] is False
+
+
+def test_one_shot_assessment_separates_not_assessed_from_not_stalled() -> None:
+    unhealthy = (SourceHealth(SourceName.STAMPEDE, HealthState.STALE, 200.0),)
+    stale = assess_stall_once(
+        _publication(1, 200, 1, "SUBMIT", source_health=unhealthy)
+    )
+    missing = assess_stall_once(
+        replace(
+            _publication(1, 200, 1, "SUBMIT"),
+            effective=None,
+            has_authoritative_base=False,
+        )
+    )
+
+    for assessment, reason in (
+        (stale, "stampede_not_healthy"),
+        (missing, "authoritative_snapshot_unavailable"),
+    ):
+        assert assessment.status is StallAssessmentStatus.NOT_ASSESSED
+        assert assessment.reason == reason
+        document = assessment.to_json_dict()
+        assert document["assessed"] is False
+        assert document["stalled"] is None
+
+
+def test_one_shot_assessment_leaves_the_live_detector_two_strike_rule() -> None:
+    detector = _detector()
+    publication = _publication(1, 0, 1, "SUBMIT")
+
+    assert assess_stall_once(_publication(1, 200, 1, "SUBMIT")).kind is not None
+    assert detector.check(publication) is None
+    assert detector.check(_publication(2, 6, 1, "SUBMIT")) is None
+    assert not detector.is_stalled
