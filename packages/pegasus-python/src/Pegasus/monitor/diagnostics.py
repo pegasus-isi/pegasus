@@ -166,6 +166,18 @@ class DiagnosticFinding:
     job_provenance: str
     evidence: tuple[DiagnosticEvidence, ...]
 
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "exec_job_id": self.exec_job_id,
+            "category": self.category.value,
+            "severity": self.severity.value,
+            "code": self.code,
+            "summary": self.summary,
+            "suggestions": list(self.suggestions),
+            "job_provenance": self.job_provenance,
+            "evidence": [item.to_json_dict() for item in self.evidence],
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class DiagnosticsBatch:

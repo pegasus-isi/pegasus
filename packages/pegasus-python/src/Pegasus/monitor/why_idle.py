@@ -62,6 +62,14 @@ class SourceAssessment:
     evidence_count: int
     error_code: str | None = None
 
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "kind": self.kind.value,
+            "disposition": self.disposition.value,
+            "evidence_count": self.evidence_count,
+            "error_code": self.error_code,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class IdleJob:
@@ -69,6 +77,14 @@ class IdleJob:
     state: Lifecycle
     type_desc: str
     provenance: str
+
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "exec_job_id": self.exec_job_id,
+            "state": self.state.value,
+            "type_desc": self.type_desc,
+            "provenance": self.provenance,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +97,17 @@ class ResourceMismatch:
     reason: str
     requirements: str | None = None
 
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "exec_job_id": self.exec_job_id,
+            "requested_cpus": self.requested_cpus,
+            "requested_memory_mb": self.requested_memory_mb,
+            "requested_disk_kb": self.requested_disk_kb,
+            "requested_gpus": self.requested_gpus,
+            "reason": self.reason,
+            "requirements": self.requirements,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class PrioritySummary:
@@ -90,6 +117,16 @@ class PrioritySummary:
     real_priority: float | None
     resources_used: float | None
     better_priority_users: int
+
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "owner": self.owner,
+            "principal": self.principal,
+            "effective_priority": self.effective_priority,
+            "real_priority": self.real_priority,
+            "resources_used": self.resources_used,
+            "better_priority_users": self.better_priority_users,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +151,42 @@ class IdleAnalysis:
     findings: tuple[str, ...]
     suggestions: tuple[str, ...]
     sources: tuple[SourceAssessment, ...]
+
+    def to_json_dict(self) -> dict[str, object]:
+        """Group the analysis by the question each part answers."""
+
+        return {
+            "workflow_owner": self.workflow_owner,
+            "queued_jobs": self.queued_jobs,
+            "unsubmitted_jobs": self.unsubmitted_jobs,
+            "idle_jobs": [item.to_json_dict() for item in self.idle_jobs],
+            "pool": {
+                "machines": self.pool_machines,
+                "total_slots": self.pool_total_slots,
+                "idle_slots": self.pool_idle_slots,
+                "total_cpus": self.pool_total_cpus,
+                "idle_cpus": self.pool_idle_cpus,
+                "total_memory_mb": self.pool_total_memory_mb,
+                "idle_memory_mb": self.pool_idle_memory_mb,
+                "total_gpus": self.pool_total_gpus,
+                "idle_gpus": self.pool_idle_gpus,
+            },
+            "resource_fit": {
+                "mismatches": [
+                    item.to_json_dict() for item in self.requirement_mismatches
+                ],
+            },
+            "priority": (
+                None if self.priority is None else self.priority.to_json_dict()
+            ),
+            "negotiator": {
+                "last_cycle_seconds": self.negotiation_cycle_seconds,
+                "last_cycle_matches": self.negotiation_matches,
+            },
+            "findings": list(self.findings),
+            "suggestions": list(self.suggestions),
+            "sources": [item.to_json_dict() for item in self.sources],
+        }
 
 
 def _inputs(

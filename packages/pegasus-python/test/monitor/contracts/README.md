@@ -1,4 +1,6 @@
-# Pegasus monitor JSONL v1 contract
+# Pegasus monitor contracts
+
+## JSONL v1 event log
 
 This directory records the WP1 serialization boundary for the later WP7
 writer/replay/remote implementation. The executable source of truth is the
@@ -18,3 +20,18 @@ identity. Checkpoints wrap a `DatabaseSnapshot`, including job and workflow
 watermarks, and contain no provisional tail overlays or scheduler enrichment.
 A gap invalidates incremental reconstruction until the next DB-confirmed
 checkpoint. Diagnostic records explicitly do not change replayed state.
+
+## JSON output v1
+
+`json-output-v1.json` describes the single document that
+`pegasus-monitor --json` writes for the one-shot modes (`--once`, `--diagnose`,
+`--why-idle`). It is a separate contract from the JSONL log: it carries
+`format` and `format_version`, never the log's `schema_version`, and it
+includes scheduler evidence, diagnostic suggestions, the why-idle analysis and
+a one-shot stall assessment, none of which the log records.
+
+The executable source of truth is `Pegasus.monitor.json_output`, which builds
+the document from the same `to_json_dict()` codecs as the log. Each list under
+`sections` is the exact, ordered key set of that object. Additive changes keep
+`format_version`; removing or renaming a key, or changing its type or meaning,
+increments it.

@@ -1,0 +1,328 @@
+{
+  "format": "pegasus-monitor-json",
+  "format_version": 1,
+  "monitor_version": "<VERSION>",
+  "generated_at_epoch": "<NOW>",
+  "generated_at": "<NOW>",
+  "observed_at_epoch": 1000.0,
+  "modes": [
+    "why_idle"
+  ],
+  "origin": "live",
+  "target": "<SUBMIT_DIR>",
+  "exit_code": 0,
+  "error": null,
+  "workflow": {
+    "wf_uuid": "root-uuid",
+    "root_wf_uuid": "root-uuid",
+    "is_sub_workflow": false,
+    "submit_dir": "<SUBMIT_DIR>",
+    "label": "integration-diamond",
+    "owner": "integration-user",
+    "dag_name": "diamond-0.dag",
+    "planner_version": "5.2.0-dev",
+    "sub_workflows": {
+      "count": 1,
+      "aggregated": false,
+      "exec_job_ids": [
+        "subwf_ID0000004"
+      ],
+      "exec_job_ids_omitted": 0
+    }
+  },
+  "sources": [
+    {
+      "source": "stampede",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": {
+        "seconds": 0.0,
+        "maximum_seconds": 2592000.0,
+        "capped": false
+      },
+      "stale_after_seconds": 10.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "live_tail",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_queue",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": 10.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_history",
+      "state": "not_queried",
+      "checked_at_epoch": null,
+      "last_success_epoch": null,
+      "last_good_age": null,
+      "stale_after_seconds": null,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": false
+    },
+    {
+      "source": "condor_pool",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": 60.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_priority",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": 300.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    },
+    {
+      "source": "condor_negotiator",
+      "state": "healthy",
+      "checked_at_epoch": 1000.0,
+      "last_success_epoch": 1000.0,
+      "last_good_age": null,
+      "stale_after_seconds": 300.0,
+      "consecutive_failures": 0,
+      "pending_count": 0,
+      "error_code": null,
+      "detail": null,
+      "queried": true
+    }
+  ],
+  "summary": {
+    "workflow_state": "WORKFLOW_STARTED",
+    "workflow_status": null,
+    "restart_count": 0,
+    "started_at": "100",
+    "ended_at": null,
+    "provenance": "db_confirmed",
+    "authoritative_complete": false,
+    "removal_reason": null,
+    "job_counts": {
+      "total": 4,
+      "compute": 3,
+      "unsubmitted": 1,
+      "pre": 0,
+      "queued": 1,
+      "running": 0,
+      "held": 1,
+      "post": 0,
+      "succeeded": 0,
+      "failed": 1,
+      "other": 0
+    },
+    "pending_tail_events": 0
+  },
+  "snapshot": null,
+  "stats": {
+    "total_jobs": 4,
+    "compute_jobs": 3,
+    "infra_jobs": 1,
+    "succeeded": 0,
+    "failed": 1,
+    "held": 1,
+    "unsubmitted": 1,
+    "queued": 1,
+    "running": 0,
+    "wall_time": 900.0,
+    "total_compute_time": 17.0,
+    "parallelism": 0.01888888888888889,
+    "dur_min": 17.0,
+    "dur_max": 17.0,
+    "dur_mean": 17.0,
+    "dur_median": 17.0,
+    "longest_job_name": "example::failed",
+    "shortest_job_name": "example::failed",
+    "pool_machines": 2,
+    "pool_total_cpus": 12,
+    "pool_total_gpus": 2,
+    "authoritative_final": false,
+    "workflow_provenance": "db_confirmed",
+    "db_confirmed_jobs": 4,
+    "tail_overlay_jobs": 0,
+    "tail_pending_jobs": 0,
+    "provisional_jobs": 0,
+    "pending_jobs": 0,
+    "scheduler_coverage": [
+      {
+        "kind": "history",
+        "health": "unavailable",
+        "evidence_count": 0,
+        "matched_current_jobs": 0,
+        "eligible_current_jobs": 3,
+        "complete": false
+      },
+      {
+        "kind": "pool",
+        "health": "healthy",
+        "evidence_count": 3,
+        "matched_current_jobs": 0,
+        "eligible_current_jobs": 0,
+        "complete": true
+      }
+    ]
+  },
+  "diagnostics": null,
+  "stall": {
+    "assessed": true,
+    "stalled": true,
+    "reason": "idle_too_long",
+    "kind": "idle_too_long",
+    "summary": "1 job(s) queued with no running jobs and no semantic progress for 870s",
+    "method": "snapshot_timestamps",
+    "confirmed": false,
+    "observed_at_epoch": 1000.0,
+    "last_progress_epoch": 130.0,
+    "seconds_since_progress": 870.0,
+    "job_counts": {
+      "total": 4,
+      "succeeded": 0,
+      "failed": 1,
+      "held": 1,
+      "running": 0,
+      "queued": 1,
+      "unsubmitted": 1
+    },
+    "thresholds": {
+      "no_progress_seconds": 60.0,
+      "running_plateau_seconds": 120.0,
+      "idle_threshold_seconds": 120.0,
+      "startup_grace_seconds": 60.0
+    }
+  },
+  "why_idle": {
+    "available": true,
+    "reason": null,
+    "workflow_owner": "integration-user",
+    "queued_jobs": 1,
+    "unsubmitted_jobs": 1,
+    "idle_jobs": [
+      {
+        "exec_job_id": "cluster_ID0000001",
+        "state": "queued",
+        "type_desc": "compute",
+        "provenance": "condor_queue"
+      },
+      {
+        "exec_job_id": "subwf_ID0000004",
+        "state": "unsubmitted",
+        "type_desc": "dax",
+        "provenance": "db_confirmed"
+      }
+    ],
+    "pool": {
+      "machines": 2,
+      "total_slots": 2,
+      "idle_slots": 1,
+      "total_cpus": 12,
+      "idle_cpus": 6,
+      "total_memory_mb": 24576,
+      "idle_memory_mb": 12288,
+      "total_gpus": 2,
+      "idle_gpus": 2
+    },
+    "resource_fit": {
+      "mismatches": [
+        {
+          "exec_job_id": "cluster_ID0000001",
+          "requested_cpus": 64,
+          "requested_memory_mb": 4096,
+          "requested_disk_kb": 102400,
+          "requested_gpus": 0,
+          "reason": "exceeds_single_slot_capacity",
+          "requirements": null
+        }
+      ],
+      "mismatches_omitted": 0
+    },
+    "priority": {
+      "owner": "integration-user",
+      "principal": "integration-user@example.org",
+      "effective_priority": 12.5,
+      "real_priority": 10.0,
+      "resources_used": 4.0,
+      "better_priority_users": 1
+    },
+    "negotiator": {
+      "last_cycle_seconds": 4.5,
+      "last_cycle_matches": 12
+    },
+    "findings": [
+      "held_ID0000002: HELD by HTCondor; Job has gone over memory limit of 4096 megabytes",
+      "1 job(s) are unsubmitted and waiting on DAG dependencies.",
+      "1 job(s) are queued for HTCondor matching.",
+      "1 queued job(s) have no confirmed fit on an available single slot.",
+      "1 user(s) have better fair-share priority."
+    ],
+    "suggestions": [
+      "Check per-job resource requests and Requirements, or wait for a capable slot."
+    ],
+    "sources": [
+      {
+        "kind": "queue",
+        "disposition": "healthy",
+        "evidence_count": 2,
+        "error_code": null
+      },
+      {
+        "kind": "pool",
+        "disposition": "healthy",
+        "evidence_count": 3,
+        "error_code": null
+      },
+      {
+        "kind": "priority",
+        "disposition": "healthy",
+        "evidence_count": 2,
+        "error_code": null
+      },
+      {
+        "kind": "negotiator",
+        "disposition": "healthy",
+        "evidence_count": 1,
+        "error_code": null
+      }
+    ],
+    "idle_jobs_omitted": 0
+  },
+  "stream": null,
+  "analysis_errors": []
+}

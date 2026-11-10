@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import select
 import signal
@@ -227,3 +228,97 @@ def test_stop_running_server_writes_closing_checkpoint(tmp_path):
         if process.poll() is None:
             process.terminate()
             process.communicate(timeout=5)
+
+
+def run_json_monitor(
+    *arguments: str, path: str | None = None
+) -> tuple[subprocess.CompletedProcess, dict]:
+    """Run the real entry point with stdout on a pipe and parse its document."""
+
+    env = environment()
+    if path is not None:
+        env["PATH"] = path
+    result = subprocess.run(
+        [sys.executable, "-m", "Pegasus.monitor.cli", *arguments, "--json"],
+        text=True,
+        capture_output=True,
+        env=env,
+        timeout=20.0,
+        check=False,
+    )
+    assert result.stdout.endswith("\n")
+    assert result.stdout.count("\n") == 1
+    assert "\x1b" not in result.stdout
+    return result, json.loads(result.stdout)
+
+
+def test_json_one_shot_writes_one_document_and_leaves_sources_untouched(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run0001"
+    database, tail = create_run(run)
+    db_before = database.stat()
+    tail_before = tail.stat()
+    names_before = {path.name for path in run.iterdir()}
+
+    result, document = run_json_monitor(
+        "--once", "--diagnose", "--why-idle", "--no-condor", str(run)
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+    assert document["format"] == "pegasus-monitor-json"
+    assert document["modes"] == ["once", "diagnose", "why_idle"]
+    assert (document["exit_code"], document["error"]) == (0, None)
+    assert document["workflow"]["label"] == "integration-diamond"
+    assert document["summary"]["workflow_state"] == "WORKFLOW_TERMINATED"
+    assert document["summary"]["authoritative_complete"] is True
+    assert document["stall"]["reason"] == "workflow_complete"
+    assert document["diagnostics"]["findings"] == []
+    assert document["why_idle"]["available"] is True
+    assert database.stat().st_mtime_ns == db_before.st_mtime_ns
+    assert tail.stat().st_mtime_ns == tail_before.st_mtime_ns
+    assert {path.name for path in run.iterdir()} == names_before
+
+
+def test_json_without_htcondor_installed_reports_unavailable_sources(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run0001"
+    create_run(run, terminated=False)
+    empty = tmp_path / "no-condor-here"
+    empty.mkdir()
+
+    result, document = run_json_monitor("--diagnose", str(run), path=str(empty))
+
+    assert result.returncode == 0, result.stderr
+    assert document["error"] is None
+    sources = {item["source"]: item for item in document["sources"]}
+    for name in ("condor_queue", "condor_history"):
+        assert sources[name]["queried"] is True
+        assert sources[name]["state"] != "healthy"
+        assert sources[name]["error_code"]
+    assert sources["condor_pool"]["state"] == "not_queried"
+    assert sources["stampede"]["state"] == "healthy"
+
+
+def test_json_failures_are_documents_with_the_text_mode_exit_codes(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run0001"
+    database, _tail = create_run(run)
+    database.unlink()
+
+    missing, missing_document = run_json_monitor("--once", "--no-condor", str(run))
+    absent, absent_document = run_json_monitor("--once", str(tmp_path / "absent"))
+    usage, usage_document = run_json_monitor("--serve", str(run))
+
+    assert missing.returncode == missing_document["exit_code"] == 1
+    assert missing_document["error"]["code"] == "no_authoritative_snapshot"
+    assert "--once requires an authoritative Stampede snapshot" in missing.stderr
+    assert not database.exists()
+    assert absent.returncode == absent_document["exit_code"] == 1
+    assert absent_document["error"]["code"] == "workflow_location_error"
+    assert usage.returncode == usage_document["exit_code"] == 2
+    assert usage_document["error"]["code"] == "usage_error"
+    assert "usage: pegasus-monitor" in usage.stderr

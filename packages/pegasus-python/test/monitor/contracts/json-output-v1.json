@@ -1,0 +1,363 @@
+{
+  "format": "pegasus-monitor-json",
+  "format_version": 1,
+  "compatibility": "Adding a key or an enumeration value keeps format_version. Removing or renaming a key, or changing the type or meaning of an existing one, increments it. Consumers must ignore keys they do not know.",
+  "modes": {
+    "once": "Fills snapshot. Honors --events for snapshot.events; lists every job regardless of --all-jobs.",
+    "diagnose": "Fills diagnostics.",
+    "why_idle": "Fills why_idle.",
+    "always": "workflow, sources, summary, stats and stall are filled for every mode whenever an authoritative Stampede snapshot exists. A section whose mode was not requested is null."
+  },
+  "origins": [
+    "live",
+    "replay",
+    "remote"
+  ],
+  "sections": {
+    "envelope": [
+      "format",
+      "format_version",
+      "monitor_version",
+      "generated_at_epoch",
+      "generated_at",
+      "observed_at_epoch",
+      "modes",
+      "origin",
+      "target",
+      "exit_code",
+      "error",
+      "workflow",
+      "sources",
+      "summary",
+      "snapshot",
+      "stats",
+      "diagnostics",
+      "stall",
+      "why_idle",
+      "stream",
+      "analysis_errors"
+    ],
+    "error": [
+      "code",
+      "message"
+    ],
+    "workflow": [
+      "wf_uuid",
+      "root_wf_uuid",
+      "is_sub_workflow",
+      "submit_dir",
+      "label",
+      "owner",
+      "dag_name",
+      "planner_version",
+      "sub_workflows"
+    ],
+    "sub_workflows": [
+      "count",
+      "aggregated",
+      "exec_job_ids",
+      "exec_job_ids_omitted"
+    ],
+    "source": [
+      "source",
+      "state",
+      "checked_at_epoch",
+      "last_success_epoch",
+      "last_good_age",
+      "stale_after_seconds",
+      "consecutive_failures",
+      "pending_count",
+      "error_code",
+      "detail",
+      "queried"
+    ],
+    "summary": [
+      "workflow_state",
+      "workflow_status",
+      "restart_count",
+      "started_at",
+      "ended_at",
+      "provenance",
+      "authoritative_complete",
+      "removal_reason",
+      "job_counts",
+      "pending_tail_events"
+    ],
+    "job_counts": [
+      "total",
+      "compute",
+      "unsubmitted",
+      "pre",
+      "queued",
+      "running",
+      "held",
+      "post",
+      "succeeded",
+      "failed",
+      "other"
+    ],
+    "snapshot": [
+      "epoch",
+      "published_at_epoch",
+      "db_generation",
+      "tail_generation",
+      "pending_overlay_count",
+      "workflow",
+      "jobs",
+      "events",
+      "events_omitted"
+    ],
+    "snapshot_job_additions": [
+      "lifecycle",
+      "is_compute"
+    ],
+    "diagnostics": [
+      "available",
+      "reason",
+      "origin",
+      "findings",
+      "errors"
+    ],
+    "finding": [
+      "target",
+      "category",
+      "severity",
+      "code",
+      "summary",
+      "suggestions",
+      "evidence"
+    ],
+    "finding_target": [
+      "workflow",
+      "exec_job_id",
+      "job_provenance"
+    ],
+    "evidence": [
+      "source",
+      "code",
+      "payload"
+    ],
+    "stall": [
+      "assessed",
+      "stalled",
+      "reason",
+      "kind",
+      "summary",
+      "method",
+      "confirmed",
+      "observed_at_epoch",
+      "last_progress_epoch",
+      "seconds_since_progress",
+      "job_counts",
+      "thresholds"
+    ],
+    "stall_job_counts": [
+      "total",
+      "succeeded",
+      "failed",
+      "held",
+      "running",
+      "queued",
+      "unsubmitted"
+    ],
+    "stall_thresholds": [
+      "no_progress_seconds",
+      "running_plateau_seconds",
+      "idle_threshold_seconds",
+      "startup_grace_seconds"
+    ],
+    "why_idle": [
+      "available",
+      "reason",
+      "workflow_owner",
+      "queued_jobs",
+      "unsubmitted_jobs",
+      "idle_jobs",
+      "pool",
+      "resource_fit",
+      "priority",
+      "negotiator",
+      "findings",
+      "suggestions",
+      "sources",
+      "idle_jobs_omitted"
+    ],
+    "why_idle_idle_job": [
+      "exec_job_id",
+      "state",
+      "type_desc",
+      "provenance"
+    ],
+    "why_idle_pool": [
+      "machines",
+      "total_slots",
+      "idle_slots",
+      "total_cpus",
+      "idle_cpus",
+      "total_memory_mb",
+      "idle_memory_mb",
+      "total_gpus",
+      "idle_gpus"
+    ],
+    "why_idle_resource_fit": [
+      "mismatches",
+      "mismatches_omitted"
+    ],
+    "why_idle_mismatch": [
+      "exec_job_id",
+      "requested_cpus",
+      "requested_memory_mb",
+      "requested_disk_kb",
+      "requested_gpus",
+      "reason",
+      "requirements"
+    ],
+    "why_idle_priority": [
+      "owner",
+      "principal",
+      "effective_priority",
+      "real_priority",
+      "resources_used",
+      "better_priority_users"
+    ],
+    "why_idle_negotiator": [
+      "last_cycle_seconds",
+      "last_cycle_matches"
+    ],
+    "why_idle_source": [
+      "kind",
+      "disposition",
+      "evidence_count",
+      "error_code"
+    ],
+    "unavailable_section": [
+      "available",
+      "reason"
+    ],
+    "stream": [
+      "stop_reason",
+      "stopped_by_recorder"
+    ]
+  },
+  "model_codecs": {
+    "snapshot.workflow": "WorkflowSnapshot.to_json_dict()",
+    "snapshot.jobs[]": "JobSnapshot.to_json_dict() plus snapshot_job_additions",
+    "snapshot.events[]": "EffectiveEvent.to_json_dict()",
+    "sources[]": "SourceHealth.to_json_dict() plus queried",
+    "stats": "WorkflowStats.to_dict(); keys whose value is unknown are omitted",
+    "evidence[]": "DiagnosticEvidence.to_json_dict() after the JSONL log's redaction"
+  },
+  "sources": [
+    "stampede",
+    "live_tail",
+    "condor_queue",
+    "condor_history",
+    "condor_pool",
+    "condor_priority",
+    "condor_negotiator"
+  ],
+  "source_states": [
+    "healthy",
+    "waiting",
+    "stale",
+    "degraded",
+    "gap",
+    "reattaching",
+    "resync",
+    "failed_unconfirmed",
+    "unavailable",
+    "disabled",
+    "not_queried"
+  ],
+  "lifecycles": [
+    "unsubmitted",
+    "pre",
+    "queued",
+    "running",
+    "held",
+    "post",
+    "succeeded",
+    "failed",
+    "other"
+  ],
+  "finding_categories": [
+    "held",
+    "failed"
+  ],
+  "finding_severities": [
+    "info",
+    "warning",
+    "error"
+  ],
+  "hold_codes": [
+    "user_hold",
+    "output_missing",
+    "output_transfer_failed",
+    "input_transfer_failed",
+    "memory_exceeded",
+    "disk_exceeded",
+    "walltime_exceeded",
+    "credential_failure",
+    "shadow_exception",
+    "dns_failure",
+    "container_failure",
+    "policy_hold",
+    "held_unknown"
+  ],
+  "failure_codes": [
+    "exit_code_<N>",
+    "exit_code_unknown",
+    "job_removed"
+  ],
+  "diagnostics_origins": {
+    "analysis": "Computed by this run; category and suggestions are present.",
+    "event_log": "Read from a replayed or remote JSONL stream, which never stored category or suggestions; both are null."
+  },
+  "stall_method": "snapshot_timestamps",
+  "stall_kinds": [
+    "all_held",
+    "no_semantic_progress",
+    "running_plateau",
+    "idle_too_long"
+  ],
+  "stall_reasons": {
+    "stalled": [
+      "all_held",
+      "no_semantic_progress",
+      "running_plateau",
+      "idle_too_long"
+    ],
+    "not_stalled": [
+      "workflow_complete",
+      "no_jobs_submitted",
+      "startup_grace",
+      "within_thresholds"
+    ],
+    "not_assessed": [
+      "authoritative_snapshot_unavailable",
+      "stampede_not_healthy",
+      "progress_time_unavailable"
+    ]
+  },
+  "unavailable_reasons": [
+    "authoritative_snapshot_unavailable",
+    "analysis_failed",
+    "scheduler_evidence_not_recorded"
+  ],
+  "exit_codes": {
+    "0": "A document with error null.",
+    "1": "A document whose error names a runtime failure.",
+    "2": "A document whose error.code is usage_error; argparse also prints usage to stderr."
+  },
+  "error_codes": {
+    "usage_error": 2,
+    "workflow_location_error": 1,
+    "no_authoritative_snapshot": 1,
+    "no_complete_checkpoint": 1,
+    "invalid_event_log": 1,
+    "io_error": 1,
+    "interrupted": 1,
+    "cleanup_failed": 1,
+    "monitor_error": 1
+  }
+}

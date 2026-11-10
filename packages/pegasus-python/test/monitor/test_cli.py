@@ -21,6 +21,8 @@ from __future__ import annotations
 import asyncio
 import gc
 import io
+import json
+import signal
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -787,3 +789,217 @@ def test_parser_errors_strip_terminal_controls(capsys):
     with pytest.raises(SystemExit):
         cli.build_parser().parse_args(["--evil\x1b[2J"])
     assert "\x1b" not in capsys.readouterr().err
+
+
+def _json_runtime(tmp_path, **options):
+    """The fake runtime with a builder that records what the CLI handed it."""
+
+    runtime, calls = _runtime(tmp_path, **options)
+    calls.documents = []
+
+    def build(base, **values):
+        calls.documents.append(values)
+        return {**base, "summary": {"built": True}}
+
+    return replace(runtime, build_json_document=build), calls
+
+
+def _document(output):
+    text = output.getvalue()
+    assert text.count("\n") == 1 and text.endswith("\n")
+    return json.loads(text)
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--json"],
+        ["--json", "--serve"],
+        ["--json", "--once", "--serve-foreground"],
+        ["--json", "--diagnose", "--stop-server"],
+        ["--json", "--once", "--interval", "nan"],
+        ["--js"],
+    ],
+)
+def test_json_usage_errors_exit_two_with_one_document(monkeypatch, capsys, arguments):
+    monkeypatch.setattr(
+        cli,
+        "_load_runtime",
+        lambda: pytest.fail("runtime should not be imported or constructed"),
+    )
+    output = _Output()
+
+    with pytest.raises(SystemExit) as raised:
+        cli.main(arguments, stdout=output)
+
+    assert raised.value.code == 2
+    document = _document(output)
+    assert document["exit_code"] == 2
+    assert document["error"]["code"] == "usage_error"
+    assert document["error"]["message"] in capsys.readouterr().err
+
+
+def test_usage_errors_without_json_write_nothing_to_stdout(capsys):
+    output = _Output()
+
+    with pytest.raises(SystemExit) as raised:
+        cli.main(["--once", "--serve"], stdout=output)
+
+    assert raised.value.code == 2
+    assert output.getvalue() == ""
+    assert "server modes cannot be combined" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("flags", "modes", "queries"),
+    [
+        (["--once"], ["once"], ["QUEUE", "HISTORY"]),
+        (["--diagnose"], ["diagnose"], ["QUEUE", "HISTORY"]),
+        (
+            ["--why-idle"],
+            ["why_idle"],
+            ["QUEUE", "POOL", "PRIORITY", "NEGOTIATOR", "HISTORY"],
+        ),
+        (["--once", "--diagnose"], ["once", "diagnose"], ["QUEUE", "HISTORY"]),
+    ],
+)
+def test_json_one_shot_modes_emit_a_document_instead_of_text(
+    tmp_path, flags, modes, queries
+):
+    runtime, calls = _json_runtime(tmp_path)
+    output = _Output(tty=True)
+
+    code = cli.main([*flags, "--json", str(tmp_path)], runtime=runtime, stdout=output)
+
+    assert code == 0
+    document = _document(output)
+    assert document["modes"] == modes
+    assert document["origin"] == "live"
+    assert document["target"] == str(tmp_path)
+    assert (document["exit_code"], document["error"]) == (0, None)
+    assert document["summary"] == {"built": True}
+    assert [kind.name for kind in calls.scheduler_queries] == queries
+    assert calls.console_prints == 0
+    assert calls.coordinator_closed == 1
+    assert len(calls.documents) == 1
+
+
+def test_json_passes_condor_and_event_options_to_the_builder(tmp_path):
+    runtime, calls = _json_runtime(tmp_path)
+
+    cli.main(
+        ["--once", "--json", "--no-condor", "-e", "3", str(tmp_path)],
+        runtime=runtime,
+        stdout=_Output(),
+    )
+
+    assert calls.scheduler == 0
+    assert calls.documents[0]["condor_disabled"] is True
+    assert calls.documents[0]["event_limit"] == 3
+
+
+def test_json_without_authoritative_snapshot_keeps_exit_one(tmp_path):
+    runtime, calls = _json_runtime(tmp_path, authoritative=False)
+    output, errors = _Output(), io.StringIO()
+
+    code = cli.main(
+        ["--once", "--json", str(tmp_path)],
+        runtime=runtime,
+        stdout=output,
+        stderr=errors,
+    )
+
+    assert code == 1
+    document = _document(output)
+    assert document["exit_code"] == 1
+    assert document["error"]["code"] == "no_authoritative_snapshot"
+    assert document["summary"] == {"built": True}
+    assert "--once requires an authoritative Stampede snapshot" in errors.getvalue()
+    assert calls.coordinator_closed == 1
+
+
+def test_json_reports_cleanup_failure_in_the_single_document(tmp_path):
+    runtime, _calls = _json_runtime(tmp_path)
+
+    async def close(_self):
+        raise OSError("close failed")
+
+    runtime.coordinator_type.close = close
+    output = _Output()
+
+    code = cli.main(
+        ["--once", "--json", str(tmp_path)],
+        runtime=runtime,
+        stdout=output,
+        stderr=io.StringIO(),
+    )
+
+    assert code == 1
+    document = _document(output)
+    assert document["error"] == {"code": "cleanup_failed", "message": "close failed"}
+    assert document["summary"] == {"built": True}
+
+
+def test_json_interrupt_is_an_error_document_not_a_silent_success(
+    tmp_path, monkeypatch
+):
+    runtime, _calls = _json_runtime(tmp_path)
+
+    def interrupted(coroutine):
+        coroutine.close()
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli.asyncio, "run", interrupted)
+    output = _Output()
+
+    code = cli.main(["--once", "--json", str(tmp_path)], runtime=runtime, stdout=output)
+
+    assert code == 1
+    assert _document(output)["error"]["code"] == "interrupted"
+
+
+def test_json_sigterm_before_a_result_is_an_error_document(tmp_path):
+    runtime, _calls = _json_runtime(tmp_path)
+
+    async def bootstrap(_self):
+        signal.raise_signal(signal.SIGTERM)
+        await asyncio.sleep(30)
+
+    runtime.coordinator_type.bootstrap = bootstrap
+    output = _Output()
+
+    code = cli.main(["--once", "--json", str(tmp_path)], runtime=runtime, stdout=output)
+
+    assert code == 1
+    assert _document(output)["error"]["code"] == "interrupted"
+
+
+def test_json_error_messages_strip_terminal_controls(tmp_path):
+    runtime, _calls = _json_runtime(tmp_path)
+
+    def locate(_self, _target, **_kwargs):
+        raise ValueError("bad \x1b[31mpath\x1b[0m")
+
+    runtime.locator_type.locate = locate
+    output = _Output()
+
+    code = cli.main(
+        ["--once", "--json", str(tmp_path)],
+        runtime=runtime,
+        stdout=output,
+        stderr=io.StringIO(),
+    )
+
+    assert code == 1
+    assert "\x1b" not in output.getvalue()
+    assert "\\u001b" not in output.getvalue()
+    assert _document(output)["error"]["code"] == "monitor_error"
+
+
+def test_text_one_shot_output_is_unchanged_by_the_json_seam(tmp_path):
+    runtime, calls = _json_runtime(tmp_path)
+    output = _Output()
+
+    assert cli.main(["--once", str(tmp_path)], runtime=runtime, stdout=output) == 0
+    assert output.getvalue() == "rendered\n"
+    assert calls.documents == []

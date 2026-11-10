@@ -103,12 +103,16 @@ def _temporary_sigterm_handler(callback: Callable[[int, object | None], None]):
 
 
 class _TerminalSafeParser(argparse.ArgumentParser):
+    usage_error: str | None = None
+
     def error(self, message: str) -> None:
-        super().error(sanitize_display(message))
+        # Retained so --json can report the same message as a document.
+        self.usage_error = sanitize_display(message)
+        super().error(self.usage_error)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build exactly the version 1 parser without constructing any source."""
+    """Build the version 1 parser, plus --json, without constructing any source."""
 
     parser = _TerminalSafeParser(
         prog="pegasus-monitor",
@@ -176,6 +180,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--diagnose",
         action="store_true",
         help="Show bounded failure and stall diagnostics without a sidecar",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Write one JSON document for --once, --diagnose, or --why-idle",
     )
     parser.add_argument(
         "--log",
@@ -306,6 +315,7 @@ class RuntimeComponents:
     live_type: type
     scheduler_factory: Callable[..., Any]
     scheduler_kind: type
+    build_json_document: Callable[..., dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,6 +335,18 @@ class ReplayRuntime:
     rendering_gc_guard: Callable[..., Any]
     console_type: type
     live_type: type
+    build_json_document: Callable[..., dict[str, Any]] | None = None
+
+
+def _json_document(
+    runtime: RuntimeComponents | ReplayRuntime, base: object, **values: object
+) -> dict[str, Any]:
+    """Build the --json document, importing its codecs only when requested."""
+
+    builder = runtime.build_json_document
+    if builder is None:
+        from Pegasus.monitor.json_output import build_document as builder
+    return builder(base, **values)
 
 
 def _scheduler_factory(**values: object) -> object:
@@ -465,6 +487,11 @@ def _validate_mode_args(
         parser.error("--stop-server PID_FILE cannot be combined with --log")
     if not args.remote and (args.ssh_config or args.ssh_identity):
         parser.error("--ssh-config and --ssh-identity require --remote")
+    if args.json:
+        if args.serve or args.serve_foreground or args.stop_server is not None:
+            parser.error("--json cannot be combined with server modes")
+        if not (args.once or args.diagnose or args.why_idle):
+            parser.error("--json requires --once, --diagnose, or --why-idle")
 
 
 def _record_type_order(record: object) -> tuple[object, ...]:
@@ -1098,6 +1125,14 @@ def _refresh_live(
         live.update(renderable_factory(), refresh=True)
 
 
+def _no_checkpoint_error() -> type[RuntimeError]:
+    """The RuntimeError subclass that --json reports as no_complete_checkpoint."""
+
+    from Pegasus.monitor.json_output import NoCompleteCheckpoint
+
+    return NoCompleteCheckpoint
+
+
 def _read_replay_header(path: Path) -> object:
     from Pegasus.monitor.event_log import EventLogFormatError, decode_json_line
     from Pegasus.monitor.models import StreamHeader
@@ -1112,10 +1147,38 @@ def _read_replay_header(path: Path) -> object:
     return record
 
 
+def _replay_json_document(
+    emitter: object,
+    args: argparse.Namespace,
+    runtime: ReplayRuntime,
+    context: object,
+    publication: object,
+    analysis: object,
+    diagnostics: tuple[object, ...],
+    stop_reason: str | None,
+) -> dict[str, Any]:
+    return _json_document(
+        runtime,
+        emitter.base,
+        context=context,
+        snapshot=publication,
+        stats=analysis.stats,
+        recorded_diagnostics=diagnostics,
+        removal_reason=analysis.workflow_removal_reason,
+        condor_disabled=True,
+        event_limit=args.events,
+        stream={
+            "stop_reason": stop_reason,
+            "stopped_by_recorder": stop_reason == "stopped",
+        },
+    )
+
+
 def _run_replay_mode(
     args: argparse.Namespace,
     runtime: ReplayRuntime,
     stdout: TextIO,
+    emitter: object | None = None,
 ) -> int:
     path = Path(args.replay)
     header = _read_replay_header(path)
@@ -1129,7 +1192,7 @@ def _run_replay_mode(
     if args.once:
         result = engine.replay()
         if not result.complete or result.snapshot is None:
-            raise RuntimeError(
+            raise _no_checkpoint_error()(
                 f"replay has no complete checkpoint (stream: {result.stop_reason or 'incomplete'})"
             )
         publication = _replay_publication(
@@ -1144,6 +1207,18 @@ def _run_replay_mode(
             runtime,
             result.workflow_removal_reason,
         )
+        if emitter is not None:
+            emitter.document = _replay_json_document(
+                emitter,
+                args,
+                runtime,
+                context,
+                publication,
+                analysis,
+                result.current_diagnostics,
+                result.stop_reason,
+            )
+            return 0
         if result.stop_reason == "stopped":
             stdout.write("Stream stopped by recorder; workflow may still be running.\n")
         width = getattr(stdout, "width", 120)
@@ -1205,7 +1280,7 @@ def _run_replay_mode(
             with runtime.rendering_gc_guard():
                 manager.__exit__(*sys.exc_info())
     if not result.complete:
-        raise RuntimeError(
+        raise _no_checkpoint_error()(
             f"replay ended while awaiting a recovery checkpoint (stream: {result.stop_reason or 'incomplete'})"
         )
     if result.stop_reason == "stopped":
@@ -1217,6 +1292,7 @@ async def _run_remote_mode(
     args: argparse.Namespace,
     runtime: ReplayRuntime,
     stdout: TextIO,
+    emitter: object | None = None,
 ) -> int:
     reader = runtime.remote_reader_type(
         args.remote,
@@ -1297,7 +1373,7 @@ async def _run_remote_mode(
             if args.once:
                 if result.at_eof:
                     if accumulator.snapshot is None or accumulator.awaiting_checkpoint:
-                        raise RuntimeError(
+                        raise _no_checkpoint_error()(
                             f"remote stream has no complete checkpoint (stream: {accumulator.stop_reason or 'incomplete'})"
                         )
                     break
@@ -1330,9 +1406,21 @@ async def _run_remote_mode(
                 manager.__exit__(*sys.exc_info())
 
     if latest_publication is None or latest_analysis is None or context is None:
-        raise RuntimeError(
+        raise _no_checkpoint_error()(
             f"remote stream has no complete checkpoint (stream: {accumulator.stop_reason or 'incomplete'})"
         )
+    if emitter is not None:
+        emitter.document = _replay_json_document(
+            emitter,
+            args,
+            runtime,
+            context,
+            latest_publication,
+            latest_analysis,
+            accumulator.diagnostics,
+            accumulator.stop_reason,
+        )
+        return 0
     if accumulator.stop_reason == "stopped":
         stdout.write("Stream stopped by recorder; workflow may still be running.\n")
     if args.once:
@@ -1364,6 +1452,7 @@ async def _run_once(
     stdout: TextIO,
     stderr: TextIO,
     recorder: _EventRecorder | None = None,
+    emitter: object | None = None,
 ) -> int:
     diagnostics_engine = runtime.diagnostics_engine_type() if args.diagnose else None
     snapshot = await coordinator.bootstrap()
@@ -1383,21 +1472,40 @@ async def _run_once(
     analysis = await _analyze(snapshot, context, args, runtime, diagnostics_engine)
     if recorder is not None:
         await recorder.capture(coordinator, snapshot, analysis=analysis, force=True)
-    width = getattr(stdout, "width", 120)
-    options = _display_options(args, runtime, width=width, live=False)
-    stdout.write(
-        runtime.render_text(
-            context,
-            snapshot,
-            analysis,
-            options,
-            width=max(40, width),
+    if emitter is not None:
+        emitter.document = _json_document(
+            runtime,
+            emitter.base,
+            context=context,
+            snapshot=snapshot,
+            stats=analysis.stats,
+            diagnostics=analysis.diagnostics,
+            why_idle=analysis.why_idle,
+            analysis_errors=analysis.errors,
+            condor_disabled=args.no_condor,
+            event_limit=args.events,
         )
-    )
-    stdout.flush()
+    else:
+        width = getattr(stdout, "width", 120)
+        options = _display_options(args, runtime, width=width, live=False)
+        stdout.write(
+            runtime.render_text(
+                context,
+                snapshot,
+                analysis,
+                options,
+                width=max(40, width),
+            )
+        )
+        stdout.flush()
     # Tail-only evidence is useful in live mode but cannot satisfy --once.
     if snapshot.has_authoritative_base:
         return 0
+    if emitter is not None:
+        emitter.fail(
+            "no_authoritative_snapshot",
+            "no authoritative Stampede snapshot is available",
+        )
     print(
         "pegasus-monitor: --once requires an authoritative Stampede snapshot",
         file=stderr,
@@ -1597,6 +1705,7 @@ async def _run(
     runtime: RuntimeComponents,
     stdout: TextIO,
     stderr: TextIO,
+    emitter: object | None = None,
 ) -> int:
     termination = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -1621,7 +1730,7 @@ async def _run(
             coordinator = _make_coordinator(args, location, runtime)
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(sanitize_display(f"pegasus-monitor: {error}"), file=stderr)
-            return 1
+            return _json_failure(emitter, error)
 
         operation = asyncio.create_task(
             (
@@ -1633,6 +1742,7 @@ async def _run(
                     stdout,
                     stderr,
                     recorder=recorder,
+                    emitter=emitter,
                 )
                 if args.once or args.why_idle
                 else _run_live(
@@ -1663,6 +1773,8 @@ async def _run(
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(sanitize_display(f"pegasus-monitor: {error}"), file=stderr)
             result = 1
+            if emitter is not None:
+                emitter.fail(_json_error_code(error), error)
         finally:
             if not operation.done():
                 operation.cancel()
@@ -1686,7 +1798,85 @@ async def _run(
                     file=stderr,
                 )
                 result = 1
-        return result
+                if emitter is not None:
+                    emitter.fail("cleanup_failed", cleanup_errors[0])
+        # Written only after cleanup, so the one document reports its outcome.
+        return result if emitter is None else emitter.emit(result)
+
+
+def _json_error_code(error: BaseException) -> str:
+    from Pegasus.monitor.json_output import error_code
+
+    return error_code(error)
+
+
+def _json_failure(emitter: object | None, error: BaseException) -> int:
+    """Report a failure that ends the command; text mode has already printed it."""
+
+    if emitter is None:
+        return 1
+    emitter.fail(_json_error_code(error), error)
+    return emitter.emit(1)
+
+
+def _json_interrupted(emitter: object | None) -> int:
+    """Text mode exits 0 on interrupt; a document without a result is an error."""
+
+    if emitter is None:
+        return 0
+    emitter.fail("interrupted", "monitoring was interrupted before any result")
+    return emitter.emit(1)
+
+
+def _json_emitter(args: argparse.Namespace, stdout: TextIO, origin: str) -> object:
+    from Pegasus.monitor.json_output import JsonEmitter, envelope, requested_modes
+
+    return JsonEmitter(
+        stdout,
+        envelope(
+            monitor_version=_version(),
+            modes=requested_modes(args),
+            origin=origin,
+            target=(args.replay or args.remote or args.target),
+        ),
+    )
+
+
+def _json_requested(argv: list[str] | None) -> bool:
+    """Whether raw arguments select --json, including argparse abbreviations."""
+
+    values = sys.argv[1:] if argv is None else argv
+    for value in values:
+        if value == "--":
+            return False
+        if len(value) >= 4 and "--json".startswith(value):
+            return True
+    return False
+
+
+def _json_usage_error(
+    parser: _TerminalSafeParser, argv: list[str] | None, stdout: TextIO
+) -> None:
+    """Report an argparse failure as a document; argparse still exits 2."""
+
+    from Pegasus.monitor.json_output import JsonEmitter, envelope
+
+    values = sys.argv[1:] if argv is None else argv
+    modes = tuple(
+        name
+        for name, flag in (
+            ("once", "--once"),
+            ("diagnose", "--diagnose"),
+            ("why_idle", "--why-idle"),
+        )
+        if flag in values
+    )
+    emitter = JsonEmitter(
+        stdout,
+        envelope(monitor_version=_version(), modes=modes, origin="live", target=None),
+    )
+    emitter.fail("usage_error", parser.usage_error or "invalid arguments")
+    emitter.emit(2)
 
 
 async def _close_monitor_resources(
@@ -2019,23 +2209,42 @@ def main(
     """Run ``pegasus-monitor`` and return its stable process exit status."""
 
     parser = build_parser()
-    args = parser.parse_args(argv)
-    _validate_mode_args(parser, args)
     output = stdout or sys.stdout
     errors = stderr or sys.stderr
+    try:
+        args = parser.parse_args(argv)
+        _validate_mode_args(parser, args)
+    except SystemExit as stop:
+        if stop.code == 2 and _json_requested(argv):
+            _json_usage_error(parser, argv, output)
+        raise
+
+    emitter = None
+    if args.json:
+        # The document names the modes requested; --json then forces one shot.
+        emitter = _json_emitter(
+            args,
+            output,
+            "replay" if args.replay else "remote" if args.remote else "live",
+        )
+        args.once = True
 
     if args.replay or args.remote:
         args.once = args.once or not output.isatty()
         selected_replay = runtime or _load_replay_runtime()
         try:
             if args.replay:
-                return _run_replay_mode(args, selected_replay, output)
-            return asyncio.run(_run_remote_mode(args, selected_replay, output))
+                code = _run_replay_mode(args, selected_replay, output, emitter)
+            else:
+                code = asyncio.run(
+                    _run_remote_mode(args, selected_replay, output, emitter)
+                )
+            return code if emitter is None else emitter.emit(code)
         except KeyboardInterrupt:
-            return 0
+            return _json_interrupted(emitter)
         except (OSError, TypeError, ValueError, RuntimeError) as error:
             print(sanitize_display(f"pegasus-monitor: {error}"), file=errors)
-            return 1
+            return _json_failure(emitter, error)
 
     server_action = args.stop_server is not None or args.serve or args.serve_foreground
     if args.diagnose and not server_action and not output.isatty():
@@ -2063,9 +2272,9 @@ def main(
         return 1
 
     try:
-        return asyncio.run(_run(args, selected_runtime, output, errors))
+        return asyncio.run(_run(args, selected_runtime, output, errors, emitter))
     except KeyboardInterrupt:
-        return 0
+        return _json_interrupted(emitter)
 
 
 if __name__ == "__main__":
