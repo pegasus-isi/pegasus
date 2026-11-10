@@ -1,7 +1,7 @@
 """
 PegasusOracle — Embedded Workflow Runtime Predictor
 
-Loads a trained PegasusOracle model (.pkl) and predicts the runtime of a job,
+Loads a PegasusOracle ONNX model and preprocessing metadata and predicts the runtime of a job,
 or of the tasks of a clustered job, and patches the prediction into the condor
 submit file of the job — no external API server required.
 
@@ -25,18 +25,32 @@ from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from PythonSed import Sed, SedException
 import yaml
+import onnxruntime as ort
 
-from Pegasus.api import File, Job, Namespace, Workflow
-from Pegasus.monitoring.metadata import Metadata
+# Standalone ModelContext inference does not need Pegasus or PythonSed.
+try:
+    from PythonSed import Sed, SedException
+except ImportError:
+    Sed = None
+    SedException = Exception
+
+try:
+    from Pegasus.api import File, Job, Namespace, Workflow
+except ImportError:
+    File = Job = Namespace = Workflow = None
+
+try:
+    from Pegasus.monitoring.metadata import Metadata
+except ImportError:
+    Metadata = None
 
 warnings.filterwarnings("ignore")
 
-# Default model location: <package>/models/pegasus_oracle_model.pkl
+# Default model location: <package>/models/preprocessing.pkl
 # Drop the trained .pkl there and leave model_path unset — it is found automatically.
 _MODELS_DIR    = Path(__file__).parent / "models"
-_DEFAULT_MODEL = _MODELS_DIR / "pegasus_oracle_model.pkl"
+_DEFAULT_MODEL = _MODELS_DIR / "pegasus_oracle.onnx"
 
 
 # ─────────────────────────────────────────────
@@ -58,7 +72,7 @@ class RuntimePredictionConfig:
     Pegasus property keys
     ---------------------
     pegasus.runtime.prediction.enable          : "true" / "false"
-    pegasus.runtime.prediction.model.path      : /path/to/pegasus_oracle_model.pkl
+    pegasus.runtime.prediction.model.path      : /path/to/pegasus_oracle.onnx
     pegasus.runtime.prediction.output.dir      : /path/to/output/dir
     pegasus.runtime.prediction.sparse.threshold: integer  (default: model value)
     pegasus.runtime.prediction.interval.low    : float 0–1 (default: 0.05)
@@ -135,70 +149,6 @@ class RuntimePredictionConfig:
 # ─────────────────────────────────────────────
 # 1. NEURAL ARCHITECTURE  (must match pegasus_oracle.py)
 # ─────────────────────────────────────────────
-
-try:
-    import torch
-    import torch.nn as nn
-
-    class Mish(nn.Module):
-        def forward(self, x):
-            return x * torch.tanh(nn.functional.softplus(x))
-
-    class ResBlock(nn.Module):
-        def __init__(self, dim):
-            super().__init__()
-            self.net = nn.Sequential(
-                nn.Linear(dim, dim), nn.LayerNorm(dim), Mish(),
-                nn.Linear(dim, dim), nn.LayerNorm(dim),
-            )
-        def forward(self, x): return x + self.net(x)
-
-    class PegasusOracle(nn.Module):
-        def __init__(self, input_dim: int, latent_dim: int = 8):
-            super().__init__()
-            H = 512
-            self.backbone = nn.Sequential(
-                nn.Linear(input_dim, H), nn.LayerNorm(H), Mish(), nn.Dropout(0.10),
-                ResBlock(H), ResBlock(H), ResBlock(H), ResBlock(H),
-                nn.Linear(H, 256), Mish(), nn.Dropout(0.05),
-                nn.Linear(256, 128), Mish(),
-            )
-            self.median_head = nn.Linear(128, 1)
-            self.low_offset  = nn.Linear(128, 1)
-            self.high_offset = nn.Linear(128, 1)
-            self.enc = nn.Sequential(
-                nn.Linear(input_dim, 128), Mish(),
-                nn.Linear(128, 64),        Mish(),
-            )
-            self.fc_mu     = nn.Linear(64, latent_dim)
-            self.fc_logvar = nn.Linear(64, latent_dim)
-            self.dec = nn.Sequential(
-                nn.Linear(latent_dim, 64),  Mish(),
-                nn.Linear(64, 128),         Mish(),
-                nn.Linear(128, input_dim),
-            )
-
-        def encode(self, x):
-            h = self.enc(x)
-            return self.fc_mu(h), self.fc_logvar(h)
-
-        def reparameterize(self, mu, logvar):
-            return mu + torch.randn_like(mu) * torch.exp(0.5 * logvar)
-
-        def forward(self, x):
-            f   = self.backbone(x)
-            med = self.median_head(f)
-            low = med - nn.functional.softplus(self.low_offset(f))
-            hig = med + nn.functional.softplus(self.high_offset(f))
-            mu, lv = self.encode(x)
-            z      = self.reparameterize(mu, lv)
-            recon  = self.dec(z)
-            return (med, low, hig), recon, mu, lv
-
-    _TORCH_AVAILABLE = True
-
-except ImportError:
-    _TORCH_AVAILABLE = False
 
 
 # ─────────────────────────────────────────────
@@ -438,40 +388,41 @@ def _get_condor_slot(cache_file: Optional[str] = None) -> dict:
 
 class ModelContext:
     def __init__(self, path: str):
-        if not _TORCH_AVAILABLE:
-            raise ImportError(
-                "Runtime prediction requires PyTorch. "
-                "Install with: pip install torch"
-            )
-        with open(path, "rb") as f:
+        # The caller supplies the ONNX path. Preprocessing is loaded automatically.
+        onnx_path = Path(path)
+        if not onnx_path.is_file():
+            raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
+        preprocessing_path = onnx_path.with_name("preprocessing.pkl")
+        if not preprocessing_path.is_file():
+            raise FileNotFoundError(f"Preprocessing artifact not found: {preprocessing_path}")
+        # Only load trusted preprocessing files; pickle can execute arbitrary code.
+        with open(preprocessing_path, "rb") as f:
             payload = pickle.load(f)
 
-        self.scaler       = payload["scaler"]
+        self.scaler = payload["scaler"]
         self.numeric_cols = payload["numeric_cols"]
-        self.arts         = payload["arts"]
-        self.q_lo         = payload["q_lo"]
-        self.q_hi         = payload["q_hi"]
-        self.rule_map     = payload["rule_map"]
-        self.lat_dim      = payload["lat_dim"]
-        self.input_dim    = payload["input_dim"]
-        self.sparse_thr   = payload.get("sparse_thr", 10)
-        self.device       = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        self.arts = payload["arts"]
+        self.q_lo = payload["q_lo"]
+        self.q_hi = payload["q_hi"]
+        self.rule_map = payload["rule_map"]
+        self.lat_dim = payload["lat_dim"]
+        self.input_dim = payload["input_dim"]
+        self.sparse_thr = payload.get("sparse_thr", 10)
 
-        self.model = PegasusOracle(self.input_dim, latent_dim=self.lat_dim)
-        self.model.load_state_dict(payload["model_state"])
-        self.model.to(self.device).eval()
+        if not onnx_path.is_file():
+            raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
+        self.session = ort.InferenceSession(
+            str(onnx_path), providers=["CPUExecutionProvider"]
+        )
+        actual_dim = self.session.get_inputs()[0].shape[-1]
+        if isinstance(actual_dim, int) and actual_dim != self.input_dim:
+            raise ValueError(f"ONNX input dimension {actual_dim} != {self.input_dim}")
+        self.input_name = self.session.get_inputs()[0].name
 
-        self.known_trans  = set(self.arts["trans_map"].keys())
+        self.known_trans = set(self.arts["trans_map"].keys())
         self.trans_counts = self.arts.get("trans_counts", {})
-        self.smart_rule   = self.arts.get("smart_rule", {})
-
-        # Reverse lookup: bare name (no ns:: or :version) → best canonical name.
-        # "best" = highest training sample count when multiple canonical names
-        # share the same bare name (e.g. "diamond::findrange:4.0" and
-        # "pegasus::findrange:4.0" both strip to "findrange").
-        # Built once at load time so _resolve() is O(1) per job.
-        self._bare_to_canonical: dict = {}
+        self.smart_rule = self.arts.get("smart_rule", {})
+        self._bare_to_canonical = {}
         for cname in self.known_trans:
             bare = re.sub(r":[^:]+$", "", re.sub(r"^[^:]+::", "", cname))
             if (bare not in self._bare_to_canonical or
@@ -511,22 +462,23 @@ class ModelContext:
             df["transformation"] = df["transformation"].apply(self._resolve_name)
         df_eng, name_emb = _make_features(df, self.arts)
         X = self.scaler.transform(_assemble_X(df_eng, name_emb, self.numeric_cols))
-        Xt = torch.FloatTensor(X).to(self.device)
-        with torch.no_grad():
-            (pm, pl, ph), recon, mu, lv = self.model(Xt)
+        X = np.asarray(X, dtype=np.float32)
+        pm, pl, ph, recon, mu, lv = self.session.run(
+            None, {self.input_name: X}
+        )
 
-        p_med  = np.expm1(pm.cpu().numpy().flatten())
-        p_low  = np.clip(np.expm1(pl.cpu().numpy().flatten()), 0, None)
-        p_high = np.expm1(ph.cpu().numpy().flatten())
+        p_med  = np.expm1(pm.flatten())
+        p_low  = np.clip(np.expm1(pl.flatten()), 0, None)
+        p_high = np.expm1(ph.flatten())
 
         # ── VAE interpretation ─────────────────────────────────────────────
         # Per-feature squared reconstruction error: shape (N, input_dim).
         # Tells us WHICH feature is most responsible for the anomaly.
-        per_feat_err = ((Xt - recon) ** 2).cpu().numpy()   # (N, input_dim)
+        per_feat_err = ((X - recon) ** 2)   # (N, input_dim)
         recon_err    = per_feat_err.mean(axis=1)            # (N,) — overall error
 
         # KL divergence per job — how unusual is the latent encoding.
-        kl = (0.5 * (mu ** 2 + lv.exp() - lv - 1).sum(dim=1)).cpu().numpy()
+        kl = (0.5 * (mu ** 2 + np.exp(lv) - lv - 1).sum(axis=1))
 
         # Anomaly score [0,1]: sigmoid-normalised combination of recon error + KL.
         raw_anomaly   = recon_err + 0.1 * kl
@@ -534,7 +486,7 @@ class ModelContext:
                                                        ) / (raw_anomaly.std() + 1e-8)))
 
         vae_confidence = np.clip(1.0 - anomaly_score, 0.0, 1.0)
-        latent_mu      = mu.cpu().numpy()   # (N, lat_dim)
+        latent_mu      = mu   # (N, lat_dim)
 
         # ── Anomaly type: which feature group drives the reconstruction error ──
         # Map feature index → human-readable anomaly category.
@@ -820,6 +772,8 @@ def patch_sub_file(sub_path: str, prediction: dict) -> bool:
 
     Returns True on success, False if the file could not be patched.
     """
+    if Sed is None:
+        raise ImportError("PythonSed is required to patch HTCondor submit files")
     path = Path(sub_path)
     if not path.is_file():
         return False
@@ -1075,7 +1029,7 @@ class WorkflowRuntimePredictor:
     Usage — explicit config::
 
         cfg = RuntimePredictionConfig(
-            model_path  = "pegasus_oracle_model.pkl",
+            model_path  = "pegasus_oracle.onnx",
             output_dir  = "/submit/dir",
             q_lo        = 0.10,
             q_hi        = 0.90,
@@ -1096,15 +1050,15 @@ class WorkflowRuntimePredictor:
         :param config: :py:class:`RuntimePredictionConfig` instance
         :raises ValueError: if config.model_path is not set
         :raises FileNotFoundError: if the model file does not exist
-        :raises ImportError: if PyTorch or scikit-learn are not installed
+        :raises ImportError: if ONNX Runtime or scikit-learn are not installed
         """
         if not config.model_path:
             if _DEFAULT_MODEL.exists():
                 config.model_path = str(_DEFAULT_MODEL)
             else:
                 raise ValueError(
-                    "No model found. Either set pegasus.runtime.prediction.model.path "
-                    "in pegasus.properties, or place pegasus_oracle_model.pkl in: "
+                    "No preprocessing file found. Either set pegasus.runtime.prediction.model.path "
+                    "in pegasus.properties, or place pegasus_oracle.onnx in: "
                     f"{_MODELS_DIR}"
                 )
         if not os.path.isfile(config.model_path):
@@ -1113,6 +1067,8 @@ class WorkflowRuntimePredictor:
                 "Train the model via pegasus_oracle.py and place the .pkl in "
                 f"{_MODELS_DIR} or set pegasus.runtime.prediction.model.path."
             )
+        if Workflow is None:
+            raise ImportError("Pegasus.api is required for workflow integration; standalone ModelContext inference works without it")
         self._cfg        = config
         self._ctx        = ModelContext(config.model_path)
 
@@ -1424,6 +1380,8 @@ def _read_lof(lof_file: str) -> list:
 
 def _read_meta_sizes(meta_files) -> dict:
     """Return the sizes in bytes of the files in the .meta files, indexed by lfn."""
+    if Metadata is None and meta_files:
+        raise ImportError("Pegasus.monitoring.metadata is required to read .meta files; use the Pegasus installation providing this module")
     sizes = {}
     for meta_file in meta_files:
         try:

@@ -108,7 +108,7 @@ fi
 %{buildroot}%{pegasus_venv}/bin/pip install dist/pegasus_wms-*.whl
 
 # Remove PyTorch's standalone test executable.
-find %{buildroot}%{pegasus_venv} -type f -path '*/site-packages/torch/bin/test_jit' -delete
+#find %{buildroot}%{pegasus_venv} -type f -path '*/site-packages/torch/bin/test_jit' -delete
 
 # The venv was created under %{buildroot}, so its generated script shebangs and
 # pyvenv.cfg embed that build-time prefix. Strip it so the paths are correct once
