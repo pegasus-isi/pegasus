@@ -17,7 +17,7 @@ pegasus-analyzer - debugs a workflow.
                        [--local-executable local user executable]
                        [--conf|-c property_file] [--files]
                        [--top-dir dir_name] [--traverse-all|t] [--recurse|-r]
-                       [--indent|-I indent_length]
+                       [--indent|-I indent_length] [--plain|--no-plain]
                        [workflow_directory]
 
 
@@ -182,6 +182,12 @@ Options
    **-r|--recurse** option. This option dictates the number of white spaces
    to use when indenting the output of pegasus-analyzer of a sub workflow.
 
+**--plain**; \ **--no-plain**
+   By default, on a terminal the report is rendered with Rich (styled
+   headings, tables and syntax-highlighted code), and when the output is
+   redirected or piped it is emitted as raw Markdown. **--plain** emits the
+   raw Markdown even on a terminal. **--no-plain** is the default.
+
 **-j**; \ **--json**
    This option returns the output from analyzer in a JSON serializable data
    structure (Python dict). Sample of this structure is shown below, where the
@@ -286,76 +292,85 @@ The simplest way to use **pegasus-analyzer** is to go to the
 which will cause **pegasus-analyzer** to print information about the
 workflow in the current directory.
 
-**pegasus-analyzer** output contains a summary, followed by detailed
-information about each job that either failed, or is in an unknown
-state. Here is the summary section of the output:
+**pegasus-analyzer** output is a Markdown report. On a terminal it is
+rendered with Rich; when redirected, piped or invoked with **--plain**, it
+is emitted as raw Markdown, as shown below. The report contains a summary,
+followed by detailed information about each job that either failed, or is
+in an unknown state. Here is the summary section of the output:
 
-::
+.. code-block:: markdown
 
-   **************************Summary***************************
+   ## Summary
 
-    Total jobs         :     75 (100.00%)
-    # jobs succeeded   :     41 (54.67%)
-    # jobs failed      :      0 (0.00%)
-    # jobs held        :      1 (1.33%)
-    # jobs unsubmitted :     33 (44.00%)
-    # jobs unknown     :      1 (1.33%)
+   | **Field**            | **Value**                  |
+   | -------------------- | -------------------------- |
+   | **Submit Directory** | `/home/user/run0004`       |
+   | **Workflow Status**  | `failure`                  |
 
-*jobs_succeeded* are jobs that have completed successfully.
-*jobs_failed* are jobs that have finished, but that did not complete
-successfully. *jobs_unsubmitted* are jobs that are listed in the
+   | **Jobs**        | **Count** |  **%** |
+   | --------------- | --------: | -----: |
+   | **Total Jobs**  |        75 |        |
+   | **Succeeded**   |        41 | 54.67% |
+   | **Failed**      |         0 |  0.00% |
+   | **Held**        |         1 |  1.33% |
+   | **Unsubmitted** |        33 | 44.00% |
+   | **Unknown**     |         1 |  1.33% |
+
+*Succeeded* are jobs that have completed successfully.
+*Failed* are jobs that have finished, but that did not complete
+successfully. *Unsubmitted* are jobs that are listed in the
 *dag_file*, but no information about them was found in the
-*jobstate.log* file. *jobs_held* are jobs that were in HTCondor HELD
+*jobstate.log* file. *Held* are jobs that were in HTCondor HELD
 state on the last retry of the job. With default, pegasus added
 periodic_remove expression with the jobs, a held job can eventually
 fail. In that case, held job appears as a failed job also. Finally,
-*jobs_unknown* are jobs that have started, but have not reached
+*Unknown* are jobs that have started, but have not reached
 completion.
 
 After the summary section, **pegasus-analyzer** will display information
-about each job in the *job_failed* and *job_unknown* categories.
+about each job in the failed and unknown categories.
 
-::
+.. code-block:: markdown
 
-   *******************************Held jobs' details*******************************
+   ## Held jobs' details
 
-   ====================================sleep_j2====================================
+   ### Job: `sleep_j2`
 
-           submit file            : sleep_j2.sub
-           last_job_instance_id   : 7
-           reason                 :  Error from slot1@corbusier.isi.edu:
-                                     STARTER at 128.9.64.188 failed to
-                                     send file(s) to
-                                     <128.9.64.188:62639>: error reading from
-                                     /opt/condor/8.4.8/local.corbusier/execute/dir_76205/f.out:
-                                     (errno 2) No such file or directory;
-                                    SHADOW failed to receive file(s) from <128.9.64.188:62653>
+   | **Field**                | **Value**                                          |
+   | ------------------------ | -------------------------------------------------- |
+   | **Submit File**          | `sleep_j2.sub`                                     |
+   | **Last job_instance_id** | `7`                                                |
+   | **Reason**               | `STARTER at 128.9.64.188 failed to send file(s)`   |
 
 In the above example, the *sleep_j2* job was held, and the analyzer
 displays the reason why it was held, as determined from the dagman.out
-file for the workflow. The last_job_instance_id is the database id for
+file for the workflow. The last job_instance_id is the database id for
 the job in the job instance table of the monitoring database.
 
-::
+.. code-block:: markdown
 
-   ******************Failed jobs' details**********************
+   ## Failed jobs' details
 
-   =======================findrange_j3=========================
+   ### Job: `findrange_j3`
 
-     last state: POST_SCRIPT_FAILURE
-           site: local
-    submit file: /home/user/diamond-submit/findrange_j3.sub
-    output file: /home/user/diamond-submit/findrange_j3.out.000
-     error file: /home/user/diamond-submit/findrange_j3.err.000
+   | **Field**       | **Value**                                      |
+   | --------------- | ---------------------------------------------- |
+   | **Last State**  | `POST_SCRIPT_FAILED`                           |
+   | **Site**        | `local`                                        |
+   | **Submit File** | `/home/user/diamond-submit/findrange_j3.sub`   |
+   | **Output File** | `/home/user/diamond-submit/findrange_j3.out.000` |
+   | **Error File**  | `/home/user/diamond-submit/findrange_j3.err.000` |
 
-   --------------------Task #1 - Summary-----------------------
+   #### Task #1 — Summary
 
-    site        : local
-    hostname    : server-machine.domain.com
-    executable  : (null)
-    arguments   : -a findrange -T 60 -i f.b2 -o f.c2
-    error       : 2
-    working dir :
+   | **Field**       | **Value**                            |
+   | --------------- | ------------------------------------ |
+   | **site**        | `local`                              |
+   | **hostname**    | `server-machine.domain.com`          |
+   | **executable**  | `/usr/bin/findrange`                 |
+   | **arguments**   | `-a findrange -T 60 -i f.b2 -o f.c2` |
+   | **exitcode**    | `2`                                  |
+   | **working dir** | `/home/user/diamond-submit`          |
 
 In the example above, the *findrange_j3* job has failed, and the
 analyzer displays information about the job, showing that the job
@@ -365,31 +380,31 @@ that the output file contains a kickstart record, it will display the
 breakdown containing each task in the job (in this case we only have one
 task). Because **pegasus-analyzer** was not invoked with the **--quiet**
 flag, it will also display the contents of the *output* and *error*
-files (or the stdout and stderr sections of the kickstart record), which
-in this case are both empty.
+files (or the stdout and stderr sections of the kickstart record) in
+fenced code blocks, which in this case are both empty.
 
 In the case of *SUBDAG* and *subdax* jobs, **pegasus-analyzer** will
 indicate it, and show the command needed for the user to debug that
 sub-workflow. For example:
 
-::
+.. code-block:: markdown
 
-   =================subdax_black_ID000009=====================
+   ### Job: `subdax_black_ID000009`
 
-     last state: JOB_FAILURE
-           site: local
-    submit file: /home/user/run1/subdax_black_ID000009.sub
-    output file: /home/user/run1/subdax_black_ID000009.out
-     error file: /home/user/run1/subdax_black_ID000009.err
-     This job contains sub workflows!
-     Please run the command below for more information:
-     pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+   | **Field**       | **Value**                                    |
+   | --------------- | -------------------------------------------- |
+   | **Last State**  | `JOB_FAILURE`                                |
+   | **Site**        | `local`                                      |
+   | **Submit File** | `/home/user/run1/subdax_black_ID000009.sub`  |
+   | **Output File** | `/home/user/run1/subdax_black_ID000009.out`  |
+   | **Error File**  | `/home/user/run1/subdax_black_ID000009.err`  |
 
-   -----------------subdax_black_ID000009.out-----------------
+   This job contains sub workflows! Run the command below for more
+   information:
 
-   Executing condor dagman ...
-
-   -----------------subdax_black_ID000009.err-----------------
+   ```bash
+   pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+   ```
 
 tells the user the *subdax_black_ID000009* sub-workflow failed, and that
 it can be debugged by using the indicated **pegasus-analyzer** command.

@@ -136,66 +136,79 @@ workflow run directory, like in the example below:
 
 ::
 
-   $ pegasus-analyzer  /home/user/run0004
-   pegasus-analyzer: initializing...
+   $ pegasus-analyzer /home/user/run0004
 
-   ************************************Summary*************************************
+On a terminal, the report is rendered with `Rich <https://github.com/Textualize/rich>`_
+(styled headings, tables and syntax-highlighted code). When the output is
+redirected or piped, or when **--plain** is given, the same report is
+emitted as raw Markdown. The Markdown for the example above looks like
+this:
 
-    Total jobs         :     26 (100.00%)
-    # jobs succeeded   :     25 (96.15%)
-    # jobs failed      :      1 (3.84%)
-    # jobs held        :      1 (3.84%)
-    # jobs unsubmitted :      0 (0.00%)
+.. code-block:: markdown
 
-   *******************************Held jobs' details*******************************
+   ## Summary
 
-   ================================sleep_ID0000001=================================
+   | **Field**            | **Value**                  |
+   | -------------------- | -------------------------- |
+   | **Submit Directory** | `/home/user/run0004`       |
+   | **Workflow Status**  | `failure`                  |
 
-          submit file            : sleep_ID0000001.sub
-          last_job_instance_id   : 7
-          reason                 :  Error from slot1@corbusier.isi.edu:
-                                    STARTER at 128.9.64.188 failed to
-                                    send file(s) to
-                                    <128.9.64.188:62639>: error reading from
-                                    /opt/condor/8.4.8/local.corbusier/execute/dir_76205/f.out:
-                                    (errno 2) No such file or directory;
-                                   SHADOW failed to receive file(s) from <128.9.64.188:62653>
+   | **Jobs**        | **Count** |  **%** |
+   | --------------- | --------: | -----: |
+   | **Total Jobs**  |        26 |        |
+   | **Succeeded**   |        23 | 88.46% |
+   | **Failed**      |         1 |  3.85% |
+   | **Held**        |         1 |  3.85% |
+   | **Unsubmitted** |         1 |  3.85% |
 
-   ******************************Failed jobs' details******************************
+   ## Held jobs' details
 
-   ============================register_viz_glidein_7_0============================
+   ### Job: `sleep_ID0000001`
 
-    last state: POST_SCRIPT_FAILURE
-          site: local
-   submit file: /home/user/run0004/register_viz_glidein_7_0.sub
-   output file: /home/user/run0004/register_viz_glidein_7_0.out.002
-    error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+   | **Field**                | **Value**                                          |
+   | ------------------------ | -------------------------------------------------- |
+   | **Submit File**          | `sleep_ID0000001.sub`                              |
+   | **Last job_instance_id** | `7`                                                |
+   | **Reason**               | `STARTER at 128.9.64.188 failed to send file(s)`   |
 
-   -------------------------------Task #1 - Summary--------------------------------
+   ## Failed jobs' details
 
-   site        : local
-   executable  : /lfs1/software/install/pegasus/default/bin/rc-client
-   arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
-   -Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
-   exitcode    : 1
-   working dir : /lfs1/work/pegasus/run0004
+   ### Job: `findrange_ID0000003`
 
-   ---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+   | **Field**       | **Value**                                        |
+   | --------------- | ------------------------------------------------ |
+   | **Last State**  | `POST_SCRIPT_FAILED`                             |
+   | **Site**        | `local`                                          |
+   | **Submit File** | `/home/user/run0004/findrange_ID0000003.sub`     |
+   | **Output File** | `/home/user/run0004/findrange_ID0000003.out.000` |
+   | **Error File**  | `/home/user/run0004/findrange_ID0000003.err.000` |
 
-   2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
-   2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1
+   #### Task #1 — Summary
 
-In the case above, pegasus-analyzer's output contains a brief summary
+   | **Field**       | **Value**                            |
+   | --------------- | ------------------------------------ |
+   | **site**        | `local`                              |
+   | **hostname**    | `workflow.isi.edu`                   |
+   | **executable**  | `/usr/bin/findrange`                 |
+   | **arguments**   | `-a findrange -T 60 -i f.b2 -o f.c2` |
+   | **exitcode**    | `1`                                  |
+   | **working dir** | `/work/dir`                          |
+
+   **One or more workflows failed!**
+
+In the case above, pegasus-analyzer's report contains a **Summary**
 section, showing how many jobs have succeeded and how many have failed.
 If there are any held jobs, pegasus-analyzer will report the name of the
 job that was held, and the reason why, as determined from the
-dagman.out file for the workflow. The last_job_instance_id is the
+dagman.out file for the workflow, under **Held jobs' details**. The
+last job_instance_id is the
 database id for the job in the job instance table of the monitoring
-database. After that, pegasus-analyzer will print information about each
+database. After that, under **Failed jobs' details**, pegasus-analyzer
+will print information about each
 job that failed, showing its last known state, along with the location
 of its submit, output, and error files. pegasus-analyzer will also
 display any stdout and stderr from the job, as recorded in its kickstart
-record. Please consult pegasus-analyzer's man page for more examples and
+record, in fenced code blocks. Please consult pegasus-analyzer's man page for more examples and
 a detailed description of its various command-line options.
 
 .. note::
