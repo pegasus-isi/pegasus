@@ -161,6 +161,11 @@ def compute_heap_args():
 def get_pegasus_data_dir():
     """Get the path to Pegasus package data directory.
 
+    In an install this is <site-packages>/Pegasus/data, which holds the
+    contents of the source tree's share/pegasus/ under share/pegasus/ and
+    etc/ under etc/. The repository root has the same layout, so it serves
+    as the data directory when running from a source checkout.
+
     Pegasus is a namespace package, and under an editable install its
     __path__ spans both the live source tree and the CMake-installed
     site-packages copy. Only the latter has compiled Java JARs and the
@@ -171,31 +176,20 @@ def get_pegasus_data_dir():
     candidates = [Path(root) / "data" for root in Pegasus.__path__]
 
     for candidate in candidates:
-        if candidate.is_dir() and any((candidate / "java").glob("*.jar")):
+        if any((candidate / "share" / "pegasus" / "java").glob("*.jar")):
             return candidate
 
     for candidate in candidates:
-        if candidate.is_dir():
+        if (candidate / "share" / "pegasus").is_dir():
             return candidate
 
-    # Fallback: look relative to this file's location
-    # In development: packages/pegasus-python/src/Pegasus/cli/_java.py
-    # Data might be at: share/pegasus/ or src/Pegasus/data/
-    cli_dir = Path(__file__).resolve().parent
-    pegasus_dir = cli_dir.parent
-
-    # Check for src/Pegasus/data/
-    data_dir = pegasus_dir / "data"
-    if data_dir.is_dir():
-        return data_dir
-
-    # Check for repo-root share/pegasus/ (development mode)
-    # Walk up to find the repo root
-    candidate = pegasus_dir
+    # Fallback: a source checkout, e.g.
+    # <repo>/packages/pegasus-python/src/Pegasus/cli/_java.py; walk up to the
+    # repo root holding share/pegasus/
+    candidate = Path(__file__).resolve().parent
     for _ in range(10):
-        share_dir = candidate / "share" / "pegasus"
-        if share_dir.is_dir():
-            return share_dir
+        if (candidate / "share" / "pegasus").is_dir():
+            return candidate
         candidate = candidate.parent
 
     raise click.ClickException(
@@ -203,33 +197,28 @@ def get_pegasus_data_dir():
     )
 
 
+def get_pegasus_share_dir():
+    """Get the directory holding the contents of share/pegasus/ (sh/, java/,
+    schema/, htcondor/, notification/, worker-packages/)."""
+    return get_pegasus_data_dir() / "share" / "pegasus"
+
+
 def get_java_dir():
     """Get the directory containing Pegasus Java JARs."""
-    data_dir = get_pegasus_data_dir()
-
-    # In new layout: data/java/
-    java_dir = data_dir / "java"
+    java_dir = get_pegasus_share_dir() / "java"
     if java_dir.is_dir():
         return java_dir
 
-    # Fallback for old layout: share/pegasus/java/
-    if data_dir.name == "pegasus":
-        java_dir = data_dir / "java"
-        if java_dir.is_dir():
-            return java_dir
-
-    raise click.ClickException(f"Cannot locate Java JARs directory under {data_dir}")
+    raise click.ClickException(f"Cannot locate Java JARs directory {java_dir}")
 
 
 def get_schema_dir():
     """Get the directory containing Pegasus schemas."""
-    data_dir = get_pegasus_data_dir()
+    schema_dir = get_pegasus_share_dir() / "schema"
+    if schema_dir.is_dir():
+        return schema_dir
 
-    for candidate in [data_dir / "schema", data_dir / "share" / "schema"]:
-        if candidate.is_dir():
-            return candidate
-
-    raise click.ClickException(f"Cannot locate schema directory under {data_dir}")
+    raise click.ClickException(f"Cannot locate schema directory {schema_dir}")
 
 
 def build_classpath():
@@ -339,25 +328,13 @@ def get_system_properties():
     Returns a dict with keys like 'pegasus.home.sysconfdir', etc.
     """
     data_dir = get_pegasus_data_dir()
-
-    # Determine paths based on data directory layout
-    if (data_dir / "java").is_dir():
-        # New layout: data/ contains java/, schema/, etc.
-        share_dir = str(data_dir)
-        schema_dir = str(data_dir / "schema")
-        conf_dir = str(data_dir / "etc")
-    else:
-        # Old layout: share/pegasus/
-        share_dir = str(data_dir)
-        schema_dir = str(data_dir / "schema")
-        base = data_dir.parent.parent  # share/pegasus -> root
-        conf_dir = str(base / "etc")
+    share_dir = data_dir / "share" / "pegasus"
 
     bin_dir = get_bin_dir()
 
     return {
-        "pegasus.home.sysconfdir": conf_dir,
+        "pegasus.home.sysconfdir": str(data_dir / "etc"),
         "pegasus.home.bindir": bin_dir,
-        "pegasus.home.sharedstatedir": share_dir,
-        "pegasus.home.schemadir": schema_dir,
+        "pegasus.home.sharedstatedir": str(share_dir),
+        "pegasus.home.schemadir": str(share_dir / "schema"),
     }

@@ -83,16 +83,16 @@ def _main(
     bin_dir = get_bin_dir()
     base_dir = dirname(bin_dir)
 
-    # <site-packages>/Pegasus/data, holding everything that used to live
-    # under $PEGASUS_HOME/{share/pegasus,etc}
+    # <site-packages>/Pegasus/data, holding what used to live under
+    # $PEGASUS_HOME/share/pegasus (in share/pegasus) and $PEGASUS_HOME/etc
     data_dir = data.__path__[0]
     conf_dir = join(data_dir, "etc")
-    share_dir = data_dir
-    java_dir = join(data_dir, "java")
+    share_dir = join(data_dir, "share", "pegasus")
+    java_dir = join(share_dir, "java")
     # the directory Pegasus itself is importable from
     python_dir = dirname(dirname(data_dir))
     python_externals_dir = python_dir
-    schema_dir = join(data_dir, "schema")
+    schema_dir = join(share_dir, "schema")
 
     # in native packaging mode, some directories move
     if base_dir == "/usr":

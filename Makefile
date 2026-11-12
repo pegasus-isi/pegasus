@@ -18,7 +18,7 @@ BUILD_DIR   ?= _cmake_build
 # Worker is build with "C=ON JAVA=OFF WORKER=ON" flags.
 WORKER_BUILD_DIR ?= _cmake_build_worker
 DIST_DIR    ?= dist
-WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
+WORKER_DATA := share/pegasus/worker-packages
 
 # Java tooling — override via JAVA_HOME or explicit variable
 ifdef JAVA_HOME
@@ -117,8 +117,8 @@ build-go:
 	$(CMAKE) --build $(BUILD_DIR)
 
 # Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz)
-# and stage it into the Python source tree so that `make build` includes it
-# in the wheel as Pegasus/data/worker-packages/<tarball>.
+# and stage it into share/pegasus/worker-packages/ so that `make build` includes
+# it in the wheel as Pegasus/data/share/pegasus/worker-packages/<tarball>.
 # PEGASUS_BUILD_C and PEGASUS_BUILD_GO must be ON (GO defaults ON already):
 # the tarball bundles pegasus-kickstart, pegasus-cluster, pegasus-keg,
 # libinterpose.so, and the compiled pegasus-transfer binary alongside the
