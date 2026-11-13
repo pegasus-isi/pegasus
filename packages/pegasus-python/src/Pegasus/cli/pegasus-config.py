@@ -81,7 +81,6 @@ def _main(
     # where the console scripts live - resolved from the install, not from
     # sys.argv[0], which main._run_script rewrites to a bare script name
     bin_dir = get_bin_dir()
-    base_dir = dirname(bin_dir)
 
     # <site-packages>/Pegasus/data, holding what used to live under
     # $PEGASUS_HOME/share/pegasus (in share/pegasus) and $PEGASUS_HOME/etc
@@ -94,9 +93,11 @@ def _main(
     python_externals_dir = python_dir
     schema_dir = join(share_dir, "schema")
 
-    # in native packaging mode, some directories move
-    if base_dir == "/usr":
-        conf_dir = "/etc/pegasus"
+    # GH-2276 A system package (RPM/deb) links the planner's pegasus.properties to the
+    # site configuration directory (/etc/pegasus); report that directory.
+    props = join(conf_dir, "pegasus.properties")
+    if os.path.islink(props):
+        conf_dir = dirname(os.path.realpath(props))
 
     # classpath
     jars = sorted(glob(join(java_dir, "*.jar")))
