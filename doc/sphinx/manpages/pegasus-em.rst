@@ -17,6 +17,9 @@ Commands
 **server** [-d] [-p *PORT*]
    Start the ensemble manager server. It listens on 127.0.0.1 only.
 
+**stop**
+   Stop the ensemble manager server.
+
 **ensembles**
    List ensembles.
 
@@ -63,6 +66,11 @@ Commands
 
 **triggers** *ENSEMBLE* [-l]
    List the triggers in an ensemble.
+
+**delete** *ENSEMBLE* [-t *TRIGGER*]
+   Delete an ensemble with its triggers and workflow records, or only
+   *TRIGGER*. An ensemble with planning or running workflows cannot be
+   deleted. Submit directories and other files are not removed.
 
 Common Options
 ==============
