@@ -276,6 +276,41 @@ class TestTriggerManager:
             1, "test-trigger"
         )
 
+    def test_stop_trigger_not_in_memory(self, mocker):
+        mocker.patch("Pegasus.db.ensembles.Triggers.delete_trigger")
+        mgr = TriggerManager()
+        mgr.trigger_dao = Triggers(None)
+
+        # e.g. after a server restart
+        mgr.stop_trigger(
+            Pegasus.db.schema.Trigger(_id=1, ensemble_id=1, name="test-trigger")
+        )
+
+        Pegasus.db.ensembles.Triggers.delete_trigger.assert_called_once_with(
+            1, "test-trigger"
+        )
+
+    def test_run_stops_deleted_trigger(self, mocker):
+        mocker.patch("Pegasus.db.connection.connect", return_value=None)
+        mocker.patch("Pegasus.db.ensembles.Triggers.list_triggers", return_value=[])
+        shutdown = mocker.patch(
+            "Pegasus.service.ensembles.trigger.TriggerThread.shutdown"
+        )
+
+        mgr = TriggerManager()
+        mgr.running[(1, "deleted")] = TriggerThread(
+            ensemble_id=1,
+            ensemble="test-ens",
+            trigger="deleted",
+            workflow_script="/wf.py",
+        )
+
+        with pytest.raises(AttributeError, match="has no attribute 'close'"):
+            mgr.run()
+
+        shutdown.assert_called_once_with()
+        assert mgr.running == {}
+
     def test_get_tname(self):
         trigger = Pegasus.db.schema.Trigger(
             _id=1,

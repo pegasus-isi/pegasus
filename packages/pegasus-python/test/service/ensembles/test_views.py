@@ -491,20 +491,12 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
             pre_callable=self.pre_callable,
         )
 
-        # check status code and msg
-        assert rv.status_code == 202
+        assert rv.status_code == 200
         assert (
             rv.json["message"]
-            == "ensemble: test-ensemble, trigger: test-trigger marked for deletion"
+            == "ensemble: test-ensemble, trigger: test-trigger deleted"
         )
-
-        # check trigger state
-        trigger_to_delete = (
-            g.session.execute(select(schema.Trigger).where(schema.Trigger._id == 1))
-            .scalars()
-            .one()
-        )
-        assert trigger_to_delete.state == "STOPPED"
+        assert g.session.execute(select(schema.Trigger)).scalars().all() == []
 
     @pytest.mark.parametrize(
         "ensemble,trigger,exception_msg,status_code",
@@ -537,6 +529,64 @@ class TestTriggerRoutes(NoAuthFlaskTestCase):
 
         assert rv.status_code == status_code
         assert exception_msg in rv.json["message"]
+
+
+class TestEnsembleRoutes(NoAuthFlaskTestCase):
+    @staticmethod
+    def add_workflow(state):
+        def pre_callable():
+            NoAuthFlaskTestCase.pre_callable()
+            now = datetime.datetime.now(datetime.timezone.utc)
+            g.session.add(
+                schema.EnsembleWorkflow(
+                    ensemble_id=1,
+                    name="wf",
+                    basedir="/tmp",
+                    created=now,
+                    updated=now,
+                    state=state,
+                    priority=0,
+                    plan_command="./plan.sh",
+                )
+            )
+            g.session.commit()
+
+        return pre_callable
+
+    @pytest.mark.parametrize("state", ["READY", "QUEUED", "SUCCESSFUL", "FAILED"])
+    def test_route_delete_ensemble(self, mocker, emapp_client, state):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.delete_context(
+            "/ensembles/test-ensemble", pre_callable=self.add_workflow(state)
+        )
+
+        assert rv.status_code == 200
+        assert rv.json["message"] == "ensemble: test-ensemble deleted"
+        for table in (schema.Ensemble, schema.EnsembleWorkflow, schema.Trigger):
+            assert g.session.execute(select(table)).scalars().all() == []
+
+    @pytest.mark.parametrize("state", ["PLANNING", "RUNNING"])
+    def test_route_delete_busy_ensemble(self, mocker, emapp_client, state):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.delete_context(
+            "/ensembles/test-ensemble", pre_callable=self.add_workflow(state)
+        )
+
+        assert rv.status_code == 409
+        assert "planning or running workflows: wf" in rv.json["message"]
+        assert len(g.session.execute(select(schema.Ensemble)).scalars().all()) == 1
+
+    def test_route_delete_nonexistent_ensemble(self, mocker, emapp_client):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.delete_context(
+            "/ensembles/nope", pre_callable=self.pre_callable
+        )
+
+        assert rv.status_code == 404
+        assert "No such ensemble: nope" in rv.json["message"]
 
 
 @pytest.mark.parametrize(

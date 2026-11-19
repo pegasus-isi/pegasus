@@ -107,6 +107,13 @@ def route_update_ensemble(name):
     return api.json_response(e.get_object())
 
 
+@emapp.route("/ensembles/<string:name>", methods=["DELETE"])
+def route_delete_ensemble(name):
+    dao = Ensembles(g.session)
+    dao.delete_ensemble(dao.get_ensemble(g.user.username, name))
+    return api.json_response({"message": f"ensemble: {name} deleted"})
+
+
 @emapp.route("/ensembles/<string:name>/workflows", methods=["GET"])
 def route_list_ensemble_workflows(name):
     dao = Ensembles(g.session)
@@ -428,23 +435,15 @@ def route_create_file_pattern_trigger(ensemble):
     "/ensembles/<string:ensemble>/triggers/<string:trigger>", methods=["DELETE"]
 )
 def route_delete_trigger(ensemble, trigger):
-    # verify that ensemble exists for user
-    e_dao = Ensembles(g.session)
+    ensemble_id = Ensembles(g.session).get_ensemble(g.user.username, ensemble).id
 
-    # raises EMError code 404 if does not exist
-    ensemble_id = e_dao.get_ensemble(g.user.username, ensemble).id
-
-    # update trigger state to be STOPPED so that the TriggerManager can
-    # handle it appropriately
     t_dao = Triggers(g.session)
-
-    # make sure get_trigger raises 404 if nothing found
-    trigger_id = t_dao.get_trigger(ensemble_id, trigger)._id
-    t_dao.update_state(ensemble_id, trigger_id, "STOPPED")
+    t_dao.get_trigger(ensemble_id, trigger)  # 404 if missing
+    # TriggerManager stops the thread once the row is gone
+    t_dao.delete_trigger(ensemble_id, trigger)
 
     return api.json_response(
-        {"message": f"ensemble: {ensemble}, trigger: {trigger} marked for deletion"},
-        status_code=202,
+        {"message": f"ensemble: {ensemble}, trigger: {trigger} deleted"}
     )
 
 
