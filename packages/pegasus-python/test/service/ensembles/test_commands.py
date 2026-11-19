@@ -353,6 +353,8 @@ class TestDeleteCommand:
             (["ens"], "/ensembles/ens"),
             (["ens", "-t", "trig"], "/ensembles/ens/triggers/trig"),
             (["--trigger", "trig", "ens"], "/ensembles/ens/triggers/trig"),
+            (["ens", "-f"], "/ensembles/ens?force=true"),
+            (["--force", "ens"], "/ensembles/ens?force=true"),
         ],
     )
     def test_delete(self, mocker, capsys, args, path):
@@ -366,12 +368,61 @@ class TestDeleteCommand:
         delete.assert_called_once_with(path)
         assert capsys.readouterr().out == "deleted\n"
 
-    @pytest.mark.parametrize("args", [[], ["a", "b"]])
-    def test_requires_one_ensemble(self, args):
+    @pytest.mark.parametrize("args", [[], ["a", "b"], ["a", "-f", "-t", "trig"]])
+    def test_invalid_args(self, args):
         cmd = commands.DeleteCommand()
         cmd.parse(args)
         with pytest.raises(SystemExit):
             cmd.run()
+
+
+class TestAbortCommand:
+    def test_registered(self):
+        assert dict(commands.EnsembleCommand.commands)["abort"] is commands.AbortCommand
+
+    def test_abort(self, mocker, capsys):
+        post = mocker.patch.object(commands.AbortCommand, "post")
+        post.return_value.json.return_value = {"state": "ABORTED"}
+
+        cmd = commands.AbortCommand()
+        cmd.parse(["ens.wf"])
+        cmd.run()
+
+        post.assert_called_once_with(
+            "/ensembles/ens/workflows/wf", data={"state": "ABORTED"}
+        )
+        assert "ABORTED" in capsys.readouterr().out
+
+
+class TestPauseCommand:
+    @pytest.mark.parametrize(
+        "args,data,response,out",
+        [
+            (["ens"], {"state": "PAUSED"}, {"state": "PAUSED"}, "State: PAUSED\n"),
+            (
+                ["-a", "ens"],
+                {"state": "PAUSED", "abort": "true"},
+                {"state": "PAUSED", "aborted": ["w1", "w2"]},
+                "State: PAUSED\nAborted: w1, w2\n",
+            ),
+            (
+                ["--abort", "ens"],
+                {"state": "PAUSED", "abort": "true"},
+                {"state": "PAUSED", "aborted": []},
+                "State: PAUSED\nAborted: none\n",
+            ),
+        ],
+    )
+    def test_pause(self, mocker, capsys, args, data, response, out):
+        post = mocker.patch.object(commands.PauseCommand, "post")
+        post.return_value.json.return_value = response
+
+        cmd = commands.PauseCommand()
+        cmd.parse(args)
+        cmd.run()
+
+        post.assert_called_once_with("/ensembles/ens", data=data)
+        assert capsys.readouterr().out == out
 
 
 def test_port_available():

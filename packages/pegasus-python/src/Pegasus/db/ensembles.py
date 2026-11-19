@@ -73,6 +73,13 @@ EnsembleWorkflowStates = States(
     ]
 )
 
+ABORTABLE_STATES = (
+    EnsembleWorkflowStates.READY,
+    EnsembleWorkflowStates.PLANNING,
+    EnsembleWorkflowStates.QUEUED,
+    EnsembleWorkflowStates.RUNNING,
+)
+
 
 class Ensemble(EnsembleBase):
     def __init__(self, username, name):
@@ -155,7 +162,11 @@ class EnsembleWorkflow(EnsembleBase):
         #   RUN_FAILED -> READY
         #   FAILED -> QUEUED
         #   FAILED -> READY
-        if self.state == EnsembleWorkflowStates.PLAN_FAILED:
+        #   READY|PLANNING|QUEUED|RUNNING -> ABORTED
+        if state == EnsembleWorkflowStates.ABORTED:
+            if self.state not in ABORTABLE_STATES:
+                raise EMError(f"Cannot abort workflow in {self.state} state")
+        elif self.state == EnsembleWorkflowStates.PLAN_FAILED:
             if state != EnsembleWorkflowStates.READY:
                 raise EMError("Can only replan workflows in PLAN_FAILED state")
         elif self.state == EnsembleWorkflowStates.RUN_FAILED:
@@ -324,8 +335,8 @@ class Ensembles:
         if busy:
             raise EMError(
                 f"Ensemble {ensemble.name} has planning or running workflows: "
-                f"{', '.join(busy)}. Wait for them to finish, or remove them "
-                "with pegasus-remove.",
+                f"{', '.join(busy)}. Wait for them to finish, or use --force "
+                "to abort them.",
                 409,
             )
 

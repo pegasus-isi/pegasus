@@ -9,13 +9,16 @@ from flask import g, make_response, request, url_for
 
 from Pegasus.db import connection
 from Pegasus.db.ensembles import (
+    ABORTABLE_STATES,
     EMError,
     Ensembles,
+    EnsembleStates,
     EnsembleWorkflowStates,
     Triggers,
     TriggerType,
 )
 from Pegasus.service.ensembles import api, emapp
+from Pegasus.service.ensembles.manager import abort_workflow
 from Pegasus.service.lifecycle import authenticate
 
 log = logging.getLogger(__name__)
@@ -104,13 +107,36 @@ def route_update_ensemble(name):
 
     g.session.commit()
 
-    return api.json_response(e.get_object())
+    result = e.get_object()
+    if request.form.get("abort") == "true":
+        # committed above, so the manager can't start new workflows meanwhile
+        if e.state == EnsembleStates.ACTIVE:
+            raise EMError("Pause the ensemble before aborting its workflows", 400)
+        result["aborted"] = abort_ensemble_workflows(dao, e)
+
+    return api.json_response(result)
+
+
+def abort_ensemble_workflows(dao, ensemble):
+    """Abort all unfinished workflows; return their names."""
+    aborted = []
+    for w in dao.list_ensemble_workflows(ensemble.id):
+        if w.state in ABORTABLE_STATES:
+            abort_workflow(dao, w)
+            g.session.commit()  # keep completed aborts if a later one fails
+            aborted.append(w.name)
+    return aborted
 
 
 @emapp.route("/ensembles/<string:name>", methods=["DELETE"])
 def route_delete_ensemble(name):
     dao = Ensembles(g.session)
-    dao.delete_ensemble(dao.get_ensemble(g.user.username, name))
+    e = dao.get_ensemble(g.user.username, name)
+
+    if request.args.get("force") == "true":
+        abort_ensemble_workflows(dao, e)
+
+    dao.delete_ensemble(e)
     return api.json_response({"message": f"ensemble: {name} deleted"})
 
 
@@ -175,7 +201,9 @@ def route_update_ensemble_workflow(ensemble, workflow):
         w.set_priority(priority)
 
     state = request.form.get("state", None)
-    if state is not None:
+    if state == EnsembleWorkflowStates.ABORTED:
+        abort_workflow(dao, w)
+    elif state is not None:
         w.change_state(state)
 
     w.set_updated()

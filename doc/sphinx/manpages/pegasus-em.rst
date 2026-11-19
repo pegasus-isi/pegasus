@@ -26,8 +26,11 @@ Commands
 **create** *ENSEMBLE* [-R *MAX_RUNNING*] [-P *MAX_PLANNING*]
    Create an ensemble.
 
-**pause** *ENSEMBLE*
-   Pause ensemble.
+**pause** *ENSEMBLE* [-a]
+   Pause ensemble: no new workflows are planned or run. Workflows already
+   planning or running continue, and triggers keep adding workflows. With
+   **-a**/**--abort**, also abort all ready, planning, queued and running
+   workflows (see **abort**).
 
 **activate** *ENSEMBLE*
    Activate a paused ensemble.
@@ -49,6 +52,11 @@ Commands
 **rerun** *ENSEMBLE.WORKFLOW*
    Rerun a failed workflow.
 
+**abort** *ENSEMBLE.WORKFLOW*
+   Abort a workflow that is ready, planning, queued or running. A running
+   workflow is removed with **pegasus-remove**; a planning workflow's planner
+   runs to completion and its result is ignored.
+
 **status** *ENSEMBLE.WORKFLOW*
    Display the status of a workflow.
 
@@ -67,10 +75,11 @@ Commands
 **triggers** *ENSEMBLE* [-l]
    List the triggers in an ensemble.
 
-**delete** *ENSEMBLE* [-t *TRIGGER*]
+**delete** *ENSEMBLE* [-t *TRIGGER* \| -f]
    Delete an ensemble with its triggers and workflow records, or only
    *TRIGGER*. An ensemble with planning or running workflows cannot be
-   deleted. Submit directories and other files are not removed.
+   deleted unless **-f**/**--force** is given, which aborts them first.
+   Submit directories and other files are not removed.
 
 Common Options
 ==============

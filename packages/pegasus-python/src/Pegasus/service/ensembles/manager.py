@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import shlex
 import subprocess
 import threading
 import time
@@ -263,6 +264,18 @@ class WorkflowProcessor:
 
         runscript(f"pegasus-run {submitdir} >>{logfile} 2>&1", env=get_script_env())
 
+    def remove(self):
+        "Remove the running workflow using pegasus-remove"
+        logfile = self.workflow.get_logfile()
+        try:
+            runscript(
+                f"pegasus-remove {shlex.quote(self.workflow.submitdir)} "
+                f">>{shlex.quote(logfile)} 2>&1",
+                env=get_script_env(),
+            )
+        except EMError:
+            raise EMError(f"pegasus-remove failed, see {logfile}") from None
+
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
         wf_uuid = self.workflow.wf_uuid
@@ -338,6 +351,18 @@ class WorkflowProcessor:
         if ws is None or ws.state == "WORKFLOW_STARTED":
             raise EMError("Workflow is running")
         return ws.status == 0
+
+
+def abort_workflow(dao, workflow):
+    """Abort a workflow; a running DAG is removed with pegasus-remove.
+
+    A planning workflow is only marked ABORTED: its planner runs to completion
+    and the result is ignored.
+    """
+    if workflow.state == EnsembleWorkflowStates.RUNNING:
+        WorkflowProcessor(dao, workflow).remove()
+    workflow.change_state(EnsembleWorkflowStates.ABORTED)
+    workflow.set_updated()
 
 
 class EnsembleProcessor:
@@ -478,6 +503,11 @@ class EnsembleProcessor:
 
         log.info(f"Workflow {workflow.name} is no longer running")
         self.running -= 1
+
+        # may have been aborted since this loop started
+        self.dao.session.refresh(workflow)
+        if workflow.state != EnsembleWorkflowStates.RUNNING:
+            return
 
         if p.running_successful():
             log.info(f"Workflow {workflow.name} was successful")
