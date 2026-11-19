@@ -313,6 +313,34 @@ class Ensembles:
         self.session.flush()
         return ensemble
 
+    def delete_ensemble(self, ensemble):
+        """Delete an ensemble and its workflow and trigger records."""
+        active = (EnsembleWorkflowStates.PLANNING, EnsembleWorkflowStates.RUNNING)
+        busy = [
+            w.name
+            for w in self.list_ensemble_workflows(ensemble.id)
+            if w.state in active
+        ]
+        if busy:
+            raise EMError(
+                f"Ensemble {ensemble.name} has planning or running workflows: "
+                f"{', '.join(busy)}. Wait for them to finish, or remove them "
+                "with pegasus-remove.",
+                409,
+            )
+
+        # children first: foreign keys are enforced
+        self.session.execute(
+            delete(db.schema.Trigger).where(
+                db.schema.Trigger.ensemble_id == ensemble.id
+            )
+        )
+        self.session.execute(
+            delete(EnsembleWorkflow).where(EnsembleWorkflow.ensemble_id == ensemble.id)
+        )
+        self.session.delete(ensemble)
+        self.session.commit()
+
     def list_ensemble_workflows(self, ensemble_id):
         q = select(EnsembleWorkflow)
         q = q.where(EnsembleWorkflow.ensemble_id == ensemble_id)

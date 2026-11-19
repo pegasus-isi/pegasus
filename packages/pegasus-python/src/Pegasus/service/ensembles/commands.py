@@ -3,6 +3,7 @@ import getpass
 import json
 import logging
 import os
+import signal
 import socket
 import sys
 import time
@@ -300,6 +301,37 @@ class ServerCommand(LoggingCommand):
                 remove_em_runtime()
 
         log.info("Exiting")
+
+
+class StopCommand(Command):
+    description = "Stop ensemble manager"
+    usage = "Usage: %prog stop"
+
+    def run(self):
+        if self.args:
+            self.parser.error("Invalid argument")
+
+        runtime = read_em_runtime() or {}
+        pid, port = runtime.get("pid"), runtime.get("port")
+
+        # a dead pid or a free port means the runtime file is stale
+        if not is_process_alive(pid) or not port or _port_available(EM_HOST, port):
+            if runtime:
+                remove_em_runtime(pid=pid)
+            print("Ensemble manager is not running")
+            return
+
+        os.kill(pid, signal.SIGTERM)
+        for _ in range(50):
+            if not is_process_alive(pid):
+                break
+            time.sleep(0.2)
+        else:
+            print(f"ERROR: Ensemble manager (pid {pid}) did not stop")
+            sys.exit(1)
+
+        remove_em_runtime(pid=pid)
+        print(f"Stopped ensemble manager (pid {pid}, port {port})")
 
 
 def formatts(ts):
@@ -844,7 +876,30 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
         print(response.json()["message"])
 
 
-# TODO: StopTriggerCommand
+class DeleteCommand(EnsembleClientCommand):
+    description = "Delete an ensemble, or one of its triggers"
+    usage = "Usage: %prog delete ENSEMBLE [-t TRIGGER]"
+
+    def __init__(self):
+        EnsembleClientCommand.__init__(self)
+        self.parser.add_option(
+            "-t",
+            "--trigger",
+            action="store",
+            dest="trigger",
+            default=None,
+            help="Delete only this trigger",
+        )
+
+    def run(self):
+        if len(self.args) != 1:
+            self.parser.error("Specify ENSEMBLE")
+
+        path = f"/ensembles/{self.args[0]}"
+        if self.options.trigger:
+            path += f"/triggers/{self.options.trigger}"
+
+        print(self.delete(path).json()["message"])
 
 
 class ListTriggersCommand(EnsembleClientCommand):
@@ -904,6 +959,7 @@ class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
     commands = [
         ("server", ServerCommand),
+        ("stop", StopCommand),
         ("ensembles", EnsemblesCommand),
         ("create", CreateCommand),
         ("pause", PauseCommand),
@@ -919,6 +975,7 @@ class EnsembleCommand(CompoundCommand):
         ("cron-trigger", CronTriggerCommand),
         ("file-pattern-trigger", FilePatternTriggerCommand),
         ("triggers", ListTriggersCommand),
+        ("delete", DeleteCommand),
     ]
     aliases = {
         "c": "create",

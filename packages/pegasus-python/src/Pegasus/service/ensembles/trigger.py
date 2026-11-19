@@ -71,6 +71,11 @@ class TriggerManager(threading.Thread):
                         self.stop_trigger(t)
                     elif t.state == "STOPPED":
                         self.stop_trigger(t)
+
+                # stop threads whose trigger rows were deleted
+                for t_name in set(self.running) - {self.get_tname(t) for t in triggers}:
+                    self.log.debug(f"{t_name} deleted, stopping it")
+                    self.running.pop(t_name).shutdown()
             finally:
                 session.close()
 
@@ -125,8 +130,9 @@ class TriggerManager(threading.Thread):
         # using reference to trigger, tell trigger to shutdown
         target_trigger = TriggerManager.get_tname(trigger)
         self.log.debug(f"stopping {target_trigger}")
-        self.running[target_trigger].shutdown()
-        del self.running[target_trigger]
+        t = self.running.pop(target_trigger, None)
+        if t:
+            t.shutdown()
 
         # remove entry from database
         self.trigger_dao.delete_trigger(trigger.ensemble_id, trigger.name)

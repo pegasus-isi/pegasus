@@ -18,6 +18,7 @@ from Pegasus.service.ensembles.commands import (
     FilePatternTriggerCommand,
     ListTriggersCommand,
     ServerCommand,
+    StopCommand,
     _compute_em_port,
     emapp,
     resolve_client_port,
@@ -294,6 +295,83 @@ class TestServerCommand:
         with pytest.raises(SystemExit):
             self._run("--port", "18128")
         assert _config.read_em_runtime() is None
+
+
+class TestStopCommand:
+    def _run(self):
+        cmd = StopCommand()
+        cmd.parse([])
+        cmd.run()
+
+    def test_not_running(self, pegasus_dir, capsys):
+        self._run()
+        assert "not running" in capsys.readouterr().out
+
+    @pytest.mark.parametrize("alive,port_free", [(False, False), (True, True)])
+    def test_stale_runtime_removed(self, pegasus_dir, mocker, capsys, alive, port_free):
+        _config.write_em_runtime(18128, "tok", pid=os.getpid() + 1)
+        mocker.patch.object(commands, "is_process_alive", return_value=alive)
+        mocker.patch.object(commands, "_port_available", return_value=port_free)
+        kill = mocker.patch("os.kill")
+
+        self._run()
+
+        kill.assert_not_called()
+        assert _config.read_em_runtime() is None
+        assert "not running" in capsys.readouterr().out
+
+    def test_stops_server(self, pegasus_dir, mocker, capsys):
+        pid = os.getpid() + 1
+        _config.write_em_runtime(18128, "tok", pid=pid)
+        # alive for the initial check, then exits after SIGTERM
+        mocker.patch.object(commands, "is_process_alive", side_effect=[True, False])
+        mocker.patch.object(commands, "_port_available", return_value=False)
+        kill = mocker.patch("os.kill")
+
+        self._run()
+
+        kill.assert_called_once_with(pid, commands.signal.SIGTERM)
+        assert _config.read_em_runtime() is None
+        assert f"Stopped ensemble manager (pid {pid}" in capsys.readouterr().out
+
+    def test_server_does_not_stop(self, pegasus_dir, mocker):
+        _config.write_em_runtime(18128, "tok", pid=os.getpid() + 1)
+        mocker.patch.object(commands, "is_process_alive", return_value=True)
+        mocker.patch.object(commands, "_port_available", return_value=False)
+        mocker.patch("os.kill")
+        mocker.patch.object(commands.time, "sleep")
+
+        with pytest.raises(SystemExit):
+            self._run()
+        assert _config.read_em_runtime() is not None
+
+
+class TestDeleteCommand:
+    @pytest.mark.parametrize(
+        "args,path",
+        [
+            (["ens"], "/ensembles/ens"),
+            (["ens", "-t", "trig"], "/ensembles/ens/triggers/trig"),
+            (["--trigger", "trig", "ens"], "/ensembles/ens/triggers/trig"),
+        ],
+    )
+    def test_delete(self, mocker, capsys, args, path):
+        delete = mocker.patch.object(commands.DeleteCommand, "delete")
+        delete.return_value.json.return_value = {"message": "deleted"}
+
+        cmd = commands.DeleteCommand()
+        cmd.parse(args)
+        cmd.run()
+
+        delete.assert_called_once_with(path)
+        assert capsys.readouterr().out == "deleted\n"
+
+    @pytest.mark.parametrize("args", [[], ["a", "b"]])
+    def test_requires_one_ensemble(self, args):
+        cmd = commands.DeleteCommand()
+        cmd.parse(args)
+        with pytest.raises(SystemExit):
+            cmd.run()
 
 
 def test_port_available():

@@ -541,6 +541,9 @@ class EnsembleManager(threading.Thread):
             try:
                 dao = Ensembles(session)
                 self.loop_once(dao)
+            except Exception:
+                # e.g. an ensemble deleted mid-loop; keep the manager alive
+                log.exception("Error processing ensembles")
             finally:
                 session.close()
             time.sleep(self.interval)
