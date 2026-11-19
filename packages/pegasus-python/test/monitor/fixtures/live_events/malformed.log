@@ -1,0 +1,4 @@
+1700000000 too few fields
+1700000000 compute_ID0000001 JOB_SUCCESS not-an-int local - 1
+1700000000 INTERNAL *** DAGMAN_STARTED ***
+not-a-timestamp compute_ID0000001 EXECUTE 123.0 local - 1

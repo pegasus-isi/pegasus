@@ -1,0 +1,104 @@
+{
+  "description": "A healthy sub-workflow sampled 2 s after proc_inner_a left the queue and 1 s before DAGMan read its termination. Read stalled:true, no_scheduler_activity.",
+  "source": "2026-11-10 trial, HTCondor 25.14.1, Pegasus 6.0.0.dev0, monitor at 8663f4ac7; fixtures-extra/FALSE-POSITIVE-healthy-subworkflow-no_scheduler_activity.json, hier3-sub/condor_q.attrs.midrun.txt and the sub-workflow's dagman.out",
+  "observed_at_epoch": 1794340777.2946048,
+  "workflow": {
+    "wf_uuid": "f999ffb2-b126-4511-b858-467ba0e629c0",
+    "root_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c"
+  },
+  "started_at": 1794340642,
+  "jobs": [
+    {
+      "exec_job_id": "proc_inner_a",
+      "state": "EXECUTE",
+      "timestamp": 1794340685,
+      "scheduler_id": "395.0"
+    },
+    {
+      "exec_job_id": "stage_in_remote_local_0_0",
+      "state": "POST_SCRIPT_SUCCESS",
+      "timestamp": 1794340673,
+      "scheduler_id": "394.0"
+    },
+    {
+      "exec_job_id": "create_dir_pm-inner_0_local",
+      "state": "POST_SCRIPT_SUCCESS",
+      "timestamp": 1794340653,
+      "scheduler_id": "392.0"
+    },
+    {
+      "exec_job_id": "register_local_1_0",
+      "state": null
+    },
+    {
+      "exec_job_id": "register_local_0_0",
+      "state": null
+    },
+    {
+      "exec_job_id": "stage_out_local_local_1_0",
+      "state": null
+    },
+    {
+      "exec_job_id": "stage_out_local_local_0_0",
+      "state": null
+    },
+    {
+      "exec_job_id": "proc_inner_b",
+      "state": null
+    }
+  ],
+  "queue": {
+    "comment": "Rows as condor_q.attrs.midrun.txt recorded them 80 s earlier; 395 had left the queue by this sample. pegasus_root_wf_uuid is from the submit files that created the rows.",
+    "own": [],
+    "related": [
+      {
+        "ClusterId": 385,
+        "ProcId": 0,
+        "JobUniverse": 7,
+        "JobStatus": 2,
+        "Cmd": "/usr/lib/pegasus/venv/bin/pegasus-dagman",
+        "Iwd": "/pmtrial/work-fixes/hier3/runs/submit/pegasus/pm-root/run0001",
+        "pegasus_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c",
+        "pegasus_root_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c"
+      },
+      {
+        "ClusterId": 391,
+        "ProcId": 0,
+        "JobUniverse": 7,
+        "JobStatus": 2,
+        "Cmd": "/usr/bin/condor_dagman",
+        "Iwd": "/pmtrial/work-fixes/hier3/runs/submit/pegasus/pm-root/run0001/00/00/./pm-inner_subwf",
+        "DAGManJobId": 385,
+        "pegasus_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c",
+        "pegasus_root_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c"
+      }
+    ],
+    "left": {
+      "ClusterId": 395,
+      "ProcId": 0,
+      "JobUniverse": 5,
+      "JobStatus": 2,
+      "DAGNodeName": "proc_inner_a",
+      "Cmd": "/pmtrial/work-fixes/hier3/runs/submit/pegasus/pm-root/run0001/00/00/./pm-inner_subwf.000/00/00/proc_inner_a.sh",
+      "DAGManJobId": 391,
+      "pegasus_wf_uuid": "f999ffb2-b126-4511-b858-467ba0e629c0",
+      "pegasus_root_wf_uuid": "61523dfc-5fa8-49d0-ba93-a243f2332d1c"
+    }
+  },
+  "submit_dir": "/pmtrial/work-fixes/hier3/runs/submit/pegasus/pm-root/run0001/00/00/pm-inner_subwf.000",
+  "local": {
+    "comment": "dagman.out was last written at 19:58:08 (ULOG_EXECUTE of 395) and next at 19:59:38. The schedd wrote the termination of 395 to the nodes log at 19:59:35.",
+    "dagman_out_mtime": 1794340688,
+    "nodes_log_mtime": 1794340775
+  },
+  "captured_stall": {
+    "stalled": true,
+    "reason": "no_scheduler_activity",
+    "seconds_since_progress": 92.2946047782898,
+    "scheduler": {
+      "queue_queried": true,
+      "dagman_in_queue": false,
+      "jobs_in_queue": 0
+    }
+  }
+}

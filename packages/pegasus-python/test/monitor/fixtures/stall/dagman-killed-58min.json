@@ -1,0 +1,61 @@
+{
+  "description": "condor_dagman killed with -9 at 1794340308. The pegasus-dagman wrapper job stayed running; the orphaned job ended 32 s later. Read stalled:false, jobs_running, 58 minutes on.",
+  "source": "2026-11-10 trial, HTCondor 25.14.1, Pegasus 6.0.0.dev0, monitor at 8663f4ac7; fixtures-extra/MISSED-dagman-killed-58min.json and dead-kill9/, and jobstate.log, dagman.out and nodes.log of the run",
+  "observed_at_epoch": 1794343818.7049649,
+  "workflow": {
+    "wf_uuid": "59122258-e1d9-4744-9015-edb7bafaea2f",
+    "root_wf_uuid": "59122258-e1d9-4744-9015-edb7bafaea2f"
+  },
+  "started_at": 1794340256,
+  "jobs": [
+    {
+      "exec_job_id": "proc_preprocess",
+      "state": "EXECUTE",
+      "timestamp": 1794340294,
+      "scheduler_id": "384.0"
+    },
+    {
+      "exec_job_id": "create_dir_pm-zombie_0_local",
+      "state": "POST_SCRIPT_SUCCESS",
+      "timestamp": 1794340267,
+      "scheduler_id": "382.0"
+    },
+    {
+      "exec_job_id": "stage_in_local_local_0_0",
+      "state": "POST_SCRIPT_SUCCESS",
+      "timestamp": 1794340282,
+      "scheduler_id": "383.0"
+    }
+  ],
+  "unsubmitted_jobs": 14,
+  "queue": {
+    "own": [
+      {
+        "ClusterId": 381,
+        "ProcId": 0,
+        "JobUniverse": 7,
+        "JobStatus": 2,
+        "Cmd": "/usr/lib/pegasus/venv/bin/pegasus-dagman",
+        "Iwd": "/pmtrial/work-fixes/dead-kill9/runs/submit/pegasus/pm-zombie/run0001",
+        "pegasus_wf_uuid": "59122258-e1d9-4744-9015-edb7bafaea2f",
+        "pegasus_root_wf_uuid": "59122258-e1d9-4744-9015-edb7bafaea2f"
+      }
+    ],
+    "related": []
+  },
+  "local": {
+    "comment": "File mtimes as left on disk. dagman.out ends at 19:51:37, 11 s before the kill. The schedd wrote the orphaned job's termination to the nodes log at 19:52:20, with DAGMan dead.",
+    "dagman_out_mtime": 1794340297,
+    "nodes_log_mtime": 1794340340
+  },
+  "captured_stall": {
+    "stalled": false,
+    "reason": "jobs_running",
+    "seconds_since_progress": 3524.704964876175,
+    "scheduler": {
+      "queue_queried": true,
+      "dagman_in_queue": true,
+      "jobs_in_queue": 0
+    }
+  }
+}

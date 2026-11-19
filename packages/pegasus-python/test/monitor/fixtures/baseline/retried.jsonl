@@ -1,0 +1,5 @@
+{"event_type":"workflow_start","timestamp":1300.0,"wf_uuid":"00000000-0000-4000-8000-000000000004","dax_label":"retried","user":"test-user","planner_version":"test","submit_dir":"SANITIZED"}
+{"event_type":"jobs_init","timestamp":1300.0,"wf_uuid":"00000000-0000-4000-8000-000000000004","total_jobs":1,"jobs":[{"job_id":4,"exec_job_id":"compute_retry","type_desc":"compute"}]}
+{"event_type":"job_state","timestamp":1301.0,"wf_uuid":"00000000-0000-4000-8000-000000000004","job_id":4,"job_instance_id":40,"job_submit_seq":0,"jobstate_submit_seq":0,"exec_job_id":"compute_retry","type_desc":"compute","state":"JOB_FAILURE","exitcode":256}
+{"event_type":"job_state","timestamp":1302.0,"wf_uuid":"00000000-0000-4000-8000-000000000004","job_id":4,"job_instance_id":41,"job_submit_seq":1,"jobstate_submit_seq":0,"exec_job_id":"compute_retry","type_desc":"compute","state":"SUBMIT"}
+{"event_type":"job_state","timestamp":1303.0,"wf_uuid":"00000000-0000-4000-8000-000000000004","job_id":4,"job_instance_id":41,"job_submit_seq":1,"jobstate_submit_seq":1,"exec_job_id":"compute_retry","type_desc":"compute","state":"JOB_SUCCESS","exitcode":0}

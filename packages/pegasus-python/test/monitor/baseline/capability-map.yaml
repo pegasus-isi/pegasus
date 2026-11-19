@@ -1,0 +1,156 @@
+schema_version: 1
+source_document: /Users/stealey/GitHub/pegasusai/workflow-monitor/DATA_SOURCES.md
+source_commit: 358d7ff22231882000e3741121a2ac92745831ef
+capabilities:
+  - id: braindump-metadata
+    source_section: '1. braindump.yml'
+    work_packages: [WP1, WP2, WP6b, WP7]
+    v1_status: required
+  - id: stampede-sqlite-state-roster-attempts-transitions
+    source_section: '2. stampede.db (SQLite)'
+    work_packages: [WP1, WP2, WP4, WP6a, WP7]
+    v1_status: required
+  - id: htcondor-queue
+    source_section: '3. HTCondor Queue (condor_q)'
+    work_packages: [WP4, WP5, WP6a, WP6b, WP7]
+    v1_status: optional_enrichment
+  - id: htcondor-history
+    source_section: '4. HTCondor History (condor_history)'
+    work_packages: [WP4, WP5, WP6a, WP7]
+    v1_status: optional_enrichment
+  - id: htcondor-pool-status
+    source_section: '5. HTCondor Pool Status (condor_status)'
+    work_packages: [WP4, WP5, WP6a, WP7]
+    v1_status: optional_enrichment
+  - id: htcondor-user-priority
+    source_section: '6. HTCondor User Priority (condor_userprio)'
+    work_packages: [WP5, WP6a, WP6b, WP7]
+    v1_status: on_demand_enrichment
+  - id: htcondor-negotiator
+    source_section: '7. HTCondor Negotiator (condor_status -negotiator)'
+    work_packages: [WP5, WP6a, WP6b, WP7]
+    v1_status: on_demand_enrichment
+  - id: kickstart-forensics
+    source_section: '8. Kickstart Output Files'
+    work_packages: [WP6a, WP6b, WP7]
+    v1_status: on_demand_diagnostic
+  - id: jsonl-event-log
+    source_section: '9. JSONL Event Log (output)'
+    work_packages: [WP1, WP7, WP9b]
+    v1_status: fast_follow
+    legacy_event_mapping:
+      workflow_start: WP7 stream header
+      jobs_init: WP7 initial DB-confirmed checkpoint
+      workflow_state: WP7 DB-confirmed transition
+      job_state: WP7 DB-confirmed transition
+      htcondor_poll: WP7 optional scheduler enrichment
+      htcondor_history: WP7 optional scheduler enrichment
+      pool_status: WP7 optional pool enrichment
+      workflow_stats: WP7 final statistics record
+      workflow_end: WP7 final DB-confirmed checkpoint
+      log_paused: WP7 gap marker
+      log_resumed: WP7 recovery checkpoint
+  - id: diagnostics-sidecar
+    source_section: '9b. Diagnostics Sidecar (output)'
+    work_packages: [WP6a, WP6b, WP7]
+    v1_status: deliberately_deferred
+    note: WP6a returns structured diagnostics; WP7 owns later versioned records, not the source sidecar.
+  - id: derived-statistics
+    source_section: '10. Derived Statistics (WorkflowStats)'
+    work_packages: [WP6a, WP6b, WP7]
+    v1_status: required
+  - id: live-tui
+    source_section: '11. Consumption Modes: Live TUI'
+    work_packages: [WP4, WP6b]
+    v1_status: required
+  - id: jobstate-live-overlay
+    source_section: 'Plan addition (not present as an active source reader in DATA_SOURCES.md)'
+    work_packages: [WP2, WP3, WP4, WP6b, WP9a]
+    v1_status: required
+  - id: one-shot
+    source_section: '11. Consumption Modes: One-shot'
+    work_packages: [WP4, WP6b]
+    v1_status: required
+  - id: server-daemon
+    source_section: '11. Consumption Modes: Server/Daemon'
+    work_packages: [WP7, WP9b]
+    v1_status: fast_follow
+  - id: remote-ssh
+    source_section: '11. Consumption Modes: Remote SSH'
+    work_packages: [WP7, WP9b]
+    v1_status: fast_follow
+  - id: replay
+    source_section: '11. Consumption Modes: Replay'
+    work_packages: [WP7, WP9b]
+    v1_status: fast_follow
+  - id: why-idle
+    source_section: '11. Consumption Modes: Why-Idle'
+    work_packages: [WP5, WP6a, WP6b, WP7]
+    v1_status: required
+  - id: diagnose
+    source_section: '11. Consumption Modes: Diagnose'
+    work_packages: [WP4, WP5, WP6a, WP6b, WP7]
+    v1_status: required_without_sidecar
+  - id: scheduler-credential-inputs
+    source_section: '11. Credential Support'
+    work_packages: [WP5, WP6b]
+    v1_status: optional_enrichment
+  - id: cli-contract
+    source_section: '11. Consumption Modes and src/workflow_monitor/cli.py'
+    work_packages: [WP6b, WP7]
+    v1_status: required_with_fast_follow_flags_absent
+    retained_short_aliases: ['-V', '-i', '-a', '-e']
+    retained_v1_flags:
+      - target
+      - --version/-V
+      - --interval/-i
+      - --all-jobs/-a
+      - --sort-by-activity/--no-sort-by-activity
+      - --events/-e
+      - --once
+      - --why-idle
+      - --remap-submit-dir
+      - --diagnose
+      - --schedd
+      - --collector
+      - --token
+      - --cert
+      - --key
+      - --password-file
+    v1_new_flags: [--no-condor, --no-live-events, --jobstate-path]
+    wp7_flags:
+      - '--log [PATH]'
+      - --replay
+      - --speed
+      - --min-free-mb
+      - --max-log-mb
+      - --serve
+      - --serve-foreground
+      - '--stop-server [PID_FILE]'
+      - --remote
+      - --sync-interval
+      - --ssh-config
+      - --ssh-identity
+    removed_flags: [--condor-poll, --no-condor-poll]
+    compatibility_defaults:
+      --interval/-i: 2.0 seconds
+      --events/-e: 15
+      --all-jobs/-a: false
+      --sort-by-activity: true
+      --log: 'WP7 optional value; omitted value selects auto path'
+      --stop-server: 'WP7 optional value; omitted value selects auto PID file'
+plan_additions_not_in_source_inventory:
+  - capability: jobstate-log-live-overlay
+    work_packages: [WP2, WP3, WP4, WP6b, WP9a]
+    rationale: plan decisions 2, 3, and 6 supersede source plugin/live ingestion
+  - capability: source-health-last-good-cache-and-reconciliation
+    work_packages: [WP1, WP2, WP3, WP4, WP5, WP6b, WP9a]
+    rationale: plan correctness and safety invariant
+  - capability: deliberate-port-divergences
+    work_packages: [WP1, WP2, WP4, WP5, WP6a, WP6b, WP7, WP9a, WP9b]
+    rationale: >-
+      subprocess-only Condor; exact DB row identities; last-good DB behavior;
+      canonical diagnostic stream replacing the legacy diagnostics sidecar.
+  - capability: packaging-and-documentation
+    work_packages: [WP8]
+    rationale: native wrapper, wheel script, CI/tox, manpage, guide, and release notes
