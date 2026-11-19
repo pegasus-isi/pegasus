@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 import Pegasus.db.schema as schema
-from Pegasus.db.ensembles import Triggers, TriggerType
+from Pegasus.db.ensembles import EMError, Triggers, TriggerType
 from Pegasus.service.ensembles.views import to_seconds
 
 
@@ -547,11 +547,132 @@ class TestEnsembleRoutes(NoAuthFlaskTestCase):
                     state=state,
                     priority=0,
                     plan_command="./plan.sh",
+                    submitdir="/tmp/submit",
                 )
             )
             g.session.commit()
 
         return pre_callable
+
+    @staticmethod
+    def workflow():
+        return g.session.execute(select(schema.EnsembleWorkflow)).scalars().one()
+
+    @pytest.mark.parametrize(
+        "state,removed",
+        [("READY", 0), ("PLANNING", 0), ("QUEUED", 0), ("RUNNING", 1)],
+    )
+    def test_route_abort_workflow(self, mocker, emapp_client, state, removed):
+        mocker.patch("Pegasus.db.connection.connect")
+        remove = mocker.patch(
+            "Pegasus.service.ensembles.manager.WorkflowProcessor.remove"
+        )
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble/workflows/wf",
+            data={"state": "ABORTED"},
+            pre_callable=self.add_workflow(state),
+        )
+
+        assert rv.status_code == 200
+        assert self.workflow().state == "ABORTED"
+        assert remove.call_count == removed
+
+    @pytest.mark.parametrize("state", ["SUCCESSFUL", "FAILED", "ABORTED"])
+    def test_route_abort_finished_workflow(self, mocker, emapp_client, state):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble/workflows/wf",
+            data={"state": "ABORTED"},
+            pre_callable=self.add_workflow(state),
+        )
+
+        assert f"Cannot abort workflow in {state} state" in rv.json["message"]
+        assert self.workflow().state == state
+
+    def test_route_abort_remove_fails(self, mocker, emapp_client):
+        mocker.patch("Pegasus.db.connection.connect")
+        mocker.patch(
+            "Pegasus.service.ensembles.manager.WorkflowProcessor.remove",
+            side_effect=EMError("pegasus-remove failed"),
+        )
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble/workflows/wf",
+            data={"state": "ABORTED"},
+            pre_callable=self.add_workflow("RUNNING"),
+        )
+
+        assert "pegasus-remove failed" in rv.json["message"]
+        assert self.workflow().state == "RUNNING"
+
+    @pytest.mark.parametrize(
+        "state,aborted,removed",
+        [("RUNNING", ["wf"], 1), ("QUEUED", ["wf"], 0), ("SUCCESSFUL", [], 0)],
+    )
+    def test_route_pause_abort(self, mocker, emapp_client, state, aborted, removed):
+        mocker.patch("Pegasus.db.connection.connect")
+        remove = mocker.patch(
+            "Pegasus.service.ensembles.manager.WorkflowProcessor.remove"
+        )
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble",
+            data={"state": "PAUSED", "abort": "true"},
+            pre_callable=self.add_workflow(state),
+        )
+
+        assert rv.status_code == 200
+        assert rv.json["state"] == "PAUSED"
+        assert rv.json["aborted"] == aborted
+        assert remove.call_count == removed
+        expected = "ABORTED" if aborted else state
+        assert self.workflow().state == expected
+        # triggers are left alone
+        assert len(g.session.execute(select(schema.Trigger)).scalars().all()) == 1
+
+    def test_route_abort_requires_pause(self, mocker, emapp_client):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble",
+            data={"state": "ACTIVE", "abort": "true"},
+            pre_callable=self.add_workflow("RUNNING"),
+        )
+
+        assert rv.status_code == 400
+        assert "Pause the ensemble" in rv.json["message"]
+        assert self.workflow().state == "RUNNING"
+
+    def test_route_pause_without_abort(self, mocker, emapp_client):
+        mocker.patch("Pegasus.db.connection.connect")
+
+        rv = emapp_client.post_context(
+            "/ensembles/test-ensemble",
+            data={"state": "PAUSED"},
+            pre_callable=self.add_workflow("RUNNING"),
+        )
+
+        assert rv.status_code == 200
+        assert "aborted" not in rv.json
+        assert self.workflow().state == "RUNNING"
+
+    @pytest.mark.parametrize("state,removed", [("PLANNING", 0), ("RUNNING", 1)])
+    def test_route_force_delete_ensemble(self, mocker, emapp_client, state, removed):
+        mocker.patch("Pegasus.db.connection.connect")
+        remove = mocker.patch(
+            "Pegasus.service.ensembles.manager.WorkflowProcessor.remove"
+        )
+
+        rv = emapp_client.delete_context(
+            "/ensembles/test-ensemble?force=true",
+            pre_callable=self.add_workflow(state),
+        )
+
+        assert rv.status_code == 200
+        assert remove.call_count == removed
+        assert g.session.execute(select(schema.Ensemble)).scalars().all() == []
 
     @pytest.mark.parametrize("state", ["READY", "QUEUED", "SUCCESSFUL", "FAILED"])
     def test_route_delete_ensemble(self, mocker, emapp_client, state):
@@ -576,6 +697,7 @@ class TestEnsembleRoutes(NoAuthFlaskTestCase):
 
         assert rv.status_code == 409
         assert "planning or running workflows: wf" in rv.json["message"]
+        assert "--force" in rv.json["message"]
         assert len(g.session.execute(select(schema.Ensemble)).scalars().all()) == 1
 
     def test_route_delete_nonexistent_ensemble(self, mocker, emapp_client):

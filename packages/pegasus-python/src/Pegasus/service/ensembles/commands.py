@@ -582,18 +582,32 @@ class StateChangeCommand(EnsembleClientCommand):
         if len(self.args) > 1:
             self.parser.error("Invalid argument")
 
-        response = self.post(
-            f"/ensembles/{self.args[0]}", data={"state": self.newstate}
-        )
-        result = response.json()
+        data = {"state": self.newstate}
+        if getattr(self.options, "abort", False):
+            data["abort"] = "true"
+
+        result = self.post(f"/ensembles/{self.args[0]}", data=data).json()
 
         print("State:", result["state"])
+        if "aborted" in result:
+            print("Aborted:", ", ".join(result["aborted"]) or "none")
 
 
 class PauseCommand(StateChangeCommand):
     description = "Pause active ensemble"
-    usage = "Usage: %prog pause ENSEMBLE"
+    usage = "Usage: %prog pause [-a] ENSEMBLE"
     newstate = EnsembleStates.PAUSED
+
+    def __init__(self):
+        StateChangeCommand.__init__(self)
+        self.parser.add_option(
+            "-a",
+            "--abort",
+            action="store_true",
+            dest="abort",
+            default=False,
+            help="Also abort ready, planning, queued and running workflows",
+        )
 
 
 class ActivateCommand(StateChangeCommand):
@@ -878,7 +892,7 @@ class FilePatternTriggerCommand(EnsembleClientCommand):
 
 class DeleteCommand(EnsembleClientCommand):
     description = "Delete an ensemble, or one of its triggers"
-    usage = "Usage: %prog delete ENSEMBLE [-t TRIGGER]"
+    usage = "Usage: %prog delete ENSEMBLE [-t TRIGGER | -f]"
 
     def __init__(self):
         EnsembleClientCommand.__init__(self)
@@ -890,14 +904,26 @@ class DeleteCommand(EnsembleClientCommand):
             default=None,
             help="Delete only this trigger",
         )
+        self.parser.add_option(
+            "-f",
+            "--force",
+            action="store_true",
+            dest="force",
+            default=False,
+            help="Abort planning/running workflows first",
+        )
 
     def run(self):
         if len(self.args) != 1:
             self.parser.error("Specify ENSEMBLE")
+        if self.options.force and self.options.trigger:
+            self.parser.error("--force cannot be used with --trigger")
 
         path = f"/ensembles/{self.args[0]}"
         if self.options.trigger:
             path += f"/triggers/{self.options.trigger}"
+        elif self.options.force:
+            path += "?force=true"
 
         print(self.delete(path).json()["message"])
 
@@ -971,6 +997,7 @@ class EnsembleCommand(CompoundCommand):
         ("analyze", AnalyzeCommand),
         ("replan", ReplanCommand),
         ("rerun", RerunCommand),
+        ("abort", AbortCommand),
         ("priority", PriorityCommand),
         ("cron-trigger", CronTriggerCommand),
         ("file-pattern-trigger", FilePatternTriggerCommand),
