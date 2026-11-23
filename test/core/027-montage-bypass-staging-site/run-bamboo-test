@@ -34,7 +34,7 @@ sites:
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el10/montage/current"
-      http_proxy: "workflow.isi.edu:3128"
+      http_proxy: "proxy.scitech.group:3128"
     pegasus:
       style: "condor"
  -
@@ -64,7 +64,7 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      http_proxy: "workflow.isi.edu:3128"
+      http_proxy: "proxy.scitech.group:3128"
  -
   name: "CCGData"
   arch: "x86"

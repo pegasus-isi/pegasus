@@ -60,7 +60,7 @@ sites:
   profiles:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el10/montage/current"
-      http_proxy: "workflow.isi.edu:3128"
+      http_proxy: "proxy.scitech.group:3128"
     condor:
       universe: "local"
     pegasus:

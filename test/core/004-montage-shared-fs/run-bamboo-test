@@ -52,7 +52,7 @@ sites:
     env:
       MONTAGE_HOME: "/scitech/shared/software/el10/montage/current"
       PEGASUS_HOME: "/scitech/shared/scratch-90-days/bamboo/installs/pegasus-$PEGASUS_VERSION"
-      http_proxy: "workflow.isi.edu:3128"
+      http_proxy: "proxy.scitech.group:3128"
     condor:
       requirements: "(TARGET.FileSystemDomain =!= \"\")"
     pegasus:
@@ -84,7 +84,7 @@ sites:
     jobtype: "auxillary"
   profiles:
     env:
-      http_proxy: "workflow.isi.edu:3128"
+      http_proxy: "proxy.scitech.group:3128"
   profiles:
     pegasus:
       SSH_PRIVATE_KEY: /scitech/shared/home/bamboo/.ssh/workflow_id_rsa

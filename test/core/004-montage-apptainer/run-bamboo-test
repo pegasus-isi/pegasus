@@ -24,7 +24,7 @@ apptainer exec \
                 --band 2mass:k:red
 
 pegasus-plan \
-        -Denv.http_proxy=workflow.isi.edu:3128 \
+        -Denv.http_proxy=proxy.scitech.group:3128 \
         --dir submit \
         --cluster horizontal \
         --submit \
