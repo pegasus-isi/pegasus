@@ -52,6 +52,7 @@ Welcome to Pegasus WMS's documentation!
     :numbered:
     :maxdepth: 2
 
+    release-notes/release_6.0.x.md
     release-notes/release_5.1.x.md
     release-notes/release_5.0.x.md
     release-notes/release_4.9.x.md

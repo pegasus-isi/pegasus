@@ -1,0 +1,3 @@
+{"event_type":"workflow_start","timestamp":1400.0,"wf_uuid":"00000000-0000-4000-8000-000000000005","dax_label":"clustered","user":"test-user","planner_version":"test","submit_dir":"SANITIZED"}
+{"event_type":"jobs_init","timestamp":1400.0,"wf_uuid":"00000000-0000-4000-8000-000000000005","total_jobs":1,"jobs":[{"job_id":5,"exec_job_id":"cluster_compute_0","type_desc":"compute","transformation":"cluster"}]}
+{"event_type":"job_state","timestamp":1401.0,"wf_uuid":"00000000-0000-4000-8000-000000000005","job_id":5,"job_instance_id":50,"jobstate_submit_seq":0,"exec_job_id":"cluster_compute_0","type_desc":"compute","state":"EXECUTE"}

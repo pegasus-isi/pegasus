@@ -1,0 +1,38 @@
+[
+  {
+    "ClusterId": 39,
+    "ProcId": 0,
+    "DAGNodeName": "stage_in_local",
+    "JobStatus": 4,
+    "ExitCode": 0,
+    "RemoteWallClockTime": 10.5,
+    "RemoteUserCpu": 8.0,
+    "RemoteSysCpu": 1.0,
+    "RequestCpus": 1,
+    "RequestMemory": 1024,
+    "ImageSize": 512000,
+    "BytesSent": 100,
+    "BytesRecvd": 200,
+    "NumJobStarts": 1,
+    "pegasus_wf_uuid": "wf-selected",
+    "pegasus_root_wf_uuid": "wf-root"
+  },
+  {
+    "ClusterId": 40,
+    "ProcId": 1,
+    "DAGNodeName": "compute_ID0000001",
+    "JobStatus": 4,
+    "ExitCode": 0,
+    "RemoteWallClockTime": 20.0,
+    "RemoteUserCpu": 17.5,
+    "RemoteSysCpu": 1.5,
+    "RequestCpus": 2,
+    "RequestMemory": 2048,
+    "ImageSize": 1024000,
+    "BytesSent": 300,
+    "BytesRecvd": 400,
+    "NumJobStarts": 3,
+    "pegasus_wf_uuid": "wf-selected",
+    "pegasus_root_wf_uuid": "wf-root"
+  }
+]
