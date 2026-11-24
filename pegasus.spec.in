@@ -135,6 +135,25 @@ done
 install -d %{buildroot}%{python_sitearch}
 echo '%{pegasus_home}/site' > %{buildroot}%{python_sitearch}/pegasus.pth
 
+# /etc/pegasus is a real directory for site configuration that the RPM never
+# overwrites: it owns only the directory and the two links below, so anything
+# an admin puts there survives upgrades (including a change of the venv's
+# Python version) and removal. readlink -f resolves the venv's lib64 -> lib
+# symlink.
+#   /etc/pegasus/samples -> the venv's Pegasus/data/etc (basic.properties, the
+#       sample catalogs, yaml/), which 5.x shipped in /etc/pegasus itself
+#   <venv>/.../Pegasus/data/etc/pegasus.properties -> /etc/pegasus/pegasus.properties
+#       the planner loads pegasus.properties from Pegasus/data/etc (the
+#       pegasus.home.sysconfdir that pegasus-plan passes it), so this makes it
+#       read the admin's file; it skips the link while the target is missing.
+#       pegasus-config --conf follows this link to report /etc/pegasus.
+etc_dir=$(readlink -f %{buildroot}${venv_site}/Pegasus/data/etc)
+test -d "$etc_dir"
+test ! -e "$etc_dir/pegasus.properties"
+install -d %{buildroot}%{_sysconfdir}/pegasus
+ln -s ${etc_dir#%{buildroot}} %{buildroot}%{_sysconfdir}/pegasus/samples
+ln -s %{_sysconfdir}/pegasus/pegasus.properties "$etc_dir/pegasus.properties"
+
 # Install systemd service unit from source tree
 install -d %{buildroot}%{_unitdir}
 install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \
@@ -149,15 +168,20 @@ find %{buildroot} -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || t
 %{_bindir}/pegasus*
 %{pegasus_home}/
 %{python_sitearch}/pegasus.pth
+%dir %{_sysconfdir}/pegasus
+%{_sysconfdir}/pegasus/samples
 %{_unitdir}/pegasus-service.service
 
 %post
 systemctl daemon-reload >/dev/null 2>&1 || true
 
 %preun
-systemctl stop pegasus-service.service >/dev/null 2>&1 || true
-systemctl disable pegasus-service.service >/dev/null 2>&1 || true
-systemctl daemon-reload >/dev/null 2>&1 || true
+# Only on erase ($1 == 0), not when an upgrade removes the old version.
+if [ $1 -eq 0 ]; then
+    systemctl stop pegasus-service.service >/dev/null 2>&1 || true
+    systemctl disable pegasus-service.service >/dev/null 2>&1 || true
+    systemctl daemon-reload >/dev/null 2>&1 || true
+fi
 
 %changelog
 * @DATE@ Pegasus Development Team <pegasus-support@isi.edu> @PEGASUS_VERSION@

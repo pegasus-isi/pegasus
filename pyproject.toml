@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pegasus-wms"
-version = "6.0.0.dev1"
+version = "6.0.0.dev2276"
 description = "Pegasus Workflow Management System"
 readme = "README.md"
 license = "Apache-2.0"
@@ -127,11 +127,16 @@ wheel.py-api = "py3"
 # pegasus-api and pegasus-runtime are merged into the wheel via CMake
 # install(DIRECTORY) in the top-level CMakeLists.txt.
 wheel.packages = ["packages/pegasus-python/src/Pegasus"]
+# The worker tarball belongs only in Pegasus/data/share/pegasus/worker-packages/
+# (installed by CMake from share/pegasus/worker-packages/). Keep out any tarball
+# left in the old staging location in the Python source tree, which the
+# wheel.packages copy would otherwise pick up as Pegasus/data/worker-packages/.
+wheel.exclude = ["Pegasus/data/worker-packages/**"]
 
 # Include non-git tracked files in the wheel and sdist (e.g., Java JARs, worker packages, etc.)
 sdist.include = [
     "share/pegasus/java/**",
-    "packages/pegasus-python/src/Pegasus/data/worker-packages/*.tar.gz",
+    "share/pegasus/worker-packages/*.tar.gz",
 ]
 sdist.exclude = [
     "**/*.o",

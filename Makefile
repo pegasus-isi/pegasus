@@ -18,7 +18,7 @@ BUILD_DIR   ?= _cmake_build
 # Worker is build with "C=ON JAVA=OFF WORKER=ON" flags.
 WORKER_BUILD_DIR ?= _cmake_build_worker
 DIST_DIR    ?= dist
-WORKER_DATA := packages/pegasus-python/src/Pegasus/data/worker-packages
+WORKER_DATA := share/pegasus/worker-packages
 
 # Java tooling — override via JAVA_HOME or explicit variable
 ifdef JAVA_HOME
@@ -117,8 +117,8 @@ build-go:
 	$(CMAKE) --build $(BUILD_DIR)
 
 # Build the worker package tarball (pegasus-worker-VERSION-PLATFORM.tar.gz)
-# and stage it into the Python source tree so that `make build` includes it
-# in the wheel as Pegasus/data/worker-packages/<tarball>.
+# and stage it into share/pegasus/worker-packages/ so that `make build` includes
+# it in the wheel as Pegasus/data/share/pegasus/worker-packages/<tarball>.
 # PEGASUS_BUILD_C and PEGASUS_BUILD_GO must be ON (GO defaults ON already):
 # the tarball bundles pegasus-kickstart, pegasus-cluster, pegasus-keg,
 # libinterpose.so, and the compiled pegasus-transfer binary alongside the
@@ -132,6 +132,9 @@ build-worker:
 	    -DPEGASUS_BUILD_JAVA=OFF \
 	    -DPEGASUS_BUILD_GO=ON \
 	    -DPEGASUS_BUILD_WORKER=ON
+	# Drop tarballs left over from earlier builds (e.g. an older version), so
+	# only the one built now is staged and ends up in the wheel.
+	rm -f $(WORKER_BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/pegasus-worker-*.tar.gz
 	$(CMAKE) --build $(WORKER_BUILD_DIR) --target build_worker_tarball
 	mkdir -p $(WORKER_DATA) dist
 	cp $(WORKER_BUILD_DIR)/pegasus-worker-*.tar.gz $(WORKER_DATA)/
@@ -185,8 +188,9 @@ repair-wheel:
 	rmdir $(DIST_DIR)/wheelhouse
 	@echo "==> repaired wheels:"; ls -1 $(DIST_DIR)/*.whl
 
-# Remove worker build artifacts (cmake staging dir and the staged tarball in the
-# Python source tree; the latter must be removed to avoid stale tarballs in the wheel).
+# Remove worker build artifacts (cmake staging dir and the tarball staged in
+# share/pegasus/worker-packages/; the latter must be removed to avoid stale
+# tarballs in the wheel).
 # The chmod is needed because the Go module cache under here (GOPATH/pkg/mod,
 # see packages/pegasus-transfer/CMakeLists.txt) is marked read-only by `go`
 # itself; a plain rm -rf fails partway through without it.

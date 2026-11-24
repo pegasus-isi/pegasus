@@ -99,6 +99,29 @@ install: build
 	done
 	echo /usr/lib/pegasus/site > debian/pegasus/usr/lib/python3/dist-packages/pegasus.pth
 
+	# /etc/pegasus is a real directory for site configuration that the package
+	# never overwrites: it ships only the directory and the two links below, so
+	# anything an admin puts there survives upgrades (including a change of the
+	# venv's Python version) and removal. readlink -f resolves the venv's
+	# lib64 -> lib symlink.
+	#   /etc/pegasus/samples -> the venv's Pegasus/data/etc (basic.properties,
+	#       the sample catalogs, yaml/), which 5.x shipped in /etc/pegasus itself
+	#   <venv>/.../Pegasus/data/etc/pegasus.properties -> /etc/pegasus/pegasus.properties
+	#       the planner loads pegasus.properties from Pegasus/data/etc (the
+	#       pegasus.home.sysconfdir that pegasus-plan passes it), so this makes it
+	#       read the admin's file; it skips the link while the target is missing.
+	#       pegasus-config --conf follows this link to report /etc/pegasus.
+	# The 5.x conffiles in /etc/pegasus are removed on upgrade by
+	# debian/pegasus.maintscript.
+	set -e; \
+	venv_site=$$(debian/pegasus/usr/lib/pegasus/venv/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))"); \
+	etc_dir=$$(readlink -f $$venv_site/Pegasus/data/etc); \
+	test -d "$$etc_dir"; \
+	test ! -e "$$etc_dir/pegasus.properties"; \
+	install -d debian/pegasus/etc/pegasus; \
+	ln -s $${etc_dir#$(CURDIR)/debian/pegasus} debian/pegasus/etc/pegasus/samples; \
+	ln -s /etc/pegasus/pegasus.properties $$etc_dir/pegasus.properties
+
 	# Install systemd service unit from source tree
 	install -d debian/pegasus/lib/systemd/system
 	install -m 0644 share/pegasus/systemd-unit/pegasus-service.service \

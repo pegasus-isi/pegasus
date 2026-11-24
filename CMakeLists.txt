@@ -102,15 +102,19 @@ else()
     set(C_LIB_DEST "${CMAKE_INSTALL_LIBDIR}/pegasus")
 endif()
 
+# In the wheel, everything from share/pegasus/ keeps its source layout under
+# Pegasus/data/share/pegasus/, and etc/ goes to Pegasus/data/etc/. _java.py's
+# get_pegasus_share_dir() and pegasus-config resolve these locations.
 if(DEFINED SKBUILD_PLATLIB_DIR)
-    set(_data_base "${SKBUILD_PLATLIB_DIR}/Pegasus/data")
+    set(_data_base  "${SKBUILD_PLATLIB_DIR}/Pegasus/data")
+    set(_share_base "${_data_base}/share/pegasus")
 else()
-    set(_data_base "${CMAKE_INSTALL_DATAROOTDIR}/pegasus")
+    set(_data_base  "${CMAKE_INSTALL_DATAROOTDIR}/pegasus")
+    set(_share_base "${_data_base}")
 endif()
-# Keep JARs at <data>/java so _java.py's get_pegasus_data_dir() finds them.
-set(JAVA_DEST    "${_data_base}/java")
-set(WORKER_DEST  "${_data_base}/worker-packages")
-set(SCHEMA_DEST  "${_data_base}/schema")
+set(JAVA_DEST    "${_share_base}/java")
+set(WORKER_DEST  "${_share_base}/worker-packages")
+set(SCHEMA_DEST  "${_share_base}/schema")
 set(ETC_DEST     "${_data_base}/etc")
 
 # Python sub-packages: merge pegasus-common, pegasus-api and pegasus-runtime
@@ -132,14 +136,18 @@ endif()
 
 # Static runtime data — always installed regardless of Java/C build flags.
 # The Java planner and Python tools look these up via pegasus.home.sharedstatedir
-# which maps to Pegasus/data/ in the installed wheel.
+# which maps to Pegasus/data/share/pegasus/ in the installed wheel.
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/sh/"
-        DESTINATION "${_data_base}/sh"
+        DESTINATION "${_share_base}/sh"
         USE_SOURCE_PERMISSIONS)
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/notification/"
-        DESTINATION "${_data_base}/notification")
+        DESTINATION "${_share_base}/notification")
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/htcondor/"
-        DESTINATION "${_data_base}/htcondor")
+        DESTINATION "${_share_base}/htcondor")
+# Worker tarballs staged by `make build-worker` (see WORKER_DATA in the Makefile).
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/share/pegasus/worker-packages/"
+        DESTINATION "${WORKER_DEST}"
+        FILES_MATCHING PATTERN "*.tar.gz")
 
 if(PEGASUS_BUILD_C)
     add_subdirectory(packages/pegasus-kickstart)
