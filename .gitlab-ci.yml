@@ -394,6 +394,31 @@ RPMs:
     - ${ARCH}
     - docker
 
+RPMs-Upgrading:
+  <<: *retry-and-timeout
+  stage: packaging-tests
+  parallel:
+    matrix:
+      - ARCH:
+          - x86_64_v3
+          - arm64
+  image: almalinux:10
+  needs:
+    - "RHEL_v3: [x86_64_v3, rhel_10]"
+    - "RHEL_v3: [arm64, rhel_10]"
+  script:
+    - ls -l dist/rpm/
+    - dnf -y install dnf-plugins-core epel-release
+    - dnf config-manager --set-enabled crb
+    - dnf -y install https://htcss-downloads.chtc.wisc.edu/repo/26.x/htcondor-release-current.el10.noarch.rpm
+    - dnf -y install https://download.pegasus.isi.edu/pegasus/5.1.3/pegasus-5.1.3-1.el10.$(uname -m).rpm
+    - dnf -y upgrade ./dist/rpm/pegasus-*.el10.$(uname -m).rpm
+    - pegasus-version
+    - pegasus-kickstart /bin/true > /dev/null
+  tags:
+    - ${ARCH}
+    - docker
+
 DEBs:
   <<: *retry-and-timeout
   stage: packaging-tests
@@ -412,6 +437,35 @@ DEBs:
     - ls -l dist/deb/
     - apt-get -y update
     - apt-get -y install ./dist/deb/pegasus_*debian13_$(dpkg --print-architecture).deb
+    - pegasus-version
+    - pegasus-kickstart /bin/true > /dev/null
+  tags:
+    - ${ARCH}
+    - docker
+
+DEBs-Upgrading:
+  <<: *retry-and-timeout
+  stage: packaging-tests
+  parallel:
+    matrix:
+      - ARCH:
+          - x86_64
+          - arm64
+  image: debian:trixie
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+  needs:
+    - "Debian: [x86_64, deb_13]"
+    - "Debian: [arm64, deb_13]"
+  script:
+    - ls -l dist/deb/
+    - apt -y update
+    - apt -y install curl
+    - curl -fsSL -o /etc/apt/keyrings/htcondor.asc https://htcss-downloads.chtc.wisc.edu/repo/keys/HTCondor-26.x-Key
+    - curl -fsSL -o /etc/apt/sources.list.d/htcondor.list https://htcss-downloads.chtc.wisc.edu/repo/debian/htcondor-26.x-trixie.list
+    - curl -fsSL -o pegasus.deb https://download.pegasus.isi.edu/pegasus/5.1.3/pegasus_5.1.3-1+deb13_$(dpkg --print-architecture).deb
+    - apt -y install ./pegasus.deb
+    - apt -y install ./dist/deb/pegasus_*debian13_$(dpkg --print-architecture).deb
     - pegasus-version
     - pegasus-kickstart /bin/true > /dev/null
   tags:
