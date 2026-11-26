@@ -100,6 +100,10 @@ public class CondorGeneratorTest {
         String concurrencyLimit(Job job) throws CodeGeneratorException {
             return getConcurrencyLimit(job);
         }
+
+        String graphvizArguments(int jobCount) {
+            return getGraphvizArguments(jobCount, "workflow.dot", "workflow.dag");
+        }
     }
 
     @Test
@@ -211,5 +215,23 @@ public class CondorGeneratorTest {
         assertThat(knobs, containsString("MAXJOBS bigjob 25"));
         assertThat(knobs, containsString("MAXJOBS stagein 10"));
         assertThat(knobs, containsString("MAXJOBS stageout 10"));
+    }
+
+    @Test
+    public void testGraphvizSimplifiesWorkflowAtJobLimit() {
+        TestCondorGenerator gen = new TestCondorGenerator();
+
+        assertThat(
+                gen.graphvizArguments(CondorGenerator.DOT_SIMPLIFICATION_LIMIT),
+                is("-l label -o workflow.dot workflow.dag"));
+    }
+
+    @Test
+    public void testGraphvizDoesNotSimplifyWorkflowAboveJobLimit() {
+        TestCondorGenerator gen = new TestCondorGenerator();
+
+        assertThat(
+                gen.graphvizArguments(CondorGenerator.DOT_SIMPLIFICATION_LIMIT + 1),
+                is("-s -l label -o workflow.dot workflow.dag"));
     }
 }

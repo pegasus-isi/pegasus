@@ -11,11 +11,11 @@ MAX_SECONDS=1600
 # dax - if these limit is exceeded, the test fails. This is used
 # to detect big improvements in the planner which would mean it
 # is time to lower the upper (and lower) limits of this test
-MIN_SECONDS=200
+MIN_SECONDS=75
 
 #######################################################################
 
-set -e
+set -euo pipefail
 
 TOPDIR=`pwd`
 

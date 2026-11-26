@@ -147,6 +147,9 @@ public class CondorGenerator extends Abstract {
     /** limit to use for visualizing the concrete wf */
     public static final int CONCRETE_WF_VISUALIZE_LIMIT = 150;
 
+    /** Job limit above which DOT graph simplification is disabled. */
+    public static final int DOT_SIMPLIFICATION_LIMIT = 10000;
+
     /**
      * the environment variable key populated with all jobs to have the condor job id set in the
      * environment.
@@ -1120,7 +1123,8 @@ public class CondorGenerator extends Abstract {
         String output = new File(dir, filename).getAbsolutePath();
 
         ShellCommand c = ShellCommand.getInstance(mLogger);
-        if (c.execute("pegasus-graphviz", "-l label -o " + output + " " + dagFileName) == 0) {
+        String arguments = getGraphvizArguments(dag.getNoOfJobs(), output, dagFileName);
+        if (c.execute("pegasus-graphviz", arguments) == 0) {
             mLogger.log(
                     "Written out dot file for the executable workflow to: " + filename,
                     LogManager.INFO_MESSAGE_LEVEL);
@@ -1131,6 +1135,20 @@ public class CondorGenerator extends Abstract {
             return false;
         }
         return true;
+    }
+
+    /** Returns the arguments for generating an executable workflow DOT file. */
+    protected String getGraphvizArguments(int jobCount, String output, String dagFileName) {
+        StringBuilder arguments = new StringBuilder();
+        if (jobCount > DOT_SIMPLIFICATION_LIMIT) {
+            arguments.append("-s ");
+        }
+        return arguments
+                .append("-l label -o ")
+                .append(output)
+                .append(" ")
+                .append(dagFileName)
+                .toString();
     }
 
     /**

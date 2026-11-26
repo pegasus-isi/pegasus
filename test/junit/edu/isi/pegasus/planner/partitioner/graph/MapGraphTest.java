@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
+
 /** Unit tests for the MapGraph class. */
 public class MapGraphTest {
 
@@ -139,5 +141,66 @@ public class MapGraphTest {
         assertThat(
                 ((CloneNotSupportedException) cloned).getMessage(),
                 is("Clone() not implemented in GraphNode"));
+    }
+
+    @Test
+    public void testIteratorUsesRemainingParentCounts() {
+        GraphNode first = new GraphNode("first", "first");
+        GraphNode second = new GraphNode("second", "second");
+        GraphNode child = new NoScanGraphNode("child", "child");
+        mGraph.addNode(first);
+        mGraph.addNode(second);
+        mGraph.addNode(child);
+        mGraph.addEdge(first, child);
+        mGraph.addEdge(second, child);
+
+        Iterator<GraphNode> iterator = mGraph.iterator();
+        int visited = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            visited++;
+        }
+
+        assertThat(visited, is(3));
+        assertThat(child.getDepth(), is(1));
+    }
+
+    @Test
+    public void testBottomUpIteratorUsesRemainingChildCounts() {
+        GraphNode parent = new NoScanGraphNode("parent", "parent");
+        GraphNode first = new GraphNode("first", "first");
+        GraphNode second = new GraphNode("second", "second");
+        mGraph.addNode(parent);
+        mGraph.addNode(first);
+        mGraph.addNode(second);
+        mGraph.addEdge(parent, first);
+        mGraph.addEdge(parent, second);
+
+        Iterator<GraphNode> iterator = mGraph.bottomUpIterator();
+        int visited = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            visited++;
+        }
+
+        assertThat(visited, is(3));
+        assertThat(parent.getDepth(), is(1));
+    }
+
+    private static class NoScanGraphNode extends GraphNode {
+
+        NoScanGraphNode(String id, String name) {
+            super(id, name);
+        }
+
+        @Override
+        public boolean parentsColored(int color) {
+            throw new AssertionError("Iterator scanned all parents");
+        }
+
+        @Override
+        public boolean childrenColored(int color) {
+            throw new AssertionError("Iterator scanned all children");
+        }
     }
 }
