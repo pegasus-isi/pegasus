@@ -258,6 +258,7 @@ entry-point name:
    pegasus.monitord.plugins.myplugin.tick_interval  5       # >0 enables tick() (default 0 = no ticks)
    pegasus.monitord.plugins.myplugin.events          stampede.job_inst.,stampede.xwf.  # event-name prefixes; overrides the plugin's event_filter; '*' = all (default: all)
    pegasus.monitord.plugins.myplugin.overflow_policy drop-newest  # or drop-oldest: evict the oldest queued event instead (default drop-newest)
+   pegasus.monitord.plugins.myplugin.event_timeout  0       # >0 cancels an async handler call that exceeds it, seconds (default 0 = no bound; async plugins only)
    # any other key in the namespace is yours, via props.propertyset(...)
 
 If you enable a name that no installed package registers under the
@@ -287,7 +288,11 @@ drops.
    timed-out bootstrap returns later. ``handle_event()`` and ``tick()``
    run on the plugin's own dedicated thread, so they never race each
    other and shared plugin state needs no locking. ``stop()`` runs once
-   after the worker exits, in a bounded helper thread.
+   after the worker exits, in a bounded helper thread. When several
+   plugins are enabled, different plugins start and stop concurrently
+   with one another (startup and shutdown are bounded by the slowest
+   plugin, not the sum); each plugin's own lifecycle stays strictly
+   ordered.
 
 -  Events are delivered to a single plugin **in order**; different
    plugins (and monitord's own database writer) run concurrently. Do not
@@ -301,8 +306,8 @@ drops.
 
 -  Delivery is **best-effort**: the queue is bounded (drop-on-overflow,
    counted and logged, with a final per-plugin dropped total logged at
-   shutdown), workers are daemon threads, and shutdown joins are bounded
-   by ``join_timeout``. Which event is lost on overflow is configurable:
+   shutdown), workers are daemon threads, and worker joins are bounded by
+   ``join_timeout``. Which event is lost on overflow is configurable:
    ``drop-newest`` (default) drops the event being submitted, while
    ``overflow_policy = drop-oldest`` evicts the oldest queued event so a
    live-monitoring plugin keeps the freshest state — either way exactly
@@ -310,8 +315,9 @@ drops.
    raises, wedges, or falls behind is isolated and logged; it never
    blocks, grows, or kills monitord. If the worker does not exit within
    ``join_timeout``, ``stop()`` is skipped for that plugin because
-   ``handle_event()`` may still be running. If ``stop()`` itself does
-   not return within ``join_timeout``, Pegasus logs and continues exit.
+   ``handle_event()`` may still be running. A synchronous ``stop()`` that
+   does not return within ``join_timeout`` is abandoned; async cancellation
+   behavior is described below.
 
 -  A single monitord may process a root workflow and its sub-workflows;
    demultiplex on the ``xwf__id`` / ``root__xwf__id`` payload keys if
@@ -322,6 +328,38 @@ drops.
    after an event once the interval has elapsed — and never after
    shutdown begins. It is the supported way to do wall-clock work (e.g.
    polling an external service) without a thread of your own.
+
+**Async plugins.** ``handle_event()``, ``tick()``, and ``stop()`` may each
+be declared ``async def`` — detected automatically, no configuration
+needed. Async handlers run on a private asyncio event loop owned by the
+plugin's worker thread (reach it with ``asyncio.get_running_loop()``);
+delivery stays strictly in order, one event at a time, and
+``handle_event()``/``tick()`` still never run concurrently, so the
+no-locking contract is unchanged.
+
+What async buys is *recoverable timeouts*: with
+``pegasus.monitord.plugins.<name>.event_timeout`` set to a positive number
+of seconds, a handler call that exceeds it is **cancelled** and the worker
+moves on to the next event — where a wedged sync handler permanently costs
+its worker thread and its ``stop()`` cleanup. An ``async def stop()`` is
+cancelled at ``join_timeout`` and gets up to one additional
+``join_timeout`` to finish cooperative cancellation cleanup before its
+helper thread is abandoned. With ``event_timeout`` unset (the default),
+async event handlers behave exactly like sync ones, wedges included.
+
+Two caveats, both important:
+
+-  Cancellation is **cooperative**. ``asyncio.CancelledError`` is raised
+   at the coroutine's next ``await`` — a coroutine that blocks in
+   synchronous code (``requests.get``, a stuck DB driver, a tight loop)
+   starves the loop and wedges the worker exactly like a blocking sync
+   handler. The timeout only protects handlers that actually ``await``
+   their slow work (e.g. ``aiohttp``, ``asyncio.to_thread`` is *not*
+   sufficient — the blocked thread survives cancellation).
+-  Write handlers **cancellation-safe**: cleanup belongs in ``finally``
+   (which runs on the worker thread), and a cancelled handler's partial
+   work must not corrupt your durable output — the same idempotency
+   thinking replay/recovery already requires.
 
 **Replay and recovery: the stream can be re-emitted from the beginning.**
 Two situations make ``pegasus-monitord`` re-read ``dagman.out`` from the
@@ -375,6 +413,29 @@ A complete production example is the ``wfmonitor`` plugin in
 (``src/workflow_monitor/monitord_plugin.py``), which translates the live
 event stream into its native JSONL records and uses ``tick()`` to poll
 HTCondor alongside.
+
+**When not to run in-process: native, untrusted, or crash-isolated
+consumers.** In-process plugins are for **trusted, pure-Python** code.
+The host isolates plugins from monitord at the Python level — exceptions
+are swallowed, queues are bounded, every lifecycle wait carries a
+timeout — but no in-process safeguard can survive what happens *below*
+Python: a native-extension segfault kills the whole monitord process, an
+``os._exit()`` call skips every atexit drain, and a GIL-holding busy
+loop starves the parse loop itself. If your consumer links native code
+you do not fully trust, must not be able to take monitord down under any
+circumstance, or needs true CPU parallelism, run it **out of process**
+and use monitord's existing delivery mechanisms as the boundary:
+
+-  **AMQP**: point ``pegasus.catalog.workflow.amqp.url`` at a broker and
+   consume the event stream from any language, at any pace, in a process
+   whose crash monitord never notices. This is the sanctioned pattern
+   for untrusted consumers — the queue-plus-external-consumer split is
+   exactly the isolation an in-process plugin cannot get.
+-  **File tail**: a minimal trusted in-process plugin (or the
+   ``file://`` sink) writes events to a line-buffered file; the real
+   consumer tails it from its own process. This is the pattern the
+   ``wfmonitor`` plugin's JSONL output follows, and it adds
+   crash-replayability for free — the file is the durable hand-off.
 
 .. _stampede-schema-overview:
 
